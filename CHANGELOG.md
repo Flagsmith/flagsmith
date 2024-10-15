@@ -1,5 +1,45 @@
 # Changelog
 
+## [2.147.0](https://github.com/Flagsmith/flagsmith/compare/v2.146.0...v2.147.0) (2024-10-15)
+
+
+### Features
+
+* organisation integrations ([#4704](https://github.com/Flagsmith/flagsmith/issues/4704)) ([d76a6f0](https://github.com/Flagsmith/flagsmith/commit/d76a6f05bf958a69c418ec7fd00099f24f312b7b))
+
+
+### Bug Fixes
+
+* Invalid Segment base URLs ([#4727](https://github.com/Flagsmith/flagsmith/issues/4727)) ([8b823a7](https://github.com/Flagsmith/flagsmith/commit/8b823a7e36d14fc092753c37049bcc4151d6f786))
+* subscription state ([#4710](https://github.com/Flagsmith/flagsmith/issues/4710)) ([796fb01](https://github.com/Flagsmith/flagsmith/commit/796fb01ba5ae2af1a4aa39740d751b673cebdfc8))
+
+## [2.146.0](https://github.com/Flagsmith/flagsmith/compare/v2.145.0...v2.146.0) (2024-10-14)
+
+
+### Features
+
+* Hide change email when auth_type !== 'EMAIL' ([#4712](https://github.com/Flagsmith/flagsmith/issues/4712)) ([27109fd](https://github.com/Flagsmith/flagsmith/commit/27109fd06c81be472224bff4e2a94776a6a156ef))
+* Set base url for segment ([#4684](https://github.com/Flagsmith/flagsmith/issues/4684)) ([4e833b8](https://github.com/Flagsmith/flagsmith/commit/4e833b89e517cdb7870f8369a07f7d8aa9d60cf0))
+
+
+### Bug Fixes
+
+* **ci:** Anonymous registry pushes attempted for Tribvy databases ([#4716](https://github.com/Flagsmith/flagsmith/issues/4716)) ([205988d](https://github.com/Flagsmith/flagsmith/commit/205988db1cae9c8e998c62af7dc8097d8076fa68))
+* Remove mailer lite ([#4705](https://github.com/Flagsmith/flagsmith/issues/4705)) ([1c71905](https://github.com/Flagsmith/flagsmith/commit/1c71905fbb34d423420c52715f497f53eb8c0bd2))
+
+## [2.145.0](https://github.com/Flagsmith/flagsmith/compare/v2.144.0...v2.145.0) (2024-10-08)
+
+
+### Features
+
+* Add hubspot ([#4698](https://github.com/Flagsmith/flagsmith/issues/4698)) ([c4faf69](https://github.com/Flagsmith/flagsmith/commit/c4faf69bf968d65e16f0eb9d7f212124e66291d7))
+
+
+### Bug Fixes
+
+* diff check for versioned segment overrides and MV ([#4656](https://github.com/Flagsmith/flagsmith/issues/4656)) ([8d1c22e](https://github.com/Flagsmith/flagsmith/commit/8d1c22e898fceaa4f35c3e0a291283a8b414da07))
+* searching edge identities (dashboard_alias prefix and identifier casing) ([#4700](https://github.com/Flagsmith/flagsmith/issues/4700)) ([8e6b241](https://github.com/Flagsmith/flagsmith/commit/8e6b241fb5543c31bf8e4e8afa374bae200ceadb))
+
 ## [2.144.0](https://github.com/Flagsmith/flagsmith/compare/v2.143.0...v2.144.0) (2024-10-03)
 
 
