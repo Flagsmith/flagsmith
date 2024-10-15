@@ -643,17 +643,31 @@ const App = class extends Component {
                                   Usage
                                 </NavSubLink>
                               )}
-
                             {AccountStore.isAdmin() && (
-                              <NavSubLink
-                                icon={<SettingsIcon />}
-                                id='org-settings-link'
-                                to={`/organisation/${
-                                  AccountStore.getOrganisation().id
-                                }/settings`}
-                              >
-                                Organisation Settings
-                              </NavSubLink>
+                              <>
+                                {Utils.getFlagsmithHasFeature(
+                                  'organisation_integrations',
+                                ) && (
+                                  <NavSubLink
+                                    icon={<Icon name='layers' />}
+                                    id='integrations-link'
+                                    to={`/organisation/${
+                                      AccountStore.getOrganisation().id
+                                    }/integrations`}
+                                  >
+                                    Organisation Integrations
+                                  </NavSubLink>
+                                )}
+                                <NavSubLink
+                                  icon={<SettingsIcon />}
+                                  id='org-settings-link'
+                                  to={`/organisation/${
+                                    AccountStore.getOrganisation().id
+                                  }/settings`}
+                                >
+                                  Organisation Settings
+                                </NavSubLink>
+                              </>
                             )}
                           </>
                         )

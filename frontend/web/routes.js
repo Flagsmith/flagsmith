@@ -9,7 +9,7 @@ import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'
 import UsersPage from './components/pages/UsersPage'
 import UserPage from './components/pages/UserPage'
 import UserIdPage from './components/pages/UserIdPage'
-import IntegrationsPage from './components/pages/IntegrationsPage'
+import IntegrationsPage from 'components/pages/IntegrationsPage'
 import FlagsPage from './components/pages/FeaturesPage'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage'
@@ -39,60 +39,62 @@ import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
+import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 
 export const routes = {
-  'features': '/project/:projectId/environment/:environmentId/features',
-  'change-requests':
-    '/project/:projectId/environment/:environmentId/change-requests',
-  'github-setup': '/github-setup',
+  'broken': '/broken',
   'change-request':
     '/project/:projectId/environment/:environmentId/change-requests/:id',
-  'home': '/home',
-  'login': '/login',
-  'maintenance': '/maintenance',
-  'invite': '/invite/:id',
-  'not-found': '/404',
-  'broken': '/broken',
-  'root': '/',
-  'invite-link': '/invite-link/:id',
+  'change-requests':
+    '/project/:projectId/environment/:environmentId/change-requests',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
-  'signup': '/signup',
+  'features': '/project/:projectId/environment/:environmentId/features',
+  'github-setup': '/github-setup',
+  'home': '/home',
   'integrations': '/project/:projectId/integrations',
-  'oauth': '/oauth/:type',
-  'password-reset': '/password-reset/confirm/:uid/:token/',
+  'invite': '/invite/:id',
   'create-environment': '/project/:projectId/environment/create',
-  'scheduled-change':
-    '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
+  'invite-link': '/invite-link/:id',
   'compare': '/project/:projectId/compare',
-  'scheduled-changes':
-    '/project/:projectId/environment/:environmentId/scheduled-changes',
+  'login': '/login',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
+  'maintenance': '/maintenance',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
-  'widget': '/widget',
-  'organisation-settings': '/organisation/:organisationId/settings',
+  'not-found': '/404',
+  'oauth': '/oauth/:type',
+  'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
-  'saml': '/saml',
-  'organisation-settings-redirect': '/organisation-settings',
-  'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
+  'root': '/',
+  'organisation-settings': '/organisation/:organisationId/settings',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
-  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
+  'signup': '/signup',
   'audit-log': '/project/:projectId/audit-log',
-  'users': '/project/:projectId/environment/:environmentId/users',
   'audit-log-item': '/project/:projectId/audit-log/:id',
-  'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'password-reset': '/password-reset/confirm/:uid/:token/',
   'create-organisation': '/create',
+  'scheduled-change':
+    '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
+  'account': '/account',
+  'scheduled-changes':
+    '/project/:projectId/environment/:environmentId/scheduled-changes',
+  'organisation-projects': '/organisation/:organisationId/projects',
+  'organisation-settings-redirect': '/organisation-settings',
+  'widget': '/widget',
+  'organisation-usage': '/organisation/:organisationId/usage',
+  'organisations': '/organisations',
+  'permissions': '/project/:projectId/permissions',
+  'saml': '/saml',
+  'project-redirect': '/project/:projectId',
+  'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
+  'project-settings': '/project/:projectId/settings',
+  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
-  'account': '/account',
-  'permissions': '/project/:projectId/permissions',
-  'organisation-projects': '/organisation/:organisationId/projects',
-  'project-settings': '/project/:projectId/settings',
-  'organisation-usage': '/organisation/:organisationId/usage',
+  'users': '/project/:projectId/environment/:environmentId/users',
   'segments': '/project/:projectId/segments',
-  'organisations': '/organisations',
-  'project-redirect': '/project/:projectId',
+  'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
 }
 export default (
   <App>
@@ -156,6 +158,11 @@ export default (
         path={routes.integrations}
         exact
         component={IntegrationsPage}
+      />
+      <ParameterizedRoute
+        path={routes['organisation-integrations']}
+        exact
+        component={OrganisationIntegrationsPage}
       />
       <ParameterizedRoute path={routes.users} exact component={UsersPage} />
       <ParameterizedRoute
