@@ -5,6 +5,7 @@ from core.models import SoftDeleteExportableModel
 from django.db import models
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_UPDATE,
     BEFORE_DELETE,
     LifecycleModelMixin,
     hook,
@@ -93,6 +94,7 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         ).delete()
 
     @hook(AFTER_CREATE)
+    @hook(AFTER_UPDATE, when="tagging_enabled", has_changed=True, was=False)
     def create_github_tags(
         self,
     ) -> None:
