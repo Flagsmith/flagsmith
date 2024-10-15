@@ -58,7 +58,7 @@ type CreateRoleType = {
   isEdit?: boolean
   onComplete: () => void
   organisationId?: number
-  role?: Role
+  role?: number
   users?: User[]
 }
 const CreateRole: FC<CreateRoleType> = ({
@@ -66,9 +66,16 @@ const CreateRole: FC<CreateRoleType> = ({
   isEdit,
   onComplete,
   organisationId,
-  role,
+  role: role_id,
   users,
 }) => {
+  const { data: role, isLoading } = useGetRoleQuery(
+    {
+      organisation_id: `${organisationId}`,
+      role_id: role_id!,
+    },
+    { skip: !role_id || !organisationId },
+  )
   const buttonText = isEdit ? 'Update Role' : 'Create Role'
   const [tab, setTab] = useState<number>(0)
   const [userGroupTab, setUserGroupTab] = useState<number>(0)
@@ -244,7 +251,7 @@ const CreateRole: FC<CreateRoleType> = ({
       toast('Role assigned')
     }
     //eslint-disable-next-line
-  }, [userAdded, usersData])
+  }, [userAdded, usersData]);
 
   useEffect(() => {
     if (groupAdded && groupsData) {
@@ -257,7 +264,7 @@ const CreateRole: FC<CreateRoleType> = ({
       toast('Role assigned')
     }
     //eslint-disable-next-line
-  }, [groupAdded, groupsData])
+  }, [groupAdded, groupsData]);
 
   const Tab1 = forwardRef((props, ref) => {
     const { data: roleData, isLoading } = useGetRoleQuery(
@@ -391,150 +398,156 @@ const CreateRole: FC<CreateRoleType> = ({
     )
   })
 
-  const TabValue = () => {
-    const ref = useRef<TabRef>(null)
-    const ref2 = useRef<TabRef>(null)
-    useEffect(() => {
-      if (isEdit) {
-        setInterceptClose(() => ref.current?.onClosing() || Promise.resolve())
-      }
-    }, [])
+  const ref = useRef<TabRef>(null)
+  const ref2 = useRef<TabRef>(null)
+  useEffect(() => {
+    if (isEdit) {
+      setInterceptClose(() => ref.current?.onClosing() || Promise.resolve())
+    }
+  }, [])
 
-    const openConfirmNavigation = (
-      newTab: number,
-      setTab: (v: number) => void,
-    ) => {
-      return new Promise((resolve) => {
-        openConfirm({
-          body: 'Changing this tab will discard your unsaved changes.',
-          noText: 'Cancel',
-          onNo: () => resolve(false),
-          onYes: () => {
-            resolve(true), setTab(newTab)
-          },
-          title: 'Discard changes',
-          yesText: 'Ok',
-        })
+  const openConfirmNavigation = (
+    newTab: number,
+    setTabFn: (v: number) => void,
+  ) => {
+    return new Promise((resolve) => {
+      openConfirm({
+        body: 'Changing this tab will discard your unsaved changes.',
+        noText: 'Cancel',
+        onNo: () => resolve(false),
+        onYes: () => {
+          resolve(true), setTabFn(newTab)
+        },
+        title: 'Discard changes',
+        yesText: 'Ok',
       })
+    })
+  }
+
+  const changeTab = (newTab: number) => {
+    const changed = ref.current!.tabChanged()
+    if (changed && newTab !== tab) {
+      openConfirmNavigation(newTab, setTab)
+    } else {
+      setTab(newTab)
     }
+  }
 
-    const changeTab = (newTab: number) => {
-      const changed = ref.current!.tabChanged()
-      if (changed && newTab !== tab) {
-        openConfirmNavigation(newTab, setTab)
-      } else {
-        setTab(newTab)
-      }
+  const changeSubTab = (newTab: number) => {
+    const changed = ref.current!.tabChanged()
+    if (changed && newTab !== userGroupTab) {
+      openConfirmNavigation(newTab, setUserGroupTab)
+    } else {
+      setUserGroupTab(newTab)
     }
+  }
 
-    const changeSubTab = (newTab: number) => {
-      const changed = ref.current!.tabChanged()
-      if (changed && newTab !== userGroupTab) {
-        openConfirmNavigation(newTab, setUserGroupTab)
-      } else {
-        setUserGroupTab(newTab)
-      }
-    }
-
-    return isEdit ? (
-      <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>General</Row>}
-        >
-          <Tab1 ref={ref} />
-        </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Members</Row>}
-        >
-          <div>
-            <div className='mt-4'>
-              <SettingsButton onClick={() => setShowUserSelect(true)}>
-                Assigned users
-              </SettingsButton>
-              {showUserSelect && (
-                <UserSelect
-                  users={users}
-                  value={usersAdded && usersAdded.map((v) => v.id)}
-                  onAdd={addUserOrGroup}
-                  onRemove={removeUserOrGroup}
-                  isOpen={showUserSelect}
-                  onToggle={() => setShowUserSelect(!showUserSelect)}
-                />
-              )}
-            </div>
-            <div className='flex-row flex-wrap'>
-              {usersAdded?.map((u) => (
-                <Row
-                  key={u.id}
-                  onClick={() => removeUserOrGroup(u.id)}
-                  className='chip my-1 justify-content-between'
-                >
-                  <span className='font-weight-bold'>
-                    {u.first_name} {u.last_name}
-                  </span>
-                  <span className='chip-icon ion'>
-                    <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
-                  </span>
-                </Row>
-              ))}
-            </div>
-            <div className='mt-2'>
-              <SettingsButton onClick={() => setShowGroupSelect(true)}>
-                Assigned groups
-              </SettingsButton>
-              {showGroupSelect && organisationId && (
-                <MyGroupsSelect
-                  orgId={organisationId}
-                  value={groupsAdded && groupsAdded.map((v) => v.id)}
-                  onAdd={addUserOrGroup}
-                  onRemove={removeUserOrGroup}
-                  isOpen={showGroupSelect}
-                  onToggle={() => setShowGroupSelect(!showGroupSelect)}
-                  size='-sm'
-                />
-              )}
-
+  if (isLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+  return (
+    <div id='create-feature-modal'>
+      {isEdit ? (
+        <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
+          <TabItem
+            tabLabel={<Row className='justify-content-center'>General</Row>}
+          >
+            <Tab1 ref={ref} />
+          </TabItem>
+          <TabItem
+            tabLabel={<Row className='justify-content-center'>Members</Row>}
+          >
+            <div>
+              <div className='mt-4'>
+                <SettingsButton onClick={() => setShowUserSelect(true)}>
+                  Assigned users
+                </SettingsButton>
+                {showUserSelect && (
+                  <UserSelect
+                    users={users}
+                    value={usersAdded && usersAdded.map((v) => v.id)}
+                    onAdd={addUserOrGroup}
+                    onRemove={removeUserOrGroup}
+                    isOpen={showUserSelect}
+                    onToggle={() => setShowUserSelect(!showUserSelect)}
+                  />
+                )}
+              </div>
               <div className='flex-row flex-wrap'>
-                {groupsAdded?.map((g) => (
+                {usersAdded?.map((u) => (
                   <Row
-                    key={g.id}
-                    onClick={() => removeUserOrGroup(g.id, false)}
+                    key={u.id}
+                    onClick={() => removeUserOrGroup(u.id)}
                     className='chip my-1 justify-content-between'
                   >
-                    <span className='font-weight-bold'>{g.name}</span>
+                    <span className='font-weight-bold'>
+                      {u.first_name} {u.last_name}
+                    </span>
                     <span className='chip-icon ion'>
                       <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
                     </span>
                   </Row>
                 ))}
               </div>
-            </div>
-          </div>
-        </TabItem>
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Permissions</Row>}
-        >
-          <div className='mt-4'>
-            <PermissionsTabs
-              tabRef={ref}
-              value={userGroupTab}
-              onChange={changeSubTab}
-              role={role}
-              orgId={AccountStore.getOrganisation()?.id}
-            />
-          </div>
-        </TabItem>
-      </Tabs>
-    ) : (
-      <div className='my-3 mx-4'>
-        <Tab1 />
-      </div>
-    )
-  }
+              <div className='mt-2'>
+                <SettingsButton onClick={() => setShowGroupSelect(true)}>
+                  Assigned groups
+                </SettingsButton>
+                {showGroupSelect && organisationId && (
+                  <MyGroupsSelect
+                    orgId={organisationId}
+                    value={groupsAdded && groupsAdded.map((v) => v.id)}
+                    onAdd={addUserOrGroup}
+                    onRemove={removeUserOrGroup}
+                    isOpen={showGroupSelect}
+                    onToggle={() => setShowGroupSelect(!showGroupSelect)}
+                    size='-sm'
+                  />
+                )}
 
-  return (
-    <div id='create-feature-modal'>
-      <TabValue />
+                <div className='flex-row flex-wrap'>
+                  {groupsAdded?.map((g) => (
+                    <Row
+                      key={g.id}
+                      onClick={() => removeUserOrGroup(g.id, false)}
+                      className='chip my-1 justify-content-between'
+                    >
+                      <span className='font-weight-bold'>{g.name}</span>
+                      <span className='chip-icon ion'>
+                        <IonIcon
+                          icon={closeIcon}
+                          style={{ fontSize: '13px' }}
+                        />
+                      </span>
+                    </Row>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </TabItem>
+          <TabItem
+            tabLabel={<Row className='justify-content-center'>Permissions</Row>}
+          >
+            <div className='mt-4'>
+              <PermissionsTabs
+                tabRef={ref}
+                value={userGroupTab}
+                onChange={changeSubTab}
+                role={role}
+                orgId={AccountStore.getOrganisation()?.id}
+              />
+            </div>
+          </TabItem>
+        </Tabs>
+      ) : (
+        <div className='my-3 mx-4'>
+          <Tab1 />
+        </div>
+      )}
     </div>
   )
 }

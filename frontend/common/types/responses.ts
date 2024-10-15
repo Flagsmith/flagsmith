@@ -504,6 +504,7 @@ export type Account = {
 }
 export type Role = {
   id: number
+  tags: number[]
   name: string
   description?: string
   organisation: number
