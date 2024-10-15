@@ -50,7 +50,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     params.featureSpecific === 'true',
   )
 
-  console.log('id is', id)
   useEffect(() => {
     if (id) {
       editSegment(id, !manageSegmentsPermission)
