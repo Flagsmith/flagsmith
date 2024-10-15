@@ -7,7 +7,7 @@ export const getSubscriptionMetadataService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       getSubscriptionMetadata: builder.query<
-        Res['getSubscriptionMetadata'],
+        Res['subscriptionMetadata'],
         Req['getSubscriptionMetadata']
       >({
         providesTags: (res) => [
