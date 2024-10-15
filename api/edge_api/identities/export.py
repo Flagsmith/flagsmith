@@ -2,7 +2,6 @@ import logging
 import typing
 import uuid
 from decimal import Decimal
-from typing import Dict, Tuple
 
 from django.utils import timezone
 from flag_engine.identities.traits.types import map_any_value_to_trait_value
@@ -19,7 +18,7 @@ logger = logging.getLogger()
 
 def export_edge_identity_and_overrides(  # noqa: C901
     environment_api_key: str,
-) -> Tuple[list, list, list]:
+) -> tuple[list, list, list]:
     kwargs = {
         "environment_api_key": environment_api_key,
         "limit": EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT,
@@ -28,9 +27,10 @@ def export_edge_identity_and_overrides(  # noqa: C901
     traits_export = []
     identity_override_export = []
 
-    feature_id_to_uuid: Dict[int, str] = {}
-
-    mv_feature_option_id_to_uuid: Dict[int, str] = {}
+    feature_id_to_uuid: dict[int, str] = get_feature_uuid_cache(environment_api_key)
+    mv_feature_option_id_to_uuid: dict[int, str] = get_mv_feature_option_uuid_cache(
+        environment_api_key
+    )
     while True:
         response = EdgeIdentity.dynamo_wrapper.get_all_items(**kwargs)
         for item in response["Items"]:
@@ -50,11 +50,8 @@ def export_edge_identity_and_overrides(  # noqa: C901
                 featurestate_uuid = override["featurestate_uuid"]
                 feature_id = override["feature"]["id"]
                 if feature_id not in feature_id_to_uuid:
-                    try:
-                        feature_id_to_uuid[feature_id] = _get_feature_uuid(feature_id)
-                    except Feature.DoesNotExist:
-                        logging.warning("Feature with id %s does not exist", feature_id)
-                        continue
+                    logging.warning("Feature with id %s does not exist", feature_id)
+                    continue
 
                 feature_uuid = feature_id_to_uuid[feature_id]
 
@@ -74,43 +71,50 @@ def export_edge_identity_and_overrides(  # noqa: C901
                     identity_override_export.append(
                         export_featurestate_value(featurestate_value, featurestate_uuid)
                     )
-                if mvfsv := override["multivariate_feature_state_values"]:
-                    # only one mvfs override can exists
-                    mv_feature_option_id = mvfsv[0]["multivariate_feature_option"]["id"]
-                    if mv_feature_option_id not in mv_feature_option_id_to_uuid:
-                        try:
-                            mv_feature_option_id_to_uuid[mv_feature_option_id] = (
-                                _get_mv_feature_option_uuid(mv_feature_option_id)
-                            )
-                        except MultivariateFeatureOption.DoesNotExist:
+                if mvfsv_overrides := override["multivariate_feature_state_values"]:
+                    for mvfsv_override in mvfsv_overrides:
+                        mv_feature_option_id = mvfsv_override[
+                            "multivariate_feature_option"
+                        ]["id"]
+                        if mv_feature_option_id not in mv_feature_option_id_to_uuid:
                             logging.warning(
                                 "MultivariateFeatureOption with id %s does not exist",
                                 mv_feature_option_id,
                             )
                             continue
 
-                    mv_feature_option_uuid = mv_feature_option_id_to_uuid[
-                        mv_feature_option_id
-                    ]
-
-                    # export mv feature state value
-                    identity_override_export.append(
-                        export_mv_featurestate_value(
-                            featurestate_uuid, mv_feature_option_uuid
+                        mv_feature_option_uuid = mv_feature_option_id_to_uuid[
+                            mv_feature_option_id
+                        ]
+                        percentage_allocation = float(
+                            mvfsv_override["percentage_allocation"]
                         )
-                    )
+                        # export mv feature state value
+                        identity_override_export.append(
+                            export_mv_featurestate_value(
+                                featurestate_uuid,
+                                mv_feature_option_uuid,
+                                percentage_allocation,
+                            )
+                        )
         if "LastEvaluatedKey" not in response:
             break
         kwargs["start_key"] = response["LastEvaluatedKey"]
     return identity_export, traits_export, identity_override_export
 
 
-def _get_feature_uuid(feature_id: int) -> str:
-    return Feature.objects.get(id=feature_id).uuid
+def get_feature_uuid_cache(environment_api_key: str) -> dict[int, str]:
+    qs = Feature.objects.filter(
+        project__environments__api_key=environment_api_key
+    ).values_list("id", "uuid")
+    return {feature_id: feature_uuid for feature_id, feature_uuid in qs}
 
 
-def _get_mv_feature_option_uuid(mv_feature_option_id: int) -> str:
-    return MultivariateFeatureOption.objects.get(id=mv_feature_option_id).uuid
+def get_mv_feature_option_uuid_cache(environment_api_key: str) -> dict[int, str]:
+    qs = MultivariateFeatureOption.objects.filter(
+        feature__project__environments__api_key=environment_api_key
+    ).values_list("id", "uuid")
+    return {mvfso_id: mvfso_uuid for mvfso_id, mvfso_uuid in qs}
 
 
 def export_edge_trait(trait: dict, identifier: str, environment_api_key: str) -> dict:
@@ -191,7 +195,7 @@ def export_featurestate_value(
 
 
 def export_mv_featurestate_value(
-    featurestate_uuid: str, mv_feature_option_uuid: int
+    featurestate_uuid: str, mv_feature_option_uuid: int, percentage_allocation: float
 ) -> dict:
 
     return {
@@ -200,6 +204,6 @@ def export_mv_featurestate_value(
             "uuid": uuid.uuid4(),
             "feature_state": [featurestate_uuid],
             "multivariate_feature_option": [mv_feature_option_uuid],
-            "percentage_allocation": 100.0,
+            "percentage_allocation": percentage_allocation,
         },
     }

@@ -195,10 +195,13 @@ def export_edge_identities(organisation_id: int) -> typing.List[dict]:
     for environment in Environment.objects.filter(
         project__organisation__id=organisation_id, project__enable_dynamo_db=True
     ):
-        result = export_edge_identity_and_overrides(environment.api_key)
-        identities.extend(result[0])
-        traits.extend(result[1])
-        identity_overrides.extend(result[2])
+        exported_identities, exported_traits, exported_overrides = (
+            export_edge_identity_and_overrides(environment.api_key)
+        )
+        identities.extend(exported_identities)
+        traits.extend(exported_traits)
+        identity_overrides.extend(exported_overrides)
+
     return [*identities, *traits, *identity_overrides]
 
 
