@@ -3469,3 +3469,33 @@ def test_filter_features_with_owners_and_group_owners_together(
     assert len(response.data["results"]) == 2
     assert response.data["results"][0]["id"] == feature.id
     assert response.data["results"][1]["id"] == feature2.id
+
+
+def test_if_environment_does_not_exist_permission_returns_false(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_segment: FeatureSegment,
+    environment_two: Environment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-list",
+        args=["fake-api-key"],
+    )
+    new_value = "new-value"
+    data = {
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment_two.id,
+        "feature_segment": feature_segment.id,
+    }
+
+    # When
+    response = admin_client_new.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
