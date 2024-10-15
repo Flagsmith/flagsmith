@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.146.0](https://github.com/Flagsmith/flagsmith/compare/v2.145.0...v2.146.0) (2024-10-14)
+
+
+### Features
+
+* Hide change email when auth_type !== 'EMAIL' ([#4712](https://github.com/Flagsmith/flagsmith/issues/4712)) ([27109fd](https://github.com/Flagsmith/flagsmith/commit/27109fd06c81be472224bff4e2a94776a6a156ef))
+* Set base url for segment ([#4684](https://github.com/Flagsmith/flagsmith/issues/4684)) ([4e833b8](https://github.com/Flagsmith/flagsmith/commit/4e833b89e517cdb7870f8369a07f7d8aa9d60cf0))
+
+
+### Bug Fixes
+
+* **ci:** Anonymous registry pushes attempted for Tribvy databases ([#4716](https://github.com/Flagsmith/flagsmith/issues/4716)) ([205988d](https://github.com/Flagsmith/flagsmith/commit/205988db1cae9c8e998c62af7dc8097d8076fa68))
+* Remove mailer lite ([#4705](https://github.com/Flagsmith/flagsmith/issues/4705)) ([1c71905](https://github.com/Flagsmith/flagsmith/commit/1c71905fbb34d423420c52715f497f53eb8c0bd2))
+
 ## [2.145.0](https://github.com/Flagsmith/flagsmith/compare/v2.144.0...v2.145.0) (2024-10-08)
 
 
