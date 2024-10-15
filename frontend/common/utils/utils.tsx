@@ -23,6 +23,7 @@ import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import Format from './format'
 import { defaultFlags } from 'common/stores/default-flags'
+import { HasFeatureOptions } from 'flagsmith/types'
 
 const semver = require('semver')
 
@@ -99,7 +100,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   canCreateOrganisation() {
     return (
-      !Utils.getFlagsmithHasFeature('disable_create_org') &&
+      !Utils.getFlagsmithHasFeature('disable_create_org', { fallback: true }) &&
       (!Project.superUserCreateOnly ||
         (Project.superUserCreateOnly && AccountStore.isSuper()))
     )
@@ -252,8 +253,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: projectFlag.type,
     }
   },
-  getFlagsmithHasFeature(key: string) {
-    return flagsmith.hasFeature(key)
+  getFlagsmithHasFeature(key: string, options?: HasFeatureOptions) {
+    return flagsmith.hasFeature(key, options)
   },
   getFlagsmithJSONValue(key: string, defaultValue: any) {
     return flagsmith.getValue(key, { fallback: defaultValue, json: true })

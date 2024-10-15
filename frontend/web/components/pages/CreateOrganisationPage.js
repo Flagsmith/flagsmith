@@ -45,7 +45,9 @@ class CreateOrganisationPage extends Component {
         </div>
       )
     }
-    if (Utils.getFlagsmithHasFeature('disable_create_org')) {
+    if (
+      Utils.getFlagsmithHasFeature('disable_create_org', { fallback: true })
+    ) {
       return (
         <div id='create-org-page' className='container app-container'>
           This Flagsmith instance is configured to prevent additional
