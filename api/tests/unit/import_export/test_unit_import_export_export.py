@@ -102,6 +102,36 @@ def test_export_project(organisation):
     # TODO: test whether the export is importable
 
 
+def test_export_project__only_live_segments_are_imported(
+    organisation: Organisation, project: Project
+):
+    # Given
+    # a segment
+    segment = Segment.objects.create(project=project, name="test segment")
+    segment_rule = SegmentRule.objects.create(segment=segment, type=ALL_RULE)
+    segment_condition = Condition.objects.create(
+        rule=segment_rule, operator=EQUAL, property="foo", value="bar"
+    )
+
+    # A segment version that is not live
+    segmet2 = Segment.objects.create(
+        project=project, name="test segment 2", version_of=segment
+    )
+    segment_rule2 = SegmentRule.objects.create(segment=segmet2, type=ALL_RULE)
+    Condition.objects.create(
+        rule=segment_rule2, operator=EQUAL, property="foo", value="bar"
+    )
+    # When
+    export = export_projects(organisation.id)
+
+    # Then
+    # only the project and the live segment should be exported
+    assert len(export) == 4
+    assert export[1]["fields"]["uuid"] == str(segment.uuid)
+    assert export[2]["fields"]["uuid"] == str(segment_rule.uuid)
+    assert export[3]["fields"]["uuid"] == str(segment_condition.uuid)
+
+
 def test_export_environments(project):
     # Given
     # an environment
