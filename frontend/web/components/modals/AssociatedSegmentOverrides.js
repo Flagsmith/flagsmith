@@ -327,8 +327,9 @@ export default class SegmentOverridesInner extends Component {
               )
             this.setState({ isSaving: true })
           })
-          const segmentOverride =
-            segmentOverrides && segmentOverrides.filter((v) => v.segment === id)
+          const segmentOverride = segmentOverrides?.filter?.(
+            (v) => v.segment === id,
+          )
           if (!segmentOverride?.length) return null
           return (
             <div>
