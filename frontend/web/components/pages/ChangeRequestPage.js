@@ -371,7 +371,7 @@ const ChangeRequestsPage = class extends Component {
                         >
                           Delete
                         </Button>
-                        {!isVersioned && !changeRequest?.committedAt && (
+                        {!changeRequest?.committedAt && (
                           <Button
                             onClick={() =>
                               this.editChangeRequest(
