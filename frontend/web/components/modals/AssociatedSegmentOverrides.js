@@ -177,11 +177,7 @@ class TheComponent extends Component {
             }
             renderRow={(v) => (
               <div key={v.feature.id} className='list-item-override p-3 mb-4'>
-                <div
-                  onClick={() => {
-                    // window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
-                  }}
-                >
+                <div>
                   <WrappedSegmentOverrides
                     onSave={this.fetch}
                     projectFlag={v.feature}
