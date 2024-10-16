@@ -28,7 +28,7 @@ def test_json_formatter__outputs_expected(
     expected_tb_string = (
         "Traceback (most recent call last):\n"
         f'  File "{expected_module_path}",'
-        " line 34, in _log_traceback\n"
+        " line 37, in _log_traceback\n"
         "    raise Exception()\nException"
     )
 
