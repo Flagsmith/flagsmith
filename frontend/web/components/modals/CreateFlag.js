@@ -883,7 +883,7 @@ const CreateFlag = class extends Component {
             ) => {
               const saveFeatureValue = saveFeatureWithValidation((schedule) => {
                 if ((is4Eyes || schedule) && !identity) {
-                  this.setState({ valueChanged: false, segmentsChanged: false })
+                  this.setState({ segmentsChanged: false, valueChanged: false })
 
                   openModal2(
                     schedule
@@ -1063,7 +1063,11 @@ const CreateFlag = class extends Component {
                                     <ModalHR className='mt-4' />
                                     <div className='text-right mt-4 mb-3 fs-small lh-sm modal-caption'>
                                       {is4Eyes
-                                        ? 'This will create a change request with any value and segment override changes for the environment'
+                                        ? `This will create a change request ${
+                                            isVersioned
+                                              ? 'with any value and segment override changes '
+                                              : ''
+                                          }for the environment`
                                         : 'This will update the feature value for the environment'}{' '}
                                       <strong>
                                         {
@@ -1346,7 +1350,11 @@ const CreateFlag = class extends Component {
                                             <div>
                                               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                                                 {is4Eyes && isVersioned
-                                                  ? 'This will create a change request with any value and segment override changes for the environment'
+                                                  ? `This will create a change request ${
+                                                      isVersioned
+                                                        ? 'with any value and segment override changes '
+                                                        : ''
+                                                    }for the environment`
                                                   : 'This will update the segment overrides for the environment'}{' '}
                                                 <strong>
                                                   {
