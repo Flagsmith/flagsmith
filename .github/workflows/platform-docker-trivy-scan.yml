@@ -33,6 +33,7 @@ on:
 
 # Inputs don't work for cron runs, define defaults as env
 env:
+  REGISTRY_URL: ${{ inputs.registry-url || 'ghcr.io' }}
   TRIVY_DB_REPOSITORY_SOURCE:
     ${{ github.event.inputs.trivy-db-repository-source || 'ghcr.io/aquasecurity/trivy-db:latest' }}
   TRIVY_JAVA_DB_REPOSITORY_SOURCE:
@@ -58,7 +59,7 @@ jobs:
         with:
           shell: bash
           command: |
-            oras login -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} ${{ inputs.registry-url }}
+            oras login -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} ${{ env.REGISTRY_URL }}
             oras pull --no-tty $TRIVY_DB_REPOSITORY_SOURCE
             oras pull --no-tty $TRIVY_JAVA_DB_REPOSITORY_SOURCE
             oras push $TRIVY_DB_REPOSITORY db.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
@@ -102,7 +103,7 @@ jobs:
         id: trivy
         uses: ./.github/actions/trivy-scan-image
         with:
-          image-tag: ${{ inputs.registry-url }}/flagsmith/${{ matrix.image-name }}:main
+          image-tag: ${{ env.REGISTRY_URL }}/flagsmith/${{ matrix.image-name }}:main
           category: ${{ matrix.image-name }}
           query: branch:main
           trivy-username: ${{ github.actor }}
