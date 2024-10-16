@@ -333,7 +333,7 @@ export default class SegmentOverridesInner extends Component {
           })
           const segmentOverride =
             segmentOverrides && segmentOverrides.filter((v) => v.segment === id)
-          if (!segmentOverrides) return null
+          if (!segmentOverride?.length) return null
           return (
             <div>
               {originalSegmentOverrides.length > 1 && (
