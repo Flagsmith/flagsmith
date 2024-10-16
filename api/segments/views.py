@@ -10,8 +10,13 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import FeatureState
-from features.serializers import SegmentAssociatedFeatureStateSerializer
+from features.serializers import (
+    AssociatedFeaturesQuerySerializer,
+    SegmentAssociatedFeatureStateSerializer,
+)
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.permissions import VIEW_PROJECT
 
 from .models import Segment
@@ -77,6 +82,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @swagger_auto_schema(query_serializer=AssociatedFeaturesQuerySerializer())
     @action(
         detail=True,
         methods=["GET"],
@@ -85,7 +91,23 @@ class SegmentViewSet(viewsets.ModelViewSet):
     )
     def associated_features(self, request, *args, **kwargs):
         segment = self.get_object()
-        queryset = FeatureState.objects.filter(feature_segment__segment=segment)
+
+        query_serializer = AssociatedFeaturesQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        query_kwargs = {"feature_segment__segment": segment}
+
+        if environment_id := query_serializer.validated_data.get("environment"):
+            environment = Environment.objects.get(pk=environment_id)
+            query_kwargs["environment"] = environment
+            if environment.use_v2_feature_versioning and (
+                latest_version_uuids := EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
+                    environment_id
+                )
+            ):
+                query_kwargs["environment_feature_version__in"] = latest_version_uuids
+
+        queryset = FeatureState.objects.filter(**query_kwargs)
 
         page = self.paginate_queryset(queryset)
         if page is not None:

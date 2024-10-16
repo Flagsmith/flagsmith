@@ -25,7 +25,7 @@ class TheComponent extends Component {
   fetch = () => {
     _data
       .get(
-        `${Project.api}projects/${this.props.projectId}/segments/${this.props.id}/associated-features/`,
+        `${Project.api}projects/${this.props.projectId}/segments/${this.props.id}/associated-features/?environment=${this.props.environmentId}`,
       )
       .then((v) =>
         Promise.all(
