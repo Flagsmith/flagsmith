@@ -1,8 +1,6 @@
 # See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
 # This Docker Compose file will run the entire Flagsmith Platform
 
-version: '3'
-
 volumes:
   pgdata:
 
