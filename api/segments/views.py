@@ -95,19 +95,18 @@ class SegmentViewSet(viewsets.ModelViewSet):
         query_serializer = AssociatedFeaturesQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
 
-        query_kwargs = {"feature_segment__segment": segment}
-
+        filter_kwargs = {"feature_segment__segment": segment}
         if environment_id := query_serializer.validated_data.get("environment"):
             environment = Environment.objects.get(pk=environment_id)
-            query_kwargs["environment"] = environment
-            if environment.use_v2_feature_versioning and (
-                latest_version_uuids := EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
-                    environment_id
+            filter_kwargs["environment"] = environment
+            if environment.use_v2_feature_versioning:
+                filter_kwargs["environment_feature_version__in"] = (
+                    EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
+                        environment_id
+                    )
                 )
-            ):
-                query_kwargs["environment_feature_version__in"] = latest_version_uuids
 
-        queryset = FeatureState.objects.filter(**query_kwargs)
+        queryset = FeatureState.objects.filter(**filter_kwargs)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
