@@ -192,7 +192,6 @@ const FeatureListProvider = class extends React.Component {
     segmentOverrides,
     changeRequest,
     commit,
-    mode,
   ) => {
     AppActions.editFeatureMv(
       projectId,
@@ -224,7 +223,6 @@ const FeatureListProvider = class extends React.Component {
           segmentOverrides,
           changeRequest,
           commit,
-          mode,
         )
       },
     )
