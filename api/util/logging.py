@@ -57,7 +57,7 @@ class GunicornAccessLogJsonFormatter(JsonFormatter):
 class GunicornJsonCapableLogger(GunicornLogger):
     def setup(self, cfg: Config) -> None:
         super().setup(cfg)
-        if settings.LOG_FORMAT == "json":
+        if getattr(settings, "LOG_FORMAT", None) == "json":
             self._set_handler(
                 self.error_log,
                 cfg.errorlog,
