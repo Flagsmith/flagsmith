@@ -509,7 +509,6 @@ const controller = {
             }),
           ])
 
-          debugger
         const version = getFeatureStateCrud(
           featureStates.map((v: FeatureState) => ({
             ...v,
