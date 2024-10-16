@@ -18,7 +18,7 @@ import Utils from 'common/utils/utils'
 class TheComponent extends Component {
   state = {
     isLoading: true,
-    selectedEnv: ProjectStore.getEnvs()?.[0]?.api_key
+    selectedEnv: ProjectStore.getEnvs()?.[0]?.api_key,
   }
   componentDidMount() {
     this.fetch()
@@ -29,7 +29,11 @@ class TheComponent extends Component {
     }
     _data
       .get(
-        `${Project.api}projects/${this.props.projectId}/segments/${this.props.id}/associated-features/?environment=${ProjectStore.getEnvironmentIdFromKey(this.state.selectedEnv)}`,
+        `${Project.api}projects/${this.props.projectId}/segments/${
+          this.props.id
+        }/associated-features/?environment=${ProjectStore.getEnvironmentIdFromKey(
+          this.state.selectedEnv,
+        )}`,
       )
       .then((v) =>
         Promise.all(
