@@ -1,6 +1,6 @@
 .EXPORT_ALL_VARIABLES:
 
-COMPOSE_FILE ?= docker-compose-e2e-tests.yml
+COMPOSE_FILE ?= docker-compose-e2e-tests.postgres.yml
 COMPOSE_PROJECT_NAME ?= flagsmith-e2e
 
 DOTENV_OVERRIDE_FILE ?= .env

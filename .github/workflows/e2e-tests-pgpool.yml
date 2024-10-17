@@ -1,0 +1,41 @@
+on:
+  workflow_dispatch:
+    inputs:
+      e2e-image:
+        description: 'The image reference to use for E2E tests'
+        default: 'ghcr.io/flagsmith/flagsmith-e2e:latest'
+      api-image:
+        description: 'The image reference to use for running the API'
+        default: 'ghcr.io/flagsmith/flagsmith:latest'
+      database-service:
+        description: 'Which database service to use to run the API against'
+        default: postgres
+        type: choice
+        options:
+          - postgres
+          - pgpool
+
+jobs:
+  run-e2e-tests:
+    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
+    with:
+      runs-on: ubuntu-latest
+      e2e-image: ${{ needs.e2e-image }}
+      api-image: ${{ inputs.api-image }}
+      concurrency: ${{ matrix.args.concurrency }}
+      tests: ${{ matrix.args.tests }}
+      compose-file: docker-compose-e2e-tests.${{ inputs.database-service }}.yml
+    secrets:
+      gcr-token: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+
+    strategy:
+      matrix:
+        args:
+          - tests: segment-part-1 environment
+            concurrency: 1
+          - tests: segment-part-2
+            concurrency: 1
+          - tests: segment-part-3 signup flag invite project
+            concurrency: 2
+          - tests: versioning
+            concurrency: 1
