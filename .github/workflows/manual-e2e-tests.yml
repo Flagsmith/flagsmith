@@ -1,3 +1,5 @@
+name: 'Manual E2E test runner'
+
 on:
   workflow_dispatch:
     inputs:
