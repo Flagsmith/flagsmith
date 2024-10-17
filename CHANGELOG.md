@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.148.1](https://github.com/Flagsmith/flagsmith/compare/v2.148.0...v2.148.1) (2024-10-17)
+
+
+### Bug Fixes
+
+* `AttributeError` when using `LOGGING_CONFIGURATION_FILE` environment variable ([#4693](https://github.com/Flagsmith/flagsmith/issues/4693)) ([2aad0a1](https://github.com/Flagsmith/flagsmith/commit/2aad0a1c4c54557c211d43a144a148ebabc7e9de))
+* **ci:** Failing Trivy cron job ([#4741](https://github.com/Flagsmith/flagsmith/issues/4741)) ([dbb9ddf](https://github.com/Flagsmith/flagsmith/commit/dbb9ddfe4983ddb9aa72fa85452d85e96e501b91))
+* **ci:** Trivy scan triggered when no scan requested ([#4742](https://github.com/Flagsmith/flagsmith/issues/4742)) ([1ffef49](https://github.com/Flagsmith/flagsmith/commit/1ffef493b68789916c3c31814ca82ec4a88a07d8))
+* Combine segment override and value change requests ([#4734](https://github.com/Flagsmith/flagsmith/issues/4734)) ([714a68b](https://github.com/Flagsmith/flagsmith/commit/714a68bfdf4024854a457c4d53af37c974d9fdc6))
+
 ## [2.148.0](https://github.com/Flagsmith/flagsmith/compare/v2.147.0...v2.148.0) (2024-10-15)
 
 
