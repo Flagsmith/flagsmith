@@ -8,6 +8,8 @@ services:
     image: docker.io/bitnami/postgresql-repmgr:14
     ports:
       - 5432
+    volumes:
+      - pg_0_data:/bitnami/postgresql
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=password
       - POSTGRESQL_USERNAME=flagsmith
@@ -25,6 +27,8 @@ services:
     image: docker.io/bitnami/postgresql-repmgr:14
     ports:
       - 5432
+    volumes:
+      - pg_1_data:/bitnami/postgresql
     environment:
       - POSTGRESQL_POSTGRES_PASSWORD=password
       - POSTGRESQL_USERNAME=flagsmith
@@ -41,7 +45,7 @@ services:
   pgpool:
     image: docker.io/bitnami/pgpool:4
     ports:
-      - 5432
+      - 5432:5432
     environment:
       - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
       - PGPOOL_SR_CHECK_USER=repmgr
@@ -59,6 +63,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    depends_on:
+      - pg-0
+      - pg-1
 
   flagsmith-api:
     extends:
@@ -76,3 +83,9 @@ services:
     extends:
       file: ./.common.docker-compose.e2e-tests.yml
       service: frontend
+
+volumes:
+  pg_0_data:
+    driver: local
+  pg_1_data:
+    driver: local

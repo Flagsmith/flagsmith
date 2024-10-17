@@ -95,6 +95,7 @@ services:
       flagsmith:
         condition: service_healthy
     command: run-task-processor
+
 volumes:
   pg_0_data:
     driver: local
