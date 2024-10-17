@@ -1786,7 +1786,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("httpw://flagsmith.example.com/api/v1/")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()
