@@ -67,7 +67,8 @@ services:
     environment:
       DATABASE_URL: postgresql://flagsmith:password@pgpool:5432/flagsmith
     depends_on:
-      - pgpool
+      pgpool:
+        condition: service_healthy
     links:
       - pgpool:pgpool
 
