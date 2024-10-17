@@ -16,6 +16,10 @@ services:
     extends:
       file: ./.common.docker-compose.e2e-tests.yml
       service: flagsmith-api
+    depends_on:
+      - db
+    links:
+      - db:db
 
   frontend:
     extends:

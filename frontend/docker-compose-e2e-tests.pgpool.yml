@@ -3,7 +3,6 @@
 # docker-compose -f docker-compose-e2e-tests.pgpool.yml build
 # docker-compose -f docker-compose-e2e-tests.pgpool.yml up
 
-version: '3'
 services:
   pg-0:
     image: docker.io/bitnami/postgresql-repmgr:14
@@ -67,6 +66,10 @@ services:
       service: flagsmith-api
     environment:
       DATABASE_URL: postgresql://flagsmith:password@pgpool:5432/flagsmith
+    depends_on:
+      - pgpool
+    links:
+      - pgpool:pgpool
 
   frontend:
     extends:

@@ -15,10 +15,6 @@ services:
       ACCESS_LOG_LOCATION: /dev/shm/log.txt
     ports:
       - 8000:8000
-    depends_on:
-      - db
-    links:
-      - db:db
     healthcheck:
       test: "[ -e /dev/shm/log.txt ] && exit 0 || exit 1"
       start_period: 60s
