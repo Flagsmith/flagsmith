@@ -121,7 +121,7 @@ You can use caches instead of async/await:
 
 ```dart
 final config = FlagsmithConfig(
-    baseURI: 'http://yoururl.com/',
+    baseURI: 'https://flagsmith.example.com/api/v1/',
     connectTimeout: 200,
     receiveTimeout: 500,
     sendTimeout: 500,
@@ -228,7 +228,7 @@ By default, the client uses the default configuration. You can override this con
 ```dart
 final flagsmithClient = FlagsmithClient(
       config: FlagsmithConfig(
-          baseURI: 'http://yoururl.com/'
+          baseURI: 'https://flagsmith.example.com/api/v1/'
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
 
@@ -237,7 +237,7 @@ Override the default configuration with your own:
 ```dart
 final flagsmithClient = FlagsmithClient(
       config: FlagsmithConfig(
-          baseURI: 'http://yoururl.com/',
+          baseURI: 'https://flagsmith.example.com/api/v1/',
           connectTimeout: 200,
           receiveTimeout: 500,
           sendTimeout: 500,
