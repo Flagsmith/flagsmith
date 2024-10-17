@@ -1,0 +1,102 @@
+# Copyright Broadcom, Inc. All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+services:
+  pg-0:
+    image: docker.io/bitnami/postgresql-repmgr:14
+    ports:
+      - 5432
+    volumes:
+      - pg_0_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=password
+      - POSTGRESQL_USERNAME=flagsmith
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=flagsmith
+      - POSTGRESQL_NUM_SYNCHRONOUS_REPLICAS=1
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-1,pg-0
+      - REPMGR_NODE_NAME=pg-0
+      - REPMGR_NODE_NETWORK_NAME=pg-0
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpassword
+  pg-1:
+    image: docker.io/bitnami/postgresql-repmgr:14
+    ports:
+      - 5432
+    volumes:
+      - pg_1_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=password
+      - POSTGRESQL_USERNAME=flagsmith
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=flagsmith
+      - POSTGRESQL_NUM_SYNCHRONOUS_REPLICAS=1
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=pg-1
+      - REPMGR_USERNAME=repmgr
+      - REPMGR_PASSWORD=repmgrpassword
+  pgpool:
+    image: docker.io/bitnami/pgpool:4
+    ports:
+      - 5432:5432
+    environment:
+      - PGPOOL_BACKEND_NODES=0:pg-0:5432,1:pg-1:5432
+      - PGPOOL_SR_CHECK_USER=repmgr
+      - PGPOOL_SR_CHECK_PASSWORD=repmgrpassword
+      - PGPOOL_ENABLE_LDAP=no
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=password
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpassword
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_POSTGRES_CUSTOM_USERS=flagsmith
+      - PGPOOL_POSTGRES_CUSTOM_PASSWORDS=password
+    healthcheck:
+      test: ['CMD', '/opt/bitnami/scripts/pgpool/healthcheck.sh']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  flagsmith:
+    image: flagsmith/flagsmith:latest
+    platform: linux/arm64
+    environment:
+      DATABASE_URL: postgresql://flagsmith:password@pgpool:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: 'true' # Store API and Flag Analytics data in Postgres
+
+      ENVIRONMENT: production # set to 'production' in production.
+      DJANGO_ALLOWED_HOSTS: '*' # Change this in production
+      ALLOW_ADMIN_INITIATION_VIA_CLI: 'true' # Change this in production
+      FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
+      DJANGO_SECRET_KEY: secret # Change this in production
+      ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
+      TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
+    ports:
+      - 8000:8000
+    healthcheck:
+      test: ['CMD-SHELL', 'python /app/scripts/healthcheck.py']
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 20s
+    depends_on:
+      pgpool:
+        condition: service_healthy
+
+  flagsmith_processor:
+    image: flagsmith/flagsmith:latest
+    platform: linux/arm64
+    environment:
+      DATABASE_URL: postgresql://flagsmith:password@pgpool:5432/flagsmith
+      USE_POSTGRES_FOR_ANALYTICS: 'true'
+    depends_on:
+      flagsmith:
+        condition: service_healthy
+    command: run-task-processor
+volumes:
+  pg_0_data:
+    driver: local
+  pg_1_data:
+    driver: local
