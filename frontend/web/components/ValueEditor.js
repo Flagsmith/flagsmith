@@ -227,7 +227,7 @@ class ValueEditor extends Component {
           <textarea {...rest} />
         ) : (
           <Highlight
-            data-test={rest['data-test']}
+            data-test={E2E ? rest['data-test'] : ''}
             disabled={rest.disabled}
             onChange={rest.disabled ? null : rest.onChange}
             onBlur={rest.disabled ? null : rest.onBlur}
