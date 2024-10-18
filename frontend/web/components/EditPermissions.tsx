@@ -12,7 +12,6 @@ import {
   UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
-import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import Format from 'common/utils/format'
 import PanelSearch from './PanelSearch'
@@ -131,24 +130,7 @@ const withAdminPermissions = (InnerComponent: any) => {
   return WrappedComponent
 }
 const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
-  forwardRef((props) => {
-    const [entityPermissions, setEntityPermissions] =
-      useState<EntityPermissions>({ admin: false, permissions: [] })
-    const [parentError, setParentError] = useState(false)
-    const [saving, setSaving] = useState(false)
-    const [showRoles, setShowRoles] = useState<boolean>(false)
-    const [valueChanged, setValueChanged] = useState(false)
-
-    const [permissionWasCreated, setPermissionWasCreated] =
-      useState<boolean>(false)
-    const [rolesSelected, setRolesSelected] = useState<
-      {
-        role: number
-        user_role_id?: number
-        group_role_id?: number
-      }[]
-    >([])
-
+  forwardRef((props: EditPermissionModalType) => {
     const {
       className,
       envId,
@@ -169,6 +151,30 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       roles,
       user,
     } = props
+
+    const [entityPermissions, setEntityPermissions] =
+      useState<EntityPermissions>({ admin: false, permissions: [] })
+    const [parentError, setParentError] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [valueChanged, setValueChanged] = useState(false)
+
+    const projectId =
+      props.level === 'project'
+        ? props.id
+        : props.level === 'environment'
+        ? props.parentId
+        : undefined
+
+    const [permissionWasCreated, setPermissionWasCreated] =
+      useState<boolean>(false)
+    const [rolesSelected, setRolesSelected] = useState<
+      {
+        role: number
+        user_role_id?: number
+        group_role_id?: number
+      }[]
+    >([])
 
     const { data: permissions } = useGetAvailablePermissionsQuery({ level })
     const { data: userWithRolesData, isSuccess: userWithRolesDataSuccesfull } =
@@ -669,8 +675,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const rolesAdded = getRoles(roles, rolesSelected || [])
 
     const isAdmin = admin()
-
-    const [search, setSearch] = useState()
 
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
