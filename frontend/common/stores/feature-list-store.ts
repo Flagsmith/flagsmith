@@ -53,8 +53,7 @@ const convertSegmentOverrideToFeatureState = (
     feature_state_value: override.value,
     id: override.id,
     live_from: changeRequest?.live_from,
-    multivariate_feature_state_values:
-      override.multivariate_options,
+    multivariate_feature_state_values: override.multivariate_options,
     toRemove: override.toRemove,
   } as Partial<FeatureState>
 }
@@ -115,7 +114,13 @@ const controller = {
       })
       .then(() =>
         Promise.all([
-          data.get(`${Project.api}projects/${projectId}/features/?environment=${ProjectStore.getEnvironmentIdFromKey(environmentId)}`),
+          data.get(
+            `${
+              Project.api
+            }projects/${projectId}/features/?environment=${ProjectStore.getEnvironmentIdFromKey(
+              environmentId,
+            )}`,
+          ),
         ]).then(([features]) => {
           const environmentFeatures = features.results.map((v) => ({
             ...v.environment_feature_state,
@@ -258,13 +263,9 @@ const controller = {
     const segmentOverridesProm = (segmentOverrides || [])
       .map((v, i) => () => {
         if (v.toRemove) {
-          return (
-            v.id
-              ? data.delete(`${Project.api}features/feature-segments/${v.id}/`)
-              : Promise.resolve()
-          ).then(() => {
-            segmentOverrides = segmentOverrides.filter((s) => v.id !== s.id)
-          })
+          return v.id
+            ? data.delete(`${Project.api}features/feature-segments/${v.id}/`)
+            : Promise.resolve()
         }
         if (!v.id) {
           const featureFlagId = v.feature
@@ -328,6 +329,9 @@ const controller = {
     API.trackEvent(Constants.events.EDIT_FEATURE)
     segmentOverridesProm
       .then(() => {
+        segmentOverrides = segmentOverrides?.filter?.(
+          (override) => !override.toRemove,
+        )
         if (mode !== 'VALUE') {
           prom = Promise.resolve()
         } else if (environmentFlag) {
@@ -860,7 +864,9 @@ const controller = {
               ? page
               : `${Project.api}projects/${projectId}/features/?page=${
                   page || 1
-                }&environment=${environment}&page_size=${pageSize || PAGE_SIZE}${filterUrl}`
+                }&environment=${environment}&page_size=${
+                  pageSize || PAGE_SIZE
+                }${filterUrl}`
           if (store.search) {
             featuresEndpoint += `&search=${store.search}`
           }
@@ -959,7 +965,7 @@ const controller = {
   },
   searchFeatures: _.throttle(
     (search, environmentId, projectId, filter, pageSize) => {
-      store.search = encodeURIComponent(search||'')
+      store.search = encodeURIComponent(search || '')
       controller.getFeatures(
         projectId,
         environmentId,
