@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.148.2](https://github.com/Flagsmith/flagsmith/compare/v2.148.1...v2.148.2) (2024-10-18)
+
+
+### Bug Fixes
+
+* value editor typing ([#4748](https://github.com/Flagsmith/flagsmith/issues/4748)) ([99876ca](https://github.com/Flagsmith/flagsmith/commit/99876ca2e33e403280f4adcb911c9b54bb0028d7))
+
 ## [2.148.1](https://github.com/Flagsmith/flagsmith/compare/v2.148.0...v2.148.1) (2024-10-17)
 
 
