@@ -125,6 +125,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
     ],
   }
   const [segment, setSegment] = useState(_segment || defaultSegment)
+  const [description, setDescription] = useState(segment.description)
+  const [name, setName] = useState<Segment['name']>(segment.name)
+  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  useEffect(() => {
+    if (segment) {
+      setRules(segment.rules)
+      setDescription(segment.description)
+      setName(segment.name)
+    }
+  }, [segment])
   const isEdit = !!segment.id
   const [
     createSegment,
@@ -147,9 +157,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [description, setDescription] = useState(segment.description)
-  const [name, setName] = useState<Segment['name']>(segment.name)
-  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
@@ -157,7 +164,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const metadataEnable =
     Utils.getPlansPermission('METADATA') &&
     Utils.getFlagsmithHasFeature('enable_metadata')
-
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
@@ -284,6 +290,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [createSuccess])
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
+      setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
@@ -399,7 +406,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <form id='create-segment-modal' onSubmit={save}>
       {!condensed && (
         <div className='mt-3'>
-          <InfoMessage>
+          <InfoMessage collapseId={'value-type-conversions'}>
             Learn more about rule and trait value type conversions{' '}
             <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
               here
@@ -606,7 +613,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Users'>
             <div className='my-4'>
-              <InfoMessage>
+              <InfoMessage collapseId={'random-identity-sample'}>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
               </InfoMessage>

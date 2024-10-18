@@ -40,10 +40,14 @@ const AddEditTags: FC<AddEditTagsType> = ({
   const [tab, setTab] = useState<'SELECT' | 'CREATE' | 'EDIT'>('SELECT')
   const [deleteTag] = useDeleteTagMutation()
   const [createTag] = useCreateTagMutation()
-  const { permission: projectAdminPermission } = useHasPermission({
+  const permissionType = Utils.getFlagsmithHasFeature('manage_tags_permission')
+    ? 'MANAGE_TAGS'
+    : 'ADMIN'
+
+  const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: permissionType,
   })
 
   useEffect(() => {
@@ -166,12 +170,14 @@ const AddEditTags: FC<AddEditTagsType> = ({
             !readOnly && (
               <div className='text-right'>
                 {Utils.renderWithPermission(
-                  projectAdminPermission,
-                  Constants.projectPermissions('Admin'),
+                  createEditTagPermission,
+                  Constants.projectPermissions(
+                    permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
+                  ),
                   <div className='text-center'>
                     <Button
                       className=''
-                      disabled={!projectAdminPermission}
+                      disabled={!createEditTagPermission}
                       onClick={() => {
                         setTab('CREATE')
                         setFilter('')
@@ -206,7 +212,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
                         />
                       </Flex>
                       {!readOnly &&
-                        !!projectAdminPermission &&
+                        !!createEditTagPermission &&
                         !tag.is_system_tag && (
                           <>
                             <div

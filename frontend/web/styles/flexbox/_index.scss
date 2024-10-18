@@ -33,8 +33,8 @@
 }
 
 .flex-column {
-  margin-left: $input-padding-x/2;
-  margin-right: $input-padding-x/2;
+  margin-left: calc($input-padding-x / 2);
+  margin-right: calc($input-padding-x / 2);
 }
 
 .flex-1 {

@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { RouterChildContext } from 'react-router'
 import { Link } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
@@ -6,6 +6,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 
 import Constants from 'common/constants'
 import {
+  deleteIdentity,
   useDeleteIdentityMutation,
   useGetIdentitiesQuery,
 } from 'common/services/useIdentity'
@@ -19,10 +20,9 @@ import JSONReference from 'components/JSONReference' // we need this to make JSX
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import Format from 'common/utils/format'
 import IdentifierString from 'components/IdentifierString'
-
-const CodeHelp = require('../CodeHelp')
+import CodeHelp from 'components/CodeHelp'
+import { getStore } from 'common/store'
 
 type UsersPageType = {
   router: RouterChildContext['router']
@@ -33,6 +33,45 @@ type UsersPageType = {
     }
   }
 }
+const searchTypes = [
+  { label: 'ID', value: 'id' },
+  { label: 'Alias', value: 'alias' },
+]
+
+export const removeIdentity = (
+  id: string,
+  identifier: string,
+  environmentId: string,
+  onYes?: () => void,
+) => {
+  openConfirm({
+    body: (
+      <div>
+        {'Are you sure you want to delete '}
+        <strong>{identifier}</strong>
+        {'? Identities can be re-added here or via one of our SDKs.'}
+      </div>
+    ),
+    destructive: true,
+    onYes: () => {
+      onYes?.()
+      deleteIdentity(getStore(), {
+        environmentId,
+        id,
+        isEdge: Utils.getIsEdge(),
+      }).then((res) => {
+        if (res.error) {
+          toast('Identity could not be removed', 'danger')
+        } else {
+          toast('Identity removed')
+        }
+      })
+    },
+    title: 'Delete User',
+    yesText: 'Confirm',
+  })
+}
+
 const UsersPage: FC<UsersPageType> = (props) => {
   const [page, setPage] = useState<{
     number: number
@@ -50,17 +89,28 @@ const UsersPage: FC<UsersPageType> = (props) => {
       })
     },
   )
-  const [deleteIdentity] = useDeleteIdentityMutation({})
   const isEdge = Utils.getIsEdge()
+  const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
+  const [searchType, setSearchType] = useState<'id' | 'alias'>(
+    showAliases
+      ? localStorage.getItem('identity_search_type') === 'alias'
+        ? 'alias'
+        : 'id' || 'id'
+      : 'id',
+  )
+  useEffect(() => {
+    localStorage.setItem('identity_search_type', searchType)
+  }, [searchType])
   const { data: identities, isLoading } = useGetIdentitiesQuery({
+    dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
     environmentId: props.match.params.environmentId,
     isEdge,
     page: page.number,
     pageType: page.pageType,
     page_size: 10,
     pages: page.pages,
-    q: search,
+    q: searchType === 'alias' ? undefined : search,
   })
 
   const { environmentId } = props.match.params
@@ -70,23 +120,6 @@ const UsersPage: FC<UsersPageType> = (props) => {
     level: 'environment',
     permission: Utils.getViewIdentitiesPermission(),
   })
-
-  const removeIdentity = (id: string, identifier: string) => {
-    openConfirm({
-      body: (
-        <div>
-          {'Are you sure you want to delete '}
-          <strong>{identifier}</strong>
-          {'? Identities can be re-added here or via one of our SDKs.'}
-        </div>
-      ),
-      destructive: true,
-      onYes: () =>
-        deleteIdentity({ environmentId, id, isEdge: Utils.getIsEdge() }),
-      title: 'Delete User',
-      yesText: 'Confirm',
-    })
-  }
 
   const newUser = () => {
     openModal(
@@ -149,6 +182,19 @@ const UsersPage: FC<UsersPageType> = (props) => {
         <FormGroup>
           <PanelSearch
             renderSearchWithNoResults
+            filterRowContent={
+              showAliases && (
+                <div className='ms-2' style={{ width: 100 }}>
+                  <Select
+                    options={searchTypes}
+                    value={searchTypes.find((v) => v.value === searchType)}
+                    onChange={(v) => {
+                      setSearchType(v.value)
+                    }}
+                  />
+                </div>
+              )
+            }
             renderFooter={() => (
               <JSONReference
                 className='mx-2 mt-4'
@@ -209,19 +255,16 @@ const UsersPage: FC<UsersPageType> = (props) => {
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
                   >
-                    <div className='font-weight-medium'>
-                      <IdentifierString value={identifier} />
-                      {dashboard_alias ? ` (alias: ${dashboard_alias})` : ''}
+                    <div>
+                      <div className='font-weight-medium'>
+                        <IdentifierString value={identifier} />
+                      </div>
+                      {!!showAliases && !!dashboard_alias && (
+                        <div className={'list-item-subtitle mt-1'}>
+                          {dashboard_alias ? `${dashboard_alias}` : ''}
+                        </div>
+                      )}
                     </div>
-                    <Icon
-                      name='chevron-right'
-                      width={22}
-                      fill={
-                        Utils.getFlagsmithHasFeature('dark_mode')
-                          ? '#FFF'
-                          : '#656D7B'
-                      }
-                    />
                   </Link>
                   <div className='table-column'>
                     <Button
@@ -230,9 +273,13 @@ const UsersPage: FC<UsersPageType> = (props) => {
                       type='button'
                       onClick={() => {
                         if (id) {
-                          removeIdentity(id, identifier)
+                          removeIdentity(id, identifier, environmentId)
                         } else if (identity_uuid) {
-                          removeIdentity(identity_uuid, identifier)
+                          removeIdentity(
+                            identity_uuid,
+                            identifier,
+                            environmentId,
+                          )
                         }
                       }}
                     >

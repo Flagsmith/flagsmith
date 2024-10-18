@@ -10,7 +10,7 @@ import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 
 :::tip
 
-Server Side SDKs can run in 2 different modes: `Local Evaluation` and `Remote Evaluation`. We recommend
+Server Side SDKs can run in 2 different modes: Local Evaluation and Remote Evaluation. We recommend
 [reading up about the differences](/clients#server-side-sdks) first before integrating the SDKS into your applications.
 
 :::
@@ -515,21 +515,21 @@ buttonData, _ := flags.GetFeatureValue("secret_button")
 <TabItem value="rust" label="Rust">
 
 ```rust
-use flagsmith_flag_engine::identities::Trait;
+use flagsmith::models::SDKTrait;
 use flagsmith_flag_engine::types::{FlagsmithValue, FlagsmithValueType};
 
 let identifier = "delboy@trotterstraders.co.uk";
 
-let traits = vec![Trait {
-            trait_key: "car_type".to_string(),
-            trait_value: FlagsmithValue {
+let traits = vec![SDKTrait::new(
+            "car_type".to_string(),
+            FlagsmithValue {
                 value: "robin_reliant".to_string(),
                 value_type: FlagsmithValueType::String,
             },
-        }];
+        )];
 
 // The method below triggers a network request
-let identity_flags = flagsmith.get_identity_flags(identifier, Some(traits)).unwrap();
+let identity_flags = flagsmith.get_identity_flags(identifier, Some(traits), None).unwrap();
 
 let show_button = identity_flags.is_feature_enabled("secret_button").unwrap();
 let button_data = identity_flags.get_feature_value_as_string("secret_button").unwrap();
@@ -1786,7 +1786,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("http://yoururl.com")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()
@@ -1802,7 +1802,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("http://yoururl.com")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()
@@ -1840,7 +1840,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("http://yoururl.com")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()
