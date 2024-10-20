@@ -79,7 +79,8 @@ REST calls to the API.
 - [Website](https://flagsmith.com/)
 - [Documentation](https://docs.flagsmith.com/)
 - If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
-- You can also [Ask Flagsmith Guru](https://gurubase.io/g/flagsmith), it is a Flagsmith-focused AI to answer your questions.
+- You can also [Ask Flagsmith Guru](https://gurubase.io/g/flagsmith), it is a Flagsmith-focused AI to answer your
+  questions.
 
 ## Acknowledgements
 
