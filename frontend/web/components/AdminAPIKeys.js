@@ -178,6 +178,9 @@ export class CreateAPIKey extends PureComponent {
     const { expiry_date, is_admin, roles, showRoles } = this.state
     const buttonText = this.props.isEdit ? 'Update' : 'Create'
     const buttonSavingText = this.props.isEdit ? 'Updating' : 'Creating'
+    const isFreePlan =
+      AccountStore.getOrganisation().subscription.plan === 'free'
+
     return (
       <>
         <div className='modal-body flex flex-column flex-fill px-4'>
@@ -213,6 +216,7 @@ export class CreateAPIKey extends PureComponent {
                       })
                     }}
                     checked={is_admin}
+                    disabled={isFreePlan && is_admin}
                   />
                 </Row>
                 {!is_admin && (
