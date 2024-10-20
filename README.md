@@ -6,6 +6,7 @@
 [![Join the Discord chat](https://img.shields.io/discord/517647859495993347)](https://discord.gg/hFhxNtXzgm)
 [![Coverage](https://codecov.io/gh/Flagsmith/flagsmith/branch/main/graph/badge.svg?token=IyGii7VSdc)](https://codecov.io/gh/Flagsmith/flagsmith)
 <a href="https://depot.dev?utm_source=Flagsmith"><img src="https://depot.dev/badges/built-with-depot.svg" alt="Built with Depot" height="20"></a>
+[![](https://img.shields.io/badge/Gurubase-Ask%20Flagsmith%20Guru-006BFF)](https://gurubase.io/g/flagsmith)
 
 [Flagsmith](https://flagsmith.com/) is an open source, fully featured, Feature Flag and Remote Config service. Use our
 hosted API, deploy to your own private cloud, or run on-premise.
@@ -78,6 +79,7 @@ REST calls to the API.
 - [Website](https://flagsmith.com/)
 - [Documentation](https://docs.flagsmith.com/)
 - If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
+- You can also [Ask Flagsmith Guru](https://gurubase.io/g/flagsmith), it is a Flagsmith-focused AI to answer your questions.
 
 ## Acknowledgements
 
