@@ -452,11 +452,12 @@ const OrganisationSettingsPage = class extends Component {
                                       target='_blank'
                                       className='btn'
                                     >
-                                      Manage Invoices
+                                      Manage subscription
                                     </Button>
                                   )}
                                 </div>
                               </Row>
+                              <h5>Manage Payment Plan</h5>
                               <Payment viewOnly={false} />
                             </div>
                           </TabItem>

@@ -14,7 +14,12 @@ import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
-
+import freeEmailDomains from 'free-email-domains'
+import InfoMessage from 'components/InfoMessage';
+const freeEmail = (value)=>{
+  const domain = value?.split("@")?.[1]
+  return freeEmailDomains.includes(domain)
+}
 const HomePage = class extends React.Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -221,7 +226,10 @@ const HomePage = class extends React.Component {
         )
       }
 
-      if (Utils.getFlagsmithHasFeature('saml')) {
+      if (
+        !Utils.flagsmithFeatureExists('saml') ||
+        Utils.getFlagsmithHasFeature('saml')
+      ) {
         oauths.push(
           <div className={oauthClasses}>
             <Button
@@ -605,6 +613,11 @@ const HomePage = class extends React.Component {
                                       name='email'
                                       id='email'
                                     />
+                                    {freeEmail(email) &&(
+                                        <InfoMessage>
+                                          Signing up with a work email makes it easier for co-workers to join your Flagsmith organisation.
+                                        </InfoMessage>
+                                    )}
                                     <InputGroup
                                       title='Password'
                                       data-test='password'
@@ -625,8 +638,8 @@ const HomePage = class extends React.Component {
                                       id='password'
                                     />
                                     <PasswordRequirements
-                                      password={this.state.password} 
-                                      onRequirementsMet={this.handleRequirementsMet} 
+                                      password={this.state.password}
+                                      onRequirementsMet={this.handleRequirementsMet}
                                     />
                                     <div className='form-cta'>
                                       <Button

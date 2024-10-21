@@ -1,5 +1,6 @@
 import logging
 import typing
+import uuid
 from datetime import timedelta
 
 from django.conf import settings
@@ -35,7 +36,6 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
-from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -46,7 +46,6 @@ if typing.TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
-mailer_lite = MailerLite()
 
 
 class SignUpType(models.TextChoices):
@@ -112,6 +111,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
 
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
@@ -121,10 +122,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def __str__(self):
         return self.email
-
-    @hook(AFTER_CREATE)
-    def subscribe_to_mailing_list(self):
-        mailer_lite.subscribe(self)
 
     @hook(AFTER_CREATE)
     def schedule_hubspot_tracking(self) -> None:
@@ -152,7 +149,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def set_password(self, raw_password):
         super().set_password(raw_password)
-        self.password_reset_requests.all().delete()
+        if self.id:
+            self.password_reset_requests.all().delete()
 
     @property
     def auth_type(self):
@@ -219,9 +217,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         )
 
     def add_organisation(self, organisation, role=OrganisationRole.USER):
-        if organisation.is_paid:
-            mailer_lite.subscribe(self)
-
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )
@@ -434,5 +429,16 @@ class HubspotLead(models.Model):
         on_delete=models.CASCADE,
     )
     hubspot_id = models.CharField(unique=True, max_length=100, null=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class HubspotTracker(models.Model):
+    user = models.OneToOneField(
+        FFAdminUser,
+        related_name="hubspot_tracker",
+        on_delete=models.CASCADE,
+    )
+    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
