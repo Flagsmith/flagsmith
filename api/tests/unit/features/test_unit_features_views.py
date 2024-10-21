@@ -2193,8 +2193,7 @@ def test_cannot_create_feature_state_for_feature_from_different_project(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["feature"][0] == "Feature does not exist in project"
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_create_feature_state_environment_is_read_only(
@@ -2255,8 +2254,7 @@ def test_cannot_create_feature_state_of_feature_from_different_project(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["feature"][0] == "Feature does not exist in project"
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_create_feature_state_environment_field_is_read_only(
