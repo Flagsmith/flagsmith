@@ -164,11 +164,10 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
 
             if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
                 feature_id = request.data.get("feature")
-                if feature_id:
-                    feature = Feature.objects.get(
-                        id=feature_id, project=environment.project
-                    )
-                    tag_ids = list(feature.tags.values_list("id", flat=True))
+                feature = Feature.objects.get(
+                    id=feature_id, project=environment.project
+                )
+                tag_ids = list(feature.tags.values_list("id", flat=True))
 
             return request.user.has_environment_permission(
                 required_permission, environment, tag_ids=tag_ids
