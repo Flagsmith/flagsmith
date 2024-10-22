@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.148.2](https://github.com/Flagsmith/flagsmith/compare/v2.148.1...v2.148.2) (2024-10-22)
+
+
+### Bug Fixes
+
+* Fix "assigned groups" showing empty when trying to assign groups to a role ([#4756](https://github.com/Flagsmith/flagsmith/issues/4756)) ([038a15a](https://github.com/Flagsmith/flagsmith/commit/038a15abab3335b57db62ff1194cbd632ba5a2df))
+* Frontend error when creating SAML configuration if API URL is relative ([#4751](https://github.com/Flagsmith/flagsmith/issues/4751)) ([df1b84e](https://github.com/Flagsmith/flagsmith/commit/df1b84ec2bdf9f7dbb833341d57e7342c780dd60))
+* Tag Based permissions only validate some views ([#4523](https://github.com/Flagsmith/flagsmith/issues/4523)) ([6d2ab58](https://github.com/Flagsmith/flagsmith/commit/6d2ab58988bf36bf78668f6b51b91340abc9eab1))
+* value editor typing ([#4748](https://github.com/Flagsmith/flagsmith/issues/4748)) ([99876ca](https://github.com/Flagsmith/flagsmith/commit/99876ca2e33e403280f4adcb911c9b54bb0028d7))
+
 ## [2.148.1](https://github.com/Flagsmith/flagsmith/compare/v2.148.0...v2.148.1) (2024-10-17)
 
 
