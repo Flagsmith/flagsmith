@@ -617,6 +617,8 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
 if ENABLE_DB_LOGGING:
+    if not DEBUG:  # pragma: no cover
+        raise ImproperlyConfigured("DB logging will not work without DEBUG=True")
     LOGGING["loggers"]["django.db.backends"] = {
         "level": "DEBUG",
         "handlers": ["console"],
