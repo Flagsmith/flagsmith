@@ -33,6 +33,7 @@ from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
+    UserOrganisation,
 )
 from organisations.tasks import (
     update_organisation_subscription_information_cache,
@@ -129,7 +130,17 @@ class OrganisationList(ListView):
         if email_regex.match(search_term.lower()):
             # Assume that the search is for the email of a given user
             user = FFAdminUser.objects.filter(email__iexact=search_term).first()
-            return Q(id__in=user.organisations.values_list("id", flat=True))
+
+            if user:
+                org_ids = user.organisations.values_list("id", flat=True)
+            else:
+                domain = search_term.split("@")[-1]
+                matching_users = FFAdminUser.objects.filter(email__iendswith=domain)
+                org_ids = UserOrganisation.objects.filter(
+                    user__in=matching_users
+                ).values_list("organisation_id", flat=True)
+
+            return Q(id__in=org_ids)
 
         return Q(name__icontains=search_term) | Q(
             subscription__subscription_id=search_term
