@@ -310,29 +310,25 @@ const OrganisationSettingsPage = class extends Component {
                                     onChange={this.save2FA}
                                   />
                                 </div>
-                                {Utils.getFlagsmithHasFeature(
-                                  'restrict_project_create_to_admin',
-                                ) && (
-                                  <FormGroup className='mt-4 col-md-8'>
-                                    <h5>Admin Settings</h5>
-                                    <Row className='mb-2'>
-                                      <Switch
-                                        checked={
-                                          organisation.restrict_project_create_to_admin
-                                        }
-                                        onChange={() =>
-                                          this.setAdminCanCreateProject(
-                                            !organisation.restrict_project_create_to_admin,
-                                          )
-                                        }
-                                      />
-                                      <p className='fs-small ml-3 mb-0 lh-sm'>
-                                        Only allow organisation admins to create
-                                        projects
-                                      </p>
-                                    </Row>
-                                  </FormGroup>
-                                )}
+                                <FormGroup className='mt-4 col-md-8'>
+                                  <h5>Admin Settings</h5>
+                                  <Row className='mb-2'>
+                                    <Switch
+                                      checked={
+                                        organisation.restrict_project_create_to_admin
+                                      }
+                                      onChange={() =>
+                                        this.setAdminCanCreateProject(
+                                          !organisation.restrict_project_create_to_admin,
+                                        )
+                                      }
+                                    />
+                                    <p className='fs-small ml-3 mb-0 lh-sm'>
+                                      Only allow organisation admins to create
+                                      projects
+                                    </p>
+                                  </Row>
+                                </FormGroup>
                               </div>
                             </FormGroup>
                             <hr className='my-4' />
