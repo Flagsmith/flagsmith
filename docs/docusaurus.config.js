@@ -240,6 +240,8 @@ const config = {
     ],
 
     clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
+
+    plugins: ['./plugins/flagsmith-versions'],
 };
 
 export default config;
