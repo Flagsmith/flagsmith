@@ -1362,8 +1362,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
-reference = "feat/add_workflows_change_request_concerns"
-resolved_reference = "98e0166d68fc0a4fa0a1309a0f2355e3d89f9267"
+reference = "v1.1.0"
+resolved_reference = "27fbd8b7d889dc1529df08972a8c1bfaba5a7e03"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -4060,14 +4060,14 @@ develop = false
 [package.dependencies]
 djangorestframework = "*"
 djangorestframework-recursive = "*"
-flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", branch = "feat/add_workflows_change_request_concerns"}
+flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.1.0"}
 flagsmith-flag-engine = "*"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
 reference = "feat/add_change_requests_to_segments"
-resolved_reference = "a857e7910a2aeaec2fe9d180894cf9f68ff4969b"
+resolved_reference = "4756d1b241133be3cb213eeaf70765031bb2ee2d"
 
 [[package]]
 name = "wrapt"
@@ -4186,4 +4186,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "c689af63b0148c14da2868478e2ce1dead27e8c777f39269b7633fd50cd223ce"
+content-hash = "a53b690d04c413759a3a71c59299ae7be999d2a36b97acfe8327037133b8123a"
