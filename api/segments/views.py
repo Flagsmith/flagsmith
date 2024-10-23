@@ -1,5 +1,7 @@
 import logging
 
+from common.projects.permissions import VIEW_PROJECT
+from common.segments.serializers import SegmentSerializer
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
@@ -12,11 +14,10 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from features.models import FeatureState
 from features.serializers import SegmentAssociatedFeatureStateSerializer
-from projects.permissions import VIEW_PROJECT
 
 from .models import Segment
 from .permissions import SegmentPermissions
-from .serializers import SegmentListQuerySerializer, SegmentSerializer
+from .serializers import SegmentListQuerySerializer
 
 logger = logging.getLogger()
 
@@ -39,7 +40,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
         )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
-        queryset = project.segments.all()
+        queryset = Segment.live_objects.filter(project=project)
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.

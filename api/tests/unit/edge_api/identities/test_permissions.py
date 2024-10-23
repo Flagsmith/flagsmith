@@ -1,7 +1,8 @@
+from common.environments.permissions import UPDATE_FEATURE_STATE
+
 from edge_api.identities.permissions import (
     EdgeIdentityWithIdentifierViewPermissions,
 )
-from environments.permissions.constants import UPDATE_FEATURE_STATE
 
 
 def test_edge_identity_with_identifier_view_permissions_has_permissions_calls_has_environment_permission(

@@ -1,16 +1,13 @@
 import uuid
 
 import pytest
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 
 from features.multivariate.views import MultivariateFeatureOptionViewSet
-from projects.permissions import (
-    CREATE_FEATURE,
-    VIEW_PROJECT,
-    NestedProjectPermissions,
-)
+from projects.permissions import NestedProjectPermissions
 
 
 def test_multivariate_feature_options_view_set_get_permissions():

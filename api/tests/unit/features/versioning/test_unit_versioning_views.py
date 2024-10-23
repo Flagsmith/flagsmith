@@ -3,6 +3,11 @@ import typing
 from datetime import datetime, timedelta
 
 import pytest
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import VIEW_PROJECT
 from core.constants import STRING
 from django.urls import reverse
 from django.utils import timezone
@@ -15,10 +20,6 @@ from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
 )
@@ -26,7 +27,6 @@ from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from tests.types import (
     WithEnvironmentPermissionsCallable,

@@ -1,26 +1,26 @@
 from contextlib import suppress
 
+from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
+from common.environments.permissions import (
+    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
+)
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import CREATE_FEATURE, DELETE_FEATURE
+from common.projects.permissions import (
+    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_PROJECT_PERMISSIONS,
+)
+from common.projects.permissions import VIEW_PROJECT
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
-from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
-from environments.permissions.constants import (
-    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
-)
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from features.models import Feature, FeatureState
 from projects.models import Project
-from projects.permissions import CREATE_FEATURE, DELETE_FEATURE
-from projects.permissions import (
-    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_PROJECT_PERMISSIONS,
-)
-from projects.permissions import VIEW_PROJECT
 
 ACTION_PERMISSIONS_MAP = {
     "retrieve": VIEW_PROJECT,

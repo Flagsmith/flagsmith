@@ -1,3 +1,4 @@
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -5,11 +6,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
 from features.models import Feature
-from projects.permissions import (
-    CREATE_FEATURE,
-    VIEW_PROJECT,
-    NestedProjectPermissions,
-)
+from projects.permissions import NestedProjectPermissions
 
 from .models import MultivariateFeatureOption
 from .serializers import MultivariateFeatureOptionSerializer

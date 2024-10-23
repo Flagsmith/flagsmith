@@ -1,9 +1,9 @@
 from contextlib import suppress
 
+from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment
-from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
 
 
 class FeatureSegmentPermissions(IsAuthenticated):

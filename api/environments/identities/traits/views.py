@@ -1,3 +1,4 @@
+from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
@@ -20,10 +21,6 @@ from environments.identities.traits.serializers import (
     TraitSerializer,
     TraitSerializerBasic,
     TraitSerializerFull,
-)
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_IDENTITIES,
 )
 from environments.permissions.permissions import (
     EnvironmentKeyPermissions,

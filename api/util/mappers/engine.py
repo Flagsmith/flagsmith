@@ -27,6 +27,7 @@ from flag_engine.segments.models import (
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
+from segments.models import Segment
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
@@ -40,7 +41,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import Segment, SegmentRule
+    from segments.models import SegmentRule
 
 
 __all__ = (
@@ -194,7 +195,17 @@ def map_environment_to_engine(
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
+
+    # Because of the queryset parameter of the calling code's
+    # Prefetch this queryset will actually load the live_objects
+    # manager for the Segment lookup.
     project_segments: List["Segment"] = project.segments.all()
+
+    # Even though the main calling code filters via a prefetch,
+    # we still want to guard this function in case there are other
+    # callers in the future.
+    project_segments = [ps for ps in project_segments if ps.id == ps.version_of_id]
+
     project_segment_rules_by_segment_id: Dict[
         int,
         Iterable["SegmentRule"],

@@ -3,6 +3,7 @@ import json
 import typing
 
 import pydantic
+from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
@@ -51,10 +52,6 @@ from environments.identities.serializers import (
     IdentityAllFeatureStatesSerializer,
 )
 from environments.models import Environment
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions

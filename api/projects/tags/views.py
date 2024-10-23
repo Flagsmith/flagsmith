@@ -1,11 +1,10 @@
+from common.projects.permissions import VIEW_PROJECT
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from projects.permissions import VIEW_PROJECT
 
 from . import serializers
 from .models import Tag

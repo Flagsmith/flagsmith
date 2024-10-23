@@ -1,3 +1,4 @@
+from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
 from common.features.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -5,7 +6,6 @@ from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
-from environments.permissions.constants import MANAGE_SEGMENT_OVERRIDES
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
     exceeds_segment_override_limit,

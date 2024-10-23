@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
@@ -33,11 +34,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import (
-    VIEW_PROJECT,
-    IsProjectAdmin,
-    ProjectPermissions,
-)
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
     CreateUpdateUserProjectPermissionSerializer,

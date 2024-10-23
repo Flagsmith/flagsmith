@@ -1,11 +1,11 @@
 import pytest
-from pytest_lazyfixture import lazy_fixture
-
-from environments.permissions.constants import (
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from pytest_lazyfixture import lazy_fixture
+
 from environments.permissions.models import EnvironmentPermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
 

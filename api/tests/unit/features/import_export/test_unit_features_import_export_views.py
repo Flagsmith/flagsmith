@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from common.projects.permissions import VIEW_PROJECT
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
@@ -16,7 +17,6 @@ from features.import_export.models import (
     FlagsmithOnFlagsmithFeatureExport,
 )
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser

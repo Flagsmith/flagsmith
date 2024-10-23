@@ -1,15 +1,15 @@
+from common.environments.permissions import (
+    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
+)
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 from rest_framework.viewsets import GenericViewSet
 
 from environments.models import Environment
-from environments.permissions.constants import (
-    TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
-)
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 

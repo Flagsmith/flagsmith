@@ -17,24 +17,27 @@ from features.models import (
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
 if TYPE_CHECKING:
     from pytest_django import DjangoAssertNumQueries
 
     from organisations.models import Organisation
-    from projects.models import Project
 
 
 def test_get_environment_document(
     organisation_one: "Organisation",
+    organisation_two: "Organisation",
     organisation_one_project_one: "Project",
     django_assert_num_queries: "DjangoAssertNumQueries",
 ) -> None:
     # Given
     project = organisation_one_project_one
+    project2 = Project.objects.create(
+        name="standin_project", organisation=organisation_two
+    )
 
-    # an environment
     environment = Environment.objects.create(name="Test Environment", project=project)
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
@@ -44,6 +47,21 @@ def test_get_environment_document(
     feature = Feature.objects.create(name="test_feature", project=project)
     for i in range(10):
         segment = Segment.objects.create(project=project)
+
+        # Create a shallow clone which should not be returned in the document.
+        segment.shallow_clone(
+            name=f"disregarded-clone-{i}",
+            description=f"some-disregarded-clone-{i}",
+            change_request=None,
+        )
+
+        # Create some other segments to ensure that the segments manager was
+        # properly set.
+        Segment.objects.create(
+            project=project2,
+            name=f"standin_segment{i}",
+            description=f"Should not be selected {i}",
+        )
         segment_rule = SegmentRule.objects.create(
             segment=segment, type=SegmentRule.ALL_RULE
         )
@@ -114,6 +132,7 @@ def test_get_environment_document(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()
+    assert len(response.data["project"]["segments"]) == 10
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
