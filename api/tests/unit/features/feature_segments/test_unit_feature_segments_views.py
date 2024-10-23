@@ -1,6 +1,11 @@
 import json
 
 import pytest
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
 from django.conf import settings
 from django.urls import reverse
 from pytest_django import DjangoAssertNumQueries
@@ -12,11 +17,6 @@ from audit.constants import SEGMENT_FEATURE_STATE_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from environments.permissions.constants import (
-    MANAGE_SEGMENT_OVERRIDES,
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project, UserProjectPermission

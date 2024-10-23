@@ -2,6 +2,7 @@ import json
 from unittest import mock
 
 import pytest
+from common.environments.permissions import VIEW_ENVIRONMENT
 from core.constants import STRING
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -18,7 +19,6 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion

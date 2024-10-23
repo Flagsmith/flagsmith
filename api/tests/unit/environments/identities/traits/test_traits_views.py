@@ -1,6 +1,11 @@
 import json
 from unittest import mock
 
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
 from core.constants import INTEGER, STRING
 from django.test import override_settings
 from django.urls import reverse
@@ -15,11 +20,6 @@ from environments.identities.traits.constants import (
 from environments.identities.traits.models import Trait
 from environments.identities.traits.views import TraitViewSet
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from organisations.models import Organisation

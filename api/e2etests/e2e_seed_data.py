@@ -1,14 +1,14 @@
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
 from django.conf import settings
 from flag_engine.identities.models import IdentityModel as EngineIdentity
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import UserOrganisationPermission

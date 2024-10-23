@@ -1,9 +1,9 @@
 import pytest
-
-from environments.permissions.constants import (
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+
 from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,

@@ -5,6 +5,11 @@ from unittest.mock import MagicMock
 
 import boto3
 import pytest
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -27,11 +32,6 @@ from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,

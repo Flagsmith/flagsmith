@@ -6,6 +6,11 @@ from unittest import mock
 import pytest
 import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
@@ -27,11 +32,6 @@ from audit.constants import (
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_SEGMENT_OVERRIDES,
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState

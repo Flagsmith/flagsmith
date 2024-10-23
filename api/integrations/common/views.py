@@ -1,3 +1,4 @@
+from common.environments.permissions import VIEW_ENVIRONMENT
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -7,7 +8,6 @@ from rest_framework.request import Request
 from rest_framework.serializers import BaseSerializer
 
 from environments.models import Environment
-from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
