@@ -196,10 +196,10 @@ def seed_data() -> None:
 
     for identity_info in identities_test_data:
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            engine_identity = EngineIdentity(
+            engine_identity = EngineIdentity(  # pragma: no cover
                 identifier=identity_info["identifier"],
                 environment_api_key=identity_info["environment"].api_key,
             )
-            EdgeIdentity(engine_identity).save()
+            EdgeIdentity(engine_identity).save()  # pragma: no cover
         else:
             Identity.objects.create(**identity_info)
