@@ -8,8 +8,9 @@ from tempfile import TemporaryFile
 import boto3
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Model, Q
+from django.db.models import F, Model, Q
 
+from edge_api.identities.export import export_edge_identity_and_overrides
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -76,6 +77,7 @@ def full_export(organisation_id: int) -> typing.List[dict]:
         *export_identities(organisation_id),
         *export_features(organisation_id),
         *export_metadata(organisation_id),
+        *export_edge_identities(organisation_id),
     ]
 
 
@@ -115,13 +117,25 @@ def export_projects(organisation_id: int) -> typing.List[dict]:
         _EntityExportConfig(Segment, default_filter),
         _EntityExportConfig(
             SegmentRule,
-            Q(segment__project__organisation__id=organisation_id)
-            | Q(rule__segment__project__organisation__id=organisation_id),
+            Q(
+                segment__project__organisation__id=organisation_id,
+                segment_id=F("segment__version_of"),
+            )
+            | Q(
+                rule__segment__project__organisation__id=organisation_id,
+                rule__segment_id=F("rule__segment__version_of"),
+            ),
         ),
         _EntityExportConfig(
             Condition,
-            Q(rule__segment__project__organisation__id=organisation_id)
-            | Q(rule__rule__segment__project__organisation__id=organisation_id),
+            Q(
+                rule__segment__project__organisation__id=organisation_id,
+                rule__segment_id=F("rule__segment__version_of"),
+            )
+            | Q(
+                rule__rule__segment__project__organisation__id=organisation_id,
+                rule__rule__segment_id=F("rule__rule__segment__version_of"),
+            ),
         ),
         _EntityExportConfig(Tag, default_filter),
         _EntityExportConfig(DataDogConfiguration, default_filter),
@@ -150,12 +164,20 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
     traits = _export_entities(
         _EntityExportConfig(
             Trait,
-            Q(identity__environment__project__organisation__id=organisation_id),
+            Q(
+                identity__environment__project__organisation__id=organisation_id,
+                identity__environment__project__enable_dynamo_db=False,
+            ),
         ),
     )
+
     identities = _export_entities(
         _EntityExportConfig(
-            Identity, Q(environment__project__organisation__id=organisation_id)
+            Identity,
+            Q(
+                environment__project__organisation__id=organisation_id,
+                environment__project__enable_dynamo_db=False,
+            ),
         ),
     )
 
@@ -164,6 +186,23 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
     # identities during the export process and the identity doesn't exist in the import.
     # We then need to reverse the order so that the identities are imported first.
     return [*identities, *traits]
+
+
+def export_edge_identities(organisation_id: int) -> typing.List[dict]:
+    identities = []
+    traits = []
+    identity_overrides = []
+    for environment in Environment.objects.filter(
+        project__organisation__id=organisation_id, project__enable_dynamo_db=True
+    ):
+        exported_identities, exported_traits, exported_overrides = (
+            export_edge_identity_and_overrides(environment.api_key)
+        )
+        identities.extend(exported_identities)
+        traits.extend(exported_traits)
+        identity_overrides.extend(exported_overrides)
+
+    return [*identities, *traits, *identity_overrides]
 
 
 def export_features(organisation_id: int) -> typing.List[dict]:
