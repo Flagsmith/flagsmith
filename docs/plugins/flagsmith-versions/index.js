@@ -22,7 +22,7 @@ const fetchJavaVersion = async () => {
 };
 
 const fetchDotnetVersion = async () => {
-    const data = await fetchJSON('https://api.nuget.org/v3-flatcontainer/Flagsmith/index.json');
+    const data = await fetchJSON('https://api.nuget.org/v3-flatcontainer/flagsmith/index.json');
     return data.versions[data.versions.length - 1];
 };
 
