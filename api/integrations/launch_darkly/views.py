@@ -1,3 +1,4 @@
+from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from django.db.models import QuerySet
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
@@ -18,11 +19,7 @@ from integrations.launch_darkly.tasks import (
     process_launch_darkly_import_request,
 )
 from projects.models import Project
-from projects.permissions import (
-    CREATE_ENVIRONMENT,
-    VIEW_PROJECT,
-    NestedProjectPermissions,
-)
+from projects.permissions import NestedProjectPermissions
 
 
 class LaunchDarklyImportRequestViewSet(

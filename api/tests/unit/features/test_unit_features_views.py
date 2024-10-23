@@ -11,6 +11,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
@@ -41,7 +42,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
-from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (

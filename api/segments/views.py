@@ -1,5 +1,6 @@
 import logging
 
+from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
@@ -12,7 +13,6 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from features.models import FeatureState
 from features.serializers import SegmentAssociatedFeatureStateSerializer
-from projects.permissions import VIEW_PROJECT
 
 from .models import Segment
 from .permissions import SegmentPermissions

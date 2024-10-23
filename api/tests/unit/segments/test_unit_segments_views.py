@@ -2,6 +2,7 @@ import json
 import random
 
 import pytest
+from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -21,7 +22,6 @@ from environments.models import Environment
 from features.models import Feature
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
-from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document

@@ -7,13 +7,13 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from common.projects.permissions import PROJECT_PERMISSIONS
 from django.db import migrations, models
 
 from permissions.models import (
     ENVIRONMENT_PERMISSION_TYPE,
     PROJECT_PERMISSION_TYPE,
 )
-from projects.permissions import PROJECT_PERMISSIONS
 
 ENVIRONMENT_PERMISSIONS = [
     (VIEW_ENVIRONMENT, "View permission for the given environment."),

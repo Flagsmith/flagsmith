@@ -3,6 +3,12 @@ from common.environments.permissions import (
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
+from common.projects.permissions import (
+    CREATE_ENVIRONMENT,
+    CREATE_FEATURE,
+    VIEW_AUDIT_LOG,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 from flag_engine.identities.models import IdentityModel as EngineIdentity
 
@@ -18,12 +24,6 @@ from organisations.permissions.permissions import (
 )
 from organisations.subscriptions.constants import SCALE_UP
 from projects.models import Project, UserProjectPermission
-from projects.permissions import (
-    CREATE_ENVIRONMENT,
-    CREATE_FEATURE,
-    VIEW_AUDIT_LOG,
-    VIEW_PROJECT,
-)
 from users.models import FFAdminUser, UserPermissionGroup
 
 # Password used by all the test users

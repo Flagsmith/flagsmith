@@ -6,6 +6,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.urls import reverse
 from pytest_django import DjangoAssertNumQueries
@@ -20,7 +21,6 @@ from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project, UserProjectPermission
-from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from tests.types import (
     WithEnvironmentPermissionsCallable,

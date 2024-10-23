@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 from common.environments.permissions import VIEW_ENVIRONMENT
+from common.projects.permissions import CREATE_ENVIRONMENT
 from core.constants import STRING
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -25,7 +26,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation
 from projects.models import Project
-from projects.permissions import CREATE_ENVIRONMENT
 from segments.models import Condition, Segment, SegmentRule
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser

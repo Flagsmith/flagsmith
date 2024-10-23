@@ -2,6 +2,11 @@ import json
 from datetime import timedelta
 
 import pytest
+from common.projects.permissions import (
+    CREATE_ENVIRONMENT,
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+)
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
@@ -25,11 +30,6 @@ from projects.models import (
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
-)
-from projects.permissions import (
-    CREATE_ENVIRONMENT,
-    CREATE_FEATURE,
-    VIEW_PROJECT,
 )
 from segments.models import Segment
 from tests.types import WithProjectPermissionsCallable

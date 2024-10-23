@@ -1,4 +1,5 @@
 from common.environments.permissions import VIEW_ENVIRONMENT
+from common.projects.permissions import VIEW_PROJECT
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -12,7 +13,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from organisations.permissions.permissions import (
     NestedOrganisationEntityPermission,
 )
-from projects.permissions import VIEW_PROJECT, NestedProjectPermissions
+from projects.permissions import NestedProjectPermissions
 
 
 class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):

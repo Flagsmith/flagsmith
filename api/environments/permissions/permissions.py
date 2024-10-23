@@ -1,13 +1,13 @@
 import typing
 
 from common.environments.permissions import VIEW_ENVIRONMENT
+from common.projects.permissions import CREATE_ENVIRONMENT
 from django.db.models import Model, Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from environments.models import Environment
 from projects.models import Project
-from projects.permissions import CREATE_ENVIRONMENT
 
 
 class EnvironmentKeyPermissions(BasePermission):

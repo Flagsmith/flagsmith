@@ -1,4 +1,5 @@
 from common.environments.permissions import VIEW_ENVIRONMENT
+from common.projects.permissions import VIEW_PROJECT
 from django.db.models import BooleanField, ExpressionWrapper, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -38,7 +39,6 @@ from features.versioning.serializers import (
     EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
-from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
 

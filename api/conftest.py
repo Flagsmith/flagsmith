@@ -10,6 +10,7 @@ from common.environments.permissions import (
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -66,7 +67,6 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from tests.test_helpers import fix_issue_3869
