@@ -7,11 +7,14 @@ from django.db import migrations, models
 def set_project_for_existing_change_requests(apps, schema_model):
     ChangeRequest = apps.get_model("workflows_core", "ChangeRequest")
 
+    change_requests = []
     for change_request in ChangeRequest.objects.filter(
         environment_id__isnull=False
-    ).select_related("environment"):
+    ).select_related("environment", "environment__project"):
         change_request.project = change_request.environment.project
-        change_request.save()
+        change_requests.append(change_request)
+
+    ChangeRequest.objects.bulk_update(change_requests, ["project"])
 
 
 class Migration(migrations.Migration):
