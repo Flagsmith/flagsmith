@@ -78,7 +78,6 @@ class ChangeRequest(
         null=True,
     )
 
-    # Change requests get deleted in a delegated task when a project is deleted.
     project = models.ForeignKey(
         "projects.Project",
         on_delete=models.CASCADE,
