@@ -19,3 +19,8 @@ class CurrentUser(IsAuthenticated):
 class IsSignupAllowed(AllowAny):
     def has_permission(self, request: Request, view: View) -> bool:
         return not settings.PREVENT_SIGNUP
+
+
+class IsPasswordLoginAllowed(AllowAny):
+    def has_permission(self, request: Request, view: View) -> bool:
+        return not settings.PREVENT_EMAIL_PASSWORD
