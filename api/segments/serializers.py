@@ -1,6 +1,10 @@
 import logging
 import typing
 
+from common.metadata.serializers import (
+    MetadataSerializer,
+    SerializerWithMetadata,
+)
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
@@ -10,7 +14,6 @@ from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import RecursiveField
 
 from metadata.models import Metadata
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
