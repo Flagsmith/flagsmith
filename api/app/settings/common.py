@@ -616,7 +616,11 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
-if ENABLE_DB_LOGGING:
+if ENABLE_DB_LOGGING:  # pragma: no cover
+    if not DEBUG:
+        warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
+        DEBUG = True
+
     LOGGING["loggers"]["django.db.backends"] = {
         "level": "DEBUG",
         "handlers": ["console"],
@@ -916,13 +920,6 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
-
-# MailerLite
-MAILERLITE_BASE_URL = env.str(
-    "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
-)
-MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
-MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None

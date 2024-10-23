@@ -1031,7 +1031,7 @@ def flagsmith_identities_table(
                 "Projection": {"ProjectionType": "ALL"},
             },
             {
-                "IndexName": "environment_api_key-dashboard_alias-index",
+                "IndexName": "environment_api_key-dashboard_alias-index-v2",
                 "KeySchema": [
                     {"AttributeName": "environment_api_key", "KeyType": "HASH"},
                     {"AttributeName": "dashboard_alias", "KeyType": "RANGE"},

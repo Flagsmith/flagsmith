@@ -1,0 +1,112 @@
+name: Update Trivy Database and Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry-url:
+        type: string
+        description: Github Container Registry base URL
+        required: false
+        default: ghcr.io
+      trivy-db-repository-source:
+        type: string
+        description: Souce repository to pull Trivy database from
+        required: false
+        default: ghcr.io/aquasecurity/trivy-db:latest
+      trivy-java-db-repository-source:
+        type: string
+        description: Source repository to pull Trivy Java database from
+        required: false
+        default: ghcr.io/aquasecurity/trivy-java-db:1
+      trivy-db-repository:
+        type: string
+        description: Destination repository to store Trivy database in
+        required: false
+        default: ghcr.io/flagsmith/trivy-db:latest
+      trivy-java-db-repository:
+        type: string
+        description: Destination repository to store Trivy Java database in
+        default: ghcr.io/flagsmith/trivy-java-db:latest
+
+  schedule:
+    - cron: 11 */3 * * * # Runs at 11 minutes past the hour, every 3 hours
+
+# Inputs don't work for cron runs, define defaults as env
+env:
+  REGISTRY_URL: ${{ inputs.registry-url || 'ghcr.io' }}
+  TRIVY_DB_REPOSITORY_SOURCE:
+    ${{ github.event.inputs.trivy-db-repository-source || 'ghcr.io/aquasecurity/trivy-db:latest' }}
+  TRIVY_JAVA_DB_REPOSITORY_SOURCE:
+    ${{ github.event.inputs.trivy-java-db-repository-source || 'ghcr.io/aquasecurity/trivy-java-db:1' }}
+  TRIVY_DB_REPOSITORY: ${{ github.event.inputs.trivy-db-repository || 'ghcr.io/flagsmith/trivy-db:latest' }}
+  TRIVY_JAVA_DB_REPOSITORY:
+    ${{ github.event.inputs.trivy-java-db-repository || 'ghcr.io/flagsmith/trivy-java-db:latest' }}
+
+jobs:
+  pull-trivy-db:
+    name: Pull and republish Trivy databases
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Prepare oras CLI
+        uses: oras-project/setup-oras@v1
+
+      - name: Pull and republish Trivy databases
+        uses: nick-fields/retry@v3
+        with:
+          shell: bash
+          command: |
+            oras login -u ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }} ${{ env.REGISTRY_URL }}
+            oras pull --no-tty $TRIVY_DB_REPOSITORY_SOURCE
+            oras pull --no-tty $TRIVY_JAVA_DB_REPOSITORY_SOURCE
+            oras push $TRIVY_DB_REPOSITORY db.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
+            oras push $TRIVY_JAVA_DB_REPOSITORY javadb.tar.gz:$MIME_TYPE+gzip --artifact-type $MIME_TYPE+json
+          max_attempts: 5
+          retry_on: error
+          timeout_minutes: 20
+        env:
+          MIME_TYPE: application/vnd.aquasec.trivy.db.layer.v1.tar
+
+  scan-images:
+    name: Scan image
+    runs-on: ubuntu-latest
+    needs: pull-trivy-db
+
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+
+    strategy:
+      max-parallel: 5
+      matrix:
+        image-name:
+          - flagsmith
+          - flagsmith-api
+          - flagsmith-frontend
+          - flagsmith-private-cloud
+          - flagsmith-private-cloud-api
+
+    steps:
+      - name: Checkout trivy.yaml
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            trivy.yaml
+            .github*
+          sparse-checkout-cone-mode: false
+
+      - name: Scan ${{ matrix.image-name }}:main image
+        id: trivy
+        uses: ./.github/actions/trivy-scan-image
+        with:
+          image-tag: ${{ env.REGISTRY_URL }}/flagsmith/${{ matrix.image-name }}:main
+          category: ${{ matrix.image-name }}
+          query: branch:main
+          trivy-username: ${{ github.actor }}
+          trivy-password: ${{ secrets.GITHUB_TOKEN }}
+          trivy-db-repository: ${{ env.TRIVY_DB_REPOSITORY }}
+          trivy-java-db-repository: ${{ env.TRIVY_JAVA_DB_REPOSITORY }}
