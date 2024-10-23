@@ -616,7 +616,11 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
-if ENABLE_DB_LOGGING:
+if ENABLE_DB_LOGGING:  # pragma: no cover
+    if not DEBUG:
+        warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
+        DEBUG = True
+
     LOGGING["loggers"]["django.db.backends"] = {
         "level": "DEBUG",
         "handlers": ["console"],
