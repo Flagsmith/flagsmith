@@ -1,6 +1,7 @@
 import logging
 
 from common.projects.permissions import VIEW_PROJECT
+from common.segments.serializers import SegmentSerializer
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
@@ -16,7 +17,7 @@ from features.serializers import SegmentAssociatedFeatureStateSerializer
 
 from .models import Segment
 from .permissions import SegmentPermissions
-from .serializers import SegmentListQuerySerializer, SegmentSerializer
+from .serializers import SegmentListQuerySerializer
 
 logger = logging.getLogger()
 
