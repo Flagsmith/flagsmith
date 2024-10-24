@@ -459,7 +459,8 @@ to be run from a shell running the version that you are rolling back _from_.
 Note that you will need to update the query to add the datetime relevant to just after you deployed the version that you
 are rolling back to. For example, if you are rolling back from v2.148.2 (for which you completed the deployment at
 2024-10-24 11:00:05) to v2.245.0 (for which you completed the deployment at 2024-10-20 12:05:00) then you should use the
-date, for example, 2024-10-20 12:10:00, which is just you completed the deployment of v2.145.0 in your infrastructure.
+date 2024-10-20 12:10:00, for example, which is just after you completed the deployment of v2.145.0 in your
+infrastructure.
 
 If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
 guide. If you query the `django_migrations` table, using `SELECT * FROM django_migrations ORDER BY applied DESC` then
