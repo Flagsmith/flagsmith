@@ -4,7 +4,11 @@ sidebar_label: Server Side
 sidebar_position: 2
 ---
 
-import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+import { JavaVersion, RustVersion, DotnetVersion, ElixirVersion } from '@site/src/components/SdkVersions.js';
 
 # Server Side SDKs
 
@@ -20,57 +24,57 @@ Server Side SDKs can run in 2 different modes: Local Evaluation and Remote Evalu
 <Tabs groupId="language" queryString>
 <TabItem value="python" label="Python">
 
-- Version Compatibility: **Python 3.8+**
-- Source Code: https://github.com/Flagsmith/flagsmith-python-client
+-   Version Compatibility: **Python 3.8+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-python-client
 
 </TabItem>
 <TabItem value="java" label="Java">
 
-- Version Compatibility: **JDK 11+**
-- Source Code: https://github.com/Flagsmith/flagsmith-java-client
+-   Version Compatibility: **JDK 11+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-java-client
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-- Version Compatibility: **.NET core 6.0+**
-- Source Code: https://github.com/Flagsmith/flagsmith-dotnet-client
+-   Version Compatibility: **.NET core 6.0+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-dotnet-client
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
 
-- Version Compatibility: **Node 14+**
-- Source Code:
-  - https://github.com/Flagsmith/flagsmith-nodejs-client
+-   Version Compatibility: **Node 14+**
+-   Source Code:
+    -   https://github.com/Flagsmith/flagsmith-nodejs-client
 
 </TabItem>
 <TabItem value="ruby" label="Ruby">
 
-- Version Compatibility: **Ruby 2.4+**
-- Source Code: https://github.com/Flagsmith/flagsmith-ruby-client
+-   Version Compatibility: **Ruby 2.4+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-ruby-client
 
 </TabItem>
 <TabItem value="php" label="PHP">
 
-- Version Compatibility: **php 7.4+**
-- Source Code: https://github.com/Flagsmith/flagsmith-php-client
+-   Version Compatibility: **php 7.4+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-php-client
 
 </TabItem>
 <TabItem value="go" label="Go">
 
-- Version Compatibility: **Go 1.18+**
-- Source Code: https://github.com/Flagsmith/flagsmith-go-client
+-   Version Compatibility: **Go 1.18+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-go-client
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
-- Version Compatibility: **2021 edition (1.56.0)+**
-- Source Code: https://github.com/Flagsmith/flagsmith-rust-client
+-   Version Compatibility: **2021 edition (1.56.0)+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-rust-client
 
 </TabItem>
 <TabItem value="elixir" label="Elixir">
 
-- Version Compatibility: **Elixir 1.12+**
-- Source Code: https://github.com/Flagsmith/flagsmith-elixir-client
+-   Version Compatibility: **Elixir 1.12+**
+-   Source Code: https://github.com/Flagsmith/flagsmith-elixir-client
 
 </TabItem>
 </Tabs>
@@ -87,39 +91,53 @@ pip install flagsmith
 </TabItem>
 <TabItem value="java" label="Java">
 
-```xml
-# Check https://search.maven.org/artifact/com.flagsmith/flagsmith-java-client
-# for the latest version!
+<h3>Maven</h3>
 
-# Maven
-<dependency>
-  <groupId>com.flagsmith</groupId>
-  <artifactId>flagsmith-java-client</artifactId>
-  <version>7.2.0</version>
-</dependency>
+<CodeBlock>
+    {`<dependency>
+    <groupId>com.flagsmith</groupId>
+    <artifactId>flagsmith-java-client</artifactId>
+    <version>`}
+    <JavaVersion />
+    {`</version>
+</dependency>`}
+</CodeBlock>
 
-# Gradle
-implementation 'com.flagsmith:flagsmith-java-client:7.2.0'
-```
+<h3>Gradle</h3>
+
+<CodeBlock>
+    {`implementation 'com.flagsmith:flagsmith-java-client:`}
+    <JavaVersion />
+    {`'`}
+</CodeBlock>
 
 </TabItem>
 <TabItem value="dotnet" label=".NET">
 
-```bash
-# Check https://www.nuget.org/packages/Flagsmith for the latest version!
+<h3>Package Manager console</h3>
+<CodeBlock>
+    {`Install-Package Flagsmith -Version `}
+    <DotnetVersion />
+</CodeBlock>
 
-# Package Manager
-Install-Package Flagsmith -Version 5.2.2
+<h3>.NET CLI</h3>
+<CodeBlock>
+    {`dotnet add package Flagsmith --version `}
+    <DotnetVersion />
+</CodeBlock>
 
-#.NET CLI
-dotnet add package Flagsmith --version 5.2.2
+<h3>PackageReference</h3>
+<CodeBlock>
+    {`<PackageReference Include="Flagsmith" Version="`}
+    <DotnetVersion />
+    {`" />`}
+</CodeBlock>
 
-# PackageReference
-<PackageReference Include="Flagsmith" Version="5.2.2" />
-
-# Paket CLI
-paket add Flagsmith --version 5.2.2
-```
+<h3>Paket CLI</h3>
+<CodeBlock>
+    {`paket add Flagsmith --version `}
+    <DotnetVersion />
+</CodeBlock>
 
 </TabItem>
 <TabItem value="nodejs" label="NodeJS">
@@ -156,32 +174,31 @@ composer require flagsmith/flagsmith-php-client symfony/http-client nyholm/psr7 
 <TabItem value="go" label="Go">
 
 ```bash
-# Check https://github.com/Flagsmith/flagsmith-go-client/releases for the latest version!
-
-go get github.com/Flagsmith/flagsmith-go-client/v3
+go get github.com/Flagsmith/flagsmith-go-client
 ```
 
 </TabItem>
 <TabItem value="rust" label="Rust">
 
-```bash
-# Check https://crates.io/crates/flagsmith/versions for the latest version!
-
-# Cargo.toml
-[dependencies]
-flagsmith = "~1"
-```
+<CodeBlock>
+    {`[dependencies]
+flagsmith = "~`}
+    <RustVersion />
+    {`"`}
+</CodeBlock>
 
 </TabItem>
 <TabItem value="elixir" label="Elixir">
 
-```elixir
-def deps do
+<CodeBlock>
+    {`def deps do
   [
-    {:flagsmith_engine, "~> 1.0"}
+    {:flagsmith_engine, "~> `}
+    <ElixirVersion />
+    {`"},
   ]
-end
-```
+end`}
+</CodeBlock>
 
 </TabItem>
 </Tabs>
@@ -234,7 +251,7 @@ _flagsmithClient = new("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY");
 const Flagsmith = require('flagsmith-nodejs');
 
 const flagsmith = new Flagsmith({
- environmentKey: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
+    environmentKey: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
 });
 ```
 
@@ -555,19 +572,19 @@ secret_button_feature_value = Flagsmith.Client.get_feature_value(flags, "secret_
 
 ### When running in [Remote Evaluation mode](/clients#remote-evaluation)
 
-- When requesting Flags for an Identity, all the Traits defined in the SDK will automatically be persisted against the
-  Identity within the Flagsmith API.
-- Traits passed to the SDK will be added to all the other previously persisted Traits associated with that Identity.
-- This full set of Traits are then used to evaluate the Flag values for the Identity.
-- This all happens in a single request/response.
+-   When requesting Flags for an Identity, all the Traits defined in the SDK will automatically be persisted against the
+    Identity within the Flagsmith API.
+-   Traits passed to the SDK will be added to all the other previously persisted Traits associated with that Identity.
+-   This full set of Traits are then used to evaluate the Flag values for the Identity.
+-   This all happens in a single request/response.
 
 ### When running in [Local Evaluation mode](/clients#local-evaluation)
 
-- _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
-  network requests to the Flagsmith API when evaluating Flags for an Identity.
-  - When running in Local Evaluation Mode, the SDK requests the
-    [Environment Document](/clients#the-environment-document) from the Flagsmith API. This contains all the information
-    required to make Flag Evaluations, but it does _not_ contain any Trait data.
+-   _Only_ the Traits provided to the SDK at runtime will be used. Local Evaluation mode, by design, does not make any
+    network requests to the Flagsmith API when evaluating Flags for an Identity.
+    -   When running in Local Evaluation Mode, the SDK requests the
+        [Environment Document](/clients#the-environment-document) from the Flagsmith API. This contains all the
+        information required to make Flag Evaluations, but it does _not_ contain any Trait data.
 
 ## Managing Default Flags
 
@@ -649,11 +666,11 @@ static Flag defaultFlagHandler(string featureName)
 
 ```javascript
 const flagsmith = new Flagsmith({
- environmentKey,
- enableLocalEvaluation: true,
- defaultFlagHandler: (str) => {
-  return { enabled: false, isDefault: true, value: { colour: '#ababab' } };
- },
+    environmentKey,
+    enableLocalEvaluation: true,
+    defaultFlagHandler: (str) => {
+        return { enabled: false, isDefault: true, value: { colour: '#ababab' } };
+    },
 });
 ```
 
@@ -767,8 +784,8 @@ Progress on the remaining SDKs can be seen [here](https://github.com/Flagsmith/f
 
 Flagsmith SDKs can be configured to include an offline handler which has 2 functions:
 
-1. It can be used alongside [Offline Mode](server-side.md#offline-mode) to evaluate flags in environments with no
-   network access
+1. It can be used alongside [Offline Mode](server-side#offline-mode) to evaluate flags in environments with no network
+   access
 2. It can be used as a means of defining the behaviour for evaluating default flags, when something goes wrong with the
    regular evaluation process. To do this, simply set the offline handler initialisation parameter without enabling
    offline mode.
@@ -966,10 +983,10 @@ The Server Side SDKS share the same network behaviour across the different langu
 
 ### Remote Evaluation Mode Network Behaviour
 
-- A blocking network request is made every time you make a call to get an Environment Flags. In Python, for example,
-  `flagsmith.get_environment_flags()` will trigger this request.
-- A blocking network request is made every time you make a call to get an Identities Flags. In Python, for example,
-  `flagsmith.get_identity_flags(identifier=identifier, traits=traits)` will trigger this request.
+-   A blocking network request is made every time you make a call to get an Environment Flags. In Python, for example,
+    `flagsmith.get_environment_flags()` will trigger this request.
+-   A blocking network request is made every time you make a call to get an Identities Flags. In Python, for example,
+    `flagsmith.get_identity_flags(identifier=identifier, traits=traits)` will trigger this request.
 
 ### Local Evaluation Mode Network Behaviour
 
@@ -981,9 +998,9 @@ To use Local Evaluation mode, you must use a Server Side key.
 
 :::
 
-- When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
-- Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information it
-  has is up to date.
+-   When the SDK is initialised, it will make an asynchronous network request to retrieve details about the Environment.
+-   Every 60 seconds (by default), it will repeat this aysnchronous request to ensure that the Environment information
+    it has is up to date.
 
 To achieve Local Evaluation, in most languages, the SDK spawns a separate thread (or equivalent) to poll the API for
 changes to the Environment. In certain languages, you may be required to terminate this thread before cleaning up the
@@ -1027,8 +1044,8 @@ Progress on the remaining SDKs can be seen [here](https://github.com/Flagsmith/f
 
 To run the SDK in a fully offline mode, you can set the client to offline mode. This will prevent the SDK from making
 any calls to the Flagsmith API. To use offline mode, you must also provide an
-[offline handler](server-side.md#using-an-offline-handler). See
-[Configuring the SDK](server-side.md#configuring-the-sdk) for more details on initialising the SDK in offline mode.
+[offline handler](server-side#using-an-offline-handler). See [Configuring the SDK](server-side#configuring-the-sdk) for
+more details on initialising the SDK in offline mode.
 
 ## Configuring the SDK
 
@@ -1324,15 +1341,15 @@ In the `appsettings.json` file you can configure the necessary flagsmith values.
 
 ```json
 {
- "AllowedHosts": "*",
- "FlagsmithConfiguration": {
-  "EnvironmentKey": "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
-  "EnableClientSideEvaluation": false,
-  "EnvironmentRefreshIntervalSeconds": 60,
-  "EnableAnalytics": true,
-  "RequestTimeout": 10,
-  "Retries": 3
- }
+    "AllowedHosts": "*",
+    "FlagsmithConfiguration": {
+        "EnvironmentKey": "FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY",
+        "EnableClientSideEvaluation": false,
+        "EnvironmentRefreshIntervalSeconds": 60,
+        "EnableAnalytics": true,
+        "RequestTimeout": 10,
+        "Retries": 3
+    }
 }
 ```
 
@@ -1402,83 +1419,83 @@ $flagsmith = Flagsmith::Client.new(
 import { bool, number } from 'prop-types';
 
 const flagsmith = new Flagsmith({
- /*
+    /*
    Your API Token.
    Note that this is either the `Environment API` key or the `Server Side SDK Token`
    depending on if you are using Local or Remote Evaluation
    Required.
    */
- environmentKey: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
+    environmentKey: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
 
- /*
+    /*
    Override the default Flagsmith API URL if you are self-hosting.
    Optional.
    Defaults to https://edge.api.flagsmith.com/api/v1/
    */
- apiUrl: 'https://api.yourselfhostedflagsmith.com/api/v1/',
+    apiUrl: 'https://api.yourselfhostedflagsmith.com/api/v1/',
 
- /*
+    /*
    Adds caching support
    Optional
    See https://docs.flagsmith.com/clients/server-side#caching
    */
- cache: {
-  has: (key: string) => bool,
-  get: (key: string) => string | number | null,
-  set: (k: string, v: Flags) => (cache[k] = v),
- },
+    cache: {
+        has: (key: string) => bool,
+        get: (key: string) => string | number | null,
+        set: (k: string, v: Flags) => (cache[k] = v),
+    },
 
- /*
+    /*
    Custom http headers can be added to the http client
    Optional
    */
- customHeaders: { aHeader: 'aValue' },
+    customHeaders: { aHeader: 'aValue' },
 
- /*
+    /*
    Controls whether Flag Analytics data is sent to the Flagsmith API
    See https://docs.flagsmith.com/advanced-use/flag-analytics
    Optional
    Defaults to false
    */
- enableAnalytics: true,
+    enableAnalytics: true,
 
- /*
+    /*
    Controls which mode to run in; local or remote evaluation.
    See the `SDKs Overview Page` for more info
    Optional.
    Defaults to false.
    */
- enableLocalEvaluation: true,
+    enableLocalEvaluation: true,
 
- /*
+    /*
    Set environment refresh rate with polling manager.
    Only needed when local evaluation is true.
    Optional.
    Defaults to 60 seconds
    */
- environmentRefreshIntervalSeconds: 60,
+    environmentRefreshIntervalSeconds: 60,
 
- /*
+    /*
    The network timeout in seconds.
    Optional.
    Defaults to 10 seconds
    */
- requestTimeoutSeconds: 30,
+    requestTimeoutSeconds: 30,
 
- /*
+    /*
    You can specify default Flag values on initialisation.
    Optional
    */
- defaultFlagHandler: (featureName: string) => {
-  return { enabled: false, isDefault: true, value: null };
- },
+    defaultFlagHandler: (featureName: string) => {
+        return { enabled: false, isDefault: true, value: null };
+    },
 
- /*
+    /*
     A callback for whenever the environment model is updated or there is an error retrieving it.
     This is only used in local evaluation mode.
     Optional
     */
- onEnvironmentChange: (error: Error | null, result: EnvironmentModel) => {},
+    onEnvironmentChange: (error: Error | null, result: EnvironmentModel) => {},
 });
 ```
 
@@ -1776,9 +1793,9 @@ Flagsmith uses [Caffeine](https://github.com/ben-manes/caffeine), a high perform
 If you enable caching on the Flagsmith client without setting any values (as shown below), the following default values
 will be set for you:
 
-- `maxSize(10)`
-- `expireAfterWrite(5, TimeUnit.MINUTES)`
-- project level caching will be disabled by default (i.e. only enabled if you configure a caching key)
+-   `maxSize(10)`
+-   `expireAfterWrite(5, TimeUnit.MINUTES)`
+-   project level caching will be disabled by default (i.e. only enabled if you configure a caching key)
 
 ```java
 // use in-memory caching with Flagsmith defaults as described above
@@ -1881,44 +1898,44 @@ const flagsmith = require('flagsmith-nodejs');
 const redis = require('redis');
 
 const redisClient = redis.createClient({
- host: 'localhost',
- port: 6379,
+    host: 'localhost',
+    port: 6379,
 });
 
 flagsmith.init({
- environmentID: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
- cache: {
-  has: (key) =>
-   new Promise((resolve, reject) => {
-    redisClient.exists(key, (err, reply) => {
-     console.log('check ' + key + ' from cache', err, reply);
-     resolve(reply === 1);
-    });
-   }),
-  get: (key) =>
-   new Promise((resolve) => {
-    redisClient.get(key, (err, cacheValue) => {
-     console.log('get ' + key + ' from cache');
-     resolve(cacheValue && JSON.parse(cacheValue));
-    });
-   }),
-  set: (key, value) =>
-   new Promise((resolve) => {
-    // Expire the key after 60 seconds
-    redisClient.set(key, JSON.stringify(value), 'EX', 60, (err, reply) => {
-     console.log('set ' + key + ' to cache', err);
-     resolve();
-    });
-   }),
- },
+    environmentID: 'FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY',
+    cache: {
+        has: (key) =>
+            new Promise((resolve, reject) => {
+                redisClient.exists(key, (err, reply) => {
+                    console.log('check ' + key + ' from cache', err, reply);
+                    resolve(reply === 1);
+                });
+            }),
+        get: (key) =>
+            new Promise((resolve) => {
+                redisClient.get(key, (err, cacheValue) => {
+                    console.log('get ' + key + ' from cache');
+                    resolve(cacheValue && JSON.parse(cacheValue));
+                });
+            }),
+        set: (key, value) =>
+            new Promise((resolve) => {
+                // Expire the key after 60 seconds
+                redisClient.set(key, JSON.stringify(value), 'EX', 60, (err, reply) => {
+                    console.log('set ' + key + ' to cache', err);
+                    resolve();
+                });
+            }),
+    },
 });
 
 router.get('/', function (req, res, next) {
- flagsmith.getValue('background_colour').then((value) => {
-  res.render('index', {
-   title: value,
-  });
- });
+    flagsmith.getValue('background_colour').then((value) => {
+        res.render('index', {
+            title: value,
+        });
+    });
 });
 ```
 
@@ -1961,11 +1978,11 @@ $flagsmith->updateEnvironment();
 
 Note:
 
-- For the environment cache, please use the server key generated from the Flagsmith Settings menu. The key's prefix is
-  `ser.`.
-- The cache is important for concurrent requests. Without the cache, each request in PHP is a different process with its
-  own memory objects. The cache (filesystem or other) would enforce that the network call is reduced to a file system
-  one.
+-   For the environment cache, please use the server key generated from the Flagsmith Settings menu. The key's prefix is
+    `ser.`.
+-   The cache is important for concurrent requests. Without the cache, each request in PHP is a different process with
+    its own memory objects. The cache (filesystem or other) would enforce that the network call is reduced to a file
+    system one.
 
 </TabItem>
 </Tabs>
