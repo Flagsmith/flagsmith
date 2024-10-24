@@ -463,10 +463,10 @@ date 2024-10-20 12:10:00, for example, which is just after you completed the dep
 infrastructure.
 
 If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
-guide. If you query the `django_migrations` table, using `SELECT * FROM django_migrations ORDER BY applied DESC` then
-you should see the migrations that have been applied (in descending order), grouped in batches corresponding to each
-deployment. You can then set the date to be later than the most recent `applied` date in the deployment for the version
-that you want to roll back to.
+guide. If you query the table, using `SELECT * FROM django_migrations ORDER BY applied DESC` then you should see the
+migrations that have been applied (in descending order), grouped in batches corresponding to each deployment. You can
+then set the date to be later than the most recent `applied` date in the deployment for the version that you want to
+roll back to.
 
 ```sql
 select
