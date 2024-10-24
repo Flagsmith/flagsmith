@@ -457,8 +457,8 @@ Currently, it is a mostly manual process to achieve this. The following query wi
 to be run from a shell running the version that you are rolling back _from_.
 
 Note that you will need to update the query to add the datetime relevant to just after you released the version that you
-are rolling back to. For example, if you are rolling back from v2.148.2 (for which the release was completed at
-2024-10-24 11:00:05) to v2.245.0 (for which the release was completed at 2024-10-20 12:05:00) then you should use the
+are rolling back to. For example, if you are rolling back from v2.148.2 (for which you completed the release at
+2024-10-24 11:00:05) to v2.245.0 (for which you completed the release at 2024-10-20 12:05:00) then you should use the
 date, for example, 2024-10-20 12:10:00, which is just after the release of v2.145.0 was completed.
 
 ```sql
