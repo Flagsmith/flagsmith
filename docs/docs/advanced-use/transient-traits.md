@@ -525,11 +525,3 @@ final flags = await fs.getFeatureFlags(user: user, traits: traits);
 
 </TabItem>
 </Tabs>
-
-### Transient Traits
-
-### Multiple contexts
-
-### Avoid storing PII in Flagsmith
-
-### Cross-platform Segments
