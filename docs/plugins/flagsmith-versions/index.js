@@ -39,16 +39,26 @@ const fetchElixirVersions = async () => {
     return data.releases.map((release) => release.version);
 };
 
+const fetchNpmVersions = async (pkg) => {
+    const data = await fetchJSON(new URL(pkg, 'https://registry.npmjs.org'));
+    return Object.keys(data.versions);
+};
+
 export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
         async loadContent() {
-            const [java, dotnet, rust, elixir] = await Promise.all(
-                [fetchJavaVersions(), fetchDotnetVersions(), fetchRustVersions(), fetchElixirVersions()].map(
-                    fallback([]),
-                ),
+            const [js, java, dotnet, rust, elixir] = await Promise.all(
+                [
+                    fetchNpmVersions('flagsmith'),
+                    fetchJavaVersions(),
+                    fetchDotnetVersions(),
+                    fetchRustVersions(),
+                    fetchElixirVersions(),
+                ].map(fallback([])),
             );
             return {
+                js,
                 java,
                 dotnet,
                 rust,
