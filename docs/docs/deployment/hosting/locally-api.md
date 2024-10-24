@@ -478,7 +478,7 @@ ORDER BY applied DESC
 :::
 
 2. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
-   and before any subsequent deployments.
+   and before any subsequent deployments. Execute the subsequent query against the Flagsmith database.
 
 ```sql {14} showLineNumbers
 select
