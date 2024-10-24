@@ -459,26 +459,20 @@ to be run from a shell running the version that you are rolling back _from_.
 
 ```sql
 select
-	concat('python manage.py migrate ',
-	app,
-	' ',
-	case
-		when substring(name, 1, 4)::integer = 1 then 'zero'
-		else lpad((substring(name, 1, 4)::integer - 1)::text, 4, '0')
-		end
-	)
-from
-	django_migrations
-where
-	id in (
-	select
-		min(id)
-	from
-		django_migrations
-	where
-		applied >= '2024-10-01 01:23:45.678'
-	group by
-		app
+    concat('python manage.py migrate ',
+    app,
+    ' ',
+    case
+        when substring(name, 1, 4)::integer = 1 then 'zero'
+        else lpad((substring(name, 1, 4)::integer - 1)::text, 4, '0')
+        end
+    )
+from django_migrations
+where id in (
+    select min(id)
+    from django_migrations
+    where applied >= '2024-10-01 01:23:45.678'
+    group by app
 );
 ```
 
