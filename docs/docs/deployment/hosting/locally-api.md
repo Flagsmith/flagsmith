@@ -511,7 +511,8 @@ Example output:
  python manage.py migrate token_blacklist zero
 ```
 
-3. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
+3. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith. If the query
+   generated no results, then proceed to step 4.
 4. Roll back the Flagsmith API to the desired version.
 
 ## Information for Developers working on the project
