@@ -8,12 +8,7 @@ import CodeBlock from '@theme/CodeBlock';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-import { usePluginData } from '@docusaurus/useGlobalData';
-export const Version = ({ sdk }) => {
-    const version = usePluginData('flagsmith-versions')[sdk];
-    if (!version) throw new Error('unknown sdk: ' + sdk);
-    return version;
-};
+import { JavaVersion, RustVersion, DotnetVersion, ElixirVersion } from '@site/src/components/SdkVersions.js';
 
 # Server Side SDKs
 
@@ -103,7 +98,7 @@ pip install flagsmith
     <groupId>com.flagsmith</groupId>
     <artifactId>flagsmith-java-client</artifactId>
     <version>`}
-    <Version sdk="java" />
+    <JavaVersion />
     {`</version>
 </dependency>`}
 </CodeBlock>
@@ -112,7 +107,7 @@ pip install flagsmith
 
 <CodeBlock>
     {`implementation 'com.flagsmith:flagsmith-java-client:`}
-    <Version sdk="java" />
+    <JavaVersion />
     {`'`}
 </CodeBlock>
 
@@ -122,26 +117,26 @@ pip install flagsmith
 <h3>Package Manager console</h3>
 <CodeBlock>
     {`Install-Package Flagsmith -Version `}
-    <Version sdk="dotnet" />
+    <DotnetVersion />
 </CodeBlock>
 
 <h3>.NET CLI</h3>
 <CodeBlock>
     {`dotnet add package Flagsmith --version `}
-    <Version sdk="dotnet" />
+    <DotnetVersion />
 </CodeBlock>
 
 <h3>PackageReference</h3>
 <CodeBlock>
     {`<PackageReference Include="Flagsmith" Version="`}
-    <Version sdk="dotnet" />
+    <DotnetVersion />
     {`" />`}
 </CodeBlock>
 
 <h3>Paket CLI</h3>
 <CodeBlock>
     {`paket add Flagsmith --version `}
-    <Version sdk="dotnet" />
+    <DotnetVersion />
 </CodeBlock>
 
 </TabItem>
@@ -188,7 +183,7 @@ go get github.com/Flagsmith/flagsmith-go-client
 <CodeBlock>
     {`[dependencies]
 flagsmith = "~`}
-    <Version sdk="rust" />
+    <RustVersion />
     {`"`}
 </CodeBlock>
 
@@ -199,7 +194,7 @@ flagsmith = "~`}
     {`def deps do
   [
     {:flagsmith_engine, "~> `}
-    <Version sdk="elixir" />
+    <ElixirVersion />
     {`"},
   ]
 end`}

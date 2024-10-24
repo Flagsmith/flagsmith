@@ -209,6 +209,7 @@ const config = {
 
     customFields: {
         swaggerURL: '/api-static/edge-api.yaml',
+        CI: process.env.CI,
     },
 
     presets: [

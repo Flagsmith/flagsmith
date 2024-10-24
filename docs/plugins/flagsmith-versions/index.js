@@ -13,31 +13,30 @@ const fallback = (value) => (promise) => {
     return promise;
 };
 
-const fetchJavaVersion = async () => {
+const fetchJavaVersions = async () => {
     const data = await fetchJSON(
-        'https://search.maven.org/solrsearch/select?q=g:%22com.flagsmith%22+AND+a:%22flagsmith-java-client%22&wt=json',
+        'https://search.maven.org/solrsearch/select?q=g:%22com.flagsmith%22+AND+a:%22flagsmith-java-client%22&wt=json&core=gav',
     );
-    if (data.response.numFound !== 1) throw new Error('unexpected response when fetching Java version', data);
-    return data.response.docs[0].latestVersion;
+    return data.response.docs.map((doc) => doc.v);
 };
 
-const fetchDotnetVersion = async () => {
+const fetchDotnetVersions = async () => {
     const data = await fetchJSON('https://api.nuget.org/v3-flatcontainer/flagsmith/index.json');
-    return data.versions[data.versions.length - 1];
+    return data.versions;
 };
 
-const fetchRustVersion = async () => {
+const fetchRustVersions = async () => {
     // https://crates.io/data-access#api
     const headers = new Headers({
         'User-Agent': 'Flagsmith-Docs <support@flagsmith.com>',
     });
     const data = await fetchJSON('https://crates.io/api/v1/crates/flagsmith', { headers });
-    return data.crate.max_stable_version;
+    return data.versions.map((version) => version.num);
 };
 
-const fetchElixirVersion = async () => {
+const fetchElixirVersions = async () => {
     const data = await fetchJSON('https://hex.pm/api/packages/flagsmith_engine');
-    return data.releases[0].version;
+    return data.releases.map((release) => release.version);
 };
 
 export default async function fetchFlagsmithVersions(context, options) {
@@ -45,8 +44,8 @@ export default async function fetchFlagsmithVersions(context, options) {
         name: 'flagsmith-versions',
         async loadContent() {
             const [java, dotnet, rust, elixir] = await Promise.all(
-                [fetchJavaVersion(), fetchDotnetVersion(), fetchRustVersion(), fetchElixirVersion()].map(
-                    fallback('x.y.z'),
+                [fetchJavaVersions(), fetchDotnetVersions(), fetchRustVersions(), fetchElixirVersions()].map(
+                    fallback([]),
                 ),
             );
             return {
