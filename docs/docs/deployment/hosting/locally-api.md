@@ -456,10 +456,16 @@ version that you want to roll back to, and the one that you are rolling back fro
 Currently, it is a mostly manual process to achieve this. The following query will give you a list of commands that need
 to be run from a shell running the version that you are rolling back _from_.
 
-Note that you will need to update the query to add the datetime relevant to just after you released the version that you
+Note that you will need to update the query to add the datetime relevant to just after you deployed the version that you
 are rolling back to. For example, if you are rolling back from v2.148.2 (for which you completed the deployment at
 2024-10-24 11:00:05) to v2.245.0 (for which you completed the deployment at 2024-10-20 12:05:00) then you should use the
 date, for example, 2024-10-20 12:10:00, which is just you completed the deployment of v2.145.0 in your infrastructure.
+
+If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
+guide. If you query the `django_migrations` table, using `SELECT * FROM django_migrations ORDER BY applied DESC` then
+you should see the migrations that have been applied (in descending order), grouped in batches corresponding to each
+deployment. You can then set the date to be later than the most recent `applied` date in the deployment for the version
+that you want to roll back to.
 
 ```sql
 select
