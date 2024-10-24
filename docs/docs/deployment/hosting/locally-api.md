@@ -451,8 +451,8 @@ The Django `collectstatic` command then copies all the additional static assets 
 
 :::warning
 
-These steps may result in data loss in the scenario where new models have been added to the database. We recommend
-taking a full backup of the database before completing the rollback.
+These steps may result in data loss in the scenario where new models or fields have been added to the database. We
+recommend taking a full backup of the database before completing the rollback.
 
 :::
 
