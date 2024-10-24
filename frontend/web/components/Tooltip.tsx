@@ -2,6 +2,7 @@ import React, { FC, ReactElement, ReactNode, useRef } from 'react'
 import ReactTooltip, { TooltipProps as _TooltipProps } from 'react-tooltip'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
+import { sanitize } from 'dompurify'
 
 export type TooltipProps = {
   title: ReactNode
@@ -44,7 +45,7 @@ const Tooltip: FC<TooltipProps> = ({
           ) : (
             <div
               style={{ wordBreak: 'break-word' }}
-              dangerouslySetInnerHTML={{ __html: children }}
+              dangerouslySetInnerHTML={{ __html: sanitize(children) }}
             />
           )}
         </ReactTooltip>
