@@ -5,6 +5,8 @@ description: Manage your Feature Flags and Remote Config in your Android applica
 slug: /clients/android
 ---
 
+import CodeBlock from '@theme/CodeBlock'; import { AndroidVersion } from '@site/src/components/SdkVersions.js';
+
 This SDK can be used for Android applications written in Kotlin. The source code for the client is available on
 [GitHub](https://github.com/Flagsmith/flagsmith-kotlin-android-client/).
 
@@ -12,28 +14,9 @@ This SDK can be used for Android applications written in Kotlin. The source code
 
 ### Gradle - App
 
-In your project path `app/build.gradle` add a new dependence
+In your project path `app/build.gradle` add a new dependency:
 
-```groovy
-//flagsmith
-implementation("com.github.Flagsmith:flagsmith-kotlin-android-client:v1.6.1")
-```
-
-You should be able to find the latest version in the
-[releases section](https://github.com/Flagsmith/flagsmith-kotlin-android-client/releases) of the GitHub repository.
-
-### Gradle - Project
-
-In the new Gradle version 7+ update your `settings.gradle` file to include JitPack if you haven't already
-
-```groovy
-repositories {
-    google()
-    mavenCentral()
-
-    maven("https://jitpack.io")
-}
-```
+<CodeBlock>{`implementation("com.github.Flagsmith:flagsmith-kotlin-android-client:v`}<AndroidVersion />"{`)`}</CodeBlock>
 
 ## Basic Usage
 

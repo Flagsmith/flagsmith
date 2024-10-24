@@ -13,12 +13,24 @@ const fallback = (value) => (promise) => {
     return promise;
 };
 
-const fetchJavaVersions = async () => {
+const fetchMavenVersions = async ({ groupId, artifactId }) => {
     const data = await fetchJSON(
-        'https://search.maven.org/solrsearch/select?q=g:%22com.flagsmith%22+AND+a:%22flagsmith-java-client%22&wt=json&core=gav',
+        `https://central.sonatype.com/solrsearch/select?q=g:${groupId}+AND+a:${artifactId}&wt=json&core=gav`,
     );
     return data.response.docs.map((doc) => doc.v);
 };
+
+const fetchJavaVersions = async () =>
+    fetchMavenVersions({
+        groupId: 'com.flagsmith',
+        artifactId: 'flagsmith-java-client',
+    });
+
+const fetchAndroidVersions = async () =>
+    fetchMavenVersions({
+        groupId: 'io.flagsmith',
+        artifactId: 'flagsmith-kotlin-android-client',
+    });
 
 const fetchDotnetVersions = async () => {
     const data = await fetchJSON('https://api.nuget.org/v3-flatcontainer/flagsmith/index.json');
@@ -48,10 +60,11 @@ export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
         async loadContent() {
-            const [js, java, dotnet, rust, elixir] = await Promise.all(
+            const [js, java, android, dotnet, rust, elixir] = await Promise.all(
                 [
                     fetchNpmVersions('flagsmith'),
                     fetchJavaVersions(),
+                    fetchAndroidVersions(),
                     fetchDotnetVersions(),
                     fetchRustVersions(),
                     fetchElixirVersions(),
@@ -60,6 +73,7 @@ export default async function fetchFlagsmithVersions(context, options) {
             return {
                 js,
                 java,
+                android,
                 dotnet,
                 rust,
                 elixir,
