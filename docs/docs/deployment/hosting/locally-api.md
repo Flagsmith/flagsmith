@@ -449,15 +449,33 @@ The Django `collectstatic` command then copies all the additional static assets 
 
 ## Rolling back to a previous version of Flagsmith
 
+:::warning
+
+These steps may result in data loss in the scenario where new models have been added to the database. We recommend
+taking a full backup of the database before completing the rollback.
+
+:::
+
 If you need to roll back to a previous version of Flagsmith you will need to ensure that the database is also rolled
 back to the correct state. In order to do this, you will need to unapply all the migrations that happened in between the
-version that you want to roll back to, and the one that you are rolling back from. The following steps should help you
-do that.
+version that you want to roll back to, and the one that you are rolling back from. The following steps explain how to do
+that.
 
-1. Identify the date and time that you deployed the version that you want to roll back to. If you are unsure on when you
-   completed the previous deployment, then you can use the `django_migrations` table as a guide. If you query the table,
-   using `SELECT * FROM django_migrations ORDER BY applied DESC` then you should see the migrations that have been
-   applied (in descending order), grouped in batches corresponding to each deployment.
+1. Identify the date and time that you deployed the version that you want to roll back to.
+
+:::tip
+
+If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
+guide. If you query the table, using the following query then you should see the migrations that have been applied (in
+descending order), grouped in batches corresponding to each deployment.
+
+```sql
+SELECT *
+FROM django_migrations
+ORDER BY applied DESC
+```
+
+:::
 
 2. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
    and before any subsequent deployments.
@@ -476,7 +494,7 @@ from django_migrations
 where id in (
     select min(id)
     from django_migrations
-    where applied >= 'yyyy-MM-dd HH:mm:ss' -- <datetime after the release of the rollback to version>
+    where applied >= 'yyyy-MM-dd HH:mm:ss'
     group by app
 );
 ```
@@ -495,13 +513,6 @@ Example output:
 
 3. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
 4. Roll back the Flagsmith API to the desired version.
-
-:::warning
-
-These steps may result in potential data loss in the scenario where new entities are added to the database. We recommend
-taking a full backup of the database before completing the rollback.
-
-:::
 
 ## Information for Developers working on the project
 
