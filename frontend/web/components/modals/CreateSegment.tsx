@@ -605,6 +605,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                       projectId={projectId}
                       id={segment.id}
                       readOnly={isReadOnly}
+                      environmentId={environmentId}
                     />
                   )
                 }}
