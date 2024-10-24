@@ -449,16 +449,17 @@ The Django `collectstatic` command then copies all the additional static assets 
 
 ## Rolling Back to a Previous Version of Flagsmith
 
-If you need to roll back to a previous version of Flagsmith, and intend to use the old version for normal usage then you
-will need to ensure that the database is also rolled back to the correct state. In order to do this, you will need to
-unapply all the migrations that happened in between the version that you want to roll back to, and the one that you are
-rolling back from.
+If you need to roll back to a previous version of Flagsmith you will need to ensure that the database is also rolled
+back to the correct state. In order to do this, you will need to unapply all the migrations that happened in between the
+version that you want to roll back to, and the one that you are rolling back from.
 
 Currently, it is a mostly manual process to achieve this. The following query will give you a list of commands that need
 to be run from a shell running the version that you are rolling back _from_.
 
 Note that you will need to update the query to add the datetime relevant to just after you released the version that you
-are rolling back to.
+are rolling back to. For example, if you are rolling back from v2.148.2 (for which the release was completed at
+2024-10-24 11:00:05) to v2.245.0 (for which the release was completed at 2024-10-20 12:05:00) then you should use the
+date, for example, 2024-10-20 12:10:00, which is just after the release of v2.145.0 was completed.
 
 ```sql
 select
@@ -469,7 +470,7 @@ select
         when substring(name, 1, 4)::integer = 1 then 'zero'
         else lpad((substring(name, 1, 4)::integer - 1)::text, 4, '0')
         end
-    )
+    ) as "python_commands"
 from django_migrations
 where id in (
     select min(id)
@@ -477,6 +478,18 @@ where id in (
     where applied >= 'yyyy-MM-dd HH:mm:ss' -- <datetime after the release of the rollback to version>
     group by app
 );
+```
+
+Example output:
+
+```
+                python_commands
+-----------------------------------------------
+ python manage.py migrate multivariate 0007
+ python manage.py migrate segment 0004
+ python manage.py migrate environments 0034
+ python manage.py migrate features 0064
+ python manage.py migrate token_blacklist zero
 ```
 
 ## Information for Developers working on the project
