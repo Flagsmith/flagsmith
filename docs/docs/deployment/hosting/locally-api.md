@@ -457,6 +457,9 @@ rolling back from.
 Currently, it is a mostly manual process to achieve this. The following query will give you a list of commands that need
 to be run from a shell running the version that you are rolling back _from_.
 
+Note that you will need to update the query to add the datetime relevant to just after you released the version that you
+are rolling back to.
+
 ```sql
 select
     concat('python manage.py migrate ',
@@ -471,7 +474,7 @@ from django_migrations
 where id in (
     select min(id)
     from django_migrations
-    where applied >= '2024-10-01 01:23:45.678'
+    where applied >= 'yyyy-MM-dd HH:mm:ss' -- <datetime after the release of the rollback to version>
     group by app
 );
 ```
