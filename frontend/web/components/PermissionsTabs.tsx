@@ -16,6 +16,7 @@ import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
+import TagBasedPermissions from './TagBasedPermissions'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -120,7 +121,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             group={group}
             orgId={orgId}
             filter={searchProject}
-            mainItems={projectData}
+            mainItems={projectData.map((v) => ({ ...v, projectId: v.id }))}
             role={role}
             level={'project'}
             ref={tabRef}
@@ -150,23 +151,28 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               value={project}
             />
           </div>
-          {environments.length > 0 && (
-            <RolePermissionsList
-              user={user}
-              orgId={orgId}
-              group={group}
-              filter={searchEnv}
-              mainItems={(environments || [])?.map((v) => {
-                return {
-                  id: role ? v.id : v.api_key,
-                  name: v.name,
-                }
-              })}
-              role={role}
-              level={'environment'}
-              ref={tabRef}
-            />
-          )}
+
+          <TagBasedPermissions projectId={project} role={role} />
+          <div className='mt-2'>
+            {environments.length > 0 && (
+              <RolePermissionsList
+                user={user}
+                orgId={orgId}
+                group={group}
+                filter={searchEnv}
+                mainItems={(environments || [])?.map((v) => {
+                  return {
+                    id: role ? v.id : v.api_key,
+                    name: v.name,
+                    parentId: v.project,
+                  }
+                })}
+                role={role}
+                level={'environment'}
+                ref={tabRef}
+              />
+            )}
+          </div>
         </TabItem>
       </Tabs>
     </PlanBasedAccess>

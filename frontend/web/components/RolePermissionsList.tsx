@@ -15,6 +15,7 @@ import { PermissionLevel } from 'common/types/requests'
 import { Role, User, UserGroup, UserGroupSummary } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'
+import TagBasedPermissions from './TagBasedPermissions'
 
 type NameAndId = {
   name: string
@@ -145,15 +146,26 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
             </Row>
             <div>
               {expandedItems.includes(mainItem.id) && (
-                <EditPermissionsModal
-                  id={mainItem.id}
-                  level={level}
-                  role={role}
-                  className='mt-2 px-3'
-                  isGroup={!!group}
-                  group={group}
-                  user={user}
-                />
+                <>
+                  <div className='px-3'>
+                    {level === 'project' && role && (
+                      <TagBasedPermissions
+                        projectId={`${mainItem.id}`}
+                        role={role}
+                      />
+                    )}
+                  </div>
+                  <EditPermissionsModal
+                    id={mainItem.id}
+                    level={level}
+                    role={role}
+                    className='mt-2 px-3'
+                    isGroup={!!group}
+                    parentId={mainItem.parentId}
+                    group={group}
+                    user={user}
+                  />
+                </>
               )}
             </div>
           </div>
