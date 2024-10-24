@@ -447,7 +447,7 @@ Webpack compiles a front end build, sourcing `api/app/templates/index.html`. It 
 The Django `collectstatic` command then copies all the additional static assets that Django needs, including
 `api/app/templates/webpack/index.html`, into `api/static`.
 
-## Rolling Back to a Previous Version of Flagsmith
+## Rolling back to a previous version of Flagsmith
 
 If you need to roll back to a previous version of Flagsmith you will need to ensure that the database is also rolled
 back to the correct state. In order to do this, you will need to unapply all the migrations that happened in between the
