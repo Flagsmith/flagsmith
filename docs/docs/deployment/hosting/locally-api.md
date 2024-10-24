@@ -451,24 +451,18 @@ The Django `collectstatic` command then copies all the additional static assets 
 
 If you need to roll back to a previous version of Flagsmith you will need to ensure that the database is also rolled
 back to the correct state. In order to do this, you will need to unapply all the migrations that happened in between the
-version that you want to roll back to, and the one that you are rolling back from.
+version that you want to roll back to, and the one that you are rolling back from. The following steps should help you
+do that.
 
-Currently, it is a mostly manual process to achieve this. The following query will give you a list of commands that need
-to be run from a shell running the version that you are rolling back _from_.
+1. Identify the date and time that you deployed the version that you want to roll back to. If you are unsure on when you
+   completed the previous deployment, then you can use the `django_migrations` table as a guide. If you query the table,
+   using `SELECT * FROM django_migrations ORDER BY applied DESC` then you should see the migrations that have been
+   applied (in descending order), grouped in batches corresponding to each deployment.
 
-Note that you will need to update the query to add the datetime relevant to just after you deployed the version that you
-are rolling back to. For example, if you are rolling back from v2.148.2 (for which you completed the deployment at
-2024-10-24 11:00:05) to v2.245.0 (for which you completed the deployment at 2024-10-20 12:05:00) then you should use the
-date 2024-10-20 12:10:00, for example, which is just after you completed the deployment of v2.145.0 in your
-infrastructure.
+2. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
+   and before any subsequent deployments.
 
-If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
-guide. If you query the table, using `SELECT * FROM django_migrations ORDER BY applied DESC` then you should see the
-migrations that have been applied (in descending order), grouped in batches corresponding to each deployment. You can
-then set the date to be later than the most recent `applied` date in the deployment for the version that you want to
-roll back to.
-
-```sql
+```sql {14} showLineNumbers
 select
     concat('python manage.py migrate ',
     app,
@@ -498,6 +492,16 @@ Example output:
  python manage.py migrate features 0064
  python manage.py migrate token_blacklist zero
 ```
+
+3. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
+4. Roll back the Flagsmith API to the desired version.
+
+:::warning
+
+These steps may result in potential data loss in the scenario where new entities are added to the database. We recommend
+taking a full backup of the database before completing the rollback.
+
+:::
 
 ## Information for Developers working on the project
 
