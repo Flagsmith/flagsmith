@@ -32,6 +32,12 @@ const fetchAndroidVersions = async () =>
         artifactId: 'flagsmith-kotlin-android-client',
     });
 
+const fetchIOSVersions = async () => {
+    // retrieved from https://cocoapods.org/pods/FlagsmithClient
+    const data = await fetchJSON('https://api.github.com/repos/CocoaPods/Specs/contents/Specs/2/8/0/FlagsmithClient');
+    return data.map((entry) => entry.name);
+};
+
 const fetchDotnetVersions = async () => {
     const data = await fetchJSON('https://api.nuget.org/v3-flatcontainer/flagsmith/index.json');
     return data.versions;
@@ -60,11 +66,12 @@ export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
         async loadContent() {
-            const [js, java, android, dotnet, rust, elixir] = await Promise.all(
+            const [js, java, android, ios, dotnet, rust, elixir] = await Promise.all(
                 [
                     fetchNpmVersions('flagsmith'),
                     fetchJavaVersions(),
                     fetchAndroidVersions(),
+                    fetchIOSVersions(),
                     fetchDotnetVersions(),
                     fetchRustVersions(),
                     fetchElixirVersions(),
@@ -74,6 +81,7 @@ export default async function fetchFlagsmithVersions(context, options) {
                 js,
                 java,
                 android,
+                ios,
                 dotnet,
                 rust,
                 elixir,

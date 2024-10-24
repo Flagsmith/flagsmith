@@ -5,6 +5,8 @@ description: Manage your Feature Flags and Remote Config in your iOS application
 slug: /clients/ios
 ---
 
+import CodeBlock from '@theme/CodeBlock'; import { IOSVersion } from '@site/src/components/SdkVersions.js';
+
 This library can be used with iOS and Mac applications. The source code for the client is available on
 [GitHub](https://github.com/flagsmith/flagsmith-ios-client).
 
@@ -15,20 +17,14 @@ This library can be used with iOS and Mac applications. The source code for the 
 [CocoaPods](https://cocoapods.org) is a dependency manager for Cocoa projects. For usage and installation instructions,
 visit their website. To integrate Flagsmith into your Xcode project using CocoaPods, specify it in your `Podfile`:
 
-```ruby
-pod 'FlagsmithClient', '~> 1.0'
-```
+<CodeBlock>{`pod 'FlagsmithClient', '~> `}<IOSVersion />{`'`}</CodeBlock>
 
 ### Swift Package Manager
 
 The Swift Package Manager is a tool for automating the distribution of Swift code and is integrated into the swift
 compiler. You can use it to install Flagsmith by adding the description to your `Package.swift` file:
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/Flagsmith/flagsmith-ios-client.git", from: "1.1.1"),
-]
-```
+<CodeBlock>{`dependencies: [     .package(url: "https://github.com/Flagsmith/flagsmith-ios-client.git", from: "`}<IOSVersion />{`"), ]`}</CodeBlock>
 
 ## Basic Usage
 

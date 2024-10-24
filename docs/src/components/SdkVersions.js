@@ -20,6 +20,7 @@ export const Version = ({ sdk, spec = '*', options = {} }) => {
 export const JavaVersion = ({ spec = '~7' }) => Version({ sdk: 'java', spec });
 export const AndroidVersion = ({ spec = '~1' }) =>
     Version({ sdk: 'android', spec, options: { includePrerelease: true, loose: true } });
+export const IOSVersion = ({ spec = '~3' }) => Version({ sdk: 'ios', spec });
 export const DotnetVersion = ({ spec = '~5' }) => Version({ sdk: 'dotnet', spec });
 export const ElixirVersion = ({ spec = '~2' }) => Version({ sdk: 'elixir', spec });
 export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
