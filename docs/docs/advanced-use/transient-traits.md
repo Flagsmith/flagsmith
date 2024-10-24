@@ -33,6 +33,15 @@ let identifierToUseLater = flagsmith.getContext().identity.identifier;
 This approach is useful for scenarios such as A/B testing in e-commerce, where you want to include users who haven't
 registered or logged in.
 
+::: info
+
+Server-generated transient identifiers are consistent across flag evaluations, meaning the same identifier will be
+returned for identical sets of Traits.
+
+To generate truly unique identifiers, include additional unique Trait values.
+
+:::
+
 ### Ephemeral Contexts
 
 In some cases, you may need to temporarily override certain Traits for a session or device without overwriting the
