@@ -1266,3 +1266,8 @@ EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
 ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
 )
+
+# Date on which versioning is released. This is used to give any scale up
+# subscriptions created before this date full audit log and versioning
+# history.
+VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
