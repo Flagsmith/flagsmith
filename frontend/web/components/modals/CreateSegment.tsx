@@ -161,9 +161,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable =
-    Utils.getPlansPermission('METADATA') &&
-    Utils.getFlagsmithHasFeature('enable_metadata')
+  const metadataEnable = Utils.getPlansPermission('METADATA')
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0

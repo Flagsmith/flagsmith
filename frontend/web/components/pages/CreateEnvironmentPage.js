@@ -33,10 +33,7 @@ const CreateEnvironmentPage = class extends Component {
   componentDidMount = () => {
     API.trackPage(Constants.pages.CREATE_ENVIRONMENT)
 
-    if (
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
-    ) {
+    if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -200,7 +197,6 @@ const CreateEnvironmentPage = class extends Component {
                               )}
                             </div>
                             {Utils.getPlansPermission('METADATA') &&
-                              Utils.getFlagsmithHasFeature('enable_metadata') &&
                               envContentType?.id && (
                                 <CondensedRow>
                                   <FormGroup className='mt-5 setting'>
