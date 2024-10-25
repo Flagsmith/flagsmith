@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.149.0](https://github.com/Flagsmith/flagsmith/compare/v2.148.2...v2.149.0) (2024-10-25)
+
+
+### Features
+
+* Support `PREVENT_EMAIL_PASSWORD` in backend ([#4765](https://github.com/Flagsmith/flagsmith/issues/4765)) ([7a6b2e0](https://github.com/Flagsmith/flagsmith/commit/7a6b2e0f62d7ffdb2defec0862765a13897d3f96))
+
+
+### Bug Fixes
+
+* Disable is_admin switcher in Organization API Keys ([#4753](https://github.com/Flagsmith/flagsmith/issues/4753)) ([6d955b4](https://github.com/Flagsmith/flagsmith/commit/6d955b4e08f7c56027394080644b7ed01e0b7486))
+* Fix stored XSS when rendering tooltips ([#4770](https://github.com/Flagsmith/flagsmith/issues/4770)) ([96f62c7](https://github.com/Flagsmith/flagsmith/commit/96f62c7367e47db7111dab420b40e85a04d28ddd))
+* Removing segment overrides whilst adding others ([#4709](https://github.com/Flagsmith/flagsmith/issues/4709)) ([05f2bca](https://github.com/Flagsmith/flagsmith/commit/05f2bca3903c8f574c1293eb518aec6df45e307d))
+
 ## [2.148.2](https://github.com/Flagsmith/flagsmith/compare/v2.148.1...v2.148.2) (2024-10-22)
 
 
