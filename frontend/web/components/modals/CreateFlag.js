@@ -186,10 +186,7 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    if (
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
-    ) {
+    if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -566,9 +563,7 @@ parseError = (error)=>{
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
-    const metadataEnable =
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable = Utils.getPlansPermission('METADATA')
 
     try {
       if (!isEdit && name && regex) {
