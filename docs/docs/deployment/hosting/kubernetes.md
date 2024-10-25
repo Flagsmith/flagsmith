@@ -94,8 +94,9 @@ ingress:
    - host: flagsmith.[MYDOMAIN]
      paths:
       - /api/
-      - /health
+      - /health/
       - /admin/
+      - /static/
 
 frontend:
  extraEnv:
