@@ -137,8 +137,11 @@ class OrganisationList(ListView):
             query = Q()
 
             if domain_regex.match(search_term):
+                matching_users = FFAdminUser.objects.filter(
+                    email__iendswith=search_term
+                )
                 org_ids = UserOrganisation.objects.filter(
-                    user__email__iendswith=search_term
+                    user__in=matching_users
                 ).values_list("organisation_id", flat=True)
                 query = query & Q(id__in=org_ids)
 
