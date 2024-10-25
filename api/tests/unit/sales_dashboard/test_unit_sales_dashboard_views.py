@@ -145,6 +145,25 @@ def test_list_organisations_search_by_user_email_for_non_existent_user(
 
     # Then
     assert response.status_code == 200
+    assert list(response.context_data["organisation_list"]) == []
+
+
+def test_list_organisations_search_by_domain(
+    organisation: Organisation,
+    superuser_client: Client,
+) -> None:
+    # Given
+    domain = "bar.com"
+    user = FFAdminUser.objects.create(email=f"foo@{domain}")
+    user.add_organisation(organisation)
+
+    url = "%s?search=%s" % (reverse("sales_dashboard:index"), domain)
+
+    # When
+    response = superuser_client.get(url)
+
+    # Then
+    assert response.status_code == 200
     assert list(response.context_data["organisation_list"]) == [organisation]
 
 
