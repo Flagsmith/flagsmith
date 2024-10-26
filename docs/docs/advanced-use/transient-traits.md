@@ -2,6 +2,8 @@
 title: Transient Traits and Identities
 ---
 
+import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
+
 By default, Flagsmith [stores all Traits](/basic-features/managing-identities#identity-and-trait-storage) associated
 with an Identity to evaluate flags. This default behavior works for most use cases. However, there are scenarios where
 you may want more control over which Traits or Identities are stored. Using the Flagsmith API and SDKs, you can mark
@@ -33,7 +35,7 @@ let identifierToUseLater = flagsmith.getContext().identity.identifier;
 This approach is useful for scenarios such as A/B testing in e-commerce, where you want to include users who haven't
 registered or logged in.
 
-::: info
+:::info
 
 Server-generated transient identifiers are consistent across flag evaluations, meaning the same identifier will be
 returned for identical sets of Traits.
@@ -92,6 +94,8 @@ without the `email` Trait being stored.
 
 ## Usage
 
+### Server-side SDKs
+
 <Tabs groupId="language" queryString>
 <TabItem value="curl" label="API (curl)">
 
@@ -137,33 +141,6 @@ curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
     ],
     "transient": true
 }'
-```
-
-</TabItem>
-<TabItem value="js" label="JavaScript">
-
-:::info
-
-Transient Traits and Identities are supported starting from JavaScript SDK version 5.0.0.
-
-:::
-
-Mark a Trait as transient:
-
-```javascript
-flagsmith.setTrait('my_trait_key', { value: 123.5, transient: true });
-```
-
-Mark the whole Identity as transient:
-
-```javascript
-flagsmith.setContext({
- identity: {
-  identifier: 'my-user',
-  transient: true,
-  traits: { my_trait_key: 123.5, my_other_key: true },
- },
-});
 ```
 
 </TabItem>
@@ -308,20 +285,20 @@ $flags = $flagsmith.get_identity_flags('my-user', true, my_trait_key: 123.5, my_
 
 :::info
 
-Transient Traits and Identities are supported starting from Ruby SDK version 4.2.0.
+Transient Traits and Identities are supported starting from PHP SDK version 4.4.0.
 
 :::
 
 Mark a Trait as transient:
 
-```ruby
-$flags = $flagsmith.get_identity_flags('my-user', my_trait_key: { value: 123.5, transient: true }, my_other_key: true )
+```php
+$flags = $flagsmith->getIdentityFlags('my-user', (object)['my_trait_key' => (object)['transient' => true, 'value' => 123.5], 'my_other_key' => true]);
 ```
 
 Mark the whole Identity as transient:
 
-```ruby
-$flags = $flagsmith.get_identity_flags('my-user', true, my_trait_key: 123.5, my_other_key: true)
+```php
+$flags = $flagsmith->getIdentityFlags('my-user', (object)['my_trait_key' => 123.5, 'my_other_key' => true], true);
 ```
 
 </TabItem>
@@ -465,6 +442,38 @@ Mark the whole Identity as transient:
       ],
       true
 )
+```
+
+</TabItem>
+</Tabs>
+
+### Client-side SDKs
+
+<Tabs groupId="language" queryString>
+<TabItem value="js" label="JavaScript">
+
+:::info
+
+Transient Traits and Identities are supported starting from JavaScript SDK version 5.0.0.
+
+:::
+
+Mark a Trait as transient:
+
+```javascript
+flagsmith.setTrait('my_trait_key', { value: 123.5, transient: true });
+```
+
+Mark the whole Identity as transient:
+
+```javascript
+flagsmith.setContext({
+ identity: {
+  identifier: 'my-user',
+  transient: true,
+  traits: { my_trait_key: 123.5, my_other_key: true },
+ },
+});
 ```
 
 </TabItem>
