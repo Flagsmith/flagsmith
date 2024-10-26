@@ -532,5 +532,47 @@ final flags = await fs.getFeatureFlags(user: user, traits: traits);
 </TabItem>
 <TabItem value="ios" label="iOS">
 
+:::info
+
+Transient Traits and Identities are supported starting from iOS SDK version 3.8.0.
+
+:::
+
+Mark a Trait as transient:
+
+```swift
+Flagsmith.shared.getFeatureFlags(forIdentity: "my-user", traits: [Trait(key: "my_trait_key", value: 123.5, transient: true), Trait("my_other_key", value: true)]) {(result) in
+    switch result {
+    case .success(let flags):
+        for flag in flags {
+            let name = flag.feature.name
+            let value = flag.value?.stringValue
+            let enabled = flag.enabled
+            print(name, "= enabled:", enabled, "value:", value ?? "nil")
+        }
+    case .failure(let error):
+        print(error)
+    }
+}
+```
+
+Mark the whole Identity as transient:
+
+```swift
+Flagsmith.shared.getFeatureFlags(forIdentity: "my-user", transient: true, traits: [Trait(key: "my_trait_key", value: 123.5), Trait("my_other_key", value: true)]) {(result) in
+    switch result {
+    case .success(let flags):
+        for flag in flags {
+            let name = flag.feature.name
+            let value = flag.value?.stringValue
+            let enabled = flag.enabled
+            print(name, "= enabled:", enabled, "value:", value ?? "nil")
+        }
+    case .failure(let error):
+        print(error)
+    }
+}
+```
+
 </TabItem>
 </Tabs>
