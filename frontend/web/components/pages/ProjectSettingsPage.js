@@ -170,8 +170,6 @@ const ProjectSettingsPage = class extends Component {
     const { name, stale_flags_limit_days } = this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
 
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
-
     return (
       <div className='app-container container'>
         <ProjectProvider
@@ -605,14 +603,12 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    {metadataEnable && (
-                      <TabItem tabLabel='Custom Fields'>
-                        <MetadataPage
-                          organisationId={AccountStore.getOrganisation().id}
-                          projectId={this.props.match.params.projectId}
-                        />
-                      </TabItem>
-                    )}
+                    <TabItem tabLabel='Custom Fields'>
+                      <MetadataPage
+                        organisationId={AccountStore.getOrganisation().id}
+                        projectId={this.props.match.params.projectId}
+                      />
+                    </TabItem>
                     {!!ProjectStore.getEnvs()?.length && (
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage
