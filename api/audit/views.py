@@ -1,4 +1,8 @@
+from abc import abstractmethod
+from datetime import timedelta
+
 from django.db.models import Q, QuerySet
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, viewsets
@@ -15,7 +19,7 @@ from audit.serializers import (
     AuditLogRetrieveSerializer,
     AuditLogsQueryParamSerializer,
 )
-from organisations.models import OrganisationRole
+from organisations.models import Organisation, OrganisationRole
 
 
 @method_decorator(
@@ -44,17 +48,41 @@ class _BaseAuditLogViewSet(
         if search:
             q = q & Q(log__icontains=search)
 
-        return AuditLog.objects.filter(q).select_related(
+        queryset = AuditLog.objects.filter(q).select_related(
             "project", "environment", "author"
         )
 
-    def _get_base_filters(self) -> Q:
-        return Q()
+        return self._apply_visibility_limits(queryset)
 
     def get_serializer_class(self):
         return {"retrieve": AuditLogRetrieveSerializer}.get(
             self.action, AuditLogListSerializer
         )
+
+    def _get_base_filters(self) -> Q:  # pragma: no cover
+        return Q()
+
+    def _apply_visibility_limits(
+        self, queryset: QuerySet[AuditLog]
+    ) -> QuerySet[AuditLog]:
+        organisation = self._get_organisation()
+        if not organisation:
+            return AuditLog.objects.none()
+
+        subscription_metadata = organisation.subscription.get_subscription_metadata()
+        if (
+            subscription_metadata
+            and (limit := subscription_metadata.audit_log_visibility_days) is not None
+        ):
+            queryset = queryset.filter(
+                created_date__gte=timezone.now() - timedelta(days=limit)
+            )
+
+        return queryset
+
+    @abstractmethod
+    def _get_organisation(self) -> Organisation | None:
+        raise NotImplementedError("Must implement _get_organisation()")
 
 
 class AllAuditLogViewSet(_BaseAuditLogViewSet):
@@ -64,6 +92,25 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
             project__organisation__userorganisation__role=OrganisationRole.ADMIN,
         )
 
+    def _get_organisation(self) -> Organisation | None:
+        """
+        This is a bit of a hack but since this endpoint is no longer used (by the UI
+        at least) we just return the first organisation the user has (most users only
+        have a single organisation anyway).
+
+        Since this function is only used here for limiting access (by number of days)
+        to the audit log, the blast radius here is pretty small.
+
+        Since we're applying the base filters to the query set
+        """
+        return (
+            self.request.user.organisations.filter(
+                userorganisation__role=OrganisationRole.ADMIN
+            )
+            .select_related("subscription", "subscription_information_cache")
+            .first()
+        )
+
 
 class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
     permission_classes = [IsAuthenticated, OrganisationAuditLogPermissions]
@@ -71,9 +118,27 @@ class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
     def _get_base_filters(self) -> Q:
         return Q(project__organisation__id=self.kwargs["organisation_pk"])
 
+    def _get_organisation(self) -> Organisation | None:
+        return (
+            Organisation.objects.select_related(
+                "subscription", "subscription_information_cache"
+            )
+            .filter(pk=self.kwargs["organisation_pk"])
+            .first()
+        )
+
 
 class ProjectAuditLogViewSet(_BaseAuditLogViewSet):
     permission_classes = [IsAuthenticated, ProjectAuditLogPermissions]
 
     def _get_base_filters(self) -> Q:
         return Q(project__id=self.kwargs["project_pk"])
+
+    def _get_organisation(self) -> Organisation | None:
+        return (
+            Organisation.objects.select_related(
+                "subscription", "subscription_information_cache"
+            )
+            .filter(projects__pk=self.kwargs["project_pk"])
+            .first()
+        )
