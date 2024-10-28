@@ -49,7 +49,7 @@
     "@material-ui/core": "4.12.4",
     "@react-oauth/google": "^0.2.8",
     "@reduxjs/toolkit": "1.9.1",
-    "@sentry/browser": "^7.28.0",
+    "@sentry/browser": "^7.119.1",
     "@slack/web-api": "^6.9.1",
     "animejs": "3.0.1",
     "array-find-index": "^1.0.2",
