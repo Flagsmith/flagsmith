@@ -138,7 +138,7 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
 
     class Meta:
         model = Environment
-        fields = ("id", "name", "api_key", "project", "clone_method")
+        fields = ("id", "name", "api_key", "project", "clone_feature_states_async")
         read_only_fields = ("id", "api_key", "project")
 
     def create(self, validated_data):
