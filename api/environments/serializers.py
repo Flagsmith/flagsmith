@@ -132,7 +132,7 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
     clone_feature_states_async = serializers.BooleanField(
         default=False,
         help_text="If True, the environment will be created immediately, but the feature states "
-        "will be created asynchronously. Environment will have `is_creating: true` until"
+        "will be created asynchronously. Environment will have `is_creating: true` until "
         "this process is completed.",
     )
 
