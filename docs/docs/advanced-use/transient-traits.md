@@ -372,7 +372,6 @@ let traits = vec![
             value: "true".to_string(),
             value_type: FlagsmithValueType::Bool,
         },
-        true,
     ),
 ];
 
@@ -401,7 +400,6 @@ let traits = vec![
             value: "true".to_string(),
             value_type: FlagsmithValueType::Bool,
         },
-        true,
     ),
 ];
 
