@@ -145,6 +145,9 @@ def test_environment_clone_clones_the_feature_states(
     # Then
     assert clone.feature_states.first().enabled is True
 
+    clone.refresh_from_db()
+    assert clone.is_creating is False
+
 
 def test_environment_clone_clones_multivariate_feature_state_values(
     environment: Environment,
