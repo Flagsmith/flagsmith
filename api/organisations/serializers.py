@@ -247,6 +247,9 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
 
     chargebee_email = serializers.EmailField()
 
+    feature_history_visibility_days = serializers.IntegerField(allow_null=True)
+    audit_log_visibility_days = serializers.IntegerField(allow_null=True)
+
 
 class OrganisationAPIUsageNotificationSerializer(serializers.Serializer):
     organisation_id = serializers.IntegerField()

@@ -12,7 +12,7 @@ def test_add_chargebee_object_meta_data():
     # Then
     assert added_chargebee_obj_metadata.seats == 30
     assert added_chargebee_obj_metadata.api_calls == 300
-    assert added_chargebee_obj_metadata.projects == 100
+    assert added_chargebee_obj_metadata.projects is None
 
 
 def test_multiply_chargebee_object_metadata():

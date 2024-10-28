@@ -1,11 +1,26 @@
 import json
 
+import pytest
 from django.urls import reverse
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
-def test_audit_logs_only_makes_two_queries(
+
+@pytest.fixture(autouse=True)
+def _subscription_metadata(mocker: MockerFixture) -> None:
+    metadata = BaseSubscriptionMetadata(
+        audit_log_visibility_days=None,
+    )
+    mocker.patch(
+        "organisations.models.Subscription.get_subscription_metadata",
+        return_value=metadata,
+    )
+
+
+def test_get_audit_logs_makes_expected_queries(
     admin_client,
     project,
     environment,
@@ -15,7 +30,7 @@ def test_audit_logs_only_makes_two_queries(
 ):
     url = reverse("api-v1:audit-list")
 
-    with django_assert_num_queries(2):
+    with django_assert_num_queries(3):
         res = admin_client.get(url, {"project": project})
 
     assert res.status_code == status.HTTP_200_OK
