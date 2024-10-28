@@ -1,5 +1,92 @@
 # Changelog
 
+## [2.149.0](https://github.com/Flagsmith/flagsmith/compare/v2.148.2...v2.149.0) (2024-10-25)
+
+
+### Features
+
+* Support `PREVENT_EMAIL_PASSWORD` in backend ([#4765](https://github.com/Flagsmith/flagsmith/issues/4765)) ([7a6b2e0](https://github.com/Flagsmith/flagsmith/commit/7a6b2e0f62d7ffdb2defec0862765a13897d3f96))
+
+
+### Bug Fixes
+
+* Disable is_admin switcher in Organization API Keys ([#4753](https://github.com/Flagsmith/flagsmith/issues/4753)) ([6d955b4](https://github.com/Flagsmith/flagsmith/commit/6d955b4e08f7c56027394080644b7ed01e0b7486))
+* Fix stored XSS when rendering tooltips ([#4770](https://github.com/Flagsmith/flagsmith/issues/4770)) ([96f62c7](https://github.com/Flagsmith/flagsmith/commit/96f62c7367e47db7111dab420b40e85a04d28ddd))
+* Removing segment overrides whilst adding others ([#4709](https://github.com/Flagsmith/flagsmith/issues/4709)) ([05f2bca](https://github.com/Flagsmith/flagsmith/commit/05f2bca3903c8f574c1293eb518aec6df45e307d))
+
+## [2.148.2](https://github.com/Flagsmith/flagsmith/compare/v2.148.1...v2.148.2) (2024-10-22)
+
+
+### Bug Fixes
+
+* Fix "assigned groups" showing empty when trying to assign groups to a role ([#4756](https://github.com/Flagsmith/flagsmith/issues/4756)) ([038a15a](https://github.com/Flagsmith/flagsmith/commit/038a15abab3335b57db62ff1194cbd632ba5a2df))
+* Frontend error when creating SAML configuration if API URL is relative ([#4751](https://github.com/Flagsmith/flagsmith/issues/4751)) ([df1b84e](https://github.com/Flagsmith/flagsmith/commit/df1b84ec2bdf9f7dbb833341d57e7342c780dd60))
+* Tag Based permissions only validate some views ([#4523](https://github.com/Flagsmith/flagsmith/issues/4523)) ([6d2ab58](https://github.com/Flagsmith/flagsmith/commit/6d2ab58988bf36bf78668f6b51b91340abc9eab1))
+* value editor typing ([#4748](https://github.com/Flagsmith/flagsmith/issues/4748)) ([99876ca](https://github.com/Flagsmith/flagsmith/commit/99876ca2e33e403280f4adcb911c9b54bb0028d7))
+
+## [2.148.1](https://github.com/Flagsmith/flagsmith/compare/v2.148.0...v2.148.1) (2024-10-17)
+
+
+### Bug Fixes
+
+* `AttributeError` when using `LOGGING_CONFIGURATION_FILE` environment variable ([#4693](https://github.com/Flagsmith/flagsmith/issues/4693)) ([2aad0a1](https://github.com/Flagsmith/flagsmith/commit/2aad0a1c4c54557c211d43a144a148ebabc7e9de))
+* **ci:** Failing Trivy cron job ([#4741](https://github.com/Flagsmith/flagsmith/issues/4741)) ([dbb9ddf](https://github.com/Flagsmith/flagsmith/commit/dbb9ddfe4983ddb9aa72fa85452d85e96e501b91))
+* **ci:** Trivy scan triggered when no scan requested ([#4742](https://github.com/Flagsmith/flagsmith/issues/4742)) ([1ffef49](https://github.com/Flagsmith/flagsmith/commit/1ffef493b68789916c3c31814ca82ec4a88a07d8))
+* Combine segment override and value change requests ([#4734](https://github.com/Flagsmith/flagsmith/issues/4734)) ([714a68b](https://github.com/Flagsmith/flagsmith/commit/714a68bfdf4024854a457c4d53af37c974d9fdc6))
+
+## [2.148.0](https://github.com/Flagsmith/flagsmith/compare/v2.147.0...v2.148.0) (2024-10-15)
+
+
+### Features
+
+* Persist identity search type ([#4729](https://github.com/Flagsmith/flagsmith/issues/4729)) ([08cdf67](https://github.com/Flagsmith/flagsmith/commit/08cdf672cb6b4b7b3a06c988ef085eba50679d88))
+
+
+### Bug Fixes
+
+* add trailing slash to endpoint to retrieve features after feature create ([#4730](https://github.com/Flagsmith/flagsmith/issues/4730)) ([cbd08f3](https://github.com/Flagsmith/flagsmith/commit/cbd08f3e4ef877be135b5fa9a4748f6870ff68dd))
+* Duplicated segment conditions on save ([#4726](https://github.com/Flagsmith/flagsmith/issues/4726)) ([8825971](https://github.com/Flagsmith/flagsmith/commit/8825971afb079dd4e31a657c57af129e27e18a8c))
+
+## [2.147.0](https://github.com/Flagsmith/flagsmith/compare/v2.146.0...v2.147.0) (2024-10-15)
+
+
+### Features
+
+* organisation integrations ([#4704](https://github.com/Flagsmith/flagsmith/issues/4704)) ([d76a6f0](https://github.com/Flagsmith/flagsmith/commit/d76a6f05bf958a69c418ec7fd00099f24f312b7b))
+
+
+### Bug Fixes
+
+* Invalid Segment base URLs ([#4727](https://github.com/Flagsmith/flagsmith/issues/4727)) ([8b823a7](https://github.com/Flagsmith/flagsmith/commit/8b823a7e36d14fc092753c37049bcc4151d6f786))
+* subscription state ([#4710](https://github.com/Flagsmith/flagsmith/issues/4710)) ([796fb01](https://github.com/Flagsmith/flagsmith/commit/796fb01ba5ae2af1a4aa39740d751b673cebdfc8))
+
+## [2.146.0](https://github.com/Flagsmith/flagsmith/compare/v2.145.0...v2.146.0) (2024-10-14)
+
+
+### Features
+
+* Hide change email when auth_type !== 'EMAIL' ([#4712](https://github.com/Flagsmith/flagsmith/issues/4712)) ([27109fd](https://github.com/Flagsmith/flagsmith/commit/27109fd06c81be472224bff4e2a94776a6a156ef))
+* Set base url for segment ([#4684](https://github.com/Flagsmith/flagsmith/issues/4684)) ([4e833b8](https://github.com/Flagsmith/flagsmith/commit/4e833b89e517cdb7870f8369a07f7d8aa9d60cf0))
+
+
+### Bug Fixes
+
+* **ci:** Anonymous registry pushes attempted for Tribvy databases ([#4716](https://github.com/Flagsmith/flagsmith/issues/4716)) ([205988d](https://github.com/Flagsmith/flagsmith/commit/205988db1cae9c8e998c62af7dc8097d8076fa68))
+* Remove mailer lite ([#4705](https://github.com/Flagsmith/flagsmith/issues/4705)) ([1c71905](https://github.com/Flagsmith/flagsmith/commit/1c71905fbb34d423420c52715f497f53eb8c0bd2))
+
+## [2.145.0](https://github.com/Flagsmith/flagsmith/compare/v2.144.0...v2.145.0) (2024-10-08)
+
+
+### Features
+
+* Add hubspot ([#4698](https://github.com/Flagsmith/flagsmith/issues/4698)) ([c4faf69](https://github.com/Flagsmith/flagsmith/commit/c4faf69bf968d65e16f0eb9d7f212124e66291d7))
+
+
+### Bug Fixes
+
+* diff check for versioned segment overrides and MV ([#4656](https://github.com/Flagsmith/flagsmith/issues/4656)) ([8d1c22e](https://github.com/Flagsmith/flagsmith/commit/8d1c22e898fceaa4f35c3e0a291283a8b414da07))
+* searching edge identities (dashboard_alias prefix and identifier casing) ([#4700](https://github.com/Flagsmith/flagsmith/issues/4700)) ([8e6b241](https://github.com/Flagsmith/flagsmith/commit/8e6b241fb5543c31bf8e4e8afa374bae200ceadb))
+
 ## [2.144.0](https://github.com/Flagsmith/flagsmith/compare/v2.143.0...v2.144.0) (2024-10-03)
 
 

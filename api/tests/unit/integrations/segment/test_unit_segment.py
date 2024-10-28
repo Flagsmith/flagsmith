@@ -10,13 +10,15 @@ from integrations.segment.segment import SegmentWrapper
 def test_segment_initialized_correctly():
     # Given
     api_key = "123key"
-    config = SegmentConfiguration(api_key=api_key)
+    base_url = "https://api.segment.io/"
+    config = SegmentConfiguration(api_key=api_key, base_url=base_url)
 
-    # When initialized
+    # When
     segment_wrapper = SegmentWrapper(config)
 
     # Then
     assert segment_wrapper.analytics.write_key == api_key
+    assert segment_wrapper.analytics.host == base_url
 
 
 @pytest.mark.django_db

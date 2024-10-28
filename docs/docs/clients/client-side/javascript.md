@@ -41,12 +41,6 @@ AsyncStorage to be provided (e.g. @react-native-community/async-storage) in orde
 npm i react-native-flagsmith --save
 ```
 
-### Via JavaScript CDN
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
-```
-
 ## Basic Usage
 
 The SDK is initialised against a single environment within a project on [https://flagsmith.com](https://flagsmith.com),
@@ -562,8 +556,8 @@ the browser, an onChange event will be fired immediately with the local storage 
 
 5. whenever flags have been retrieved local storage will be updated.
 
-By default, these flags will be persisted indefinitely, you can clear this by removing `"BULLET_TRAIN_DB"` from
-`localStorage`.
+By default, these flags will be persisted indefinitely, you can clear this by removing `"FLAGSMITH_DB_$ENVIRONMENT_ID"`
+from `localStorage`.
 
 **Why am I seeing `ReferenceError: XMLHttpRequest is not defined`?**
 

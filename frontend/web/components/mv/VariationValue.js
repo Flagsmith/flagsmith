@@ -19,7 +19,7 @@ const VariationValue = ({
         noMargin
         component={
           <ValueEditor
-            data-test={`featureVariationValue${index}`}
+            data-test={`featureVariationValue${Utils.featureStateToValue(value) || index}`}
             name='featureValue'
             className='full-width code-medium'
             value={Utils.getTypedValue(Utils.featureStateToValue(value))}

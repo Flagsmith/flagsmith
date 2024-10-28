@@ -42,12 +42,6 @@ AsyncStorage to be provided (e.g. @react-native-community/async-storage) in orde
 npm i react-native-flagsmith --save
 ```
 
-### Via JavaScript CDN
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
-```
-
 ## Basic Usage
 
 The SDK is initialised against a single environment. You can find your Client-side Environment Key in the Environment

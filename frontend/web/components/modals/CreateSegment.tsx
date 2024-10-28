@@ -125,6 +125,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
     ],
   }
   const [segment, setSegment] = useState(_segment || defaultSegment)
+  const [description, setDescription] = useState(segment.description)
+  const [name, setName] = useState<Segment['name']>(segment.name)
+  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  useEffect(() => {
+    if (segment) {
+      setRules(segment.rules)
+      setDescription(segment.description)
+      setName(segment.name)
+    }
+  }, [segment])
   const isEdit = !!segment.id
   const [
     createSegment,
@@ -147,17 +157,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [description, setDescription] = useState(segment.description)
-  const [name, setName] = useState<Segment['name']>(segment.name)
-  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable =
-    Utils.getPlansPermission('METADATA') &&
-    Utils.getFlagsmithHasFeature('enable_metadata')
-
+  const metadataEnable = Utils.getPlansPermission('METADATA')
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
@@ -284,6 +288,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [createSuccess])
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
+      setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
