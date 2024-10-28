@@ -1011,6 +1011,7 @@ def test_environment_clone_async(
 
     # Then
     assert cloned_environment.id != environment.id
+    assert cloned_environment.is_creating is True
     mocked_clone_environment_fs_task.delay.assert_called_once_with(
         kwargs={
             "source_environment_id": environment.id,
