@@ -69,7 +69,7 @@ def join_organisation_from_link(request, hash):
 
     register_hubspot_tracker(request)
 
-    request.user.join_organisation_from_invite_link(invite)
+    request.user.join_organisation_from_invite(invite)
 
     return Response(
         OrganisationSerializerFull(

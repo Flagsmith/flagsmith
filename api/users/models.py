@@ -39,11 +39,7 @@ from users.exceptions import InvalidInviteError
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
-    from organisations.invites.models import (
-        AbstractBaseInviteModel,
-        Invite,
-        InviteLink,
-    )
+    from organisations.invites.models import AbstractBaseInviteModel, Invite
 
 logger = logging.getLogger(__name__)
 
@@ -191,12 +187,14 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         self.permission_groups.add(*invite_email.permission_groups.all())
         invite_email.delete()
 
-    def join_organisation_from_invite_link(self, invite_link: "InviteLink"):
-        self.join_organisation_from_invite(invite_link)
-
     def join_organisation_from_invite(self, invite: "AbstractBaseInviteModel"):
-        organisation = invite.organisation
+        self.join_organisation(
+            organisation=invite.organisation, role=OrganisationRole(invite.role)
+        )
 
+    def join_organisation(
+        self, organisation: Organisation, role: OrganisationRole = OrganisationRole.USER
+    ):
         if settings.ENABLE_CHARGEBEE and organisation.over_plan_seats_limit(
             additional_seats=1
         ):
@@ -205,7 +203,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
             else:
                 raise SubscriptionDoesNotSupportSeatUpgrade()
 
-        self.add_organisation(organisation, role=OrganisationRole(invite.role))
+        self.add_organisation(organisation, role=role)
 
     def is_organisation_admin(self, organisation: typing.Union["Organisation", int]):
         return is_user_organisation_admin(self, organisation)
