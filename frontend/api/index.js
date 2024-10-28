@@ -40,7 +40,7 @@ app.get('/config/project-overrides', (req, res) => {
             `
     }
 
-    return `    ${name}: '${value}',
+    return `    ${name}: '${value.trim()}',
         `
   }
   const envToBool = (name, defaultVal) => {
