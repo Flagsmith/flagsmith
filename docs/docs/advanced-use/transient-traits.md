@@ -38,9 +38,9 @@ without the `email` Trait being stored.
 
 ### Anonymous Identities
 
-If you choose to provide a blank (`""`) or null identifier, Flagsmith will automatically treat the Identity
-as transient. In this case, an auto-generated identifier is returned, based on a hash of the provided Traits. This
-ensures consistent flag evaluations without persisting the Identity in the Flagsmith dashboard.
+If you choose to provide a blank (`""`) or null identifier, Flagsmith will automatically treat the Identity as
+transient. In this case, an auto-generated identifier is returned, based on a hash of the provided Traits. This ensures
+consistent flag evaluations without persisting the Identity in the Flagsmith dashboard.
 
 If no Traits and a null/blank identifier provided, a random UUIDv4 identifier is generated and used for flag evaluation.
 
