@@ -16,12 +16,11 @@ data in Flagsmith. Below are common scenarios where transient Traits or Identiti
 
 ### Anonymous Identities
 
-If you choose to provide an empty or blank (`""`) identifier is provided, Flagsmith will automatically treat the
-Identity as transient. In this case, an auto-generated identifier is returned, based on a hash of the provided Traits.
-This ensures consistent flag evaluations without persisting the Identity in the Flagsmith dashboard.
+If you choose to provide a blank (`""`) or null identifier is provided, Flagsmith will automatically treat the Identity
+as transient. In this case, an auto-generated identifier is returned, based on a hash of the provided Traits. This
+ensures consistent flag evaluations without persisting the Identity in the Flagsmith dashboard.
 
-If no Traits and an empty/blank identifier provided, a random UUIDv4 identifier is generated and used for flag
-evaluation.
+If no Traits and a null/blank identifier provided, a random UUIDv4 identifier is generated and used for flag evaluation.
 
 ```javascript
 flagsmith.init({
