@@ -20,6 +20,9 @@ If you choose to provide an empty or blank (`""`) identifier is provided, Flagsm
 Identity as transient. In this case, an auto-generated identifier is returned, based on a hash of the provided Traits.
 This ensures consistent flag evaluations without persisting the Identity in the Flagsmith dashboard.
 
+If no Traits and an empty/blank identifier provided, a random UUIDv4 identifier is generated and used for flag
+evaluation.
+
 ```javascript
 flagsmith.init({
  evaluationContext: {
