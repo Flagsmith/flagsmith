@@ -70,8 +70,8 @@ value, you can mark the Trait as transient:
 flagsmith.setTrait('screenOrientation', { value: 'portrait', transient: true });
 ```
 
-In this case, `portrait` will be used for one specific flag evaluation, but the stored `landscape` value will remain
-unchanged.
+Until you set another Trait value, the `screenOrientation` used for flag evaluations will be `portrait` in this specific
+SDK instance. The `landscape` value will remain stored in Flagsmith for other evaluations.
 
 ### Skipping Personal Identifiable Information (PII)
 
