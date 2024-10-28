@@ -6,3 +6,4 @@ from core.apps import BaseAppConfig
 
 class EnvironmentsConfig(BaseAppConfig):
     name = "environments"
+    default = True

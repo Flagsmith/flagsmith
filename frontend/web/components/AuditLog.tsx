@@ -10,6 +10,7 @@ import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
 import JSONReference from './JSONReference'
 import moment from 'moment'
+import PlanBasedBanner from './PlanBasedAccess'
 
 type AuditLogType = {
   environmentId: string
@@ -26,7 +27,7 @@ type AuditLogType = {
   }
 }
 
-const widths = [210, 210, 130]
+const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
@@ -120,7 +121,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
           className='table-column fs-small ln-sm'
           style={{ width: widths[1] }}
         >
-          {author?.first_name} {author?.last_name}
+          <div>
+            {author?.first_name} {author?.last_name}
+          </div>
+          <div className="list-item-subtitle">
+            {author?.email}
+          </div>
         </div>
         {environment?.name ? (
           <Link
@@ -158,18 +164,6 @@ const AuditLog: FC<AuditLogType> = (props) => {
   }
 
   const { env: envFilter } = Utils.fromParam()
-
-  const hasRbacPermission = Utils.getPlansPermission('AUDIT')
-  if (!hasRbacPermission) {
-    return (
-      <div>
-        <div className='text-center'>
-          To access this feature please upgrade your account to scaleup or
-          higher.
-        </div>
-      </div>
-    )
-  }
 
   return (
     <PanelSearch
@@ -230,4 +224,14 @@ const AuditLog: FC<AuditLogType> = (props) => {
   )
 }
 
-export default withRouter(AuditLog as any)
+type AuditLogWrapperType = AuditLogType
+
+const AuditLogWrapper: FC<AuditLogWrapperType> = (props) => {
+  return (
+    <PlanBasedBanner feature={'AUDIT'} theme={'page'}>
+      <AuditLog {...props} />
+    </PlanBasedBanner>
+  )
+}
+
+export default withRouter(AuditLogWrapper as any)

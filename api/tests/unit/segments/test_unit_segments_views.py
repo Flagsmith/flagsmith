@@ -2,6 +2,7 @@ import json
 import random
 
 import pytest
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -17,7 +18,8 @@ from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from features.models import Feature
+from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
@@ -326,6 +328,75 @@ def test_associated_features_returns_all_the_associated_features(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_associated_features_returns_only_latest_versions_of_associated_features(
+    project: Project,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+    client: APIClient,
+) -> None:
+    # Given
+    # 2 features
+    feature_one = Feature.objects.create(project=project, name="feature_1")
+    feature_two = Feature.objects.create(project=project, name="feature_2")
+
+    # Now let's create a version for each feature with a segment override
+    for feature in (feature_one, feature_two):
+        version = EnvironmentFeatureVersion.objects.create(
+            feature=feature, environment=environment_v2_versioning
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=version,
+            feature_segment=FeatureSegment.objects.create(
+                segment=segment,
+                environment=environment_v2_versioning,
+                feature=feature,
+                environment_feature_version=version,
+            ),
+        )
+        version.publish()
+
+    # And then let's create a third version for feature_one where we update the segment override
+    feature_1_version_3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature_one, environment=environment_v2_versioning
+    )
+    f1v3_segment_override_feature_state = feature_1_version_3.feature_states.get(
+        feature_segment__segment=segment
+    )
+    f1v3_segment_override_feature_state.enabled = True
+    f1v3_segment_override_feature_state.save()
+    feature_1_version_3.publish()
+
+    # And finally, let's create a third version for feature_two where we remove the segment override
+    feature_2_version_3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature_two, environment=environment_v2_versioning
+    )
+    feature_2_version_3.feature_states.filter(feature_segment__segment=segment).delete()
+    feature_2_version_3.publish()
+
+    url = "%s?environment=%s" % (
+        reverse(
+            "api-v1:projects:project-segments-associated-features",
+            args=[project.id, segment.id],
+        ),
+        environment_v2_versioning.id,
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.json().get("count") == 1
+    assert response.json()["results"][0]["id"] == f1v3_segment_override_feature_state.id
+    assert response.json()["results"][0]["feature"] == feature_one.id
+    assert response.json()["results"][0]["environment"] == environment_v2_versioning.id
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_can_create_feature_based_segment(project, client, feature):
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
@@ -362,6 +433,10 @@ def test_get_segment_by_uuid(client, project, segment):
     assert response.json()["uuid"] == str(segment.uuid)
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 @pytest.mark.parametrize(
     "client, num_queries",
     [
@@ -369,32 +444,16 @@ def test_get_segment_by_uuid(client, project, segment):
         (lazy_fixture("admin_client"), 14),
     ],
 )
-def test_list_segments(
+def test_list_segments_num_queries_without_rbac(
     django_assert_num_queries: DjangoAssertNumQueries,
     project: Project,
     client: APIClient,
     num_queries: int,
     required_a_segment_metadata_field: MetadataModelField,
-):
+) -> None:
     # Given
     num_segments = 5
-    segments = []
-    for i in range(num_segments):
-        segment = Segment.objects.create(project=project, name=f"segment {i}")
-        Metadata.objects.create(
-            object_id=segment.id,
-            content_type=ContentType.objects.get_for_model(segment),
-            model_field=required_a_segment_metadata_field,
-            field_value="test",
-        )
-        all_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
-        Condition.objects.create(
-            property="foo", value=str(random.randint(0, 10)), rule=any_rule
-        )
-        segments.append(segment)
+    _list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
 
     # When
     with django_assert_num_queries(num_queries):
@@ -411,6 +470,63 @@ def test_list_segments(
 
     response_json = response.json()
     assert response_json["count"] == num_segments
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+@pytest.mark.parametrize(
+    "client, num_queries",
+    [
+        (lazy_fixture("admin_master_api_key_client"), 12),
+        (lazy_fixture("admin_client"), 15),
+    ],
+)
+def test_list_segments_num_queries_with_rbac(
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project: Project,
+    client: APIClient,
+    num_queries: int,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:  # pragma: no cover
+    # Given
+    num_segments = 5
+    _list_segment_setup_data(project, required_a_segment_metadata_field, num_segments)
+
+    # When
+    with django_assert_num_queries(num_queries):
+        response = client.get(
+            reverse("api-v1:projects:project-segments-list", args=[project.id])
+        )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == num_segments
+
+
+def _list_segment_setup_data(
+    project: Project,
+    required_a_segment_metadata_field: MetadataModelField,
+    num_segments: int,
+) -> None:
+    for i in range(num_segments):
+        segment = Segment.objects.create(project=project, name=f"segment {i}")
+        Metadata.objects.create(
+            object_id=segment.id,
+            content_type=ContentType.objects.get_for_model(segment),
+            model_field=required_a_segment_metadata_field,
+            field_value="test",
+        )
+        all_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        any_rule = SegmentRule.objects.create(rule=all_rule, type=SegmentRule.ANY_RULE)
+        Condition.objects.create(
+            property="foo", value=str(random.randint(0, 10)), rule=any_rule
+        )
 
 
 @pytest.mark.parametrize(

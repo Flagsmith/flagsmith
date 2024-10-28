@@ -116,9 +116,20 @@ def post_comment_to_github(
 def delete_github_installation(installation_id: str) -> requests.Response:
     url = f"{GITHUB_API_URL}app/installations/{installation_id}"
     headers = build_request_headers(installation_id, use_jwt=True)
-    response = requests.delete(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
-    response.raise_for_status()
-    return response
+    try:
+        response = requests.delete(
+            url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+        )
+        response.raise_for_status()
+        return response
+    except HTTPError:
+        response_content = response.content.decode("utf-8")
+        error_data = json.loads(response_content)
+        if error_data.get("message") == "Not Found" and response.status_code == 404:
+            logger.info(
+                f"The GitHub application with the installation ID: {installation_id} was not found."
+            )
+            return response
 
 
 def fetch_search_github_resource(
@@ -155,9 +166,23 @@ def fetch_search_github_resource(
     headers: dict[str, str] = build_request_headers(
         github_configuration.installation_id
     )
-    response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
-    response.raise_for_status()
-    json_response = response.json()
+    try:
+        response = requests.get(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
+        response.raise_for_status()
+        json_response = response.json()
+
+    except HTTPError:
+        response_content = response.content.decode("utf-8")
+        error_message = (
+            "The resources do not exist or you do not have permission to view them"
+        )
+        error_data = json.loads(response_content)
+        if error_data.get("message", "") == "Validation Failed" and any(
+            error.get("code", "") == "invalid" for error in error_data.get("errors", [])
+        ):
+            logger.warning(error_message)
+            raise ValueError(error_message)
+
     results = [
         {
             "html_url": i["html_url"],

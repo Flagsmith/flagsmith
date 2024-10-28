@@ -54,6 +54,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "use_identity_composite_key_for_hashing",
             "hide_sensitive_data",
             "use_v2_feature_versioning",
+            "use_identity_overrides_in_local_eval",
             "is_creating",
         )
         read_only_fields = ("use_v2_feature_versioning",)

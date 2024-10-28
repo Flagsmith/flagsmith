@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from typing import Any
+
 from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
@@ -17,6 +19,7 @@ from django_lifecycle import (
 from simple_history.models import HistoricalRecords
 
 from app.utils import is_enterprise, is_saas
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead,
     update_hubspot_active_subscription,
@@ -44,13 +47,13 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_PAYMENT_METHODS,
     TRIAL_SUBSCRIPTION_ID,
     XERO,
+    SubscriptionPlanFamily,
 )
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
-from users.utils.mailer_lite import MailerLite
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
@@ -148,6 +151,11 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     @hook(AFTER_CREATE)
     def create_subscription(self):
         Subscription.objects.create(organisation=self)
+
+    @hook(AFTER_CREATE)
+    def create_subscription_cache(self):
+        if is_saas() and not self.has_subscription_information_cache():
+            OrganisationSubscriptionInformationCache.objects.create(organisation=self)
 
     @hook(AFTER_SAVE)
     def clear_environment_caches(self):
@@ -256,7 +264,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def is_free_plan(self) -> bool:
-        return self.plan == FREE_PLAN_ID
+        return self.subscription_plan_family == SubscriptionPlanFamily.FREE
+
+    @property
+    def subscription_plan_family(self) -> SubscriptionPlanFamily:
+        return SubscriptionPlanFamily.get_by_plan_id(self.plan)
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):
@@ -274,13 +286,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             return
 
         update_hubspot_active_subscription.delay(args=(self.id,))
-
-    @hook(AFTER_SAVE, when="cancellation_date", has_changed=True)
-    @hook(AFTER_SAVE, when="subscription_id", has_changed=True)
-    def update_mailer_lite_subscribers(self):
-        if settings.MAILERLITE_API_KEY:
-            mailer_lite = MailerLite()
-            mailer_lite.update_organisation_users(self.organisation.id)
 
     def save_as_free_subscription(self):
         """
@@ -303,18 +308,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not getattr(self.organisation, "subscription_information_cache", None):
             return
 
-        # There is a weird bug where the cache is present, but the id is unset.
-        # See here for more: https://flagsmith.sentry.io/issues/4945988284/
-        if not self.organisation.subscription_information_cache.id:
-            return
-
-        self.organisation.subscription_information_cache.delete()
+        self.organisation.subscription_information_cache.reset_to_defaults()
+        self.organisation.subscription_information_cache.save()
 
     def prepare_for_cancel(
         self, cancellation_date=timezone.now(), update_chargebee=True
     ) -> None:
         """
-        This method get's a subscription ready for cancelation.
+        This method gets a subscription ready for cancellation.
 
         If cancellation_date is in the future some aspects are
         reserved for a task after the date has passed.
@@ -381,6 +382,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         # or for a payment method that is not covered above. In this situation
         # we want the response to be what is stored in the Django database.
         # Note that Free plans are caught in the parent method above.
+        if self.organisation.has_subscription_information_cache():
+            return self.organisation.subscription_information_cache.as_base_subscription_metadata(
+                seats=self.max_seats, api_calls=self.max_api_calls
+            )
         return BaseSubscriptionMetadata(
             seats=self.max_seats, api_calls=self.max_api_calls
         )
@@ -389,14 +394,25 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if self.organisation.has_subscription_information_cache():
             # Getting the data from the subscription information cache because
             # data is guaranteed to be up to date by using a Chargebee webhook.
-            return ChargebeeObjMetadata(
-                seats=self.organisation.subscription_information_cache.allowed_seats,
-                api_calls=self.organisation.subscription_information_cache.allowed_30d_api_calls,
-                projects=self.organisation.subscription_information_cache.allowed_projects,
-                chargebee_email=self.organisation.subscription_information_cache.chargebee_email,
+            cb_metadata = (
+                self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
             )
+        else:
+            cb_metadata = get_subscription_metadata_from_id(self.subscription_id)
 
-        return get_subscription_metadata_from_id(self.subscription_id)
+        if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
+            settings.VERSIONING_RELEASE_DATE is None
+            or (
+                self.subscription_date is not None
+                and self.subscription_date < settings.VERSIONING_RELEASE_DATE
+            )
+        ):
+            # Logic to grandfather old scale up plan customers to give them
+            # full access to audit log and feature history.
+            cb_metadata.audit_log_visibility_days = None
+            cb_metadata.feature_history_visibility_days = None
+
+        return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
         if not is_enterprise():
@@ -406,6 +422,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
             seats=self.max_seats,
             api_calls=self.max_api_calls,
             projects=None,
+            audit_log_visibility_days=None,
+            feature_history_visibility_days=None,
         )
 
     def add_single_seat(self):
@@ -451,15 +469,68 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     api_calls_7d = models.IntegerField(default=0)
     api_calls_30d = models.IntegerField(default=0)
 
-    allowed_seats = models.IntegerField(default=1)
+    allowed_seats = models.IntegerField(default=MAX_SEATS_IN_FREE_PLAN)
     allowed_30d_api_calls = models.IntegerField(default=MAX_API_CALLS_IN_FREE_PLAN)
     allowed_projects = models.IntegerField(default=1, blank=True, null=True)
+
+    audit_log_visibility_days = models.IntegerField(default=0, null=True, blank=True)
+    feature_history_visibility_days = models.IntegerField(
+        default=DEFAULT_VERSION_LIMIT_DAYS, null=True, blank=True
+    )
 
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
 
     @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
     def erase_api_notifications(self):
         self.organisation.api_usage_notifications.all().delete()
+
+    def upgrade_to_enterprise(self, seats: int, api_calls: int):
+        self.allowed_seats = seats
+        self.allowed_30d_api_calls = api_calls
+
+        self.allowed_projects = None
+        self.audit_log_visibility_days = None
+        self.feature_history_visibility_days = None
+
+    def reset_to_defaults(self):
+        """
+        Resets all limits and CB related data to the defaults, leaving the
+        usage data intact.
+        """
+        self.current_billing_term_starts_at = None
+        self.current_billing_term_ends_at = None
+
+        self.allowed_seats = MAX_SEATS_IN_FREE_PLAN
+        self.allowed_30d_api_calls = MAX_API_CALLS_IN_FREE_PLAN
+        self.allowed_projects = 1
+        self.audit_log_visibility_days = 0
+        self.feature_history_visibility_days = DEFAULT_VERSION_LIMIT_DAYS
+
+        self.chargebee_email = None
+
+    def as_base_subscription_metadata(self, **overrides) -> BaseSubscriptionMetadata:
+        kwargs = {
+            **self._get_default_subscription_metadata_kwargs(),
+            **overrides,
+        }
+        return BaseSubscriptionMetadata(**kwargs)
+
+    def as_chargebee_subscription_metadata(self, **overrides) -> ChargebeeObjMetadata:
+        kwargs = {
+            **self._get_default_subscription_metadata_kwargs(),
+            "chargebee_email": self.chargebee_email,
+            **overrides,
+        }
+        return ChargebeeObjMetadata(**kwargs)
+
+    def _get_default_subscription_metadata_kwargs(self) -> dict[str, Any]:
+        return {
+            "seats": self.allowed_seats,
+            "api_calls": self.allowed_30d_api_calls,
+            "projects": self.allowed_projects,
+            "audit_log_visibility_days": self.audit_log_visibility_days,
+            "feature_history_visibility_days": self.feature_history_visibility_days,
+        }
 
 
 class OrganisationAPIUsageNotification(models.Model):

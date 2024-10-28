@@ -10,7 +10,7 @@ import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 
 :::tip
 
-Server Side SDKs can run in 2 different modes: `Local Evaluation` and `Remote Evaluation`. We recommend
+Server Side SDKs can run in 2 different modes: Local Evaluation and Remote Evaluation. We recommend
 [reading up about the differences](/clients#server-side-sdks) first before integrating the SDKS into your applications.
 
 :::
@@ -515,21 +515,21 @@ buttonData, _ := flags.GetFeatureValue("secret_button")
 <TabItem value="rust" label="Rust">
 
 ```rust
-use flagsmith_flag_engine::identities::Trait;
+use flagsmith::models::SDKTrait;
 use flagsmith_flag_engine::types::{FlagsmithValue, FlagsmithValueType};
 
 let identifier = "delboy@trotterstraders.co.uk";
 
-let traits = vec![Trait {
-            trait_key: "car_type".to_string(),
-            trait_value: FlagsmithValue {
+let traits = vec![SDKTrait::new(
+            "car_type".to_string(),
+            FlagsmithValue {
                 value: "robin_reliant".to_string(),
                 value_type: FlagsmithValueType::String,
             },
-        }];
+        )];
 
 // The method below triggers a network request
-let identity_flags = flagsmith.get_identity_flags(identifier, Some(traits)).unwrap();
+let identity_flags = flagsmith.get_identity_flags(identifier, Some(traits), None).unwrap();
 
 let show_button = identity_flags.is_feature_enabled("secret_button").unwrap();
 let button_data = identity_flags.get_feature_value_as_string("secret_button").unwrap();
@@ -874,6 +874,86 @@ class MyCustomOfflineHandler
     # Some code providing the environment for the handler
   end
 end
+```
+
+</TabItem>
+<TabItem value="rust" label="Rust">
+
+```rust
+# Using the built-in local file handler
+
+let handler = offline_handler::LocalFileHandler::new("environment.json").unwrap();
+
+# Instantiate the client with offline handler
+
+  let flagsmith_options = FlagsmithOptions {
+    offline_handler: Some(Box::new(handler)),
+    ..Default::default()
+};
+
+let flagsmith = Flagsmith::new(ENVIRONMENT_KEY.to_string(), flagsmith_options);
+
+
+# Defining a custom offline handler
+impl OfflineHandler for MyCustomOfflineHandler {
+    fn get_environment(&self) -> Environment {
+      ...
+    }
+}
+
+```
+
+</TabItem>
+<TabItem value="go" label="Go">
+
+```go
+# Using the built-in local file handler
+
+envJsonPath := "./fixtures/environment.json"
+offlineHandler, err := flagsmith.NewLocalFileHandler(envJsonPath)
+
+# Instantiate the client with offline handler
+
+flagsmith := flagsmith.NewClient(EnvironmentAPIKey, flagsmith.WithOfflineHandler(offlineHandler),
+    flagsmith.WithBaseURL(server.URL+"/api/v1/"))
+
+
+# Defining a custom offline handler
+type CustomOfflineHandler struct {
+    ...
+}
+
+func (handler *CustomOfflineHandler) GetEnvironment() *environments.EnvironmentModel {
+  ...
+}
+
+```
+
+</TabItem>
+
+<TabItem value="php" label="PHP">
+
+```php
+// Using the built-in local file handler
+
+$offline_handler = new LocalFileHandler("/path/to/environment.json")
+
+// Instantiate the client with offline mode set to true
+
+$flagsmith = new Flagsmith(
+    offline_mode: true,
+    offline_handler: offline_handler,
+)
+
+// Defining a custom offline handler
+
+class LocalFileHandler implements IOfflineHandler
+{
+    public function getEnvironment()
+    {
+        // Some code providing the environment for the handler
+    }
+}
 ```
 
 </TabItem>
@@ -1456,6 +1536,17 @@ $flagsmith = new Flagsmith(
     Optional
     */
     Closure $defaultFlagHandler = null
+
+    /*
+    (Available in 4.4.0+) Set the SDK into offline mode
+    Optional
+    */
+    bool $offlineMode = false,
+
+    # (Available in 4.4.0+) Provide an offline handler to use with offline mode, or
+    # as a means of returning default flags.
+    # Optional
+    IOfflineHandler $offlineHandler = null,
 );
 ```
 
@@ -1501,6 +1592,13 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
         // the request to flagsmith fails or the flag requested is not included in the
         // response
         flagsmith.WithDefaultHandler(defaultFlagHandler),
+
+        // WithOfflineMode returns an Option function that enables the offline mode.
+        flagsmith.WithOfflineHandler(offlineHandler)
+
+        // WithOfflineMode returns an Option function that enables the offline mode.
+        // (before using this option, you should set the offline handler)
+        flagsmith.WithOfflineMode()
 
         // Allows the client to use any logger that implements the `Logger` interface.
         flagsmith.WithLogger(ctx),
@@ -1554,6 +1652,12 @@ let options = FlagsmithOptions {
     // feature is Requested
     // Defaults to None
     default_flag_handler: None
+
+    // Provide an offline handler to use with offline mode, or as a means of returning default flags
+    offline_handler: None
+
+    // Set the SDK into offline mode(offline_handler must be set)
+    offline_mode: false
 };
 
 // Required Arguments
@@ -1682,7 +1786,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("http://yoururl.com")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()
@@ -1698,7 +1802,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("http://yoururl.com")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()
@@ -1736,7 +1840,7 @@ final FlagsmithClient flagsmithClient = FlagsmithClient.newBuilder()
                 .setApiKey("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
                 .withConfiguration(FlagsmithConfig
                         .newBuilder()
-                        .baseURI("http://yoururl.com")
+                        .baseURI("https://flagsmith.example.com/api/v1/")
                         .build())
                 .withCache(FlagsmithCacheConfig
                         .newBuilder()

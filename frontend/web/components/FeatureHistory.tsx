@@ -1,48 +1,33 @@
 import React, { FC, useState } from 'react'
-import FlagSelect from 'components/FlagSelect'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { RouterChildContext } from 'react-router'
-import Utils from 'common/utils/utils'
-import ProjectStore from 'common/stores/project-store'
 import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
 import { useGetUsersQuery } from 'common/services/useUser'
 import AccountStore from 'common/stores/account-store'
-import PanelSearch from 'components/PanelSearch'
-import {
-  Environment,
-  FeatureVersion as TFeatureVersion,
-} from 'common/types/responses'
-import PageTitle from 'components/PageTitle'
-import Button from 'components/base/forms/Button'
-import FeatureVersion from 'components/FeatureVersion'
-import InlineModal from 'components/InlineModal'
-import TableFilterItem from 'components/tables/TableFilterItem'
+import { FeatureVersion as TFeatureVersion } from 'common/types/responses'
+import Button from './base/forms/Button'
+import FeatureVersion from './FeatureVersion'
+import InlineModal from './InlineModal'
+import TableFilterItem from './tables/TableFilterItem'
 import moment from 'moment'
-import { Link } from 'react-router-dom'
-import DateList from 'components/DateList'
+import DateList from './DateList'
+import PlanBasedBanner from './PlanBasedAccess'
+import classNames from 'classnames'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
-  router: RouterChildContext['router']
-
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+  environmentId: string
+  environmentApiKey: string
+  projectId: string
+  feature: number
 }
 
-const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
-  const feature = Utils.fromParam(router.route.location.search)?.feature
+const FeatureHistory: FC<FeatureHistoryPageType> = ({
+  environmentApiKey,
+  environmentId,
+  feature,
+  projectId,
+}) => {
   const [open, setOpen] = useState(false)
-
-  const env: Environment | undefined = ProjectStore.getEnvironment(
-    match.params.environmentId,
-  ) as any
-  // @ts-ignore
-  const environmentId = `${env?.id}`
-  const environmentApiKey = `${env?.api_key}`
   const { data: users } = useGetUsersQuery({
     organisationId: AccountStore.getOrganisation().id,
   })
@@ -54,41 +39,29 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
       is_live: true,
       page,
     },
-    { skip: !env || !feature },
+    { skip: !environmentId || !feature },
   )
   const [selected, setSelected] = useState<TFeatureVersion | null>(null)
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
-
   const [diff, setDiff] = useState<null | string>(null)
+  const versionLimit = 3
   return (
-    <div className='container app-container'>
-      <PageTitle title={'History'}>
-        <div>
-          View and rollback history of feature values, multivariate values and
-          segment overrides.
-        </div>
-      </PageTitle>
-      <div className='row'>
-        <div className='col-md-4'>
-          <div className='flex-row'>
-            <label className='mb-0'>Feature</label>
-            <div className='flex-fill ml-2'>
-              <FlagSelect
-                placeholder='Select a Feature...'
-                projectId={match.params.projectId}
-                onChange={(flagId: string) => {
-                  router.history.replace(
-                    `${document.location.pathname}?feature=${flagId}`,
-                  )
-                }}
-                value={feature ? parseInt(feature) : null}
-              />
-            </div>
-          </div>
-        </div>
+    <div>
+      <h5>Change History</h5>
+      <div>
+        View and rollback history of feature values, multivariate values and
+        segment overrides.
       </div>
       <div className='mt-4'>
+        {/*{!!versionLimit && (*/}
+        {/*  <PlanBasedBanner*/}
+        {/*    className='mb-4'*/}
+        {/*    force*/}
+        {/*    feature={'VERSIONING'}*/}
+        {/*    theme={'page'}*/}
+        {/*  />*/}
+        {/*)}*/}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
@@ -96,11 +69,20 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           renderRow={(v: TFeatureVersion, i: number) => {
+            const isOverLimit = false
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row className='list-item py-2 mh-auto'>
-                <div className='flex-fill'>
+              <Row
+                className={classNames('list-item py-2 mh-auto', {
+                  'blur no-pointer': isOverLimit,
+                })}
+              >
+                <div
+                  className={classNames('flex-fill', {
+                    'overflow-hidden': !open,
+                  })}
+                >
                   <div className='flex-row flex-fill'>
                     <div
                       className='table-column flex-fill'
@@ -119,8 +101,10 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                       </div>
                     </div>
                     <div className='table-column' style={{ width: widths[1] }}>
-                      <Link
-                        to={`/project/${match.params.projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
+                      <a
+                        href={`/project/${projectId}/environment/${environmentApiKey}/history/${v.uuid}/`}
+                        target='_blank'
+                        rel='noreferrer'
                       >
                         <Button
                           theme='text'
@@ -129,7 +113,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                         >
                           View Details
                         </Button>
-                      </Link>
+                      </a>
                     </div>
                     <div className='table-column' style={{ width: widths[1] }}>
                       {i + 1 !== data!.results.length && (
@@ -214,7 +198,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                   </div>
                   {diff === v.uuid && (
                     <FeatureVersion
-                      projectId={`${match.params.projectId}`}
+                      projectId={`${projectId}`}
                       featureId={feature}
                       environmentId={environmentId}
                       newUUID={compareToLive ? live!.uuid : v.uuid}
@@ -235,4 +219,4 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   )
 }
 
-export default ConfigProvider(FeatureHistoryPage)
+export default ConfigProvider(FeatureHistory)

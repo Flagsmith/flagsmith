@@ -2,11 +2,11 @@ import Utils from 'common/utils/utils'
 
 module.exports = () => `// Maven
 ${Utils.escapeHtml('<dependency>')}
-${Utils.escapeHtml('<groupId>com.flagsmith</groupId>')}
-${Utils.escapeHtml('<artifactId>flagsmith-java-client</artifactId>')}
-${Utils.escapeHtml('<version>5.0.0/version>')}
-</dependency>
+    ${Utils.escapeHtml('<groupId>com.flagsmith</groupId>')}
+    ${Utils.escapeHtml('<artifactId>flagsmith-java-client</artifactId>')}
+    ${Utils.escapeHtml('<version>7.4.1</version>')}
+${Utils.escapeHtml('</dependency>')}
 
 // Gradle
-implementation 'com.flagsmith:flagsmith-java-client:5.0.0'
+implementation 'com.flagsmith:flagsmith-java-client:7.4.1'
 `

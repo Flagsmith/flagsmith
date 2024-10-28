@@ -385,20 +385,14 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
     )
 
 
-@pytest.mark.parametrize(
-    "period",
-    [
-        CURRENT_BILLING_PERIOD,
-        PREVIOUS_BILLING_PERIOD,
-    ],
-)
-def test_get_usage_data_returns_empty_list_when_unset_subscription_information_cache(
-    period: str,
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_usage_data_returns_30d_of_60d_when_unset_subscription_information_cache_for_previous_billing_period(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
 ) -> None:
     # Given
+    period = PREVIOUS_BILLING_PERIOD
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
@@ -406,11 +400,43 @@ def test_get_usage_data_returns_empty_list_when_unset_subscription_information_c
     assert getattr(organisation, "subscription_information_cache", None) is None
 
     # When
-    usage_data = get_usage_data(organisation, period=period)
+    get_usage_data(organisation, period=period)
 
     # Then
-    assert usage_data == []
-    mocked_get_usage_data_from_local_db.assert_not_called()
+    mocked_get_usage_data_from_local_db.assert_called_once_with(
+        organisation=organisation,
+        environment_id=None,
+        project_id=None,
+        date_start=datetime(2022, 11, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_for_current_billing_period(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
+    # Given
+    period = CURRENT_BILLING_PERIOD
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
+    mocked_get_usage_data_from_local_db = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
+    )
+    assert getattr(organisation, "subscription_information_cache", None) is None
+
+    # When
+    get_usage_data(organisation, period=period)
+
+    # Then
+    mocked_get_usage_data_from_local_db.assert_called_once_with(
+        organisation=organisation,
+        environment_id=None,
+        project_id=None,
+        date_start=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")

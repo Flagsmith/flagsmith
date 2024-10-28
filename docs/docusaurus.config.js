@@ -12,6 +12,11 @@ const config = {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
 
+    markdown: {
+        mermaid: true,
+    },
+    themes: ['@docusaurus/theme-mermaid'],
+
     themeConfig:
         /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
         ({
@@ -224,7 +229,15 @@ const config = {
         ],
     ],
 
-    scripts: ['/js/crisp-chat.js'],
+    scripts: [
+        '/js/crisp-chat.js',
+        {
+            src: '//js-eu1.hs-scripts.com/143451822.js',
+            async: true,
+            defer: true,
+            id: 'hs-script-loader',
+        },
+    ],
 
     clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
 };

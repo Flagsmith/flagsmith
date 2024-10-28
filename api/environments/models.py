@@ -131,6 +131,11 @@ class Environment(
     )
 
     use_v2_feature_versioning = models.BooleanField(default=False)
+    use_identity_overrides_in_local_eval = models.BooleanField(
+        default=True,
+        help_text="When enabled, identity overrides will be included in the environment document",
+    )
+    objects = EnvironmentManager()
 
     is_creating = models.BooleanField(
         default=False,

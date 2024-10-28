@@ -126,10 +126,15 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         return Response(status=status.HTTP_200_OK)
 
     if subscription["status"] in ("non_renewing", "cancelled"):
-        existing_subscription.prepare_for_cancel(
-            datetime.fromtimestamp(subscription.get("current_term_end")).replace(
+        cancellation_date = subscription.get("current_term_end")
+        if cancellation_date is not None:
+            cancellation_date = datetime.fromtimestamp(cancellation_date).replace(
                 tzinfo=timezone.utc
-            ),
+            )
+        else:
+            cancellation_date = timezone.now()
+        existing_subscription.prepare_for_cancel(
+            cancellation_date,
             update_chargebee=False,
         )
         return Response(status=status.HTTP_200_OK)
@@ -152,6 +157,8 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         "organisation_id": existing_subscription.organisation_id,
         "allowed_projects": subscription_metadata.projects,
         "chargebee_email": subscription_metadata.chargebee_email,
+        "feature_history_visibility_days": subscription_metadata.feature_history_visibility_days,
+        "audit_log_visibility_days": subscription_metadata.audit_log_visibility_days,
     }
 
     if "current_term_end" in subscription:

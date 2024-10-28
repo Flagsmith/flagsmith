@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
+from core.helpers import get_current_site_url
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -84,7 +85,7 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(
     mocked_ffadmin_user = mocker.patch("organisations.tasks.FFAdminUser")
     max_seats = 10
     mocker.patch(
-        "organisations.tasks.get_subscription_metadata",
+        "organisations.models.Subscription.get_subscription_metadata",
         return_value=SubscriptionMetadata(seats=max_seats),
     )
 
@@ -109,6 +110,13 @@ def test_subscription_cancellation(db: None) -> None:
     organisation = Organisation.objects.create()
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
+        allowed_seats=5,
+        allowed_30d_api_calls=1_000_000,
+        allowed_projects=None,
+        api_calls_24h=30_000,
+        api_calls_7d=210_000,
+        api_calls_30d=900_000,
+        chargebee_email="foo@example.com",
     )
     UserOrganisation.objects.create(
         organisation=organisation,
@@ -138,7 +146,8 @@ def test_subscription_cancellation(db: None) -> None:
     # Then
     organisation.refresh_from_db()
     subscription.refresh_from_db()
-    assert getattr(organisation, "subscription_information_cache", None) is None
+    organisation.subscription_information_cache.refresh_from_db()
+
     assert subscription.subscription_id is None
     assert subscription.subscription_date is None
     assert subscription.plan == FREE_PLAN_ID
@@ -150,6 +159,23 @@ def test_subscription_cancellation(db: None) -> None:
     assert subscription.payment_method is None
     assert subscription.cancellation_date is None
     assert subscription.notes == notes
+
+    # The CB / limit data on the subscription information cache object is reset
+    assert organisation.subscription_information_cache.chargebee_email is None
+    assert (
+        organisation.subscription_information_cache.allowed_30d_api_calls
+        == MAX_API_CALLS_IN_FREE_PLAN
+    )
+    assert organisation.subscription_information_cache.allowed_projects == 1
+    assert (
+        organisation.subscription_information_cache.allowed_seats
+        == MAX_SEATS_IN_FREE_PLAN
+    )
+
+    # But the usage data isn't
+    assert organisation.subscription_information_cache.api_calls_24h == 30_000
+    assert organisation.subscription_information_cache.api_calls_7d == 210_000
+    assert organisation.subscription_information_cache.api_calls_30d == 900_000
 
 
 @pytest.mark.freeze_time("2023-01-19T09:12:34+00:00")
@@ -228,9 +254,14 @@ def test_finish_subscription_cancellation(db: None, mocker: MockerFixture) -> No
     assert organisation4.num_seats == organisation_user_count
 
 
-def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) -> None:
+def test_send_org_subscription_cancelled_alert(
+    mocker: MockerFixture, settings: SettingsWrapper
+) -> None:
     # Given
-    send_mail_mock = mocker.patch("users.models.send_mail")
+    send_mail_mock = mocker.patch("organisations.tasks.send_mail")
+
+    recipient = "foo@bar.com"
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = [recipient]
 
     # When
     send_org_subscription_cancelled_alert(
@@ -243,7 +274,7 @@ def test_send_org_subscription_cancelled_alert(db: None, mocker: MockerFixture) 
         subject="Organisation TestCorp has cancelled their subscription",
         message="Organisation TestCorp has cancelled their subscription on 2023-02-08 09:12:34",
         from_email="noreply@flagsmith.com",
-        recipient_list=[],
+        recipient_list=[recipient],
         fail_silently=True,
     )
 
@@ -279,6 +310,33 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
     assert inspecting_handler.messages == [
         f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
     ]
+
+
+def test_handle_api_usage_notification_for_organisation_when_cancellation_date_is_set(
+    organisation: Organisation,
+    inspecting_handler: logging.Handler,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.cancellation_date = timezone.now()
+    organisation.subscription.save()
+    mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    mock_api_usage.return_value = 25
+    from organisations.task_helpers import logger
+
+    logger.addHandler(inspecting_handler)
+
+    # When
+    result = handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    assert result is None
+    assert OrganisationAPIUsageNotification.objects.count() == 0
+
+    # Check to ensure that error messages haven't been set.
+    assert inspecting_handler.messages == []
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -726,7 +784,6 @@ def test_handle_api_usage_notifications_missing_info_cache(
     from organisations.task_helpers import logger
 
     logger.addHandler(inspecting_handler)
-
     assert organisation.has_subscription_information_cache() is False
 
     mock_api_usage = mocker.patch(
@@ -823,6 +880,50 @@ def test_charge_for_api_call_count_overages_scale_up(
     assert api_billing.api_overage == 200_000
     assert api_billing.immediate_invoice is False
     assert api_billing.billed_at == now
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_cancellation_date(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.cancellation_date = timezone.now()
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    assert OrganisationAPIBilling.objects.count() == 0
+    mock_api_usage.assert_not_called()
+    client_mock.get_identity_flags.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -928,6 +1029,65 @@ def test_charge_for_api_call_count_overages_grace_period(
     # Then
     mock_chargebee_update.assert_not_called()
     assert OrganisationAPIBilling.objects.count() == 0
+    assert organisation.breached_grace_period
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_grace_period_over(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    now = timezone.now()
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation)
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    # Set the return value to something less than 200% of base rate
+    mock_api_usage.return_value = 115_000
+    assert OrganisationAPIBilling.objects.count() == 0
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    # Since the OrganisationBreachedGracePeriod was created already
+    # the charges go through.
+    mock_chargebee_update.assert_called_once_with(
+        "fancy_sub_id23",
+        {
+            "addons": [{"id": "additional-api-scale-up-monthly", "quantity": 1}],
+            "prorate": False,
+            "invoice_immediately": False,
+        },
+    )
+    assert OrganisationAPIBilling.objects.count() == 1
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -1103,6 +1263,123 @@ def test_charge_for_api_call_count_overages_start_up(
     charge_for_api_call_count_overages()
     assert OrganisationAPIBilling.objects.count() == 1
     calls_mock.assert_not_called()
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_non_standard(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    inspecting_handler: logging.Handler,
+) -> None:
+    # Given
+    now = timezone.now()
+
+    from organisations.tasks import logger
+
+    logger.addHandler(inspecting_handler)
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "nonstandard-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 202_005
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    mock_chargebee_update.assert_not_called()
+    assert inspecting_handler.messages == [
+        f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
+        f"for organisation {organisation.id}"
+    ]
+
+    assert OrganisationAPIBilling.objects.count() == 0
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_charge_for_api_call_count_overages_with_exception(
+    organisation: Organisation,
+    mocker: MockerFixture,
+    inspecting_handler: logging.Handler,
+) -> None:
+    # Given
+    now = timezone.now()
+
+    from organisations.tasks import logger
+
+    logger.addHandler(inspecting_handler)
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_seats=10,
+        allowed_projects=3,
+        allowed_30d_api_calls=100_000,
+        chargebee_email="test@example.com",
+        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_ends_at=now + timedelta(minutes=30),
+    )
+    organisation.subscription.subscription_id = "fancy_sub_id23"
+    organisation.subscription.plan = "startup-v2"
+    organisation.subscription.save()
+    OrganisationAPIUsageNotification.objects.create(
+        organisation=organisation,
+        percent_usage=100,
+        notified_at=now,
+    )
+
+    get_client_mock = mocker.patch("organisations.tasks.get_client")
+    client_mock = MagicMock()
+    get_client_mock.return_value = client_mock
+    client_mock.get_identity_flags.return_value.is_feature_enabled.return_value = True
+    mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
+    mock_chargebee_update = mocker.patch(
+        "organisations.chargebee.chargebee.chargebee.Subscription.update"
+    )
+
+    mock_api_usage = mocker.patch(
+        "organisations.tasks.get_current_api_usage",
+    )
+    mock_api_usage.return_value = 202_005
+    mocker.patch(
+        "organisations.tasks.add_100k_api_calls_start_up",
+        side_effect=ValueError("An error occurred"),
+    )
+
+    # When
+    charge_for_api_call_count_overages()
+
+    # Then
+    assert inspecting_handler.messages[0].startswith(
+        f"Unable to charge organisation {organisation.id} due to billing error"
+    )
+    mock_chargebee_update.assert_not_called()
+    assert OrganisationAPIBilling.objects.count() == 0
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -1284,6 +1561,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation3 = Organisation.objects.create(name="Org #3")
     organisation4 = Organisation.objects.create(name="Org #4")
     organisation5 = Organisation.objects.create(name="Org #5")
+    organisation6 = Organisation.objects.create(name="Org #6")
 
     for org in [
         organisation,
@@ -1291,6 +1569,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         organisation3,
         organisation4,
         organisation5,
+        organisation6,
     ]:
         OrganisationSubscriptionInformationCache.objects.create(
             organisation=org,
@@ -1309,7 +1588,13 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     mock_api_usage.return_value = 12_005
 
     # Add users to test email delivery
-    for org in [organisation2, organisation3, organisation4, organisation5]:
+    for org in [
+        organisation2,
+        organisation3,
+        organisation4,
+        organisation5,
+        organisation6,
+    ]:
         admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
         staff_user.add_organisation(org, role=OrganisationRole.USER)
 
@@ -1358,6 +1643,15 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         percent_usage=120,
     )
 
+    # Should be immediately blocked because they've previously breached the grace
+    # period
+    OrganisationAPIUsageNotification.objects.create(
+        notified_at=now,
+        organisation=organisation6,
+        percent_usage=120,
+    )
+    OrganisationBreachedGracePeriod.objects.create(organisation=organisation6)
+
     # When
     restrict_use_due_to_api_limit_grace_period_over()
 
@@ -1367,6 +1661,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     organisation3.refresh_from_db()
     organisation4.refresh_from_db()
     organisation5.refresh_from_db()
+    organisation6.refresh_from_db()
 
     # Organisation without breaching 100 percent usage is ok.
     assert organisation3.stop_serving_flags is False
@@ -1390,6 +1685,9 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
     assert organisation2.stop_serving_flags is True
     assert organisation2.block_access_to_admin is True
     assert organisation2.api_limit_access_block
+    assert organisation6.stop_serving_flags is True
+    assert organisation6.block_access_to_admin is True
+    assert organisation6.api_limit_access_block
 
     client_mock.get_identity_flags.call_args_list == [
         call(
@@ -1406,20 +1704,27 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
                 "subscription.plan": organisation2.subscription.plan,
             },
         ),
+        call(
+            f"org.{organisation6.id}",
+            traits={
+                "organisation_id": organisation6.id,
+                "subscription.plan": organisation6.subscription.plan,
+            },
+        ),
     ]
 
-    assert len(mailoutbox) == 2
+    assert len(mailoutbox) == 3
     email1 = mailoutbox[0]
     assert email1.subject == "Flagsmith API use has been blocked due to overuse"
     assert email1.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation},
+        context={"organisation": organisation, "url": get_current_site_url()},
     )
     email2 = mailoutbox[1]
     assert email2.subject == "Flagsmith API use has been blocked due to overuse"
     assert email2.body == render_to_string(
         "organisations/api_flags_blocked_notification.txt",
-        context={"organisation": organisation2},
+        context={"organisation": organisation2, "url": get_current_site_url()},
     )
 
     assert len(email2.alternatives) == 1
@@ -1428,10 +1733,31 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
 
     assert email2.alternatives[0][0] == render_to_string(
         "organisations/api_flags_blocked_notification.html",
-        context={"organisation": organisation2},
+        context={
+            "organisation": organisation2,
+            "grace_period": False,
+            "url": get_current_site_url(),
+        },
     )
     assert email2.from_email == "noreply@flagsmith.com"
     assert email2.to == ["admin@example.com", "staff@example.com"]
+
+    email3 = mailoutbox[2]
+    assert email3.subject == "Flagsmith API use has been blocked due to overuse"
+    assert len(email3.alternatives) == 1
+    assert len(email3.alternatives[0]) == 2
+    assert email3.alternatives[0][1] == "text/html"
+
+    assert email3.alternatives[0][0] == render_to_string(
+        "organisations/api_flags_blocked_notification.html",
+        context={
+            "organisation": organisation6,
+            "grace_period": False,
+            "url": get_current_site_url(),
+        },
+    )
+    assert email3.from_email == "noreply@flagsmith.com"
+    assert email3.to == ["admin@example.com", "staff@example.com"]
 
     # Organisations that change their subscription are unblocked.
     organisation.subscription.plan = "scale-up-v2"

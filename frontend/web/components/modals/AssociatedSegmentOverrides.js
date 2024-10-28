@@ -18,14 +18,22 @@ import Utils from 'common/utils/utils'
 class TheComponent extends Component {
   state = {
     isLoading: true,
+    selectedEnv: ProjectStore.getEnvs()?.[0]?.api_key,
   }
   componentDidMount() {
     this.fetch()
   }
   fetch = () => {
+    if (!this.state.selectedEnv) {
+      return
+    }
     _data
       .get(
-        `${Project.api}projects/${this.props.projectId}/segments/${this.props.id}/associated-features/`,
+        `${Project.api}projects/${this.props.projectId}/segments/${
+          this.props.id
+        }/associated-features/?environment=${ProjectStore.getEnvironmentIdFromKey(
+          this.state.selectedEnv,
+        )}`,
       )
       .then((v) =>
         Promise.all(
@@ -45,7 +53,7 @@ class TheComponent extends Component {
                 (v) => v.id === e.environment,
               )
               e.env = env
-              return env && env.name
+              return env && env.api_key
             }),
           )
           .then((v) => {
@@ -57,7 +65,7 @@ class TheComponent extends Component {
             })
             const newItems = this.state.newItems || {}
             const selectedEnv =
-              this.state.selectedEnv || ProjectStore.getEnvs()[0].name
+              this.state.selectedEnv || ProjectStore.getEnvs()[0].api_key
             newItems[selectedEnv] = (newItems[selectedEnv] || []).filter(
               (newItem) => {
                 const existingSegmentOverride =
@@ -94,7 +102,7 @@ class TheComponent extends Component {
       (newItems && newItems[this.state.selectedEnv]) || []
 
     const environment = ProjectStore.getEnvs().find(
-      (v) => v.name === this.state.selectedEnv,
+      (v) => v.api_key === this.state.selectedEnv,
     )
     const selectedResults = selectedNewResults.concat(
       (results && results[this.state.selectedEnv]) || [],
@@ -117,13 +125,9 @@ class TheComponent extends Component {
       </div>
     )
 
-    return this.state.isLoading ? (
-      <div className='text-center'>
-        <Loader />
-      </div>
-    ) : (
+    return (
       <div className='mt-4'>
-        <InfoMessage>
+        <InfoMessage collapseId={'associated-segment-overrides'}>
           This shows the list of segment overrides associated with this segment.
           <br />
           Segment overrides will only apply when you identify via the SDK.{' '}
@@ -137,7 +141,7 @@ class TheComponent extends Component {
           .
         </InfoMessage>
         <SegmentOverrideLimit
-          id={environment.api_key}
+          id={environment?.api_key}
           maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
         />
         <div>
@@ -145,66 +149,71 @@ class TheComponent extends Component {
             component={
               <EnvironmentSelect
                 projectId={this.props.projectId}
-                value={environment.api_key}
+                value={environment?.api_key}
                 onChange={(selectedEnv) =>
-                  this.setState({
-                    selectedEnv: ProjectStore.getEnvs().find(
-                      (v) => v.api_key === selectedEnv,
-                    ).name,
-                  })
+                  this.setState(
+                    {
+                      selectedEnv,
+                    },
+                    this.fetch,
+                  )
                 }
               />
             }
             title='Environment'
           />
-          <PanelSearch
-            searchPanel={addOverride}
-            search={this.state.search}
-            onChange={(search) => this.setState({ search })}
-            filterRow={(row, search) =>
-              row.feature.name.toLowerCase().includes(search.toLowerCase())
-            }
-            className='no-pad panel-override'
-            title='Associated Features'
-            items={selectedResults}
-            renderNoResults={
-              <Panel className='no-pad' title='Associated Features'>
-                {addOverride}
-                <div className='p-2 text-center'>
-                  There are no segment overrides in this environment
+
+          {this.state.isLoading ? (
+            <div className='text-center'>
+              <Loader />
+            </div>
+          ) : (
+            <PanelSearch
+              searchPanel={addOverride}
+              search={this.state.search}
+              onChange={(search) => this.setState({ search })}
+              filterRow={(row, search) =>
+                row.feature.name.toLowerCase().includes(search.toLowerCase())
+              }
+              className='no-pad panel-override'
+              title='Associated Features'
+              items={selectedResults}
+              renderNoResults={
+                <Panel className='no-pad' title='Associated Features'>
+                  {addOverride}
+                  <div className='p-2 text-center'>
+                    There are no segment overrides in this environment
+                  </div>
+                </Panel>
+              }
+              renderRow={(v) => (
+                <div key={v.feature.id} className='list-item-override p-3 mb-4'>
+                  <div>
+
+                    <WrappedSegmentOverrides
+                      onSave={this.fetch}
+                      projectFlag={v.feature}
+                      newSegmentOverrides={v.newSegmentOverrides}
+                      onRemove={() => {
+                        if (v.newSegmentOverrides) {
+                          newItems[this.state.selectedEnv] = newItems[
+                            this.state.selectedEnv
+                          ].filter((x) => x !== v)
+                          this.setState({
+                            newItems,
+                          })
+                        }
+                      }}
+                      id={this.props.id}
+                      projectId={this.props.projectId}
+                      environmentId={v.env.api_key}
+                      readOnly={this.props.readOnly}
+                    />
+                  </div>
                 </div>
-              </Panel>
-            }
-            renderRow={(v) => (
-              <div key={v.feature.id} className='list-item-override p-3 mb-4'>
-                <div
-                  onClick={() => {
-                    // window.open(`${document.location.origin}/project/${this.props.projectId}/environment/${v.env.api_key}/features?feature=${v.feature.id}&tab=1`)
-                  }}
-                >
-                  <WrappedSegmentOverrides
-                    onSave={this.fetch}
-                    projectFlag={v.feature}
-                    newSegmentOverrides={v.newSegmentOverrides}
-                    onRemove={() => {
-                      if (v.newSegmentOverrides) {
-                        newItems[this.state.selectedEnv] = newItems[
-                          this.state.selectedEnv
-                        ].filter((x) => x !== v)
-                        this.setState({
-                          newItems,
-                        })
-                      }
-                    }}
-                    id={this.props.id}
-                    projectId={this.props.projectId}
-                    environmentId={v.env.api_key}
-                    readOnly={this.props.readOnly}
-                  />
-                </div>
-              </div>
-            )}
-          />
+              )}
+            />
+          )}
         </div>
       </div>
     )
@@ -304,7 +313,9 @@ export default class SegmentOverridesInner extends Component {
       segmentOverrides,
       updateSegments,
     } = this.props
-    const environment = ProjectStore.getEnvironment(environmentId)
+    const environment = ProjectStore.getEnvironment(
+      this.state.selectedEnvironment,
+    )
     const changeRequest = Utils.changeRequestsEnabled(
       environment?.minimum_change_request_approvals,
     )
@@ -331,9 +342,10 @@ export default class SegmentOverridesInner extends Component {
               )
             this.setState({ isSaving: true })
           })
-          const segmentOverride =
-            segmentOverrides && segmentOverrides.filter((v) => v.segment === id)
-          if (!segmentOverrides) return null
+          const segmentOverride = segmentOverrides?.filter?.(
+            (v) => v.segment === id,
+          )
+          if (!segmentOverride?.length) return null
           return (
             <div>
               {originalSegmentOverrides.length > 1 && (
@@ -397,7 +409,7 @@ class SegmentOverridesInnerAdd extends Component {
 
   fetchTotalSegmentOverrides() {
     const { environmentId } = this.props
-    const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
+    const env = ProjectStore.getEnvs().find((v) => v.api_key === environmentId)
 
     if (!env) {
       return
@@ -417,15 +429,17 @@ class SegmentOverridesInnerAdd extends Component {
     this.fetchTotalSegmentOverrides()
   }
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.environmentId !== this.props.environmentId) {
+  componentDidUpdate(_, prevState) {
+    if (prevState.selectedEnv !== this.state.selectedEnv) {
       this.fetchTotalSegmentOverrides()
     }
   }
   render() {
     const { environmentId, id, ignoreFlags, projectId, readOnly } = this.props
     const addValue = (featureId, feature) => {
-      const env = ProjectStore.getEnvs().find((v) => v.name === environmentId)
+      const env = ProjectStore.getEnvs().find(
+        (v) => v.api_key === environmentId,
+      )
       const item = {
         env,
         environment: environmentId,

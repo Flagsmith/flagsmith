@@ -44,7 +44,7 @@ class UserFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FFAdminUser
-        fields = ("id", "email", "first_name", "last_name", "organisations")
+        fields = ("id", "email", "first_name", "last_name", "organisations", "uuid")
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -57,7 +57,7 @@ class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField(read_only=True)
     join_date = serializers.SerializerMethodField(read_only=True)
 
-    default_fields = ("id", "email", "first_name", "last_name", "last_login")
+    default_fields = ("id", "email", "first_name", "last_name", "last_login", "uuid")
     organisation_users_fields = (
         "role",
         "date_joined",
@@ -134,12 +134,14 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
 class CustomCurrentUserSerializer(DjoserUserSerializer):
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
+    uuid = serializers.UUIDField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
         fields = DjoserUserSerializer.Meta.fields + (
             "auth_type",
             "is_superuser",
             "date_joined",
+            "uuid",
         )
 
 

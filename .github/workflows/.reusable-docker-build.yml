@@ -50,6 +50,15 @@ on:
         description: Whether to update the build status in a PR comment
         required: false
         default: false
+      trivy-db-repository:
+        type: string
+        description: Trivy Database OCI specifier
+        required: false
+        default: ghcr.io/flagsmith/trivy-db:latest
+      trivy-java-db-repository:
+        type: string
+        description: Trivy Java Database OCI specifier
+        default: ghcr.io/flagsmith/trivy-java-db:latest
     outputs:
       image:
         description: Resulting image specifier
@@ -137,32 +146,21 @@ jobs:
           build-status: 'Finished :white_check_mark:'
           security-report-status: 'Skipped'
 
-      - name: Run Trivy vulnerability scanner
+      - name: Scan ${{ steps.image-tag.outputs.image-tag }} image
         id: trivy
+        uses: ./.github/actions/trivy-scan-image
         if: inputs.scan
-        uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ steps.image-tag.outputs.image-tag }}
-          format: sarif
-          output: trivy-results.sarif
-        env:
-          TRIVY_USERNAME: ${{ inputs.ephemeral && 'x-token' || github.actor }}
-          TRIVY_PASSWORD: ${{ inputs.ephemeral && steps.depot-token.outputs.depot-token || secrets.GITHUB_TOKEN }}
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        if: inputs.scan && (success() || failure())
-        with:
+          image-tag: ${{ steps.image-tag.outputs.image-tag }}
           category: ${{ inputs.image-name }}
-          sarif_file: trivy-results.sarif
-
-      - name: Render scan results URL
-        id: scan-results-url
-        if: inputs.scan
-        run: >
-          echo scan-results-url=${{ format('{0}/{1}/security/code-scanning?query=pr%3A{2}+path%3Aflagsmith%2F{3}',
-          github.server_url, github.repository, github.event.pull_request.number, inputs.image-name) }} >>
-          $GITHUB_OUTPUT
+          # `query` value contained path:{image_name} before but not all Trivy findings
+          # conform to that. There's no category filter at the moment; for the time being,
+          # produce a shared report URL for all images.
+          query: ${{ format('pr:{0}', github.event.pull_request.number) }}
+          trivy-username: ${{ inputs.ephemeral && 'x-token' || github.actor }}
+          trivy-password: ${{ inputs.ephemeral && steps.depot-token.outputs.depot-token || secrets.GITHUB_TOKEN }}
+          trivy-db-repository: ${{ inputs.trivy-db-repository }}
+          trivy-java-db-repository: ${{ inputs.trivy-java-db-repository }}
 
       - name: Report scan results URL
         uses: ./.github/actions/docker-build-report-to-pr
@@ -171,4 +169,5 @@ jobs:
           image-tag: ${{ steps.image-tag.outputs.image-tag }}
           build-status: 'Finished :white_check_mark:'
           security-report-status:
-            "${{ format('[Results]({0}) :white_check_mark:', steps.scan-results-url.outputs.scan-results-url) }}"
+            "${{ format('[Results]({0}) {1}', steps.trivy.outputs.scan-results-url, steps.trivy.outputs.scan-outcome ==
+            'success' && ':white_check_mark:' || ':heavy_exclamation_mark:') }}"

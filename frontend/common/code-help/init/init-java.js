@@ -1,10 +1,17 @@
+import Constants from 'common/constants'
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, LIB_NAME_JAVA },
   customFeature,
 ) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
     .newBuilder()
-    .setApiKey("${envId}")
+    .setApiKey("${envId}")${
+  Constants.isCustomFlagsmithUrl
+    ? `\n    .withConfiguration(FlagsmithConfig.newBuilder()
+        .baseUri("${Project.flagsmithClientAPI}")
+        .build())`
+    : ''
+}
     .build();
 
 Flags flags = flagsmith.getEnvironmentFlags();

@@ -183,6 +183,35 @@ export type Repository = {
   owner: { login: string }
 }
 
+export type IntegrationFieldOption = { label: string; value: string }
+export type IntegrationField = {
+  key: string
+  label: string
+  default?: string
+  hidden?: boolean
+  inputType?: 'text' | 'checkbox'
+  options?: IntegrationFieldOption[]
+}
+
+export type IntegrationData = {
+  description: string
+  docs?: string
+  external: boolean
+  image: string
+  fields: IntegrationField[] | undefined
+  isExternalInstallation: boolean
+  perEnvironment: boolean
+  title?: string
+  organisation?: string
+  project?: string
+  isOauth?: boolean
+}
+
+export type ActiveIntegration = {
+  id: string
+  flagsmithEnvironment?: string
+}
+
 export type GithubRepository = {
   id: number
   github_configuration: number
@@ -292,6 +321,7 @@ export type Identity = {
   id?: string
   identifier: string
   identity_uuid?: string
+  dashboard_alias?: string
 }
 
 export type AvailablePermission = {
@@ -387,6 +417,10 @@ export type FeatureState = {
   change_request?: number
   //Added by FE
   toRemove?: boolean
+}
+
+export type TypedFeatureState = Omit<FeatureState, 'feature_state_value'> & {
+  feature_state_value: FeatureStateValue
 }
 
 export type ProjectFlag = {
@@ -501,7 +535,7 @@ export type FeatureConflict = {
   published_at: string
   is_environment_default: boolean
 }
-export type FeatureStateWithConflict = FeatureState & {
+export type FeatureStateWithConflict = TypedFeatureState & {
   conflict?: FeatureConflict
 }
 export type ChangeRequest = {

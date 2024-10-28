@@ -22,6 +22,9 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
@@ -109,6 +112,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         """
         Override create method to add new organisation to authenticated user
         """
+
+        register_hubspot_tracker(request)
         user = request.user
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
@@ -146,7 +151,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/total-count​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
     )
     @action(
         detail=True,
@@ -185,7 +190,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
         subscription_details = organisation.subscription.get_subscription_metadata()
-        serializer = self.get_serializer(instance=subscription_details)
+        serializer = self.get_serializer(
+            instance=subscription_details,
+            context={"subscription": organisation.subscription},
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
@@ -221,7 +229,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
         query_serializer=InfluxDataQuerySerializer(),
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
