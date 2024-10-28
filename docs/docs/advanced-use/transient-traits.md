@@ -14,6 +14,28 @@ Traits and Identities as transient — meaning they are used for flag evaluation
 Transient Identities and Traits are particularly useful when you need to run flag evaluations without storing specific
 data in Flagsmith. Below are common scenarios where transient Traits or Identities come in handy.
 
+### Skipping Personal Identifiable Information (PII)
+
+You can mark sensitive Traits, such as `email`, `phoneNumber`, or `locality`, as transient to enable segmentation
+without storing the actual data. For example, you may want to target users based on email domains while avoiding the
+storage of email addresses.
+
+Considering you have a Segment condition where `"email"` ends with `"example.com"`. To get flags for this Segment:
+
+```javascript
+flagsmith.updateContext({
+ identity: {
+  identifier: 'test-user-with-transient-email',
+  traits: {
+   email: { value: 'alice@example.com', transient: true },
+  },
+ },
+});
+```
+
+After making the SDK call, if you check the Identities tab, you'll see the `test-user-with-transient-email` Identity
+without the `email` Trait being stored.
+
 ### Anonymous Identities
 
 If you choose to provide a blank (`""`) or null identifier is provided, Flagsmith will automatically treat the Identity
@@ -71,28 +93,6 @@ flagsmith.setTrait('screenOrientation', { value: 'portrait', transient: true });
 
 Until you set another Trait value, the `screenOrientation` used for flag evaluations will be `portrait` in this specific
 SDK instance. The `landscape` value will remain stored in Flagsmith for other evaluations.
-
-### Skipping Personal Identifiable Information (PII)
-
-You can mark sensitive Traits, such as `email`, `phoneNumber`, or `locality`, as transient to enable segmentation
-without storing the actual data. For example, you may want to target users based on email domains while avoiding the
-storage of email addresses.
-
-Considering you have a Segment condition where `"email"` ends with `"example.com"`. To get flags for this Segment:
-
-```javascript
-flagsmith.updateContext({
- identity: {
-  identifier: 'test-user-with-transient-email',
-  traits: {
-   email: { value: 'alice@example.com', transient: true },
-  },
- },
-});
-```
-
-After making the SDK call, if you check the Identities tab, you'll see the `test-user-with-transient-email` Identity
-without the `email` Trait being stored.
 
 ## Usage
 
