@@ -24,6 +24,20 @@ local IP.
 npm run start -- --host 0.0.0.0
 ```
 
+### Checking your changes with prettier
+
+After you make changes to the documentation, you can check the changes by running the following command:
+
+```console
+npx prettier --check docs
+```
+
+If you want to apply any fixes discovered, you can run the following command:
+
+```console
+npx prettier <YOUR_DOC> --write
+```
+
 ## Build
 
 ```console
