@@ -135,7 +135,6 @@ class Environment(
         default=True,
         help_text="When enabled, identity overrides will be included in the environment document",
     )
-    objects = EnvironmentManager()
 
     is_creating = models.BooleanField(
         default=False,
