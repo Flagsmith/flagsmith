@@ -95,6 +95,8 @@ ingress:
      paths:
       - /api/
       - /health/
+      - /admin/
+      - /static/
 
 frontend:
  extraEnv:
