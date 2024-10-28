@@ -2,7 +2,6 @@ import typing
 
 from rest_framework import serializers
 
-from environments.constants import CLONE_METHOD_ASYNC, CLONE_METHOD_SYNC
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
@@ -130,9 +129,11 @@ class CreateUpdateEnvironmentSerializer(
 
 
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):
-    clone_method = serializers.ChoiceField(
-        choices=[CLONE_METHOD_SYNC, CLONE_METHOD_ASYNC],
-        write_only=True,
+    clone_feature_states_async = serializers.BooleanField(
+        default=False,
+        help_text="If True, the environment will be created immediately, but the feature states "
+        "will be created asynchronously. Environment will have `is_creating: true` until"
+        "this process is completed.",
     )
 
     class Meta:
@@ -143,8 +144,10 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
     def create(self, validated_data):
         name = validated_data.get("name")
         source_env = validated_data.get("source_env")
-        clone_method = validated_data.get("clone_method", CLONE_METHOD_SYNC)
-        clone = source_env.clone(name, clone_method=clone_method)
+        clone_feature_states_async = validated_data.get("clone_feature_states_async")
+        clone = source_env.clone(
+            name, clone_feature_states_async=clone_feature_states_async
+        )
         return clone
 
 

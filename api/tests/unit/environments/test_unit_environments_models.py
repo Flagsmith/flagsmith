@@ -16,7 +16,6 @@ from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from environments.constants import CLONE_METHOD_ASYNC
 from environments.identities.models import Identity
 from environments.models import (
     Environment,
@@ -1007,7 +1006,7 @@ def test_environment_clone_async(
 
     # When
     cloned_environment = environment.clone(
-        name="Cloned environment", clone_method=CLONE_METHOD_ASYNC
+        name="Cloned environment", clone_feature_states_async=True
     )
 
     # Then
@@ -1018,15 +1017,3 @@ def test_environment_clone_async(
             "clone_environment_id": cloned_environment.id,
         }
     )
-
-
-def test_environment_clone_unknown_clone_method(environment: Environment) -> None:
-    # When
-    with pytest.raises(ValueError) as exc_info:
-        environment.clone(name="Cloned environment", clone_method="FOO")
-
-    # Then
-    assert exc_info.value.args[0] == "Invalid clone method FOO"
-
-    assert Environment.objects.count() == 1
-    assert Environment.objects.first() == environment
