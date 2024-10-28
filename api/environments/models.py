@@ -31,7 +31,11 @@ from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
 )
-from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from environments.constants import (
+    CLONE_METHOD_ASYNC,
+    CLONE_METHOD_SYNC,
+    IDENTITY_INTEGRATIONS_RELATION_NAMES,
+)
 from environments.dynamodb import (
     DynamoEnvironmentAPIKeyWrapper,
     DynamoEnvironmentV2Wrapper,
@@ -169,12 +173,17 @@ class Environment(
     def natural_key(self):
         return (self.api_key,)
 
-    def clone(self, name: str, api_key: str = None) -> "Environment":
+    def clone(
+        self, name: str, api_key: str = None, clone_method: str = CLONE_METHOD_SYNC
+    ) -> "Environment":
         """
         Creates a clone of the environment, related objects and returns the
         cloned object after saving it to the database.
         # NOTE: clone will not trigger create hooks
         """
+        if clone_method not in (CLONE_METHOD_SYNC, CLONE_METHOD_ASYNC):
+            raise ValueError(f"Invalid clone method {clone_method}")
+
         clone = deepcopy(self)
         clone.id = None
         clone.name = name
@@ -184,9 +193,12 @@ class Environment(
 
         from environments.tasks import clone_environment_feature_states
 
-        clone_environment_feature_states.delay(
-            kwargs={"source_environment_id": self.id, "clone_environment_id": clone.id}
-        )
+        kwargs = {"source_environment_id": self.id, "clone_environment_id": clone.id}
+
+        if clone_method == CLONE_METHOD_SYNC:
+            clone_environment_feature_states(**kwargs)
+        else:
+            clone_environment_feature_states.delay(kwargs=kwargs)
 
         return clone
 

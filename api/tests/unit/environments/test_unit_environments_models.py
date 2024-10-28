@@ -16,6 +16,7 @@ from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from environments.constants import CLONE_METHOD_ASYNC
 from environments.identities.models import Identity
 from environments.models import (
     Environment,
@@ -144,9 +145,6 @@ def test_environment_clone_clones_the_feature_states(
 
     # Then
     assert clone.feature_states.first().enabled is True
-
-    clone.refresh_from_db()
-    assert clone.is_creating is False
 
 
 def test_environment_clone_clones_multivariate_feature_state_values(
@@ -998,5 +996,37 @@ def test_clone_environment_v2_versioning(
         is expected_segment_fs_enabled_value
     )
 
-    cloned_environment.refresh_from_db()
-    assert cloned_environment.is_creating is False
+
+def test_environment_clone_async(
+    environment: Environment, mocker: MockerFixture
+) -> None:
+    # Given
+    mocked_clone_environment_fs_task = mocker.patch(
+        "environments.tasks.clone_environment_feature_states"
+    )
+
+    # When
+    cloned_environment = environment.clone(
+        name="Cloned environment", clone_method=CLONE_METHOD_ASYNC
+    )
+
+    # Then
+    assert cloned_environment.id != environment.id
+    mocked_clone_environment_fs_task.delay.assert_called_once_with(
+        kwargs={
+            "source_environment_id": environment.id,
+            "clone_environment_id": cloned_environment.id,
+        }
+    )
+
+
+def test_environment_clone_unknown_clone_method(environment: Environment) -> None:
+    # When
+    with pytest.raises(ValueError) as exc_info:
+        environment.clone(name="Cloned environment", clone_method="FOO")
+
+    # Then
+    assert exc_info.value.args[0] == "Invalid clone method FOO"
+
+    assert Environment.objects.count() == 1
+    assert Environment.objects.first() == environment

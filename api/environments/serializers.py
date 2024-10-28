@@ -2,6 +2,7 @@ import typing
 
 from rest_framework import serializers
 
+from environments.constants import CLONE_METHOD_ASYNC, CLONE_METHOD_SYNC
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
@@ -129,15 +130,21 @@ class CreateUpdateEnvironmentSerializer(
 
 
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):
+    clone_method = serializers.ChoiceField(
+        choices=[CLONE_METHOD_SYNC, CLONE_METHOD_ASYNC],
+        write_only=True,
+    )
+
     class Meta:
         model = Environment
-        fields = ("id", "name", "api_key", "project")
+        fields = ("id", "name", "api_key", "project", "clone_method")
         read_only_fields = ("id", "api_key", "project")
 
     def create(self, validated_data):
         name = validated_data.get("name")
         source_env = validated_data.get("source_env")
-        clone = source_env.clone(name)
+        clone_method = validated_data.get("clone_method", CLONE_METHOD_SYNC)
+        clone = source_env.clone(name, clone_method=clone_method)
         return clone
 
 

@@ -6,3 +6,6 @@ IDENTITY_INTEGRATIONS_RELATION_NAMES = [
     "segment_config",
     "webhook_config",
 ]
+
+CLONE_METHOD_SYNC = "SYNC"
+CLONE_METHOD_ASYNC = "ASYNC"
