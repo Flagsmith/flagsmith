@@ -1272,7 +1272,7 @@ _flagsmithClient = new FlagsmithClient(
 )
 ```
 
-### Singleton Initialization
+<h3>Singleton Initialization</h3>
 
 Singleton ensures a single instance of FlagsmithClient throughout the application, optimizing resources and maintaining
 consistency in configuration.
