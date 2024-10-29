@@ -101,7 +101,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
 @api_view(["GET"])
 def get_segment_by_uuid(request, uuid):
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
-    qs = Segment.objects.filter(project__in=accessible_projects)
+    qs = Segment.live_objects.filter(project__in=accessible_projects)
     segment = get_object_or_404(qs, uuid=uuid)
     serializer = SegmentSerializer(instance=segment)
     return Response(serializer.data)

@@ -119,7 +119,7 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
     def get_total_segments(self, instance: Project) -> int:
         # added here to prevent need for annotate(Count("segments", distinct=True))
         # which causes performance issues.
-        return instance.segments.count()
+        return instance.live_segment_count()
 
 
 class CreateUpdateUserProjectPermissionSerializer(

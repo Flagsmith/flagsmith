@@ -120,7 +120,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     def is_too_large(self) -> bool:
         return (
             self.features.count() > self.max_features_allowed
-            or self.segments.count() > self.max_segments_allowed
+            or self.live_segment_count() > self.max_segments_allowed
             or self.environments.annotate(
                 segment_override_count=Count("feature_segments")
             )
@@ -187,6 +187,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             settings.EDGE_RELEASE_DATETIME
             and self.created_date >= settings.EDGE_RELEASE_DATETIME
         )
+
+    def live_segment_count(self) -> int:
+        from segments.models import Segment
+
+        return Segment.live_objects.filter(project=self).count()
 
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """

@@ -199,7 +199,9 @@ def map_environment_to_engine(
     # Because of the queryset parameter of the calling code's
     # Prefetch this queryset will actually load the live_objects
     # manager for the Segment lookup.
-    project_segments: List["Segment"] = project.segments.all()
+    project_segments: List["Segment"] = Segment.live_objects.filter(
+        project=project
+    ).all()
 
     # Even though the main calling code filters via a prefetch,
     # we still want to guard this function in case there are other
