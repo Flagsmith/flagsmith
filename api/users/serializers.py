@@ -110,6 +110,9 @@ class UserPermissionGroupSummarySerializer(serializers.ModelSerializer):
 
 
 class ListUserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
+    # Note that in order to add the group_admin attribute, we use the UserPermissionGroupMembership
+    # object instead of the FFAdminUser object. As such, we need to manually define the fields
+    # and sources here.
     id = serializers.IntegerField(source="ffadminuser.id")
     email = serializers.EmailField(source="ffadminuser.email")
     first_name = serializers.CharField(source="ffadminuser.first_name")
