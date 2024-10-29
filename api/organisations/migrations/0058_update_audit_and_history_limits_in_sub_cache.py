@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 def update_limits(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     subscription_model = apps.get_model("organisations", "Subscription")
-    organisation_subscription_information_cache_model = apps.get_model("organisations", "OrganisationSubscriptionInformationCache")
+    organisation_subscription_information_cache_model = apps.get_model(
+        "organisations", "OrganisationSubscriptionInformationCache"
+    )
 
     all_paid_subscriptions = subscription_model.objects.select_related(
         "organisation", "organisation__subscription_information_cache"
@@ -22,17 +24,17 @@ def update_limits(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
 
     for subscription in all_paid_subscriptions:
         subscription_family = SubscriptionPlanFamily.get_by_plan_id(subscription.plan)
-        if subscription_family == SubscriptionPlanFamily.START_UP:
+        if subscription_family != SubscriptionPlanFamily.ENTERPRISE:
+            # We only want to update Enterprise plans since:
+            #  1. start up and scale up should only have the defaults
+            #  2. scale up plans are handled differently (using the VERSIONING_RELEASE_DATE setting) which
+            #     is needed to avoid having to create another plan in chargebee.
             continue
 
-        osic = getattr(subscription.organisation, "subscription_information_cache", None)
-        if osic is None:
+        if (osic := getattr(subscription.organisation, "subscription_information_cache", None)) is None:
             continue
 
-        if subscription_family in (SubscriptionPlanFamily.SCALE_UP, SubscriptionPlanFamily.ENTERPRISE):
-            osic.audit_log_visibility_days = None
-            osic.feature_history_visibility_days = None
-
+        osic.audit_log_visibility_days = osic.feature_history_visibility_days = None
         cache_models_to_update.append(osic)
 
     organisation_subscription_information_cache_model.objects.bulk_update(

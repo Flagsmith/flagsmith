@@ -240,11 +240,13 @@ def test_update_audit_and_history_limits(migrator: Migrator) -> None:
     assert migrated_start_up_osic.audit_log_visibility_days == 0
     assert migrated_start_up_osic.feature_history_visibility_days == 7
 
+    # Note that scale up plans are not updated as the logic to grandfather old scale up
+    # plans is handled by the `VERSIONING_RELEASE_DATE` setting.
     migrated_scale_up_osic = NewOrganisationSubscriptionInformationCache.objects.get(
         organisation_id=scale_up_organisation.id,
     )
-    assert migrated_scale_up_osic.audit_log_visibility_days is None
-    assert migrated_scale_up_osic.feature_history_visibility_days is None
+    assert migrated_scale_up_osic.audit_log_visibility_days == 0
+    assert migrated_scale_up_osic.feature_history_visibility_days == 7
 
     migrated_enterprise_osic = NewOrganisationSubscriptionInformationCache.objects.get(
         organisation_id=enterprise_organisation.id,
