@@ -7,8 +7,6 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
 from organisations.subscriptions.constants import SubscriptionPlanFamily
 
-logger = logging.getLogger(__name__)
-
 
 def update_limits(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     subscription_model = apps.get_model("organisations", "Subscription")
