@@ -53,6 +53,9 @@ class HubspotClient:
     def create_lead_form(
         self, user: FFAdminUser, hubspot_cookie: str
     ) -> dict[str, Any]:
+        logger.info(
+            f"Creating Hubspot lead form for user {user.email} with hubspot cookie {hubspot_cookie}"
+        )
         fields = [
             {
                 "objectTypeId": "0-1",
