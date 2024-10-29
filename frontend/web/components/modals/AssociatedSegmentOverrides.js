@@ -14,6 +14,7 @@ import { getStore } from 'common/store'
 import { getEnvironment } from 'common/services/useEnvironment'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import Utils from 'common/utils/utils'
+import Permission from 'common/providers/Permission'
 
 class TheComponent extends Component {
   state = {
@@ -107,115 +108,132 @@ class TheComponent extends Component {
     const selectedResults = selectedNewResults.concat(
       (results && results[this.state.selectedEnv]) || [],
     )
-    const addOverride = (
-      <div style={{ width: 300 }} className='my-4'>
-        <WrappedSegmentOverrideAdd
-          onSave={this.fetch}
-          addItem={this.addItem}
-          feature={this.props.feature}
-          selectedResults={selectedResults}
-          ignoreFlags={
-            selectedResults && selectedResults.map((v) => v.feature.id)
-          }
-          id={this.props.id}
-          projectId={this.props.projectId}
-          environmentId={this.state.selectedEnv}
-          readOnly={this.props.readOnly}
-        />
-      </div>
-    )
 
     return (
-      <div className='mt-4'>
-        <InfoMessage collapseId={'associated-segment-overrides'}>
-          This shows the list of segment overrides associated with this segment.
-          <br />
-          Segment overrides will only apply when you identify via the SDK.{' '}
-          <a
-            target='_blank'
-            href='https://docs.flagsmith.com/basic-features/segments'
-            rel='noreferrer'
-          >
-            Check the Docs for more details
-          </a>
-          .
-        </InfoMessage>
-        <SegmentOverrideLimit
-          id={environment?.api_key}
-          maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
-        />
-        <div>
-          <InputGroup
-            component={
-              <EnvironmentSelect
-                projectId={this.props.projectId}
-                value={environment?.api_key}
-                onChange={(selectedEnv) =>
-                  this.setState(
-                    {
-                      selectedEnv,
-                    },
-                    this.fetch,
-                  )
+      <Permission
+        level='environment'
+        permission={'MANAGE_SEGMENT_OVERRIDES'}
+        id={this.state.selectedEnv}
+      >
+        {({ permission: manageSegmentOverrides }) => {
+          const readOnly = !manageSegmentOverrides
+          const addOverride = (
+            <div style={{ width: 300 }} className='my-4'>
+              <WrappedSegmentOverrideAdd
+                onSave={this.fetch}
+                addItem={this.addItem}
+                feature={this.props.feature}
+                selectedResults={selectedResults}
+                ignoreFlags={
+                  selectedResults && selectedResults.map((v) => v.feature.id)
                 }
+                id={this.props.id}
+                projectId={this.props.projectId}
+                environmentId={this.state.selectedEnv}
+                readOnly={readOnly}
               />
-            }
-            title='Environment'
-          />
-
-          {this.state.isLoading ? (
-            <div className='text-center'>
-              <Loader />
             </div>
-          ) : (
-            <PanelSearch
-              searchPanel={addOverride}
-              search={this.state.search}
-              onChange={(search) => this.setState({ search })}
-              filterRow={(row, search) =>
-                row.feature.name.toLowerCase().includes(search.toLowerCase())
-              }
-              className='no-pad panel-override'
-              title='Associated Features'
-              items={selectedResults}
-              renderNoResults={
-                <Panel className='no-pad' title='Associated Features'>
-                  {addOverride}
-                  <div className='p-2 text-center'>
-                    There are no segment overrides in this environment
-                  </div>
-                </Panel>
-              }
-              renderRow={(v) => (
-                <div key={v.feature.id} className='list-item-override p-3 mb-4'>
-                  <div>
+          )
 
-                    <WrappedSegmentOverrides
-                      onSave={this.fetch}
-                      projectFlag={v.feature}
-                      newSegmentOverrides={v.newSegmentOverrides}
-                      onRemove={() => {
-                        if (v.newSegmentOverrides) {
-                          newItems[this.state.selectedEnv] = newItems[
-                            this.state.selectedEnv
-                          ].filter((x) => x !== v)
-                          this.setState({
-                            newItems,
-                          })
-                        }
-                      }}
-                      id={this.props.id}
+          return (
+            <div className='mt-4'>
+              <InfoMessage collapseId={'associated-segment-overrides'}>
+                This shows the list of segment overrides associated with this
+                segment.
+                <br />
+                Segment overrides will only apply when you identify via the SDK.{' '}
+                <a
+                  target='_blank'
+                  href='https://docs.flagsmith.com/basic-features/segments'
+                  rel='noreferrer'
+                >
+                  Check the Docs for more details
+                </a>
+                .
+              </InfoMessage>
+              <SegmentOverrideLimit
+                id={environment?.api_key}
+                maxSegmentOverridesAllowed={ProjectStore.getMaxSegmentOverridesAllowed()}
+              />
+              <div>
+                <InputGroup
+                  component={
+                    <EnvironmentSelect
                       projectId={this.props.projectId}
-                      environmentId={v.env.api_key}
-                      readOnly={this.props.readOnly}
+                      value={environment?.api_key}
+                      onChange={(selectedEnv) =>
+                        this.setState(
+                          {
+                            selectedEnv,
+                          },
+                          this.fetch,
+                        )
+                      }
                     />
+                  }
+                  title='Environment'
+                />
+
+                {this.state.isLoading ? (
+                  <div className='text-center'>
+                    <Loader />
                   </div>
-                </div>
-              )}
-            />
-          )}
-        </div>
-      </div>
+                ) : (
+                  <PanelSearch
+                    searchPanel={addOverride}
+                    search={this.state.search}
+                    onChange={(search) => this.setState({ search })}
+                    filterRow={(row, search) =>
+                      row.feature.name
+                        .toLowerCase()
+                        .includes(search.toLowerCase())
+                    }
+                    className='no-pad panel-override'
+                    title='Associated Features'
+                    items={selectedResults}
+                    renderNoResults={
+                      <Panel className='no-pad' title='Associated Features'>
+                        {addOverride}
+                        <div className='p-2 text-center'>
+                          There are no segment overrides in this environment
+                        </div>
+                      </Panel>
+                    }
+                    renderRow={(v) => (
+                      <div
+                        key={v.feature.id}
+                        className='list-item-override p-3 mb-4'
+                      >
+                        <div>
+                          <WrappedSegmentOverrides
+                            onSave={this.fetch}
+                            projectFlag={v.feature}
+                            newSegmentOverrides={v.newSegmentOverrides}
+                            onRemove={() => {
+                              if (v.newSegmentOverrides) {
+                                newItems[this.state.selectedEnv] = newItems[
+                                  this.state.selectedEnv
+                                ].filter((x) => x !== v)
+                                this.setState({
+                                  newItems,
+                                })
+                              }
+                            }}
+                            id={this.props.id}
+                            projectId={this.props.projectId}
+                            environmentId={v.env.api_key}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  />
+                )}
+              </div>
+            </div>
+          )
+        }}
+      </Permission>
     )
   }
 }
