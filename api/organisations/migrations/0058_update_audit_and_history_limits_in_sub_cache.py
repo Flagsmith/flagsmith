@@ -29,10 +29,7 @@ def update_limits(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
         if osic is None:
             continue
 
-        if subscription_family == SubscriptionPlanFamily.SCALE_UP:
-            osic.audit_log_visibility_days = None
-            osic.feature_history_visibility_days = 14
-        elif subscription_family == SubscriptionPlanFamily.ENTERPRISE:
+        if subscription_family in (SubscriptionPlanFamily.SCALE_UP, SubscriptionPlanFamily.ENTERPRISE):
             osic.audit_log_visibility_days = None
             osic.feature_history_visibility_days = None
 

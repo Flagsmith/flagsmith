@@ -244,7 +244,7 @@ def test_update_audit_and_history_limits(migrator: Migrator) -> None:
         organisation_id=scale_up_organisation.id,
     )
     assert migrated_scale_up_osic.audit_log_visibility_days is None
-    assert migrated_scale_up_osic.feature_history_visibility_days == 14
+    assert migrated_scale_up_osic.feature_history_visibility_days is None
 
     migrated_enterprise_osic = NewOrganisationSubscriptionInformationCache.objects.get(
         organisation_id=enterprise_organisation.id,
