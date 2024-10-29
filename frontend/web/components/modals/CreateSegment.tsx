@@ -46,7 +46,6 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
@@ -587,27 +586,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
-              <Permission
-                level='environment'
-                permission={'MANAGE_SEGMENT_OVERRIDES'}
-                id={environmentId}
-              >
-                {({ permission: manageSegmentOverrides }) => {
-                  const isReadOnly = !manageSegmentOverrides
-                  return (
-                    <AssociatedSegmentOverrides
-                      onUnsavedChange={() => {
-                        setValueChanged(true)
-                      }}
-                      feature={segment.feature}
-                      projectId={projectId}
-                      id={segment.id}
-                      readOnly={isReadOnly}
-                      environmentId={environmentId}
-                    />
-                  )
+              <AssociatedSegmentOverrides
+                onUnsavedChange={() => {
+                  setValueChanged(true)
                 }}
-              </Permission>
+                feature={segment.feature}
+                projectId={projectId}
+                id={segment.id}
+                environmentId={environmentId}
+              />
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
