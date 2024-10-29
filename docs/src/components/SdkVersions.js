@@ -2,7 +2,7 @@ import { usePluginData } from '@docusaurus/useGlobalData';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { maxSatisfying } from 'semver';
 
-export const Version = ({ sdk, spec = '*', options = {} }) => {
+const Version = ({ sdk, spec = '*', options = {} }) => {
     const {
         siteConfig: { CI },
     } = useDocusaurusContext();
