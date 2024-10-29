@@ -16,7 +16,7 @@ This SDK can be used for Android applications written in Kotlin. The source code
 
 In your project path `app/build.gradle` add a new dependency:
 
-<CodeBlock>{`implementation("com.github.Flagsmith:flagsmith-kotlin-android-client:v`}<AndroidVersion />"{`)`}</CodeBlock>
+<CodeBlock>{`implementation("io.flagsmith:flagsmith-kotlin-android-client:v`}<AndroidVersion />"{`)`}</CodeBlock>
 
 ## Basic Usage
 
