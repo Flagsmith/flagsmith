@@ -1,5 +1,6 @@
 import pytest
 from django.conf import settings
+from django_test_migrations.migrator import Migrator
 
 from organisations.models import OrganisationRole
 from organisations.permissions.permissions import (
@@ -165,4 +166,92 @@ def test_merge_duplicate_permissions_migration(migrator):
     # and non_duplicate permission still exists
     assert UserOrganisationPermission.objects.filter(
         id=non_duplicate_permission.id
+    ).exists()
+
+
+def test_update_audit_and_history_limits(migrator: Migrator) -> None:
+    # Given
+    old_state = migrator.apply_initial_migration(
+        ("organisations", "0056_create_organisation_breached_grace_period")
+    )
+
+    Organisation = old_state.apps.get_model("organisations", "Organisation")
+    Subscription = old_state.apps.get_model("organisations", "Subscription")
+    OrganisationSubscriptionInformationCache = old_state.apps.get_model(
+        "organisations", "OrganisationSubscriptionInformationCache"
+    )
+
+    # Free Organisation
+    free_organisation = Organisation.objects.create(name="Free Organisation")
+    Subscription.objects.create(organisation=free_organisation, plan="free")
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=free_organisation,
+    )
+
+    # Start up organisation
+    start_up_organisation = Organisation.objects.create(name="Start up Organisation")
+    Subscription.objects.create(organisation=start_up_organisation, plan="start-up-v2")
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=start_up_organisation,
+        allowed_seats=3,
+        allowed_30d_api_calls=1_000_000,
+    )
+
+    # Scale up organisation
+    scale_up_organisation = Organisation.objects.create(name="Scale up Organisation")
+    Subscription.objects.create(organisation=scale_up_organisation, plan="scale-up-v2")
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=scale_up_organisation,
+        allowed_seats=5,
+        allowed_30d_api_calls=5_000_000,
+    )
+
+    # Enterprise organisation
+    enterprise_organisation = Organisation.objects.create(name="Enterprise Organisation")
+    Subscription.objects.create(organisation=enterprise_organisation, plan="enterprise")
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=enterprise_organisation,
+        allowed_seats=20,
+        allowed_30d_api_calls=5_000_000,
+    )
+
+    # Enterprise organisation without OrganisationSubscriptionInformationCache
+    enterprise_organisation_no_osic = Organisation.objects.create(name="Enterprise Organisation No OSIC")
+    Subscription.objects.create(organisation=enterprise_organisation_no_osic, plan="enterprise")
+
+    # When
+    new_state = migrator.apply_tested_migration(
+        ("organisations", "0058_update_audit_and_history_limits_in_sub_cache")
+    )
+    NewOrganisationSubscriptionInformationCache = new_state.apps.get_model(
+        "organisations", "OrganisationSubscriptionInformationCache"
+    )
+
+    # Then
+    migrated_free_osic = NewOrganisationSubscriptionInformationCache.objects.get(
+        organisation_id=free_organisation.id,
+    )
+    assert migrated_free_osic.audit_log_visibility_days == 0
+    assert migrated_free_osic.feature_history_visibility_days == 7
+
+    migrated_start_up_osic = NewOrganisationSubscriptionInformationCache.objects.get(
+        organisation_id=start_up_organisation.id,
+    )
+    assert migrated_start_up_osic.audit_log_visibility_days == 0
+    assert migrated_start_up_osic.feature_history_visibility_days == 7
+
+    migrated_scale_up_osic = NewOrganisationSubscriptionInformationCache.objects.get(
+        organisation_id=scale_up_organisation.id,
+    )
+    assert migrated_scale_up_osic.audit_log_visibility_days is None
+    assert migrated_scale_up_osic.feature_history_visibility_days == 14
+
+    migrated_enterprise_osic = NewOrganisationSubscriptionInformationCache.objects.get(
+        organisation_id=enterprise_organisation.id,
+    )
+    assert migrated_enterprise_osic.audit_log_visibility_days is None
+    assert migrated_enterprise_osic.feature_history_visibility_days is None
+
+    assert not NewOrganisationSubscriptionInformationCache.objects.filter(
+        organisation_id=enterprise_organisation_no_osic.id,
     ).exists()
