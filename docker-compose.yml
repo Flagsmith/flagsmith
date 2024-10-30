@@ -1,26 +1,14 @@
 # See https://docs.flagsmith.com/deployment/docker for more information on running Flagsmith in Docker
 # This Docker Compose file will run the entire Flagsmith Platform
 
-version: '3'
-
 volumes:
   pgdata:
 
 services:
   postgres:
-    image: postgres:15.5-alpine
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: flagsmith
-    container_name: flagsmith_postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -d flagsmith -U postgres']
-      interval: 2s
-      timeout: 2s
-      retries: 20
-      start_period: 20s
+    extends:
+      file: ./docker/common/db/.postgres.yml
+      service: postgres
 
   flagsmith:
     image: flagsmith.docker.scarf.sh/flagsmith/flagsmith:latest

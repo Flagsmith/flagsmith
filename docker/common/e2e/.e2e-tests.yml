@@ -1,4 +1,3 @@
-version: '3'
 services:
   flagsmith-api:
     image: ${API_IMAGE:-ghcr.io/flagsmith/flagsmith-api:dev}
@@ -9,14 +8,14 @@ services:
       E2E_TEST_AUTH_TOKEN: some-token
       ENABLE_FE_E2E: 'True'
       DJANGO_ALLOWED_HOSTS: '*'
-      DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
+      DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       DISABLE_ANALYTICS_FEATURES: 'true'
       EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
       ACCESS_LOG_LOCATION: /dev/shm/log.txt
     ports:
       - 8000:8000
     healthcheck:
-      test: "[ -e /dev/shm/log.txt ] && exit 0 || exit 1"
+      test: '[ -e /dev/shm/log.txt ] && exit 0 || exit 1'
       start_period: 60s
       interval: 10s
       timeout: 3s
