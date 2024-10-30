@@ -1365,12 +1365,12 @@ resolved_reference = "f3809f6d592b2c6cfdfa88e0b345ce722ac47727"
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "5.2.0"
+version = "5.3.0"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 files = [
-    {file = "flagsmith-flag-engine-5.2.0.tar.gz", hash = "sha256:247da79a9fee55a55de1440fcd112de9b56cef9d5feb8c783319a9e0620e3a72"},
+    {file = "flagsmith-flag-engine-5.3.0.tar.gz", hash = "sha256:87007f6a312cf11b2c201acd54b30f17de8aa039c3c56af431f1ed3c743fa84c"},
 ]
 
 [package.dependencies]
@@ -4182,4 +4182,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "508c20bd1cbdf2c8d1173d13b27369a7a9a0be82350f429467af94f53e80ebb9"
+content-hash = "27333f5bbd3bb607cdb7d728dae6d0a6a11658cba09b45d69a6ee5a744111ad5"
