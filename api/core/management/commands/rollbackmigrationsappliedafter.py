@@ -30,8 +30,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.NOTICE("No migrations to rollback."))
 
         # Since we've ordered by the date applied, we know that the first entry in the qs for each app
-        # is the earliest migration after the supplied date, i.e. we want to roll back to one migration
-        # earlier than this one.
+        # is the earliest migration after the supplied date.
         earliest_migration_by_app = {}
         for migration in applied_migrations:
             if migration.app in earliest_migration_by_app:
@@ -39,6 +38,21 @@ class Command(BaseCommand):
             earliest_migration_by_app[migration.app] = migration.name
 
         for app, migration_name in earliest_migration_by_app.items():
-            migration_number = int(migration_name.split("_", maxsplit=1)[0])
-            rollback_to = f"{migration_number - 1:04}" if migration_number > 1 else "zero"
-            call_command("migrate", app, rollback_to)
+            call_command(
+                "migrate", app, _get_previous_migration_number(migration_name)
+            )
+
+
+def _get_previous_migration_number(migration_name: str) -> str:
+    """
+    Returns the previous migration number (0 padded number to 4 characters), or zero
+    if the provided migration name is the first for a given app (usually 0001_initial).
+
+    Examples:
+          _get_previous_migration_number("0001_initial") -> "zero"
+          _get_previous_migration_number("0009_migration_9") -> "0008"
+          _get_previous_migration_number("0103_migration_103") -> "0102"
+    """
+
+    migration_number = int(migration_name.split("_", maxsplit=1)[0])
+    return f"{migration_number - 1:04}" if migration_number > 1 else "zero"
