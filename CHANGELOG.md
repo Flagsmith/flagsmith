@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.150.0](https://github.com/Flagsmith/flagsmith/compare/v2.149.0...v2.150.0) (2024-10-30)
+
+
+### Features
+
+* add group admin to list groups ([#4779](https://github.com/Flagsmith/flagsmith/issues/4779)) ([391b377](https://github.com/Flagsmith/flagsmith/commit/391b37773d69d44d5fa904aaac1fb5029657a2b2))
+* Log Hubspot cookie creation ([#4778](https://github.com/Flagsmith/flagsmith/issues/4778)) ([960def4](https://github.com/Flagsmith/flagsmith/commit/960def40be5370e617ad5893a3666c5dcf9b3ba4))
+* **versioning:** limit returned number of versions by plan ([#4433](https://github.com/Flagsmith/flagsmith/issues/4433)) ([55de839](https://github.com/Flagsmith/flagsmith/commit/55de839fb8882065ddc70465a0d3e7c13235e9ad))
+
+
+### Bug Fixes
+
+* associated segment override check ([#4781](https://github.com/Flagsmith/flagsmith/issues/4781)) ([85556a0](https://github.com/Flagsmith/flagsmith/commit/85556a0ddef843d9edefe285d06cdd3f23c2d186))
+* audit and version limits for existing subscriptions ([#4780](https://github.com/Flagsmith/flagsmith/issues/4780)) ([5827e07](https://github.com/Flagsmith/flagsmith/commit/5827e07ee39a6cf74d4d0295404624565a27ab89))
+* GitHub integration tagging issues ([#4586](https://github.com/Flagsmith/flagsmith/issues/4586)) ([56a266d](https://github.com/Flagsmith/flagsmith/commit/56a266de9eeb2216099645d8221092163f31e2e9))
+* Prevent newlines in environment variables from causing frontend syntax errors ([#4750](https://github.com/Flagsmith/flagsmith/issues/4750)) ([6bbd6c7](https://github.com/Flagsmith/flagsmith/commit/6bbd6c7d3de3df7ca11f4c38d7b86bc0d2cd1c85))
+* run `eslint --fix` removing all prettier error from web/ folder ([#4739](https://github.com/Flagsmith/flagsmith/issues/4739)) ([13494b6](https://github.com/Flagsmith/flagsmith/commit/13494b60186b272d4aa06fb53d451c4990c77648))
+* **sales-dashboard:** prevent 500 error when user doesn't exist on sales dashboard search ([#4757](https://github.com/Flagsmith/flagsmith/issues/4757)) ([282d82f](https://github.com/Flagsmith/flagsmith/commit/282d82f289bcdac363e3e892a07e0485017d8c7b))
+* **versioning:** handle versioned environments for associated-features endpoint ([#4735](https://github.com/Flagsmith/flagsmith/issues/4735)) ([7d40a07](https://github.com/Flagsmith/flagsmith/commit/7d40a07d9a2bfb95f38b54e507b32f0488e7e206))
+
 ## [2.149.0](https://github.com/Flagsmith/flagsmith/compare/v2.148.2...v2.149.0) (2024-10-25)
 
 
