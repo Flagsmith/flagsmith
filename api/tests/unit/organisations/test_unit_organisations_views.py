@@ -1979,8 +1979,6 @@ def test_create_or_update_licence(
     organisation: Organisation, admin_client: APIClient, mocker: MockerFixture
 ) -> None:
     # Given
-    mocker.patch("organisations.urls.is_enterprise", return_value=True)
-
     importlib.reload(organisations.urls)
 
     url = reverse(
