@@ -189,6 +189,16 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
                 q = q & Q(userpermissiongroupmembership__group_admin=True)
             qs = qs.filter(q)
 
+        if self.action == "list":
+            qs = qs.prefetch_related(
+                Prefetch(
+                    "userpermissiongroupmembership_set",
+                    queryset=UserPermissionGroupMembership.objects.select_related(
+                        "ffadminuser"
+                    ),
+                )
+            )
+
         return qs
 
     def paginate_queryset(self, queryset: QuerySet) -> list[UserPermissionGroup] | None:
