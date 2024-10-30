@@ -477,7 +477,20 @@ ORDER BY applied DESC
 
 :::
 
-2. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
+2. Run the following command inside a Flagsmith API container running the _current_ version of Flagsmith
+
+```bash
+python manage.py rollbackmigrationsafter "<datetime from step 1>"
+```
+
+3. Roll back the Flagsmith API to the desired version.
+
+### Steps pre v2.151.0
+
+If you are rolling back from a version earlier than v2.151.0, you will need to replace step 2 above with the following 2
+steps.
+
+1. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
    and before any subsequent deployments. Execute the subsequent query against the Flagsmith database.
 
 ```sql {14} showLineNumbers
@@ -511,8 +524,7 @@ Example output:
  python manage.py migrate token_blacklist zero
 ```
 
-3. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
-4. Roll back the Flagsmith API to the desired version.
+2. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
 
 ## Information for Developers working on the project
 
