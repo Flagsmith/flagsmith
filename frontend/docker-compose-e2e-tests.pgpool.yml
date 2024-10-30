@@ -6,17 +6,17 @@
 services:
   pg-0:
     extends:
-      file: ../docker/common/db/pgpool.yml
+      file: ../docker/common/db/.pgpool.yml
       service: pg-0
 
   pg-1:
     extends:
-      file: ../docker/common/db/pgpool.yml
+      file: ../docker/common/db/.pgpool.yml
       service: pg-1
 
   pgpool:
     extends:
-      file: ../docker/common/db/pgpool.yml
+      file: ../docker/common/db/.pgpool.yml
       service: pgpool
 
   flagsmith-api:
