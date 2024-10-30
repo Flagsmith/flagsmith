@@ -297,6 +297,7 @@ export default class SegmentOverridesInner extends Component {
         <UncontrolledSegmentOverrides
           feature={projectFlag.id}
           readOnly
+          hideViewSegment
           projectId={projectId}
           multivariateOptions={_.cloneDeep(projectFlag.multivariate_options)}
           environmentId={environmentId}
@@ -397,6 +398,7 @@ export default class SegmentOverridesInner extends Component {
                 name=' '
                 disableCreate
                 projectId={projectId}
+                hideViewSegment
                 onRemove={this.props.onRemove}
                 multivariateOptions={_.cloneDeep(
                   projectFlag.multivariate_options,
