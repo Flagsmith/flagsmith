@@ -47,7 +47,7 @@ import FlagsmithClient
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
+Flagsmith.shared.apiKey = "<YOUR_ENVIRONMENT_KEY>"
 // The rest of your launch method code
 }
 ```
@@ -115,6 +115,66 @@ Flagsmith.shared.getTraits(forIdentity: "test_user@test.com") {(result) in
     case .failure(let error):
         print(error)
     }
+}
+```
+
+To retrieve a flag for a particular identity:
+
+```swift
+Flagsmith.shared.getFeatureFlags(forIdentity: "test_user@test.com") {(result) in
+    switch result {
+    case .success(let flags):
+        for flag in flags {
+            let name = flag.feature.name
+            let value = flag.value?.stringValue
+            let enabled = flag.enabled
+            print(name, "= enabled:", enabled, "value:", value ?? "nil")
+        }
+    case .failure(let error):
+        print(error)
+    }
+}
+```
+
+If you would prefer to do this using async/await you can do the following:
+
+```swift
+let flags = try await Flagsmith.shared.getFeatureFlags(forIdentity: "test_user@test.com")
+for flag in flags {
+    let name = flag.feature.name
+    let value = flag.value?.stringValue
+    let enabled = flag.enabled
+    print(name, "= enabled:", enabled, "value:", value ?? "nil")
+}
+```
+
+You can also retrieve flags for a particular identity and set traits at the same time:
+
+```swift
+Flagsmith.shared.getFeatureFlags(forIdentity: "test_user@test.com", traits: [Trait(key: "selected_tint_color", value: "orange")]) {(result) in
+    switch result {
+    case .success(let flags):
+        for flag in flags {
+            let name = flag.feature.name
+            let value = flag.value?.stringValue
+            let enabled = flag.enabled
+            print(name, "= enabled:", enabled, "value:", value ?? "nil")
+        }
+    case .failure(let error):
+        print(error)
+    }
+}
+```
+
+If you would prefer to do this using async/await you can do the following:
+
+```swift
+let flags = try await Flagsmith.shared.getFeatureFlags(forIdentity: "test_user@test.com", traits: [Trait(key: "selected_tint_color", value: "orange")])
+for flag in flags {
+    let name = flag.feature.name
+    let value = flag.value?.stringValue
+    let enabled = flag.enabled
+    print(name, "= enabled:", enabled, "value:", value ?? "nil")
 }
 ```
 
@@ -226,6 +286,32 @@ If more customisation is required, you can override the cache implemention with 
 Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE_IMPLEMENTATION>
 ```
 
+### Real Time Updates
+
+By default real-time updates are disabled. When enabled the SDK will listen for changes to flags and update the cache as
+needed. If you want to enable real-time updates you can do so by setting the following flag:
+
+```swift
+Flagsmith.shared.enableRealTimeUpdates = false
+```
+
+It's possible to listen to updates in real time from the SDK using the `flagStream` property.
+
+```swift
+func subscribeToFlagUpdates() {
+    Task {
+        for await updatedFlags in flagsmith.flagStream {
+            DispatchQueue.main.async {
+                flags = updatedFlags
+            }
+        }
+    }
+}
+```
+
+You can find an example of this functionality in the Flagsmith iOS Example app, which should work on your own data if
+you replace your Environment Key in the `AppDelegate.swift` file.
+
 ## Override default configuration
 
 By default, the client uses a default configuration. You can override the configuration as follows:
@@ -235,8 +321,9 @@ Override just the default API URI with your own:
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
-Flagsmith.shared.baseURL = "https://<your-self-hosted-api>/api/v1/"
-// The rest of your launch method code
+    Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
+    Flagsmith.shared.baseURL = "https://<your-self-hosted-api>/api/v1/"
+    Flagsmith.eventSourceBaseURL = "https://<your-self-hosted-api>/api/v1/"
+    // The rest of your launch method code
 }
 ```

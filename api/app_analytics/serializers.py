@@ -1,4 +1,8 @@
+import typing
+
 from rest_framework import serializers
+
+from .types import PERIOD_TYPE
 
 
 class UsageDataSerializer(serializers.Serializer):
@@ -12,6 +16,12 @@ class UsageDataSerializer(serializers.Serializer):
 class UsageDataQuerySerializer(serializers.Serializer):
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
+    period = serializers.ChoiceField(
+        choices=typing.get_args(PERIOD_TYPE),
+        allow_null=True,
+        default=None,
+        required=False,
+    )
 
 
 class UsageTotalCountSerializer(serializers.Serializer):

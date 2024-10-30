@@ -10,7 +10,9 @@ The Edge Proxy can be configured using a json configuration file (named `config.
 
 You can set the following configuration in `config.json` to control the behaviour of the Edge Proxy:
 
-### `environment_key_pairs`
+### Basic Settings
+
+#### `environment_key_pairs`
 
 An array of environment key pair objects:
 
@@ -21,7 +23,7 @@ An array of environment key pair objects:
 }]
 ```
 
-### `api_poll_frequency`
+#### `api_poll_frequency`
 
 :::note
 
@@ -37,7 +39,7 @@ Control how often the Edge Proxy is going to ping the server for changes, in sec
 
 Defaults to `10`.
 
-### `api_poll_timeout`
+#### `api_poll_timeout`
 
 :::note
 
@@ -53,7 +55,7 @@ Specify the request timeout when trying to retrieve new changes, in seconds:
 
 Defaults to `5`.
 
-### `api_url`
+#### `api_url`
 
 :::note
 
@@ -69,7 +71,7 @@ Set if you are running a self hosted version of Flagsmith:
 
 If not set, defaults to Flagsmith's Edge API.
 
-### `allow_origins`
+#### `allow_origins`
 
 :::note
 
@@ -85,7 +87,9 @@ Set a value for the `Access-Control-Allow-Origin` header.
 
 If not set, defaults to `*`.
 
-### `endpoint_caches`
+### Endpoint Caches
+
+#### `endpoint_caches`
 
 :::note
 
@@ -109,7 +113,9 @@ Optionally, specify the LRU cache size with `cache_max_size` (defaults to 128):
 }
 ```
 
-### `logging.log_level`
+### Logging
+
+#### `logging.log_level`
 
 :::note
 
@@ -123,7 +129,7 @@ Choose a logging level from `"CRITICAL"`, `"ERROR"`, `"WARNING"`, `"INFO"`, `"DE
 "logging": {"log_level": "DEBUG"}
 ```
 
-### `logging.log_format`
+#### `logging.log_format`
 
 :::note
 
@@ -137,7 +143,7 @@ Choose a logging forman between `"generic"` and `"json"`. Defaults to `"generic"
 "logging": {"log_format": "json"}
 ```
 
-### `logging.log_event_field_name`
+#### `logging.log_event_field_name`
 
 :::note
 
@@ -151,7 +157,114 @@ Set a name used for human-readable log entry field when logging events in JSON. 
 "logging": {"log_event_field_name": "event"}
 ```
 
-### `config.json` example
+#### `logging.colour`
+
+:::note
+
+- Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
+- This setting is optional.
+
+:::
+
+Set to `false` to disable coloured output. Useful when outputting the log to a file.
+
+#### `logging.override`
+
+:::note
+
+- Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
+- This setting is optional.
+
+:::
+
+Accepts
+[Python-compatible logging settings](https://docs.python.org/3/library/logging.config.html#configuration-dictionary-schema)
+in JSON format. You're able to define custom formatters, handlers and logger configurations. For example, to log
+everything a file, one can set up own file handler and assign it to the root logger:
+
+```json
+"logging": {
+  "override": {
+      "handlers": {
+          "file": {
+              "level": "INFO",
+              "class": "logging.FileHandler",
+              "filename": "edge-proxy.log",
+              "formatter": "json"
+          }
+      },
+      "loggers": {
+          "": {
+              "handlers": ["file"],
+              "level": "INFO",
+              "propagate": true
+          }
+      }
+  }
+}
+```
+
+Or, log access logs to file in generic format while logging everything else to stdout in json:
+
+```json
+"logging": {
+  "override": {
+      "handlers": {
+          "file": {
+              "level": "INFO",
+              "class": "logging.FileHandler",
+              "filename": "edge-proxy.log",
+              "formatter": "generic"
+          }
+      },
+      "loggers": {
+          "": {
+              "handlers": ["default"],
+              "level": "INFO"
+          },
+          "uvicorn.access": {
+              "handlers": ["file"],
+              "level": "INFO",
+              "propagate": false
+          }
+      }
+  }
+}
+```
+
+When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
+specified by the [`"logging.log_format"`](#logginglog_format) setting.
+
+### Health Check
+
+The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
+fetch all its configured environment documents. If any environment document could not be fetched during a configurable
+grace period, the health check will fail with a 500 status code. This allows the Edge Proxy to continue reporting as
+healthy even if the Flagsmith API is temporarily unavailable.
+
+#### `health_check.environment_update_grace_period_seconds`
+
+Default: `30`.
+
+The number of seconds to allow per environment key pair before the environment data stored by the Edge Proxy is
+considered stale.
+
+When set to `null`, cached environment documents are never considered stale, and health checks will succeed if all
+environments were successfully fetched at some point since the Edge Proxy started.
+
+The effective grace period depends on how many environments the Edge Proxy is configured to serve. It can be calculated
+using the following pseudo-Python code:
+
+```python
+total_grace_period_seconds = api_poll_frequency + (environment_update_grace_period_seconds * len(environment_key_pairs))
+if last_updated_all_environments_at < datetime.now() - timedelta(seconds=total_grace_period_seconds):
+    # Data is stale
+    return 500
+# Data is not stale
+return 200
+```
+
+### Example
 
 Here's an example of a minimal working Edge Proxy configuration:
 
@@ -196,7 +309,6 @@ docker run \
 ### With docker compose
 
 ```yml
-version: '3.9'
 services:
  edge_proxy:
   image: flagsmith/edge-proxy:latest
@@ -205,8 +317,7 @@ services:
      source: ./config.json
      target: /app/config.json
   ports:
-   - target: 8000
-   - published: 8000
+   - '8000:8000'
 ```
 
 The Proxy is now running and available on port 8000.
@@ -218,7 +329,7 @@ domain name and you're good to go. For example, lets say you had your proxy runn
 above:
 
 ```bash
-curl "http://localhost:8000/api/v1/flags" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
+curl "http://localhost:8000/api/v1/flags/" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
 
 [
     {
@@ -250,8 +361,7 @@ There are 2 health check endpoints for the Edge Proxy.
 
 When making a request to `/proxy/health` the proxy will respond with a HTTP `200` and `{"status": "ok"}`. You can point
 your orchestration health checks to this endpoint. This endpoint checks that the
-[Environment Document](/clients/overview#the-environment-document) is not stale, and that the proxy is serving SDK
-requests.
+[Environment Document](/clients#the-environment-document) is not stale, and that the proxy is serving SDK requests.
 
 ### Realtime Flags/Server Sent Events Health Check
 

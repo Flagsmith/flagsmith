@@ -175,8 +175,8 @@ export const addSegmentOverrideConfig = async (
   await click(byId(`select-segment-option-${selectionIndex}`))
 
   await waitForElementVisible(byId(`segment-override-value-${index}`))
-  await setText(byId(`segment-override-value-${0}`), `${value}`)
-  await click(byId('segment-override-toggle-0'))
+  await setText(byId(`segment-override-value-${index}`), `${value}`)
+  await click(byId(`segment-override-toggle-${index}`))
 }
 
 export const addSegmentOverride = async (
@@ -189,7 +189,7 @@ export const addSegmentOverride = async (
   await click(byId(`select-segment-option-${selectionIndex}`))
   await waitForElementVisible(byId(`segment-override-value-${index}`))
   if (value) {
-    await click(`${byId(`segment-override-${0}`)} [role="switch"]`)
+    await click(`${byId(`segment-override-${index}`)} [role="switch"]`)
   }
   if (mvs) {
     await Promise.all(
@@ -264,9 +264,8 @@ export const logout = async (t) => {
 }
 
 export const goToFeatureVersions = async (featureIndex:number) =>{
-  await gotoFeatures()
-  await click(byId(`feature-action-${featureIndex}`))
-  await click(byId(`feature-history-${featureIndex}`))
+  await gotoFeature(featureIndex)
+  await click(byId('change-history'))
 }
 
 export const compareVersion = async (
@@ -294,10 +293,12 @@ export const compareVersion = async (
   if(newValue) {
     await assertTextContent(byId(`old-value`), `${oldValue}`)
   }
+  await closeModal()
 }
 export const assertNumberOfVersions = async (index:number, versions:number) =>{
   await goToFeatureVersions(index)
   await waitForElementVisible(byId(`history-item-${versions-2}-compare`))
+  await closeModal()
 }
 
 export const createRemoteConfig = async (
@@ -361,7 +362,6 @@ export const editRemoteConfig = async (
   }
   await Promise.all(
       mvs.map(async (v, i) => {
-        await setText(byId(`featureVariationValue${i}`), v.value)
         await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
       }),
   )
@@ -433,7 +433,6 @@ export const createSegment = async (
   rules?: Rule[],
 ) => {
   await click(byId('show-create-segment-btn'))
-  await click(byId('add-rule'))
   await setText(byId('segmentID'), id)
   for (let x = 0; x < rules.length; x++) {
     const rule = rules[x]
@@ -458,6 +457,7 @@ export const createSegment = async (
   await click(byId('create-segment'))
   await waitForElementVisible(byId(`segment-${index}-name`))
   await assertTextContent(byId(`segment-${index}-name`), id)
+  await closeModal()
 }
 
 export const waitAndRefresh = async (waitFor = 3000) => {

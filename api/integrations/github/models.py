@@ -1,9 +1,17 @@
 import logging
+import re
 
 from core.models import SoftDeleteExportableModel
 from django.db import models
-from django_lifecycle import BEFORE_DELETE, LifecycleModelMixin, hook
+from django_lifecycle import (
+    AFTER_CREATE,
+    AFTER_UPDATE,
+    BEFORE_DELETE,
+    LifecycleModelMixin,
+    hook,
+)
 
+from integrations.github.constants import GITHUB_TAG_COLOR
 from organisations.models import Organisation
 
 logger: logging.Logger = logging.getLogger(name=__name__)
@@ -31,9 +39,10 @@ class GithubConfiguration(SoftDeleteExportableModel):
                 condition=models.Q(deleted_at__isnull=True),
             )
         ]
+        ordering = ("id",)
 
 
-class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
+class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
     github_configuration = models.ForeignKey(
         GithubConfiguration, related_name="repository_config", on_delete=models.CASCADE
     )
@@ -46,6 +55,7 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         null=False,
         on_delete=models.CASCADE,
     )
+    tagging_enabled = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -57,8 +67,10 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
                     "repository_name",
                 ],
                 name="unique_repository_data",
+                condition=models.Q(deleted_at__isnull=True),
             )
         ]
+        ordering = ("id",)
 
     @hook(BEFORE_DELETE)
     def delete_feature_external_resources(
@@ -66,12 +78,38 @@ class GithubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
     ) -> None:
         from features.feature_external_resources.models import (
             FeatureExternalResource,
+            ResourceType,
         )
+
+        pattern = re.escape(f"/{self.repository_owner}/{self.repository_name}/")
 
         FeatureExternalResource.objects.filter(
             feature_id__in=self.project.features.values_list("id", flat=True),
             type__in=[
-                FeatureExternalResource.ResourceType.GITHUB_ISSUE,
-                FeatureExternalResource.ResourceType.GITHUB_PR,
+                ResourceType.GITHUB_ISSUE,
+                ResourceType.GITHUB_PR,
             ],
+            # Filter by url containing the repository owner and name
+            url__regex=pattern,
         ).delete()
+
+    @hook(AFTER_CREATE)
+    @hook(AFTER_UPDATE, when="tagging_enabled", has_changed=True, was=False)
+    def create_github_tags(
+        self,
+    ) -> None:
+        from integrations.github.constants import (
+            GitHubTag,
+            github_tag_description,
+        )
+        from projects.tags.models import Tag, TagType
+
+        for tag_label in GitHubTag:
+            tag, created = Tag.objects.get_or_create(
+                color=GITHUB_TAG_COLOR,
+                description=github_tag_description[tag_label.value],
+                label=tag_label.value,
+                project=self.project,
+                is_system_tag=True,
+                type=TagType.GITHUB.value,
+            )

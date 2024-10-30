@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -112,10 +116,6 @@
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
-                    "name": "MAILERLITE_NEW_USER_GROUP_ID",
-                    "value": "110227625"
-                },
-                {
                     "name": "OAUTH_CLIENT_ID",
                     "value": "232959427810-br6ltnrgouktp0ngsbs04o14ueb9rch0.apps.googleusercontent.com"
                 },
@@ -133,11 +133,11 @@
                 },
                 {
                     "name": "SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.00003"
+                    "value": "0.000003"
                 },
                 {
                     "name": "DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE",
-                    "value": "0.01"
+                    "value": "0.002"
                 },
                 {
                     "name": "SLACK_CLIENT_ID",
@@ -154,6 +154,10 @@
                 {
                     "name": "CACHE_BAD_ENVIRONMENTS_SECONDS",
                     "value": "60"
+                },
+                {
+                    "name": "FEATURE_EVALUATION_CACHE_SECONDS",
+                    "value": "300"
                 },
                 {
                     "name": "EDGE_RELEASE_DATETIME",

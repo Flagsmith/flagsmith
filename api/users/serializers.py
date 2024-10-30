@@ -5,7 +5,11 @@ from rest_framework.exceptions import ValidationError
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
 
-from .models import FFAdminUser, UserPermissionGroup
+from .models import (
+    FFAdminUser,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
 
 
 class UserIdSerializer(serializers.Serializer):
@@ -44,7 +48,7 @@ class UserFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FFAdminUser
-        fields = ("id", "email", "first_name", "last_name", "organisations")
+        fields = ("id", "email", "first_name", "last_name", "organisations", "uuid")
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -57,7 +61,7 @@ class UserListSerializer(serializers.ModelSerializer):
     role = serializers.SerializerMethodField(read_only=True)
     join_date = serializers.SerializerMethodField(read_only=True)
 
-    default_fields = ("id", "email", "first_name", "last_name", "last_login")
+    default_fields = ("id", "email", "first_name", "last_name", "last_login", "uuid")
     organisation_users_fields = (
         "role",
         "date_joined",
@@ -106,13 +110,24 @@ class UserPermissionGroupSummarySerializer(serializers.ModelSerializer):
 
 
 class ListUserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
+    # Note that in order to add the group_admin attribute, we use the UserPermissionGroupMembership
+    # object instead of the FFAdminUser object. As such, we need to manually define the fields
+    # and sources here.
+    id = serializers.IntegerField(source="ffadminuser.id")
+    email = serializers.EmailField(source="ffadminuser.email")
+    first_name = serializers.CharField(source="ffadminuser.first_name")
+    last_name = serializers.CharField(source="ffadminuser.last_name")
+    last_login = serializers.CharField(source="ffadminuser.last_login")
+
     class Meta:
-        model = FFAdminUser
-        fields = ("id", "email", "first_name", "last_name", "last_login")
+        model = UserPermissionGroupMembership
+        fields = ("id", "email", "first_name", "last_name", "last_login", "group_admin")
 
 
 class ListUserPermissionGroupSerializer(UserPermissionGroupSerializer):
-    users = ListUserPermissionGroupMembershipSerializer(many=True, read_only=True)
+    users = ListUserPermissionGroupMembershipSerializer(
+        many=True, read_only=True, source="userpermissiongroupmembership_set"
+    )
 
 
 class UserPermissionGroupMembershipSerializer(serializers.ModelSerializer):
@@ -134,12 +149,14 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
 class CustomCurrentUserSerializer(DjoserUserSerializer):
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
+    uuid = serializers.UUIDField(read_only=True)
 
     class Meta(DjoserUserSerializer.Meta):
         fields = DjoserUserSerializer.Meta.fields + (
             "auth_type",
             "is_superuser",
             "date_joined",
+            "uuid",
         )
 
 

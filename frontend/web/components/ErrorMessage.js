@@ -12,7 +12,14 @@ export default class ErrorMessage extends PureComponent {
     const errorMessageClassName = `alert alert-danger ${
       this.props.errorMessageClass || 'flex-1 align-items-center'
     }`
-    const error = this.props.error?.data || this.props.error
+    const error =
+      this.props.error?.data?.metadata?.find((item) =>
+        // eslint-disable-next-line no-prototype-builtins
+        item.hasOwnProperty('non_field_errors'),
+      )?.non_field_errors[0] ||
+      this.props.error?.data ||
+      this.props.error?.message ||
+      this.props.error
     return this.props.error ? (
       <div
         className={errorMessageClassName}
@@ -21,7 +28,9 @@ export default class ErrorMessage extends PureComponent {
         <span className='icon-alert'>
           <Icon name='close-circle' />
         </span>
-        {typeof error === 'object' ? (
+        {error instanceof Error ? (
+          error.message
+        ) : typeof error === 'object' ? (
           <div
             dangerouslySetInnerHTML={{
               __html: Object.keys(error)
@@ -41,7 +50,7 @@ export default class ErrorMessage extends PureComponent {
           <Button
             className='btn ml-3'
             onClick={() => {
-              document.location.replace(Constants.upgradeURL)
+              document.location.replace(Constants.getUpgradeUrl())
             }}
           >
             Upgrade plan

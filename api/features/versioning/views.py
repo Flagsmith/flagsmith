@@ -1,9 +1,12 @@
-from django.db.models import BooleanField, ExpressionWrapper, Q
+from datetime import timedelta
+
+from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import action
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -16,20 +19,26 @@ from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 from rest_framework.viewsets import GenericViewSet
 
+from app.pagination import CustomPagination
 from environments.models import Environment
 from environments.permissions.constants import VIEW_ENVIRONMENT
 from features.models import Feature, FeatureState
-from features.serializers import CreateSegmentOverrideFeatureStateSerializer
+from features.serializers import (
+    CustomCreateSegmentOverrideFeatureStateSerializer,
+)
 from features.versioning.exceptions import FeatureVersionDeleteError
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.permissions import (
     EnvironmentFeatureVersionFeatureStatePermissions,
     EnvironmentFeatureVersionPermissions,
+    EnvironmentFeatureVersionRetrievePermissions,
 )
 from features.versioning.serializers import (
-    EnvironmentFeatureVersionFeatureStateSerializer,
+    CustomEnvironmentFeatureVersionFeatureStateSerializer,
+    EnvironmentFeatureVersionCreateSerializer,
     EnvironmentFeatureVersionPublishSerializer,
     EnvironmentFeatureVersionQuerySerializer,
+    EnvironmentFeatureVersionRetrieveSerializer,
     EnvironmentFeatureVersionSerializer,
 )
 from projects.permissions import VIEW_PROJECT
@@ -48,8 +57,8 @@ class EnvironmentFeatureVersionViewSet(
     CreateModelMixin,
     DestroyModelMixin,
 ):
-    serializer_class = EnvironmentFeatureVersionSerializer
     permission_classes = [IsAuthenticated, EnvironmentFeatureVersionPermissions]
+    pagination_class = CustomPagination
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,6 +71,10 @@ class EnvironmentFeatureVersionViewSet(
         match self.action:
             case "publish":
                 return EnvironmentFeatureVersionPublishSerializer
+            case "retrieve":
+                return EnvironmentFeatureVersionRetrieveSerializer
+            case "create":
+                return EnvironmentFeatureVersionCreateSerializer
             case _:
                 return EnvironmentFeatureVersionSerializer
 
@@ -106,6 +119,9 @@ class EnvironmentFeatureVersionViewSet(
             )
             queryset = queryset.filter(_is_live=is_live)
 
+        if self.action == "list":
+            queryset = self._apply_visibility_limits(queryset)
+
         return queryset
 
     def perform_create(self, serializer: Serializer) -> None:
@@ -130,6 +146,48 @@ class EnvironmentFeatureVersionViewSet(
         serializer.save(published_by=request.user)
         return Response(serializer.data)
 
+    def _apply_visibility_limits(self, queryset: QuerySet) -> QuerySet:
+        """
+        Filter the given queryset by the visibility limits enforced
+        by the given organisation's subscription.
+        """
+        subscription = self.environment.project.organisation.subscription
+        subscription_metadata = subscription.get_subscription_metadata()
+        if (
+            subscription_metadata
+            and (
+                version_limit_days := subscription_metadata.feature_history_visibility_days
+            )
+            is not None
+        ):
+            limited_queryset = queryset.filter(
+                Q(live_from__gte=timezone.now() - timedelta(days=version_limit_days))
+                | Q(live_from__isnull=True)
+            )
+            if not limited_queryset.exists():
+                # If there are no versions in the visible time frame for the
+                # given user, we still need to make that we return the live
+                # version, which will be the first one in the original qs.
+                return queryset[:1]
+            return limited_queryset
+        return queryset
+
+
+class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):
+    """
+    This is an additional endpoint to retrieve a specific version without needing
+    to provide the environment or feature as part of the URL.
+    """
+
+    permission_classes = [
+        IsAuthenticated,
+        EnvironmentFeatureVersionRetrievePermissions,
+    ]
+    serializer_class = EnvironmentFeatureVersionRetrieveSerializer
+
+    def get_queryset(self):
+        return EnvironmentFeatureVersion.objects.all()
+
 
 class EnvironmentFeatureVersionFeatureStatesViewSet(
     GenericViewSet,
@@ -138,7 +196,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     UpdateModelMixin,
     DestroyModelMixin,
 ):
-    serializer_class = EnvironmentFeatureVersionFeatureStateSerializer
+    serializer_class = CustomEnvironmentFeatureVersionFeatureStateSerializer
     permission_classes = [
         IsAuthenticated,
         EnvironmentFeatureVersionFeatureStatePermissions,
@@ -188,21 +246,25 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         context["environment_feature_version"] = self.environment_feature_version
         return context
 
-    def perform_create(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
+    def perform_create(
+        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
+    ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
         )
 
-    def perform_update(self, serializer: CreateSegmentOverrideFeatureStateSerializer):
+    def perform_update(
+        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
+    ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
         )
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance) -> None:
         if instance.feature_segment is None and instance.identity is None:
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."

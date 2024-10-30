@@ -25,9 +25,9 @@ from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
+from task_processor.task_run_method import TaskRunMethod
 
 from app.routers import ReplicaReadStrategy
-from task_processor.task_run_method import TaskRunMethod
 
 env = Env()
 
@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
     "custom_auth",
@@ -108,6 +109,7 @@ INSTALLED_APPS = [
     "organisations.subscriptions.licensing",  # TODO: should this be added conditionally?
     "projects",
     "sales_dashboard",
+    "edge_api",
     "environments",
     "environments.permissions",
     "environments.identities",
@@ -128,7 +130,7 @@ INSTALLED_APPS = [
     "api_keys",
     "features.feature_external_resources",
     # 2FA
-    "trench",
+    "custom_auth.mfa.trench",
     # health check plugins
     "health_check",
     "health_check.db",
@@ -150,6 +152,7 @@ INSTALLED_APPS = [
     "integrations.flagsmith",
     "integrations.launch_darkly",
     "integrations.github",
+    "integrations.grafana",
     # Rate limiting admin endpoints
     "axes",
     "telemetry",
@@ -253,6 +256,7 @@ DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
@@ -328,6 +332,12 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
+PG_API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
+
+FEATURE_EVALUATION_CACHE_SECONDS = env.int(
+    "FEATURE_EVALUATION_CACHE_SECONDS", default=60
+)
 
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 
@@ -409,19 +419,6 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in django 3
 
-# CORS settings
-
-CORS_ORIGIN_ALLOW_ALL = True
-FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
-    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
-)
-CORS_ALLOW_HEADERS = [
-    *default_headers,
-    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
-    "X-Environment-Key",
-    "X-E2E-Test-Auth-Token",
-]
-
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
@@ -486,6 +483,7 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
 SWAGGER_SETTINGS = {
+    "DEEP_LINKING": True,
     "DEFAULT_AUTO_SCHEMA_CLASS": "api.openapi.PydanticResponseCapableSwaggerAutoSchema",
     "SHOW_REQUEST_HEADERS": True,
     "SECURITY_DEFINITIONS": {
@@ -509,6 +507,10 @@ LOGIN_URL = "/admin/login/"
 LOGOUT_URL = "/admin/logout/"
 
 # Enable E2E tests
+E2E_TEST_AUTH_TOKEN = env.str("E2E_TEST_AUTH_TOKEN", default=None)
+if E2E_TEST_AUTH_TOKEN is not None:
+    MIDDLEWARE.append("e2etests.middleware.E2ETestMiddleware")
+
 ENABLE_FE_E2E = env.bool("ENABLE_FE_E2E", default=False)
 # Email associated with user that is used by front end for end to end testing purposes
 E2E_TEST_EMAIL_DOMAIN = "flagsmithe2etestdomain.io"
@@ -518,6 +520,18 @@ E2E_SIGNUP_USER = f"e2e_signup_user@{E2E_TEST_EMAIL_DOMAIN}"
 E2E_CHANGE_EMAIL_USER = f"e2e_change_email@{E2E_TEST_EMAIL_DOMAIN}"
 # User email address used for the rest of the E2E tests
 E2E_USER = f"e2e_user@{E2E_TEST_EMAIL_DOMAIN}"
+E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS = (
+    f"e2e_non_admin_user_with_org_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS = (
+    f"e2e_non_admin_user_with_project_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS = (
+    f"e2e_non_admin_user_with_env_permissions@{E2E_TEST_EMAIL_DOMAIN}"
+)
+E2E_NON_ADMIN_USER_WITH_A_ROLE = (
+    f"e2e_non_admin_user_with_a_role@{E2E_TEST_EMAIL_DOMAIN}"
+)
 #  Identity for E2E segment tests
 E2E_IDENTITY = "test-identity"
 
@@ -603,7 +617,11 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
-if ENABLE_DB_LOGGING:
+if ENABLE_DB_LOGGING:  # pragma: no cover
+    if not DEBUG:
+        warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
+        DEBUG = True
+
     LOGGING["loggers"]["django.db.backends"] = {
         "level": "DEBUG",
         "handlers": ["console"],
@@ -750,7 +768,6 @@ CACHES = {
 }
 
 TRENCH_AUTH = {
-    "FROM_EMAIL": DEFAULT_FROM_EMAIL,
     "BACKUP_CODES_QUANTITY": 5,
     "BACKUP_CODES_LENGTH": 10,  # keep (quantity * length) under 200
     "BACKUP_CODES_CHARACTERS": (
@@ -759,6 +776,7 @@ TRENCH_AUTH = {
     "DEFAULT_VALIDITY_PERIOD": 30,
     "CONFIRM_BACKUP_CODES_REGENERATION_WITH_CODE": True,
     "APPLICATION_ISSUER_NAME": "app.bullet-train.io",
+    "ENCRYPT_BACKUP_CODES": True,
     "MFA_METHODS": {
         "app": {
             "VERBOSE_NAME": "TOTP App",
@@ -771,7 +789,10 @@ TRENCH_AUTH = {
 }
 
 USER_CREATE_PERMISSIONS = env.list(
-    "USER_CREATE_PERMISSIONS", default=["rest_framework.permissions.AllowAny"]
+    "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
+)
+USER_LOGIN_PERMISSIONS = env.list(
+    "USER_LOGIN_PERMISSIONS", default=["custom_auth.permissions.IsPasswordLoginAllowed"]
 )
 
 DJOSER = {
@@ -784,6 +805,7 @@ DJOSER = {
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
+        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
@@ -799,7 +821,18 @@ DJOSER = {
         "user": ["custom_auth.permissions.CurrentUser"],
         "user_list": ["custom_auth.permissions.CurrentUser"],
         "user_create": USER_CREATE_PERMISSIONS,
+        "token_create": USER_LOGIN_PERMISSIONS,
     },
+}
+SIMPLE_JWT = {
+    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"],
+    "SLIDING_TOKEN_LIFETIME": timedelta(
+        minutes=env.int(
+            "COOKIE_AUTH_JWT_ACCESS_TOKEN_LIFETIME_MINUTES",
+            default=10 * 60,
+        )
+    ),
+    "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
 # Github OAuth credentials
@@ -867,8 +900,6 @@ PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
-PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
-PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_ANALYTICS_FEATURES = env.bool(
     "DISABLE_INFLUXDB_FEATURES", default=False
 ) or env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
@@ -883,8 +914,6 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
-USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
-COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -895,13 +924,6 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
-
-# MailerLite
-MAILERLITE_BASE_URL = env.str(
-    "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
-)
-MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
-MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
@@ -1013,6 +1035,26 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 )
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
+COOKIE_AUTH_ENABLED = env.bool("COOKIE_AUTH_ENABLED", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
+
+# CORS settings
+
+CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLED)
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
+FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+)
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CORS_ALLOW_HEADERS = [
+    *default_headers,
+    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+]
 
 # use a separate boolean setting so that we add it to the API containers in environments
 # where we're running the task processor, so we avoid creating unnecessary tasks
@@ -1107,7 +1149,7 @@ LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 # The URL of the LDAP server.
 LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
 
-if LDAP_INSTALLED and LDAP_AUTH_URL:
+if LDAP_INSTALLED and LDAP_AUTH_URL:  # pragma: no cover
     AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
     INSTALLED_APPS.append("flagsmith_ldap")
 
@@ -1180,11 +1222,18 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
+    DJOSER["LOGIN_FIELD"] = "username"
 
 SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
 if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
     raise ImproperlyConfigured(
         "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
+
+FEATURE_VALUE_LIMIT = env.int("FEATURE_VALUE_LIMIT", default=20_000)
+if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
+    raise ImproperlyConfigured(
+        "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
@@ -1214,3 +1263,12 @@ EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
     "EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET",
     default=0,
 )
+
+ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
+    "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
+)
+
+# Date on which versioning is released. This is used to give any scale up
+# subscriptions created before this date full audit log and versioning
+# history.
+VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)

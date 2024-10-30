@@ -1,6 +1,8 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
+import Utils from './utils/utils'
 
+import Project from './project'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -113,7 +115,7 @@ export default {
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-js')(
+      'React Native': require('./code-help/init/init-react')(
         envId,
         keywordsReactNative,
       ),
@@ -228,7 +230,6 @@ export default {
       ),
       'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
     }),
-
     keys: {
       'Java': 'java',
       'JavaScript': 'javascript',
@@ -349,6 +350,12 @@ export default {
       }
     },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_LOCKED_FEATURE: (feature: string) => {
+      return {
+        'category': 'Locked Feature',
+        'event': `View Locked Feature ${feature}`,
+      }
+    },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
       'category': 'User Features',
@@ -435,6 +442,19 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  getUpgradeUrl: (feature?: string) => {
+    return Utils.isSaas()
+      ? '/organisation-settings?tab=billing'
+      : `https://www.flagsmith.com/pricing${
+          feature ? `?utm_source=${feature}` : ''
+        }`
+  },
+  githubType: {
+    githubIssue: 'GitHub Issue',
+    githubPR: 'Github PR',
+  },
+  isCustomFlagsmithUrl:
+    Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -472,6 +492,20 @@ export default {
   ],
   projectPermissions: (perm: string) =>
     `To use this feature you need the <i>${perm}</i> permission for this project.<br/>Please contact a member of this project who has administrator privileges.`,
+  resourceTypes: {
+    GITHUB_ISSUE: {
+      id: 1,
+      label: 'Issue',
+      resourceType: 'issues',
+      type: 'GITHUB',
+    },
+    GITHUB_PR: {
+      id: 2,
+      label: 'Pull Request',
+      resourceType: 'pulls',
+      type: 'GITHUB',
+    },
+  },
   roles: {
     'ADMIN': 'Organisation Administrator',
     'USER': 'User',
@@ -500,7 +534,8 @@ export default {
       'Set different values for your feature based on what segments users are in. Identity overrides will take priority over any segment override.',
     TAGS_DESCRIPTION:
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
-    TOOLTIP_METADATA_DESCRIPTION: 'Add metadata in your',
+    TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
+      `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:
@@ -529,5 +564,4 @@ export default {
     '#DE3163',
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
-  upgradeURL: '/organisation-settings?tab=billing',
 }

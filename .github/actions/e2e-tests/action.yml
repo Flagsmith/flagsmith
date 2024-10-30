@@ -43,10 +43,9 @@ runs:
           npm run test -- ${{ inputs.tests }}
         max_attempts: 2
         retry_on: error
-        timeout_minutes: 10
+        timeout_minutes: 20
       env:
         E2E_TEST_TOKEN: ${{ inputs.e2e_test_token }}
         SLACK_TOKEN: ${{ inputs.slack_token }}
-        STATIC_ASSET_CDN_URL: /
-        ENV: ${{ inputs.environment }}
+        ENV: ${{ inputs.environment == 'production' && 'prod' || inputs.environment }}
         GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

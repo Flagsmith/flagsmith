@@ -10,7 +10,6 @@ from django.core.cache import caches
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
     AFTER_DELETE,
@@ -42,6 +41,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -77,7 +77,7 @@ class Environment(
     project = models.ForeignKey(
         "projects.Project",
         related_name="environments",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove all previous Feature States for"
             " the previously associated projects Features that are related to this"
             " Environment. New default Feature States will be created for the new"
@@ -131,9 +131,12 @@ class Environment(
         help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
-    objects = EnvironmentManager()
-
     use_v2_feature_versioning = models.BooleanField(default=False)
+    use_identity_overrides_in_local_eval = models.BooleanField(
+        default=True,
+        help_text="When enabled, identity overrides will be included in the environment document",
+    )
+    objects = EnvironmentManager()
 
     class Meta:
         ordering = ["id"]
@@ -175,8 +178,31 @@ class Environment(
         # Since identities are closely tied to the environment
         # it does not make much sense to clone them, hence
         # only clone feature states without identities
-        for feature_state in self.feature_states.filter(identity=None):
-            feature_state.clone(clone, live_from=feature_state.live_from)
+        queryset = self.feature_states.filter(identity=None)
+
+        if self.use_v2_feature_versioning:
+            # Grab the latest feature versions from the source environment.
+            latest_environment_feature_versions = (
+                EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+                    environment_id=self.id
+                )
+            )
+
+            # Create a dictionary holding the environment feature versions (unique per feature)
+            # to use in the cloned environment.
+            clone_environment_feature_versions = {
+                efv.feature_id: efv.clone_to_environment(environment=clone)
+                for efv in latest_environment_feature_versions
+            }
+
+            for feature_state in queryset.filter(
+                environment_feature_version__in=latest_environment_feature_versions
+            ):
+                clone_efv = clone_environment_feature_versions[feature_state.feature_id]
+                feature_state.clone(clone, environment_feature_version=clone_efv)
+        else:
+            for feature_state in queryset:
+                feature_state.clone(clone, live_from=feature_state.live_from)
 
         return clone
 

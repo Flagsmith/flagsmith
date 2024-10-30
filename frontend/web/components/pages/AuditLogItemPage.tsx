@@ -12,6 +12,8 @@ import DiffString from 'components/diff/DiffString'
 import DiffEnabled from 'components/diff/DiffEnabled'
 import Format from 'common/utils/format'
 import { Environment } from 'common/types/responses'
+import { Link } from 'react-router-dom'
+import Button from 'components/base/forms/Button'
 type AuditLogItemPageType = {
   match: {
     params: {
@@ -41,7 +43,7 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
         items={[
           {
             title: 'Audit Log',
-            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/audit-log`,
+            url: `/project/${match.params.projectId}/audit-log`,
           },
         ]}
         currentPage={match.params.id}
@@ -112,6 +114,15 @@ const AuditLogItemPage: FC<AuditLogItemPageType> = ({ match }) => {
                   </div>
                 </Panel>
               )}
+              {data.related_object_type === 'EF_VERSION' &&
+                !!data.project &&
+                !!data.environment && (
+                  <Link
+                    to={`/project/${data.project.id}/environment/${data.environment.api_key}/history/${data.related_object_uuid}/`}
+                  >
+                    <Button theme='text'>View version</Button>
+                  </Link>
+                )}
             </>
           )}
         </div>

@@ -24,6 +24,7 @@ class AuditLogListSerializer(serializers.ModelSerializer):
             "environment",
             "project",
             "related_object_id",
+            "related_object_uuid",
             "related_object_type",
             "is_system_event",
         )
@@ -52,6 +53,7 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "environment",
             "project",
             "related_object_id",
+            "related_object_uuid",
             "related_object_type",
             "is_system_event",
             "change_details",

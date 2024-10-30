@@ -1,16 +1,16 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
-from app_analytics.analytics_db_service import ANALYTICS_READ_BUCKET_SIZE
+from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
-from django.db.models import Count, Q, Sum
+from django.db.models import Q, Sum
 from django.utils import timezone
-
-from environments.models import Environment
 from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
+
+from environments.models import Environment
 
 from .models import (
     APIUsageBucket,
@@ -97,7 +97,7 @@ def track_feature_evaluation(
 
 
 @register_task_handler()
-def track_request(resource: int, host: str, environment_key: str):
+def track_request(resource: int, host: str, environment_key: str, count: int = 1):
     environment = Environment.get_from_cache(environment_key)
     if environment is None:
         return
@@ -105,6 +105,7 @@ def track_request(resource: int, host: str, environment_key: str):
         environment_id=environment.id,
         resource=resource,
         host=host,
+        count=count,
     )
 
 
@@ -145,10 +146,10 @@ def populate_api_usage_bucket(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
-            APIUsageBucket.objects.create(
+            APIUsageBucket.objects.update_or_create(
+                defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
                 resource=row["resource"],
-                total_count=row["count"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
             )
@@ -162,10 +163,10 @@ def populate_feature_evaluation_bucket(
             bucket_start_time, bucket_end_time, source_bucket_size
         )
         for row in data:
-            FeatureEvaluationBucket.objects.create(
+            FeatureEvaluationBucket.objects.update_or_create(
+                defaults={"total_count": row["count"]},
                 environment_id=row["environment_id"],
                 feature_name=row["feature_name"],
-                total_count=row["count"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
             )
@@ -187,7 +188,7 @@ def _get_api_usage_source_data(
     return (
         APIUsageRaw.objects.filter(filters)
         .values("environment_id", "resource")
-        .annotate(count=Count("id"))
+        .annotate(count=Sum("count"))
     )
 
 

@@ -33,6 +33,7 @@ from pytest_mock import MockerFixture
 
 from environments.models import Environment
 from features.models import FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from integrations.common.models import IntegrationsModel
 from integrations.dynatrace.models import DynatraceConfiguration
@@ -40,6 +41,7 @@ from integrations.mixpanel.models import MixpanelConfiguration
 from integrations.segment.models import SegmentConfiguration
 from integrations.webhook.models import WebhookConfiguration
 from segments.models import Segment, SegmentRule
+from users.models import FFAdminUser
 from util.mappers import engine
 
 if TYPE_CHECKING:
@@ -384,6 +386,7 @@ def test_map_environment_to_engine__return_expected(
         allow_client_traits=environment.allow_client_traits,
         updated_at=environment.updated_at,
         use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
+        use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
         amplitude_config=None,
@@ -598,3 +601,59 @@ def test_map_environment_to_engine_following_migration_to_v2_versioning(
     assert mapped_segment_override.django_id == v2_segment_override.id
     assert mapped_segment_override.enabled is True
     assert mapped_segment_override.feature_state_value == v2_segment_override_value
+
+
+def test_map_environment_to_engine_v2_versioning_segment_overrides(
+    environment_v2_versioning: Environment,
+    segment: Segment,
+    feature: "Feature",
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    # Another segment
+    another_segment = Segment.objects.create(
+        name="another_segment", project=feature.project
+    )
+
+    # First, let's create a version that includes 2 segment overrides
+    v2 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+    for _segment in [segment, another_segment]:
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=v2,
+            feature_segment=FeatureSegment.objects.create(
+                feature=feature,
+                segment=_segment,
+                environment=environment_v2_versioning,
+                environment_feature_version=v2,
+            ),
+        )
+    v2.publish(staff_user)
+
+    # Now, let's create another new version which will keep one of the segment overrides
+    # and remove the other.
+    v3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    v3_segment_override = FeatureState.objects.get(
+        feature_segment__segment=segment, environment_feature_version=v3
+    )
+    FeatureState.objects.filter(
+        feature_segment__segment=another_segment, environment_feature_version=v3
+    ).delete()
+
+    v3.publish(staff_user)
+
+    # When
+    environment_model = engine.map_environment_to_engine(environment_v2_versioning)
+
+    # Then
+    assert len(environment_model.project.segments[0].feature_states) == 1
+    assert (
+        environment_model.project.segments[0].feature_states[0].django_id
+        == v3_segment_override.id
+    )

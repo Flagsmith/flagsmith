@@ -6,8 +6,10 @@ from django.dispatch import receiver
 
 from audit.models import AuditLog, RelatedObjectType
 from audit.serializers import AuditLogListSerializer
+from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
+from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
@@ -40,12 +42,15 @@ def call_webhooks(sender, instance, **kwargs):
         )
 
 
-def _get_integration_config(instance, integration_name):
-    if hasattr(instance.project, integration_name):
-        return getattr(instance.project, integration_name)
-    elif hasattr(instance.environment, integration_name):
-        return getattr(instance.environment, integration_name)
-
+def _get_integration_config(
+    instance: AuditLog, integration_name: str
+) -> IntegrationsModel | None:
+    if hasattr(project := instance.project, integration_name):
+        return getattr(project, integration_name)
+    if hasattr(environment := instance.environment, integration_name):
+        return getattr(environment, integration_name)
+    if hasattr(organisation := instance.organisation, integration_name):
+        return getattr(organisation, integration_name)
     return None
 
 
@@ -111,6 +116,20 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
         entity_selector=dynatrace_config.entity_selector,
     )
     _track_event_async(instance, dynatrace)
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only_feature_related_events
+def send_audit_log_event_to_grafana(sender, instance, **kwargs):
+    grafana_config = _get_integration_config(instance, "grafana_config")
+    if not grafana_config:
+        return
+
+    grafana = GrafanaWrapper(
+        base_url=grafana_config.base_url,
+        api_key=grafana_config.api_key,
+    )
+    _track_event_async(instance, grafana)
 
 
 @receiver(post_save, sender=AuditLog)

@@ -1,6 +1,5 @@
 from django.conf import settings
-from django.conf.urls import url
-from django.urls import path
+from django.urls import path, re_path
 
 from organisations.invites.views import (
     join_organisation_from_email,
@@ -23,5 +22,5 @@ urlpatterns = [
     ),
 ]
 
-if settings.ALLOW_ADMIN_INITIATION_VIA_URL:
-    urlpatterns.insert(0, url(r"^init/", AdminInitView.as_view()))
+if settings.ALLOW_ADMIN_INITIATION_VIA_URL:  # pragme: no cover
+    urlpatterns.insert(0, re_path(r"^init/", AdminInitView.as_view()))

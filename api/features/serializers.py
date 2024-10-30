@@ -1,21 +1,25 @@
 import typing
-from dataclasses import asdict
 from datetime import datetime
 
 import django.core.exceptions
+from common.features.multivariate.serializers import (
+    MultivariateFeatureStateValueSerializer,
+)
+from common.features.serializers import (
+    CreateSegmentOverrideFeatureStateSerializer,
+    FeatureStateValueSerializer,
+)
 from drf_writable_nested import WritableNestedModelSerializer
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
-from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
-from integrations.github.github import GithubData, generate_data
-from integrations.github.models import GithubConfiguration
-from integrations.github.tasks import call_github_app_webhook_for_feature_state
+from integrations.github.constants import GitHubEventType
+from integrations.github.github import call_github_task
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
@@ -26,17 +30,17 @@ from users.serializers import (
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
+from .feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from .feature_segments.serializers import (
-    CreateSegmentOverrideFeatureSegmentSerializer,
+    CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .models import Feature, FeatureState, FeatureStateValue
-from .multivariate.serializers import (
-    MultivariateFeatureStateValueSerializer,
-    NestedMultivariateFeatureOptionSerializer,
-)
+from .models import Feature, FeatureState
+from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):
@@ -474,23 +478,18 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 and feature_state.environment.project.github_project.exists()
                 and feature_state.environment.project.organisation.github_config.exists()
             ):
-                github_configuration = GithubConfiguration.objects.get(
-                    organisation_id=feature_state.environment.project.organisation_id
-                )
-                feature_states = []
-                feature_states.append(feature_state)
-                feature_data: GithubData = generate_data(
-                    github_configuration=github_configuration,
-                    feature=feature_state.feature,
-                    type=WebhookEventType.FLAG_UPDATED.value,
-                    feature_states=feature_states,
-                )
 
-                call_github_app_webhook_for_feature_state.delay(
-                    args=(asdict(feature_data),),
+                call_github_task(
+                    organisation_id=feature_state.feature.project.organisation_id,
+                    type=GitHubEventType.FLAG_UPDATED.value,
+                    feature=feature_state.feature,
+                    segment_name=None,
+                    url=None,
+                    feature_states=[feature_state],
                 )
 
             return response
+
         except django.core.exceptions.ValidationError as e:
             raise serializers.ValidationError(str(e))
 
@@ -559,12 +558,6 @@ class FeatureStateSerializerCreate(serializers.ModelSerializer):
         fields = ("feature", "enabled")
 
 
-class FeatureStateValueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FeatureStateValue
-        fields = ("type", "string_value", "integer_value", "boolean_value")
-
-
 class FeatureInfluxDataSerializer(serializers.Serializer):
     events_list = serializers.ListSerializer(child=serializers.DictField())
 
@@ -600,52 +593,24 @@ class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
         fields = ("id", "feature", "environment")
 
 
+class AssociatedFeaturesQuerySerializer(serializers.Serializer):
+    environment = serializers.IntegerField(required=False)
+
+
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"
     )
 
 
-class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer):
-    feature_state_value = FeatureStateValueSerializer()
-    feature_segment = CreateSegmentOverrideFeatureSegmentSerializer(
+class CustomCreateSegmentOverrideFeatureStateSerializer(
+    CreateSegmentOverrideFeatureStateSerializer
+):
+    validate_override_limit = True
+
+    feature_segment = CustomCreateSegmentOverrideFeatureSegmentSerializer(
         required=False, allow_null=True
     )
-    multivariate_feature_state_values = MultivariateFeatureStateValueSerializer(
-        many=True, required=False
-    )
-
-    class Meta:
-        model = FeatureState
-        fields = (
-            "id",
-            "feature",
-            "enabled",
-            "feature_state_value",
-            "feature_segment",
-            "deleted_at",
-            "uuid",
-            "created_at",
-            "updated_at",
-            "live_from",
-            "environment",
-            "identity",
-            "change_request",
-            "multivariate_feature_state_values",
-        )
-
-        read_only_fields = (
-            "id",
-            "deleted_at",
-            "uuid",
-            "created_at",
-            "updated_at",
-            "live_from",
-            "environment",
-            "identity",
-            "change_request",
-            "feature",
-        )
 
     def _get_save_kwargs(self, field_name):
         kwargs = super()._get_save_kwargs(field_name)
@@ -659,18 +624,8 @@ class CreateSegmentOverrideFeatureStateSerializer(WritableNestedModelSerializer)
 
     def create(self, validated_data: dict) -> FeatureState:
         environment = validated_data["environment"]
-        self.validate_environment_segment_override_limit(environment)
-        return super().create(validated_data)
-
-    def validate_environment_segment_override_limit(
-        self, environment: Environment
-    ) -> None:
-        if (
-            environment.feature_segments.count()
-            >= environment.project.max_segment_overrides_allowed
-        ):
+        if self.validate_override_limit and exceeds_segment_override_limit(environment):
             raise serializers.ValidationError(
-                {
-                    "environment": "The environment has reached the maximum allowed segments overrides limit."
-                }
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
             )
+        return super().create(validated_data)

@@ -45,6 +45,10 @@ class FeaturePermissions(IsAuthenticated):
             # handled by has_object_permission
             return True
 
+        if view.action in ["list"]:
+            # handled by the view
+            return True
+
         try:
             project_id = view.kwargs.get("project_pk") or request.data.get("project")
             project = Project.objects.get(id=project_id)
@@ -63,7 +67,7 @@ class FeaturePermissions(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
-            tag_ids = []
+            tag_ids = None
             required_permission = ACTION_PERMISSIONS_MAP.get(view.action)
             if required_permission in TAG_SUPPORTED_PROJECT_PERMISSIONS:
                 tag_ids = list(obj.tags.values_list("id", flat=True))
@@ -152,19 +156,35 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
             return True
 
         environment_api_key = view.kwargs.get("environment_api_key")
-        with suppress(Environment.DoesNotExist):
+        with suppress(Environment.DoesNotExist, Feature.DoesNotExist):
             environment = Environment.objects.get(api_key=environment_api_key)
+
+            tag_ids = None
+            required_permission = action_permission_map.get(view.action)
+
+            if required_permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+                feature_id = request.data.get("feature")
+                feature = Feature.objects.get(
+                    id=feature_id, project=environment.project
+                )
+                tag_ids = list(feature.tags.values_list("id", flat=True))
+
             return request.user.has_environment_permission(
-                action_permission_map.get(view.action), environment
+                required_permission, environment, tag_ids=tag_ids
             )
         return False
 
     def has_object_permission(self, request, view, obj):
         action_permission_map = {"retrieve": VIEW_ENVIRONMENT}
 
+        permission = action_permission_map.get(view.action, UPDATE_FEATURE_STATE)
+
+        tag_ids = None
+        if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
+            tag_ids = list(obj.feature.tags.values_list("id", flat=True))
+
         return request.user.has_environment_permission(
-            permission=action_permission_map.get(view.action, UPDATE_FEATURE_STATE),
-            environment=obj.environment,
+            permission=permission, environment=obj.environment, tag_ids=tag_ids
         )
 
 

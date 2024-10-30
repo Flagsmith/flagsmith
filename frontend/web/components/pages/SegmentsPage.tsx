@@ -22,9 +22,12 @@ import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
-import Panel from 'components/base/grid/Panel'
+import { setModalTitle } from 'components/modals/base/ModalDefault'
+import classNames from 'classnames'
+import InfoMessage from 'components/InfoMessage'
+import { withRouter } from 'react-router-dom'
 
-const CodeHelp = require('../../components/CodeHelp')
+import CodeHelp from 'components/CodeHelp'
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -35,34 +38,25 @@ type SegmentsPageType = {
   }
 }
 
-const HowToUseSegmentsMessage = () => (
-  <div className='mt-2'>
-    <p className='alert alert-info'>
-      In order to use segments, please set the segment_operators remote config
-      value.{' '}
-      <Button
-        theme='text'
-        target='_blank'
-        href='https://docs.flagsmith.com/deployment/overview#running-flagsmith-on-flagsmith'
-      >
-        Learn about self hosting
-      </Button>
-      .
-    </p>
-  </div>
-)
-
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { projectId } = props.match.params
   const environmentId =
     ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
-  const preselect = useRef(Utils.fromParam().id)
-  const hasNoOperators = !Utils.getFlagsmithValue('segment_operators')
-
+  const params = Utils.fromParam()
+  const id = params.id
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
   const [page, setPage] = useState(1)
-  const [showFeatureSpecific, setShowFeatureSpecific] = useState(false)
+  const [showFeatureSpecific, setShowFeatureSpecific] = useState(
+    params.featureSpecific === 'true',
+  )
 
+  useEffect(() => {
+    if (id) {
+      editSegment(id, !manageSegmentsPermission)
+    } else if (!id && typeof closeModal !== 'undefined') {
+      closeModal()
+    }
+  }, [id])
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
     include_feature_specific: showFeatureSpecific,
     page,
@@ -70,8 +64,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     projectId,
     q: search,
   })
-  const [removeSegment] = useDeleteSegmentMutation()
-  const hasHadResults = useRef(false)
+  const [removeSegment, { isLoading: isRemoving }] = useDeleteSegmentMutation()
 
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
@@ -87,14 +80,24 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       props.router.history.replace(Utils.getOrganisationHomePage())
     }
   }, [error, props.router.history])
+
+  useEffect(() => {
+    props.router.history.replace(
+      `${document.location.pathname}?${Utils.toParam({
+        ...Utils.fromParam(),
+        featureSpecific: showFeatureSpecific,
+      })}`,
+    )
+  }, [showFeatureSpecific])
+
   const newSegment = () => {
     openModal(
       'New Segment',
       <CreateSegmentModal
-        onComplete={() => {
+        onComplete={(segment) => {
           //todo: remove when CreateSegment uses hooks
-          closeModal()
-          refetch()
+          setModalTitle(`Edit Segment: ${segment.name}`)
+          toast('Created segment')
         }}
         environmentId={environmentId}
         projectId={projectId}
@@ -118,24 +121,32 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
 
   const editSegment = (id: number, readOnly?: boolean) => {
     API.trackEvent(Constants.events.VIEW_SEGMENT)
-    history.replaceState({}, '', `${document.location.pathname}?id=${id}`)
 
     openModal(
       `Edit Segment`,
       <CreateSegmentModal
+        key={id}
         segment={id}
-        isEdit
+        onSegmentRetrieved={(segment) => {
+          setShowFeatureSpecific(!!segment?.feature)
+          setModalTitle(`Edit Segment: ${segment.name}`)
+        }}
         readOnly={readOnly}
         onComplete={() => {
           refetch()
-          closeModal()
+          toast('Updated Segment')
         }}
         environmentId={environmentId}
         projectId={projectId}
       />,
       'side-modal create-segment-modal',
       () => {
-        history.replaceState({}, '', `${document.location.pathname}`)
+        props.router.history.push(
+          `${document.location.pathname}?${Utils.toParam({
+            ...Utils.fromParam(),
+            id: undefined,
+          })}`,
+        )
       },
     )
   }
@@ -152,11 +163,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       </Tooltip>
     )
   }
-
-  if (data?.results.length) {
-    hasHadResults.current = true
-  }
-
   const segments = data?.results
   return (
     <div
@@ -166,26 +172,23 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     >
       <PageTitle
         cta={
-          segments && (segments.length || searchInput) ? (
-            <>
-              {renderWithPermission(
-                manageSegmentsPermission,
-                'Manage segments',
-                <Button
-                  disabled={
-                    hasNoOperators ||
-                    !manageSegmentsPermission ||
-                    segmentsLimitAlert.percentage >= 100
-                  }
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  onClick={newSegment}
-                >
-                  Create Segment
-                </Button>,
-              )}
-            </>
-          ) : null
+          <>
+            {renderWithPermission(
+              manageSegmentsPermission,
+              'Manage segments',
+              <Button
+                disabled={
+                  !manageSegmentsPermission ||
+                  segmentsLimitAlert.percentage >= 100
+                }
+                id='show-create-segment-btn'
+                data-test='show-create-segment-btn'
+                onClick={newSegment}
+              >
+                Create Segment
+              </Button>,
+            )}
+          </>
         }
         title={'Segments'}
       >
@@ -209,7 +212,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         </Button>
       </PageTitle>
       <div className='segments-page'>
-        {isLoading && !hasHadResults.current && !segments && !searchInput && (
+        {isLoading && !segments && !searchInput && (
           <div className='centered-container'>
             <Loader />
           </div>
@@ -217,147 +220,125 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         {(!isLoading || segments || searchInput) && (
           <div>
             {Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
-            {hasHadResults.current ||
-            (segments && (segments.length || searchInput)) ? (
-              <div>
-                {hasNoOperators && <HowToUseSegmentsMessage />}
-
-                <FormGroup>
-                  <PanelSearch
-                    filterElement={
-                      <div className='text-right me-2'>
-                        <label className='me-2'>Include Feature-Specific</label>
-                        <Switch onChange={setShowFeatureSpecific} />
-                      </div>
-                    }
-                    renderSearchWithNoResults
-                    className='no-pad'
-                    id='segment-list'
-                    title='Segments'
-                    renderFooter={() => (
-                      <JSONReference
-                        className='mx-2 mt-4'
-                        title={'Segments'}
-                        json={segments}
+            <div>
+              <FormGroup className={classNames({ 'opacity-50': isRemoving })}>
+                <PanelSearch
+                  filterElement={
+                    <div className='text-right me-2'>
+                      <label className='me-2'>Include Feature-Specific</label>
+                      <Switch
+                        checked={showFeatureSpecific}
+                        onChange={setShowFeatureSpecific}
                       />
-                    )}
-                    items={sortBy(segments, (v) => {
-                      return `${v.feature ? 'a' : 'z'}${v.name}`
-                    })}
-                    renderRow={(
-                      { description, feature, id, name }: Segment,
-                      i: number,
-                    ) => {
-                      if (preselect.current === `${id}`) {
-                        editSegment(
-                          preselect.current,
-                          !manageSegmentsPermission,
-                        )
-                        preselect.current = null
-                      }
-
-                      // TODO: remove this check
-                      // I'm leaving this here for now so that we can deploy the FE and
-                      // API independently, but we should remove this once PR #3430 is
-                      // merged and released.
-                      if (feature && !showFeatureSpecific) {
-                        return null
-                      }
-
-                      return renderWithPermission(
-                        manageSegmentsPermission,
-                        'Manage segments',
-                        <Row className='list-item clickable' key={id} space>
-                          <Flex
-                            className='table-column px-3'
-                            onClick={
-                              manageSegmentsPermission
-                                ? () =>
-                                    editSegment(id, !manageSegmentsPermission)
-                                : undefined
-                            }
-                          >
-                            <Row
-                              data-test={`segment-${i}-name`}
-                              className='font-weight-medium'
-                            >
-                              {name}
-                              {feature && (
-                                <div className='chip chip--xs ml-2'>
-                                  Feature-Specific
-                                </div>
-                              )}
-                            </Row>
-                            <div className='list-item-subtitle mt-1'>
-                              {description || 'No description'}
-                            </div>
-                          </Flex>
-                          <div className='table-column'>
-                            <Button
-                              disabled={!manageSegmentsPermission}
-                              data-test={`remove-segment-btn-${i}`}
-                              onClick={() => {
-                                const segment = find(segments, { id })
-                                if (segment) {
-                                  confirmRemove(segment, () => {
-                                    removeSegment({ id, projectId })
-                                  })
-                                }
-                              }}
-                              className='btn btn-with-icon'
-                            >
-                              <Icon name='trash-2' width={20} fill='#656D7B' />
-                            </Button>
-                          </div>
-                        </Row>,
-                      )
-                    }}
-                    paging={data}
-                    nextPage={() => setPage(page + 1)}
-                    prevPage={() => setPage(page - 1)}
-                    goToPage={(page: number) => setPage(page)}
-                    search={searchInput}
-                    onChange={(e: any) => {
-                      setSearchInput(Utils.safeParseEventValue(e))
-                    }}
-                    renderNoResults={<div className='text-center' />}
-                    filterRow={() => true}
-                  />
-                </FormGroup>
-
-                <p>
-                  Segments require you to identitfy users, setting traits will
-                  add users to segments.
-                </p>
-                <FormGroup className='mt-4'>
-                  <CodeHelp
-                    title='Using segments'
-                    snippets={Constants.codeHelp.USER_TRAITS(
-                      environmentId || 'ENVIRONMENT_KEY',
-                    )}
-                  />
-                </FormGroup>
-              </div>
-            ) : (
-              <div>
-                <FormGroup className='text-center'>
-                  {renderWithPermission(
-                    manageSegmentsPermission,
-                    'Manage segments',
-                    <Button
-                      disabled={!manageSegmentsPermission || hasNoOperators}
-                      className='btn-lg btn-primary'
-                      id='show-create-segment-btn'
-                      data-test='show-create-segment-btn'
-                      onClick={newSegment}
-                    >
-                      Create your first Segment
-                    </Button>,
+                    </div>
+                  }
+                  renderSearchWithNoResults
+                  className='no-pad'
+                  id='segment-list'
+                  title=' '
+                  renderFooter={() => (
+                    <JSONReference
+                      className='mx-2 mt-4'
+                      title={'Segments'}
+                      json={segments}
+                    />
                   )}
-                </FormGroup>
-                {hasNoOperators && <HowToUseSegmentsMessage />}
-              </div>
-            )}
+                  items={sortBy(segments, (v) => {
+                    return `${v.feature ? 'a' : 'z'}${v.name}`
+                  })}
+                  renderRow={(
+                    { description, feature, id, name }: Segment,
+                    i: number,
+                  ) => {
+                    return renderWithPermission(
+                      manageSegmentsPermission,
+                      'Manage segments',
+                      <Row className='list-item clickable' key={id} space>
+                        <Flex
+                          className='table-column px-3'
+                          onClick={
+                            manageSegmentsPermission
+                              ? () =>
+                                  props.router.history.push(
+                                    `${
+                                      document.location.pathname
+                                    }?${Utils.toParam({
+                                      ...Utils.fromParam(),
+                                      id,
+                                    })}`,
+                                  )
+                              : undefined
+                          }
+                        >
+                          <Row
+                            data-test={`segment-${i}-name`}
+                            className='font-weight-medium'
+                          >
+                            {name}
+                            {feature && (
+                              <div className='chip chip--xs ml-2'>
+                                Feature-Specific
+                              </div>
+                            )}
+                          </Row>
+                          <div className='list-item-subtitle mt-1'>
+                            {description || 'No description'}
+                          </div>
+                        </Flex>
+                        <div className='table-column'>
+                          <Button
+                            disabled={!manageSegmentsPermission}
+                            data-test={`remove-segment-btn-${i}`}
+                            onClick={() => {
+                              const segment = find(segments, { id })
+                              if (segment) {
+                                confirmRemove(segment, () => {
+                                  removeSegment({ id, projectId }).then(
+                                    (res) => {
+                                      toast(
+                                        <div>
+                                          Removed Segment:{' '}
+                                          <strong>{segment.name}</strong>
+                                        </div>,
+                                      )
+                                    },
+                                  )
+                                })
+                              }
+                            }}
+                            className='btn btn-with-icon'
+                          >
+                            <Icon name='trash-2' width={20} fill='#656D7B' />
+                          </Button>
+                        </div>
+                      </Row>,
+                    )
+                  }}
+                  paging={data}
+                  nextPage={() => setPage(page + 1)}
+                  prevPage={() => setPage(page - 1)}
+                  goToPage={(page: number) => setPage(page)}
+                  search={searchInput}
+                  onChange={(e: any) => {
+                    setSearchInput(Utils.safeParseEventValue(e))
+                  }}
+                  filterRow={() => true}
+                />
+              </FormGroup>
+
+              <InfoMessage collapseId={'segment-identify'}>
+                Segments require you to identitfy users, setting traits will add
+                users to segments.
+              </InfoMessage>
+              <FormGroup className='mt-4'>
+                <CodeHelp
+                  title='Using segments'
+                  snippets={Constants.codeHelp.USER_TRAITS(
+                    environmentId || 'ENVIRONMENT_KEY',
+                  )}
+                />
+              </FormGroup>
+            </div>
           </div>
         )}
         <FormGroup>
@@ -371,4 +352,4 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   )
 }
 
-module.exports = ConfigProvider(SegmentsPage)
+module.exports = ConfigProvider(withRouter(SegmentsPage))

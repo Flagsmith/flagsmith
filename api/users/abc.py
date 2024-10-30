@@ -26,12 +26,18 @@ class UserABC(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def has_project_permission(self, permission: str, project: "Project") -> bool:
+    def is_group_admin(self, group_id: int) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def has_project_permission(
+        self, permission: str, project: "Project", tag_ids: list[int] = None
+    ) -> bool:
         raise NotImplementedError()
 
     @abstractmethod
     def has_environment_permission(
-        self, permission: str, environment: "Environment"
+        self, permission: str, environment: "Environment", tag_ids: list[int] = None
     ) -> bool:
         raise NotImplementedError()
 

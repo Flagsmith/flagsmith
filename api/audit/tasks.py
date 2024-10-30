@@ -4,14 +4,14 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from task_processor.decorators import register_task_handler
+from task_processor.models import TaskPriority
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
     FEATURE_STATE_WENT_LIVE_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
 
 logger = logging.getLogger(__name__)
 
@@ -159,9 +159,16 @@ def create_segment_priorities_changed_audit_log(
     if not feature_segments:
         return
 
-    # all feature segments should have the same value for feature and environment
+    # all feature segments should have the same value for feature, environment and
+    # environment feature version
     environment = feature_segments[0].environment
     feature = feature_segments[0].feature
+    environment_feature_version_id = feature_segments[0].environment_feature_version_id
+
+    if environment_feature_version_id is not None:
+        # Don't create audit logs for FeatureSegments wrapped in a version
+        # as this is handled by the feature history instead.
+        return
 
     AuditLog.objects.create(
         log=f"Segment overrides re-ordered for feature '{feature.name}'.",

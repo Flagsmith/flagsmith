@@ -24,6 +24,7 @@ import {
   MetadataModelField,
   isRequiredFor,
 } from 'common/types/responses'
+import ErrorMessage from 'components/ErrorMessage'
 
 type CreateMetadataFieldType = {
   id?: string
@@ -76,8 +77,10 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const { data: supportedContentTypes } = useGetSupportedContentTypeQuery({
     organisation_id: `${organisationId}`,
   })
-  const [createMetadataField, { isLoading: creating, isSuccess: created }] =
-    useCreateMetadataFieldMutation()
+  const [
+    createMetadataField,
+    { error: errorCreating, isLoading: creating, isSuccess: created },
+  ] = useCreateMetadataFieldMutation()
   const [updateMetadataField, { isLoading: updating, isSuccess: updated }] =
     useUpdateMetadataFieldMutation()
 
@@ -167,31 +170,47 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         },
         id: id!,
       }).then(() => {
-        Promise.all(
-          metadataUpdatedSelectList?.map(
-            async (m: metadataFieldUpdatedSelectListType) => {
+        if (metadataFieldSelectList.length) {
+          Promise.all(
+            metadataFieldSelectList.map(async (m) => {
               const query = generateDataQuery(
-                m.content_type,
-                m.field,
-                m.is_required_for,
-                m.id,
-                m.new,
+                m.value,
+                parseInt(id!),
+                !!m?.isRequired,
+                0,
+                true,
               )
-              if (!m.removed && !m.new) {
-                await updateMetadataModelField(query)
-              } else if (m.removed) {
-                await deleteMetadataModelField({
-                  id: m.id,
-                  organisation_id: organisationId,
-                })
-              } else if (m.new) {
-                const newQuery = { ...query }
-                delete newQuery.id
-                await createMetadataModelField(newQuery)
-              }
-            },
-          ),
-        )
+              await createMetadataModelField(query)
+            }),
+          )
+        }
+        if (metadataUpdatedSelectList.length) {
+          Promise.all(
+            metadataUpdatedSelectList?.map(
+              async (m: metadataFieldUpdatedSelectListType) => {
+                const query = generateDataQuery(
+                  m.content_type,
+                  m.field,
+                  m.is_required_for,
+                  m.id,
+                  m.new,
+                )
+                if (!m.removed && !m.new) {
+                  await updateMetadataModelField(query)
+                } else if (m.removed) {
+                  await deleteMetadataModelField({
+                    id: m.id,
+                    organisation_id: organisationId,
+                  })
+                } else if (m.new) {
+                  const newQuery = { ...query }
+                  delete newQuery.id
+                  await createMetadataModelField(newQuery)
+                }
+              },
+            ),
+          )
+        }
         closeModal()
       })
     } else {
@@ -248,7 +267,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           setDescription(Utils.safeParseEventValue(event))
         }}
         type='text'
-        title={'Description (optional)'}
+        title={'Description'}
         placeholder={"e.g. 'The JIRA Ticket Number associated with this flag'"}
       />
       <InputGroup
@@ -256,7 +275,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         component={
           <Select
             value={typeValue}
-            placeholder='Select a metadata type'
+            placeholder='Select a field type'
             options={metadataTypes}
             onChange={(m: MetadataType) => {
               setTypeValue(m)
@@ -272,56 +291,60 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           if (isEdit) {
             const newMetadataFieldArray: metadataFieldUpdatedSelectListType[] =
               []
-
-            metadataModelFieldList?.forEach((item1) => {
-              const match = m.find(
-                (item2) => item2.value === item1.content_type.toString(),
-              )
-
-              if (match) {
-                const isRequiredLength = !!item1.is_required_for.length
-                const isRequired = match.isRequired
-                if (isRequiredLength !== isRequired) {
-                  newMetadataFieldArray.push({
-                    ...item1,
-                    is_required_for: isRequired,
-                  })
-                }
-              } else {
-                newMetadataFieldArray.push({
-                  ...item1,
-                  new: false,
-                  removed: true,
-                })
-              }
-              m.forEach((item) => {
-                const match = metadataModelFieldList.find(
-                  (item2) => item2.content_type.toString() === item.value,
+            if (!metadataModelFieldList?.length) {
+              setMetadataFieldSelectList(m)
+            } else {
+              metadataModelFieldList?.forEach((item1) => {
+                const match = m.find(
+                  (item2) => item2.value === item1.content_type.toString(),
                 )
-                if (!match) {
+
+                if (match) {
+                  const isRequiredLength = !!item1.is_required_for.length
+                  const isRequired = match.isRequired
+                  if (isRequiredLength !== isRequired) {
+                    newMetadataFieldArray.push({
+                      ...item1,
+                      is_required_for: isRequired,
+                    })
+                  }
+                } else {
                   newMetadataFieldArray.push({
                     ...item1,
-                    content_type: item.value,
-                    is_required_for: m?.isRequired,
-                    new: true,
-                    removed: false,
+                    new: false,
+                    removed: true,
                   })
                 }
+                m.forEach((item) => {
+                  const match = metadataModelFieldList.find(
+                    (item2) => item2.content_type.toString() === item.value,
+                  )
+                  if (!match) {
+                    newMetadataFieldArray.push({
+                      ...item1,
+                      content_type: item.value,
+                      is_required_for: m?.isRequired,
+                      new: true,
+                      removed: false,
+                    })
+                  }
+                })
               })
-            })
-            setMetadataFieldUpdatedSelectList(newMetadataFieldArray)
+              setMetadataFieldUpdatedSelectList(newMetadataFieldArray)
+            }
           } else {
             setMetadataFieldSelectList(m)
           }
         }}
         metadataModelFieldList={metadataModelFieldList!}
       />
+      {errorCreating && <ErrorMessage error={errorCreating} />}
       <Button
         disabled={!name || !typeValue || !metadataFieldSelectList}
         onClick={save}
         className='float-right'
       >
-        {isEdit ? 'Update Metadata Field' : 'Create Metadata Field'}
+        {isEdit ? 'Update Custom Field' : 'Create Custom Field'}
       </Button>
     </div>
   )

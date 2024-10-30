@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, List, Set, Union
 
+from django.conf import settings
 from django.db.models import Q, QuerySet
 
 from environments.models import Environment
@@ -76,7 +77,7 @@ def get_permitted_projects_for_user(
         - If `tag_ids` is a list of tag IDs, only project with one of those tags will
         be returned
     """
-    base_filter = get_base_permission_filter(
+    project_ids_from_base_filter = get_object_id_from_base_permission_filter(
         user, Project, permission_key, tag_ids=tag_ids
     )
 
@@ -84,8 +85,12 @@ def get_permitted_projects_for_user(
         organisation__userorganisation__user=user,
         organisation__userorganisation__role=OrganisationRole.ADMIN.name,
     )
-    filter_ = base_filter | organisation_filter
-    return Project.objects.filter(filter_).distinct()
+    project_ids_from_organisation = Project.objects.filter(
+        organisation_filter
+    ).values_list("id", flat=True)
+
+    project_ids = project_ids_from_base_filter | set(project_ids_from_organisation)
+    return Project.objects.filter(id__in=project_ids)
 
 
 def get_permitted_projects_for_master_api_key(
@@ -129,12 +134,13 @@ def get_permitted_environments_for_user(
             return queryset.prefetch_related("metadata")
         return queryset
 
-    base_filter = get_base_permission_filter(
+    environment_ids_from_base_filter = get_object_id_from_base_permission_filter(
         user, Environment, permission_key, tag_ids=tag_ids
     )
-    filter_ = base_filter & Q(project=project)
+    queryset = Environment.objects.filter(
+        id__in=environment_ids_from_base_filter, project=project
+    )
 
-    queryset = Environment.objects.filter(filter_)
     if prefetch_metadata:
         queryset = queryset.prefetch_related("metadata")
 
@@ -143,7 +149,7 @@ def get_permitted_environments_for_user(
     # the select parameters. This leads to an N+1 query for
     # lists of environments when description is included, as
     # each environment object re-queries the DB seperately.
-    return queryset.distinct().defer("description")
+    return queryset.defer("description")
 
 
 def get_permitted_environments_for_master_api_key(
@@ -218,6 +224,34 @@ def get_base_permission_filter(
     )
 
     return user_filter | group_filter | role_filter
+
+
+def get_object_id_from_base_permission_filter(
+    user: "FFAdminUser",
+    for_model: Union[Organisation, Project, Environment] = None,
+    permission_key: str = None,
+    allow_admin: bool = True,
+    tag_ids=None,
+) -> Set[int]:
+    object_ids = set()
+    user_filter = get_user_permission_filter(user, permission_key, allow_admin)
+    object_ids.update(
+        list(for_model.objects.filter(user_filter).values_list("id", flat=True))
+    )
+
+    group_filter = get_group_permission_filter(user, permission_key, allow_admin)
+
+    object_ids.update(
+        list(for_model.objects.filter(group_filter).values_list("id", flat=True))
+    )
+    if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+        role_filter = get_role_permission_filter(
+            user, for_model, permission_key, allow_admin, tag_ids
+        )
+        object_ids.update(
+            list(for_model.objects.filter(role_filter).values_list("id", flat=True))
+        )
+    return object_ids
 
 
 def get_user_permission_filter(

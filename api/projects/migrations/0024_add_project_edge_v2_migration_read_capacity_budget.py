@@ -31,6 +31,7 @@ class Migration(migrations.Migration):
                 default=None,
                 help_text="[Edge V2 migration] Read capacity budget override. If project migration was finished with `INCOMPLETE` status, you can set it to a higher value than `EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET` setting before restarting the migration.",
                 null=True,
+                blank=True,
             ),
         ),
         migrations.AlterField(

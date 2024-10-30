@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -165,7 +169,19 @@
                 },
                 {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
-                    "value": "True"
+                    "value": "False"
+                },
+                {
+                    "name": "INFLUXDB_ORG",
+                    "value": "ben.rometsch@bullet-train.io"
+                },
+                {
+                    "name": "INFLUXDB_BUCKET",
+                    "value": "api_staging"
+                },
+                {
+                    "name": "INFLUXDB_URL",
+                    "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
                 },
                 {
                     "name": "DEFAULT_THROTTLE_CLASSES",
@@ -198,10 +214,6 @@
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DATABASE_URL::"
                 },
                 {
-                    "name": "ANALYTICS_DATABASE_URL",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:ANALYTICS_DATABASE_URL::"
-                },
-                {
                     "name": "DJANGO_SECRET_KEY",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:DJANGO_SECRET_KEY::"
                 },
@@ -216,6 +228,10 @@
                 {
                     "name": "GITHUB_CLIENT_SECRET",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:GITHUB_CLIENT_SECRET::"
+                },
+                {
+                    "name": "INFLUXDB_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:INFLUXDB_TOKEN::"
                 },
                 {
                     "name": "OAUTH_CLIENT_SECRET",

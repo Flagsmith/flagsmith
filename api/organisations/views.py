@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import logging
+from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
@@ -21,11 +22,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     OrganisationWebhook,
 )
@@ -108,6 +112,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         """
         Override create method to add new organisation to authenticated user
         """
+
+        register_hubspot_tracker(request)
         user = request.user
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
@@ -145,7 +151,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/total-count​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/total-count/",
     )
     @action(
         detail=True,
@@ -184,7 +190,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
         subscription_details = organisation.subscription.get_subscription_metadata()
-        serializer = self.get_serializer(instance=subscription_details)
+        serializer = self.get_serializer(
+            instance=subscription_details,
+            context={"subscription": organisation.subscription},
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")
@@ -220,7 +229,7 @@ class OrganisationViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(
         deprecated=True,
-        operation_description="Please use ​​/api​/v1​/organisations​/{organisation_pk}​/usage-data​/",
+        operation_description="Please use /api/v1/organisations/{organisation_pk}/usage-data/",
         query_serializer=InfluxDataQuerySerializer(),
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
@@ -319,15 +328,19 @@ class OrganisationAPIUsageNotificationView(ListAPIView):
     def get_queryset(self):
         organisation = Organisation.objects.get(id=self.kwargs["organisation_pk"])
         if not hasattr(organisation, "subscription_information_cache"):
-            return OranisationAPIUsageNotification.objects.none()
+            return OrganisationAPIUsageNotification.objects.none()
         subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
         now = timezone.now()
 
+        # Handle case where billing dates are not set (most often in a free plan)
+        # by defaulting to something as a reasonable default.
+        billing_starts_at = billing_starts_at or now - timedelta(days=30)
+
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
-        queryset = OranisationAPIUsageNotification.objects.filter(
+        queryset = OrganisationAPIUsageNotification.objects.filter(
             organisation_id=organisation.id,
             notified_at__gt=period_starts_at,
         )

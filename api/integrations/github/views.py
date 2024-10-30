@@ -1,6 +1,8 @@
 import json
+import logging
 import re
 from functools import wraps
+from typing import Any, Callable
 
 import requests
 from django.conf import settings
@@ -11,23 +13,35 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
-from integrations.github.client import generate_token
-from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
+from integrations.github.client import (
+    ResourceType,
+    create_flagsmith_flag_label,
+    delete_github_installation,
+    fetch_github_repo_contributors,
+    fetch_github_repositories,
+    fetch_search_github_resource,
+)
 from integrations.github.exceptions import DuplicateGitHubIntegration
+from integrations.github.github import (
+    handle_github_webhook_event,
+    tag_by_event_type,
+)
 from integrations.github.helpers import github_webhook_payload_is_valid
-from integrations.github.models import GithubConfiguration, GithubRepository
+from integrations.github.models import GithubConfiguration, GitHubRepository
 from integrations.github.permissions import HasPermissionToGithubConfiguration
 from integrations.github.serializers import (
     GithubConfigurationSerializer,
     GithubRepositorySerializer,
-    RepoQuerySerializer,
+    IssueQueryParamsSerializer,
+    PaginatedQueryParamsSerializer,
+    RepoQueryParamsSerializer,
 )
-from organisations.models import Organisation
 from organisations.permissions.permissions import GithubIsAdminOrganisation
+
+logger = logging.getLogger(__name__)
 
 
 def github_auth_required(func):
-
     @wraps(func)
     def wrapper(request, organisation_pk):
 
@@ -44,6 +58,34 @@ def github_auth_required(func):
         return func(request, organisation_pk)
 
     return wrapper
+
+
+def github_api_call_error_handler(
+    error: str | None = None,
+) -> Callable[..., Callable[..., Any]]:
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> Response:
+            default_error = "Failed to retrieve requested information from GitHub API."
+            try:
+                return func(*args, **kwargs)
+            except ValueError as e:
+                return Response(
+                    data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
+                    content_type="application/json",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            except requests.RequestException as e:
+                logger.error(f"{error or default_error} Error: {str(e)}", exc_info=e)
+                return Response(
+                    data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
+                    content_type="application/json",
+                    status=status.HTTP_502_BAD_GATEWAY,
+                )
+
+        return wrapper
+
+    return decorator
 
 
 class GithubConfigurationViewSet(viewsets.ModelViewSet):
@@ -71,6 +113,11 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
             if re.search(r"Key \(organisation_id\)=\(\d+\) already exists", str(e)):
                 raise DuplicateGitHubIntegration
 
+    @github_api_call_error_handler(error="Failed to delete GitHub Installation.")
+    def destroy(self, request, *args, **kwargs):
+        delete_github_installation(self.get_object().installation_id)
+        return super().destroy(request, *args, **kwargs)
+
 
 class GithubRepositoryViewSet(viewsets.ModelViewSet):
     permission_classes = (
@@ -79,21 +126,34 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         GithubIsAdminOrganisation,
     )
     serializer_class = GithubRepositorySerializer
-    model_class = GithubRepository
+    model_class = GitHubRepository
 
     def perform_create(self, serializer):
         github_configuration_id = self.kwargs["github_pk"]
         serializer.save(github_configuration_id=github_configuration_id)
 
     def get_queryset(self):
-        return GithubRepository.objects.filter(
-            github_configuration=self.kwargs["github_pk"]
-        )
+        try:
+            if github_pk := self.kwargs.get("github_pk"):
+                int(github_pk)
+                return GitHubRepository.objects.filter(github_configuration=github_pk)
+        except ValueError:
+            raise ValidationError({"github_pk": ["Must be an integer"]})
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs) -> Response | None:
 
         try:
-            return super().create(request, *args, **kwargs)
+            response: Response = super().create(request, *args, **kwargs)
+            github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
+                id=self.kwargs["github_pk"]
+            )
+            if request.data.get("tagging_enabled", False):
+                create_flagsmith_flag_label(
+                    installation_id=github_configuration.installation_id,
+                    owner=request.data.get("repository_owner"),
+                    repo=request.data.get("repository_name"),
+                )
+            return response
 
         except IntegrityError as e:
             if re.search(
@@ -104,107 +164,106 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
                     detail="Duplication error. The GitHub repository already linked"
                 )
 
+    def update(self, request, *args, **kwargs) -> Response | None:
+        response: Response = super().update(request, *args, **kwargs)
+        github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
+            id=self.kwargs["github_pk"]
+        )
+        if request.data.get("tagging_enabled", False):
+            create_flagsmith_flag_label(
+                installation_id=github_configuration.installation_id,
+                owner=request.data.get("repository_owner"),
+                repo=request.data.get("repository_name"),
+            )
+        return response
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
+@github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
 def fetch_pull_requests(request, organisation_pk) -> Response:
-    organisation = Organisation.objects.get(id=organisation_pk)
-    github_configuration = GithubConfiguration.objects.get(
-        organisation=organisation, deleted_at__isnull=True
-    )
-    token = generate_token(
-        github_configuration.installation_id,
-        settings.GITHUB_APP_ID,
-    )
-
-    query_serializer = RepoQuerySerializer(data=request.query_params)
+    query_serializer = IssueQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
 
-    repo_owner = query_serializer.validated_data.get("repo_owner")
-    repo_name = query_serializer.validated_data.get("repo_name")
-
-    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/pulls"
-
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return Response(data)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=500)
+    data = fetch_search_github_resource(
+        resource_type=ResourceType.PULL_REQUESTS,
+        organisation_id=organisation_pk,
+        params=query_serializer.validated_data,
+    )
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
 @github_auth_required
-def fetch_issues(request, organisation_pk) -> Response:
-    organisation = Organisation.objects.get(id=organisation_pk)
-    github_configuration = GithubConfiguration.objects.get(
-        organisation=organisation, deleted_at__isnull=True
-    )
-    token = generate_token(
-        github_configuration.installation_id,
-        settings.GITHUB_APP_ID,
-    )
-
-    query_serializer = RepoQuerySerializer(data=request.query_params)
+@github_api_call_error_handler(error="Failed to retrieve GitHub issues.")
+def fetch_issues(request, organisation_pk) -> Response | None:
+    query_serializer = IssueQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
 
-    repo_owner = query_serializer.validated_data.get("repo_owner")
-    repo_name = query_serializer.validated_data.get("repo_name")
-
-    url = f"{GITHUB_API_URL}repos/{repo_owner}/{repo_name}/issues"
-
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
-
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        filtered_data = [issue for issue in data if "pull_request" not in issue]
-        return Response(filtered_data)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=500)
+    data = fetch_search_github_resource(
+        resource_type=ResourceType.ISSUES,
+        organisation_id=organisation_pk,
+        params=query_serializer.validated_data,
+    )
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
-def fetch_repositories(request, organisation_pk: int) -> Response:
+@github_api_call_error_handler(error="Failed to retrieve GitHub repositories.")
+def fetch_repositories(request, organisation_pk: int) -> Response | None:
+    query_serializer = PaginatedQueryParamsSerializer(data=request.query_params)
+    if not query_serializer.is_valid():
+        return Response({"error": query_serializer.errors}, status=400)
     installation_id = request.GET.get("installation_id")
 
-    token = generate_token(
-        installation_id,
-        settings.GITHUB_APP_ID,
+    if not installation_id:
+        return Response(
+            data={"detail": "Missing installation_id parameter"},
+            content_type="application/json",
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    data = fetch_github_repositories(
+        installation_id=installation_id, params=query_serializer.validated_data
+    )
+    return Response(
+        data=data,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
     )
 
-    url = f"{GITHUB_API_URL}installation/repositories"
 
-    headers = {
-        "X-GitHub-Api-Version": GITHUB_API_VERSION,
-        "Accept": "application/vnd.github.v3+json",
-        "Authorization": f"Bearer {token}",
-    }
+@api_view(["GET"])
+@permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
+@github_auth_required
+@github_api_call_error_handler(error="Failed to retrieve GitHub repo contributors.")
+def fetch_repo_contributors(request, organisation_pk) -> Response:
+    query_serializer = RepoQueryParamsSerializer(data=request.query_params)
+    if not query_serializer.is_valid():
+        return Response({"error": query_serializer.errors}, status=400)
 
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        return Response(data)
-    except requests.RequestException as e:
-        return Response({"error": str(e)}, status=500)
+    response = fetch_github_repo_contributors(
+        organisation_id=organisation_pk, params=query_serializer.validated_data
+    )
+
+    return Response(
+        data=response,
+        content_type="application/json",
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST"])
@@ -218,11 +277,8 @@ def github_webhook(request) -> Response:
         payload_body=payload, secret_token=secret, signature_header=signature
     ):
         data = json.loads(payload.decode("utf-8"))
-        # handle GitHub Webhook "installation" event with action type "deleted"
-        if github_event == "installation" and data["action"] == "deleted":
-            GithubConfiguration.objects.filter(
-                installation_id=data["installation"]["id"]
-            ).delete()
+        if github_event == "installation" or github_event in tag_by_event_type:
+            handle_github_webhook_event(event_type=github_event, payload=data)
             return Response({"detail": "Event processed"}, status=200)
         else:
             return Response({"detail": "Event bypassed"}, status=200)

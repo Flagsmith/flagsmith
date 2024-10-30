@@ -40,8 +40,35 @@ FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
 )
 FREE_PLAN_ID = "free"
 TRIAL_SUBSCRIPTION_ID = "trial"
+SCALE_UP = "scale-up"
+SCALE_UP_12_MONTHS_V2 = "scale-up-12-months-v2"
+SCALE_UP_QUARTERLY_V2_SEMIANNUAL = "scale-up-quarterly-v2-semiannual"
+SCALE_UP_V2 = "scale-up-v2"
+STARTUP = "startup"
+STARTUP_ANNUAL_V2 = "startup-annual-v2"
+STARTUP_V2 = "startup-v2"
+ENTERPRISE = "enterprise"
 
 
 class SubscriptionCacheEntity(Enum):
     INFLUX = "INFLUX"
     CHARGEBEE = "CHARGEBEE"
+
+
+class SubscriptionPlanFamily(Enum):
+    FREE = "FREE"
+    START_UP = "START_UP"
+    SCALE_UP = "SCALE_UP"
+    ENTERPRISE = "ENTERPRISE"
+
+    @classmethod
+    def get_by_plan_id(cls, plan_id: str) -> "SubscriptionPlanFamily":
+        match str(plan_id).replace("-", "").lower():
+            case p if p.startswith("scaleup"):
+                return cls.SCALE_UP
+            case p if p.startswith("startup"):
+                return cls.START_UP
+            case p if p.startswith("enterprise"):
+                return cls.ENTERPRISE
+            case _:
+                return cls.FREE

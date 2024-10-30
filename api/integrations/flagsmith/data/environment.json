@@ -2,7 +2,7 @@
   "api_key": "masked",
   "feature_states": [
     {
-      "django_id": 517915,
+      "django_id": 585364,
       "enabled": false,
       "feature": {
         "id": 91559,
@@ -11,7 +11,46 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "632b424f-dea1-4080-ba0c-55a3772b1712",
+      "featurestate_uuid": "cc446405-e6c8-497c-a2a1-d5a6e6e0c56d",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 615532,
+      "enabled": true,
+      "feature": {
+        "id": 96656,
+        "name": "api_limiting_stop_serving_flags",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "49db2260-d4d4-47be-b84c-7197c46b10fb",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 615534,
+      "enabled": true,
+      "feature": {
+        "id": 96657,
+        "name": "api_limiting_block_access_to_admin",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "7489b387-31f8-436d-a862-e2aa12939b5b",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 588488,
+      "enabled": true,
+      "feature": {
+        "id": 98035,
+        "name": "api_usage_overage_charges",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "3adb2623-f4b4-4407-bdf4-033dc60dc785",
       "multivariate_feature_state_values": []
     }
   ],

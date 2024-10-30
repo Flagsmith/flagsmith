@@ -1,4 +1,11 @@
-import React, { FC, FormEvent, useEffect, useMemo, useState } from 'react'
+import React, {
+  FC,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
@@ -39,12 +46,12 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
+import { setInterceptClose } from './base/ModalDefault'
 
 type PageType = {
   number: number
@@ -82,7 +89,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   identities,
   identitiesLoading,
   identity,
-  isEdit,
   onCancel,
   onComplete,
   page,
@@ -106,12 +112,29 @@ const CreateSegment: FC<CreateSegmentType> = ({
     rules: [
       {
         conditions: [],
-        rules: [],
+        rules: [
+          {
+            conditions: [{ ...Constants.defaultRule }],
+            rules: [],
+            type: 'ANY',
+          },
+        ],
         type: 'ALL',
       },
     ],
   }
-  const segment = _segment || defaultSegment
+  const [segment, setSegment] = useState(_segment || defaultSegment)
+  const [description, setDescription] = useState(segment.description)
+  const [name, setName] = useState<Segment['name']>(segment.name)
+  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  useEffect(() => {
+    if (segment) {
+      setRules(segment.rules)
+      setDescription(segment.description)
+      setName(segment.name)
+    }
+  }, [segment])
+  const isEdit = !!segment.id
   const [
     createSegment,
     {
@@ -133,15 +156,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [description, setDescription] = useState(segment.description)
-  const [name, setName] = useState<Segment['name']>(segment.name)
-  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
-
+  const metadataEnable = Utils.getPlansPermission('METADATA')
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
@@ -191,6 +210,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const save = (e: FormEvent) => {
     Utils.preventDefault(e)
+    setValueChanged(false)
+    setMetadataValueChanged(false)
     const segmentData: Omit<Segment, 'id' | 'uuid'> = {
       description,
       feature: feature,
@@ -219,6 +240,29 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }
 
+  const [valueChanged, setValueChanged] = useState(false)
+  const [metadataValueChanged, setMetadataValueChanged] = useState(false)
+  const onClosing = useCallback(() => {
+    return new Promise((resolve) => {
+      if (valueChanged) {
+        openConfirm({
+          body: 'Closing this will discard your unsaved changes.',
+          noText: 'Cancel',
+          onNo: () => resolve(false),
+          onYes: () => resolve(true),
+          title: 'Discard changes',
+          yesText: 'Ok',
+        })
+      } else {
+        resolve(true)
+      }
+    })
+    return Promise.resolve(true)
+  }, [valueChanged, isEdit])
+  useEffect(() => {
+    setInterceptClose(onClosing)
+    return () => setInterceptClose(null)
+  }, [onClosing])
   const isValid = useMemo(() => {
     if (!rules[0]?.rules?.find((v) => !v.delete)) {
       return false
@@ -236,20 +280,19 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [])
   useEffect(() => {
     if (createSuccess && createSegmentData) {
+      setSegment(createSegmentData)
       onComplete?.(createSegmentData)
     }
     //eslint-disable-next-line
   }, [createSuccess])
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
+      setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
   }, [updateSuccess])
-  const operators: Operator[] | null =
-    _operators || Utils.getFlagsmithValue('segment_operators')
-      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-      : null
+  const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
   if (operators) {
     _operators = operators
   }
@@ -282,43 +325,51 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [operators, rules])
   //Find any non-deleted rules
   const hasNoRules = !rules[0]?.rules?.find((v) => !v.delete)
-
+  const rulesToShow = rules[0].rules.filter((v) => !v.delete)
   const rulesEl = (
     <div className='overflow-visible'>
       <div>
         <div className='mb-4'>
-          {rules[0].rules
-            ?.filter((v) => !v?.delete)
-            .map((rule, i) => {
-              return (
-                <div key={i}>
-                  <Row
-                    className={classNames('and-divider my-1', {
-                      'text-danger': rule.type !== 'ANY',
-                    })}
-                  >
-                    <Flex className='and-divider__line' />
-                    {Format.camelCase(
-                      `${i > 0 ? 'And ' : ''}${
-                        rule.type === 'ANY'
-                          ? 'Any of the following'
-                          : 'None of the following'
-                      }`,
-                    )}
-                    <Flex className='and-divider__line' />
-                  </Row>
-                  <Rule
-                    showDescription={showDescriptions}
-                    readOnly={readOnly}
-                    data-test={`rule-${i}`}
-                    rule={rule}
-                    operators={operators}
-                    onRemove={() => removeRule(0, i)}
-                    onChange={(v: SegmentRule) => updateRule(0, i, v)}
-                  />
-                </div>
-              )
-            })}
+          {rules[0].rules.map((rule, i) => {
+            if (rule.delete) {
+              return null
+            }
+            const displayIndex = rulesToShow.indexOf(rule)
+            return (
+              <div key={i}>
+                <Row
+                  className={classNames('and-divider my-1', {
+                    'text-danger': rule.type !== 'ANY',
+                  })}
+                >
+                  <Flex className='and-divider__line' />
+                  {Format.camelCase(
+                    `${displayIndex > 0 ? 'And ' : ''}${
+                      rule.type === 'ANY'
+                        ? 'Any of the following'
+                        : 'None of the following'
+                    }`,
+                  )}
+                  <Flex className='and-divider__line' />
+                </Row>
+                <Rule
+                  showDescription={showDescriptions}
+                  readOnly={readOnly}
+                  data-test={`rule-${displayIndex}`}
+                  rule={rule}
+                  operators={operators}
+                  onRemove={() => {
+                    setValueChanged(true)
+                    removeRule(0, i)
+                  }}
+                  onChange={(v: SegmentRule) => {
+                    setValueChanged(true)
+                    updateRule(0, i, v)
+                  }}
+                />
+              </div>
+            )
+          })}
         </div>
         {hasNoRules && (
           <InfoMessage>
@@ -352,7 +403,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <form id='create-segment-modal' onSubmit={save}>
       {!condensed && (
         <div className='mt-3'>
-          <InfoMessage>
+          <InfoMessage collapseId={'value-type-conversions'}>
             Learn more about rule and trait value type conversions{' '}
             <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
               here
@@ -373,13 +424,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
             id='segmentID'
             maxLength={SEGMENT_ID_MAXLENGTH}
             value={name}
-            onChange={(e: InputEvent) =>
+            onChange={(e: InputEvent) => {
+              setValueChanged(true)
               setName(
                 Format.enumeration
                   .set(Utils.safeParseEventValue(e))
                   .toLowerCase(),
               )
-            }
+            }}
             isValid={name && name.length}
             type='text'
             placeholder='E.g. power_users'
@@ -395,12 +447,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
             name: 'featureDesc',
             readOnly: !!identity || readOnly,
           }}
-          onChange={(e: InputEvent) =>
+          onChange={(e: InputEvent) => {
+            setValueChanged(true)
             setDescription(Utils.safeParseEventValue(e))
-          }
+          }}
           isValid={name && name.length}
           type='text'
-          title='Description (optional)'
+          title='Description'
           placeholder="e.g. 'People who have spent over $100' "
         />
       )}
@@ -418,32 +471,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
             style={{ fontWeight: 'normal', marginLeft: '12px' }}
             className='mb-0 fs-small text-dark'
           >
-            {showDescriptions
-              ? 'Hide condition descriptions'
-              : 'Show condition descriptions'}
+            Show condition descriptions
           </span>
         </Row>
-        {metadataEnable && segmentContentType?.id && (
-          <FormGroup className='mb-5 setting'>
-            <InputGroup
-              title={'Metadata'}
-              tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION} segments`}
-              tooltipPlace='right'
-              component={
-                <AddMetadataToEntity
-                  organisationId={AccountStore.getOrganisation().id}
-                  projectId={projectId}
-                  entityId={`${segment.id}` || ''}
-                  entityContentType={segmentContentType?.id}
-                  entity={segmentContentType?.model}
-                  onChange={(m: CustomMetadataField[]) => {
-                    setMetadata(m)
-                  }}
-                />
-              }
-            />
-          </FormGroup>
-        )}
         <Flex className='mb-3'>
           <label className='cols-sm-2 control-label mb-1'>
             Include users when all of the following rules apply:
@@ -517,37 +547,59 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </form>
   )
 
+  const MetadataTab = (
+    <FormGroup className='mt-5 setting'>
+      <InputGroup
+        component={
+          <AddMetadataToEntity
+            organisationId={AccountStore.getOrganisation().id}
+            projectId={projectId}
+            entityId={`${segment.id}` || ''}
+            entityContentType={segmentContentType?.id}
+            entity={segmentContentType?.model}
+            onChange={(m: CustomMetadataField[]) => {
+              setMetadata(m)
+              if (isEdit) {
+                setMetadataValueChanged(true)
+              }
+            }}
+          />
+        }
+      />
+    </FormGroup>
+  )
+
   return (
     <>
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
-          <TabItem tabLabel='Rules'>
+          <TabItem
+            tabLabelString='Rules'
+            tabLabel={
+              <Row className='justify-content-center'>
+                Rules{' '}
+                {valueChanged && <div className='unread ml-2 px-1'>{'*'}</div>}
+              </Row>
+            }
+          >
             <div className='my-4'>{Tab1}</div>
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
-              <Permission
-                level='environment'
-                permission={'MANAGE_SEGMENT_OVERRIDES'}
-                id={environmentId}
-              >
-                {({ permission: manageSegmentOverrides }) => {
-                  const isReadOnly = !manageSegmentOverrides
-                  return (
-                    <AssociatedSegmentOverrides
-                      feature={segment.feature}
-                      projectId={projectId}
-                      id={segment.id}
-                      readOnly={isReadOnly}
-                    />
-                  )
+              <AssociatedSegmentOverrides
+                onUnsavedChange={() => {
+                  setValueChanged(true)
                 }}
-              </Permission>
+                feature={segment.feature}
+                projectId={projectId}
+                id={segment.id}
+                environmentId={environmentId}
+              />
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
             <div className='my-4'>
-              <InfoMessage>
+              <InfoMessage collapseId={'random-identity-sample'}>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
               </InfoMessage>
@@ -677,6 +729,38 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </div>
             </div>
           </TabItem>
+          {metadataEnable && segmentContentType?.id && (
+            <TabItem
+              tabLabelString='Custom Fields'
+              tabLabel={
+                <Row className='justify-content-center'>
+                  Custom Fields
+                  {metadataValueChanged && (
+                    <div className='unread ml-2 px-1'>{'*'}</div>
+                  )}
+                </Row>
+              }
+            >
+              <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+            </TabItem>
+          )}
+        </Tabs>
+      ) : metadataEnable && segmentContentType?.id ? (
+        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+          <TabItem
+            tabLabelString='Basic configuration'
+            tabLabel={'Basic configuration'}
+          >
+            <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+          </TabItem>
+          <TabItem
+            tabLabelString='Custom Fields'
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
+          >
+            <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
+          </TabItem>
         </Tabs>
       ) : (
         <div className={className || 'my-3 mx-4'}>{Tab1}</div>
@@ -690,7 +774,8 @@ type LoadingCreateSegmentType = {
   environmentId: string
   isEdit?: boolean
   readOnly?: boolean
-  onComplete?: () => void
+  onSegmentRetrieved?: (segment: Segment) => void
+  onComplete?: (segment: Segment) => void
   projectId: string
   segment?: number
 }
@@ -722,6 +807,11 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     },
   )
 
+  useEffect(() => {
+    if (segmentData) {
+      props.onSegmentRetrieved?.(segmentData)
+    }
+  }, [segmentData])
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =

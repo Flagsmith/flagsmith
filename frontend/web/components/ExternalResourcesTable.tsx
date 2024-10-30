@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect } from 'react'
 import PanelSearch from './PanelSearch'
 import Button from './base/forms/Button'
 import Icon from './Icon'
@@ -7,21 +7,30 @@ import {
   useDeleteExternalResourceMutation,
 } from 'common/services/useExternalResource'
 import { ExternalResource } from 'common/types/responses'
+import Constants from 'common/constants'
+import Tooltip from './Tooltip'
 
-export type ExternalResourcesTableType = {
+export type ExternalResourcesTableBase = {
   featureId: string
   projectId: string
+  organisationId: string
 }
 
-const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
+export type ExternalResourcesTableType = ExternalResourcesTableBase & {
+  setSelectedResources: (r: ExternalResource[]) => void
+}
+
+type ExternalResourceRowType = {
+  featureId: string
+  projectId: string
+  externalResource: ExternalResource
+}
+
+const ExternalResourceRow: FC<ExternalResourceRowType> = ({
+  externalResource,
   featureId,
   projectId,
 }) => {
-  const { data } = useGetExternalResourcesQuery({
-    feature_id: featureId,
-    project_id: projectId,
-  })
-
   const [deleteExternalResource, { isSuccess: isDeleted }] =
     useDeleteExternalResourceMutation()
 
@@ -30,61 +39,148 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
       toast('External resources was deleted')
     }
   }, [isDeleted])
+  return (
+    <Row className='list-item' key={externalResource?.id}>
+      <div className='table-column text-left' style={{ width: '100px' }}>
+        <div className='font-weight-medium mb-1'>
+          {
+            Constants.resourceTypes[
+              externalResource?.type as keyof typeof Constants.resourceTypes
+            ].label
+          }
+        </div>
+      </div>
+      <Flex className='table-column'>
+        <Row className='font-weight-medium'>
+          <Button
+            theme='text'
+            href={`${externalResource?.url}`}
+            target='_blank'
+            className='fw-normal ml-1 mt-1'
+          >
+            <Tooltip
+              title={
+                <Row>
+                  {`${
+                    externalResource?.metadata?.title
+                  } (#${externalResource?.url.replace(/\D/g, '')})`}{' '}
+                  <div className='ml-1 mb-1'>
+                    <Icon name='open-external-link' width={14} fill='#6837fc' />
+                  </div>
+                </Row>
+              }
+              place='right'
+            >
+              {`${externalResource?.url}`}
+            </Tooltip>
+          </Button>
+        </Row>
+      </Flex>
+      <div className='table-column text-center' style={{ width: '80px' }}>
+        <div className='font-weight-medium mb-1'>
+          {externalResource?.metadata?.state}
+        </div>
+      </div>
+      <div className='table-column text-center' style={{ width: '80px' }}>
+        <Button
+          onClick={() =>
+            openModal2(
+              'Unlink External Resources',
+              <div>
+                <label>
+                  {`Are you sure you want to unlink your ${
+                    Constants.resourceTypes[
+                      externalResource?.type as keyof typeof Constants.resourceTypes
+                    ].label
+                  } ${externalResource?.metadata?.title}?`}
+                </label>
+                <div className='text-right'>
+                  <Button
+                    className='mr-2'
+                    onClick={() => {
+                      closeModal2()
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    theme='danger'
+                    onClick={() => {
+                      deleteExternalResource({
+                        external_resource_id: `${externalResource?.id}`,
+                        feature_id: featureId,
+                        project_id: projectId,
+                      }).then(() => {
+                        closeModal2()
+                      })
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </div>,
+            )
+          }
+          className='btn btn-with-icon'
+        >
+          <Icon name='trash-2' width={20} fill='#656D7B' />
+        </Button>
+      </div>
+    </Row>
+  )
+}
+
+const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
+  featureId,
+  projectId,
+  setSelectedResources,
+}) => {
+  const { data } = useGetExternalResourcesQuery({
+    feature_id: featureId,
+    project_id: projectId,
+  })
+
+  useEffect(() => {
+    if (data?.results) {
+      setSelectedResources(data.results)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
 
   return (
-    <PanelSearch
-      className='no-pad'
-      title='Linked Issues and Pull Requests'
-      items={data?.results}
-      header={
-        <Row className='table-header'>
-          <Flex className='table-column px-3' style={{ 'minWidth': '280px' }}>
-            URL
-          </Flex>
-          <Flex className='table-column pl-1'>Type</Flex>
-          <div className='table-column text-center' style={{ width: '80px' }}>
-            Status
-          </div>
-          <div className='table-column text-center' style={{ width: '80px' }}>
-            Remove
-          </div>
-        </Row>
-      }
-      renderRow={(v: ExternalResource) => (
-        <Row className='list-item' key={v.id}>
-          <Flex className='table-column px-3'>
-            <Button
-              theme='text'
-              href={`${v.url}`}
-              target='_blank'
-              className='fw-normal'
+    <>
+      <PanelSearch
+        className='no-pad overflow-visible mt-4'
+        items={data?.results}
+        header={
+          <Row className='table-header'>
+            <div className='table-column' style={{ width: '100px' }}>
+              Type
+            </div>
+            <Flex className='table-column px-3'>Name</Flex>
+            <div
+              className='table-column text-center'
+              style={{ width: '240px' }}
             >
-              <p className='fs-small'>{v.url}</p>
-            </Button>
-          </Flex>
-          <Flex className='table-column px-3'>
-            <div className='font-weight-medium mb-1'>{v.type}</div>
-          </Flex>
-          <div className='table-column text-center' style={{ width: '80px' }}>
-            <div className='font-weight-medium mb-1'>{v.status}</div>
-          </div>
-          <div className='table-column text-center' style={{ width: '80px' }}>
-            <Button
-              onClick={() => {
-                deleteExternalResource({
-                  external_resource_id: `${v.id}`,
-                  feature_id: featureId,
-                  project_id: projectId,
-                })
-              }}
-              className='btn btn-with-icon'
-            >
-              <Icon name='trash-2' width={20} fill='#656D7B' />
-            </Button>
-          </div>
-        </Row>
-      )}
-    />
+              Status
+            </div>
+          </Row>
+        }
+        renderRow={(v: ExternalResource) => (
+          <ExternalResourceRow
+            key={v.id}
+            featureId={featureId}
+            projectId={projectId}
+            externalResource={v}
+          />
+        )}
+        renderNoResults={
+          <FormGroup className='text-center mt-4'>
+            You have no external resources linked for this feature.
+          </FormGroup>
+        }
+      />
+    </>
   )
 }
 

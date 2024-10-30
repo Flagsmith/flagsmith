@@ -1,7 +1,13 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from rest_framework_dataclasses.serializers import DataclassSerializer
 
-from .models import GithubConfiguration, GithubRepository
+from integrations.github.dataclasses import (
+    IssueQueryParams,
+    PaginatedQueryParams,
+    RepoQueryParams,
+)
+from integrations.github.models import GithubConfiguration, GitHubRepository
 
 
 class GithubConfigurationSerializer(ModelSerializer):
@@ -13,13 +19,15 @@ class GithubConfigurationSerializer(ModelSerializer):
 
 class GithubRepositorySerializer(ModelSerializer):
     class Meta:
-        model = GithubRepository
+        model = GitHubRepository
+        optional_fields = ("search_text", "page")
         fields = (
             "id",
             "github_configuration",
             "project",
             "repository_owner",
             "repository_name",
+            "tagging_enabled",
         )
         read_only_fields = (
             "id",
@@ -27,6 +35,18 @@ class GithubRepositorySerializer(ModelSerializer):
         )
 
 
-class RepoQuerySerializer(serializers.Serializer):
-    repo_owner = serializers.CharField(required=True)
-    repo_name = serializers.CharField(required=True)
+class PaginatedQueryParamsSerializer(DataclassSerializer):
+    class Meta:
+        dataclass = PaginatedQueryParams
+
+
+class RepoQueryParamsSerializer(DataclassSerializer):
+    class Meta:
+        dataclass = RepoQueryParams
+
+
+class IssueQueryParamsSerializer(DataclassSerializer):
+    class Meta:
+        dataclass = IssueQueryParams
+
+    search_in_body = serializers.BooleanField(required=False, default=True)

@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
+from uuid import UUID
 
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
@@ -25,6 +26,7 @@ from flag_engine.segments.models import (
 )
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
+from features.versioning.models import EnvironmentFeatureVersion
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
@@ -200,6 +202,16 @@ def map_environment_to_engine(
     project_segment_feature_states_by_segment_id = _get_segment_feature_states(
         project_segments,
         environment.pk,
+        latest_environment_feature_version_uuids=(
+            {
+                efv.uuid
+                for efv in EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
+                    environment.id
+                )
+            }
+            if environment.use_v2_feature_versioning
+            else []
+        ),
     )
     environment_feature_states: List["FeatureState"] = _get_prioritised_feature_states(
         [
@@ -314,6 +326,7 @@ def map_environment_to_engine(
         use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
+        use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
         #
         # Relationships:
         project=project_model,
@@ -419,14 +432,26 @@ def _get_prioritised_feature_states(
 def _get_segment_feature_states(
     segments: Iterable["Segment"],
     environment_id: int,
+    latest_environment_feature_version_uuids: Iterable[UUID],
 ) -> Dict[int, List["FeatureState"]]:
     feature_states_by_segment_id = {}
+
     for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
+
         for feature_segment in segment.feature_segments.all():
             if feature_segment.environment_id != environment_id:
                 continue
+
+            if (
+                latest_environment_feature_version_uuids
+                and feature_segment.environment_feature_version_id
+                not in latest_environment_feature_version_uuids
+            ):
+                continue
+
             segment_feature_states += _get_prioritised_feature_states(
                 feature_segment.feature_states.all()
             )
+
     return feature_states_by_segment_id

@@ -103,7 +103,6 @@ def dynamo_enabled_environment(
     admin_client: APIClient,
     dynamo_enabled_project: int,
     environment_api_key: str,
-    app_settings_for_dynamodb: None,
 ) -> int:
     environment_data = {
         "name": "Test Environment",
@@ -343,6 +342,8 @@ def segment_featurestate(
     feature_segment: int,
 ) -> int:
     data = {
+        "enabled": True,
+        "feature_state_value": {"type": "unicode", "string_value": "segment override"},
         "feature": feature,
         "environment": environment,
         "feature_segment": feature_segment,
@@ -374,6 +375,9 @@ def identity_document(
     mv_feature_name,
     mv_feature,
 ):
+    _identifier = "User1-Test"  # use a mixture of cases and symbols to make sure we're testing all cases
+    _dashboard_alias = "dashboard-alias"
+
     _environment_feature_state_1_document = {
         "featurestate_uuid": "ad71c644-71df-4e83-9cb5-cd2cd0160200",
         "multivariate_feature_state_values": [],
@@ -430,14 +434,15 @@ def identity_document(
         "feature_segment": None,
     }
     return {
-        "composite_key": f"{environment_api_key}_user_1_test",
+        "composite_key": f"{environment_api_key}_{_identifier}",
+        "dashboard_alias": _dashboard_alias,
         "identity_traits": identity_traits,
         "identity_features": [
             _environment_feature_state_1_document,
             _environment_feature_state_2_document,
             _mv_feature_state_document,
         ],
-        "identifier": "user_1_test",
+        "identifier": _identifier,
         "created_date": "2021-09-21T10:12:42.230257+00:00",
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
@@ -456,6 +461,7 @@ def identity_document_without_fs(environment_api_key, identity_traits):
         "environment_api_key": environment_api_key,
         "identity_uuid": "59efa2a7-6a45-46d6-b953-a7073a90eacf",
         "django_id": None,
+        "dashboard_alias": None,
     }
 
 

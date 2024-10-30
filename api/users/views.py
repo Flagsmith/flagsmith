@@ -189,6 +189,16 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
                 q = q & Q(userpermissiongroupmembership__group_admin=True)
             qs = qs.filter(q)
 
+        if self.action == "list":
+            qs = qs.prefetch_related(
+                Prefetch(
+                    "userpermissiongroupmembership_set",
+                    queryset=UserPermissionGroupMembership.objects.select_related(
+                        "ffadminuser"
+                    ),
+                )
+            )
+
         return qs
 
     def paginate_queryset(self, queryset: QuerySet) -> list[UserPermissionGroup] | None:
@@ -227,8 +237,12 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         user_ids = request.data["user_ids"]
 
-        if request.user.id in user_ids and not request.user.is_organisation_admin(
-            Organisation.objects.get(pk=organisation_pk)
+        if (
+            isinstance(request.user, FFAdminUser)
+            and request.user.id in user_ids
+            and not request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
         ):
             raise PermissionDenied("Non-admin users cannot add themselves to a group.")
 
@@ -248,8 +262,12 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         group = self.get_object()
         user_ids = request.data["user_ids"]
 
-        if request.user.id in user_ids and not request.user.is_organisation_admin(
-            Organisation.objects.get(pk=organisation_pk)
+        if (
+            isinstance(request.user, FFAdminUser)
+            and request.user.id in user_ids
+            and not request.user.is_organisation_admin(
+                Organisation.objects.get(pk=organisation_pk)
+            )
         ):
             raise PermissionDenied(
                 "Non-admin users cannot remove themselves from a group."

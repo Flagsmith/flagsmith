@@ -1,7 +1,19 @@
+from copy import deepcopy
+
+import pytest
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+from rest_framework.exceptions import PermissionDenied
 
-from custom_auth.serializers import CustomUserCreateSerializer
+from custom_auth.constants import (
+    USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
+)
+from custom_auth.serializers import (
+    CustomTokenCreateSerializer,
+    CustomUserCreateSerializer,
+)
+from organisations.invites.models import InviteLink
 from users.models import FFAdminUser, SignUpType
 
 user_dict = {
@@ -12,19 +24,30 @@ user_dict = {
 }
 
 
-def test_CustomUserCreateSerializer_converts_email_to_lower_case(db):
+def test_CustomUserCreateSerializer_converts_email_to_lower_case(
+    db: None, rf: RequestFactory
+) -> None:
     # Given
-    serializer = CustomUserCreateSerializer(data=user_dict)
+    request = rf.post("/api/v1/auth/users/")
+    serializer = CustomUserCreateSerializer(
+        data=user_dict, context={"request": request}
+    )
     # When
     serializer.is_valid(raise_exception=True)
     # Then
     assert serializer.validated_data["email"] == "testuser@mail.com"
 
 
-def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(db):
+def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(
+    db: None, rf: RequestFactory
+) -> None:
     # Given
+    request = rf.post("/api/v1/auth/users/")
     FFAdminUser.objects.create(email="testuser@mail.com")
-    serializer = CustomUserCreateSerializer(data=user_dict)
+
+    serializer = CustomUserCreateSerializer(
+        data=user_dict, context={"request": request}
+    )
 
     # When
     assert serializer.is_valid() is False
@@ -59,6 +82,7 @@ def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correct
 
 
 def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invite_link(
+    invite_link: InviteLink,
     db: None,
     settings: SettingsWrapper,
     rf: RequestFactory,
@@ -69,10 +93,11 @@ def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invit
     data = {
         **user_dict,
         "sign_up_type": SignUpType.INVITE_LINK.value,
+        "invite_hash": invite_link.hash,
     }
 
     serializer = CustomUserCreateSerializer(
-        data=data, context={"request": rf.post("/v1/auth/users/")}
+        data=data, context={"request": rf.post("/api/v1/auth/users/")}
     )
     assert serializer.is_valid()
 
@@ -81,3 +106,70 @@ def test_CustomUserCreateSerializer_allows_registration_if_sign_up_type_is_invit
 
     # Then
     assert user
+
+
+def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_provided(
+    settings: SettingsWrapper,
+    db: None,
+) -> None:
+    # Given
+    settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+
+    serializer = CustomUserCreateSerializer(
+        data={
+            **user_dict,
+            "sign_up_type": SignUpType.INVITE_LINK.value,
+        }
+    )
+
+    # When
+    with pytest.raises(PermissionDenied) as exc_info:
+        serializer.is_valid(raise_exception=True)
+
+    # Then
+    assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+
+
+def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_valid(
+    invite_link: InviteLink,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+
+    serializer = CustomUserCreateSerializer(
+        data={
+            **user_dict,
+            "sign_up_type": SignUpType.INVITE_LINK.value,
+            "invite_hash": "invalid-hash",
+        }
+    )
+
+    # When
+    with pytest.raises(PermissionDenied) as exc_info:
+        serializer.is_valid(raise_exception=True)
+
+    # Then
+    assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
+
+
+def test_CustomTokenCreateSerializer_validate_uses_login_field_to_authenticate(
+    settings: SettingsWrapper, mocker: MockerFixture
+) -> None:
+    # Given
+    djoser_settings = deepcopy(settings.DJOSER)
+    djoser_settings["LOGIN_FIELD"] = "username"
+    settings.DJOSER = djoser_settings
+
+    mocked_authenticate = mocker.patch("djoser.serializers.authenticate")
+    serializer = CustomTokenCreateSerializer(
+        data={"email": "some_username", "password": "some_password"}
+    )
+
+    # When
+    serializer.is_valid(raise_exception=True)
+
+    # Then
+    mocked_authenticate.assert_called_with(
+        request=None, username="some_username", password="some_password"
+    )

@@ -26,11 +26,13 @@ import organisations.urls
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
+from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.invites.models import Invite
 from organisations.models import (
-    OranisationAPIUsageNotification,
     Organisation,
+    OrganisationAPIUsageNotification,
     OrganisationRole,
     OrganisationSubscriptionInformationCache,
     OrganisationWebhook,
@@ -40,6 +42,7 @@ from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import CREATE_PROJECT
 from organisations.subscriptions.constants import (
     CHARGEBEE,
+    FREE_PLAN_ID,
     MAX_API_CALLS_IN_FREE_PLAN,
     MAX_SEATS_IN_FREE_PLAN,
     SUBSCRIPTION_BILLING_STATUS_ACTIVE,
@@ -50,6 +53,7 @@ from projects.models import Project, UserProjectPermission
 from segments.models import Segment
 from users.models import (
     FFAdminUser,
+    HubspotTracker,
     UserPermissionGroup,
     UserPermissionGroupMembership,
 )
@@ -73,6 +77,7 @@ def test_should_return_organisation_list_when_requested(
 
 def test_non_superuser_can_create_new_organisation_by_default(
     staff_client: APIClient,
+    staff_user: FFAdminUser,
 ) -> None:
     # Given
     org_name = "Test create org"
@@ -82,6 +87,8 @@ def test_non_superuser_can_create_new_organisation_by_default(
         "name": org_name,
         "webhook_notification_email": webhook_notification_email,
     }
+    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+    assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
     response = staff_client.post(url, data=data)
@@ -92,6 +99,7 @@ def test_non_superuser_can_create_new_organisation_by_default(
         Organisation.objects.get(name=org_name).webhook_notification_email
         == webhook_notification_email
     )
+    assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
 @override_settings(RESTRICT_ORG_CREATE_TO_SUPERUSERS=True)
@@ -140,7 +148,7 @@ def test_should_update_organisation_data(
 
 def test_should_invite_users_to_organisation(
     settings: SettingsWrapper,
-    staff_client: APIClient,
+    admin_client: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
@@ -150,7 +158,7 @@ def test_should_invite_users_to_organisation(
     data = {"emails": ["test@example.com"]}
 
     # When
-    response = staff_client.post(
+    response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -183,6 +191,28 @@ def test_should_fail_if_invite_exists_already(
     assert response_success.status_code == status.HTTP_201_CREATED
     assert response_fail.status_code == status.HTTP_400_BAD_REQUEST
     assert Invite.objects.filter(email=email, organisation=organisation).count() == 1
+
+
+def test_organisation_invite__non_admin__return_expected(
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["invite"] = None
+
+    email = "test_2@example.com"
+    data = {"invites": [{"email": email, "role": "ADMIN"}]}
+    url = reverse("api-v1:organisations:organisation-invite", args=[organisation.pk])
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not Invite.objects.filter(email=email, organisation=organisation).exists()
 
 
 def test_should_return_all_invites_and_can_resend(
@@ -355,6 +385,7 @@ def test_user_can_get_projects_for_an_organisation(
     assert response.data[0]["name"] == project.name
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("app_analytics.influxdb_wrapper.influxdb_client")
 def test_should_get_usage_for_organisation(
     mock_influxdb_client: MagicMock,
@@ -369,7 +400,7 @@ def test_should_get_usage_for_organisation(
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '
-            "|> range(start: -30d, stop: now()) "
+            "|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
             '|> filter(fn:(r) => r._measurement == "api_call")         '
             '|> filter(fn: (r) => r["_field"] == "request_count")         '
             f'|> filter(fn: (r) => r["organisation_id"] == "{organisation.id}") '
@@ -563,12 +594,14 @@ def test_get_my_permissions_for_admin(
     assert response.data["admin"] is True
 
 
+@pytest.mark.parametrize("subscription_status", ("active", "in_trial"))
 @mock.patch("organisations.chargebee.webhook_handlers.extract_subscription_metadata")
 def test_chargebee_webhook(
     mock_extract_subscription_metadata: MagicMock,
     staff_user: FFAdminUser,
     staff_client: APIClient,
     subscription: Subscription,
+    subscription_status: str,
 ) -> None:
     # Given
     seats = 3
@@ -584,7 +617,7 @@ def test_chargebee_webhook(
     data = {
         "content": {
             "subscription": {
-                "status": "active",
+                "status": subscription_status,
                 "id": subscription.subscription_id,
                 "current_term_start": 1699630389,
                 "current_term_end": 1702222389,
@@ -623,12 +656,14 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
     current_term_end = int(datetime.timestamp(cancellation_date))
     subscription.subscription_id = "subscription-id"
     subscription.save()
+
     data = {
         "content": {
             "subscription": {
@@ -640,6 +675,8 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
         }
     }
     url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
 
     # When
     staff_client.post(url, data=json.dumps(data), content_type="application/json")
@@ -655,10 +692,49 @@ def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and
     mocked_cancel_chargebee_subscription.assert_not_called()
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@mock.patch("organisations.models.cancel_chargebee_subscription")
+def test_when_subscription_is_set_to_non_renewing_then_cancellation_date_set_and_current_term_end_is_missing(
+    mocked_cancel_chargebee_subscription: MagicMock,
+    chargebee_subscription: Subscription,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    data = {
+        "content": {
+            "subscription": {
+                "status": "non_renewing",
+                "id": chargebee_subscription.subscription_id,
+                # Note the missing current_term_end field.
+            },
+            "customer": {"email": staff_user.email},
+        }
+    }
+    url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
+
+    # When
+    staff_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    chargebee_subscription.refresh_from_db()
+    # Cancellation date is set to None because the missing current_term_end field
+    # means that the cancellation is processed immediately and the subscription
+    # reverts to being a free plan, so there's no more cancelation date set.
+    assert chargebee_subscription.cancellation_date is None
+    assert chargebee_subscription.plan == FREE_PLAN_ID
+    assert len(mail.outbox) == 1
+    mocked_cancel_chargebee_subscription.assert_not_called()
+
+
 def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sent(
     subscription: Subscription,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     cancellation_date = datetime.now(tz=UTC) + timedelta(days=1)
@@ -676,6 +752,8 @@ def test_when_subscription_is_cancelled_then_cancellation_date_set_and_alert_sen
         }
     }
     url = reverse("api-v1:chargebee-webhook")
+
+    settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = ["foo@bar.com"]
 
     # When
     staff_client.post(url, data=json.dumps(data), content_type="application/json")
@@ -845,12 +923,18 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
 
+    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
+    expected_feature_history_visibility_days = 30
+    expected_audit_log_visibility_days = 30
+
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=expected_seats,
         allowed_projects=expected_projects,
         allowed_30d_api_calls=expected_api_calls,
         chargebee_email=expected_chargebee_email,
+        feature_history_visibility_days=expected_feature_history_visibility_days,
+        audit_log_visibility_days=expected_audit_log_visibility_days,
     )
 
     url = reverse(
@@ -871,6 +955,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_exist(
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
         "chargebee_email": expected_chargebee_email,
+        "feature_history_visibility_days": expected_feature_history_visibility_days,
+        "audit_log_visibility_days": expected_audit_log_visibility_days,
     }
 
 
@@ -885,6 +971,10 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
     expected_projects = 5
     expected_api_calls = 100
     expected_chargebee_email = "test@example.com"
+
+    settings.VERSIONING_RELEASE_DATE = timezone.now() - timedelta(days=1)
+    expected_feature_history_visibility_days = DEFAULT_VERSION_LIMIT_DAYS
+    expected_audit_log_visibility_days = 0
 
     mocker.patch("organisations.models.is_saas", return_value=True)
     get_subscription_metadata = mocker.patch(
@@ -913,6 +1003,8 @@ def test_get_subscription_metadata_when_subscription_information_cache_does_not_
         "max_api_calls": expected_api_calls,
         "payment_source": CHARGEBEE,
         "chargebee_email": expected_chargebee_email,
+        "feature_history_visibility_days": expected_feature_history_visibility_days,
+        "audit_log_visibility_days": expected_audit_log_visibility_days,
     }
     get_subscription_metadata.assert_called_once_with(
         chargebee_subscription.subscription_id
@@ -945,6 +1037,8 @@ def test_get_subscription_metadata_returns_200_if_the_organisation_have_no_paid_
         "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "max_seats": 1,
         "payment_source": None,
+        "feature_history_visibility_days": DEFAULT_VERSION_LIMIT_DAYS,
+        "audit_log_visibility_days": 0,
     }
 
     get_subscription_metadata.assert_not_called()
@@ -971,6 +1065,8 @@ def test_get_subscription_metadata_returns_defaults_if_chargebee_error(
         "max_projects": settings.MAX_PROJECTS_IN_FREE_PLAN,
         "payment_source": None,
         "chargebee_email": None,
+        "feature_history_visibility_days": DEFAULT_VERSION_LIMIT_DAYS,
+        "audit_log_visibility_days": 0,
     }
 
 
@@ -1710,7 +1806,7 @@ def test_defaults_to_empty_api_notifications_when_no_subscription_information_ca
     )
 
     now = timezone.now()
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now,
@@ -1751,17 +1847,17 @@ def test_retrieves_api_usage_notifications(
     )
 
     # Add three notifications, but we only get the 100% one.
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now,
     )
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=75,
         notified_at=now,
     )
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=100,
         notified_at=now,
@@ -1802,7 +1898,7 @@ def test_doesnt_retrieve_stale_api_usage_notifications(
     )
 
     # Create a notification in the past which should not be shown.
-    OranisationAPIUsageNotification.objects.create(
+    OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=90,
         notified_at=now - timedelta(20),

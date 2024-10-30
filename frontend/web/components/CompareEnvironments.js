@@ -175,7 +175,7 @@ class CompareEnvironments extends Component {
 
             <div className='mx-3'>
               <Icon
-                name='arrow-left'
+                name='arrow-right'
                 width={20}
                 fill={
                   Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'

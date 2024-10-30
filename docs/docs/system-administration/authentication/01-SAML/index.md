@@ -8,47 +8,29 @@ SAML authentication requires an [Enterprise subscription](https://flagsmith.com/
 
 :::
 
-## Setup (SaaS)
+## Setup
 
-To enable SAML authentication for your Flagsmith organisation, you must send your identity provider metadata XML
-document to [support@flagsmith.com](mailto:support@flagsmith.com).
+To enable SAML authentication for your Flagsmith organisation, you have to go to your organisations settings, and in the
+SAML tab, you'll be able to configure it.
 
-Once Flagsmith has configured your identity provider, we will send you a service provider metadata XML document or an
-Assertion Consumer Service (ACS) URL to use with your identity provider.
+In the UI, you will be able to configure the following fields.
 
-## Setup (self-hosted)
+**Name:** (**Required**) A short name for the organisation, used as the input when clicking "Single Sign-On" at login.
+This name must be unique across all Flagsmith organisations and forms part of the URL that your identity provider will
+post SAML messages to during authentication.
 
-To enable SAML for your Flagsmith organisation in a self-hosted environment, you will need access the
-[Django admin interface](/deployment/configuration/django-admin).
+**Frontend URL**: (**Required**) This should be the base URL of the Flagsmith dashboard. Users will be redirected here
+after authenticating successfully.
 
-In the Django admin interface, click on the "SAML Configurations" option in the menu on the left. To create a new SAML
-configuration, click on "Add SAML Configuration" in the top right corner.
+**Allow IdP-initiated**: If enabled, users will be able to log in directly from your identity provider without needing
+to visit the Flagsmith login page.
 
-You should see a screen similar to the following:
+**IdP metadata XML**: The metadata from your identity provider.
 
-![SAML Auth Setup](/img/saml-auth-setup.png)
+Once you have configured your identity provider, you can download the service provider metadata XML document with the
+button "Download Service Provider Metadata".
 
-From the drop down next to **Organisation**, select the organisation that you want to configure for SAML authentication.
-
-Next to **Organisation name**, add a URI-safe name that uniquely identifies the organisation. Users will need to provide
-this name when selecting the "Single Sign-On" option at the Flagsmith login screen.
-
-Next to **Frontend URL**, add the URL where your Flagsmith frontend is running. Users will be redirected to this URL
-when they authenticate using SAML.
-
-Copy your identity provider's XML metadata document into the **IdP metadata XML** field, or leave it blank and come back
-to this step later if you do not have it.
-
-If you want to enable IdP-initiated SSO, check the box next to **Allow IdP-initiated (unsolicited) login**. If you are
-unsure, leave this box unchecked.
-
-Hit the **Save** button to create the SAML configuration.
-
-Once your SAML configuration is created, you can download your Flagsmith service provider metadata by going back to the
-list of SAML configurations in the Django admin interface and clicking "Download" on the SAML configuration you just
-created.
-
-### Assertion Consumer Service URL
+### Assertion consumer service URL
 
 The assertion consumer service (ACS) URL, also known as single sign-on URL, for this SAML configuration will be at the
 following path, replacing `flagsmith.example.com` with your Flagsmith API's domain:
@@ -87,12 +69,11 @@ Flagsmith also maps user attributes from the following claims in the SAML assert
 
 | Flagsmith attribute | IdP claims                                           |
 | ------------------- | ---------------------------------------------------- |
-| `email`             | `mail`, `email` or `emailAddress`                    |
-| `first_name`        | `gn`, `givenName` or the first part of `displayName` |
-| `last_name`         | `sn`, `surname` or the second part of `displayName`  |
+| Email               | `mail`, `email` or `emailAddress`                    |
+| First name          | `gn`, `givenName` or the first part of `displayName` |
+| Last name           | `sn`, `surname` or the second part of `displayName`  |
 
-You can override these mappings by adding the corresponding IdP attribute names to your SAML configuration from the
-Django admin interface.
+To add custom attribute mappings, edit your SAML configuration and open the Attribute Mappings tab.
 
 ## Permissions for SAML users
 

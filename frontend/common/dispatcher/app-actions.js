@@ -29,11 +29,12 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       pin,
     })
   },
-  createEnv(name, projectId, cloneId, description) {
+  createEnv(name, projectId, cloneId, description, metadata) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_ENV,
       cloneId,
       description,
+      metadata,
       name,
       projectId,
     })

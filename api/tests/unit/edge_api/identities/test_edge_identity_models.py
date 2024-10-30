@@ -7,14 +7,17 @@ from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
+from pytest_lazyfixture import lazy_fixture
 from pytest_mock import MockerFixture
 
+from api_keys.user import APIKeyUser
 from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.versioning.tasks import enable_v2_versioning
 from features.workflows.core.models import ChangeRequest
 from segments.models import Segment
+from users.models import FFAdminUser
 
 
 def test_get_all_feature_states_for_edge_identity_uses_segment_priorities(
@@ -261,10 +264,20 @@ def test_edge_identity_save_does_not_generate_audit_records_if_no_changes(
     mocked_generate_audit_log_records.delay.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "user, user_id, api_key_id",
+    [
+        (lazy_fixture("api_key_user"), None, lazy_fixture("master_api_key_id")),
+        (lazy_fixture("admin_user"), lazy_fixture("admin_user_id"), None),
+    ],
+)
 def test_edge_identity_save_called__feature_override_added__expected_tasks_called(
     mocker: MockerFixture,
     edge_identity_model: EdgeIdentity,
     edge_identity_dynamo_wrapper_mock: MagicMock,
+    user: FFAdminUser | APIKeyUser,
+    user_id: int | None,
+    api_key_id: int | None,
 ) -> None:
     # Given
     mocked_generate_audit_log_records = mocker.patch(
@@ -279,8 +292,6 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
-
-    user = mocker.MagicMock()
 
     expected_changes = {
         "feature_overrides": {
@@ -301,14 +312,15 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
 
     # Then
     edge_identity_dynamo_wrapper_mock.put_item.assert_called_once()
+
     mocked_generate_audit_log_records.delay.assert_called_once_with(
         kwargs={
             "environment_api_key": edge_identity_model.environment_api_key,
             "identifier": edge_identity_model.identifier,
-            "user_id": user.id,
+            "user_id": user_id,
             "changes": expected_changes,
             "identity_uuid": expected_identity_uuid,
-            "master_api_key_id": None,
+            "master_api_key_id": api_key_id,
         }
     )
     mocked_update_flagsmith_environments_v2_identity_overrides.delay.assert_called_once_with(
@@ -321,10 +333,20 @@ def test_edge_identity_save_called__feature_override_added__expected_tasks_calle
     )
 
 
+@pytest.mark.parametrize(
+    "user, user_id, api_key_id",
+    [
+        (lazy_fixture("api_key_user"), None, lazy_fixture("master_api_key_id")),
+        (lazy_fixture("admin_user"), lazy_fixture("admin_user_id"), None),
+    ],
+)
 def test_edge_identity_save_called__feature_override_removed__expected_tasks_called(
     mocker: MockerFixture,
     edge_identity_model: EdgeIdentity,
     edge_identity_dynamo_wrapper_mock: MagicMock,
+    user: FFAdminUser,
+    user_id: int | None,
+    api_key_id: int | None,
 ) -> None:
     # Given
     mocked_generate_audit_log_records = mocker.patch(
@@ -339,8 +361,6 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
         enabled=True,
     )
     edge_identity_model.add_feature_override(feature_state_model)
-
-    user = mocker.MagicMock()
 
     expected_changes = {
         "feature_overrides": {
@@ -372,10 +392,10 @@ def test_edge_identity_save_called__feature_override_removed__expected_tasks_cal
         kwargs={
             "environment_api_key": edge_identity_model.environment_api_key,
             "identifier": edge_identity_model.identifier,
-            "user_id": user.id,
+            "user_id": user_id,
             "changes": expected_changes,
             "identity_uuid": expected_identity_uuid,
-            "master_api_key_id": None,
+            "master_api_key_id": api_key_id,
         }
     )
     mocked_update_flagsmith_environments_v2_identity_overrides.delay.assert_called_once_with(
@@ -404,6 +424,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     mocker: MockerFixture,
     edge_identity_model: EdgeIdentity,
     edge_identity_dynamo_wrapper_mock: MagicMock,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     mocked_generate_audit_log_records = mocker.patch(
@@ -453,7 +474,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
     feature_override.set_value(new_value)
 
     # When
-    edge_identity_model.save(user=user)
+    edge_identity_model.save(user=admin_user)
 
     # Then
     edge_identity_dynamo_wrapper_mock.put_item.assert_called_once()
@@ -461,7 +482,7 @@ def test_edge_identity_save_called_generate_audit_records_if_feature_override_up
         kwargs={
             "environment_api_key": edge_identity_model.environment_api_key,
             "identifier": edge_identity_model.identifier,
-            "user_id": user.id,
+            "user_id": admin_user.id,
             "changes": expected_changes,
             "identity_uuid": expected_identity_uuid,
             "master_api_key_id": None,

@@ -1,9 +1,8 @@
 import importlib
 
 from django.conf import settings
-from django.conf.urls import include, url
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
 
 from users.views import password_reset_redirect
@@ -11,24 +10,27 @@ from users.views import password_reset_redirect
 from . import views
 
 urlpatterns = [
-    url(r"^api/v1/", include("api.urls.deprecated", namespace="api-deprecated")),
-    url(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
-    url(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
-    url(r"^admin/", admin.site.urls),
-    url(r"^health", include("health_check.urls", namespace="health")),
-    url(r"^version", views.version_info, name="version-info"),
-    url(
+    re_path(r"^api/v1/", include("api.urls.deprecated", namespace="api-deprecated")),
+    re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
+    re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
+    re_path(r"^admin/", admin.site.urls),
+    re_path(r"^health", include("health_check.urls", namespace="health")),
+    # Aptible health checks must be on /healthcheck and cannot redirect
+    # see https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks
+    path("healthcheck", include("health_check.urls", namespace="aptible")),
+    re_path(r"^version", views.version_info, name="version-info"),
+    re_path(
         r"^sales-dashboard/",
         include("sales_dashboard.urls", namespace="sales_dashboard"),
     ),
     # this url is used to generate email content for the password reset workflow
-    url(
+    re_path(
         r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"
         r"13}-[0-9A-Za-z]{1,20})/$",
         password_reset_redirect,
         name="password_reset_confirm",
     ),
-    url(
+    re_path(
         r"^config/project-overrides",
         views.project_overrides,
         name="project_overrides",
@@ -44,7 +46,7 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns = [
-        url(r"^__debug__/", include(debug_toolbar.urls)),
+        re_path(r"^__debug__/", include(debug_toolbar.urls)),
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:
@@ -68,6 +70,6 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:
         ]
     )
 
-if settings.SERVE_FE_ASSETS:
+if settings.SERVE_FE_ASSETS:  # pragma: no cover
     # add route to serve FE assets for any unrecognised paths
-    urlpatterns.append(url(r"^.*$", views.index, name="index"))
+    urlpatterns.append(re_path(r"^.*$", views.index, name="index"))

@@ -360,6 +360,14 @@ services:
 If not running our application via docker, you can find gunicorn's documentation on statsd instrumentation
 [here](https://docs.gunicorn.org/en/stable/instrumentation.html)
 
+### GitHub Integration Environment Variables
+
+- `GITHUB_PEM`: In the 'Private keys' section of your GitHub App, you can create a PEM file within your GitHub App and
+  then paste it here.
+- `GITHUB_APP_ID`: You can find the App ID in the 'About' section -> 'App ID' of your GitHub app.
+- `GITHUB_WEBHOOK_SECRET`: You should choose the same random string of text with high entropy that you put in your
+  GitHub App.
+
 ## Caching
 
 The application makes use of caching in a couple of locations:
@@ -438,6 +446,73 @@ Webpack compiles a front end build, sourcing `api/app/templates/index.html`. It 
 
 The Django `collectstatic` command then copies all the additional static assets that Django needs, including
 `api/app/templates/webpack/index.html`, into `api/static`.
+
+## Rolling back to a previous version of Flagsmith
+
+:::warning
+
+These steps may result in data loss in the scenario where new models or fields have been added to the database. We
+recommend taking a full backup of the database before completing the rollback.
+
+:::
+
+If you need to roll back to a previous version of Flagsmith you will need to ensure that the database is also rolled
+back to the correct state. In order to do this, you will need to unapply all the migrations that happened in between the
+version that you want to roll back to, and the one that you are rolling back from. The following steps explain how to do
+that.
+
+1. Identify the date and time that you deployed the version that you want to roll back to.
+
+:::tip
+
+If you are unsure on when you completed the previous deployment, then you can use the `django_migrations` table as a
+guide. If you query the table, using the following query then you should see the migrations that have been applied (in
+descending order), grouped in batches corresponding to each deployment.
+
+```sql
+SELECT *
+FROM django_migrations
+ORDER BY applied DESC
+```
+
+:::
+
+2. Replace the datetime in the query below with a datetime after the deployment of the version you want to roll back to,
+   and before any subsequent deployments. Execute the subsequent query against the Flagsmith database.
+
+```sql {14} showLineNumbers
+select
+    concat('python manage.py migrate ',
+    app,
+    ' ',
+    case
+        when substring(name, 1, 4)::integer = 1 then 'zero'
+        else lpad((substring(name, 1, 4)::integer - 1)::text, 4, '0')
+        end
+    ) as "python_commands"
+from django_migrations
+where id in (
+    select min(id)
+    from django_migrations
+    where applied >= 'yyyy-MM-dd HH:mm:ss'
+    group by app
+);
+```
+
+Example output:
+
+```
+                python_commands
+-----------------------------------------------
+ python manage.py migrate multivariate 0007
+ python manage.py migrate segment 0004
+ python manage.py migrate environments 0034
+ python manage.py migrate features 0064
+ python manage.py migrate token_blacklist zero
+```
+
+3. Run the generated commands inside a Flagsmith API container running the _current_ version of Flagsmith
+4. Roll back the Flagsmith API to the desired version.
 
 ## Information for Developers working on the project
 

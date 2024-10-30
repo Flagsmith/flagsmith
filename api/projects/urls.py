@@ -1,5 +1,4 @@
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
@@ -13,6 +12,7 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
+from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
 from projects.tags.views import TagViewSet
@@ -58,6 +58,11 @@ projects_router.register(
     basename="imports-launch-darkly",
 )
 projects_router.register(
+    r"integrations/grafana",
+    GrafanaProjectConfigurationViewSet,
+    basename="integrations-grafana",
+)
+projects_router.register(
     "audit",
     ProjectAuditLogViewSet,
     basename="project-audit",
@@ -78,9 +83,9 @@ nested_features_router.register(
 app_name = "projects"
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(projects_router.urls)),
-    url(r"^", include(nested_features_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(projects_router.urls)),
+    re_path(r"^", include(nested_features_router.urls)),
     path(
         "<int:project_pk>/all-user-permissions/<int:user_pk>/",
         get_user_project_permissions,

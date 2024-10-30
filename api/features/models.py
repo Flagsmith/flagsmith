@@ -5,13 +5,13 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
-from dataclasses import asdict
 
 from core.models import (
     AbstractBaseExportableModel,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
@@ -21,9 +21,9 @@ from django.core.exceptions import (
 from django.db import models
 from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django_lifecycle import (
     AFTER_CREATE,
+    AFTER_DELETE,
     AFTER_SAVE,
     BEFORE_CREATE,
     BEFORE_SAVE,
@@ -75,7 +75,7 @@ from features.value_types import (
     STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from integrations.github.models import GithubConfiguration
+from integrations.github.constants import GitHubEventType
 from metadata.models import Metadata
 from projects.models import Project
 from projects.tags.models import Tag
@@ -99,7 +99,7 @@ class Feature(
     project = models.ForeignKey(
         Project,
         related_name="features",
-        help_text=_(
+        help_text=(
             "Changing the project selected will remove previous Feature States for the previously "
             "associated projects Environments that are related to this Feature. New default "
             "Feature States will be created for the new selected projects Environments for this "
@@ -110,7 +110,7 @@ class Feature(
         on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
-        max_length=20000, null=True, default=None, blank=True
+        max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None, blank=True
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
@@ -140,11 +140,7 @@ class Feature(
 
     @hook(AFTER_SAVE)
     def create_github_comment(self) -> None:
-        from integrations.github.github import GithubData, generate_data
-        from integrations.github.tasks import (
-            call_github_app_webhook_for_feature_state,
-        )
-        from webhooks.webhooks import WebhookEventType
+        from integrations.github.github import call_github_task
 
         if (
             self.external_resources.exists()
@@ -152,19 +148,14 @@ class Feature(
             and self.project.organisation.github_config.exists()
             and self.deleted_at
         ):
-            github_configuration = GithubConfiguration.objects.get(
-                organisation_id=self.project.organisation_id
-            )
 
-            feature_data: GithubData = generate_data(
-                github_configuration=github_configuration,
+            call_github_task(
+                organisation_id=self.project.organisation_id,
+                type=GitHubEventType.FLAG_DELETED.value,
                 feature=self,
-                type=WebhookEventType.FLAG_DELETED.value,
-                feature_states=[],
-            )
-
-            call_github_app_webhook_for_feature_state.delay(
-                args=(asdict(feature_data),),
+                segment_name=None,
+                url=None,
+                feature_states=None,
             )
 
     @hook(AFTER_CREATE)
@@ -220,6 +211,7 @@ def get_next_segment_priority(feature):
 
 
 class FeatureSegment(
+    LifecycleModelMixin,
     AbstractBaseExportableModel,
     OrderedModelBase,
     abstract_base_auditable_model_factory(["uuid"]),
@@ -398,6 +390,11 @@ class FeatureSegment(
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self.feature_id
 
+    def get_skip_create_audit_log(self) -> bool:
+        # Don't create audit logs when deleting feature segments using versioning
+        # v2 as we rely on the version history instead.
+        return self.environment_feature_version_id is not None
+
     def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
             self.feature.name,
@@ -406,6 +403,25 @@ class FeatureSegment(
 
     def _get_environment(self) -> "Environment":
         return self.environment
+
+    @hook(AFTER_DELETE)
+    def create_github_comment(self) -> None:
+        from integrations.github.github import call_github_task
+
+        if (
+            self.feature.external_resources.exists()
+            and self.feature.project.github_project.exists()
+            and self.feature.project.organisation.github_config.exists()
+        ):
+
+            call_github_task(
+                self.feature.project.organisation_id,
+                GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
+                self.feature,
+                self.segment.name,
+                None,
+                None,
+            )
 
 
 class FeatureState(
@@ -1069,10 +1085,22 @@ class FeatureStateValue(
         self.string_value = source_feature_state_value.string_value
         self.save()
 
+    def get_skip_create_audit_log(self) -> bool:
+        try:
+            return self.feature_state.get_skip_create_audit_log()
+        except ObjectDoesNotExist:
+            return False
+
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
 
-        changes = history_instance.diff_against(history_instance.prev_record).changes
+        # NOTE: We have some feature state values that were created before we started
+        # tracking history, resulting in no prev_record.
+        changes = (
+            history_instance.diff_against(history_instance.prev_record).changes
+            if history_instance.prev_record
+            else []
+        )
         if (
             len(changes) == 1
             and changes[0].field == "string_value"

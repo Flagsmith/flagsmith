@@ -1,7 +1,8 @@
 import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { Link, withRouter } from 'react-router-dom'
-import amplitude from 'amplitude-js'
+import * as amplitude from '@amplitude/analytics-browser'
+import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
@@ -16,11 +17,9 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { getOrganisationUsage } from 'common/services/useOrganisationUsage'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
-import InfoMessage from './InfoMessage'
 import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
@@ -36,6 +35,8 @@ import AuditLogIcon from './svg/AuditLogIcon'
 import Permission from 'common/providers/Permission'
 import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
+import AnnouncementPerPage from './AnnouncementPerPage'
+import Announcement from './Announcement'
 
 const App = class extends Component {
   static propTypes = {
@@ -47,7 +48,6 @@ const App = class extends Component {
   }
 
   state = {
-    activeOrganisation: 0,
     asideIsVisible: !isMobile,
     lastEnvironmentId: '',
     lastProjectId: '',
@@ -76,7 +76,7 @@ const App = class extends Component {
     })
     const projectId =
       _.get(match, 'params.projectId') || _.get(match2, 'params.projectId')
-    return projectId
+    return !!projectId && parseInt(projectId)
   }
   getEnvironmentId = (props) => {
     const { location } = props
@@ -93,6 +93,17 @@ const App = class extends Component {
   }
 
   componentDidMount = () => {
+    if (Project.amplitude) {
+      amplitude.init(Project.amplitude, {
+        defaultTracking: true,
+        serverZone: 'EU',
+      })
+      const sessionReplayTracking = sessionReplayPlugin({
+        sampleRate: 0.5,
+        serverZone: 'EU',
+      })
+      amplitude.add(sessionReplayTracking)
+    }
     getBuildVersion()
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
@@ -100,33 +111,23 @@ const App = class extends Component {
     }
     this.listenTo(OrganisationStore, 'change', () => this.forceUpdate())
     this.listenTo(ProjectStore, 'change', () => this.forceUpdate())
-    this.listenTo(AccountStore, 'change', this.getOrganisationUsage)
-    this.getOrganisationUsage()
+    if (AccountStore.model) {
+      this.onLogin()
+    }
     window.addEventListener('scroll', this.handleScroll)
-    AsyncStorage.getItem('lastEnv').then((res) => {
-      if (res) {
-        const lastEnv = JSON.parse(res)
-        this.setState({
-          lastEnvironmentId: lastEnv.environmentId,
-          lastProjectId: lastEnv.projectId,
-        })
-      }
-    })
-  }
-
-  getOrganisationUsage = () => {
-    if (
-      AccountStore.getOrganisation()?.id &&
-      this.state.activeOrganisation !== AccountStore.getOrganisation().id
-    ) {
-      getOrganisationUsage(getStore(), {
-        organisationId: AccountStore.getOrganisation()?.id,
-      }).then((res) => {
-        this.setState({
-          activeOrganisation: AccountStore.getOrganisation().id,
-        })
+    const updateLastViewed = () => {
+      AsyncStorage.getItem('lastEnv').then((res) => {
+        if (res) {
+          const lastEnv = JSON.parse(res)
+          this.setState({
+            lastEnvironmentId: lastEnv.environmentId,
+            lastProjectId: lastEnv.projectId,
+          })
+        }
       })
     }
+    this.props.history.listen(updateLastViewed)
+    updateLastViewed()
   }
 
   toggleDarkMode = () => {
@@ -230,7 +231,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/select-organistion')
+              this.context.router.history.replace('/organisations')
               return
             }
 
@@ -305,12 +306,10 @@ const App = class extends Component {
       pathname === '/signup' ||
       pathname === '/github-setup' ||
       pathname.includes('/invite')
-    if (Project.amplitude) {
-      amplitude.getInstance().init(Project.amplitude)
-    }
     if (
       AccountStore.getOrganisation() &&
-      AccountStore.getOrganisation().block_access_to_admin
+      AccountStore.getOrganisation().block_access_to_admin &&
+      pathname !== '/organisations'
     ) {
       return <Blocked />
     }
@@ -342,17 +341,8 @@ const App = class extends Component {
     if (document.location.href.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    const announcementValue = Utils.getFlagsmithJSONValue('announcement', null)
-    const dismissed = flagsmith.getTrait('dismissed_announcement')
-    const showBanner =
-      announcementValue &&
-      (!dismissed || dismissed !== announcementValue.id) &&
-      Utils.getFlagsmithHasFeature('announcement') &&
-      this.state.showAnnouncement
     const isOrganisationSelect = document.location.pathname === '/organisations'
-    const integrations = Object.keys(
-      JSON.parse(Utils.getFlagsmithValue('integration_data') || '{}'),
-    )
+    const integrations = Object.keys(Utils.getIntegrationData())
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -378,26 +368,20 @@ const App = class extends Component {
                     {user && (
                       <OrganisationLimit
                         id={AccountStore.getOrganisation()?.id}
+                        organisationPlan={
+                          AccountStore.getOrganisation()?.subscription.plan
+                        }
                       />
                     )}
-                    {user && showBanner && (
-                      <Row className={'px-3'}>
-                        <InfoMessage
-                          title={announcementValue.title}
-                          infoMessageClass={'announcement'}
-                          isClosable={announcementValue.isClosable}
-                          close={() =>
-                            this.closeAnnouncement(announcementValue.id)
-                          }
-                          buttonText={announcementValue.buttonText}
-                          url={announcementValue.url}
-                        >
-                          <div>
-                            <div>{announcementValue.description}</div>
-                          </div>
-                        </InfoMessage>
-                      </Row>
+                    {user && (
+                      <div className='container mt-4'>
+                        <div>
+                          <Announcement />
+                          <AnnouncementPerPage pathname={pathname} />
+                        </div>
+                      </div>
                     )}
+
                     {this.props.children}
                   </Fragment>
                 )}
@@ -582,15 +566,8 @@ const App = class extends Component {
                             id={projectId}
                           >
                             {({ permission }) =>
-                              permission &&
-                              Utils.getPlansPermission('RBAC') && (
+                              permission && (
                                 <NavSubLink
-                                  tooltip={
-                                    !Utils.getPlansPermission('RBAC')
-                                      ? 'This feature is available with our scaleup plan'
-                                      : ''
-                                  }
-                                  disabled={!Utils.getPlansPermission('RBAC')}
                                   icon={<AuditLogIcon />}
                                   id='audit-log-link'
                                   to={`/project/${projectId}/audit-log`}
@@ -619,7 +596,7 @@ const App = class extends Component {
                           <Permission
                             level='project'
                             permission='ADMIN'
-                            id={this.props.projectId}
+                            id={projectId}
                           >
                             {({ permission }) =>
                               permission && (
@@ -666,17 +643,31 @@ const App = class extends Component {
                                   Usage
                                 </NavSubLink>
                               )}
-
                             {AccountStore.isAdmin() && (
-                              <NavSubLink
-                                icon={<SettingsIcon />}
-                                id='org-settings-link'
-                                to={`/organisation/${
-                                  AccountStore.getOrganisation().id
-                                }/settings`}
-                              >
-                                Organisation Settings
-                              </NavSubLink>
+                              <>
+                                {Utils.getFlagsmithHasFeature(
+                                  'organisation_integrations',
+                                ) && (
+                                  <NavSubLink
+                                    icon={<Icon name='layers' />}
+                                    id='integrations-link'
+                                    to={`/organisation/${
+                                      AccountStore.getOrganisation().id
+                                    }/integrations`}
+                                  >
+                                    Organisation Integrations
+                                  </NavSubLink>
+                                )}
+                                <NavSubLink
+                                  icon={<SettingsIcon />}
+                                  id='org-settings-link'
+                                  to={`/organisation/${
+                                    AccountStore.getOrganisation().id
+                                  }/settings`}
+                                >
+                                  Organisation Settings
+                                </NavSubLink>
+                              </>
                             )}
                           </>
                         )

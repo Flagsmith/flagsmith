@@ -7,10 +7,31 @@ import AddVariationButton from './mv/AddVariationButton'
 import ErrorMessage from './ErrorMessage'
 import Tooltip from './Tooltip'
 import Icon from './Icon'
+import InputGroup from './base/forms/InputGroup'
+import WarningMessage from './WarningMessage'
+
+function isNegativeNumberString(str) {
+  if (typeof Utils.getTypedValue(str) !== 'number') {
+    return false
+  }
+  if (typeof str !== 'string') {
+    return false
+  }
+  const num = parseFloat(str)
+  return !isNaN(num) && num < 0
+}
 
 export default class Feature extends PureComponent {
   static displayName = 'Feature'
 
+  constructor(props) {
+    super(props)
+    this.state = {
+      isNegativeNumberString: isNegativeNumberString(
+        props.environmentFlag?.feature_state_value,
+      ),
+    }
+  }
   removeVariation = (i) => {
     const idToRemove = this.props.multivariate_options[i].id
 
@@ -51,7 +72,7 @@ export default class Feature extends PureComponent {
       ? 'User override'
       : !!multivariate_options && multivariate_options.length
       ? `Control Value - ${controlPercentage}%`
-      : `Value (optional)`
+      : `Value`
 
     const showValue = !(
       !!identity &&
@@ -102,12 +123,29 @@ export default class Feature extends PureComponent {
               }
               tooltip={`${Constants.strings.REMOTE_CONFIG_DESCRIPTION}${
                 !isEdit
-                  ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit the this individually for each environment once the feature is created.'
+                  ? '<br/>Setting this when creating a feature will set the value for all environments. You can edit this individually for each environment once the feature is created.'
                   : ''
               }`}
               title={`${valueString}`}
             />
           </FormGroup>
+        )}
+        {this.state.isNegativeNumberString && (
+          <WarningMessage
+            warningMessage={
+              <div>
+                This feature currently has the value of{' '}
+                <strong>"{environmentFlag?.feature_state_value}"</strong>.
+                Saving this feature will convert its value from a string to a
+                number. If you wish to preserve this value as a string, please
+                save it using the{' '}
+                <a href='https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_update'>
+                  API
+                </a>
+                .
+              </div>
+            }
+          />
         )}
 
         {!!error && (

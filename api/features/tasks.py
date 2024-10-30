@@ -1,8 +1,9 @@
 import logging
 
+from task_processor.decorators import register_task_handler
+
 from environments.models import Webhook
 from features.models import Feature, FeatureState
-from task_processor.decorators import register_task_handler
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 from webhooks.webhooks import (
     WebhookEventType,
@@ -27,11 +28,14 @@ def trigger_feature_state_change_webhooks(
         else ""
     )
     changed_by = (
-        str(history_instance.history_user)
+        history_instance.history_user.email
         if history_instance and history_instance.history_user
-        else ""
+        else (
+            history_instance.master_api_key.name
+            if history_instance and history_instance.master_api_key
+            else ""
+        )
     )
-
     new_state = (
         None
         if event_type == WebhookEventType.FLAG_DELETED

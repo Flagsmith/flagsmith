@@ -1,5 +1,4 @@
-from django.conf.urls import include, url
-from django.urls import path
+from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from edge_api.identities.views import (
@@ -15,6 +14,7 @@ from features.views import (
 )
 from integrations.amplitude.views import AmplitudeConfigurationViewSet
 from integrations.dynatrace.views import DynatraceConfigurationViewSet
+from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.rudderstack.views import RudderstackConfigurationViewSet
@@ -82,6 +82,11 @@ environments_router.register(
     basename="integrations-dynatrace",
 )
 environments_router.register(
+    r"integrations/grafana",
+    GrafanaProjectConfigurationViewSet,
+    basename="integrations-grafana",
+)
+environments_router.register(
     r"integrations/mixpanel",
     MixpanelConfigurationViewSet,
     basename="integrations-mixpanel",
@@ -129,10 +134,10 @@ environments_router.register(r"api-keys", EnvironmentAPIKeyViewSet, basename="ap
 app_name = "environments"
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(environments_router.urls)),
-    url(r"^", include(identity_router.urls)),
-    url(r"^", include(edge_identity_router.urls)),
+    re_path(r"^", include(router.urls)),
+    re_path(r"^", include(environments_router.urls)),
+    re_path(r"^", include(identity_router.urls)),
+    re_path(r"^", include(edge_identity_router.urls)),
     path(
         "environments/<str:environment_api_key>/edge-identities-featurestates",
         EdgeIdentityWithIdentifierFeatureStateView.as_view(),

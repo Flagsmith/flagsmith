@@ -4,6 +4,7 @@ from rest_framework_nested.routers import NestedSimpleRouter
 
 from features.versioning.views import (
     EnvironmentFeatureVersionFeatureStatesViewSet,
+    EnvironmentFeatureVersionRetrieveAPIView,
     EnvironmentFeatureVersionViewSet,
 )
 
@@ -33,5 +34,10 @@ urlpatterns = [
     path(
         "environments/<int:environment_pk>/features/<int:feature_pk>/",
         include(ef_version_fs_router.urls),
+    ),
+    path(
+        "environment-feature-versions/<str:pk>/",
+        EnvironmentFeatureVersionRetrieveAPIView.as_view(),
+        name="get-efv-by-uuid",
     ),
 ]
