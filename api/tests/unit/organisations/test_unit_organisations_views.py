@@ -1,4 +1,3 @@
-import importlib
 import json
 from datetime import datetime, timedelta
 from typing import Type
@@ -22,7 +21,6 @@ from pytz import UTC
 from rest_framework import status
 from rest_framework.test import APIClient, override_settings
 
-import organisations.urls
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature
@@ -1976,11 +1974,9 @@ def test_validation_error_if_non_numeric_organisation_id(
 
 
 def test_create_or_update_licence(
-    organisation: Organisation, admin_client: APIClient, mocker: MockerFixture
+    organisation: Organisation, admin_client: APIClient
 ) -> None:
     # Given
-    importlib.reload(organisations.urls)
-
     url = reverse(
         "api-v1:organisations:create-or-update-licence", args=[organisation.id]
     )
