@@ -102,7 +102,7 @@ def test_export_project(organisation):
     # TODO: test whether the export is importable
 
 
-def test_export_project__only_live_segments_are_imported(
+def test_export_project__only_live_segments_are_exported(
     organisation: Organisation, project: Project
 ):
     # Given
