@@ -55,7 +55,5 @@ services:
       timeout: 5s
       retries: 5
     depends_on:
-      pg-0:
-        condition: service_healthy
-      pg-1:
-        condition: service_healthy
+      - pg-0
+      - pg-1
