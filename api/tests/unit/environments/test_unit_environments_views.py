@@ -18,7 +18,10 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from environments.permissions.constants import VIEW_ENVIRONMENT
+from environments.permissions.constants import (
+    TAG_SUPPORTED_PERMISSIONS,
+    VIEW_ENVIRONMENT,
+)
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -949,18 +952,29 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
 
 
+@pytest.mark.parametrize(
+    "client",
+    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+)
 def test_user_can_list_environment_permission(
-    admin_client_new: APIClient, environment: Environment
+    client: APIClient, environment: Environment
 ) -> None:
     # Given
     url = reverse("api-v1:environments:environment-permissions")
 
     # When
-    response = admin_client_new.get(url)
+    response = client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 7
+
+    returned_supported_permissions = [
+        permission["key"]
+        for permission in response.json()
+        if permission["supports_tag"] is True
+    ]
+    assert set(returned_supported_permissions) == set(TAG_SUPPORTED_PERMISSIONS)
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(
