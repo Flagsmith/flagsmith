@@ -28,7 +28,7 @@ const fetchJavaVersions = async () =>
 
 const fetchAndroidVersions = async () =>
     fetchMavenVersions({
-        groupId: 'io.flagsmith',
+        groupId: 'com.flagsmith',
         artifactId: 'flagsmith-kotlin-android-client',
     });
 
