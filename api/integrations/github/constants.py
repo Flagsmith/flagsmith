@@ -43,6 +43,7 @@ class GitHubTag(Enum):
     PR_MERGED = "PR Merged"
     PR_CLOSED = "PR Closed"
     PR_DRAFT = "PR Draft"
+    PR_DEQUEUED = "PR Dequeued"
     ISSUE_OPEN = "Issue Open"
     ISSUE_CLOSED = "Issue Closed"
 
@@ -52,6 +53,7 @@ github_tag_description = {
     GitHubTag.PR_MERGED.value: "This feature has a linked PR merged",
     GitHubTag.PR_CLOSED.value: "This feature has a linked PR closed",
     GitHubTag.PR_DRAFT.value: "This feature has a linked PR draft",
+    GitHubTag.PR_DEQUEUED.value: "This feature has a linked PR dequeued",
     GitHubTag.ISSUE_OPEN.value: "This feature has a linked issue open",
     GitHubTag.ISSUE_CLOSED.value: "This feature has a linked issue closed",
 }

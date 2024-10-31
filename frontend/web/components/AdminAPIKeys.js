@@ -213,6 +213,7 @@ export class CreateAPIKey extends PureComponent {
                       })
                     }}
                     checked={is_admin}
+                    disabled={!Utils.getPlansPermission('RBAC') && is_admin}
                   />
                 </Row>
                 {!is_admin && (

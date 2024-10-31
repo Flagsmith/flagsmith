@@ -54,7 +54,7 @@ import FlagsmithClient
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
+Flagsmith.shared.apiKey = "<YOUR_ENVIRONMENT_KEY>"
 // The rest of your launch method code
 }
 ```
@@ -293,6 +293,32 @@ If more customisation is required, you can override the cache implemention with 
 Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE_IMPLEMENTATION>
 ```
 
+### Real Time Updates
+
+By default real-time updates are disabled. When enabled the SDK will listen for changes to flags and update the cache as
+needed. If you want to enable real-time updates you can do so by setting the following flag:
+
+```swift
+Flagsmith.shared.enableRealTimeUpdates = false
+```
+
+It's possible to listen to updates in real time from the SDK using the `flagStream` property.
+
+```swift
+func subscribeToFlagUpdates() {
+    Task {
+        for await updatedFlags in flagsmith.flagStream {
+            DispatchQueue.main.async {
+                flags = updatedFlags
+            }
+        }
+    }
+}
+```
+
+You can find an example of this functionality in the Flagsmith iOS Example app, which should work on your own data if
+you replace your Environment Key in the `AppDelegate.swift` file.
+
 ## Override default configuration
 
 By default, the client uses a default configuration. You can override the configuration as follows:
@@ -302,8 +328,9 @@ Override just the default API URI with your own:
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
-Flagsmith.shared.baseURL = "https://<your-self-hosted-api>/api/v1/"
-// The rest of your launch method code
+    Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
+    Flagsmith.shared.baseURL = "https://<your-self-hosted-api>/api/v1/"
+    Flagsmith.eventSourceBaseURL = "https://<your-self-hosted-api>/api/v1/"
+    // The rest of your launch method code
 }
 ```
