@@ -78,8 +78,7 @@ Front End Web App.
 
 Running the API has the following hard dependencies:
 
-- Postgres database - the main data store. We have tested and run against Postgres v11.12 but it can work for other
-  versions too.
+- Postgres database - the main data store. Postgres 12 or later is required.
 
 The API can also optionally make use of the following 3rd party services:
 
@@ -87,8 +86,8 @@ The API can also optionally make use of the following 3rd party services:
 - InfluxDB - for API analytics
 - SendGrid - for transactional email
 - AWS S3 - to store Django Static Assets
-- GitHub - oAuth provider
-- Google - oAuth provider
+- GitHub - OAuth provider
+- Google - OAuth provider
 
 ## Flag Analytics
 
