@@ -33,6 +33,7 @@ from organisations.models import (
     Subscription,
 )
 from organisations.subscriptions.constants import SubscriptionPlanFamily
+from organisations.subscriptions.licensing.models import OrganisationLicence
 from projects.models import Project
 from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
@@ -1663,6 +1664,20 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
 
     mocker.patch("organisations.models.is_saas", return_value=is_saas)
     mocker.patch("organisations.models.is_enterprise", return_value=not is_saas)
+
+    if is_saas is False:
+        licence_content = {
+            "organisation_name": "Test Organisation",
+            "plan_id": "Enterprise",
+            "num_seats": 20,
+            "num_projects": 3,
+            "num_api_calls": 3_000_000,
+        }
+
+        OrganisationLicence.objects.create(
+            organisation=environment_v2_versioning.project.organisation,
+            content=json.dumps(licence_content),
+        )
 
     # Let's set the subscription plan as start up
     subscription.plan = "enterprise"
