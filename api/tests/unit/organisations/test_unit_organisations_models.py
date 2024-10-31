@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from unittest import mock
 
@@ -28,6 +29,7 @@ from organisations.subscriptions.constants import (
 from organisations.subscriptions.exceptions import (
     SubscriptionDoesNotSupportSeatUpgrade,
 )
+from organisations.subscriptions.licensing.models import OrganisationLicence
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 
@@ -346,8 +348,8 @@ def test_organisation_subscription_get_subscription_metadata_returns_free_plan_m
             MAX_SEATS_IN_FREE_PLAN,
             settings.MAX_PROJECTS_IN_FREE_PLAN,
         ),
-        ("anything", "enterprise", 20, 20, None),
-        (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 20, None),
+        ("anything", "enterprise", 20, 20, 10),
+        (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 20, 10),
     ),
 )
 def test_organisation_get_subscription_metadata_for_enterprise_self_hosted_licenses(
@@ -356,7 +358,7 @@ def test_organisation_get_subscription_metadata_for_enterprise_self_hosted_licen
     plan: str,
     max_seats: int,
     expected_seats: int,
-    expected_projects: int | None,
+    expected_projects: int,
     mocker: MockerFixture,
 ) -> None:
     """
@@ -368,6 +370,20 @@ def test_organisation_get_subscription_metadata_for_enterprise_self_hosted_licen
     Subscription.objects.filter(organisation=organisation).update(
         subscription_id=subscription_id, plan=plan, max_seats=max_seats
     )
+
+    licence_content = {
+        "organisation_name": "Test Organisation",
+        "plan_id": "Enterprise",
+        "num_seats": max_seats,
+        "num_projects": expected_projects,
+        "num_api_calls": 3_000_000,
+    }
+
+    OrganisationLicence.objects.create(
+        organisation=organisation,
+        content=json.dumps(licence_content),
+    )
+
     organisation.subscription.refresh_from_db()
     mocker.patch("organisations.models.is_saas", return_value=False)
     mocker.patch("organisations.models.is_enterprise", return_value=True)
