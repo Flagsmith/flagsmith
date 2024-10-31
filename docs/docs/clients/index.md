@@ -47,7 +47,7 @@ Read more about our Client-side SDKs for your language/platform:
 
 ## Server-side SDKs
 
-[Server-side SDKs](/clients/server-side.md) run within _trusted environments_ - typically the server infrastructure that
+[Server-side SDKs](/clients/server-side) run within _trusted environments_ - typically the server infrastructure that
 you have control over. Because of this, you should not share your Server-side Environment keys publicly; they should be
 treated as secret.
 
@@ -82,8 +82,7 @@ the Flag Engine, and the engine runs within your server environment within the F
 ![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
 
 You have to configure the SDK to run in Local Evaluation mode. See the
-[SDK configuration options](server-side.md#configuring-the-sdk) for details on how to do that in your particular
-language.
+[SDK configuration options](server-side#configuring-the-sdk) for details on how to do that in your particular language.
 
 When the SDK is initialised in Local Evaluation mode, it grabs the entire set of details about the Environment from the
 Flagsmith API. For a given Environment, this includes:
