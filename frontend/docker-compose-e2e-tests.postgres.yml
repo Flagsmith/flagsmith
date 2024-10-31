@@ -8,8 +8,8 @@ services:
     extends:
       file: ../docker/common/db/.postgres.yml
       service: postgres
-  volumes:
-    - pgdata:/var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   flagsmith-api:
     extends:
