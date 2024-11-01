@@ -106,7 +106,7 @@ INSTALLED_APPS = [
     "organisations",
     "organisations.invites",
     "organisations.permissions",
-    "organisations.subscriptions.licensing",  # TODO: should this be added conditionally?
+    "organisations.subscriptions.licensing",
     "projects",
     "sales_dashboard",
     "edge_api",
@@ -1272,3 +1272,6 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
 # subscriptions created before this date full audit log and versioning
 # history.
 VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
+
+SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str("SUBSCRIPTION_LICENCE_PUBLIC_KEY", None)
+SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", None)
