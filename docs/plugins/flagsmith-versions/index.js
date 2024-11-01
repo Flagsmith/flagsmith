@@ -28,7 +28,7 @@ const fetchJavaVersions = async () =>
 
 const fetchAndroidVersions = async () => {
     const data = await fetchJSON('https://api.github.com/repos/flagsmith/flagsmith-kotlin-android-client/releases');
-    return data.map((release) => release.tag_name);
+    return data.map((release) => (release.tag_name.startsWith('v') ? release.tag_name.slice(1) : release.tag_name));
 };
 
 const fetchIOSVersions = async () => {
