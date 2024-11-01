@@ -14,5 +14,4 @@ class OrganisationLicence(models.Model):
     content = models.TextField(blank=True)
 
     def get_licence_information(self) -> LicenceInformation:
-        # TODO: decryption
         return LicenceInformation.parse_raw(self.content)
