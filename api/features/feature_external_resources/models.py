@@ -95,7 +95,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                 repository_name=repo,
             )
             if github_repo.tagging_enabled:
-                github_tag = Tag.objects.get(
+                github_tag, _ = Tag.objects.get_or_create(
                     label=tag_by_type_and_state[self.type][state],
                     project=self.feature.project,
                     is_system_tag=True,
