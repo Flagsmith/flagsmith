@@ -2,7 +2,7 @@ services:
   flagsmith-api:
     image: ${API_IMAGE:-ghcr.io/flagsmith/flagsmith-api:dev}
     build:
-      context: ../../
+      context: ../../../
       target: oss-api
     environment:
       E2E_TEST_AUTH_TOKEN: some-token
@@ -23,7 +23,7 @@ services:
   frontend:
     image: ${E2E_IMAGE:-ghcr.io/flagsmith/flagsmith-e2e:dev}
     build:
-      context: ../../
+      context: ../../../
       dockerfile: frontend/Dockerfile.e2e
     environment:
       E2E_TEST_TOKEN_DEV: some-token
