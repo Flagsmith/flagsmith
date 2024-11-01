@@ -1367,12 +1367,12 @@ resolved_reference = "27fbd8b7d889dc1529df08972a8c1bfaba5a7e03"
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "5.2.0"
+version = "5.3.0"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 files = [
-    {file = "flagsmith-flag-engine-5.2.0.tar.gz", hash = "sha256:247da79a9fee55a55de1440fcd112de9b56cef9d5feb8c783319a9e0620e3a72"},
+    {file = "flagsmith-flag-engine-5.3.0.tar.gz", hash = "sha256:87007f6a312cf11b2c201acd54b30f17de8aa039c3c56af431f1ed3c743fa84c"},
 ]
 
 [package.dependencies]
@@ -3988,13 +3988,13 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 
 [[package]]
 name = "werkzeug"
-version = "3.0.3"
+version = "3.0.6"
 description = "The comprehensive WSGI web application library."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "werkzeug-3.0.3-py3-none-any.whl", hash = "sha256:fc9645dc43e03e4d630d23143a04a7f947a9a3b5727cd535fdfe155a17cc48c8"},
-    {file = "werkzeug-3.0.3.tar.gz", hash = "sha256:097e5bfda9f0aba8da6b8545146def481d06aa7d3266e7448e2cccf67dd8bd18"},
+    {file = "werkzeug-3.0.6-py3-none-any.whl", hash = "sha256:1bc0c2310d2fbb07b1dd1105eba2f7af72f322e1e455f2f93c993bee8c8a5f17"},
+    {file = "werkzeug-3.0.6.tar.gz", hash = "sha256:a8dd59d4de28ca70471a34cba79bed5f7ef2e036a76b3ab0835474246eb41f8d"},
 ]
 
 [package.dependencies]
@@ -4186,4 +4186,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "a53b690d04c413759a3a71c59299ae7be999d2a36b97acfe8327037133b8123a"
+content-hash = "7ca18174be8caa1f4fdc5bdee521a4589348290d4534abc60ee63cfca6567c61"

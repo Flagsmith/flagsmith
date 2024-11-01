@@ -596,6 +596,10 @@ class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
         fields = ("id", "feature", "environment")
 
 
+class AssociatedFeaturesQuerySerializer(serializers.Serializer):
+    environment = serializers.IntegerField(required=False)
+
+
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"

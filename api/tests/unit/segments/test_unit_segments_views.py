@@ -19,7 +19,8 @@ from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from features.models import Feature
+from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
@@ -321,6 +322,75 @@ def test_associated_features_returns_all_the_associated_features(
     assert response.json()["results"][0]["id"] == segment_featurestate.id
     assert response.json()["results"][0]["feature"] == feature.id
     assert response.json()["results"][0]["environment"] == environment.id
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_associated_features_returns_only_latest_versions_of_associated_features(
+    project: Project,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+    client: APIClient,
+) -> None:
+    # Given
+    # 2 features
+    feature_one = Feature.objects.create(project=project, name="feature_1")
+    feature_two = Feature.objects.create(project=project, name="feature_2")
+
+    # Now let's create a version for each feature with a segment override
+    for feature in (feature_one, feature_two):
+        version = EnvironmentFeatureVersion.objects.create(
+            feature=feature, environment=environment_v2_versioning
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=version,
+            feature_segment=FeatureSegment.objects.create(
+                segment=segment,
+                environment=environment_v2_versioning,
+                feature=feature,
+                environment_feature_version=version,
+            ),
+        )
+        version.publish()
+
+    # And then let's create a third version for feature_one where we update the segment override
+    feature_1_version_3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature_one, environment=environment_v2_versioning
+    )
+    f1v3_segment_override_feature_state = feature_1_version_3.feature_states.get(
+        feature_segment__segment=segment
+    )
+    f1v3_segment_override_feature_state.enabled = True
+    f1v3_segment_override_feature_state.save()
+    feature_1_version_3.publish()
+
+    # And finally, let's create a third version for feature_two where we remove the segment override
+    feature_2_version_3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature_two, environment=environment_v2_versioning
+    )
+    feature_2_version_3.feature_states.filter(feature_segment__segment=segment).delete()
+    feature_2_version_3.publish()
+
+    url = "%s?environment=%s" % (
+        reverse(
+            "api-v1:projects:project-segments-associated-features",
+            args=[project.id, segment.id],
+        ),
+        environment_v2_versioning.id,
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.json().get("count") == 1
+    assert response.json()["results"][0]["id"] == f1v3_segment_override_feature_state.id
+    assert response.json()["results"][0]["feature"] == feature_one.id
+    assert response.json()["results"][0]["environment"] == environment_v2_versioning.id
 
 
 @pytest.mark.parametrize(

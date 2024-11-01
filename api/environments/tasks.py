@@ -8,6 +8,7 @@ from environments.models import (
     environment_v2_wrapper,
     environment_wrapper,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from sse import (
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
@@ -51,3 +52,43 @@ def delete_environment_from_dynamo(api_key: str, environment_id: str):
 @register_task_handler()
 def delete_environment(environment_id: int) -> None:
     Environment.objects.get(id=environment_id).delete()
+
+
+@register_task_handler()
+def clone_environment_feature_states(
+    source_environment_id: int, clone_environment_id: int
+) -> None:
+    source = Environment.objects.get(id=source_environment_id)
+    clone = Environment.objects.get(id=clone_environment_id)
+
+    # Since identities are closely tied to the environment
+    # it does not make much sense to clone them, hence
+    # only clone feature states without identities
+    queryset = source.feature_states.filter(identity=None)
+
+    if source.use_v2_feature_versioning:
+        # Grab the latest feature versions from the source environment.
+        latest_environment_feature_versions = (
+            EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
+                environment_id=source.id
+            )
+        )
+
+        # Create a dictionary holding the environment feature versions (unique per feature)
+        # to use in the cloned environment.
+        clone_environment_feature_versions = {
+            efv.feature_id: efv.clone_to_environment(environment=clone)
+            for efv in latest_environment_feature_versions
+        }
+
+        for feature_state in queryset.filter(
+            environment_feature_version__in=latest_environment_feature_versions
+        ):
+            clone_efv = clone_environment_feature_versions[feature_state.feature_id]
+            feature_state.clone(clone, environment_feature_version=clone_efv)
+    else:
+        for feature_state in queryset:
+            feature_state.clone(clone, live_from=feature_state.live_from)
+
+    clone.is_creating = False
+    clone.save()
