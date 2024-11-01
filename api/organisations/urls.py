@@ -153,9 +153,6 @@ urlpatterns = [
         OrganisationAPIUsageNotificationView.as_view(),
         name="organisation-api-usage-notification",
     ),
-    # TODO:
-    #  - is this the best url?
-    #  - do we need to conditionally add this URL, or just raise exception if not valid in the view?
     path(
         "<int:organisation_id>/licence",
         create_or_update_licence,
