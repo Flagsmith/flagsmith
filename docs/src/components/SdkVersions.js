@@ -4,7 +4,9 @@ import { maxSatisfying } from 'semver';
 
 const Version = ({ sdk, spec = '*', options = {} }) => {
     const {
-        siteConfig: { CI },
+        siteConfig: {
+            customFields: { CI },
+        },
     } = useDocusaurusContext();
     const versions = usePluginData('flagsmith-versions')[sdk];
     if (!versions) throw new Error('unknown sdk: ' + sdk);
