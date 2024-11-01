@@ -415,8 +415,6 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        # TODO: this feels odd returning to the organisation that we likely just came
-        #  from to get to this method.
         if is_enterprise() and hasattr(self.organisation, "licence"):
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
