@@ -26,11 +26,10 @@ const fetchJavaVersions = async () =>
         artifactId: 'flagsmith-java-client',
     });
 
-const fetchAndroidVersions = async () =>
-    fetchMavenVersions({
-        groupId: 'com.flagsmith',
-        artifactId: 'flagsmith-kotlin-android-client',
-    });
+const fetchAndroidVersions = async () => {
+    const data = await fetchJSON('https://api.github.com/repos/flagsmith/flagsmith-kotlin-android-client/releases');
+    return data.map((release) => release.tag_name);
+};
 
 const fetchIOSVersions = async () => {
     // retrieved from https://cocoapods.org/pods/FlagsmithClient
