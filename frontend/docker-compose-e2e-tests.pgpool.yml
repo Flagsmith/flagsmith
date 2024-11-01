@@ -3,6 +3,8 @@
 # docker-compose -f docker-compose-e2e-tests.pgpool.yml build
 # docker-compose -f docker-compose-e2e-tests.pgpool.yml up
 
+name: flagsmith-e2e-tests-pgpool
+
 services:
   pg-0:
     extends:

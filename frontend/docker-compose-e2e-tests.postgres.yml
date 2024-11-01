@@ -3,6 +3,8 @@
 # docker-compose -f docker-compose-e2e-tests.postgres.yml build
 # docker-compose -f docker-compose-e2e-tests.postgres.yml up
 
+name: flagsmith-e2e-tests-postgres
+
 services:
   postgres:
     extends:
