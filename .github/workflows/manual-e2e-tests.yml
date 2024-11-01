@@ -1,9 +1,6 @@
 name: 'Manual E2E tests'
 
 on:
-  push:
-    branches:
-      - ci/pgpool-test-environment
   workflow_dispatch:
     inputs:
       e2e-image:
