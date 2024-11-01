@@ -46,6 +46,7 @@ from organisations.subscriptions.constants import (
     SUBSCRIPTION_BILLING_STATUS_ACTIVE,
     SUBSCRIPTION_BILLING_STATUS_DUNNING,
 )
+from organisations.subscriptions.licensing.helpers import sign_licence
 from organisations.subscriptions.licensing.models import OrganisationLicence
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
@@ -1983,21 +1984,101 @@ def test_create_or_update_licence(
 
     licence_data = {
         "organisation_name": "Test Organisation",
-        "plan": "Enterprise",
+        "plan_id": "Enterprise",
         "num_seats": 20,
         "num_projects": 3,
     }
 
+    licence_json = json.dumps(licence_data)
     licence = SimpleUploadedFile(
         name="licence.txt",
-        content=json.dumps(licence_data).encode(),
+        content=licence_json.encode(),
         content_type="text/plain",
     )
 
+    licence_signature = SimpleUploadedFile(
+        name="licence_signature.txt",
+        content=sign_licence(licence_json).encode(),
+        content_type="text/plain",
+    )
     # When
-    response = admin_client.put(url, data={"licence": licence})
+    response = admin_client.put(
+        url,
+        data={
+            "licence": licence,
+            "licence_signature": licence_signature,
+        },
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
     assert OrganisationLicence.objects.filter(organisation=organisation).exists()
+    organisation_licence = OrganisationLicence.objects.get(organisation=organisation)
+    licence = organisation_licence.get_licence_information()
+    assert licence.num_seats == 20
+    assert licence.num_projects == 3
+
+
+def test_create_or_update_licence_missing_licence(
+    organisation: Organisation, admin_client: APIClient
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:create-or-update-licence", args=[organisation.id]
+    )
+
+    licence_signature = SimpleUploadedFile(
+        name="licence_signature.txt",
+        content=sign_licence("{}").encode(),
+        content_type="text/plain",
+    )
+    # When
+    response = admin_client.put(
+        url,
+        data={
+            "licence_signature": licence_signature,
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == ["No licence file provided."]
+
+    assert not OrganisationLicence.objects.filter(organisation=organisation).exists()
+
+
+def test_create_or_update_licence_missing_licence_signature(
+    organisation: Organisation, admin_client: APIClient
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:create-or-update-licence", args=[organisation.id]
+    )
+
+    licence_data = {
+        "organisation_name": "Test Organisation",
+        "plan_id": "Enterprise",
+        "num_seats": 20,
+        "num_projects": 3,
+    }
+
+    licence_json = json.dumps(licence_data)
+    licence = SimpleUploadedFile(
+        name="licence.txt",
+        content=licence_json.encode(),
+        content_type="text/plain",
+    )
+
+    # When
+    response = admin_client.put(
+        url,
+        data={
+            "licence": licence,
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == ["No licence signature file provided."]
+    assert not OrganisationLicence.objects.filter(organisation=organisation).exists()
