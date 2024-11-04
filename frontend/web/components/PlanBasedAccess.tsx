@@ -63,9 +63,9 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Role-based access control',
   },
   'REALTIME': {
-    description: 'Add real time detection of feature flag changes in your SDK.',
+    description: 'Add real-time detection of feature flag changes in your SDK.',
     docs: 'https://docs.flagsmith.com/advanced-use/real-time-flags',
-    title: 'Realtime Updates',
+    title: 'Real-time flag updates',
   },
   'SAML': {
     description: 'Configure 2FA, SAML, Okta, ADFS and LDAP.',
