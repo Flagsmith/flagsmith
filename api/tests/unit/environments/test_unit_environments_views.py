@@ -952,18 +952,14 @@ def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     assert Trait.objects.filter(identity=identity, trait_key=trait_to_persist).exists()
 
 
-@pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
-)
 def test_user_can_list_environment_permission(
-    client: APIClient, environment: Environment
+    admin_client_new: APIClient, environment: Environment
 ) -> None:
     # Given
     url = reverse("api-v1:environments:environment-permissions")
 
     # When
-    response = client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
