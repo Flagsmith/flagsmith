@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.151.0](https://github.com/Flagsmith/flagsmith/compare/v2.150.0...v2.151.0) (2024-11-04)
+
+
+### Features
+
+* async the logic for cloning feature states into a cloned environment ([#4005](https://github.com/Flagsmith/flagsmith/issues/4005)) ([02f5f71](https://github.com/Flagsmith/flagsmith/commit/02f5f71f82bae1ec3536cb522fc0b684a2c27605))
+* **ci:** add command to rollback migrations ([#4768](https://github.com/Flagsmith/flagsmith/issues/4768)) ([483cc87](https://github.com/Flagsmith/flagsmith/commit/483cc87fde03d2da465f9ec799bdbc746533f8d2))
+* **export:** Add support for edge identities data ([#4654](https://github.com/Flagsmith/flagsmith/issues/4654)) ([f72c764](https://github.com/Flagsmith/flagsmith/commit/f72c764e59d44f3c50bafd0cd2aef2dcf51af07b))
+* **permissions:** update endpoints to expose tag-supported perms ([#4788](https://github.com/Flagsmith/flagsmith/issues/4788)) ([43e68c1](https://github.com/Flagsmith/flagsmith/commit/43e68c1b67eeb5587440cbe5017035b60d897212))
+
+
+### Bug Fixes
+
+* Extend user first name length to 150 characters ([#4797](https://github.com/Flagsmith/flagsmith/issues/4797)) ([364c565](https://github.com/Flagsmith/flagsmith/commit/364c565fed5ebdb0da86927a25d56631502b3792))
+* hide view features from associated segment overrides ([#4786](https://github.com/Flagsmith/flagsmith/issues/4786)) ([49ff569](https://github.com/Flagsmith/flagsmith/commit/49ff569cabac19f70c0688f1fe58c3511ce8801b))
+* Set tag to get or create ([#4790](https://github.com/Flagsmith/flagsmith/issues/4790)) ([fedd296](https://github.com/Flagsmith/flagsmith/commit/fedd296a5cc8eb07aa1db4a2cbb5eca8f124c098))
+
 ## [2.150.0](https://github.com/Flagsmith/flagsmith/compare/v2.149.0...v2.150.0) (2024-10-30)
 
 
