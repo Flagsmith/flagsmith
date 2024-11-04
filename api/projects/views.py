@@ -34,6 +34,7 @@ from projects.models import (
     UserProjectPermission,
 )
 from projects.permissions import (
+    TAG_SUPPORTED_PERMISSIONS,
     VIEW_PROJECT,
     IsProjectAdmin,
     ProjectPermissions,
@@ -126,13 +127,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Response(EnvironmentSerializerLight(environments, many=True).data)
 
     @swagger_auto_schema(
-        responses={200: PermissionModelSerializer}, request_body=no_body
+        responses={200: PermissionModelSerializer(many=True)}, request_body=no_body
     )
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):
         return Response(
             PermissionModelSerializer(
-                instance=ProjectPermissionModel.objects.all(), many=True
+                instance=ProjectPermissionModel.objects.all(),
+                many=True,
+                context={"tag_supported_permissions": TAG_SUPPORTED_PERMISSIONS},
             ).data
         )
 

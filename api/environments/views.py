@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from environments.permissions.constants import TAG_SUPPORTED_PERMISSIONS
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -189,12 +190,14 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(responses={200: PermissionModelSerializer})
+    @swagger_auto_schema(responses={200: PermissionModelSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):
         return Response(
             PermissionModelSerializer(
-                instance=EnvironmentPermissionModel.objects.all(), many=True
+                instance=EnvironmentPermissionModel.objects.all(),
+                many=True,
+                context={"tag_supported_permissions": TAG_SUPPORTED_PERMISSIONS},
             ).data
         )
 

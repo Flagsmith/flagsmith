@@ -18,7 +18,10 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from environments.permissions.constants import VIEW_ENVIRONMENT
+from environments.permissions.constants import (
+    TAG_SUPPORTED_PERMISSIONS,
+    VIEW_ENVIRONMENT,
+)
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
@@ -961,6 +964,13 @@ def test_user_can_list_environment_permission(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 7
+
+    returned_supported_permissions = [
+        permission["key"]
+        for permission in response.json()
+        if permission["supports_tag"] is True
+    ]
+    assert set(returned_supported_permissions) == set(TAG_SUPPORTED_PERMISSIONS)
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(

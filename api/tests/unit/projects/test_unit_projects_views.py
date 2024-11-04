@@ -29,6 +29,7 @@ from projects.models import (
 from projects.permissions import (
     CREATE_ENVIRONMENT,
     CREATE_FEATURE,
+    TAG_SUPPORTED_PERMISSIONS,
     VIEW_PROJECT,
 )
 from segments.models import Segment
@@ -142,7 +143,7 @@ def test_can_update_project(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_can_list_project_permission(client, project):
+def test_can_list_project_permission(client: APIClient, project: Project) -> None:
     # Given
     url = reverse("api-v1:projects:project-permissions")
 
@@ -154,6 +155,13 @@ def test_can_list_project_permission(client, project):
     assert (
         len(response.json()) == 7
     )  # hard code how many permissions we expect there to be
+
+    returned_supported_permissions = [
+        permission["key"]
+        for permission in response.json()
+        if permission["supports_tag"] is True
+    ]
+    assert set(returned_supported_permissions) == set(TAG_SUPPORTED_PERMISSIONS)
 
 
 def test_my_permissions_for_a_project_return_400_with_master_api_key(
