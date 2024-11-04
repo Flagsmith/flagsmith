@@ -2082,3 +2082,61 @@ def test_create_or_update_licence_missing_licence_signature(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == ["No licence signature file provided."]
     assert not OrganisationLicence.objects.filter(organisation=organisation).exists()
+
+
+def test_create_or_update_licence_bad_signature(
+    organisation: Organisation,
+    admin_client: APIClient,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:create-or-update-licence", args=[organisation.id]
+    )
+
+    licence_data = {
+        "organisation_name": "Test Organisation",
+        "plan_id": "Enterprise",
+        "num_seats": 20,
+        "num_projects": 3,
+    }
+
+    licence_json = json.dumps(licence_data)
+    licence = SimpleUploadedFile(
+        name="licence.txt",
+        content=licence_json.encode(),
+        content_type="text/plain",
+    )
+    licence_signature = SimpleUploadedFile(
+        name="licence_signature.txt",
+        content=sign_licence(licence_json).encode(),
+        content_type="text/plain",
+    )
+
+    # Change the public key information so the signature fails
+    settings.SUBSCRIPTION_LICENCE_PUBLIC_KEY = """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtKOkPiegKyWdsUcmUOXv
+bnunQeG4B+yOw2GG/bfXiG+ec9L2WVlSy5iK/p4AnwsSHj6gnJawHp/YK6wkYcgF
+w/l2WI0T9MNsJagN+uxyV27YtWnV50JzOEFyEzSYUZxqKokVce70PypbqfsjASTl
+OCJJErEGgIKdHk3T5RpQPigHwh9/a7KiBzV7ktan7KSNkcmketd9Db0eg+KdO1yZ
+bNQGDrPMaYXVpfG+Ic2yU7wtCKkYb1/s+JBMkI6a3XH8DhuKq6rSG+GrJttYpjrR
+PAhkbx1Jf3FftZf4YL9X3W3ghczPPatemfylyAFiTGH5FrjlhlRJn+8owfWjK3zN
+3wIDAQAC
+-----END PUBLIC KEY-----
+    """
+
+    # When
+    response = admin_client.put(
+        url,
+        data={
+            "licence": licence,
+            "licence_signature": licence_signature,
+        },
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == ["Signature failed for licence."]
+
+    assert not OrganisationLicence.objects.filter(organisation=organisation).exists()
