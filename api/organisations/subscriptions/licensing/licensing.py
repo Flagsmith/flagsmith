@@ -12,7 +12,7 @@ class LicenceInformation(BaseModel):
     expiry_date: typing.Optional[datetime] = None
 
     num_seats: int
-    num_projects: int  # TODO: what about Flagsmith on Flagsmith project?
+    num_projects: int
     num_api_calls: typing.Optional[int] = (
         None  # required to support private cloud installs
     )
