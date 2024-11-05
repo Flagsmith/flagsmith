@@ -26,7 +26,6 @@ const renderIcon = (
   tagLabel: string,
   isPermanent: boolean,
 ) => {
-  console.log(tagType, tagLabel)
   switch (tagType) {
     case 'STALE':
       return (
