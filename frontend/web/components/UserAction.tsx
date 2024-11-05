@@ -111,7 +111,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
               }}
             >
               <Icon name='edit' width={18} fill='#9DA4AE' />
-              <span>Edit Permissions</span>
+              <span>Manage user</span>
             </div>
           )}
 
