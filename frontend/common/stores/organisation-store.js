@@ -140,7 +140,9 @@ const controller = {
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                getSubscriptionMetadata(getStore(), { id }),
+                getSubscriptionMetadata(getStore(), { id }).then(
+                  (res) => res.data,
+                ),
               ]
             : [],
         ),
