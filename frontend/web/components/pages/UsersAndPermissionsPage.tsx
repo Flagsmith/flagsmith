@@ -106,16 +106,18 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     openModal(
       `${user.first_name} ${user.last_name}`,
       <div>
-        <Tabs uncontrolled>
-          <TabItem tabLabel='Permissions'>
-            <div className='pt-4'>
-              <PermissionsTabs
-                uncontrolled
-                user={user}
-                orgId={organisationId}
-              />
-            </div>
-          </TabItem>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          {user.role !== 'ADMIN' && (
+            <TabItem tabLabel='Permissions'>
+              <div className='pt-4'>
+                <PermissionsTabs
+                  uncontrolled
+                  user={user}
+                  orgId={organisationId}
+                />
+              </div>
+            </TabItem>
+          )}
           <TabItem tabLabel='Groups'>
             <div className='pt-4'>
               <UsersGroups user={user} orgId={organisationId} />
@@ -479,17 +481,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               )
                             }
                             const onEditClick = () => {
-                              if (role !== 'ADMIN') {
-                                editUserPermissions(user, organisation.id)
-                              }
+                              editUserPermissions(user, organisation.id)
                             }
                             return (
                               <Row
                                 data-test={`user-${i}`}
                                 space
-                                className={classNames('list-item', {
-                                  clickable: role !== 'ADMIN',
-                                })}
+                                className={classNames('list-item clickable')}
                                 onClick={onEditClick}
                                 key={id}
                               >
@@ -575,7 +573,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onRemove={onRemoveClick}
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
-                                    canEdit={role !== 'ADMIN'}
+                                    canEdit={AccountStore.isAdmin()}
                                   />
                                 </div>
                               </Row>
