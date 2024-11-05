@@ -1640,8 +1640,7 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
 
 
 @pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
-@pytest.mark.parametrize("is_saas", (True, False))
-def test_list_versions_returns_all_versions_for_enterprise_plan(
+def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1650,10 +1649,10 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
     with_project_permissions: WithProjectPermissionsCallable,
     subscription: Subscription,
     freezer: FrozenDateTimeFactory,
-    is_saas: bool,
     mocker: MockerFixture,
 ) -> None:
     # Given
+    is_saas = True
     with_environment_permissions([VIEW_ENVIRONMENT])
     with_project_permissions([VIEW_PROJECT])
 
@@ -1665,29 +1664,95 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
     mocker.patch("organisations.models.is_saas", return_value=is_saas)
     mocker.patch("organisations.models.is_enterprise", return_value=not is_saas)
 
-    if is_saas is False:
-        licence_content = {
-            "organisation_name": "Test Organisation",
-            "plan_id": "Enterprise",
-            "num_seats": 20,
-            "num_projects": 3,
-            "num_api_calls": 3_000_000,
-        }
-
-        OrganisationLicence.objects.create(
-            organisation=environment_v2_versioning.project.organisation,
-            content=json.dumps(licence_content),
-        )
-
     # Let's set the subscription plan as start up
     subscription.plan = "enterprise"
     subscription.save()
 
-    if is_saas:
-        OrganisationSubscriptionInformationCache.objects.update_or_create(
-            organisation=subscription.organisation,
-            defaults={"feature_history_visibility_days": None},
+    OrganisationSubscriptionInformationCache.objects.update_or_create(
+        organisation=subscription.organisation,
+        defaults={"feature_history_visibility_days": None},
+    )
+
+    initial_version = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # First, let's create some versions at the frozen time which is
+    # outside the limit allowed when using the scale up plan (but
+    # shouldn't matter to the enterprise plan.
+    all_versions = []
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
         )
+        version.publish(staff_user)
+        all_versions.append(version)
+
+    # Now let's jump to the current time and create some versions which
+    # are inside the limit when using the startup plan
+    freezer.move_to(now)
+
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        all_versions.append(version)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 7  # we created 6, plus the original version
+    assert {v["uuid"] for v in response_json["results"]} == {
+        str(v.uuid) for v in [initial_version, *all_versions]
+    }
+
+
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
+def test_list_versions_returns_all_versions_for_enterprise_plan_when_not_saas(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    freezer: FrozenDateTimeFactory,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+    is_saas = False
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    mocker.patch("organisations.models.is_saas", return_value=is_saas)
+    mocker.patch("organisations.models.is_enterprise", return_value=not is_saas)
+
+    licence_content = {
+        "organisation_name": "Test Organisation",
+        "plan_id": "Enterprise",
+        "num_seats": 20,
+        "num_projects": 3,
+        "num_api_calls": 3_000_000,
+    }
+
+    OrganisationLicence.objects.create(
+        organisation=environment_v2_versioning.project.organisation,
+        content=json.dumps(licence_content),
+    )
+
+    # Let's set the subscription plan as start up
+    subscription.plan = "enterprise"
+    subscription.save()
 
     initial_version = EnvironmentFeatureVersion.objects.get(
         feature=feature, environment=environment_v2_versioning
