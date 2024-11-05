@@ -9,8 +9,15 @@ from django.conf import settings
 logger: logging.Logger = logging.getLogger(name=__name__)
 
 
+class PrivateKeyMissingError(RuntimeError):
+    pass
+
+
 def sign_licence(licence: str) -> str:
     message = licence.encode("utf-8")
+
+    if not settings.SUBSCRIPTION_LICENCE_PRIVATE_KEY:
+        raise PrivateKeyMissingError("Private key is missing")
 
     # Load the private key from PEM
     private_key = serialization.load_pem_private_key(
