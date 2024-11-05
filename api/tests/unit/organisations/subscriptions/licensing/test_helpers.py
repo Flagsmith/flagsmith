@@ -1,8 +1,10 @@
 import json
 
+import pytest
 from pytest_django.fixtures import SettingsWrapper
 
 from organisations.subscriptions.licensing.helpers import (
+    PrivateKeyMissingError,
     create_private_key,
     create_public_key,
     sign_licence,
@@ -64,6 +66,27 @@ PAhkbx1Jf3FftZf4YL9X3W3ghczPPatemfylyAFiTGH5FrjlhlRJn+8owfWjK3zN
 
     # Then
     assert signature_verification is False
+
+
+def test_sign_licence_with_missing_private_key(settings: SettingsWrapper) -> None:
+    # Given
+    settings.SUBSCRIPTION_LICENCE_PRIVATE_KEY = None
+    licence_content = {
+        "organisation_name": "Test Organisation",
+        "plan_id": "Enterprise",
+        "num_seats": 20,
+        "num_projects": 3,
+        "num_api_calls": 3_000_000,
+    }
+
+    licence = json.dumps(licence_content)
+
+    # When
+    with pytest.raises(PrivateKeyMissingError) as exception:
+        sign_licence(licence)
+
+    # Then
+    assert str(exception.value) == "Private key is missing"
 
 
 def test_create_public_key() -> None:
