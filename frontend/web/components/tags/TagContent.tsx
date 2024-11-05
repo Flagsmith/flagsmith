@@ -20,7 +20,13 @@ function escapeHTML(unsafe: string) {
   )
 }
 
-const renderIcon = (tagType: string, tagColor: string, tagLabel: string) => {
+const renderIcon = (
+  tagType: string,
+  tagColor: string,
+  tagLabel: string,
+  isPermanent: boolean,
+) => {
+  console.log(tagType, tagLabel)
   switch (tagType) {
     case 'STALE':
       return (
@@ -48,13 +54,13 @@ const renderIcon = (tagType: string, tagColor: string, tagLabel: string) => {
           return
       }
     default:
-      return (
+      return isPermanent ? (
         <IonIcon
           className='ms-1'
           icon={lockClosed}
           color={color(tagColor).darken(0.1).string()}
         />
-      )
+      ) : null
   }
 }
 
@@ -125,7 +131,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
           })}
         >
           {tagLabel}
-          {renderIcon(tag.type!, tag.color!, tag.label!)}
+          {renderIcon(tag.type!, tag.color!, tag.label!, tag.is_permanent)}
         </span>
       }
     >
