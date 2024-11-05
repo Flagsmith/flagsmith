@@ -36,7 +36,6 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
-from users.utils.mailer_lite import MailerLite
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -47,7 +46,6 @@ if typing.TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
-mailer_lite = MailerLite()
 
 
 class SignUpType(models.TextChoices):
@@ -101,7 +99,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
-    first_name = models.CharField("first name", max_length=30)
+    first_name = models.CharField("first name", max_length=150)
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
@@ -124,10 +122,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     def __str__(self):
         return self.email
-
-    @hook(AFTER_CREATE)
-    def subscribe_to_mailing_list(self):
-        mailer_lite.subscribe(self)
 
     @hook(AFTER_CREATE)
     def schedule_hubspot_tracking(self) -> None:
@@ -223,9 +217,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):
         )
 
     def add_organisation(self, organisation, role=OrganisationRole.USER):
-        if organisation.is_paid:
-            mailer_lite.subscribe(self)
-
         UserOrganisation.objects.create(
             user=self, organisation=organisation, role=role.name
         )

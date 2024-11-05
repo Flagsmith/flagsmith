@@ -190,7 +190,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
         subscription_details = organisation.subscription.get_subscription_metadata()
-        serializer = self.get_serializer(instance=subscription_details)
+        serializer = self.get_serializer(
+            instance=subscription_details,
+            context={"subscription": organisation.subscription},
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")

@@ -31,7 +31,7 @@ type AuditLogType = {
   }
 }
 
-const widths = [210, 210, 130]
+const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
@@ -160,7 +160,12 @@ const AuditLog: FC<AuditLogType> = (props) => {
           className='table-column fs-small ln-sm'
           style={{ width: widths[1] }}
         >
-          {author?.first_name} {author?.last_name}
+          <div>
+            {author?.first_name} {author?.last_name}
+          </div>
+          <div className="list-item-subtitle">
+            {author?.email}
+          </div>
         </div>
         {environment?.name ? (
           <Link

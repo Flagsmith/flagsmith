@@ -65,9 +65,7 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.[MYDOMAIN]
-     paths:
-      - /
+   - flagsmith.[MYDOMAIN]
 ```
 
 Then, once any out-of-cluster DNS or CDN changes have been applied, access `https://flagsmith.[MYDOMAIN]` in a browser.
@@ -85,9 +83,8 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.[MYDOMAIN]
-     paths:
-      - /
+   - flagsmith.[MYDOMAIN]
+
  api:
   enabled: true
   hosts:
@@ -95,6 +92,8 @@ ingress:
      paths:
       - /api/
       - /health/
+      - /admin/
+      - /static/
 
 frontend:
  extraEnv:
@@ -116,9 +115,7 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.local
-     paths:
-      - /
+   - flagsmith.local
 ```
 
 and apply. This will create two ingress resources.
@@ -457,8 +454,7 @@ The following table lists the configurable parameters of the chart and their def
 | `ingress.frontend.enabled`                         |                                                                           | `false`                        |
 | `ingress.frontend.ingressClassName`                |                                                                           |                                |
 | `ingress.frontend.annotations`                     |                                                                           | `{}`                           |
-| `ingress.frontend.hosts[].host`                    |                                                                           | `chart-example.local`          |
-| `ingress.frontend.hosts[].paths`                   |                                                                           | `[]`                           |
+| `ingress.frontend.hosts`                           | List of hostnames for frontend ingress                                    | `[chart-example.local]`        |
 | `ingress.frontend.tls`                             |                                                                           | `[]`                           |
 | `ingress.api.enabled`                              |                                                                           | `false`                        |
 | `ingress.api.ingressClassName`                     |                                                                           |                                |

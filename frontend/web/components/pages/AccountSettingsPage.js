@@ -188,48 +188,50 @@ class TheComponent extends Component {
                     />
                     <div className='col-md-6'>
                       <form className='mb-0' onSubmit={this.save}>
-                        <div>
-                          <InputGroup
-                            className='mt-2'
-                            title='Email Address'
-                            data-test='firstName'
-                            inputProps={{
-                              className: 'full-width',
-                              name: 'groupName',
-                              readOnly: true,
-                            }}
-                            value={email}
-                            onChange={(e) =>
-                              this.setState({
-                                first_name: Utils.safeParseEventValue(e),
-                              })
-                            }
-                            type='text'
-                            name='Email Address'
-                          />
-                          <div className='text-right mt-5'>
-                            <Button
-                              onClick={() =>
-                                openModal(
-                                  'Change Email Address',
-                                  <ChangeEmailAddress
-                                    onComplete={() => {
-                                      closeModal()
-                                      AppActions.logout()
-                                    }}
-                                  />,
-                                  'p-0',
-                                )
+                        {AccountStore.model.auth_type === 'EMAIL' && (
+                          <div>
+                            <InputGroup
+                              className='mt-2'
+                              title='Email Address'
+                              data-test='firstName'
+                              inputProps={{
+                                className: 'full-width',
+                                name: 'groupName',
+                                readOnly: true,
+                              }}
+                              value={email}
+                              onChange={(e) =>
+                                this.setState({
+                                  first_name: Utils.safeParseEventValue(e),
+                                })
                               }
-                              id='change-email-button'
-                              data-test='change-email-button'
-                              type='button'
-                              class='input-group-addon'
-                            >
-                              Change Email Address
-                            </Button>
+                              type='text'
+                              name='Email Address'
+                            />
+                            <div className='text-right mt-5'>
+                              <Button
+                                onClick={() =>
+                                  openModal(
+                                    'Change Email Address',
+                                    <ChangeEmailAddress
+                                      onComplete={() => {
+                                        closeModal()
+                                        AppActions.logout()
+                                      }}
+                                    />,
+                                    'p-0',
+                                  )
+                                }
+                                id='change-email-button'
+                                data-test='change-email-button'
+                                type='button'
+                                class='input-group-addon'
+                              >
+                                Change Email Address
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                         <InputGroup
                           className='mt-2 mb-4'
                           title='First Name'

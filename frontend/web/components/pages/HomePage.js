@@ -14,7 +14,12 @@ import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
-
+import freeEmailDomains from 'free-email-domains'
+import InfoMessage from 'components/InfoMessage'
+const freeEmail = (value) => {
+  const domain = value?.split('@')?.[1]
+  return freeEmailDomains.includes(domain)
+}
 const HomePage = class extends React.Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -41,8 +46,8 @@ const HomePage = class extends React.Component {
       allRequirementsMet: false,
     }
 
-    this.handlePasswordChange = this.handlePasswordChange.bind(this);
-    this.handleRequirementsMet = this.handleRequirementsMet.bind(this);
+    this.handlePasswordChange = this.handlePasswordChange.bind(this)
+    this.handleRequirementsMet = this.handleRequirementsMet.bind(this)
   }
 
   addAlbacross() {
@@ -141,11 +146,11 @@ const HomePage = class extends React.Component {
   }
 
   handlePasswordChange(e) {
-    this.setState({ password: e.target.value });
+    this.setState({ password: e.target.value })
   }
 
   handleRequirementsMet(allRequirementsMet) {
-    this.setState({ allRequirementsMet });
+    this.setState({ allRequirementsMet })
   }
 
   showForgotPassword = (e) => {
@@ -608,6 +613,13 @@ const HomePage = class extends React.Component {
                                       name='email'
                                       id='email'
                                     />
+                                    {freeEmail(email) && (
+                                      <InfoMessage>
+                                        Signing up with a work email makes it
+                                        easier for co-workers to join your
+                                        Flagsmith organisation.
+                                      </InfoMessage>
+                                    )}
                                     <InputGroup
                                       title='Password'
                                       data-test='password'
@@ -628,14 +640,20 @@ const HomePage = class extends React.Component {
                                       id='password'
                                     />
                                     <PasswordRequirements
-                                      password={this.state.password} 
-                                      onRequirementsMet={this.handleRequirementsMet} 
+                                      password={this.state.password}
+                                      onRequirementsMet={
+                                        this.handleRequirementsMet
+                                      }
                                     />
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
                                         name='signup-btn'
-                                        disabled={isLoading || isSaving || !this.state.allRequirementsMet}
+                                        disabled={
+                                          isLoading ||
+                                          isSaving ||
+                                          !this.state.allRequirementsMet
+                                        }
                                         className='px-4 mt-3 full-width'
                                         type='submit'
                                       >
