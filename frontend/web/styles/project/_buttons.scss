@@ -98,7 +98,7 @@ button.btn {
     }
   }
   &-tertiary {
-    color: $primary900;
+    color: $primary900 !important;
     background-color: $btn-tertiary-bg;
     box-shadow: 0 10px 20px rgba(247, 213, 110, .2);
     &:hover,
