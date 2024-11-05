@@ -458,6 +458,7 @@ export type InviteLink = {
 
 export type SubscriptionMeta = {
   max_seats: number | null
+  audit_log_visibility_days: number | null
   feature_history_visibility_days: number | null
   max_api_calls: number | null
   max_projects: number | null

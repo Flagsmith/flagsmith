@@ -83,9 +83,13 @@ export const featureDescriptions: Record<PaidFeature, any> = {
       'Add automatic stale flag detection, prompting your team to clean up old flags.',
     title: 'Stale Flag Detection',
   },
-  'VERSIONING': {
+  'VERSIONING_DAYS': {
     description: 'Access all of your feature versions.',
     title: 'Version History',
+  },
+  'AUDIT_DAYS': {
+    description: 'Access all of your audit logs.',
+    title: 'Audit Log History',
   },
 }
 

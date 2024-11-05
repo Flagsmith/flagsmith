@@ -1,18 +1,18 @@
-import React, { FC, useState } from 'react';
-import ConfigProvider from 'common/providers/ConfigProvider';
-import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion';
-import { useGetUsersQuery } from 'common/services/useUser';
-import AccountStore from 'common/stores/account-store';
-import { FeatureVersion as TFeatureVersion } from 'common/types/responses';
-import Button from './base/forms/Button';
-import FeatureVersion from './FeatureVersion';
-import InlineModal from './InlineModal';
-import TableFilterItem from './tables/TableFilterItem';
-import moment from 'moment';
-import DateList from './DateList';
-import classNames from 'classnames';
-import PlanBasedBanner from 'components/PlanBasedAccess';
-import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata';
+import React, { FC, useState } from 'react'
+import ConfigProvider from 'common/providers/ConfigProvider'
+import { useGetFeatureVersionsQuery } from 'common/services/useFeatureVersion'
+import { useGetUsersQuery } from 'common/services/useUser'
+import AccountStore from 'common/stores/account-store'
+import { FeatureVersion as TFeatureVersion } from 'common/types/responses'
+import Button from './base/forms/Button'
+import FeatureVersion from './FeatureVersion'
+import InlineModal from './InlineModal'
+import TableFilterItem from './tables/TableFilterItem'
+import moment from 'moment'
+import DateList from './DateList'
+import classNames from 'classnames'
+import PlanBasedBanner from './PlanBasedAccess'
+import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -29,10 +29,10 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   projectId,
 }) => {
   const [open, setOpen] = useState(false)
-    const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
-        id: AccountStore.getOrganisation()?.id,
-    })
-    const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
+    id: AccountStore.getOrganisation()?.id,
+  })
+  const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
 
   // @ts-ignore
   const { data: users } = useGetUsersQuery({
@@ -60,20 +60,20 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
         segment overrides.
       </div>
       <div className='mt-4'>
-          {!!versionLimitDays && (
-              <PlanBasedBanner
-                  className='mb-4'
-                  force
-                  feature={'VERSIONING'}
-                  title={
-                      <div>
-                          Unlock your feature's entire history. Currently limited to{' '}
-                          <strong>{versionLimitDays} days</strong>.
-                      </div>
-                  }
-                  theme={'page'}
-              />
-          )}
+        {!!versionLimitDays && (
+          <PlanBasedBanner
+            className='mb-4'
+            force
+            feature={'VERSIONING_DAYS'}
+            title={
+              <div>
+                Unlock your feature's entire history. Currently limited to{' '}
+                <strong>{versionLimitDays} days</strong>.
+              </div>
+            }
+            theme={'page'}
+          />
+        )}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
@@ -85,14 +85,12 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-                <Row
-                    className={'list-item py-2 mh-auto'}
+              <Row className={'list-item py-2 mh-auto'}>
+                <div
+                  className={classNames('flex-fill', {
+                    'overflow-hidden': !open,
+                  })}
                 >
-                    <div
-                        className={classNames('flex-fill', {
-                            'overflow-hidden': !open,
-                        })}
-                    >
                   <div className='flex-row flex-fill'>
                     <div
                       className='table-column flex-fill'
