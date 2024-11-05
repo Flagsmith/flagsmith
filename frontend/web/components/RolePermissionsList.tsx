@@ -3,6 +3,7 @@ import React, {
   forwardRef,
   Ref,
   useImperativeHandle,
+  useMemo,
   useState,
 } from 'react'
 import Icon from './Icon'
@@ -16,6 +17,8 @@ import { Role, User, UserGroup, UserGroupSummary } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'
 import TagBasedPermissions from './TagBasedPermissions'
+import { useGetTagsQuery } from 'common/services/useTag'
+import classNames from 'classnames'
 
 type NameAndId = {
   name: string
@@ -30,6 +33,7 @@ type RolePermissionsListProps = {
   level: PermissionLevel
   filter: string
   orgId?: string
+  projectId: string
   user?: User
   group?: UserGroupSummary
 }
@@ -82,7 +86,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
 }
 
 const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
-  ({ filter, group, level, mainItems, orgId, role, user }, ref) => {
+  ({ filter, group, level, mainItems, orgId, projectId, role, user }, ref) => {
     const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
 
     const mainItemsFiltered =
@@ -171,7 +175,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
           </div>
         )}
         items={mainItemsFiltered || []}
-        className='no-pad'
+        className='no-pad overflow-visible'
       />
     )
   },

@@ -26,8 +26,6 @@ const TagBasedPermissions: FC<TaggedPermissionsType> = ({
     { skip: !projectId || !role },
   )
   const showTagBasedPermissions = projectId && tag_based_permissions && !!role
-  const [tagBasedPermissionsEnabled, setTagBasedPermissionsEnabled] =
-    useState<boolean>(!!role?.tags?.length)
   const matchingTags = useMemo(() => {
     if (!role?.tags || !tags?.length) return []
     return role.tags.filter((id) => tags?.find((tag) => tag.id === id))
@@ -37,6 +35,9 @@ const TagBasedPermissions: FC<TaggedPermissionsType> = ({
     <>
       {role?.tag_based && (
         <div className='mb-2'>
+          <div className='mt-2 text-body fw-bold'>
+            Enable permissions for the following tags:
+          </div>
           <AddEditTags
             projectId={projectId}
             value={matchingTags}

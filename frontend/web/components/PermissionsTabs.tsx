@@ -86,7 +86,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         theme='pill m-0'
         isRoles={true}
       >
-        {role?.tag_based !== false && (
+        {role?.tag_based !== true && (
           <TabItem
             tabLabel={
               <Row className='justify-content-center'>Organisation</Row>
@@ -155,8 +155,9 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               value={project}
             />
           </div>
-
-          <TagBasedPermissions projectId={project} role={role} />
+          <div className='my-4'>
+            <TagBasedPermissions projectId={project} role={role} />
+          </div>
           <div className='mt-2'>
             {environments.length > 0 && (
               <RolePermissionsList

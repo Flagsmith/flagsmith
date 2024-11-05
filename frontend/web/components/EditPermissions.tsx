@@ -1,4 +1,11 @@
-import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
+import React, {
+  FC,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { find } from 'lodash'
 import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -61,6 +68,7 @@ import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
 import PlanBasedAccess from './PlanBasedAccess'
+import { useGetTagsQuery } from 'common/services/useTag'
 
 const Project = require('common/project')
 
@@ -165,6 +173,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         : props.level === 'environment'
         ? props.parentId
         : undefined
+
+    const { data: tags, isLoading: tagsLoading } = useGetTagsQuery(
+      { projectId: `${projectId}` },
+      { skip: !role?.tag_based || !projectId },
+    )
+    const hasTags = useMemo(() => {
+      return tags?.find((v) => role?.tags.includes(v.id))
+    }, [tags, role?.tags])
 
     const [permissionWasCreated, setPermissionWasCreated] =
       useState<boolean>(false)
@@ -673,8 +689,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     }
 
     const rolesAdded = getRoles(roles, rolesSelected || [])
-
     const isAdmin = admin()
+    const levelUpperCase = level.toUpperCase()
+
+    if (role?.tag_based && !hasTags) {
+      return (
+        <div className='text-center py-2'>
+          Please add at least one tag to set permissions
+        </div>
+      )
+    }
 
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
@@ -684,7 +708,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       <PlanBasedAccess className='px-4 pt-4' feature={'RBAC'} theme={'page'}>
         <div>
           <div className={classNames('modal-body', className || 'px-4 mt-4')}>
-            {level !== 'organisation' && (
+            {level !== 'organisation' && !role?.tag_based && (
               <div className='mb-2'>
                 <Row className={role ? 'py-2' : ''}>
                   <Flex>
@@ -710,9 +734,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               }}
               title='Permissions'
               className='no-pad mb-2'
-              items={permissions}
+              items={permissions?.filter((item) => {
+                if (item.key === `VIEW_${levelUpperCase}`) return true
+                return !(role?.tag_based && !item.supports_tag)
+              })}
               renderRow={(p: AvailablePermission) => {
-                const levelUpperCase = level.toUpperCase()
                 const disabled =
                   level !== 'organisation' &&
                   p.key !== `VIEW_${levelUpperCase}` &&

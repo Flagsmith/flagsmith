@@ -48,6 +48,7 @@ import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
+import Switch from 'components/Switch'
 
 type TabRef = {
   onClosing: () => Promise<void>
@@ -87,6 +88,8 @@ const CreateRole: FC<CreateRoleType> = ({
       user: number
     }[]
   >([])
+
+  const [tagBased, setTagBased] = useState(!!role?.tag_based)
   const [groupSelected, setGroupSelected] = useState<
     {
       group: number
@@ -309,6 +312,7 @@ const CreateRole: FC<CreateRoleType> = ({
     )
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
+        setTagBased(roleData.tag_based)
         setRoleName(roleData.name)
         setRoleDesc(roleData.description || '')
       }
@@ -331,7 +335,7 @@ const CreateRole: FC<CreateRoleType> = ({
       if (!organisationId) return
       if (isEdit && role) {
         editRole({
-          body: { description: roleDesc, name: roleName },
+          body: { description: roleDesc, name: roleName, tag_based: tagBased },
           organisation_id: role.organisation,
           role_id: role.id,
         })
@@ -340,6 +344,7 @@ const CreateRole: FC<CreateRoleType> = ({
           description: roleDesc,
           name: roleName,
           organisation_id: organisationId,
+          tag_based: tagBased,
         })
       }
     }
@@ -364,6 +369,27 @@ const CreateRole: FC<CreateRoleType> = ({
           }}
           id='roleName'
           placeholder='E.g. Viewers'
+        />
+        <InputGroup
+          title='Use tag-based permissions'
+          tooltip={
+            'Tag-based roles will grant permissions to a selected set of feature tags'
+          }
+          value={tagBased}
+          component={
+            <Switch
+              disabled={!!role}
+              checked={tagBased}
+              onChange={setTagBased}
+            />
+          }
+          unsaved={isEdit && roleDescChanged}
+          onChange={(event: InputEvent) => {
+            setRoleDescChanged(true)
+            setRoleDesc(Utils.safeParseEventValue(event))
+          }}
+          id='description'
+          placeholder='E.g. Some role description'
         />
         <InputGroup
           title='Description'
