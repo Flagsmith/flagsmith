@@ -10,8 +10,9 @@ import InlineModal from './InlineModal'
 import TableFilterItem from './tables/TableFilterItem'
 import moment from 'moment'
 import DateList from './DateList'
-import PlanBasedBanner from './PlanBasedAccess'
 import classNames from 'classnames'
+import PlanBasedBanner from './PlanBasedAccess'
+import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -28,6 +29,12 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   projectId,
 }) => {
   const [open, setOpen] = useState(false)
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
+    id: AccountStore.getOrganisation()?.id,
+  })
+  const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
+
+  // @ts-ignore
   const { data: users } = useGetUsersQuery({
     organisationId: AccountStore.getOrganisation().id,
   })
@@ -45,7 +52,6 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
   const live = data?.results?.[0]
   const [compareToLive, setCompareToLive] = useState(false)
   const [diff, setDiff] = useState<null | string>(null)
-  const versionLimit = 3
   return (
     <div>
       <h5>Change History</h5>
@@ -54,30 +60,32 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
         segment overrides.
       </div>
       <div className='mt-4'>
-        {/*{!!versionLimit && (*/}
-        {/*  <PlanBasedBanner*/}
-        {/*    className='mb-4'*/}
-        {/*    force*/}
-        {/*    feature={'VERSIONING'}*/}
-        {/*    theme={'page'}*/}
-        {/*  />*/}
-        {/*)}*/}
+        {!!versionLimitDays && (
+          <PlanBasedBanner
+            className='mb-4'
+            force
+            feature={'VERSIONING_DAYS'}
+            title={
+              <div>
+                Unlock your feature's entire history. Currently limited to{' '}
+                <strong>{versionLimitDays} days</strong>.
+              </div>
+            }
+            theme={'page'}
+          />
+        )}
         <DateList<TFeatureVersion>
           items={data}
           isLoading={isLoading}
           nextPage={() => setPage(page + 1)}
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
+          dateProperty={'live_from'}
           renderRow={(v: TFeatureVersion, i: number) => {
-            const isOverLimit = false
             const user = users?.find((user) => v.published_by === user.id)
 
             return (
-              <Row
-                className={classNames('list-item py-2 mh-auto', {
-                  'blur no-pointer': isOverLimit,
-                })}
-              >
+              <Row className={'list-item py-2 mh-auto'}>
                 <div
                   className={classNames('flex-fill', {
                     'overflow-hidden': !open,
