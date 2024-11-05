@@ -104,7 +104,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
   const editUserPermissions = (user: User, organisationId: number) => {
     openModal(
-      `${user.first_name} ${user.last_name}`,
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
       <div>
         <Tabs uncontrolled hideNavOnSingleTab>
           {user.role !== 'ADMIN' && (
