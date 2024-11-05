@@ -35,54 +35,7 @@ const TagBasedPermissions: FC<TaggedPermissionsType> = ({
   if (!showTagBasedPermissions) return null
   return (
     <>
-      {!!showTagBasedPermissions && !!role && (
-        <div className='mt-4 mb-2'>
-          <div className='d-flex align-items-center gap-2 fw-semibold'>
-            <Switch
-              disabled={!!matchingTags?.length || roleUpdating}
-              checked={tagBasedPermissionsEnabled}
-              onChange={(v: boolean) => {
-                if (!v) {
-                  setTagBasedPermissionsEnabled(false)
-                  updateRole({
-                    body: {
-                      ...role,
-                      tags: role.tags.filter((v) => !matchingTags.includes(v)),
-                    },
-                    organisation_id: role.organisation,
-                    role_id: role.id,
-                  })
-                } else {
-                  setTagBasedPermissionsEnabled(true)
-                }
-              }}
-            />
-            <Tooltip
-              tooltipClassName='fw-normal'
-              title={'Restrict permissions to tagged features'}
-            >
-              {`This will restrict <strong>Delete Feature</strong>,
-        <strong>Update Feature State</strong>,
-        <strong>Segment Overrides</strong> and <strong>Change Requests</strong>
-        to only features with the assigned tags.
-        <br /> <br />
-        <strong>
-          This will apply across all environments within the project where the
-          environment admin permission is not enabled.
-        </strong>`}
-            </Tooltip>
-            <a
-              target='_blank'
-              href='https://docs.flagsmith.com/system-administration/rbac#tags'
-              className='fw-normal text-primary'
-              rel='noreferrer'
-            >
-              View Docs
-            </a>
-          </div>
-        </div>
-      )}
-      {tagBasedPermissionsEnabled && role && projectId && (
+      {role?.tag_based && (
         <div className='mb-2'>
           <AddEditTags
             projectId={projectId}

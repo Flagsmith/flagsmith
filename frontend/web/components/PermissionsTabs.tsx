@@ -86,19 +86,23 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         theme='pill m-0'
         isRoles={true}
       >
-        <TabItem
-          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
-        >
-          <EditPermissionsModal
-            id={orgId}
-            group={group}
-            isGroup={!!group}
-            user={user}
-            className='mt-2'
-            level={'organisation'}
-            role={role}
-          />
-        </TabItem>
+        {role?.tag_based !== false && (
+          <TabItem
+            tabLabel={
+              <Row className='justify-content-center'>Organisation</Row>
+            }
+          >
+            <EditPermissionsModal
+              id={orgId}
+              group={group}
+              isGroup={!!group}
+              user={user}
+              className='mt-2'
+              level={'organisation'}
+              role={role}
+            />
+          </TabItem>
+        )}
         <TabItem
           tabLabel={<Row className='justify-content-center'>Project</Row>}
         >

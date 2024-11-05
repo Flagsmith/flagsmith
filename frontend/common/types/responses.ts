@@ -298,6 +298,7 @@ export type Identity = {
 export type AvailablePermission = {
   key: string
   description: string
+  supports_tag: boolean
 }
 
 export type APIKey = {
@@ -479,6 +480,7 @@ export type Role = {
   name: string
   description?: string
   organisation: number
+  tag_based: boolean
 }
 
 export type ChangeSet = {
