@@ -4,7 +4,10 @@ from typing import Any
 
 from django.core.management import BaseCommand
 
-from organisations.subscriptions.licensing.helpers import sign_licence
+from organisations.subscriptions.licensing.helpers import (
+    PrivateKeyMissingError,
+    sign_licence,
+)
 
 
 class Command(BaseCommand):
@@ -53,9 +56,11 @@ class Command(BaseCommand):
         num_api_calls: int,
         **options: Any,
     ) -> None:
-        print(
-            "Don't forget to increment the project count by 1 to "
-            "account for Flagsmith on Flagsmith projects."
+        self.stdout.write(
+            self.style.NOTICE(
+                "Don't forget to increment the project count by 1 to "
+                "account for Flagsmith on Flagsmith projects."
+            )
         )
         licence_content = {
             "organisation_name": organisation_name,
@@ -66,9 +71,17 @@ class Command(BaseCommand):
         }
 
         licence = json.dumps(licence_content)
-        licence_signature = sign_licence(licence)
 
-        print("Here is the licence:")
-        print(licence)
-        print("Here is the signature:")
-        print(licence_signature)
+        try:
+            licence_signature = sign_licence(licence)
+        except PrivateKeyMissingError:
+            self.stdout.write(
+                self.style.NOTICE(
+                    "Missing settings.SUBSCRIPTION_LICENCE_PRIVATE_KEY to sign licence. It can be found in Bitwarden."
+                )
+            )
+
+        self.stdout.write(self.style.SUCCESS("Here is the licence:"))
+        self.stdout.write(licence)
+        self.stdout.write(self.style.SUCCESS("Here is the signature:"))
+        self.stdout.write(licence_signature)

@@ -7,4 +7,4 @@ from organisations.subscriptions.licensing.helpers import create_private_key
 
 class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
-        print(create_private_key())
+        self.stdout.write(create_private_key())

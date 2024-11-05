@@ -7,4 +7,4 @@ from organisations.subscriptions.licensing.helpers import create_public_key
 
 class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
-        print(create_public_key())
+        self.stdout.write(create_public_key())
