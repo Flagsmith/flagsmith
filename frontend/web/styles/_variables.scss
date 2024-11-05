@@ -13,10 +13,10 @@ $black-alpha-16: rgba(0, 0, 0, 0.16);
 $black-alpha-32: rgba(0, 0, 0, 0.32);
 
 // Backgrounds
-$bg-dark500: #101628;
-$bg-dark400: #15192b;
-$bg-dark300: #161d30;
-$bg-dark200: #202839;
+$bg-dark500: #181822;
+$bg-dark400: #1a1a26;
+$bg-dark300: #1e1e2c;
+$bg-dark200: #212130;
 $bg-dark100: #2d3443;
 $bg-light100: #ffffff;
 $bg-light200: #fafafb;
@@ -43,7 +43,7 @@ $primary400: #906af6;
 $primary600: #4e25db;
 $primary700: #3919b7;
 $primary800: #2a2054;
-$primary900: #1E0D26;
+$primary900: #231b47;
 
 $danger: #ef4d56;
 $danger400: #f57c78;
@@ -375,7 +375,7 @@ $theme-colors: (
 }
 
 .dark .bg-faint {
-  background-color: $bg-dark300;
+  background-color: $bg-dark500;
 }
 
 $butter-bar-bg: $secondary-alfa-16;
