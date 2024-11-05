@@ -7,7 +7,7 @@ defer cancel()
 // Initialise the Flagsmith client
 client := flagsmith.NewClient('${envId}',${
   Constants.isCustomFlagsmithUrl &&
-  `\nflagsmith.WithBaseURL("${Project.flagsmithClientAPI}"),\n`
+  `\nflagsmith.WithBaseURL("${Constants.getFlagsmithSDKUrl()}"),\n`
 }flagsmith.WithContext(ctx))
 
 // The method below triggers a network request

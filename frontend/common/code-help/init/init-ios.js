@@ -10,7 +10,7 @@ func application(_ application: UIApplication,
 
   Flagsmith.shared.apiKey = "${envId}"${
   Constants.isCustomFlagsmithUrl &&
-  `\n  Flagsmith.shared.baseURL = "${Project.flagsmithClientAPI}"\n`
+  `\n  Flagsmith.shared.baseURL = "${Constants.getFlagsmithSDKUrl()}"\n`
 }
   // Check for a feature
   Flagsmith.shared

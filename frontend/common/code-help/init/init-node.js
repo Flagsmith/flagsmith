@@ -8,7 +8,7 @@ module.exports = (
 
 const ${LIB_NAME} = new Flagsmith({${
   Constants.isCustomFlagsmithUrl &&
-  `\n    apiUrl: '${Project.flagsmithClientAPI}',`
+  `\n    apiUrl: '${Constants.getFlagsmithSDKUrl()}',`
 }
     environmentKey: '${envId}'
 });

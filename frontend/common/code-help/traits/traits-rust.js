@@ -7,7 +7,7 @@ use flagsmith_flag_engine::identities::Trait;
 
 let options = FlagsmithOptions {${
   Constants.isCustomFlagsmithUrl &&
-  `api_url: "${Project.flagsmithClientAPI}".to_string(),\n`
+  `api_url: "${Constants.getFlagsmithSDKUrl()}".to_string(),\n`
 }..Default::default()};
 let flagsmith = Flagsmith::new(
     "${envId}".to_string(),

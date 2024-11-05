@@ -6,7 +6,7 @@ module.exports = (
 ) => `final flagsmithClient = FlagsmithClient(
         apiKey: '${envId}',${
   Constants.isCustomFlagsmithUrl
-    ? `\n        baseURI: '${Project.flagsmithClientAPI}',`
+    ? `\n        baseURI: '${Constants.getFlagsmithSDKUrl()}',`
     : ''
 }
         config: config, 
@@ -19,7 +19,7 @@ module.exports = (
 //final flagsmithClient = await FlagsmithClient.init(
 //        apiKey: '${envId}',${
   Constants.isCustomFlagsmithUrl
-    ? `\n//        baseURI: '${Project.flagsmithClientAPI}',`
+    ? `\n//        baseURI: '${Constants.getFlagsmithSDKUrl()}',`
     : ''
 }
 //        config: config, 

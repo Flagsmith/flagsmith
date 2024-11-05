@@ -9,7 +9,7 @@ module.exports = (
     .setApiKey("${envId}")${
   Constants.isCustomFlagsmithUrl &&
   `\n    .withConfiguration(FlagsmithConfig.builder()
-        .baseUri("${Project.flagsmithClientAPI}")
+        .baseUri("${Constants.getFlagsmithSDKUrl()}")
         .build())`
 }
     .build();

@@ -9,7 +9,7 @@ module.exports = (
 $flagsmith = Flagsmith::Client.new(
     environment_key="${envId}"${
   Constants.isCustomFlagsmithUrl &&
-  `,\n    api_url="${Project.flagsmithClientAPI}"\n`
+  `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
 })
 
 // Identify the user

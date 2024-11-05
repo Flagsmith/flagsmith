@@ -13,7 +13,7 @@ export default function App({ Component, pageProps, flagsmithState } {
       options={{
         environmentID: "${envId}",${
   Constants.isCustomFlagsmithUrl
-    ? `\n        api: "${Project.flagsmithClientAPI}",`
+    ? `\n        api: "${Constants.getFlagsmithSDKUrl()}",`
     : ''
 }
       }}
@@ -27,7 +27,7 @@ App.getInitialProps = async () => {
   await flagsmith.init({ // fetches flags on the server and passes them to the App 
       environmentID: "${envId}",${
   Constants.isCustomFlagsmithUrl
-    ? `\n      api: "${Project.flagsmithClientAPI}",`
+    ? `\n      api: "${Constants.getFlagsmithSDKUrl()}",`
     : ''
 }
   });

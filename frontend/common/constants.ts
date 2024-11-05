@@ -441,6 +441,8 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  getFlagsmithSDKUrl: () =>
+    Utils.isSaas() ? Project.flagsmithClientAPI : Project.api,
   getUpgradeUrl: (feature?: string) => {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'

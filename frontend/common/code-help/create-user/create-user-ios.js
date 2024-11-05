@@ -12,7 +12,7 @@ func application(_ application: UIApplication,
 
   Flagsmith.shared.apiKey = "${envId}"${
   Constants.isCustomFlagsmithUrl &&
-  `\n  Flagsmith.shared.baseURL = "${Project.flagsmithClientAPI}"\n`
+  `\n  Flagsmith.shared.baseURL = "${Constants.getFlagsmithSDKUrl()}"\n`
 }
 
   // This will create a user in the dashboard if they don't already exist

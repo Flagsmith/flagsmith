@@ -7,7 +7,7 @@ module.exports = (
 ) => `use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('${envId}'${
-  Constants.isCustomFlagsmithUrl && `,\n  '${Project.flagsmithClientAPI}'\n`
+  Constants.isCustomFlagsmithUrl && `,\n  '${Constants.getFlagsmithSDKUrl()}'\n`
 });
 
 // Identify the user
