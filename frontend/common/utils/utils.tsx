@@ -128,6 +128,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       />
     ) : null
   },
+
   escapeHtml(html: string) {
     const text = document.createTextNode(html)
     const p = document.createElement('p')
@@ -173,6 +174,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
+
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
   },
@@ -185,6 +187,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'CREATE_PROJECT'
   },
+  showOnboarding() {return true},
   getCreateProjectPermissionDescription(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
       return 'Administrator'
