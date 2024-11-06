@@ -628,7 +628,10 @@ export type Res = {
   }
   identity: { id: string } //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
-  permission: Record<string, boolean>
+  permission: Record<string, boolean> & {
+    ADMIN: boolean
+    tag_based_permissions?: { key: string; tags: number[] }[]
+  }
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
