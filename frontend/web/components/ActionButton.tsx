@@ -1,17 +1,23 @@
 import { FC } from 'react'
 import classNames from 'classnames'
 import Icon from './Icon'
-import Button from './base/forms/Button'
+import Button, { ButtonType } from './base/forms/Button'
 
 type ActionButtonType = {
   onClick: () => void
   'data-test'?: string
+  size?: ButtonType['size']
 }
 
-const ActionButton: FC<ActionButtonType> = ({ onClick, ...rest }) => {
+const ActionButton: FC<ActionButtonType> = ({
+  onClick,
+  size = 'xSmall',
+  ...rest
+}) => {
   return (
     <Button
-      className={classNames('btn btn-with-icon btn-xs')}
+      size={size}
+      className={classNames('btn btn-with-icon')}
       data-test={rest['data-test']}
       onClick={(e) => {
         e.stopPropagation()

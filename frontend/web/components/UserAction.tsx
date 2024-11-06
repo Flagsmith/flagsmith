@@ -97,7 +97,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   return (
     <div>
       <div ref={btnRef}>
-        <ActionButton onClick={() => setIsOpen(true)} />
+        <ActionButton size='small' onClick={() => setIsOpen(true)} />
       </div>
 
       {isOpen && (
@@ -111,7 +111,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
               }}
             >
               <Icon name='edit' width={18} fill='#9DA4AE' />
-              <span>Edit Permissions</span>
+              <span>Manage user</span>
             </div>
           )}
 
