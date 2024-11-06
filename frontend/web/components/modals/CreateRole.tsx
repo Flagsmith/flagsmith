@@ -59,6 +59,7 @@ type CreateRoleType = {
   isEdit?: boolean
   onComplete: () => void
   organisationId?: number
+  tagBased: boolean
   role?: number
   users?: User[]
 }
@@ -68,6 +69,7 @@ const CreateRole: FC<CreateRoleType> = ({
   onComplete,
   organisationId,
   role: role_id,
+  tagBased,
   users,
 }) => {
   const { data: role, isLoading } = useGetRoleQuery(
@@ -89,7 +91,6 @@ const CreateRole: FC<CreateRoleType> = ({
     }[]
   >([])
 
-  const [tagBased, setTagBased] = useState(!!role?.tag_based)
   const [groupSelected, setGroupSelected] = useState<
     {
       group: number
@@ -312,7 +313,6 @@ const CreateRole: FC<CreateRoleType> = ({
     )
     useEffect(() => {
       if (!isLoading && isEdit && roleData) {
-        setTagBased(roleData.tag_based)
         setRoleName(roleData.name)
         setRoleDesc(roleData.description || '')
       }
@@ -369,27 +369,6 @@ const CreateRole: FC<CreateRoleType> = ({
           }}
           id='roleName'
           placeholder='E.g. Viewers'
-        />
-        <InputGroup
-          title='Use tag-based permissions'
-          tooltip={
-            'Tag-based roles will grant permissions to a selected set of feature tags'
-          }
-          value={tagBased}
-          component={
-            <Switch
-              disabled={!!role}
-              checked={tagBased}
-              onChange={setTagBased}
-            />
-          }
-          unsaved={isEdit && roleDescChanged}
-          onChange={(event: InputEvent) => {
-            setRoleDescChanged(true)
-            setRoleDesc(Utils.safeParseEventValue(event))
-          }}
-          id='description'
-          placeholder='E.g. Some role description'
         />
         <InputGroup
           title='Description'

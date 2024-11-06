@@ -36,7 +36,7 @@ const TagBasedPermissions: FC<TaggedPermissionsType> = ({
       {role?.tag_based && (
         <div className='mb-2'>
           <div className='mt-2 text-body fw-bold'>
-            Enable permissions for the following tags:
+            Permissions will only apply for features with the following tags:
           </div>
           <AddEditTags
             projectId={projectId}
