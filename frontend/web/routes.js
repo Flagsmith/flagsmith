@@ -5,7 +5,7 @@ import App from './components/App' // App Wrapper
 import HomePage from './components/pages/HomePage'
 import Maintenance from './components/Maintenance'
 import CreateOrganisationPage from './components/pages/CreateOrganisationPage'
-import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'
+import CreateEnvironmentPage from 'components/pages/CreateEnvironmentPage'
 import UsersPage from './components/pages/UsersPage'
 import UserPage from './components/pages/UserPage'
 import UserIdPage from './components/pages/UserIdPage'
