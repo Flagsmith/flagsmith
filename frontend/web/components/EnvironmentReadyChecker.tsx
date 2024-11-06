@@ -17,7 +17,7 @@ const EnvironmentReadyChecker: FC<EnvironmentReadyCheckerType> = ({
     {
       id: match.params.environmentId,
     },
-    { pollingInterval: 3000, skip: !match.params.environmentId },
+    { pollingInterval: 1000, skip: !match.params.environmentId },
   )
   if (!match?.params?.environmentId) {
     return children
