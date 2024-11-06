@@ -721,7 +721,7 @@ const CreateFlag = class extends Component {
       </>
     )
 
-    const Value = (error, projectAdmin, createFeature) => {
+    const Value = (error, projectAdmin, createFeature, hideValue) => {
       const { featureError, featureWarning } = this.parseError(error)
       return (
         <>
@@ -809,41 +809,43 @@ const CreateFlag = class extends Component {
               />
             </FormGroup>
           )}
-          <div
-            className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
-              identity ? 'mx-3' : ''
-            }`}
-          >
-            <Feature
-              readOnly={noPermissions}
-              multivariate_options={multivariate_options}
-              environmentVariations={environmentVariations}
-              isEdit={isEdit}
-              error={error?.initial_value?.[0]}
-              canCreateFeature={createFeature}
-              identity={identity}
-              removeVariation={this.removeVariation}
-              updateVariation={this.updateVariation}
-              addVariation={this.addVariation}
-              checked={default_enabled}
-              value={initial_value}
-              identityVariations={this.state.identityVariations}
-              onChangeIdentityVariations={(identityVariations) => {
-                this.setState({ identityVariations, valueChanged: true })
-              }}
-              environmentFlag={this.props.environmentFlag}
-              projectFlag={projectFlag}
-              onValueChange={(e) => {
-                const initial_value = Utils.getTypedValue(
-                  Utils.safeParseEventValue(e),
-                )
-                this.setState({ initial_value, valueChanged: true })
-              }}
-              onCheckedChange={(default_enabled) =>
-                this.setState({ default_enabled })
-              }
-            />
-          </div>
+          {!hideValue && (
+            <div
+              className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
+                identity ? 'mx-3' : ''
+              }`}
+            >
+              <Feature
+                readOnly={noPermissions}
+                multivariate_options={multivariate_options}
+                environmentVariations={environmentVariations}
+                isEdit={isEdit}
+                error={error?.initial_value?.[0]}
+                canCreateFeature={createFeature}
+                identity={identity}
+                removeVariation={this.removeVariation}
+                updateVariation={this.updateVariation}
+                addVariation={this.addVariation}
+                checked={default_enabled}
+                value={initial_value}
+                identityVariations={this.state.identityVariations}
+                onChangeIdentityVariations={(identityVariations) => {
+                  this.setState({ identityVariations, valueChanged: true })
+                }}
+                environmentFlag={this.props.environmentFlag}
+                projectFlag={projectFlag}
+                onValueChange={(e) => {
+                  const initial_value = Utils.getTypedValue(
+                    Utils.safeParseEventValue(e),
+                  )
+                  this.setState({ initial_value, valueChanged: true })
+                }}
+                onCheckedChange={(default_enabled) =>
+                  this.setState({ default_enabled })
+                }
+              />
+            </div>
+          )}
           {!isEdit &&
             !identity &&
             Settings(projectAdmin, createFeature, featureContentType)}
@@ -1897,7 +1899,12 @@ const CreateFlag = class extends Component {
                                     'features',
                                     featureLimitAlert.percentage,
                                   )}
-                                {Value(error, projectAdmin, createFeature)}
+                                {Value(
+                                  error,
+                                  projectAdmin,
+                                  createFeature,
+                                  project.prevent_flag_defaults && !identity,
+                                )}
                                 <ModalHR
                                   className={`my-4 ${identity ? 'mx-3' : ''}`}
                                 />
