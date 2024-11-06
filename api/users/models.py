@@ -99,7 +99,11 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
-    first_name = models.CharField("first name", max_length=150)
+    first_name = models.CharField(
+        "first name",
+        max_length=150,
+        db_column="first_name_v2",
+    )
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
