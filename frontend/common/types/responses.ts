@@ -76,6 +76,7 @@ export type Segment = {
 export type Environment = {
   id: number
   name: string
+  is_creating: boolean
   api_key: string
   description?: string
   banner_text?: string
