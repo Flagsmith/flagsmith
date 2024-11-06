@@ -4,6 +4,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 
 const base = require('../webpack.config');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 module.exports = {
     ...base,
@@ -15,6 +16,7 @@ module.exports = {
         './web/main.js',
     ],
     devServer: {
+        hot: true,
         outputPath: __dirname,
     },
     output: {
@@ -26,6 +28,7 @@ module.exports = {
 
     plugins: require('./plugins').concat([
         new webpack.HotModuleReplacementPlugin(),
+        new ReactRefreshWebpackPlugin(),
         new webpack.DefinePlugin({
             __DEV__: true,
             whitelabel: JSON.stringify(process.env.WHITELABEL),
