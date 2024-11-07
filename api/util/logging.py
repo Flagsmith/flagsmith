@@ -6,7 +6,7 @@ from typing import Any
 
 from django.conf import settings
 from gunicorn.config import Config
-from gunicorn.glogging import Logger as GunicornLogger
+from gunicorn.instrument.statsd import Statsd as GunicornLogger
 
 
 class JsonFormatter(logging.Formatter):
