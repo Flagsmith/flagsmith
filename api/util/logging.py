@@ -36,21 +36,22 @@ class JsonFormatter(logging.Formatter):
 class GunicornAccessLogJsonFormatter(JsonFormatter):
     def get_json_record(self, record: logging.LogRecord) -> dict[str, Any]:
         response_time = datetime.strptime(record.args["t"], "[%d/%b/%Y:%H:%M:%S %z]")
-        url = record.args["U"]
-        if record.args["q"]:
-            url += f"?{record.args['q']}"
+        args = record.args
+        url = args["U"]
+        if q := args["q"]:
+            url += f"?{q}"
 
         return {
             **super().get_json_record(record),
             "time": response_time.isoformat(),
             "path": url,
-            "remote_ip": record.args["h"],
-            "method": record.args["m"],
-            "status": str(record.args["s"]),
-            "user_agent": record.args["a"],
-            "referer": record.args["f"],
-            "duration_in_ms": record.args["M"],
-            "pid": record.args["p"],
+            "remote_ip": args["h"],
+            "method": args["m"],
+            "status": str(args["s"]),
+            "user_agent": args["a"],
+            "referer": args["f"],
+            "duration_in_ms": args["M"],
+            "pid": args["p"],
         }
 
 
