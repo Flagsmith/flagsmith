@@ -23,6 +23,7 @@ import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import Format from './format'
 import { defaultFlags } from 'common/stores/default-flags'
+import Color from 'color'
 
 const semver = require('semver')
 
@@ -258,9 +259,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithJSONValue(key: string, defaultValue: any) {
     return flagsmith.getValue(key, { fallback: defaultValue, json: true })
   },
+  colour(c: string, fallback = '#6837FC'): InstanceType<typeof Color> {
+    let res = Color(fallback)
+    try {
+      res = Color(c || fallback)
+    } catch (_) {}
+    return res
+  },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -275,7 +284,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
-
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -323,7 +331,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getPermissionList(
     isAdmin: boolean,
     permissions: string[] | undefined | null,
@@ -411,6 +418,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
+
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
