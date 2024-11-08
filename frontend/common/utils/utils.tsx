@@ -111,10 +111,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   colour(c: string, fallback = '#6837FC'): InstanceType<typeof Color> {
-    let res = Color(fallback)
+    let res: Color
     try {
-      res = Color(c || fallback)
-    } catch (_) {}
+      res = Color(c)
+    } catch (_) {
+      res = Color(fallback)
+    }
     return res
   },
 
