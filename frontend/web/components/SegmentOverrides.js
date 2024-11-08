@@ -143,7 +143,7 @@ const SegmentOverrideInner = class Override extends React.Component {
               <Row className='fs-small'>
                 <SegmentsIcon
                   className='opacity-50'
-                  fill='#1a2634'
+                  fill='#9DA4AE'
                   width={16}
                   height={16}
                 />
