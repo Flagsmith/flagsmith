@@ -110,6 +110,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
+  colour(c: string, fallback = '#6837FC'): InstanceType<typeof Color> {
+    let res = Color(fallback)
+    try {
+      res = Color(c || fallback)
+    } catch (_) {}
+    return res
+  },
+
   copyFeatureName: (featureName: string) => {
     navigator.clipboard.writeText(featureName)
     toast('Copied to clipboard')
@@ -259,13 +267,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithJSONValue(key: string, defaultValue: any) {
     return flagsmith.getValue(key, { fallback: defaultValue, json: true })
   },
-  colour(c: string, fallback = '#6837FC'): InstanceType<typeof Color> {
-    let res = Color(fallback)
-    try {
-      res = Color(c || fallback)
-    } catch (_) {}
-    return res
-  },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
@@ -284,6 +285,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
+
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -331,6 +333,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+
   getPermissionList(
     isAdmin: boolean,
     permissions: string[] | undefined | null,
@@ -418,7 +421,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
