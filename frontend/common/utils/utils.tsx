@@ -160,7 +160,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return featureState.string_value
     }
   },
-
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
