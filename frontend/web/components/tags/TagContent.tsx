@@ -81,7 +81,7 @@ const getTooltip = (tag: TTag | undefined) => {
         <span
           style='background-color: ${tagColor.fade(0.92)};
           border: 1px solid ${tagColor.fade(0.76)};
-          color: ${tagColor};'
+          color: ${tagColor.darken(0.1)};'
           class="chip d-inline-block chip--xs me-1${
             disabled ? ' disabled' : ''
           }"
