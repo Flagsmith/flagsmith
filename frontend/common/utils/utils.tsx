@@ -122,7 +122,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     navigator.clipboard.writeText(featureName)
     toast('Copied to clipboard')
   },
-
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -159,6 +158,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return featureState.string_value
     }
   },
+
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -270,7 +270,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
-
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
