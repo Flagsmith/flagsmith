@@ -873,12 +873,12 @@ const flagsmith = new Flagsmith({
 });
 ```
 
-To implement your own offline handler, use the `BaseOfflineHandler` interface. It must return an
-<a href={`https://www.tsdocs.dev/docs/flagsmith-nodejs/${NodejsVersion()}/classes/EnvironmentModel.html`}>EnvironmentModel</a>
+To create your own offline handler, implement the `BaseOfflineHandler` interface. It must return an
+{/* prettier-ignore */}<a href={`https://www.tsdocs.dev/docs/flagsmith-nodejs/${NodejsVersion()}/classes/EnvironmentModel.html`}>EnvironmentModel</a>
 object:
 
 ```typescript
-import { BaseOfflineHandler } from 'flagsmith-nodejs';
+import type { BaseOfflineHandler } from 'flagsmith-nodejs';
 
 class CustomOfflineHandler implements BaseOfflineHandler {
     getEnvironment(): EnvironmentModel {
@@ -1895,12 +1895,14 @@ final FlagsAndTraits flags = cache.getIfPresent(projectLevelCacheKey);
 <TabItem value="nodejs" label="Node.js">
 
 The `cache` option in the `Flagsmith` constructor accepts a cache implementation. This cache must implement the
-<a href={`https://www.tsdocs.dev/docs/flagsmith-nodejs/${NodejsVersion()}/interfaces/FlagsmithCache.html`}>FlagsmithCache</a> interface.
+{/* prettier-ignore */}<a href={`https://www.tsdocs.dev/docs/flagsmith-nodejs/${NodejsVersion()}/interfaces/FlagsmithCache.html`}>FlagsmithCache</a>
+interface.
 
 For example, this cache implementation uses Redis as a backing store:
 
 ```typescript
-import { Flags, Flagsmith, FlagsmithCache } from 'flagsmith-nodejs';
+import { Flagsmith } from 'flagsmith-nodejs';
+import type { BaseOfflineHandler, EnvironmentModel, Flags, FlagsmithCache } from 'flagsmith-nodejs';
 import * as redis from 'redis';
 
 const redisClient = redis.createClient({
