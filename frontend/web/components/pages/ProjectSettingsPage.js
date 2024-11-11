@@ -13,9 +13,6 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
-import { getStore } from 'common/store'
-import { getRoles } from 'common/services/useRole'
-import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
@@ -55,26 +52,6 @@ const ProjectSettingsPage = class extends Component {
 
   componentDidMount = () => {
     API.trackPage(Constants.pages.PROJECT_SETTINGS)
-    getRoles(
-      getStore(),
-      { organisation_id: AccountStore.getOrganisation().id },
-      { forceRefetch: true },
-    ).then((roles) => {
-      getRolesProjectPermissions(
-        getStore(),
-        {
-          organisation_id: AccountStore.getOrganisation().id,
-          project_id: this.props.match.params.projectId,
-          role_id: roles.data.results[0].id,
-        },
-        { forceRefetch: true },
-      ).then((res) => {
-        const matchingItems = roles.data.results.filter((item1) =>
-          res.data.results.some((item2) => item2.role === item1.id),
-        )
-        this.setState({ roles: matchingItems })
-      })
-    })
   }
 
   onSave = () => {
