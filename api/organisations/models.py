@@ -423,6 +423,14 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
                 audit_log_visibility_days=None,
                 feature_history_visibility_days=None,
             )
+        elif is_enterprise():
+            return BaseSubscriptionMetadata(
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
+                projects=None,
+                audit_log_visibility_days=None,
+                feature_history_visibility_days=None,
+            )
 
         return FREE_PLAN_SUBSCRIPTION_METADATA
 
