@@ -35,7 +35,6 @@ from .permissions.views import (
     UserOrganisationPermissionViewSet,
     UserPermissionGroupOrganisationPermissionViewSet,
 )
-from .subscriptions.licensing.views import create_or_update_licence
 
 router = routers.DefaultRouter()
 router.register(r"", views.OrganisationViewSet, basename="organisation")
@@ -153,12 +152,21 @@ urlpatterns = [
         OrganisationAPIUsageNotificationView.as_view(),
         name="organisation-api-usage-notification",
     ),
-    path(
-        "<int:organisation_id>/licence",
-        create_or_update_licence,
-        name="create-or-update-licence",
-    ),
 ]
+
+if settings.LICENSING_INSTALLED:
+    from licensing.views import create_or_update_licence
+
+    urlpatterns.extend(
+        [
+            path(
+                "<int:organisation_id>/licence",
+                create_or_update_licence,
+                name="create-or-update-licence",
+            ),
+        ]
+    )
+
 
 if settings.IS_RBAC_INSTALLED:
     from rbac.views import (
