@@ -106,7 +106,6 @@ INSTALLED_APPS = [
     "organisations",
     "organisations.invites",
     "organisations.permissions",
-    "organisations.subscriptions.licensing",
     "projects",
     "sales_dashboard",
     "edge_api",
@@ -1291,3 +1290,8 @@ LeC/+C54/ZiCb3r9woq/kpsbRj0Ys2b4czfjWioXooSxA0w3BE6/lV0+hVltjRO6
 # For the matching private key to the public key added above
 # search for "Flagsmith licence private key" in Bitwarden.
 SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", None)
+
+LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
+
+if LICENSING_INSTALLED:
+    INSTALLED_APPS.append("licensing")
