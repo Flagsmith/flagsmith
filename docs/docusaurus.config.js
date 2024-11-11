@@ -209,6 +209,7 @@ const config = {
 
     customFields: {
         swaggerURL: '/api-static/edge-api.yaml',
+        CI: process.env.CI,
     },
 
     presets: [
@@ -240,6 +241,8 @@ const config = {
     ],
 
     clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
+
+    plugins: ['./plugins/flagsmith-versions'],
 };
 
 export default config;

@@ -30,6 +30,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
             "api_key",
             "minimum_change_request_approvals",
             "allow_client_traits",
+            "is_creating",
         )
 
 
@@ -54,6 +55,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
             "hide_sensitive_data",
             "use_v2_feature_versioning",
             "use_identity_overrides_in_local_eval",
+            "is_creating",
         )
         read_only_fields = ("use_v2_feature_versioning",)
 
@@ -127,15 +129,26 @@ class CreateUpdateEnvironmentSerializer(
 
 
 class CloneEnvironmentSerializer(EnvironmentSerializerLight):
+    clone_feature_states_async = serializers.BooleanField(
+        default=False,
+        help_text="If True, the environment will be created immediately, but the feature states "
+        "will be created asynchronously. Environment will have `is_creating: true` until "
+        "this process is completed.",
+        write_only=True,
+    )
+
     class Meta:
         model = Environment
-        fields = ("id", "name", "api_key", "project")
+        fields = ("id", "name", "api_key", "project", "clone_feature_states_async")
         read_only_fields = ("id", "api_key", "project")
 
     def create(self, validated_data):
         name = validated_data.get("name")
         source_env = validated_data.get("source_env")
-        clone = source_env.clone(name)
+        clone_feature_states_async = validated_data.get("clone_feature_states_async")
+        clone = source_env.clone(
+            name, clone_feature_states_async=clone_feature_states_async
+        )
         return clone
 
 

@@ -247,7 +247,11 @@ const HomeAside: FC<HomeAsideType> = ({
                                         exact
                                         to={`/project/${project.id}/environment/${environment.api_key}/sdk-keys`}
                                       >
-                                        <IonIcon className='mr-2' icon={code} />
+                                        <IonIcon
+                                          color={'#9DA4AE'}
+                                          className='mr-2'
+                                          icon={code}
+                                        />
                                         SDK Keys
                                       </NavLink>
                                       {environmentAdmin && (

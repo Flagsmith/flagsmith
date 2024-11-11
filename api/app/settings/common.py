@@ -616,7 +616,11 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
-if ENABLE_DB_LOGGING:
+if ENABLE_DB_LOGGING:  # pragma: no cover
+    if not DEBUG:
+        warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
+        DEBUG = True
+
     LOGGING["loggers"]["django.db.backends"] = {
         "level": "DEBUG",
         "handlers": ["console"],
@@ -786,6 +790,9 @@ TRENCH_AUTH = {
 USER_CREATE_PERMISSIONS = env.list(
     "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
 )
+USER_LOGIN_PERMISSIONS = env.list(
+    "USER_LOGIN_PERMISSIONS", default=["custom_auth.permissions.IsPasswordLoginAllowed"]
+)
 
 DJOSER = {
     "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
@@ -813,6 +820,7 @@ DJOSER = {
         "user": ["custom_auth.permissions.CurrentUser"],
         "user_list": ["custom_auth.permissions.CurrentUser"],
         "user_create": USER_CREATE_PERMISSIONS,
+        "token_create": USER_LOGIN_PERMISSIONS,
     },
 }
 SIMPLE_JWT = {
@@ -891,7 +899,6 @@ PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
-PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_ANALYTICS_FEATURES = env.bool(
     "DISABLE_INFLUXDB_FEATURES", default=False
 ) or env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
@@ -1028,6 +1035,7 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
 PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 COOKIE_AUTH_ENABLED = env.bool("COOKIE_AUTH_ENABLED", default=False)
 USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
 COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
@@ -1258,3 +1266,8 @@ EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
 ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
 )
+
+# Date on which versioning is released. This is used to give any scale up
+# subscriptions created before this date full audit log and versioning
+# history.
+VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)

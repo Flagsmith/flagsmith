@@ -78,8 +78,7 @@ Front End Web App.
 
 Running the API has the following hard dependencies:
 
-- Postgres database - the main data store. We have tested and run against Postgres v11.12 but it can work for other
-  versions too.
+- Postgres database - the main data store. Postgres 12 or later is required.
 
 The API can also optionally make use of the following 3rd party services:
 
@@ -87,8 +86,8 @@ The API can also optionally make use of the following 3rd party services:
 - InfluxDB - for API analytics
 - SendGrid - for transactional email
 - AWS S3 - to store Django Static Assets
-- GitHub - oAuth provider
-- Google - oAuth provider
+- GitHub - OAuth provider
+- Google - OAuth provider
 
 ## Flag Analytics
 
@@ -190,7 +189,6 @@ The list of the flags and remote config we're currently using in production is b
 | `default_environment_names_for_new_project` | Names of default environments to create when creating a new project (e.g. `["Development", "Production"]`)                                     | None                                              |
 | `disable_create_org`                        | Turning this on will prevent users from creating any additional organisations                                                                  | None                                              |
 | `disable_users_as_reviewers`                | If enabled, this flag will hide the Assigned users section in the Change Requests and in the Create Change Request modal in the Features page. | None                                              |
-| `enable_metadata`                           | If enabled, metadata can be handled                                                                                                            | None                                              |
 | `feature_versioning`                        | Opt into feature versioning for your environment                                                                                               | None                                              |
 | `integration_data`                          | Integration config for different providers                                                                                                     | [See Below](#integration_data)                    |
 | `mailing_list`                              | Determines if mailing list consent is shown on signup                                                                                          | None                                              |

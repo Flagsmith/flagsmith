@@ -148,7 +148,8 @@ jobs:
 
       - name: Scan ${{ steps.image-tag.outputs.image-tag }} image
         id: trivy
-        uses: ./.github/actions/trivy-scan-image
+        uses: Flagsmith/actions/trivy-scan-image@v0.3.0
+        if: inputs.scan
         with:
           image-tag: ${{ steps.image-tag.outputs.image-tag }}
           category: ${{ inputs.image-name }}
