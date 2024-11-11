@@ -173,7 +173,6 @@ flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.0.0" }
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
-cryptography = "^43.0.3"
 
 [tool.poetry.group.auth-controller]
 optional = true
