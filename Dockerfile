@@ -235,4 +235,6 @@ COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
 
+EXPOSE 8000
+
 USER nobody
