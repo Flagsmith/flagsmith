@@ -186,10 +186,7 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    if (
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
-    ) {
+    if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -569,9 +566,7 @@ const CreateFlag = class extends Component {
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
-    const metadataEnable =
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable = Utils.getPlansPermission('METADATA')
 
     try {
       if (!isEdit && name && regex) {
@@ -1910,7 +1905,7 @@ const CreateFlag = class extends Component {
                                   error,
                                   projectAdmin,
                                   createFeature,
-                                  project.prevent_flag_defaults,
+                                  project.prevent_flag_defaults && !identity,
                                 )}
                                 <ModalHR
                                   className={`my-4 ${identity ? 'mx-3' : ''}`}

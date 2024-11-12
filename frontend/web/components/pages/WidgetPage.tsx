@@ -1,4 +1,10 @@
-import React, { Component, ReactNode, useEffect, useState } from 'react'
+import React, {
+  Component,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
 import FeatureRow from 'components/FeatureRow'
@@ -27,7 +33,7 @@ import {
   TagStrategy,
 } from 'common/types/responses'
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react'
-import client from 'components/datadog-client'
+import ddClient from 'components/datadog-client'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import AuditLog from 'components/AuditLog'
 import OrgEnvironmentSelect from 'components/OrgEnvironmentSelect'
@@ -455,6 +461,9 @@ const FeatureList = class extends Component<FeatureListType> {
 export default function Widget() {
   useEffect(() => {
     document.body.classList.add('widget-mode')
+  }, [])
+  const client = useMemo(() => {
+    return ddClient()
   }, [])
   const projectId = useCustomWidgetOptionString(client, 'Project')
   const environmentId = useCustomWidgetOptionString(client, 'Environment')

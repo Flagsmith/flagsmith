@@ -46,7 +46,6 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
@@ -125,6 +124,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
     ],
   }
   const [segment, setSegment] = useState(_segment || defaultSegment)
+  const [description, setDescription] = useState(segment.description)
+  const [name, setName] = useState<Segment['name']>(segment.name)
+  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  useEffect(() => {
+    if (segment) {
+      setRules(segment.rules)
+      setDescription(segment.description)
+      setName(segment.name)
+    }
+  }, [segment])
   const isEdit = !!segment.id
   const [
     createSegment,
@@ -147,17 +156,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [description, setDescription] = useState(segment.description)
-  const [name, setName] = useState<Segment['name']>(segment.name)
-  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable =
-    Utils.getPlansPermission('METADATA') &&
-    Utils.getFlagsmithHasFeature('enable_metadata')
-
+  const metadataEnable = Utils.getPlansPermission('METADATA')
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
@@ -284,6 +287,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [createSuccess])
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
+      setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
@@ -582,26 +586,15 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
-              <Permission
-                level='environment'
-                permission={'MANAGE_SEGMENT_OVERRIDES'}
-                id={environmentId}
-              >
-                {({ permission: manageSegmentOverrides }) => {
-                  const isReadOnly = !manageSegmentOverrides
-                  return (
-                    <AssociatedSegmentOverrides
-                      onUnsavedChange={() => {
-                        setValueChanged(true)
-                      }}
-                      feature={segment.feature}
-                      projectId={projectId}
-                      id={segment.id}
-                      readOnly={isReadOnly}
-                    />
-                  )
+              <AssociatedSegmentOverrides
+                onUnsavedChange={() => {
+                  setValueChanged(true)
                 }}
-              </Permission>
+                feature={segment.feature}
+                projectId={projectId}
+                id={segment.id}
+                environmentId={environmentId}
+              />
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>

@@ -36,6 +36,7 @@ import sortBy from 'lodash/sortBy'
 import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
+import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 
 type UsersAndPermissionsPageType = {
@@ -103,9 +104,28 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
   const editUserPermissions = (user: User, organisationId: number) => {
     openModal(
-      'Edit Organisation Permissions',
-      <div className='p-4'>
-        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          {user.role !== 'ADMIN' && (
+            <TabItem tabLabel='Permissions'>
+              <div className='pt-4'>
+                <PermissionsTabs
+                  uncontrolled
+                  user={user}
+                  orgId={organisationId}
+                />
+              </div>
+            </TabItem>
+          )}
+          <TabItem tabLabel='Groups'>
+            <div className='pt-4'>
+              <UsersGroups user={user} orgId={organisationId} />
+            </div>
+          </TabItem>
+        </Tabs>
       </div>,
       'p-0 side-modal',
     )
@@ -463,17 +483,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               )
                             }
                             const onEditClick = () => {
-                              if (role !== 'ADMIN') {
-                                editUserPermissions(user, organisation.id)
-                              }
+                              editUserPermissions(user, organisation.id)
                             }
                             return (
                               <Row
                                 data-test={`user-${i}`}
                                 space
-                                className={classNames('list-item', {
-                                  clickable: role !== 'ADMIN',
-                                })}
+                                className={classNames('list-item clickable')}
                                 onClick={onEditClick}
                                 key={id}
                               >
@@ -553,13 +569,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   style={{
                                     width: widths[2],
                                   }}
-                                  className='table-column text-end'
+                                  className='table-column d-flex justify-content-end'
                                 >
                                   <UserAction
                                     onRemove={onRemoveClick}
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
-                                    canEdit={role !== 'ADMIN'}
+                                    canEdit={AccountStore.isAdmin()}
                                   />
                                 </div>
                               </Row>
