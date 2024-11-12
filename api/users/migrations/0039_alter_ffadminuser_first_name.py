@@ -3,6 +3,7 @@ from django.apps.registry import Apps
 from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.models import F
+from django.db.models.functions import Left
 
 
 def populate_new_first_name_field(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
@@ -14,7 +15,7 @@ def populate_new_first_name_field(apps: Apps, schema_editor: BaseDatabaseSchemaE
 def populate_old_first_name_field(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
     FFAdminUser = apps.get_model("users", "FFAdminUser")
 
-    FFAdminUser.objects.update(first_name=F("first_name_v2"))
+    FFAdminUser.objects.update(first_name=Left("first_name_v2", 30))
 
 
 class Migration(migrations.Migration):
