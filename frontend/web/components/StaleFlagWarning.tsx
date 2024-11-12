@@ -8,12 +8,14 @@ import { IonIcon } from '@ionic/react'
 import { close, warning } from 'ionicons/icons'
 import Tooltip from './Tooltip'
 import ProjectStore from 'common/stores/project-store'
+import flagsmith from 'flagsmith/isomorphic'
 
 type StaleFlagWarningType = {
   projectFlag: ProjectFlag
 }
 
 const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
+  if (!flagsmith.hasFeature('feature_versioning')) return null
   const protectedTags = getProtectedTags(projectFlag, `${projectFlag.project}`)
   if (protectedTags?.length) {
     return null
