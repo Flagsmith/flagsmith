@@ -172,11 +172,6 @@ Permissions can be assigned at four levels: user group, organisation, project, a
 | Approve Change Request   | Allows approving or denying change requests in this environment.                                                        |
 | View Identities          | Grants read-only access to identities in this environment.                                                              |
 
-### Tags
+### Tag-based Roles
 
-When tags are applied to a role, the following permissions apply:
-
-- If the role does not have project admin permissions, users will only be able to delete features that have a matching
-  tag.
-- For all environments within the project where the role is not set as admin, users will only be able to update Feature
-  States, Segment Overrides, and Change Requests for features with a matching tag.
+A Tag-based role allows you to specify permissions that will only be granted for features with a defined set of tags.
