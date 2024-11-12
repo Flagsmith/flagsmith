@@ -24,11 +24,14 @@ export const useHasPermission = ({
     isSuccess,
   } = useGetPermissionQuery({ id: `${id}`, level }, { skip: !id || !level })
   const data = useMemo(() => {
-    if (!tags?.length || !permissionsData?.tag_based_permissions) return permissionsData
+    if (!tags?.length || !permissionsData?.tag_based_permissions)
+      return permissionsData
     const addedPermissions = permissionsData
     permissionsData.tag_based_permissions.forEach((tagBasedPermission) => {
       if (intersection(tagBasedPermission.tags, tags).length) {
-        addedPermissions[tagBasedPermission.key] = true
+        tagBasedPermission.permissions.forEach((key) => {
+          addedPermissions[key] = true
+        })
       }
     })
     return addedPermissions
