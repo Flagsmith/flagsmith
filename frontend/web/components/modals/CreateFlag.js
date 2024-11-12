@@ -575,151 +575,161 @@ const CreateFlag = class extends Component {
     } catch (e) {
       regexValid = false
     }
-    const Settings = (projectAdmin, createFeature, featureContentType) => (
-      <>
-        {!identity && this.state.tags && (
+    const Settings = (projectAdmin, createFeature, featureContentType) =>
+      !createFeature ? (
+        <InfoMessage>
+          <div
+            dangerouslySetInnerHTML={{
+              __html: Constants.projectPermissions('Create Feature'),
+            }}
+          />
+        </InfoMessage>
+      ) : (
+        <>
+          {!identity && this.state.tags && (
+            <FormGroup className='mb-3 setting'>
+              <InputGroup
+                title={identity ? 'Tags' : 'Tags'}
+                tooltip={Constants.strings.TAGS_DESCRIPTION}
+                component={
+                  <AddEditTags
+                    readOnly={!!identity || !createFeature}
+                    projectId={`${this.props.projectId}`}
+                    value={this.state.tags}
+                    onChange={(tags) =>
+                      this.setState({ settingsChanged: true, tags })
+                    }
+                  />
+                }
+              />
+            </FormGroup>
+          )}
+          {metadataEnable && featureContentType?.id && (
+            <>
+              <label className='mt-1'>Custom Fields</label>
+              <AddMetadataToEntity
+                organisationId={AccountStore.getOrganisation().id}
+                projectId={this.props.projectId}
+                entityId={projectFlag?.id}
+                entityContentType={featureContentType?.id}
+                entity={featureContentType?.model}
+                setHasMetadataRequired={(b) => {
+                  this.setState({
+                    hasMetadataRequired: b,
+                  })
+                }}
+                onChange={(m) => {
+                  this.setState({
+                    metadata: m,
+                  })
+                }}
+              />
+            </>
+          )}
+          {!identity && projectFlag && (
+            <Permission
+              level='project'
+              permission='CREATE_FEATURE'
+              id={this.props.projectId}
+            >
+              {({ permission }) =>
+                permission && (
+                  <>
+                    <FormGroup className='mb-3 setting'>
+                      <FlagOwners
+                        projectId={this.props.projectId}
+                        id={projectFlag.id}
+                      />
+                    </FormGroup>
+                    <FormGroup className='mb-3 setting'>
+                      <FlagOwnerGroups
+                        projectId={this.props.projectId}
+                        id={projectFlag.id}
+                      />
+                    </FormGroup>
+                    <PlanBasedBanner
+                      className='mb-3'
+                      feature={'FLAG_OWNERS'}
+                      theme={'description'}
+                    />
+                  </>
+                )
+              }
+            </Permission>
+          )}
           <FormGroup className='mb-3 setting'>
             <InputGroup
-              title={identity ? 'Tags' : 'Tags'}
-              tooltip={Constants.strings.TAGS_DESCRIPTION}
-              component={
-                <AddEditTags
-                  readOnly={!!identity || !createFeature}
-                  projectId={`${this.props.projectId}`}
-                  value={this.state.tags}
-                  onChange={(tags) =>
-                    this.setState({ settingsChanged: true, tags })
-                  }
-                />
+              value={description}
+              data-test='featureDesc'
+              inputProps={{
+                className: 'full-width',
+                name: 'featureDesc',
+              }}
+              onChange={(e) =>
+                this.setState({
+                  description: Utils.safeParseEventValue(e),
+                  settingsChanged: true,
+                })
               }
+              ds
+              type='text'
+              title={identity ? 'Description' : 'Description (optional)'}
+              placeholder="e.g. 'This determines what size the header is' "
             />
           </FormGroup>
-        )}
-        {metadataEnable && featureContentType?.id && (
-          <>
-            <label className='mt-1'>Custom Fields</label>
-            <AddMetadataToEntity
-              organisationId={AccountStore.getOrganisation().id}
-              projectId={this.props.projectId}
-              entityId={projectFlag?.id}
-              entityContentType={featureContentType?.id}
-              entity={featureContentType?.model}
-              setHasMetadataRequired={(b) => {
-                this.setState({
-                  hasMetadataRequired: b,
-                })
-              }}
-              onChange={(m) => {
-                this.setState({
-                  metadata: m,
-                })
-              }}
-            />
-          </>
-        )}
-        {!identity && projectFlag && (
-          <Permission
-            level='project'
-            permission='CREATE_FEATURE'
-            id={this.props.projectId}
-          >
-            {({ permission }) =>
-              permission && (
-                <>
-                  <FormGroup className='mb-3 setting'>
-                    <FlagOwners
-                      projectId={this.props.projectId}
-                      id={projectFlag.id}
-                    />
-                  </FormGroup>
-                  <FormGroup className='mb-3 setting'>
-                    <FlagOwnerGroups
-                      projectId={this.props.projectId}
-                      id={projectFlag.id}
-                    />
-                  </FormGroup>
-                  <PlanBasedBanner
-                    className='mb-3'
-                    feature={'FLAG_OWNERS'}
-                    theme={'description'}
-                  />
-                </>
-              )
-            }
-          </Permission>
-        )}
-        <FormGroup className='mb-3 setting'>
-          <InputGroup
-            value={description}
-            data-test='featureDesc'
-            inputProps={{
-              className: 'full-width',
-              name: 'featureDesc',
-            }}
-            onChange={(e) =>
-              this.setState({
-                description: Utils.safeParseEventValue(e),
-                settingsChanged: true,
-              })
-            }
-            ds
-            type='text'
-            title={identity ? 'Description' : 'Description (optional)'}
-            placeholder="e.g. 'This determines what size the header is' "
-          />
-        </FormGroup>
 
-        {!identity && (
-          <FormGroup className='mb-3 mt-3 setting'>
-            <Row>
-              <Switch
-                checked={this.state.is_server_key_only}
-                onChange={(is_server_key_only) =>
-                  this.setState({ is_server_key_only, settingsChanged: true })
-                }
-                className='ml-0'
-              />
-              <Tooltip
-                title={
-                  <label className='cols-sm-2 control-label mb-0 ml-3'>
-                    Server-side only <Icon name='info-outlined' />
-                  </label>
-                }
-              >
-                Prevent this feature from being accessed with client-side SDKs.
-              </Tooltip>
-            </Row>
-          </FormGroup>
-        )}
+          {!identity && (
+            <FormGroup className='mb-3 mt-3 setting'>
+              <Row>
+                <Switch
+                  checked={this.state.is_server_key_only}
+                  onChange={(is_server_key_only) =>
+                    this.setState({ is_server_key_only, settingsChanged: true })
+                  }
+                  className='ml-0'
+                />
+                <Tooltip
+                  title={
+                    <label className='cols-sm-2 control-label mb-0 ml-3'>
+                      Server-side only <Icon name='info-outlined' />
+                    </label>
+                  }
+                >
+                  Prevent this feature from being accessed with client-side
+                  SDKs.
+                </Tooltip>
+              </Row>
+            </FormGroup>
+          )}
 
-        {!identity && isEdit && (
-          <FormGroup className='mb-3 setting'>
-            <Row>
-              <Switch
-                checked={this.state.is_archived}
-                onChange={(is_archived) => {
-                  this.setState({ is_archived, settingsChanged: true })
-                }}
-                className='ml-0'
-              />
-              <Tooltip
-                title={
-                  <label className='cols-sm-2 control-label mb-0 ml-3'>
-                    Archived <Icon name='info-outlined' />
-                  </label>
-                }
-              >
-                {`Archiving a flag allows you to filter out flags from the
+          {!identity && isEdit && (
+            <FormGroup className='mb-3 setting'>
+              <Row>
+                <Switch
+                  checked={this.state.is_archived}
+                  onChange={(is_archived) => {
+                    this.setState({ is_archived, settingsChanged: true })
+                  }}
+                  className='ml-0'
+                />
+                <Tooltip
+                  title={
+                    <label className='cols-sm-2 control-label mb-0 ml-3'>
+                      Archived <Icon name='info-outlined' />
+                    </label>
+                  }
+                >
+                  {`Archiving a flag allows you to filter out flags from the
                 Flagsmith dashboard that are no longer relevant.
                 <br />
                 An archived flag will still return as normal in all SDK
                 endpoints.`}
-              </Tooltip>
-            </Row>
-          </FormGroup>
-        )}
-      </>
-    )
+                </Tooltip>
+              </Row>
+            </FormGroup>
+          )}
+        </>
+      )
 
     const Value = (error, projectAdmin, createFeature, hideValue) => {
       const { featureError, featureWarning } = this.parseError(error)
@@ -1865,7 +1875,7 @@ const CreateFlag = class extends Component {
                                       />
                                     </TabItem>
                                   )}
-                                {!existingChangeRequest && createFeature && (
+                                {!existingChangeRequest && (
                                   <TabItem
                                     data-test='settings'
                                     tabLabelString='Settings'
@@ -1894,40 +1904,29 @@ const CreateFlag = class extends Component {
                                     <ModalHR className='mt-4' />
                                     {isEdit && (
                                       <div className='text-right mt-3'>
-                                        {createFeature ? (
-                                          <p className='text-right modal-caption fs-small lh-sm'>
-                                            This will save the above settings{' '}
-                                            <strong>all environments</strong>.
-                                          </p>
-                                        ) : (
-                                          <p className='text-right modal-caption fs-small lh-sm'>
-                                            To edit this feature's settings, you
-                                            will need{' '}
-                                            <strong>
-                                              Project Administrator permissions
-                                            </strong>
-                                            . Please contact your project
-                                            administrator.
-                                          </p>
+                                        {!!createFeature && (
+                                          <>
+                                            <p className='text-right modal-caption fs-small lh-sm'>
+                                              This will save the above settings{' '}
+                                              <strong>all environments</strong>.
+                                            </p>
+                                            <Button
+                                              onClick={saveSettings}
+                                              data-test='update-feature-btn'
+                                              id='update-feature-btn'
+                                              disabled={
+                                                isSaving ||
+                                                !name ||
+                                                invalid ||
+                                                _hasMetadataRequired
+                                              }
+                                            >
+                                              {isSaving
+                                                ? 'Updating'
+                                                : 'Update Settings'}
+                                            </Button>
+                                          </>
                                         )}
-
-                                        {createFeature ? (
-                                          <Button
-                                            onClick={saveSettings}
-                                            data-test='update-feature-btn'
-                                            id='update-feature-btn'
-                                            disabled={
-                                              isSaving ||
-                                              !name ||
-                                              invalid ||
-                                              _hasMetadataRequired
-                                            }
-                                          >
-                                            {isSaving
-                                              ? 'Updating'
-                                              : 'Update Settings'}
-                                          </Button>
-                                        ) : null}
                                       </div>
                                     )}
                                   </TabItem>
