@@ -878,7 +878,7 @@ To create your own offline handler, implement the `BaseOfflineHandler` interface
 object:
 
 ```typescript
-import type { BaseOfflineHandler } from 'flagsmith-nodejs';
+import type { BaseOfflineHandler, EnvironmentModel } from 'flagsmith-nodejs';
 
 class CustomOfflineHandler implements BaseOfflineHandler {
     getEnvironment(): EnvironmentModel {
@@ -1435,6 +1435,7 @@ $flagsmith = Flagsmith::Client.new(
 
 ```typescript
 import { Flagsmith } from 'flagsmith-nodejs';
+import type { EnvironmentModel } from 'flagsmith-nodejs';
 
 const flagsmith = new Flagsmith({
     /*
