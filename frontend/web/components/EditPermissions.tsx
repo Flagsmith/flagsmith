@@ -765,9 +765,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             </p>
 
             {!!parentWarning && (
-              <WarningMessage
-                warningMessage={`As a ${level} admin, you do not have permissions to see if this user has view ${parentLevel} permissions. If you need to troubleshoot, contact a ${parentLevel} administrator.`}
-              />
+              <InfoMessage>
+                You do not have permission to verify whether this user has view
+                access for this {parentLevel}. If you need assistance, please
+                contact a {parentLevel} administrator.
+              </InfoMessage>
             )}
             {parentError && !role && (
               <div className='mt-4'>
