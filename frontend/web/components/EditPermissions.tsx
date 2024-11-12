@@ -62,6 +62,7 @@ import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
 import PlanBasedAccess from './PlanBasedAccess'
+import WarningMessage from './WarningMessage'
 
 const Project = require('common/project')
 
@@ -255,6 +256,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       createRolePermissionGroup,
       { data: groupsData, isSuccess: groupAdded },
     ] = useCreateRolePermissionGroupMutation()
+    const [parentWarning, setParentWarning] = useState(false)
 
     const [deleteRolePermissionGroup] = useDeleteRolePermissionGroupMutation()
 
@@ -393,6 +395,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             } else {
               setParentError(false)
             }
+          })
+          .catch(() => {
+            setParentWarning(true)
+            return []
           })
       }
       if (!role) {
@@ -758,6 +764,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               .
             </p>
 
+            {!!parentWarning && (
+              <WarningMessage
+                warningMessage={`As a ${level} admin, you do not have permissions to see if this user has view ${parentLevel} permissions. If you need to troubleshoot, contact a ${parentLevel} administrator.`}
+              />
+            )}
             {parentError && !role && (
               <div className='mt-4'>
                 <InfoMessage>
