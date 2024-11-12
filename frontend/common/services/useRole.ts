@@ -26,12 +26,6 @@ export const roleService = service
         query: (query: Req['getRole']) => ({
           url: `organisations/${query.organisation_id}/roles/${query.role_id}/`,
         }),
-        transformResponse: async (res: Role) => {
-          return {
-            ...res,
-            tag_based: true,
-          }
-        },
       }),
       getRoles: builder.query<Res['roles'], Req['getRoles']>({
         providesTags: [{ id: 'LIST', type: 'Role' }],
