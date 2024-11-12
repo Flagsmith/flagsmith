@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import InlineModal from './InlineModal'
 import Icon from './Icon'
+import classNames from 'classnames'
 
 class TheComponent extends Component {
   state = {
@@ -35,7 +36,7 @@ class TheComponent extends Component {
           placeholder='Search User'
           search
         />
-        <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 200, overflowX: 'hidden', overflowY: 'auto' }}>
           {users &&
             users.map((v) => (
               <div
@@ -56,12 +57,17 @@ class TheComponent extends Component {
                 className='assignees-list-item clickable'
                 key={v.id}
               >
-                <Row space>
-                  <Flex
-                    className={value.includes(v.id) ? 'font-weight-bold' : ''}
+                <Row className="flex-nowrap w-100 overflow-hidden overflow-ellipsis" space>
+                  <div
+                    className={classNames(
+                      value.includes(v.id) ? 'font-weight-bold' : '',
+                      'overflow-ellipsis w-100',
+                    )}
                   >
-                    {v.first_name} {v.last_name}
-                  </Flex>
+                    {v.first_name || v.last_name
+                      ? `${v.first_name} ${v.last_name}`
+                      : v.email}
+                  </div>
                   {value.includes(v.id) && (
                     <span className='mr-1'>
                       <Icon name='checkmark' fill='#6837FC' />

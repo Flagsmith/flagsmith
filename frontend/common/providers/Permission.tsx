@@ -2,7 +2,9 @@ import React, { FC, ReactNode, useMemo } from 'react'
 import { useGetPermissionQuery } from 'common/services/usePermission'
 import { PermissionLevel } from 'common/types/requests'
 import AccountStore from 'common/stores/account-store'
-import intersection from 'lodash/intersection' // we need this to make JSX compile
+import intersection from 'lodash/intersection'
+import { add } from 'ionicons/icons';
+import { cloneDeep } from 'lodash'; // we need this to make JSX compile
 
 type PermissionType = {
   id: any
@@ -26,7 +28,7 @@ export const useHasPermission = ({
   const data = useMemo(() => {
     if (!tags?.length || !permissionsData?.tag_based_permissions)
       return permissionsData
-    const addedPermissions = permissionsData
+    const addedPermissions = cloneDeep(permissionsData)
     permissionsData.tag_based_permissions.forEach((tagBasedPermission) => {
       if (intersection(tagBasedPermission.tags, tags).length) {
         tagBasedPermission.permissions.forEach((key) => {

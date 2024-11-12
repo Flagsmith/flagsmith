@@ -490,7 +490,11 @@ const CreateRole: FC<CreateRoleType> = ({
                     className='chip my-1 justify-content-between'
                   >
                     <span className='font-weight-bold'>
-                      {u.first_name} {u.last_name}
+                      {`${
+                        u.first_name || u.last_name
+                          ? `${u.first_name} ${u.last_name}`
+                          : `${u.email}`
+                      }`}
                     </span>
                     <span className='chip-icon ion'>
                       <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />

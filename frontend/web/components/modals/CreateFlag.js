@@ -1518,240 +1518,283 @@ const CreateFlag = class extends Component {
                                     )}
                                   </TabItem>
                                 )}
-
-                                {!identity &&
-                                  isEdit &&
-                                  !existingChangeRequest &&
-                                  !hideIdentityOverridesTab && (
-                                    <TabItem
-                                      data-test='identity_overrides'
-                                      tabLabel='Identity Overrides'
-                                    >
-                                      <FormGroup className='mb-4 mt-2'>
-                                        <PanelSearch
-                                          id='users-list'
-                                          className='no-pad identity-overrides-title'
-                                          title={
-                                            <>
-                                              <Tooltip
+                                <Permission
+                                  data-test='identity_overrides'
+                                  tabLabel='Identity Overrides'
+                                  level='environment'
+                                  permission={'VIEW_IDENTITIES'}
+                                  id={this.props.environmentId}
+                                >
+                                  {({ permission: viewIdentities }) =>
+                                    !identity &&
+                                    isEdit &&
+                                    !existingChangeRequest &&
+                                    !hideIdentityOverridesTab && (
+                                      <TabItem>
+                                        {viewIdentities ? (
+                                          <>
+                                            <FormGroup className='mb-4 mt-2'>
+                                              <PanelSearch
+                                                id='users-list'
+                                                className='no-pad identity-overrides-title'
                                                 title={
-                                                  <h5 className='mb-0'>
-                                                    Identity Overrides{' '}
-                                                    <Icon
-                                                      name='info-outlined'
-                                                      width={20}
-                                                      fill='#9DA4AE'
-                                                    />
-                                                  </h5>
+                                                  <>
+                                                    <Tooltip
+                                                      title={
+                                                        <h5 className='mb-0'>
+                                                          Identity Overrides{' '}
+                                                          <Icon
+                                                            name='info-outlined'
+                                                            width={20}
+                                                            fill='#9DA4AE'
+                                                          />
+                                                        </h5>
+                                                      }
+                                                      place='top'
+                                                    >
+                                                      {
+                                                        Constants.strings
+                                                          .IDENTITY_OVERRIDES_DESCRIPTION
+                                                      }
+                                                    </Tooltip>
+                                                    <div className='fw-normal transform-none mt-4'>
+                                                      <InfoMessage
+                                                        collapseId={
+                                                          'identity-overrides'
+                                                        }
+                                                      >
+                                                        Identity overrides
+                                                        override feature values
+                                                        for individual
+                                                        identities. The
+                                                        overrides take priority
+                                                        over an segment
+                                                        overrides and
+                                                        environment defaults.
+                                                        Identity overrides will
+                                                        only apply when you
+                                                        identify via the SDK.{' '}
+                                                        <a
+                                                          target='_blank'
+                                                          href='https://docs.flagsmith.com/basic-features/managing-identities'
+                                                          rel='noreferrer'
+                                                        >
+                                                          Check the Docs for
+                                                          more details
+                                                        </a>
+                                                        .
+                                                      </InfoMessage>
+                                                    </div>
+                                                  </>
                                                 }
-                                                place='top'
-                                              >
-                                                {
-                                                  Constants.strings
-                                                    .IDENTITY_OVERRIDES_DESCRIPTION
-                                                }
-                                              </Tooltip>
-                                              <div className='fw-normal transform-none mt-4'>
-                                                <InfoMessage
-                                                  collapseId={
-                                                    'identity-overrides'
-                                                  }
-                                                >
-                                                  Identity overrides override
-                                                  feature values for individual
-                                                  identities. The overrides take
-                                                  priority over an segment
-                                                  overrides and environment
-                                                  defaults. Identity overrides
-                                                  will only apply when you
-                                                  identify via the SDK.{' '}
-                                                  <a
-                                                    target='_blank'
-                                                    href='https://docs.flagsmith.com/basic-features/managing-identities'
-                                                    rel='noreferrer'
-                                                  >
-                                                    Check the Docs for more
-                                                    details
-                                                  </a>
-                                                  .
-                                                </InfoMessage>
-                                              </div>
-                                            </>
-                                          }
-                                          action={
-                                            !Utils.getIsEdge() && (
-                                              <Button
-                                                onClick={() =>
-                                                  this.changeIdentity(
-                                                    this.state.userOverrides,
+                                                action={
+                                                  !Utils.getIsEdge() && (
+                                                    <Button
+                                                      onClick={() =>
+                                                        this.changeIdentity(
+                                                          this.state
+                                                            .userOverrides,
+                                                        )
+                                                      }
+                                                      type='button'
+                                                      theme='secondary'
+                                                      size='small'
+                                                    >
+                                                      {enabledIndentity
+                                                        ? 'Enable All'
+                                                        : 'Disable All'}
+                                                    </Button>
                                                   )
                                                 }
-                                                type='button'
-                                                theme='secondary'
-                                                size='small'
-                                              >
-                                                {enabledIndentity
-                                                  ? 'Enable All'
-                                                  : 'Disable All'}
-                                              </Button>
-                                            )
-                                          }
-                                          items={this.state.userOverrides}
-                                          paging={
-                                            this.state.userOverridesPaging
-                                          }
-                                          renderSearchWithNoResults
-                                          nextPage={() =>
-                                            this.userOverridesPage(
-                                              this.state.userOverridesPaging
-                                                .currentPage + 1,
-                                            )
-                                          }
-                                          prevPage={() =>
-                                            this.userOverridesPage(
-                                              this.state.userOverridesPaging
-                                                .currentPage - 1,
-                                            )
-                                          }
-                                          goToPage={(page) =>
-                                            this.userOverridesPage(page)
-                                          }
-                                          searchPanel={
-                                            !Utils.getIsEdge() && (
-                                              <div className='text-center mt-2 mb-2'>
-                                                <Flex className='text-left'>
-                                                  <IdentitySelect
-                                                    isEdge={false}
-                                                    ignoreIds={this.state.userOverrides?.map(
-                                                      (v) => v.identity?.id,
-                                                    )}
-                                                    environmentId={
-                                                      this.props.environmentId
-                                                    }
-                                                    data-test='select-identity'
-                                                    placeholder='Create an Identity Override...'
-                                                    value={
-                                                      this.state
-                                                        .selectedIdentity
-                                                    }
-                                                    onChange={(
-                                                      selectedIdentity,
-                                                    ) =>
-                                                      this.setState(
-                                                        { selectedIdentity },
-                                                        this.addItem,
-                                                      )
-                                                    }
-                                                  />
-                                                </Flex>
-                                              </div>
-                                            )
-                                          }
-                                          renderRow={(identityFlag) => {
-                                            const {
-                                              enabled,
-                                              feature_state_value,
-                                              id,
-                                              identity,
-                                            } = identityFlag
-                                            return (
-                                              <Row
-                                                space
-                                                className='list-item cursor-pointer'
-                                                key={id}
-                                              >
-                                                <Row>
-                                                  <div
-                                                    className='table-column'
-                                                    style={{ width: '65px' }}
-                                                  >
-                                                    <Switch
-                                                      checked={enabled}
-                                                      onChange={() =>
-                                                        this.toggleUserFlag({
-                                                          enabled,
-                                                          id,
-                                                          identity,
-                                                        })
-                                                      }
-                                                      disabled={Utils.getIsEdge()}
-                                                    />
-                                                  </div>
-                                                  <div className='font-weight-medium fs-small lh-sm'>
-                                                    {identity.identifier}
-                                                  </div>
-                                                </Row>
-                                                <Row>
-                                                  <div
-                                                    className='table-column'
-                                                    style={{ width: '188px' }}
-                                                  >
-                                                    {feature_state_value !==
-                                                      null && (
-                                                      <FeatureValue
-                                                        value={
-                                                          feature_state_value
-                                                        }
-                                                      />
-                                                    )}
-                                                  </div>
-                                                  <div className='table-column'>
-                                                    <Button
-                                                      target='_blank'
-                                                      href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
-                                                      className='btn btn-link fs-small lh-sm font-weight-medium'
-                                                    >
-                                                      <Icon
-                                                        name='edit'
-                                                        width={20}
-                                                        fill='#6837FC'
-                                                      />{' '}
-                                                      Edit
-                                                    </Button>
-                                                    <Button
-                                                      onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        removeUserOverride({
-                                                          cb: () =>
-                                                            this.userOverridesPage(
-                                                              1,
-                                                            ),
-                                                          environmentId:
+                                                items={this.state.userOverrides}
+                                                paging={
+                                                  this.state.userOverridesPaging
+                                                }
+                                                renderSearchWithNoResults
+                                                nextPage={() =>
+                                                  this.userOverridesPage(
+                                                    this.state
+                                                      .userOverridesPaging
+                                                      .currentPage + 1,
+                                                  )
+                                                }
+                                                prevPage={() =>
+                                                  this.userOverridesPage(
+                                                    this.state
+                                                      .userOverridesPaging
+                                                      .currentPage - 1,
+                                                  )
+                                                }
+                                                goToPage={(page) =>
+                                                  this.userOverridesPage(page)
+                                                }
+                                                searchPanel={
+                                                  !Utils.getIsEdge() && (
+                                                    <div className='text-center mt-2 mb-2'>
+                                                      <Flex className='text-left'>
+                                                        <IdentitySelect
+                                                          isEdge={false}
+                                                          ignoreIds={this.state.userOverrides?.map(
+                                                            (v) =>
+                                                              v.identity?.id,
+                                                          )}
+                                                          environmentId={
                                                             this.props
-                                                              .environmentId,
-                                                          identifier:
-                                                            identity.identifier,
-                                                          identity: identity.id,
-                                                          identityFlag,
-                                                          projectFlag,
-                                                        })
-                                                      }}
-                                                      className='btn ml-2 btn-with-icon'
+                                                              .environmentId
+                                                          }
+                                                          data-test='select-identity'
+                                                          placeholder='Create an Identity Override...'
+                                                          value={
+                                                            this.state
+                                                              .selectedIdentity
+                                                          }
+                                                          onChange={(
+                                                            selectedIdentity,
+                                                          ) =>
+                                                            this.setState(
+                                                              {
+                                                                selectedIdentity,
+                                                              },
+                                                              this.addItem,
+                                                            )
+                                                          }
+                                                        />
+                                                      </Flex>
+                                                    </div>
+                                                  )
+                                                }
+                                                renderRow={(identityFlag) => {
+                                                  const {
+                                                    enabled,
+                                                    feature_state_value,
+                                                    id,
+                                                    identity,
+                                                  } = identityFlag
+                                                  return (
+                                                    <Row
+                                                      space
+                                                      className='list-item cursor-pointer'
+                                                      key={id}
                                                     >
-                                                      <Icon
-                                                        name='trash-2'
-                                                        width={20}
-                                                        fill='#656D7B'
-                                                      />
-                                                    </Button>
-                                                  </div>
-                                                </Row>
-                                              </Row>
-                                            )
-                                          }}
-                                          renderNoResults={
-                                            <Row className='list-item'>
-                                              <div className='table-column'>
-                                                No identities are overriding
-                                                this feature.
-                                              </div>
-                                            </Row>
-                                          }
-                                          isLoading={!this.state.userOverrides}
-                                        />
-                                      </FormGroup>
-                                    </TabItem>
-                                  )}
+                                                      <Row>
+                                                        <div
+                                                          className='table-column'
+                                                          style={{
+                                                            width: '65px',
+                                                          }}
+                                                        >
+                                                          <Switch
+                                                            checked={enabled}
+                                                            onChange={() =>
+                                                              this.toggleUserFlag(
+                                                                {
+                                                                  enabled,
+                                                                  id,
+                                                                  identity,
+                                                                },
+                                                              )
+                                                            }
+                                                            disabled={Utils.getIsEdge()}
+                                                          />
+                                                        </div>
+                                                        <div className='font-weight-medium fs-small lh-sm'>
+                                                          {identity.identifier}
+                                                        </div>
+                                                      </Row>
+                                                      <Row>
+                                                        <div
+                                                          className='table-column'
+                                                          style={{
+                                                            width: '188px',
+                                                          }}
+                                                        >
+                                                          {feature_state_value !==
+                                                            null && (
+                                                            <FeatureValue
+                                                              value={
+                                                                feature_state_value
+                                                              }
+                                                            />
+                                                          )}
+                                                        </div>
+                                                        <div className='table-column'>
+                                                          <Button
+                                                            target='_blank'
+                                                            href={`/project/${this.props.projectId}/environment/${this.props.environmentId}/users/${identity.identifier}/${identity.id}?flag=${projectFlag.name}`}
+                                                            className='btn btn-link fs-small lh-sm font-weight-medium'
+                                                          >
+                                                            <Icon
+                                                              name='edit'
+                                                              width={20}
+                                                              fill='#6837FC'
+                                                            />{' '}
+                                                            Edit
+                                                          </Button>
+                                                          <Button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation()
+                                                              removeUserOverride(
+                                                                {
+                                                                  cb: () =>
+                                                                    this.userOverridesPage(
+                                                                      1,
+                                                                    ),
+                                                                  environmentId:
+                                                                    this.props
+                                                                      .environmentId,
+                                                                  identifier:
+                                                                    identity.identifier,
+                                                                  identity:
+                                                                    identity.id,
+                                                                  identityFlag,
+                                                                  projectFlag,
+                                                                },
+                                                              )
+                                                            }}
+                                                            className='btn ml-2 btn-with-icon'
+                                                          >
+                                                            <Icon
+                                                              name='trash-2'
+                                                              width={20}
+                                                              fill='#656D7B'
+                                                            />
+                                                          </Button>
+                                                        </div>
+                                                      </Row>
+                                                    </Row>
+                                                  )
+                                                }}
+                                                renderNoResults={
+                                                  <Row className='list-item'>
+                                                    <div className='table-column'>
+                                                      No identities are
+                                                      overriding this feature.
+                                                    </div>
+                                                  </Row>
+                                                }
+                                                isLoading={
+                                                  !this.state.userOverrides
+                                                }
+                                              />
+                                            </FormGroup>
+                                          </>
+                                        ) : (
+                                          <InfoMessage>
+                                            <div
+                                              dangerouslySetInnerHTML={{
+                                                __html:
+                                                  Constants.environmentPermissions(
+                                                    'View Identities',
+                                                  ),
+                                              }}
+                                            />
+                                          </InfoMessage>
+                                        )}
+                                      </TabItem>
+                                    )
+                                  }
+                                </Permission>
+
                                 {!existingChangeRequest &&
                                   this.props.flagId &&
                                   isVersioned && (

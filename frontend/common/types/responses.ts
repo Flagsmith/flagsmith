@@ -662,7 +662,7 @@ export type Res = {
   identities: EdgePagedResponse<Identity>
   permission: Record<string, boolean> & {
     ADMIN: boolean
-    tag_based_permissions?: { key: string; tags: number[] }[]
+    tag_based_permissions?: { permissions: string[]; tags: number[] }[]
   }
   availablePermissions: AvailablePermission[]
   tag: Tag
