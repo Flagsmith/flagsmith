@@ -107,10 +107,25 @@ class PermissionData:
         ).union(
             reduce(
                 lambda a, b: a.union(b),
-                [role.permissions for role in self.roles],
+                [
+                    role_permission.permissions
+                    for role_permission in self.roles
+                    if not role_permission.role.tags
+                ],
                 set(),
             )
         )
+
+    @property
+    def tag_based_permissions(self) -> list[dict]:
+        return [
+            {
+                "permissions": role_permission.permissions,
+                "tags": role_permission.role.tags,
+            }
+            for role_permission in self.roles
+            if role_permission.role.tags
+        ]
 
 
 def get_project_permission_data(project_id: int, user_id: int) -> PermissionData:
