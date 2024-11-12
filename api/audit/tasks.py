@@ -89,7 +89,9 @@ def create_audit_log_from_historical_record(
     if not (history_user or override_author or history_instance.master_api_key):
         return
 
-    environment, project = instance.get_environment_and_project()
+    environment = project = None
+    if instance.__class__.objects.filter(pk=instance.pk).exists():
+        environment, project = instance.get_environment_and_project()
 
     related_object_id = instance.get_audit_log_related_object_id(history_instance)
     related_object_type = instance.get_audit_log_related_object_type(history_instance)
