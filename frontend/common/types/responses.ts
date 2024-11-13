@@ -257,6 +257,7 @@ export type UserGroup = UserGroupSummary & {
 export type UserPermission = {
   user: User
   permissions: string[]
+  tag_based_permissions: { permission: string; tags: number[] }[]
   admin: boolean
   id: number
   role?: number
@@ -508,11 +509,9 @@ export type Account = {
 }
 export type Role = {
   id: number
-  tags: number[]
   name: string
   description?: string
   organisation: number
-  tag_based: boolean
 }
 
 export type ChangeSet = {

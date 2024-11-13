@@ -2,8 +2,6 @@ import React, {
   FC,
   forwardRef,
   Ref,
-  useImperativeHandle,
-  useMemo,
   useState,
 } from 'react'
 import Icon from './Icon'
@@ -16,9 +14,6 @@ import { PermissionLevel } from 'common/types/requests'
 import { Role, User, UserGroup, UserGroupSummary } from 'common/types/responses'
 import PanelSearch from './PanelSearch'
 import PermissionsSummaryList from './PermissionsSummaryList'
-import TagBasedPermissions from './TagBasedPermissions'
-import { useGetTagsQuery } from 'common/services/useTag'
-import classNames from 'classnames'
 
 type NameAndId = {
   name: string
@@ -33,7 +28,6 @@ type RolePermissionsListProps = {
   level: PermissionLevel
   filter: string
   orgId?: string
-  projectId: string
   user?: User
   group?: UserGroupSummary
 }
@@ -86,7 +80,7 @@ const PermissionsSummary: FC<PermissionsSummaryType> = ({
 }
 
 const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
-  ({ filter, group, level, mainItems, orgId, projectId, role, user }, ref) => {
+  ({ filter, group, level, mainItems, orgId, role, user }, ref) => {
     const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
 
     const mainItemsFiltered =
@@ -150,26 +144,16 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
             </Row>
             <div>
               {expandedItems.includes(mainItem.id) && (
-                <>
-                  <div className='px-3'>
-                    {level === 'project' && role && (
-                      <TagBasedPermissions
-                        projectId={`${mainItem.id}`}
-                        role={role}
-                      />
-                    )}
-                  </div>
-                  <EditPermissionsModal
-                    id={mainItem.id}
-                    level={level}
-                    role={role}
-                    className='mt-2 px-3'
-                    isGroup={!!group}
-                    parentId={mainItem.parentId}
-                    group={group}
-                    user={user}
-                  />
-                </>
+                <EditPermissionsModal
+                  id={mainItem.id}
+                  level={level}
+                  role={role}
+                  className='mt-2 px-3'
+                  isGroup={!!group}
+                  parentId={mainItem.parentId}
+                  group={group}
+                  user={user}
+                />
               )}
             </div>
           </div>

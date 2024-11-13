@@ -32,14 +32,13 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
     level: 'organisation',
     permission: 'ADMIN',
   })
-  const createRole = (tagBased: boolean) => {
+  const createRole = () => {
     openModal(
-      tagBased ? 'Create Tag-based role' : 'Create Role',
+      'Create Role',
       <CreateRole
-        tagBased={tagBased}
         organisationId={organisationId}
         onComplete={() => {
-          toast(tagBased ? 'Tag-based Role Created' : 'Role Created')
+          toast('Role Created')
           closeModal()
         }}
       />,
@@ -61,13 +60,11 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
 
   const editRole = (role: Role) => {
     openModal(
-      role.tag_based
-        ? `Edit Tag-based Role: ${role.name}`
-        : `Edit Role: ${role.name}`,
+      'Edit Role and Permissions',
       <CreateRole
         organisationId={role.organisation}
         isEdit
-        role={role.id}
+        role={role}
         onComplete={() => {
           toast('Role Updated')
         }}
@@ -77,9 +74,6 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
       'side-modal',
     )
   }
-  const tag_based_permissions = Utils.getFlagsmithHasFeature(
-    'tag_based_permissions',
-  )
   return (
     <>
       <Row space className='mt-4'>
@@ -91,7 +85,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
             disabled={!isAdmin}
             className='mr-2'
             id='btn-invite'
-            onClick={() => createRole(false)}
+            onClick={() => createRole()}
             type='button'
           >
             Create Role
@@ -103,9 +97,9 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         you can assign roles to users and/or groups.
       </p>
       <PanelSearch
-        id='org-roles-list'
+        id='org-members-list'
         className='no-pad'
-        items={(roles?.results || []).filter((v) => !v.tag_based)}
+        items={roles?.results || []}
         itemHeight={65}
         header={
           <Row className='table-header'>
@@ -169,7 +163,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
           </Row>
         )}
         renderNoResults={
-          <Panel className='no-pad'>
+          <Panel title={'Organisation roles'} className='no-pad'>
             <div className='search-list'>
               <Row className='list-item p-3 text-muted'>
                 You currently have no organisation roles
@@ -179,107 +173,6 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         }
         isLoading={false}
       />
-      {tag_based_permissions && (
-        <>
-          <Row space className='mt-4'>
-            <h5 className='m-b-0'>Tag-based Roles</h5>
-            {Utils.renderWithPermission(
-              isAdmin,
-              Constants.organisationPermissions('Admin'),
-              <Button
-                disabled={!isAdmin}
-                className='mr-2'
-                id='btn-invite'
-                onClick={() => createRole(true)}
-                type='button'
-              >
-                Create Tag-based Role
-              </Button>,
-            )}
-          </Row>
-          <p className='fs-small lh-sm'>
-            Use tag-based roles to grant permissions for features with specific
-            tags.
-          </p>
-          <PanelSearch
-            id='org-roles-list'
-            className='no-pad'
-            items={(roles?.results || []).filter((v) => !!v.tag_based)}
-            itemHeight={65}
-            header={
-              <Row className='table-header'>
-                <div
-                  className='table-column'
-                  style={{
-                    width: rolesWidths[0],
-                  }}
-                >
-                  Name
-                </div>
-                <div className='flex-fill table-column'>Description</div>
-                <div
-                  style={{
-                    width: rolesWidths[1],
-                  }}
-                  className='table-column text-center'
-                >
-                  Remove
-                </div>
-              </Row>
-            }
-            renderRow={(role: Role) => (
-              <Row className='list-item clickable cursor-pointer' key={role.id}>
-                <Row
-                  onClick={() => {
-                    editRole(role)
-                  }}
-                  className='table-column'
-                  style={{
-                    width: rolesWidths[0],
-                  }}
-                >
-                  {role.name}
-                </Row>
-                <Row
-                  className='table-column flex-fill'
-                  onClick={() => {
-                    editRole(role)
-                  }}
-                >
-                  {role.description}
-                </Row>
-                <div
-                  style={{
-                    width: rolesWidths[1],
-                  }}
-                  className='table-column text-center'
-                >
-                  <Button
-                    id='remove-role'
-                    type='button'
-                    onClick={() => {
-                      deleteRole(role)
-                    }}
-                    className='btn btn-with-icon'
-                  >
-                    <Icon name='trash-2' width={20} fill='#656D7B' />
-                  </Button>
-                </div>
-              </Row>
-            )}
-            renderNoResults={
-              <Panel className='no-pad'>
-                <div className='search-list'>
-                  <Row className='list-item p-3 text-muted'>
-                    You currently have no tag-based roles
-                  </Row>
-                </div>
-              </Panel>
-            }
-            isLoading={false}
-          />
-        </>
-      )}
     </>
   )
 }

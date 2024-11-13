@@ -48,6 +48,7 @@ export type IconName =
   | 'minus-circle'
   | 'email'
   | 'arrow-right'
+  | 'dash'
   | 'settings-2'
   | 'rocket'
   | 'timer'
@@ -91,6 +92,26 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
             fill={fill}
             className='ionicon-stroke-width'
           ></path>
+        </svg>
+      )
+    }
+    case 'dash': {
+      return (
+        <svg
+          width={width}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/minus'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M19 13H5C4.448 13 4 12.553 4 12C4 11.447 4.448 11 5 11H19C19.553 11 20 11.447 20 12C20 12.553 19.553 13 19 13Z'
+              fill={fill}
+            />
+          </g>
         </svg>
       )
     }

@@ -16,7 +16,6 @@ import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
 import WarningMessage from './WarningMessage'
-import TagBasedPermissions from './TagBasedPermissions'
 
 type PermissionsTabsType = {
   orgId?: number
@@ -86,23 +85,19 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         theme='pill m-0'
         isRoles={true}
       >
-        {role?.tag_based !== true && (
-          <TabItem
-            tabLabel={
-              <Row className='justify-content-center'>Organisation</Row>
-            }
-          >
-            <EditPermissionsModal
-              id={orgId}
-              group={group}
-              isGroup={!!group}
-              user={user}
-              className='mt-2'
-              level={'organisation'}
-              role={role}
-            />
-          </TabItem>
-        )}
+        <TabItem
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
+        >
+          <EditPermissionsModal
+            id={orgId}
+            group={group}
+            isGroup={!!group}
+            user={user}
+            className='mt-2'
+            level={'organisation'}
+            role={role}
+          />
+        </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Project</Row>}
         >
@@ -154,9 +149,6 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               onChange={setProject}
               value={project}
             />
-          </div>
-          <div className='my-4'>
-            <TagBasedPermissions projectId={project} role={role} />
           </div>
           <div className='mt-2'>
             {environments.length > 0 && (
