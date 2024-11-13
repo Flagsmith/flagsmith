@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='ffadminuser',
             name='uuid',
-            field=models.UUIDField(default=uuid.uuid4),
+            field=models.UUIDField(default=None, null=True),
         ),
         migrations.RunPython(set_default_uuids, reverse_code=migrations.RunPython.noop),
         migrations.AlterField(
