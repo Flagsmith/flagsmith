@@ -1293,5 +1293,5 @@ SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", N
 
 LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 
-if LICENSING_INSTALLED:
+if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")

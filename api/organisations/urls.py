@@ -154,7 +154,7 @@ urlpatterns = [
     ),
 ]
 
-if settings.LICENSING_INSTALLED:
+if settings.LICENSING_INSTALLED:  # pragma: no cover
     from licensing.views import create_or_update_licence
 
     urlpatterns.extend(

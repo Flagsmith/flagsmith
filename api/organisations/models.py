@@ -415,7 +415,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if is_enterprise() and hasattr(self.organisation, "licence"):
+        if is_enterprise() and hasattr(
+            self.organisation, "licence"
+        ):  # pragma: no cover
             licence_information = self.organisation.licence.get_licence_information()
             return BaseSubscriptionMetadata(
                 seats=licence_information.num_seats,
@@ -423,7 +425,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
                 audit_log_visibility_days=None,
                 feature_history_visibility_days=None,
             )
-        elif is_enterprise():
+        elif is_enterprise():  # pragma: no cover
             return BaseSubscriptionMetadata(
                 seats=self.max_seats,
                 api_calls=self.max_api_calls,
