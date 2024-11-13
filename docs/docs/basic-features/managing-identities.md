@@ -88,6 +88,13 @@ engine runs.
 There are some [exceptions to this rule](/clients#server-side-sdks) with Server Side SDKs running in local evaluation
 mode.
 
+:::info
+
+Note that, when using our SaaS platform, there might be a short delay from the initial request to write or update traits
+for an identity and them being used in subsequent evaluations.
+
+:::
+
 ### Using Traits as a data-store
 
 Traits can also be used to store additional data about your users that would be cumbersome to store within your
