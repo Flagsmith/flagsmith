@@ -37,6 +37,12 @@ class CreateUpdateUserPermissionSerializerABC(serializers.ModelSerializer):
         return instance
 
 
+class TagBasedPermissionSerializer(serializers.Serializer):
+    permissions = serializers.ListField(child=serializers.CharField())
+    tags = serializers.ListField(child=serializers.IntegerField())
+
+
 class UserObjectPermissionsSerializer(serializers.Serializer):
     permissions = serializers.ListField(child=serializers.CharField())
     admin = serializers.BooleanField()
+    tag_based_permissions = TagBasedPermissionSerializer(many=True)
