@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.153.0](https://github.com/Flagsmith/flagsmith/compare/v2.152.0...v2.153.0) (2024-11-12)
+
+
+### Features
+
+* log commands in Docker entrypoint ([#4826](https://github.com/Flagsmith/flagsmith/issues/4826)) ([b2d7500](https://github.com/Flagsmith/flagsmith/commit/b2d7500c6fffb80522e2c940a0031e8df5387556))
+* **my-permissions:** Add tag based permissions ([#4824](https://github.com/Flagsmith/flagsmith/issues/4824)) ([cbd60d9](https://github.com/Flagsmith/flagsmith/commit/cbd60d942c5a58030af548f8b5af0057ada3cf18))
+
+
+### Bug Fixes
+
+* Allow any auth except LDAP and SAML to change email ([#4810](https://github.com/Flagsmith/flagsmith/issues/4810)) ([10eb571](https://github.com/Flagsmith/flagsmith/commit/10eb571bba1821324daf3d56edee96b3d391b977))
+* Edit identity override with prevent flag defaults enabled ([#4809](https://github.com/Flagsmith/flagsmith/issues/4809)) ([0f9b24b](https://github.com/Flagsmith/flagsmith/commit/0f9b24b5df354f01b6de9c9c754c468e65c5c081))
+* make clone_feature_states_async write only ([#4811](https://github.com/Flagsmith/flagsmith/issues/4811)) ([513b088](https://github.com/Flagsmith/flagsmith/commit/513b088edf25b05f2b7c15604826f21c2a0b3b18))
+
+## [2.152.0](https://github.com/Flagsmith/flagsmith/compare/v2.151.0...v2.152.0) (2024-11-06)
+
+
+### Features
+
+* add environment processing UI ([#4812](https://github.com/Flagsmith/flagsmith/issues/4812)) ([9db91ae](https://github.com/Flagsmith/flagsmith/commit/9db91ae980ae3bf9fe445f68c8aaf438c68a47b9))
+* Manage user's groups ([#4312](https://github.com/Flagsmith/flagsmith/issues/4312)) ([89b153c](https://github.com/Flagsmith/flagsmith/commit/89b153cb3694bf893a24e6d3e047992a6d456eae))
+* restrict versioning by days ([#4547](https://github.com/Flagsmith/flagsmith/issues/4547)) ([dad864a](https://github.com/Flagsmith/flagsmith/commit/dad864aa2de0ed6ab704c8b83796ee0a7a8a780a))
+
+
+### Bug Fixes
+
+* feature stale message not showing ([#4801](https://github.com/Flagsmith/flagsmith/issues/4801)) ([70a7d81](https://github.com/Flagsmith/flagsmith/commit/70a7d81355f8787a68de52b53caf476a5c984103))
+* Fix organisation meta ([#4802](https://github.com/Flagsmith/flagsmith/issues/4802)) ([c2fdc5b](https://github.com/Flagsmith/flagsmith/commit/c2fdc5b3e3485a22e8599e904800ca8c238a11b8))
+* permanent tag icons ([#4804](https://github.com/Flagsmith/flagsmith/issues/4804)) ([57ad28c](https://github.com/Flagsmith/flagsmith/commit/57ad28cf033b2ec9554ad60bcade4bd40cedb117))
+* users with VIEW_ENVIRONMENT should be able to retrieve environment ([#4814](https://github.com/Flagsmith/flagsmith/issues/4814)) ([e6f1bac](https://github.com/Flagsmith/flagsmith/commit/e6f1bac2f264ebdc1d012ad61539efb76ac43fd7))
+
+## [2.151.0](https://github.com/Flagsmith/flagsmith/compare/v2.150.0...v2.151.0) (2024-11-04)
+
+
+### Features
+
+* async the logic for cloning feature states into a cloned environment ([#4005](https://github.com/Flagsmith/flagsmith/issues/4005)) ([02f5f71](https://github.com/Flagsmith/flagsmith/commit/02f5f71f82bae1ec3536cb522fc0b684a2c27605))
+* **ci:** add command to rollback migrations ([#4768](https://github.com/Flagsmith/flagsmith/issues/4768)) ([483cc87](https://github.com/Flagsmith/flagsmith/commit/483cc87fde03d2da465f9ec799bdbc746533f8d2))
+* **export:** Add support for edge identities data ([#4654](https://github.com/Flagsmith/flagsmith/issues/4654)) ([f72c764](https://github.com/Flagsmith/flagsmith/commit/f72c764e59d44f3c50bafd0cd2aef2dcf51af07b))
+* **permissions:** update endpoints to expose tag-supported perms ([#4788](https://github.com/Flagsmith/flagsmith/issues/4788)) ([43e68c1](https://github.com/Flagsmith/flagsmith/commit/43e68c1b67eeb5587440cbe5017035b60d897212))
+
+
+### Bug Fixes
+
+* Extend user first name length to 150 characters ([#4797](https://github.com/Flagsmith/flagsmith/issues/4797)) ([364c565](https://github.com/Flagsmith/flagsmith/commit/364c565fed5ebdb0da86927a25d56631502b3792))
+* hide view features from associated segment overrides ([#4786](https://github.com/Flagsmith/flagsmith/issues/4786)) ([49ff569](https://github.com/Flagsmith/flagsmith/commit/49ff569cabac19f70c0688f1fe58c3511ce8801b))
+* Set tag to get or create ([#4790](https://github.com/Flagsmith/flagsmith/issues/4790)) ([fedd296](https://github.com/Flagsmith/flagsmith/commit/fedd296a5cc8eb07aa1db4a2cbb5eca8f124c098))
+
 ## [2.150.0](https://github.com/Flagsmith/flagsmith/compare/v2.149.0...v2.150.0) (2024-10-30)
 
 

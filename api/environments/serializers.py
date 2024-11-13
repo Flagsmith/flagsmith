@@ -137,6 +137,7 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
         help_text="If True, the environment will be created immediately, but the feature states "
         "will be created asynchronously. Environment will have `is_creating: true` until "
         "this process is completed.",
+        write_only=True,
     )
 
     class Meta:

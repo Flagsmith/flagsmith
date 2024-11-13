@@ -99,7 +99,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
-    first_name = models.CharField("first name", max_length=30)
+    first_name = models.CharField(
+        "first name", max_length=150, db_column="first_name_v2"
+    )
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
@@ -109,6 +111,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     )
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
+    )
+
+    _first_name_old = models.CharField(
+        "first name", max_length=30, db_column="first_name"
     )
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
