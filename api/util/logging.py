@@ -27,15 +27,11 @@ class JsonFormatter(logging.Formatter):
         return json_record
 
     def format(self, record: logging.LogRecord) -> str:
-        try:
-            return json.dumps(self.get_json_record(record))
-        except (ValueError, TypeError) as e:
-            return json.dumps({"message": f"{e} when dumping log"})
+        return json.dumps(self.get_json_record(record))
 
 
 class GunicornAccessLogJsonFormatter(JsonFormatter):
     def get_json_record(self, record: logging.LogRecord) -> dict[str, Any]:
-        response_time = datetime.strptime(record.args["t"], "[%d/%b/%Y:%H:%M:%S %z]")
         args = record.args
         url = args["U"]
         if q := args["q"]:
@@ -43,7 +39,7 @@ class GunicornAccessLogJsonFormatter(JsonFormatter):
 
         return {
             **super().get_json_record(record),
-            "time": response_time.isoformat(),
+            "time": datetime.strptime(args["t"], "[%d/%b/%Y:%H:%M:%S %z]").isoformat(),
             "path": url,
             "remote_ip": args["h"],
             "method": args["m"],
