@@ -6,7 +6,7 @@ from typing import Any
 
 from django.conf import settings
 from gunicorn.config import Config
-from gunicorn.glogging import Logger as GunicornLogger
+from gunicorn.instrument.statsd import Statsd as GunicornLogger
 
 
 class JsonFormatter(logging.Formatter):
@@ -27,30 +27,27 @@ class JsonFormatter(logging.Formatter):
         return json_record
 
     def format(self, record: logging.LogRecord) -> str:
-        try:
-            return json.dumps(self.get_json_record(record))
-        except (ValueError, TypeError) as e:
-            return json.dumps({"message": f"{e} when dumping log"})
+        return json.dumps(self.get_json_record(record))
 
 
 class GunicornAccessLogJsonFormatter(JsonFormatter):
     def get_json_record(self, record: logging.LogRecord) -> dict[str, Any]:
-        response_time = datetime.strptime(record.args["t"], "[%d/%b/%Y:%H:%M:%S %z]")
-        url = record.args["U"]
-        if record.args["q"]:
-            url += f"?{record.args['q']}"
+        args = record.args
+        url = args["U"]
+        if q := args["q"]:
+            url += f"?{q}"
 
         return {
             **super().get_json_record(record),
-            "time": response_time.isoformat(),
+            "time": datetime.strptime(args["t"], "[%d/%b/%Y:%H:%M:%S %z]").isoformat(),
             "path": url,
-            "remote_ip": record.args["h"],
-            "method": record.args["m"],
-            "status": str(record.args["s"]),
-            "user_agent": record.args["a"],
-            "referer": record.args["f"],
-            "duration_in_ms": record.args["M"],
-            "pid": record.args["p"],
+            "remote_ip": args["h"],
+            "method": args["m"],
+            "status": str(args["s"]),
+            "user_agent": args["a"],
+            "referer": args["f"],
+            "duration_in_ms": args["M"],
+            "pid": args["p"],
         }
 
 
