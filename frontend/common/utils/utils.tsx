@@ -111,7 +111,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
-  colour(c: string, fallback = '#6837FC'): InstanceType<typeof Color> {
+  colour(
+    c: string,
+    fallback = Constants.defaultTagColor,
+  ): InstanceType<typeof Color> {
     let res: Color
     try {
       res = Color(c)
