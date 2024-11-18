@@ -16,12 +16,13 @@ OverridesData = dict[int, EnvironmentFeatureOverridesData]
 
 def get_overrides_data(
     environment: "Environment",
+    feature_ids: None | list[int] = None,
 ) -> OverridesData:
     """
     Get correct overrides counts for a given environment.
 
     :param project: project to get overrides data for
-    :return: overrides data getter
+    :return: overrides data getter dictionary of {feature_id: EnvironmentFeatureOverridesData}
     """
     project = environment.project
 
@@ -29,7 +30,7 @@ def get_overrides_data(
         if project.edge_v2_identity_overrides_migrated:
             # If v2 migration is complete, count segment overrides from Core
             # and identity overrides from DynamoDB.
-            return get_edge_overrides_data(environment)
+            return get_edge_overrides_data(environment, feature_ids)
         # If v2 migration is not started, in progress, or incomplete,
         # only count segment overrides from Core.
         # v1 Edge identity overrides are uncountable.
@@ -71,7 +72,7 @@ def get_core_overrides_data(
 
 
 def get_edge_overrides_data(
-    environment: "Environment",
+    environment: "Environment", feature_ids: None | list[int] = None
 ) -> OverridesData:
     """
     Get the number of identity / segment overrides in a given environment for each feature in the
@@ -89,6 +90,8 @@ def get_edge_overrides_data(
         get_overrides_data_future = executor.submit(
             get_edge_identity_overrides,
             environment_id=environment.id,
+            feature_ids=feature_ids,
+            limit_feature_identities_to_one_page=True,
         )
     all_overrides_data: OverridesData = {}
 
