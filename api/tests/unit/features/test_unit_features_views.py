@@ -33,6 +33,7 @@ from environments.permissions.constants import (
     VIEW_ENVIRONMENT,
 )
 from environments.permissions.models import UserEnvironmentPermission
+from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -2060,6 +2061,38 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["count"] == 1
     assert response_json["results"][0]["num_segment_overrides"] == 1
     assert response_json["results"][0]["num_identity_overrides"] is None
+
+
+def test_list_features_calls_get_overrides_data_with_feature_ids(
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    admin_client_new: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature = Feature.objects.create(
+        name="test_feature", project=dynamo_enabled_project
+    )
+    url = "%s?environment=%d" % (
+        reverse(
+            "api-v1:projects:project-features-list", args=[dynamo_enabled_project.id]
+        ),
+        dynamo_enabled_project_environment_one.id,
+    )
+    mock_get_overrides_data = mocker.patch("features.views.get_overrides_data")
+    mock_get_overrides_data.return_value = {
+        feature.id: EnvironmentFeatureOverridesData()
+    }
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_overrides_data.assert_called_once_with(
+        dynamo_enabled_project_environment_one,
+        [feature.id],
+    )
 
 
 def test_create_segment_override_reaching_max_limit(
