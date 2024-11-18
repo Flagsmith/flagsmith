@@ -1,4 +1,5 @@
 import typing
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -66,22 +67,69 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         environment_id: int,
         feature_id: int | None = None,
+        feature_ids: None | list[int] = None,
+        limit_feature_identities_to_one_page: bool = False,
     ) -> typing.List[dict[str, Any]]:
         try:
-            return list(
-                self.query_get_all_items(
-                    KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-                        str(environment_id),
+            if not limit_feature_identities_to_one_page:
+                if feature_ids is not None:
+                    raise NotImplementedError(
+                        "Multiple feature ids is currently not supported "
+                        "when not limiting to a single page of features"
                     )
-                    & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
-                        get_environments_v2_identity_override_document_key(
-                            feature_id=feature_id,
-                        ),
+                return list(
+                    self.query_get_all_items(
+                        KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+                            str(environment_id),
+                        )
+                        & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
+                            get_environments_v2_identity_override_document_key(
+                                feature_id=feature_id,
+                            ),
+                        )
                     )
                 )
-            )
+            else:
+                if feature_ids is None and feature_id:
+                    feature_ids = [feature_id]
+                assert feature_ids is not None
+
+                futures = []
+                with ThreadPoolExecutor() as executor:
+                    for feature_id in feature_ids:
+                        futures.append(
+                            executor.submit(
+                                self.get_page_of_feature_identities,
+                                environment_id,
+                                feature_id,
+                            )
+                        )
+
+                results = []
+                for future in as_completed(futures):
+                    result = future.result()
+                    for item in result:
+                        results.append(item)
+
+                return results
+
         except KeyError as e:
             raise ObjectDoesNotExist() from e
+
+    def get_page_of_feature_identities(
+        self, environment_id: int, feature_id: int
+    ) -> list[dict[str, Any]]:
+        query_response = self.table.query(
+            KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+                str(environment_id),
+            )
+            & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
+                get_environments_v2_identity_override_document_key(
+                    feature_id=feature_id,
+                ),
+            )
+        )
+        return query_response["Items"]
 
     def update_identity_overrides(
         self,
