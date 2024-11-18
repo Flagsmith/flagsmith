@@ -166,8 +166,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
         if environment_id:
             page = self.paginate_queryset(queryset)
             self.environment = Environment.objects.get(id=environment_id)
+            self.feature_ids = [feature.id for feature in page]
             q = Q(
-                feature_id__in=[feature.id for feature in page],
+                feature_id__in=self.feature_ids,
                 identity__isnull=True,
                 feature_segment__isnull=True,
             )
@@ -214,10 +215,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]
             )
-            queryset = self.get_queryset()
-            page = self.paginate_queryset(queryset)
-            feature_ids = [feature.id for feature in page]
-            context["overrides_data"] = get_overrides_data(environment, feature_ids)
+            context["overrides_data"] = get_overrides_data(
+                environment, self.feature_ids
+            )
 
         return context
 
