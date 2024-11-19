@@ -10,14 +10,12 @@ def get_edge_identity_overrides(
     environment_id: int,
     feature_id: int | None = None,
     feature_ids: None | list[int] = None,
-    limit_feature_identities_to_one_page: bool = False,
 ) -> typing.List[IdentityOverrideV2]:
     override_items = (
         ddb_environment_v2_wrapper.get_identity_overrides_by_environment_id(
             environment_id=environment_id,
             feature_id=feature_id,
             feature_ids=feature_ids,
-            limit_feature_identities_to_one_page=limit_feature_identities_to_one_page,
         )
     )
     return [
