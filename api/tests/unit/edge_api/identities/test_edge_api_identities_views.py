@@ -159,7 +159,10 @@ def test_get_edge_identity_overrides_for_a_feature(
     }
 
     mock_dynamodb_wrapper.get_identity_overrides_by_environment_id.assert_called_once_with(
-        environment_id=environment.id, feature_id=feature.id
+        environment_id=environment.id,
+        feature_id=feature.id,
+        feature_ids=None,
+        limit_feature_identities_to_one_page=False,
     )
 
 
