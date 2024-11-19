@@ -566,6 +566,17 @@ Create an OAuth application in the Google Developer Console and then provide the
 }
 ```
 
+If you are using the [unified Docker image](https://hub.docker.com/repository/docker/flagsmith/flagsmith), which serves
+both the API and the frontend through Django, ensure you configure the following environment variable in your
+deployment:
+
+```
+DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY=same-origin-allow-popups
+```
+
+For those hosting the frontend independently, make sure you set the `Cross-Origin-Opener-Policy` to
+`same-origin-allow-popups` for Google OAuth flow to work.
+
 ### Dark Mode
 
 We also have a Segment that manages the ui Dark Mode:
