@@ -88,6 +88,7 @@ class IdentityOverrideV2(BaseModel):
     identifier: str
     identity_uuid: str
     feature_state: FeatureStateModel
+    more_identity_overrides: bool = False
 
 
 @dataclass
