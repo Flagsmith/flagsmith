@@ -82,7 +82,6 @@ def get_edge_overrides_data(
     :param environment: the environment to get the overrides data for
     :return OverridesData: dictionary of {feature_id: EnvironmentFeatureOverridesData}
     """
-    limit_feature_identities_to_one_page = feature_ids is not None
     with ThreadPoolExecutor() as executor:
         get_environment_flags_list_future = executor.submit(
             get_environment_flags_list,
@@ -92,7 +91,6 @@ def get_edge_overrides_data(
             get_edge_identity_overrides,
             environment_id=environment.id,
             feature_ids=feature_ids,
-            limit_feature_identities_to_one_page=limit_feature_identities_to_one_page,
         )
     all_overrides_data: OverridesData = {}
 
@@ -108,5 +106,8 @@ def get_edge_overrides_data(
             all_overrides_data[
                 identity_override.feature_state.feature.id
             ].add_identity_override()
+            all_overrides_data[
+                identity_override.feature_state.feature.id
+            ].more_identity_overrides = identity_override.more_identity_overrides
 
     return all_overrides_data
