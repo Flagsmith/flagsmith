@@ -77,7 +77,7 @@ const SingleValue = (props: SingleValueProps<any>) => {
         {props.data.value === 'GRANTED' && (
           <Icon width={18} name='checkmark' fill='#27AB95' />
         )}
-        {props.data.value === 'LIMITED' && (
+        {props.data.value === 'GRANTED_FOR_TAGS' && (
           <Icon width={18} name='shield' fill='#ff9f43' />
         )}
         {props.children}
@@ -126,7 +126,7 @@ type EntityPermissions = Omit<
 }
 const permissionOptions = [
   { label: 'Granted', value: 'GRANTED' },
-  { label: 'Granted for tags', value: 'LIMITED' },
+  { label: 'Granted for tags', value: 'GRANTED_FOR_TAGS' },
   { label: 'None', value: 'NONE' },
 ]
 const withAdminPermissions = (InnerComponent: any) => {
@@ -481,7 +481,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       if (!permission) return 'NONE'
 
       if (permission.tags?.length || limitedPermissions.includes(key)) {
-        return 'LIMITED'
+        return 'GRANTED_FOR_TAGS'
       }
 
       return 'GRANTED'
@@ -588,7 +588,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const selectPermissions = (
       key: string,
-      value: 'GRANTED' | 'LIMITED' | 'NONE',
+      value: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
       tags: number[] = [],
     ) => {
       const updatedPermissions = [
@@ -615,7 +615,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           ]),
         })
       }
-      if (value === 'LIMITED') {
+      if (value === 'GRANTED_FOR_TAGS') {
         setLimitedPermissions(updatedLimitedPermissions.concat([key]))
       } else {
         setLimitedPermissions(updatedLimitedPermissions)
@@ -855,13 +855,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                         <div className='list-item-subtitle'>
                           {p.description}
                         </div>
-                        {permissionType === 'LIMITED' && (
+                        {permissionType === 'GRANTED_FOR_TAGS' && (
                           <AddEditTags
                             projectId={`${projectId}`}
                             value={permission?.tags || []}
                             onChange={(v) => {
                               setValueChanged(true)
-                              selectPermissions(p.key, 'LIMITED', v)
+                              selectPermissions(p.key, 'GRANTED_FOR_TAGS', v)
                             }}
                           />
                         )}
