@@ -76,6 +76,23 @@ def test_retrieve_environment(
     )
 
 
+def test_user_with_view_environment_permission_can_retrieve_environment(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_can_clone_environment_with_create_environment_permission(
     test_user,
     test_user_client,
@@ -918,6 +935,27 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
 
     # and - only distinct keys are returned
     assert len(res.json().get("keys")) == 2
+
+
+def test_user_with_view_environment_can_get_trait_keys(
+    identity: Identity,
+    staff_client: APIClient,
+    trait: Trait,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-trait-keys", args=[environment.api_key]
+    )
+
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    # When
+    res = staff_client.get(url)
+
+    # Then
+    assert res.status_code == status.HTTP_200_OK
 
 
 def test_delete_trait_keys_deletes_traits_matching_provided_key_only(

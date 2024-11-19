@@ -1943,7 +1943,7 @@ const CreateFlag = class extends Component {
                                   error,
                                   projectAdmin,
                                   createFeature,
-                                  project.prevent_flag_defaults,
+                                  project.prevent_flag_defaults && !identity,
                                 )}
                                 <ModalHR
                                   className={`my-4 ${identity ? 'mx-3' : ''}`}
