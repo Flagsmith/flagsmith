@@ -442,7 +442,7 @@ export default {
     },
   },
   getFlagsmithSDKUrl: () =>
-    Utils.isSaas() || Project.api.includes('api.flagsmith.com')
+    Utils.isSaas() || Project.api.includes('https://api.flagsmith.com')
       ? Project.flagsmithClientEdgeAPI
       : Project.api,
   getUpgradeUrl: (feature?: string) => {
