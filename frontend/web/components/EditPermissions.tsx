@@ -66,6 +66,7 @@ import { useGetTagsQuery } from 'common/services/useTag'
 import { components } from 'react-select'
 import { SingleValueProps } from 'react-select/lib/components/SingleValue'
 import Utils from 'common/utils/utils'
+import AddEditTags from './tags/AddEditTags'
 
 const Project = require('common/project')
 
@@ -76,8 +77,8 @@ const SingleValue = (props: SingleValueProps<any>) => {
         {props.data.value === 'GRANTED' && (
           <Icon width={18} name='checkmark' fill='#27AB95' />
         )}
-        {props.data.value === 'LIMITED_ACCESS' && (
-          <Icon width={18} name='setting' fill='#656d7b' />
+        {props.data.value === 'LIMITED' && (
+          <Icon width={18} name='shield' fill='#ff9f43' />
         )}
         {props.children}
       </div>
@@ -125,7 +126,7 @@ type EntityPermissions = Omit<
 }
 const permissionOptions = [
   { label: 'Granted', value: 'GRANTED' },
-  { label: 'Limited', value: 'LIMITED' },
+  { label: 'Granted for tags', value: 'LIMITED' },
   { label: 'None', value: 'NONE' },
 ]
 const withAdminPermissions = (InnerComponent: any) => {
@@ -479,8 +480,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
       if (!permission) return 'NONE'
 
-      if (permission.tags?.length) {
-        // todo: keep manual track of selection
+      if (permission.tags?.length || limitedPermissions.includes(key)) {
         return 'LIMITED'
       }
 
@@ -577,6 +577,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       role,
       updateRolePermissions,
     ])
+    const [limitedPermissions, setLimitedPermissions] = useState<string[]>([])
 
     useEffect(() => {
       if (valueChanged) {
@@ -584,6 +585,42 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       }
       //eslint-disable-next-line
     }, [valueChanged])
+
+    const selectPermissions = (
+      key: string,
+      value: 'GRANTED' | 'LIMITED' | 'NONE',
+      tags: number[] = [],
+    ) => {
+      const updatedPermissions = [
+        ...entityPermissions.permissions.filter(
+          (v) => v.permission_key !== key,
+        ),
+      ]
+      const updatedLimitedPermissions = limitedPermissions.filter(
+        (v) => v !== key,
+      )
+      if (value === 'NONE') {
+        setEntityPermissions({
+          ...entityPermissions,
+          permissions: updatedPermissions,
+        })
+      } else {
+        setEntityPermissions({
+          ...entityPermissions,
+          permissions: updatedPermissions.concat([
+            {
+              permission_key: key,
+              tags,
+            },
+          ]),
+        })
+      }
+      if (value === 'LIMITED') {
+        setLimitedPermissions(updatedLimitedPermissions.concat([key]))
+      } else {
+        setLimitedPermissions(updatedLimitedPermissions)
+      }
+    }
     const togglePermission = (key: string) => {
       if (role) {
         permissionChanged?.()
@@ -802,11 +839,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   level !== 'organisation' &&
                   p.key !== `VIEW_${levelUpperCase}` &&
                   !hasPermission(`VIEW_${levelUpperCase}`)
+                const permission = entityPermissions.permissions.find(
+                  (v) => v.permission_key === p.key,
+                )
+                const permissionType = getPermissionType(p.key)
                 return (
                   <Row
                     key={p.key}
                     style={admin() ? { opacity: 0.5 } : undefined}
-                    className='list-item list-item-sm px-3'
+                    className='list-item list-item-sm px-3 py-2'
                   >
                     <Row space>
                       <Flex>
@@ -814,13 +855,27 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                         <div className='list-item-subtitle'>
                           {p.description}
                         </div>
+                        {permissionType === 'LIMITED' && (
+                          <AddEditTags
+                            projectId={`${projectId}`}
+                            value={permission?.tags || []}
+                            onChange={(v) => {
+                              setValueChanged(true)
+                              selectPermissions(p.key, 'LIMITED', v)
+                            }}
+                          />
+                        )}
                       </Flex>
                       {tagBasedPermissions ? (
                         <div className='ms-2' style={{ width: 200 }}>
                           <Select
                             value={permissionOptions.find(
-                              (v) => v.value === getPermissionType(p.key),
+                              (v) => v.value === permissionType,
                             )}
+                            onChange={(v) => {
+                              setValueChanged(true)
+                              selectPermissions(p.key, v.value)
+                            }}
                             className='react-select select-sm'
                             disabled={disabled || admin() || saving}
                             options={permissionOptions}
