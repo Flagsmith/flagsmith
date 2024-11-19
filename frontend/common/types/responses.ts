@@ -263,7 +263,7 @@ export type UserPermission = {
   role?: number
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
-  group: UserGroup
+  group: UserGroupSummary
 }
 
 export type AuditLogItem = {

@@ -80,7 +80,7 @@ import Utils from 'common/utils/utils'
 
 const Project = require('common/project')
 
-const SingleValue = (props: SingleValueProps<OptionType>) => {
+const SingleValue = (props: SingleValueProps<any>) => {
   return (
     <components.SingleValue {...props}>
       <div className='d-flex gap-1 align-items-center'>
@@ -114,7 +114,7 @@ type EditPermissionModalType = {
   user?: User
   role?: Role
   roles?: Role[]
-  permissionChanged: () => void
+  permissionChanged?: () => void
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
 }
@@ -218,8 +218,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const [rolesSelected, setRolesSelected] = useState<
       {
         role: number
-        user_role_id?: number
-        group_role_id?: number
+        user_role_id: number | undefined
+        group_role_id: number | undefined
       }[]
     >([])
 
@@ -247,6 +247,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     useEffect(() => {
       if (user && userWithRolesDataSuccesfull) {
         const resultArray = userWithRolesData?.results?.map((userRole) => ({
+          group_role_id: undefined,
           role: userRole.id,
           user_role_id: user?.id,
         }))
@@ -260,6 +261,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         const resultArray = groupWithRolesData?.results?.map((groupRole) => ({
           group_role_id: group?.id,
           role: groupRole.id,
+          user_role_id: undefined,
         }))
         setRolesSelected(resultArray)
       }
@@ -554,7 +556,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         }
         if (level === 'environment') {
           body.admin = entityPermissions.admin
-          body.environment = envId || id
+          body.environment = (envId || id) as number
         }
         if (entityId || permissionWasCreated) {
           updateRolePermissions({
@@ -689,7 +691,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             deleteRolePermissionUser({
               organisation_id: id,
               role_id: roleId,
-              user_id: roleSelected?.user_role_id,
+              user_id: roleSelected?.user_role_id!,
             }).then(onRoleRemoved as any)
           }
         }
@@ -702,7 +704,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             }).then(onRoleRemoved as any)
           } else if (roleSelected) {
             deleteRolePermissionGroup({
-              group_id: roleSelected.group_role_id,
+              group_id: roleSelected.group_role_id!,
               organisation_id: id,
               role_id: roleId,
             }).then(onRoleRemoved as any)
@@ -717,7 +719,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         if (user) {
           setRolesSelected(
             (rolesSelected || []).concat({
-              role: usersData?.role,
+              group_role_id: undefined,
+              role: usersData?.role!,
               user_role_id: usersData?.id,
             }),
           )
@@ -726,7 +729,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           setRolesSelected(
             (rolesSelected || []).concat({
               group_role_id: groupsData?.id,
-              role: groupsData?.role,
+              role: groupsData?.role!,
+              user_role_id: undefined,
             }),
           )
         }
@@ -746,24 +750,29 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           if (matchedRole) {
             if (user) {
               return {
+                group_role_id: undefined,
                 ...role,
                 user_role_id: matchedRole.user_role_id,
               }
             }
             if (group) {
               return {
+                user_role_id: undefined,
                 ...role,
                 group_role_id: matchedRole.group_role_id,
               }
             }
           }
-          return role
+          return {
+            group_role_id: undefined,
+            user_role_id: undefined,
+            ...role,
+          }
         })
     }
 
     const rolesAdded = getRoles(roles, rolesSelected || [])
     const isAdmin = admin()
-    const levelUpperCase = level.toUpperCase()
 
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
@@ -793,7 +802,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               </div>
             )}
             <PanelSearch
-              filterRow={(item: AvailablePermission, search) => {
+              filterRow={(item: AvailablePermission, search: string) => {
                 const name = Format.enumeration.get(item.key).toLowerCase()
                 return name.includes(search?.toLowerCase() || '')
               }}
@@ -960,7 +969,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
 export const EditPermissionsModal = ConfigProvider(
   _EditPermissionsModal,
-) as FC<EditPermissionModalType>
+) as unknown as FC<EditPermissionModalType>
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
@@ -1025,6 +1034,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         envId={envId}
         level={level}
         role={role}
+        push={router.history.push}
       />,
       'p-0 side-modal',
     )
@@ -1078,22 +1088,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                               </div>
                             </Row>
                           }
-                          renderRow={({
-                            email,
-                            first_name,
-                            id,
-                            last_name,
-                            role,
-                          }: User) => {
+                          renderRow={(user: User) => {
+                            const { email, first_name, id, last_name, role } =
+                              user
                             const onClick = () => {
                               if (role !== 'ADMIN') {
-                                editUserPermissions({
-                                  email,
-                                  first_name,
-                                  id,
-                                  last_name,
-                                  role,
-                                })
+                                editUserPermissions(user)
                               }
                             }
                             const matchingPermissions = permissions?.find(
@@ -1184,7 +1184,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               <UserGroupList
                 noTitle
                 orgId={AccountStore.getOrganisation().id}
-                projectId={level === 'project' && id}
+                projectId={level === 'project' ? id : undefined}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />
             </div>
