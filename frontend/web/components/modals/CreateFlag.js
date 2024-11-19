@@ -1493,37 +1493,38 @@ const CreateFlag = class extends Component {
                                                             'Manage segment overrides',
                                                           ),
                                                           <>
-                                                            {!is4Eyes && (
-                                                              <>
-                                                                <Button
-                                                                  feature='SCHEDULE_FLAGS'
-                                                                  theme='secondary'
-                                                                  onClick={() =>
-                                                                    saveFeatureSegments(
-                                                                      true,
-                                                                    )
-                                                                  }
-                                                                  className='mr-2'
-                                                                  type='button'
-                                                                  data-test='create-change-request'
-                                                                  id='create-change-request-btn'
-                                                                  disabled={
-                                                                    isSaving ||
-                                                                    !name ||
-                                                                    invalid ||
-                                                                    !savePermission
-                                                                  }
-                                                                >
-                                                                  {isSaving
-                                                                    ? existingChangeRequest
-                                                                      ? 'Updating Change Request'
-                                                                      : 'Scheduling Update'
-                                                                    : existingChangeRequest
-                                                                    ? 'Update Change Request'
-                                                                    : 'Schedule Update'}
-                                                                </Button>
-                                                              </>
-                                                            )}
+                                                            {!is4Eyes &&
+                                                              isVersioned && (
+                                                                <>
+                                                                  <Button
+                                                                    feature='SCHEDULE_FLAGS'
+                                                                    theme='secondary'
+                                                                    onClick={() =>
+                                                                      saveFeatureSegments(
+                                                                        true,
+                                                                      )
+                                                                    }
+                                                                    className='mr-2'
+                                                                    type='button'
+                                                                    data-test='create-change-request'
+                                                                    id='create-change-request-btn'
+                                                                    disabled={
+                                                                      isSaving ||
+                                                                      !name ||
+                                                                      invalid ||
+                                                                      !savePermission
+                                                                    }
+                                                                  >
+                                                                    {isSaving
+                                                                      ? existingChangeRequest
+                                                                        ? 'Updating Change Request'
+                                                                        : 'Scheduling Update'
+                                                                      : existingChangeRequest
+                                                                      ? 'Update Change Request'
+                                                                      : 'Schedule Update'}
+                                                                  </Button>
+                                                                </>
+                                                              )}
                                                             <Button
                                                               onClick={
                                                                 saveFeatureSegments
