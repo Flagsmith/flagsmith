@@ -443,7 +443,7 @@ export default {
   },
   getFlagsmithSDKUrl: () =>
     Utils.isSaas() || Project.api.includes('api.flagsmith.com')
-      ? Project.flagsmithClientAPI
+      ? Project.flagsmithClientEdgeAPI
       : Project.api,
   getUpgradeUrl: (feature?: string) => {
     return Utils.isSaas()
