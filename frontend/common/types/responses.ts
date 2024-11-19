@@ -257,10 +257,13 @@ export type UserGroup = UserGroupSummary & {
 export type UserPermission = {
   user: User
   permissions: string[]
-  tag_based_permissions: { permission: string; tags: number[] }[]
   admin: boolean
   id: number
   role?: number
+}
+
+export type RolePermission = Omit<UserPermission, 'permissions'> & {
+  permissions: { permission_key: string; tags: number[] }[]
 }
 export type GroupPermission = Omit<UserPermission, 'user'> & {
   group: UserGroupSummary

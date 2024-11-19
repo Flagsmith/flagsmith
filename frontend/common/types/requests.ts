@@ -15,6 +15,7 @@ import {
   AttributeName,
   Identity,
   Role,
+  RolePermission,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -180,7 +181,7 @@ export type Req = {
     level: PermissionLevel
     body: {
       admin?: boolean
-      permissions: string[]
+      permissions: RolePermission['permissions']
       project: number
       environment: number
     }

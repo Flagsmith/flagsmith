@@ -1,24 +1,13 @@
-import React, {
-  FC,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
 import { find } from 'lodash'
-import {
-  checkmark,
-  checkmarkCircle,
-  close as closeIcon,
-  createOutline,
-} from 'ionicons/icons'
+import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import _data from 'common/data/base/_data'
 import {
   AvailablePermission,
   GroupPermission,
   Role,
+  RolePermission,
   User,
   UserGroup,
   UserGroupSummary,
@@ -126,10 +115,11 @@ type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
   tabClassName?: string
 }
 type EntityPermissions = Omit<
-  UserPermission,
+  RolePermission,
   'user' | 'id' | 'group' | 'isGroup'
 > & {
   id?: number
+  group?: number
   user?: number
   tags?: number[]
 }
@@ -194,7 +184,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       useState<EntityPermissions>({
         admin: false,
         permissions: [],
-        tag_based_permissions: [],
       })
     const [parentError, setParentError] = useState(false)
     const [saving, setSaving] = useState(false)
@@ -269,13 +258,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     }, [groupWithRolesDataSuccesfull])
 
     const processResults = (results: (UserPermission | GroupPermission)[]) => {
-      let entityPermissions:
-        | (Omit<EntityPermissions, 'user' | 'group' | 'role'> & {
-            user?: any
-            group?: any
-            role?: any
-          })
-        | undefined = isGroup
+      const foundPermission = isGroup
         ? find(
             results || [],
             (r) => (r as GroupPermission).group.id === group?.id,
@@ -287,21 +270,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             (r) => (r as UserPermission).user?.id === user?.id,
           )
 
-      if (!entityPermissions) {
-        entityPermissions = {
-          admin: false,
-          permissions: [],
-          tag_based_permissions: [],
-        }
-      }
-      if (user) {
-        entityPermissions.user = user.id
-      }
-      if (group) {
-        entityPermissions.group = group.id
-      }
-      return entityPermissions
+      return {
+        ...(foundPermission || {}),
+        group: group?.id,
+        //Since role permissions and other permissions are different in data structure, adjust permissions to match
+        permissions: (foundPermission?.permissions || []).map((v) => ({
+          permission_key: v,
+          tags: [],
+        })),
+        user: user?.id,
+      } as EntityPermissions
     }
+
     const [
       createRolePermissionUser,
       { data: usersData, isSuccess: userAdded },
@@ -336,9 +316,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       },
     ] = useCreateRolePermissionsMutation()
 
-    const tagBasedPermissions = Utils.getFlagsmithHasFeature(
-      'tag_based_permissions',
-    )
+    const tagBasedPermissions =
+      Utils.getFlagsmithHasFeature('tag_based_permissions') && !!role
     useEffect(() => {
       const isSaving = isRolePermCreating || isRolePermUpdating
       if (isSaving) {
@@ -448,7 +427,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             if (
               !entityPermissions.admin &&
               !entityPermissions.permissions.find(
-                (v) => v === `VIEW_${parentLevel.toUpperCase()}`,
+                (v) => v.permission_key === `VIEW_${parentLevel.toUpperCase()}`,
               )
             ) {
               // e.g. trying to set an environment permission but don't have view_project
@@ -485,36 +464,27 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const admin = () => entityPermissions && entityPermissions.admin
 
-    const hasTaggedBasedPermission = (key: string) => {
-      if (admin()) return false
-      return (
-        entityPermissions.permissions.includes(key) &&
-        entityPermissions.tags?.length
-      )
-    }
-    const [, set] = useState()
-
     const hasPermission = (key: string) => {
       if (admin()) return true
-      return entityPermissions.permissions.includes(key)
+      return entityPermissions.permissions.find(
+        (permission) => permission.permission_key === key,
+      )
     }
-    const [selectedTagBasedAccess, setSelectedTagBasedAccess] = useState<
-      string[]
-    >([])
 
     const getPermissionType = (key: string) => {
       if (admin()) return 'GRANTED'
-      if (entityPermissions.permissions.includes(key)) {
-        return 'GRANTED'
-      } else if (
-        entityPermissions.tag_based_permissions?.find(
-          (v) => v.permission === key,
-        )
-      ) {
+      const permission = entityPermissions.permissions.find(
+        (v) => v.permission_key === key,
+      )
+
+      if (!permission) return 'NONE'
+
+      if (permission.tags?.length) {
+        // todo: keep manual track of selection
         return 'LIMITED'
-      } else {
-        return 'NONE'
       }
+
+      return 'GRANTED'
     }
 
     const save = useCallback(() => {
@@ -527,19 +497,33 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           : `${level}s/${id}/user-permissions/${entityId}`
         setSaving(true)
         const action = entityId ? 'put' : 'post'
-        _data[action](
-          `${Project.api}${url}${entityId && '/'}`,
-          entityPermissions,
-        )
-          .then((res: EntityPermissions) => {
-            setEntityPermissions(res)
-            toast(
-              `${
-                level.charAt(0).toUpperCase() + level.slice(1)
-              } Permissions Saved`,
-            )
-            onSave && onSave()
-          })
+        _data[action](`${Project.api}${url}${entityId && '/'}`, {
+          ...entityPermissions,
+          permissions: entityPermissions.permissions.map(
+            (v) => v.permission_key,
+          ),
+        })
+          .then(
+            (
+              res: Omit<EntityPermissions, 'permissions'> & {
+                permissions: string[]
+              },
+            ) => {
+              setEntityPermissions({
+                ...res,
+                permissions: (res.permissions || []).map((v) => ({
+                  permission_key: v,
+                  tags: [],
+                })),
+              })
+              toast(
+                `${
+                  level.charAt(0).toUpperCase() + level.slice(1)
+                } Permissions Saved`,
+              )
+              onSave && onSave()
+            },
+          )
           .catch(() => {
             toast(`Error Saving Permissions`, 'danger')
           })
@@ -604,9 +588,11 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       if (role) {
         permissionChanged?.()
         const updatedPermissions = [...entityPermissions.permissions]
-        const index = updatedPermissions.indexOf(key)
+        const index = updatedPermissions.findIndex(
+          (v) => v.permission_key === key,
+        )
         if (index === -1) {
-          updatedPermissions.push(key)
+          updatedPermissions.push({ permission_key: key, tags: [] })
         } else {
           updatedPermissions.splice(index, 1)
         }
@@ -614,17 +600,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         setEntityPermissions({
           ...entityPermissions,
           permissions: updatedPermissions,
-          tag_based_permissions: entityPermissions.tag_based_permissions.filter(
-            (v) => v.permission !== key,
-          ),
         })
       } else {
         const newEntityPermissions = { ...entityPermissions }
 
-        const index = newEntityPermissions.permissions.indexOf(key)
-
+        const index = newEntityPermissions.permissions.findIndex(
+          (v) => v.permission_key === key,
+        )
         if (index === -1) {
-          newEntityPermissions.permissions.push(key)
+          newEntityPermissions.permissions.push({
+            permission_key: key,
+            tags: [],
+          })
         } else {
           newEntityPermissions.permissions.splice(index, 1)
         }
