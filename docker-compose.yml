@@ -42,6 +42,10 @@ services:
       # Enable Task Processor
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
 
+      # Uncomment if you want to enable Google OAuth. Note this does not turn Google OAuth on. You still need to use
+      # Flagsmith on Flagsmith to enable it - https://docs.flagsmith.com/deployment/#oauth_google
+      # DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY: 'same-origin-allow-popups'
+
       # For more info on configuring E-Mails - https://docs.flagsmith.com/deployment/locally-api#environment-variables
       # Example SMTP:
       # EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
