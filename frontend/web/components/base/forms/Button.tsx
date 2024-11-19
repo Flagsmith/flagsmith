@@ -56,7 +56,7 @@ export const Button: FC<ButtonType> = ({
   const hasPlan = feature ? Utils.getPlansPermission(feature) : true
   return href || !hasPlan ? (
     <a
-      onClick={rest.onClick}
+      onClick={rest.onClick as React.MouseEventHandler}
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
       target={target}
       href={hasPlan ? href : Constants.getUpgradeUrl()}
