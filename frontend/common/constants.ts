@@ -458,6 +458,7 @@ const Constants = {
   },
   isCustomFlagsmithUrl: () =>
     Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
+  defaultTagColor: '#3d4db6',
   modals: {
     'PAYMENT': 'Payment Modal',
   },

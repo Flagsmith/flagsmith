@@ -687,11 +687,20 @@ def test_get_project_by_uuid(client, project, mocker, settings, organisation):
 
 
 @pytest.mark.parametrize(
-    "client",
-    [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
+    "subscription, can_update_realtime",
+    [
+        (lazy_fixture("free_subscription"), False),
+        (lazy_fixture("startup_subscription"), False),
+        (lazy_fixture("scale_up_subscription"), False),
+        (lazy_fixture("enterprise_subscription"), True),
+    ],
 )
-def test_can_enable_realtime_updates_for_project(
-    client, project, mocker, settings, organisation
+def test_can_enable_realtime_updates_for_enterprise(
+    admin_client: APIClient,
+    project: Project,
+    organisation: Organisation,
+    subscription: Subscription,
+    can_update_realtime: bool,
 ):
     # Given
     url = reverse("api-v1:projects:project-detail", args=[project.id])
@@ -703,12 +712,12 @@ def test_can_enable_realtime_updates_for_project(
     }
 
     # When
-    response = client.put(url, data=data)
+    response = admin_client.put(url, data=data)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["uuid"] == str(project.uuid)
-    assert response.json()["enable_realtime_updates"] is True
+    assert response.json()["enable_realtime_updates"] is can_update_realtime
 
 
 @pytest.mark.parametrize(
