@@ -2719,6 +2719,10 @@ def test_list_features_n_plus_1_without_rbac(
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
+    """
+    NOTE: When running locally, this test can come up with an extra query.
+          It should be tested against CI to ensure it passes.
+    """
     _assert_list_feature_n_plus_1(
         staff_client,
         project,
