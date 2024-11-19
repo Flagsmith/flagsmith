@@ -58,19 +58,25 @@ export const Button: FC<ButtonType> = ({
     <a
       onClick={rest.onClick}
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
-      target={target}
+      target={!hasPlan ? '_blank' : target}
       href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
-      {!!iconLeft && (
-        <Icon
-          fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
-          className='me-2'
-          name={iconLeft}
-          width={iconSize}
-        />
-      )}
-      {children}
+      {!!iconLeft &&
+        !!hasPlan(
+          <Icon
+            fill={
+              iconLeftColour ? Constants.colours[iconLeftColour] : undefined
+            }
+            className='me-2'
+            name={iconLeft}
+            width={iconSize}
+          />,
+        )}
+      <div className='d-flex align-items-center gap-2'>
+        {children}
+        {!hasPlan && <PlanBasedBanner feature={feature} theme={'badge'} />}
+      </div>
       {!!iconRight && (
         <Icon
           fill={
