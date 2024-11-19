@@ -68,38 +68,24 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         environment_id: int,
         feature_id: int | None = None,
         feature_ids: None | list[int] = None,
-        limit_feature_identities_to_one_page: bool = False,
     ) -> typing.List[dict[str, Any]]:
         try:
-            if not limit_feature_identities_to_one_page:
-                if feature_ids is not None:
-                    raise NotImplementedError(
-                        "Multiple feature ids is currently not supported "
-                        "when not limiting to a single page of features"
-                    )
+            if feature_ids is None:
                 return list(
                     self.query_get_all_items(
-                        KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-                            str(environment_id),
-                        )
-                        & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
-                            get_environments_v2_identity_override_document_key(
-                                feature_id=feature_id,
-                            ),
+                        KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
+                            environment_id=environment_id,
+                            feature_id=feature_id,
                         )
                     )
                 )
             else:
-                if feature_ids is None and feature_id:
-                    feature_ids = [feature_id]
-                assert feature_ids is not None
-
                 futures = []
                 with ThreadPoolExecutor() as executor:
                     for feature_id in feature_ids:
                         futures.append(
                             executor.submit(
-                                self.get_page_of_feature_identities,
+                                self.get_identity_overrides_page,
                                 environment_id,
                                 feature_id,
                             )
@@ -116,20 +102,32 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
-    def get_page_of_feature_identities(
+    def get_identity_overrides_page(
         self, environment_id: int, feature_id: int
     ) -> list[dict[str, Any]]:
         query_response = self.table.query(
-            KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-                str(environment_id),
-            )
-            & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
-                get_environments_v2_identity_override_document_key(
-                    feature_id=feature_id,
-                ),
+            KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
+                environment_id=environment_id,
+                feature_id=feature_id,
             )
         )
+        last_evaluated_key = query_response.get("LastEvaluatedKey")
+        for item in query_response["Items"]:
+            item["more_identity_overrides"] = last_evaluated_key is not None
         return query_response["Items"]
+
+    def get_identity_overrides_key_condition_expression(
+        self,
+        environment_id: int,
+        feature_id: None | int,
+    ) -> Key:
+        return Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+            str(environment_id),
+        ) & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
+            get_environments_v2_identity_override_document_key(
+                feature_id=feature_id,
+            ),
+        )
 
     def update_identity_overrides(
         self,
