@@ -59,6 +59,45 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__retur
     assert results[0] == override_document
 
 
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__set_feature_ids__return_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    identity_uuid = str(uuid.uuid4())
+    identifier = "identity1"
+    override_document = {
+        "environment_id": str(environment.id),
+        "document_key": get_environments_v2_identity_override_document_key(
+            feature_id=feature.id, identity_uuid=identity_uuid
+        ),
+        "environment_api_key": environment.api_key,
+        "identifier": identifier,
+        "feature_state": {},
+    }
+
+    environment_document = map_environment_to_environment_v2_document(environment)
+
+    flagsmith_environments_v2_table.put_item(Item=override_document)
+    flagsmith_environments_v2_table.put_item(Item=environment_document)
+
+    # When
+    results = wrapper.get_identity_overrides_by_environment_id(
+        environment_id=environment.id,
+        feature_ids=[feature.id],
+    )
+
+    # Then
+    assert len(results) == 1
+    override_document["more_identity_overrides"] = False
+    assert results[0] == override_document
+
+
 def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(
     flagsmith_environments_v2_table: Table,
     mocker: MockerFixture,
