@@ -6,7 +6,7 @@ module.exports = (
 ) => `from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `,\n api_url="${Constants.getFlagsmithSDKUrl()}"\n`
 })
 

@@ -4,7 +4,7 @@ module.exports = (envId, { TRAIT_NAME }, userId) => `require "flagsmith"
 
 $flagsmith = Flagsmith::Client.new(
     environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
 })
 

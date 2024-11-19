@@ -9,7 +9,7 @@ func application(_ application: UIApplication,
  didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
   Flagsmith.shared.apiKey = "${envId}"${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `\n  Flagsmith.shared.baseURL = "${Constants.getFlagsmithSDKUrl()}"\n`
 }
   // Check for a feature

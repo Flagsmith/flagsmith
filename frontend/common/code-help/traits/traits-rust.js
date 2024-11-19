@@ -6,7 +6,7 @@ use flagsmith_flag_engine::types::{FlagsmithValue, FlagsmithValueType};
 use flagsmith_flag_engine::identities::Trait;
 
 let options = FlagsmithOptions {${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `api_url: "${Constants.getFlagsmithSDKUrl()}".to_string(),\n`
 }..Default::default()};
 let flagsmith = Flagsmith::new(

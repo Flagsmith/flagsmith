@@ -7,7 +7,7 @@ module.exports = (
 ) => `import Flagsmith from "${NPM_NODE_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
 
 const ${LIB_NAME} = new Flagsmith({${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `\n    apiUrl: '${Constants.getFlagsmithSDKUrl()}',`
 }
     environmentKey: '${envId}'

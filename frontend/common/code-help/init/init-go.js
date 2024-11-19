@@ -6,7 +6,7 @@ defer cancel()
 
 // Initialise the Flagsmith client
 client := flagsmith.NewClient('${envId}',${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `\nflagsmith.WithBaseURL("${Constants.getFlagsmithSDKUrl()}"),\n`
 }flagsmith.WithContext(ctx))
 

@@ -4,7 +4,7 @@ module.exports = (envId, { FEATURE_NAME, FEATURE_NAME_ALT }) => `
 use flagsmith::{Flag, Flagsmith, FlagsmithOptions};
 
 let options = FlagsmithOptions {${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `api_url: "${Constants.getFlagsmithSDKUrl()}".to_string(),\n`
 }..Default::default()};
 let flagsmith = Flagsmith::new(

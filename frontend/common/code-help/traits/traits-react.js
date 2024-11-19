@@ -13,7 +13,7 @@ export default function App() {
     &lt;FlagsmithProvider
       options={{
         environmentID: '${envId}',${
-  Constants.isCustomFlagsmithUrl
+  Constants.isCustomFlagsmithUrl()
     ? `\n        api: '${Constants.getFlagsmithSDKUrl()}',`
     : ''
 }

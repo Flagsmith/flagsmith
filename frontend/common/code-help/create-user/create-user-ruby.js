@@ -8,7 +8,7 @@ module.exports = (
 
 $flagsmith = Flagsmith::Client.new(
     environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
 })
 
