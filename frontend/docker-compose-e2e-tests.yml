@@ -1,0 +1,60 @@
+# You can use this to run the e2e tests in a docker container running in frontend below
+# To run:
+# docker-compose -f docker-compose-e2e-tests.yml build
+# docker-compose -f docker-compose-e2e-tests.yml up
+
+version: '3'
+services:
+  db:
+    image: ghcr.io/cloudnative-pg/postgresql:15
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    container_name: flagsmith_postgres
+
+  flagsmith-api:
+    image: ${API_IMAGE:-ghcr.io/flagsmith/flagsmith-api:dev}
+    build:
+      context: ../
+      target: oss-api
+    environment:
+      E2E_TEST_AUTH_TOKEN: some-token
+      ENABLE_FE_E2E: 'True'
+      DJANGO_ALLOWED_HOSTS: '*'
+      DATABASE_URL: postgresql://postgres:password@db:5432/flagsmith
+      DISABLE_ANALYTICS_FEATURES: 'true'
+      EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      ACCESS_LOG_LOCATION: /dev/shm/log.txt
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    links:
+      - db:db
+    healthcheck:
+      test: "[ -e /dev/shm/log.txt ] && exit 0 || exit 1"
+      start_period: 60s
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  frontend:
+    image: ${E2E_IMAGE:-ghcr.io/flagsmith/flagsmith-e2e:dev}
+    build:
+      context: ../
+      dockerfile: frontend/Dockerfile.e2e
+    environment:
+      E2E_TEST_TOKEN_DEV: some-token
+      DISABLE_ANALYTICS_FEATURES: 'true'
+      FLAGSMITH_API: flagsmith-api:8000/api/v1/
+      SLACK_TOKEN: ${SLACK_TOKEN}
+      GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
+    ports:
+      - 8080:8080
+    depends_on:
+      flagsmith-api:
+        condition: service_healthy
+
+    links:
+      - flagsmith-api:flagsmith-api
+    command: [npm, run, test]
