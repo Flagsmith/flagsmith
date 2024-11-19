@@ -6,9 +6,19 @@ volumes:
 
 services:
   postgres:
-    extends:
-      file: ./docker/common/db/.postgres.yml
-      service: postgres
+    image: postgres:15.5-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: flagsmith
+    container_name: flagsmith_postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -d flagsmith -U postgres']
+      interval: 2s
+      timeout: 2s
+      retries: 20
+      start_period: 20s
 
   flagsmith:
     image: flagsmith.docker.scarf.sh/flagsmith/flagsmith:latest
