@@ -442,7 +442,9 @@ export default {
     },
   },
   getFlagsmithSDKUrl: () =>
-    Utils.isSaas() ? Project.flagsmithClientAPI : Project.api,
+    Utils.isSaas() || Project.api.includes('api.flagsmith.com')
+      ? Project.flagsmithClientAPI
+      : Project.api,
   getUpgradeUrl: (feature?: string) => {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
