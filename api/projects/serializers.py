@@ -44,6 +44,15 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "stale_flags_limit_days",
             "edge_v2_migration_status",
         )
+        read_only_fields = (
+            "enable_dynamo_db",
+            "edge_v2_migration_status",
+        )
+
+    def update(self, instance: Project, validated_data: dict) -> Project:
+        # Prevent updates to `organisation` field
+        validated_data.pop("organisation", None)
+        return super().update(instance, validated_data)
 
     def get_migration_status(self, obj: Project) -> str:
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:

@@ -139,6 +139,30 @@ def test_can_update_project(
     assert response.json()["stale_flags_limit_days"] == new_stale_flags_limit_days
 
 
+def test_can_not_update_project_organisation(
+    admin_client: APIClient,
+    project: Project,
+    organisation: Organisation,
+    organisation_two: Organisation,
+) -> None:
+    # Given
+    new_name = "New project name"
+
+    data = {
+        "name": new_name,
+        "organisation": organisation_two.id,
+    }
+    url = reverse("api-v1:projects:project-detail", args=[project.id])
+
+    # When
+    response = admin_client.put(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["name"] == new_name
+    assert response.json()["organisation"] == organisation.id
+
+
 @pytest.mark.parametrize(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
@@ -733,6 +757,9 @@ def test_update_project(client, project, mocker, settings, organisation):
         "organisation": organisation.id,
         "only_allow_lower_case_feature_names": False,
         "feature_name_regex": feature_name_regex,
+        # read only fields should not be updated
+        "enable_dynamo_db": not project.enable_dynamo_db,
+        "edge_v2_migration_status": project.edge_v2_migration_status + "random-string",
     }
 
     # When
@@ -742,6 +769,10 @@ def test_update_project(client, project, mocker, settings, organisation):
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["only_allow_lower_case_feature_names"] is False
     assert response.json()["feature_name_regex"] == feature_name_regex
+    assert response.json()["enable_dynamo_db"] == project.enable_dynamo_db
+    assert (
+        response.json()["edge_v2_migration_status"] == project.edge_v2_migration_status
+    )
 
 
 @pytest.mark.parametrize(
