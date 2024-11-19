@@ -452,6 +452,7 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  defaultTagColor: '#3d4db6',
   isCustomFlagsmithUrl:
     Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {

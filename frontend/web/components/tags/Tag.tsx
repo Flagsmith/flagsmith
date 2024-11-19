@@ -1,5 +1,4 @@
 import React, { FC } from 'react'
-import color from 'color'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
@@ -34,13 +33,13 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
-  const tagColor = getTagColor(tag, selected)
+  const tagColor = Utils.colour(getTagColor(tag, selected))
   if (isDot) {
     return (
       <div
         className={'tag--dot'}
         style={{
-          backgroundColor: `${color(tagColor).darken(0.1)}`,
+          backgroundColor: `${tagColor.darken(0.1)}`,
         }}
       />
     )
@@ -72,9 +71,9 @@ const Tag: FC<TagType> = ({
         }
       }}
       style={{
-        backgroundColor: `${color(tagColor).fade(0.92)}`,
-        border: `1px solid ${color(tagColor).fade(0.76)}`,
-        color: `${color(tagColor).darken(0.1)}`,
+        backgroundColor: `${tagColor.fade(0.92)}`,
+        border: `1px solid ${tagColor.fade(0.76)}`,
+        color: `${tagColor.darken(0.1)}`,
       }}
       className={cx('chip', className)}
     >

@@ -176,12 +176,12 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                         protectedTags?.length > 1 ? 's' : ''
                       } ${protectedTags
                         ?.map((tag) => {
-                          const tagColor = getTagColor(tag)
+                          const tagColor = Utils.colour(getTagColor(tag))
                           return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
                             tagColor,
-                          ).fade(0.92)};border-color:${color(tagColor).darken(
+                          ).fade(0.92)};border-color:${tagColor.darken(
                             0.1,
-                          )};color:${color(tagColor).darken(0.1)};'>
+                          )};color:${tagColor.darken(0.1)};'>
                         ${tag.label}
                       </strong>`
                         })
