@@ -162,7 +162,6 @@ def test_get_edge_identity_overrides_for_a_feature(
         environment_id=environment.id,
         feature_id=feature.id,
         feature_ids=None,
-        limit_feature_identities_to_one_page=False,
     )
 
 
