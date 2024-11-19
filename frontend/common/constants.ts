@@ -22,7 +22,7 @@ const keywordsReactNative = {
   ...keywords,
   NPM_CLIENT: 'react-native-flagsmith',
 }
-export default {
+const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
     'CREATE_USER': (envId: string, userId: string = keywords.USER_ID) => ({
@@ -457,7 +457,7 @@ export default {
     githubPR: 'Github PR',
   },
   isCustomFlagsmithUrl: () =>
-    Project.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
+    Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -568,3 +568,5 @@ export default {
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
 }
+
+export default Constants
