@@ -69,7 +69,7 @@ class ProjectUpdateOrCreateSerializer(
     ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
 ):
     invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
-    field_names = ("stale_flags_limit_days",)
+    field_names = ("stale_flags_limit_days", "enable_realtime_updates")
 
     def get_subscription(self) -> typing.Optional[Subscription]:
         view = self.context["view"]
