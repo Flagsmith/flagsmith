@@ -44,6 +44,10 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "stale_flags_limit_days",
             "edge_v2_migration_status",
         )
+        read_only_fields = (
+            "enable_dynamo_db",
+            "edge_v2_migration_status",
+        )
 
     def get_migration_status(self, obj: Project) -> str:
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
@@ -65,9 +69,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
         )
 
 
-class ProjectUpdateOrCreateSerializer(
-    ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
-):
+class ProjectCreateSerializer(ReadOnlyIfNotValidPlanMixin, ProjectListSerializer):
     invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
     field_names = ("stale_flags_limit_days", "enable_realtime_updates")
 
@@ -84,9 +86,19 @@ class ProjectUpdateOrCreateSerializer(
             # Organisation should only have a single subscription
             return Subscription.objects.filter(organisation_id=organisation_id).first()
         elif view.action in ("update", "partial_update"):
+            # handle instance not being set
+            # When request comes from yasg2 (as part of schema generation)
+            if not self.instance:
+                return None
             return getattr(self.instance.organisation, "subscription", None)
-
         return None
+
+
+class ProjectUpdateSerializer(ProjectCreateSerializer):
+    class Meta(ProjectCreateSerializer.Meta):
+        read_only_fields = ProjectCreateSerializer.Meta.read_only_fields + (
+            "organisation",
+        )
 
 
 class ProjectRetrieveSerializer(ProjectListSerializer):
