@@ -44,6 +44,7 @@ export type ChangeRequestSummary = {
   updated_at: string
   description: string
   user: number
+  title: string
   committed_at: string | null
   committed_by: number | null
   deleted_at: string | null
@@ -554,9 +555,9 @@ export type ChangeRequest = {
   committed_by: number | null
   deleted_at: null
   approvals: {
-    id: number
+    id?: number
     user: number
-    approved_at: null | string
+    approved_at?: null | string
   }[]
   change_sets?: ChangeSet[]
   is_approved: boolean
@@ -564,6 +565,7 @@ export type ChangeRequest = {
   group_assignments: { group: number }[]
   environment_feature_versions: {
     uuid: string
+    live_from: string | null
     feature_states: FeatureState[]
   }[]
 

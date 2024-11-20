@@ -5,6 +5,9 @@ const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
+const { environmentService } = require('common/services/useEnvironment')
+const { changeRequestService } = require('common/services/useChangeRequest')
+const { getStore } = require('common/store')
 
 const PAGE_SIZE = 20
 const transformChangeRequest = async (changeRequest) => {
@@ -27,6 +30,9 @@ const controller = {
           .get(`${Project.api}features/workflows/change-requests/${id}/`)
           .then(async (res) => {
             store.model[id] = await transformChangeRequest(res)
+            getStore().dispatch(
+              changeRequestService.util.invalidateTags(['ChangeRequest']),
+            )
             cb && cb()
             store.loaded()
           })
@@ -39,6 +45,9 @@ const controller = {
       .delete(`${Project.api}features/workflows/change-requests/${id}/`)
       .then(() => {
         store.loaded()
+        getStore().dispatch(
+          changeRequestService.util.invalidateTags(['ChangeRequest']),
+        )
         cb()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -136,6 +145,9 @@ const controller = {
               `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
             )
             store.model[changeRequest.id] = await transformChangeRequest(res)
+            getStore().dispatch(
+              changeRequestService.util.invalidateTags(['ChangeRequest']),
+            )
             store.loaded()
           })
           .catch((e) => API.ajaxHandler(store, e))

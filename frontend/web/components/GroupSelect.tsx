@@ -10,7 +10,7 @@ export type GroupSelectType = {
   groups: UserGroup[] | UserGroupSummary[] | undefined
   value: number[] | undefined
   isOpen: boolean
-  size: string
+  size?: 'sm'
   onAdd: (id: number, isUser: boolean) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
@@ -33,7 +33,7 @@ const GroupSelect: FC<GroupSelectType> = ({
       if (!search) return true
       return `${v.name}`.toLowerCase().includes(search)
     })
-  const modalClassName = `inline-modal--tags${size}`
+  const modalClassName = size ? `inline-modal--tags-${size}` : ''
   return (
     <InlineModal
       title='Groups'
