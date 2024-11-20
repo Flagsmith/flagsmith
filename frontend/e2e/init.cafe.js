@@ -15,7 +15,7 @@ import versioningTests from './tests/versioning-tests';
 require('dotenv').config()
 
 const url = `http://localhost:${process.env.PORT || 8080}/`
-const e2eTestApi = `${Project.api}e2etests/teardown/`
+const e2eTestApi = `${process.env.FLAGSMITH_API_URL || Project.api}e2etests/teardown/`
 const logger = getLogger()
 
 console.log(
