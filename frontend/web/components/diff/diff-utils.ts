@@ -2,7 +2,6 @@ import {
   FeatureConflict,
   FeatureState,
   FeatureStateWithConflict,
-  ProjectFlag,
   Segment,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
@@ -34,7 +33,7 @@ export function getFeatureStateDiff(
   return diff
 }
 
-export type TDiffSegment = {
+export type TDiffSegmentOverride = {
   segment: Segment
   newEnabled: boolean
   newPriority: number
@@ -150,7 +149,7 @@ export const getSegmentDiff = (
       segment,
       totalChanges: segmentChanges,
       variationDiff,
-    } as TDiffSegment
+    } as TDiffSegmentOverride
   })
   return {
     diffs,

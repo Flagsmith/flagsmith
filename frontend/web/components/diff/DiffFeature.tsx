@@ -15,7 +15,7 @@ import {
 } from './diff-utils'
 import DiffString from './DiffString'
 import DiffEnabled from './DiffEnabled'
-import DiffSegments from './DiffSegments'
+import DiffSegmentOverrides from './DiffSegmentOverrides'
 import DiffVariations from './DiffVariations'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
@@ -216,7 +216,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
                     />
                   </div>
                 )}
-                <DiffSegments
+                <DiffSegmentOverrides
                   diffs={segmentDiffs.diffs}
                   projectId={projectId}
                   environmentId={environmentId}
