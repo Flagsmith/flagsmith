@@ -27,6 +27,8 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
+import { environmentService } from "common/services/useEnvironment";
+import { changeRequestService } from "common/services/useChangeRequest";
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -662,12 +664,6 @@ const controller = {
                 }
               })
               prom.then(() => {
-                AppActions.getChangeRequests(environmentId, {})
-                AppActions.getChangeRequests(environmentId, { committed: true })
-                AppActions.getChangeRequests(environmentId, {
-                  live_from_after: new Date().toISOString(),
-                })
-
                 if (featureStateId) {
                   AppActions.getChangeRequest(
                     changeRequestData.id,

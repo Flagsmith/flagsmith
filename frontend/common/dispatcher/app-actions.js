@@ -215,15 +215,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
-  getChangeRequests(environment, data, page) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_CHANGE_REQUESTS,
-      committed: data.committed,
-      environment,
-      live_from_after: data.live_from_after,
-      page,
-    })
-  },
   getFeatureUsage(projectId, environmentId, flag, period) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_FEATURE_USAGE,

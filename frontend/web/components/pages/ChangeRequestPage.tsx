@@ -195,15 +195,8 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
     )
   }
 
-  const refreshChangeRequests = () => {
-    AppActions.getChangeRequests(environmentId, {})
-    AppActions.getChangeRequests(environmentId, { committed: true })
-    AppActions.getChangeRequests(environmentId, {
-      live_from_after: new Date().toISOString(),
-    })
-  }
   const approveChangeRequest = () => {
-    AppActions.actionChangeRequest(id, 'approve', refreshChangeRequests)
+    AppActions.actionChangeRequest(id, 'approve')
   }
 
   const [showUsers, setShowUsers] = useState(false)

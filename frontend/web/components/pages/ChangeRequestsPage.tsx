@@ -1,5 +1,4 @@
 import { FC, useEffect, useState } from 'react'
-import FeatureListStore from 'common/stores/feature-list-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import { RouterChildContext } from 'react-router'
 import AccountStore from 'common/stores/account-store'
@@ -20,7 +19,6 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
-import ChangeRequestPage from './ChangeRequestPage'
 import moment from 'moment'
 import Icon from 'components/Icon'
 
@@ -30,18 +28,14 @@ type ChangeRequestsPageType = {
     params: {
       environmentId: string
       projectId: string
-      id: string
     }
   }
 }
 
 const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
-  const { environmentId, id, projectId } = match.params
+  const { environmentId, projectId } = match.params
   const [page, setPage] = useState(1)
   const [pageCommitted, setPageCommitted] = useState(1)
-
-  const [live_after, setLive_after] = useState(new Date().toISOString())
-  const [showArchived, setShowArchived] = useState(false)
   const [_, setUpdate] = useState(Date.now())
   const organisationId = AccountStore.getOrganisation()?.id
   const environment = ProjectStore.getEnvironment(
