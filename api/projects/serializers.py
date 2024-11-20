@@ -86,8 +86,11 @@ class ProjectCreateSerializer(ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
             # Organisation should only have a single subscription
             return Subscription.objects.filter(organisation_id=organisation_id).first()
         elif view.action in ("update", "partial_update"):
+            # handle instance not being set
+            # When request comes from yasg2 (as part of schema generation)
+            if not self.instance:
+                return None
             return getattr(self.instance.organisation, "subscription", None)
-
         return None
 
 
