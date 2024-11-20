@@ -27,10 +27,6 @@ on:
         description: The runner label to use. Defaults to `ubuntu-latest`
         required: false
         default: ubuntu-latest
-      compose-file:
-        type: string
-        description: The compose file to use.
-        required: true
     secrets:
       gcr-token:
         description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
@@ -84,4 +80,3 @@ jobs:
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          COMPOSE_FILE: ${{ inputs.compose-file }}
