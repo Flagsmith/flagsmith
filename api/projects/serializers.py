@@ -49,11 +49,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "edge_v2_migration_status",
         )
 
-    def update(self, instance: Project, validated_data: dict) -> Project:
-        # Prevent updates to `organisation` field
-        validated_data.pop("organisation", None)
-        return super().update(instance, validated_data)
-
     def get_migration_status(self, obj: Project) -> str:
         if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
             migration_status = ProjectIdentityMigrationStatus.NOT_APPLICABLE.value
@@ -74,9 +69,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
         )
 
 
-class ProjectUpdateOrCreateSerializer(
-    ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
-):
+class ProjectCreateSerializer(ReadOnlyIfNotValidPlanMixin, ProjectListSerializer):
     invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
     field_names = ("stale_flags_limit_days", "enable_realtime_updates")
 
@@ -96,6 +89,13 @@ class ProjectUpdateOrCreateSerializer(
             return getattr(self.instance.organisation, "subscription", None)
 
         return None
+
+
+class ProjectUpdateSerializer(ProjectCreateSerializer):
+    class Meta(ProjectCreateSerializer.Meta):
+        read_only_fields = ProjectCreateSerializer.Meta.read_only_fields + (
+            "organisation",
+        )
 
 
 class ProjectRetrieveSerializer(ProjectListSerializer):
