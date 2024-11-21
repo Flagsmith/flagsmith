@@ -4066,8 +4066,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "feat/add_change_requests_to_segments"
-resolved_reference = "4756d1b241133be3cb213eeaf70765031bb2ee2d"
+reference = "v2.6.0"
+resolved_reference = "06b03d428484f5aed2f400cef431ab5aae0d0df0"
 
 [[package]]
 name = "wrapt"
@@ -4186,4 +4186,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "7ca18174be8caa1f4fdc5bdee521a4589348290d4534abc60ee63cfca6567c61"
+content-hash = "df2e02787204f56111c560faa7f7800a09e87e9bdc0b9802660af5bd08aa03ee"
