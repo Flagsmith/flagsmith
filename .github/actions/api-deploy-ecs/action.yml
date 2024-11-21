@@ -91,7 +91,7 @@ runs:
       shell: bash
 
     - name: Deploy Amazon ECS web task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         cluster: ${{ inputs.aws_ecs_cluster_name }}
         service: ${{ inputs.aws_ecs_service_name }}
