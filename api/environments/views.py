@@ -1,5 +1,6 @@
 import logging
 
+from common.environments.permissions import TAG_SUPPORTED_PERMISSIONS
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
@@ -11,7 +12,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from environments.permissions.constants import TAG_SUPPORTED_PERMISSIONS
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,

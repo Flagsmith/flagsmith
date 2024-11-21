@@ -336,10 +336,10 @@ def test_manager_returns_only_highest_version_of_segments(
     assert segment.version == 3
 
     # When
-    queryset1 = Segment.objects.filter(id=cloned_segment.id)
-    queryset2 = Segment.all_objects.filter(id=cloned_segment.id)
-    queryset3 = Segment.objects.filter(id=segment.id)
-    queryset4 = Segment.all_objects.filter(id=segment.id)
+    queryset1 = Segment.live_objects.filter(id=cloned_segment.id)
+    queryset2 = Segment.objects.filter(id=cloned_segment.id)
+    queryset3 = Segment.live_objects.filter(id=segment.id)
+    queryset4 = Segment.objects.filter(id=segment.id)
 
     # Then
     assert not queryset1.exists()
