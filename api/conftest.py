@@ -60,7 +60,13 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
-from organisations.subscriptions.constants import CHARGEBEE, XERO
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    FREE_PLAN_ID,
+    SCALE_UP,
+    STARTUP,
+    XERO,
+)
 from permissions.models import PermissionModel
 from projects.models import (
     Project,
@@ -319,6 +325,33 @@ def system_tag(project: Project) -> Tag:
 def enterprise_subscription(organisation: Organisation) -> Subscription:
     Subscription.objects.filter(organisation=organisation).update(
         plan="enterprise", subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def startup_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=STARTUP, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def scale_up_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=SCALE_UP, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def free_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=FREE_PLAN_ID, subscription_id="subscription-id"
     )
     organisation.refresh_from_db()
     return organisation.subscription
