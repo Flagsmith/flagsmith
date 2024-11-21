@@ -34,5 +34,6 @@ jobs:
           FLAGSMITH_API_URL: ${{ inputs.api-url || 'http://3.8.139.31:8000/api/v1/' }}
           E2E_CONCURRENCY: ${{ inputs.e2e-concurrency || 1 }}
         run: |
+          npm ci
           npm run env
           npm run test
