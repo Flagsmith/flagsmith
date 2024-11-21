@@ -13,7 +13,6 @@ on:
       api-url:
         description: 'Which database service to use to run the API against'
         default: 'https://api.flagsmith.com/api/v1/'
-  push:
 
 jobs:
   run-e2e-tests:
@@ -30,9 +29,9 @@ jobs:
       - name: Run tests
         working-directory: frontend
         env:
-          E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e-token || 'b682133ed570d1ebf0a11fbdefda2747' }}
-          FLAGSMITH_API_URL: ${{ inputs.api-url || 'http://3.8.139.31:8000/api/v1/' }}
-          E2E_CONCURRENCY: ${{ inputs.e2e-concurrency || 1 }}
+          E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e-token }}
+          FLAGSMITH_API_URL: ${{ inputs.api-url }}
+          E2E_CONCURRENCY: ${{ inputs.e2e-concurrency }}
         run: |
           npm ci
           npm run env
