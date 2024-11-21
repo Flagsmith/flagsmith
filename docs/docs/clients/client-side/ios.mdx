@@ -6,36 +6,47 @@ slug: /clients/ios
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import { IOSVersion } from '@site/src/components/SdkVersions.js';
+import { CocoapodsVersion, SwiftPMVersion } from '@site/src/components/SdkVersions.js';
 
 This library can be used with iOS and Mac applications. The source code for the client is available on
 [GitHub](https://github.com/flagsmith/flagsmith-ios-client).
 
 ## Installation
 
-### CocoaPods
+<details>
+<summary>CocoaPods</summary>
 
-[CocoaPods](https://cocoapods.org) is a dependency manager for Cocoa projects. For usage and installation instructions,
-visit their website. To integrate Flagsmith into your Xcode project using CocoaPods, specify it in your `Podfile`:
+Add the Flagsmith SDK as a dependency to your Podfile:
 
 <CodeBlock>
     {`pod 'FlagsmithClient', '~> `}
-    <IOSVersion />
+    <CocoapodsVersion />
     {`'`}
 </CodeBlock>
 
-### Swift Package Manager
+</details>
 
-The Swift Package Manager is a tool for automating the distribution of Swift code and is integrated into the swift
-compiler. You can use it to install Flagsmith by adding the description to your `Package.swift` file:
+<details>
+
+<summary>Swift Package Manager</summary>
+
+Add the Flagsmith SDK as a dependency to your Package.swift file:
 
 <CodeBlock>
     {`dependencies: [
     .package(url: "https://github.com/Flagsmith/flagsmith-ios-client.git", from: "`}
-    <IOSVersion />
+    <SwiftPMVersion />
     {`"),
 ]`}
 </CodeBlock>
+
+Alternatively, you can add the Flagsmith SDK as a dependency from its repository URL using Xcode:
+
+```
+https://github.com/Flagsmith/flagsmith-ios-client.git
+```
+
+</details>
 
 ## Basic Usage
 
