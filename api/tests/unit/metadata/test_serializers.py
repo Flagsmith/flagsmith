@@ -1,11 +1,11 @@
 import pytest
+from common.metadata.serializers import MetadataSerializer
 
 from metadata.models import (
     FIELD_VALUE_MAX_LENGTH,
     MetadataField,
     MetadataModelField,
 )
-from metadata.serializers import MetadataSerializer
 
 
 @pytest.mark.parametrize(

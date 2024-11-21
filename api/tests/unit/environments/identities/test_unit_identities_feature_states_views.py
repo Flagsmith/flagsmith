@@ -1,6 +1,10 @@
 import json
 
 import pytest
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
 from core.constants import STRING
 from django.test import Client
 from django.urls import reverse
@@ -8,10 +12,6 @@ from rest_framework import status
 
 from environments.identities.models import Identity
 from environments.models import Environment
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import (
     MultivariateFeatureOption,

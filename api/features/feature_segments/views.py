@@ -1,5 +1,6 @@
 import logging
 
+from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
@@ -18,7 +19,6 @@ from features.models import FeatureSegment
 from features.versioning.versioning_service import (
     get_current_live_environment_feature_version,
 )
-from projects.permissions import VIEW_PROJECT
 
 from .permissions import FeatureSegmentPermissions
 

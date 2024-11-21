@@ -1,7 +1,7 @@
+from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT
 from rest_framework.permissions import BasePermission
 
 from projects.models import Project
-from projects.permissions import MANAGE_TAGS, VIEW_PROJECT
 
 
 class TagPermissions(BasePermission):

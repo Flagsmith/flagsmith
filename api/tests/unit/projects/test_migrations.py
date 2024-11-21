@@ -1,7 +1,6 @@
 import pytest
+from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from django.conf import settings
-
-from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 
 
 @pytest.mark.skipif(

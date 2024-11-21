@@ -1,11 +1,12 @@
 import uuid
 from unittest import mock
 
+from common.projects.permissions import VIEW_PROJECT
+
 from environments.identities.models import Identity
 from environments.models import Environment
 from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
-from projects.permissions import VIEW_PROJECT
 from segments.models import Segment
 from segments.permissions import SegmentPermissions
 from tests.types import (

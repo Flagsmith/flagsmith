@@ -1,10 +1,10 @@
+from common.projects.permissions import VIEW_AUDIT_LOG
 from django.views import View
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request
 
 from organisations.models import Organisation
 from projects.models import Project
-from projects.permissions import VIEW_AUDIT_LOG
 
 
 class OrganisationAuditLogPermissions(BasePermission):

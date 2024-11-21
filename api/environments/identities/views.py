@@ -1,6 +1,7 @@
 import typing
 from collections import namedtuple
 
+from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
@@ -22,10 +23,6 @@ from environments.identities.serializers import (
     SDKIdentitiesResponseSerializer,
 )
 from environments.models import Environment
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from environments.sdk.serializers import (
     IdentifyWithTraitsSerializer,

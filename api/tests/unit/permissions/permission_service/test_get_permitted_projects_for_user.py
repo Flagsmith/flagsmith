@@ -1,13 +1,13 @@
 import pytest
-from pytest_lazyfixture import lazy_fixture
-
-from permissions.permission_service import get_permitted_projects_for_user
-from projects.models import ProjectPermissionModel
-from projects.permissions import (
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
     DELETE_FEATURE,
     VIEW_PROJECT,
 )
+from pytest_lazyfixture import lazy_fixture
+
+from permissions.permission_service import get_permitted_projects_for_user
+from projects.models import ProjectPermissionModel
 
 
 def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(

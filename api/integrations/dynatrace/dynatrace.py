@@ -95,7 +95,7 @@ def _get_deployment_name_for_feature(
 
 
 def _get_deployment_name_for_segment(object_id: int) -> str:
-    if segment := Segment.objects.all_with_deleted().filter(id=object_id).first():
+    if segment := Segment.live_objects.all_with_deleted().filter(id=object_id).first():
         return f"Flagsmith Deployment - Segment Changed: {segment.name}"
 
     return DEFAULT_DEPLOYMENT_NAME

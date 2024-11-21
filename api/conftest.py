@@ -5,6 +5,12 @@ from unittest.mock import MagicMock
 
 import boto3
 import pytest
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -27,11 +33,6 @@ from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
@@ -72,7 +73,6 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from tests.test_helpers import fix_issue_3869
@@ -547,9 +547,16 @@ def feature(project: Project, environment: Environment) -> Feature:
 
 
 @pytest.fixture()
-def change_request(environment, admin_user):
+def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
     return ChangeRequest.objects.create(
         environment=environment, title="Test CR", user_id=admin_user.id
+    )
+
+
+@pytest.fixture()
+def project_change_request(project: Project, admin_user: FFAdminUser) -> ChangeRequest:
+    return ChangeRequest.objects.create(
+        project=project, title="Test Project CR", user_id=admin_user.id
     )
 
 

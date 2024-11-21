@@ -1,7 +1,7 @@
+from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from rest_framework.permissions import IsAuthenticated
 
 from projects.models import Project
-from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 
 
 class SegmentPermissions(IsAuthenticated):

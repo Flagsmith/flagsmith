@@ -1,5 +1,6 @@
 import typing
 
+from common.projects.permissions import VIEW_PROJECT
 from rest_framework.test import APIClient
 
 from environments.models import Environment
@@ -8,7 +9,6 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
 )
 from projects.models import ProjectPermissionModel, UserProjectPermission
-from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser
 
 

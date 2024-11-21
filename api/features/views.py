@@ -5,6 +5,7 @@ from functools import reduce
 
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from common.projects.permissions import VIEW_PROJECT
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
@@ -38,7 +39,6 @@ from environments.permissions.permissions import (
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 

@@ -2,6 +2,11 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+from common.projects.permissions import (
+    CREATE_FEATURE,
+    DELETE_FEATURE,
+    VIEW_PROJECT,
+)
 
 from features.models import Feature
 from features.permissions import FeaturePermissions
@@ -12,12 +17,7 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import (
-    CREATE_FEATURE,
-    DELETE_FEATURE,
-    VIEW_PROJECT,
-    NestedProjectPermissions,
-)
+from projects.permissions import NestedProjectPermissions
 from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser, UserPermissionGroup
 

@@ -1,14 +1,14 @@
 from contextlib import suppress
 
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_IDENTITIES,
+)
 from django.http import HttpRequest
 from django.views import View
 from rest_framework.permissions import BasePermission
 
 from environments.models import Environment
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_IDENTITIES,
-)
 
 
 class EdgeIdentityWithIdentifierViewPermissions(BasePermission):

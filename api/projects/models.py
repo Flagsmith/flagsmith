@@ -25,13 +25,13 @@ from permissions.models import (
     PermissionModel,
 )
 from projects.managers import ProjectManager
+from projects.services import get_project_segments_from_cache
 from projects.tasks import (
     handle_cascade_delete,
     migrate_project_environments_to_v2,
     write_environments_to_dynamodb,
 )
 
-project_segments_cache = caches[settings.PROJECT_SEGMENTS_CACHE_LOCATION]
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
 
 
@@ -106,6 +106,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         default=30,
         help_text="Number of days without modification in any environment before a flag is considered stale.",
     )
+    minimum_change_request_approvals = models.IntegerField(blank=True, null=True)
 
     objects = ProjectManager()
 
@@ -119,7 +120,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     def is_too_large(self) -> bool:
         return (
             self.features.count() > self.max_features_allowed
-            or self.segments.count() > self.max_segments_allowed
+            or self.live_segment_count() > self.max_segments_allowed
             or self.environments.annotate(
                 segment_override_count=Count("feature_segments")
             )
@@ -142,24 +143,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
     def get_segments_from_cache(self):
-        segments = project_segments_cache.get(self.id)
-
-        if not segments:
-            # This is optimised to account for rules nested one levels deep (since we
-            # don't support anything above that from the UI at the moment). Anything
-            # past that will require additional queries / thought on how to optimise.
-            segments = self.segments.all().prefetch_related(
-                "rules",
-                "rules__conditions",
-                "rules__rules",
-                "rules__rules__conditions",
-                "rules__rules__rules",
-            )
-            project_segments_cache.set(
-                self.id, segments, timeout=settings.CACHE_PROJECT_SEGMENTS_SECONDS
-            )
-
-        return segments
+        return get_project_segments_from_cache(self.id)
 
     @hook(BEFORE_CREATE)
     def set_enable_dynamo_db(self):
@@ -203,6 +187,11 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
             settings.EDGE_RELEASE_DATETIME
             and self.created_date >= settings.EDGE_RELEASE_DATETIME
         )
+
+    def live_segment_count(self) -> int:
+        from segments.models import Segment
+
+        return Segment.live_objects.filter(project=self).count()
 
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """

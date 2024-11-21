@@ -1,5 +1,7 @@
 import logging
 
+from common.projects.permissions import VIEW_PROJECT
+from common.segments.serializers import SegmentSerializer
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
@@ -17,11 +19,10 @@ from features.serializers import (
     SegmentAssociatedFeatureStateSerializer,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from projects.permissions import VIEW_PROJECT
 
 from .models import Segment
 from .permissions import SegmentPermissions
-from .serializers import SegmentListQuerySerializer, SegmentSerializer
+from .serializers import SegmentListQuerySerializer
 
 logger = logging.getLogger()
 
@@ -44,7 +45,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
         )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
-        queryset = project.segments.all()
+        queryset = Segment.live_objects.filter(project=project)
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
@@ -121,7 +122,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
 @api_view(["GET"])
 def get_segment_by_uuid(request, uuid):
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
-    qs = Segment.objects.filter(project__in=accessible_projects)
+    qs = Segment.live_objects.filter(project__in=accessible_projects)
     segment = get_object_or_404(qs, uuid=uuid)
     serializer = SegmentSerializer(instance=segment)
     return Response(serializer.data)

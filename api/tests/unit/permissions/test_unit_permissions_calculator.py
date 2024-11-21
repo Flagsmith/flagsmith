@@ -1,9 +1,10 @@
 import pytest
-
-from environments.permissions.constants import (
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
+
 from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
@@ -29,7 +30,6 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
 from users.models import UserPermissionGroup
 
 

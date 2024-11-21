@@ -1,11 +1,11 @@
 import pytest
+from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser
 
