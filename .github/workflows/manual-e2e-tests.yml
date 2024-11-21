@@ -21,6 +21,7 @@ jobs:
 
     steps:
       - name: Run tests
+        working-directory: frontend
         env:
           E2E_TEST_AUTH_TOKEN: ${{ inputs.e2e-token || 'b682133ed570d1ebf0a11fbdefda2747' }}
           FLAGSMITH_API_URL: ${{ inputs.api-url || 'http://3.8.139.31:8000/api/v1/' }}
