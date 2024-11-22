@@ -6,6 +6,7 @@ from features.models import (
     FeatureState,
     FeatureStateValue,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from integrations.grafana.types import GrafanaAnnotation
 from segments.models import Segment
 
@@ -48,6 +49,10 @@ def _get_instance_tags_from_audit_log_record(
                 f"segment:{instance.segment.name}",
                 *_get_feature_tags(feature),
             ]
+
+        if isinstance(instance, EnvironmentFeatureVersion):
+            # TODO
+            pass
 
     return []
 

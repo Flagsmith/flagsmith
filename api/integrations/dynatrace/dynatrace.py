@@ -60,6 +60,7 @@ def _get_deployment_name(audit_log_record: AuditLog) -> str:
     try:
         related_object_type = RelatedObjectType[audit_log_record.related_object_type]
 
+        # TODO: handle RelatedObjectType.EF_VERSION
         if related_object_type in (
             RelatedObjectType.FEATURE,
             RelatedObjectType.FEATURE_STATE,
