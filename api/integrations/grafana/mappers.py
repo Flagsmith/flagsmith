@@ -51,8 +51,10 @@ def _get_instance_tags_from_audit_log_record(
             ]
 
         if isinstance(instance, EnvironmentFeatureVersion):
-            # TODO
-            pass
+            return [
+                f"feature:{instance.feature.name}",
+                *_get_feature_tags(instance.feature),
+            ]
 
     return []
 

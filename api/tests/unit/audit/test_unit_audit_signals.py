@@ -1,3 +1,6 @@
+import json
+
+import responses
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from task_processor.task_run_method import TaskRunMethod
@@ -13,12 +16,15 @@ from environments.models import Environment
 from features.models import Feature
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.dynatrace.models import DynatraceConfiguration
+from integrations.grafana.grafana import ROUTE_API_ANNOTATIONS
 from integrations.grafana.models import (
     GrafanaOrganisationConfiguration,
     GrafanaProjectConfiguration,
 )
 from organisations.models import Organisation, OrganisationWebhook
 from projects.models import Project
+from projects.tags.models import Tag
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookEventType
 
 
@@ -160,37 +166,73 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     )
 
 
+@responses.activate
 def test_send_environment_feature_version_audit_log_event_to_grafana(
     feature: Feature,
+    tag: Tag,
     environment_v2_versioning: Environment,
     project: Project,
     organisation: Organisation,
     settings: SettingsWrapper,
+    admin_user: FFAdminUser,
 ) -> None:
     # Given
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    feature.tags.add(tag)
 
     version = EnvironmentFeatureVersion(
         environment=environment_v2_versioning,
         feature=feature,
     )
-    version.publish()
+    version.publish(admin_user)
 
-    audit_log_record = AuditLog.objects.create(
-        project=project,
-        related_object_uuid=version.uuid,
-        related_object_type=RelatedObjectType.EF_VERSION.name,
+    audit_log_record = (
+        AuditLog.objects.filter(
+            related_object_uuid=version.uuid,
+            related_object_type=RelatedObjectType.EF_VERSION.name,
+        )
+        .order_by("-created_date")
+        .first()
     )
 
+    base_url = "https://test.com"
     GrafanaOrganisationConfiguration.objects.create(
-        base_url="https://test.com", api_key="test", organisation=organisation
+        base_url=base_url, api_key="test", organisation=organisation
+    )
+
+    responses.add(
+        method=responses.POST,
+        url=f"{base_url}{ROUTE_API_ANNOTATIONS}",
+        status=200,
+        json={
+            "message": "Annotation added",
+            "id": 1,
+        },
     )
 
     # When
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
 
     # Then
-    pass
+    expected_time = int(audit_log_record.created_date.timestamp() * 1000)
+
+    assert len(responses.calls) == 1
+    assert responses.calls[0].request.body == json.dumps(
+        {
+            "tags": [
+                "flagsmith",
+                f"project:{project.name}",
+                f"environment:{environment_v2_versioning.name}",
+                f"by:{admin_user.email}",
+                f"feature:{feature.name}",
+                tag.label,
+            ],
+            "text": audit_log_record.log,
+            "time": expected_time,
+            "timeEnd": expected_time,
+        }
+    )
 
 
 def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_expected(
