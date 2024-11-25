@@ -1,12 +1,4 @@
 repos:
-  - repo: local
-    hooks:
-      - id: mypy-check
-        name: mypy check
-        entry: bash -c "cd api && poetry run python scripts/mypy_check.py"
-        language: system
-        types: [python]
-
   - repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
@@ -47,6 +39,14 @@ repos:
     hooks:
       - id: poetry-check
         args: ['-C', 'api']
+
+  - repo: local
+    hooks:
+      - id: mypy-check
+        name: mypy check
+        entry: bash -c "cd api && poetry run python scripts/mypy_check.py"
+        language: system
+        types: [python]
 
 ci:
   autoupdate_commit_msg: 'ci: pre-commit autoupdate'
