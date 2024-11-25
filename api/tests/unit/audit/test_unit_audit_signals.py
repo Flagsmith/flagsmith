@@ -1,5 +1,6 @@
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from task_processor.task_run_method import TaskRunMethod
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -9,6 +10,8 @@ from audit.signals import (
     send_audit_log_event_to_grafana,
 )
 from environments.models import Environment
+from features.models import Feature
+from features.versioning.models import EnvironmentFeatureVersion
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.grafana.models import (
     GrafanaOrganisationConfiguration,
@@ -155,6 +158,39 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     grafana_wrapper_instance_mock.track_event_async.assert_called_once_with(
         event=grafana_wrapper_instance_mock.generate_event_data.return_value
     )
+
+
+def test_send_environment_feature_version_audit_log_event_to_grafana(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    project: Project,
+    organisation: Organisation,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    version = EnvironmentFeatureVersion(
+        environment=environment_v2_versioning,
+        feature=feature,
+    )
+    version.publish()
+
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        related_object_uuid=version.uuid,
+        related_object_type=RelatedObjectType.EF_VERSION.name,
+    )
+
+    GrafanaOrganisationConfiguration.objects.create(
+        base_url="https://test.com", api_key="test", organisation=organisation
+    )
+
+    # When
+    send_audit_log_event_to_grafana(AuditLog, audit_log_record)
+
+    # Then
+    pass
 
 
 def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_expected(
