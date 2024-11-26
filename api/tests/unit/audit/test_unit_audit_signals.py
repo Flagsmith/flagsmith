@@ -3,7 +3,6 @@ import json
 import responses
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-from task_processor.task_run_method import TaskRunMethod
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -15,6 +14,7 @@ from audit.signals import (
 from environments.models import Environment
 from features.models import Feature
 from features.versioning.models import EnvironmentFeatureVersion
+from integrations.dynatrace.dynatrace import EVENTS_API_URI
 from integrations.dynatrace.models import DynatraceConfiguration
 from integrations.grafana.grafana import ROUTE_API_ANNOTATIONS
 from integrations.grafana.models import (
@@ -168,32 +168,19 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
 
 @responses.activate
 def test_send_environment_feature_version_audit_log_event_to_grafana(
-    feature: Feature,
-    tag: Tag,
+    tagged_feature: Feature,
+    tag_one: Tag,
+    tag_two: Tag,
     environment_v2_versioning: Environment,
     project: Project,
     organisation: Organisation,
-    settings: SettingsWrapper,
     admin_user: FFAdminUser,
 ) -> None:
     # Given
-    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
-
-    feature.tags.add(tag)
-
-    version = EnvironmentFeatureVersion(
+    _, audit_log_record = _create_and_publish_environment_feature_version(
         environment=environment_v2_versioning,
-        feature=feature,
-    )
-    version.publish(admin_user)
-
-    audit_log_record = (
-        AuditLog.objects.filter(
-            related_object_uuid=version.uuid,
-            related_object_type=RelatedObjectType.EF_VERSION.name,
-        )
-        .order_by("-created_date")
-        .first()
+        feature=tagged_feature,
+        user=admin_user,
     )
 
     base_url = "https://test.com"
@@ -225,8 +212,9 @@ def test_send_environment_feature_version_audit_log_event_to_grafana(
                 f"project:{project.name}",
                 f"environment:{environment_v2_versioning.name}",
                 f"by:{admin_user.email}",
-                f"feature:{feature.name}",
-                tag.label,
+                f"feature:{tagged_feature.name}",
+                tag_one.label,
+                tag_two.label,
             ],
             "text": audit_log_record.log,
             "time": expected_time,
@@ -268,3 +256,71 @@ def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_
     dynatrace_wrapper_instance_mock.track_event_async.assert_called_once_with(
         event=dynatrace_wrapper_instance_mock.generate_event_data.return_value
     )
+
+
+@responses.activate
+def test_send_environment_feature_version_audit_log_event_to_dynatrace(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    project: Project,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    _, audit_log_record = _create_and_publish_environment_feature_version(
+        environment=environment_v2_versioning, feature=feature, user=admin_user
+    )
+
+    base_url = "https://dynatrace.test.com"
+    api_key = "api_123"
+    DynatraceConfiguration.objects.create(
+        base_url=base_url, api_key=api_key, environment=environment_v2_versioning
+    )
+
+    responses.add(
+        method=responses.POST,
+        url=f"{base_url}{EVENTS_API_URI}?api-token={api_key}",
+        status=201,
+        json={
+            "reportCount": 1,
+            "eventIngestResults": [{"correlationId": "foobar123456", "status": "OK"}],
+        },
+    )
+
+    # When
+    send_audit_log_event_to_dynatrace(AuditLog, audit_log_record)
+
+    # Then
+    assert len(responses.calls) == 1
+    assert json.loads(responses.calls[0].request.body) == {
+        "title": "Flagsmith flag change.",
+        "eventType": "CUSTOM_DEPLOYMENT",
+        "properties": {
+            "event": f"{audit_log_record.log} by user {admin_user.email}",
+            "environment": environment_v2_versioning.name,
+            "dt.event.deployment.name": f"Flagsmith Deployment - Flag Changed: {feature.name}",
+        },
+        "entitySelector": "",
+    }
+
+
+def _create_and_publish_environment_feature_version(
+    environment: Environment,
+    feature: Feature,
+    user: FFAdminUser,
+) -> (EnvironmentFeatureVersion, AuditLog):
+    version = EnvironmentFeatureVersion(
+        environment=environment,
+        feature=feature,
+    )
+    version.publish(user)
+
+    audit_log_record = (
+        AuditLog.objects.filter(
+            related_object_uuid=version.uuid,
+            related_object_type=RelatedObjectType.EF_VERSION.name,
+        )
+        .order_by("-created_date")
+        .first()
+    )
+    return version, audit_log_record
