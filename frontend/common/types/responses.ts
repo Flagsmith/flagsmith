@@ -51,6 +51,7 @@ export type ChangeRequestSummary = {
   live_from: string | null
 }
 export type SegmentCondition = {
+  id?: number
   delete?: boolean
   description?: string
   operator: string
@@ -58,9 +59,9 @@ export type SegmentCondition = {
   value: string | number | null
 }
 export type SegmentRule = {
-  type: string
+  id?: number
+  type: 'ALL' | 'ANY' | 'NONE'
   rules: SegmentRule[]
-
   delete?: boolean
   conditions: SegmentCondition[]
 }

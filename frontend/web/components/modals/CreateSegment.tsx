@@ -52,6 +52,7 @@ import AddMetadataToEntity, {
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
+import SegmentRuleDivider from 'components/SegmentRuleDivider'
 
 type PageType = {
   number: number
@@ -337,21 +338,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             const displayIndex = rulesToShow.indexOf(rule)
             return (
               <div key={i}>
-                <Row
-                  className={classNames('and-divider my-1', {
-                    'text-danger': rule.type !== 'ANY',
-                  })}
-                >
-                  <Flex className='and-divider__line' />
-                  {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
-                    }`,
-                  )}
-                  <Flex className='and-divider__line' />
-                </Row>
+                <SegmentRuleDivider rule={rule} index={displayIndex} />
                 <Rule
                   showDescription={showDescriptions}
                   readOnly={readOnly}

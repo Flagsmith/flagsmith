@@ -3,9 +3,12 @@ import {
   FeatureState,
   FeatureStateWithConflict,
   Segment,
+  SegmentCondition,
+  SegmentRule,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import { sortBy, uniq, uniqBy } from 'lodash'
+import { sortBy, uniqBy } from 'lodash'
+
 export function getFeatureStateDiff(
   oldFeatureState: FeatureState | undefined,
   newFeatureState: FeatureStateWithConflict | undefined,
@@ -61,7 +64,7 @@ export type TDiffVariations = {
   totalChanges: number
 }
 
-export const getSegmentDiff = (
+export const getSegmentOverrideDiff = (
   oldFeatureStates: FeatureStateWithConflict[] | undefined,
   newFeatureStates: FeatureStateWithConflict[] | undefined,
   segments: Segment[] | undefined,
@@ -198,4 +201,169 @@ export const getVariationDiff = (
     diffs,
     totalChanges,
   } as TDiffVariations
+}
+
+export type TSegmentRuleDiff = {
+  oldRule?: SegmentRule
+  newRule?: SegmentRule
+  hasChanged: boolean
+  conditions: {
+    old: SegmentCondition | undefined
+    new: SegmentCondition | undefined
+    hasChanged: boolean
+  }[]
+  rules?: TSegmentRuleDiff[]
+}
+
+export type TSegmentDiff = {
+  totalChanges: number
+  changes: TSegmentRuleDiff[]
+}
+
+export function getSegmentDiff(
+  oldSegment: Segment | undefined,
+  newSegment: Segment | undefined,
+): TSegmentDiff {
+  const oldRules = oldSegment?.rules || []
+  const newRules = newSegment?.rules || []
+
+  const { changes, totalChanges } = getRulesDiff(oldRules, newRules)
+
+  return { changes, totalChanges }
+}
+
+function getRulesDiff(
+  oldRules: SegmentRule[],
+  newRules: SegmentRule[],
+): {
+  totalChanges: number
+  changes: TSegmentRuleDiff[]
+} {
+  const ruleChanges: TSegmentRuleDiff[] = []
+  let totalChanges = 0
+
+  const matchedIds = new Set<number | undefined>()
+
+  // Compare rules based on IDs
+  newRules.forEach((newRule) => {
+    const oldRule = oldRules.find((rule) => rule.id === newRule.id)
+    matchedIds.add(newRule.id)
+
+    const conditionDiff = getConditionsDiff(
+      oldRule?.conditions || [],
+      newRule.conditions || [],
+    )
+
+    if (oldRule) {
+      // Recursively diff nested rules
+      const subDiff = getRulesDiff(oldRule.rules || [], newRule.rules || [])
+
+      const hasChanged =
+        JSON.stringify({
+          ...oldRule,
+          conditions: undefined,
+          rules: undefined,
+        }) !==
+          JSON.stringify({
+            ...newRule,
+            conditions: undefined,
+            rules: undefined,
+          }) ||
+        conditionDiff.totalChanges > 0 ||
+        subDiff.totalChanges > 0
+
+      if (hasChanged) {
+        totalChanges++
+      }
+
+      ruleChanges.push({
+        conditions: sortBy(
+          conditionDiff.conditions,
+          (v) => (v.new || v.old)?.id,
+        ),
+        hasChanged,
+        newRule,
+        oldRule,
+        rules: subDiff.changes,
+      })
+
+      totalChanges += conditionDiff.totalChanges + subDiff.totalChanges
+    } else {
+      // New rule added
+      totalChanges += conditionDiff.totalChanges
+      ruleChanges.push({
+        conditions: sortBy(
+          conditionDiff.conditions,
+          (v) => (v.new || v.old)?.id,
+        ),
+        hasChanged: true,
+        newRule,
+        oldRule: undefined,
+      })
+    }
+  })
+
+  // Handle removed rules in `oldRules`
+  oldRules.forEach((oldRule) => {
+    if (!matchedIds.has(oldRule.id)) {
+      const conditionDiff = getConditionsDiff(oldRule.conditions || [], [])
+
+      totalChanges += conditionDiff.totalChanges
+      ruleChanges.push({
+        conditions: conditionDiff.conditions,
+        hasChanged: true,
+        newRule: undefined,
+        oldRule,
+      })
+    }
+  })
+
+  return { changes: ruleChanges, totalChanges }
+}
+
+function getConditionsDiff(
+  oldConditions: SegmentCondition[],
+  newConditions: SegmentCondition[],
+): {
+  totalChanges: number
+  conditions: TSegmentRuleDiff['conditions']
+} {
+  const conditions: TSegmentRuleDiff['conditions'] = []
+  const processedIds = new Set<number | undefined>()
+  let totalChanges = 0
+
+  // Match conditions by `id`
+  newConditions.forEach((newCondition) => {
+    const oldCondition = oldConditions.find(
+      (cond) => cond.id === newCondition.id,
+    )
+    processedIds.add(newCondition.id)
+
+    const hasChanged =
+      !oldCondition ||
+      JSON.stringify({ ...oldCondition, id: undefined }) !==
+        JSON.stringify({ ...newCondition, id: undefined })
+
+    conditions.push({
+      hasChanged,
+      new: newCondition,
+      old: oldCondition,
+    })
+
+    if (hasChanged) totalChanges++
+  })
+
+  // Handle removed conditions in `oldConditions`
+  oldConditions.forEach((oldCondition) => {
+    if (!processedIds.has(oldCondition.id)) {
+      conditions.push({
+        hasChanged: true,
+        new: undefined,
+        old: oldCondition,
+      })
+      totalChanges++
+    }
+  })
+
+  return { conditions, totalChanges }
 }

@@ -14,7 +14,7 @@ import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
 import {
   getFeatureStateDiff,
-  getSegmentDiff,
+  getSegmentOverrideDiff,
   getVariationDiff,
 } from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
@@ -45,7 +45,7 @@ export const getFeatureStateCrud = (
     }
     if (segments?.length) {
       // filter out feature states that have no changes
-      const segmentDiffs = getSegmentDiff(
+      const segmentDiffs = getSegmentOverrideDiff(
         featureStates,
         oldFeatureStates,
         segments,
