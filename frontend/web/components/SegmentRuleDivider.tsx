@@ -6,15 +6,24 @@ import { SegmentRule } from 'common/types/responses'
 type SegmentRuleDividerType = {
   rule: SegmentRule
   index: number
+  className?: string
 }
 
-const SegmentRuleDivider: FC<SegmentRuleDividerType> = ({ index, rule }) => {
+const SegmentRuleDivider: FC<SegmentRuleDividerType> = ({
+  className,
+  index,
+  rule,
+}) => {
   if (rule?.type === 'ALL') return null
   return (
     <Row
-      className={classNames('and-divider my-1', {
-        'text-danger': rule.type !== 'ANY',
-      })}
+      className={classNames(
+        'and-divider',
+        {
+          'text-danger': rule.type !== 'ANY',
+        },
+        className || 'my-1',
+      )}
     >
       <Flex className='and-divider__line' />
       {Format.camelCase(

@@ -26,6 +26,8 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 import Format from 'common/utils/format'
 import Setting from 'components/Setting'
+import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
+import Utils from 'common/utils/utils'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -165,8 +167,6 @@ const EnvironmentSettingsPage = class extends Component {
         allow_client_traits: !!this.state.allow_client_traits,
         banner_colour: this.state.banner_colour,
         banner_text: this.state.banner_text,
-        use_identity_overrides_in_local_eval:
-          this.state.use_identity_overrides_in_local_eval,
         description: description || env.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
@@ -176,6 +176,8 @@ const EnvironmentSettingsPage = class extends Component {
         name: name || env.name,
         use_identity_composite_key_for_hashing:
           !!this.state.use_identity_composite_key_for_hashing,
+        use_identity_overrides_in_local_eval:
+          this.state.use_identity_overrides_in_local_eval,
         use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
       }),
     )
@@ -256,10 +258,10 @@ const EnvironmentSettingsPage = class extends Component {
       props: { webhooks, webhooksLoading },
       state: {
         allow_client_traits,
-        use_identity_overrides_in_local_eval,
         hide_sensitive_data,
         name,
         use_identity_composite_key_for_hashing,
+        use_identity_overrides_in_local_eval,
         use_v2_feature_versioning,
       },
     } = this
@@ -286,8 +288,6 @@ const EnvironmentSettingsPage = class extends Component {
             ) {
               setTimeout(() => {
                 this.setState({
-                  use_identity_overrides_in_local_eval:
-                    !!env.use_identity_overrides_in_local_eval,
                   allow_client_traits: !!env.allow_client_traits,
                   banner_colour: env.banner_colour || Constants.tagColors[0],
                   banner_text: env.banner_text,
@@ -301,6 +301,8 @@ const EnvironmentSettingsPage = class extends Component {
                   name: env.name,
                   use_identity_composite_key_for_hashing:
                     !!env.use_identity_composite_key_for_hashing,
+                  use_identity_overrides_in_local_eval:
+                    !!env.use_identity_overrides_in_local_eval,
                   use_v2_feature_versioning: !!env.use_v2_feature_versioning,
                 })
               }, 10)
@@ -522,75 +524,25 @@ const EnvironmentSettingsPage = class extends Component {
                             }
                           />
                         </div>
-                        <FormGroup className='mt-4 col-md-8'>
-                          <Setting
-                            feature='4_EYES'
-                            checked={
-                              has4EyesPermission &&
-                              Utils.changeRequestsEnabled(
-                                this.state.minimum_change_request_approvals,
-                              )
-                            }
-                            onChange={(v) =>
-                              this.setState(
-                                {
-                                  minimum_change_request_approvals: v
-                                    ? 0
-                                    : null,
-                                },
-                                this.saveEnv,
-                              )
-                            }
-                          />
-                          {Utils.changeRequestsEnabled(
-                            this.state.minimum_change_request_approvals,
-                          ) &&
-                            has4EyesPermission && (
-                              <div className='mt-4'>
-                                <div className='mb-2'>
-                                  <strong>Minimum number of approvals</strong>
-                                </div>
-                                <Row>
-                                  <Flex>
-                                    <Input
-                                      ref={(e) => (this.input = e)}
-                                      value={`${this.state.minimum_change_request_approvals}`}
-                                      inputClassName='input input--wide'
-                                      name='env-name'
-                                      min={0}
-                                      style={{ minWidth: 50 }}
-                                      onChange={(e) => {
-                                        if (!Utils.safeParseEventValue(e))
-                                          return
-                                        this.setState({
-                                          minimum_change_request_approvals:
-                                            parseInt(
-                                              Utils.safeParseEventValue(e),
-                                            ),
-                                        })
-                                      }}
-                                      isValid={name && name.length}
-                                      type='number'
-                                      placeholder='Minimum number of approvals'
-                                    />
-                                  </Flex>
-                                  <Button
-                                    type='button'
-                                    onClick={this.saveEnv}
-                                    id='save-env-btn'
-                                    className='ml-3'
-                                    disabled={
-                                      this.saveDisabled() ||
-                                      isSaving ||
-                                      isLoading
-                                    }
-                                  >
-                                    {isSaving || isLoading ? 'Saving' : 'Save'}
-                                  </Button>
-                                </Row>
-                              </div>
-                            )}
-                        </FormGroup>
+                        <ChangeRequestsSetting
+                          feature='4_EYES'
+                          isLoading={this.saveDisabled()}
+                          value={this.state.minimum_change_request_approvals}
+                          onSave={this.saveEnv}
+                          onToggle={(v) =>
+                            this.setState(
+                              {
+                                minimum_change_request_approvals: v,
+                              },
+                              this.saveEnv,
+                            )
+                          }
+                          onChange={(v) => {
+                            this.setState({
+                              minimum_change_request_approvals: v,
+                            })
+                          }}
+                        />
                         <hr className='py-0 my-4' />
                         <FormGroup className='mt-4 col-md-8'>
                           <Row space>

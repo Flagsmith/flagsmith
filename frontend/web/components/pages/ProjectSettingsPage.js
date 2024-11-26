@@ -15,7 +15,6 @@ import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
@@ -26,6 +25,8 @@ import { Link } from 'react-router-dom'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
+import ProjectProvider from 'common/providers/ProjectProvider'
+import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -59,22 +60,7 @@ const ProjectSettingsPage = class extends Component {
       getStore(),
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
-    ).then((roles) => {
-      getRolesProjectPermissions(
-        getStore(),
-        {
-          organisation_id: AccountStore.getOrganisation().id,
-          project_id: this.props.match.params.projectId,
-          role_id: roles.data.results[0].id,
-        },
-        { forceRefetch: true },
-      ).then((res) => {
-        const matchingItems = roles.data.results.filter((item1) =>
-          res.data.results.some((item2) => item2.role === item1.id),
-        )
-        this.setState({ roles: matchingItems })
-      })
-    })
+    )
   }
 
   onSave = () => {
@@ -167,9 +153,12 @@ const ProjectSettingsPage = class extends Component {
   }
 
   render() {
-    const { name, stale_flags_limit_days } = this.state
+    const { minimum_change_request_approvals, name, stale_flags_limit_days } =
+      this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
-
+    const changeRequestsFeature = Utils.getFlagsmithHasFeature(
+      'segment_change_requests',
+    )
     return (
       <div className='app-container container'>
         <ProjectProvider
@@ -177,22 +166,15 @@ const ProjectSettingsPage = class extends Component {
           onSave={this.onSave}
         >
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
-            if (
-              !this.state.stale_flags_limit_days &&
-              project?.stale_flags_limit_days
-            ) {
+            if (project && this.state.populatedProjectState !== project?.id) {
+              this.state.populatedProjectState = project.id
               this.state.stale_flags_limit_days = project.stale_flags_limit_days
-            }
-            if (!this.state.name && project?.name) {
               this.state.name = project.name
-            }
-            if (
-              !this.state.populatedProjectState &&
-              project?.feature_name_regex
-            ) {
-              this.state.populatedProjectState = true
               this.state.feature_name_regex = project?.feature_name_regex
+              this.state.minimum_change_request_approvals =
+                project?.minimum_change_request_approvals
             }
+
             let regexValid = true
             if (this.state.feature_name_regex)
               try {
@@ -201,11 +183,15 @@ const ProjectSettingsPage = class extends Component {
                 regexValid = false
               }
             const saveProject = (e) => {
-              e.preventDefault()
+              e?.preventDefault?.()
               !isSaving &&
                 name &&
                 editProject(
-                  Object.assign({}, project, { name, stale_flags_limit_days }),
+                  Object.assign({}, project, {
+                    minimum_change_request_approvals,
+                    name,
+                    stale_flags_limit_days,
+                  }),
                 )
             }
 
@@ -324,6 +310,27 @@ const ProjectSettingsPage = class extends Component {
                         </FormGroup>
                       </div>
                       <hr className='py-0 my-4' />
+                      {!!changeRequestsFeature && (
+                        <ChangeRequestsSetting
+                          feature='4_EYES_PROJECT'
+                          value={this.state.minimum_change_request_approvals}
+                          onToggle={(v) =>
+                            this.setState(
+                              {
+                                minimum_change_request_approvals: v,
+                              },
+                              saveProject,
+                            )
+                          }
+                          onSave={saveProject}
+                          onChange={(v) => {
+                            this.setState({
+                              minimum_change_request_approvals: v,
+                            })
+                          }}
+                          isLoading={isSaving}
+                        />
+                      )}
                       <FormGroup className='mt-4 col-md-8'>
                         <Row className='mb-2'>
                           <Switch

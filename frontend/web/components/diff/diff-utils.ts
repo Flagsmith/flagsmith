@@ -232,6 +232,54 @@ export function getSegmentDiff(
   return { changes, totalChanges }
 }
 
+function diffRule(
+  oldRule: SegmentRule | undefined,
+  newRule: SegmentRule | undefined,
+): { diff: TSegmentRuleDiff; totalChanges: number } {
+  const conditionDiff = getConditionsDiff(
+    oldRule?.conditions || [],
+    newRule?.conditions || [],
+  )
+  const subDiff = getRulesDiff(oldRule?.rules || [], newRule?.rules || [])
+
+  let hasChanged = false
+
+  if (oldRule && newRule) {
+    // Both rules exist, check for changes
+    hasChanged =
+      JSON.stringify({
+        ...oldRule,
+        conditions: undefined,
+        rules: undefined,
+      }) !==
+        JSON.stringify({
+          ...newRule,
+          conditions: undefined,
+          rules: undefined,
+        }) ||
+      conditionDiff.totalChanges > 0 ||
+      subDiff.totalChanges > 0
+  } else {
+    // Rule was added or removed
+    hasChanged = true
+  }
+
+  let totalChanges = conditionDiff.totalChanges + subDiff.totalChanges
+  if (hasChanged) {
+    totalChanges += 1
+  }
+
+  const diff: TSegmentRuleDiff = {
+    conditions: sortBy(conditionDiff.conditions, (v) => (v.new || v.old)?.id),
+    hasChanged,
+    newRule,
+    oldRule,
+    rules: subDiff.changes,
+  }
+
+  return { diff, totalChanges }
+}
+
 function getRulesDiff(
   oldRules: SegmentRule[],
   newRules: SegmentRule[],
@@ -249,72 +297,22 @@ function getRulesDiff(
     const oldRule = oldRules.find((rule) => rule.id === newRule.id)
     matchedIds.add(newRule.id)
 
-    const conditionDiff = getConditionsDiff(
-      oldRule?.conditions || [],
-      newRule.conditions || [],
-    )
+    const { diff, totalChanges: ruleTotalChanges } = diffRule(oldRule, newRule)
 
-    if (oldRule) {
-      // Recursively diff nested rules
-      const subDiff = getRulesDiff(oldRule.rules || [], newRule.rules || [])
-
-      const hasChanged =
-        JSON.stringify({
-          ...oldRule,
-          conditions: undefined,
-          rules: undefined,
-        }) !==
-          JSON.stringify({
-            ...newRule,
-            conditions: undefined,
-            rules: undefined,
-          }) ||
-        conditionDiff.totalChanges > 0 ||
-        subDiff.totalChanges > 0
-
-      if (hasChanged) {
-        totalChanges++
-      }
-
-      ruleChanges.push({
-        conditions: sortBy(
-          conditionDiff.conditions,
-          (v) => (v.new || v.old)?.id,
-        ),
-        hasChanged,
-        newRule,
-        oldRule,
-        rules: subDiff.changes,
-      })
-
-      totalChanges += conditionDiff.totalChanges + subDiff.totalChanges
-    } else {
-      // New rule added
-      totalChanges += conditionDiff.totalChanges
-      ruleChanges.push({
-        conditions: sortBy(
-          conditionDiff.conditions,
-          (v) => (v.new || v.old)?.id,
-        ),
-        hasChanged: true,
-        newRule,
-        oldRule: undefined,
-      })
-    }
+    totalChanges += ruleTotalChanges
+    ruleChanges.push(diff)
   })
 
   // Handle removed rules in `oldRules`
   oldRules.forEach((oldRule) => {
     if (!matchedIds.has(oldRule.id)) {
-      const conditionDiff = getConditionsDiff(oldRule.conditions || [], [])
-
-      totalChanges += conditionDiff.totalChanges
-      ruleChanges.push({
-        conditions: conditionDiff.conditions,
-        hasChanged: true,
-        newRule: undefined,
+      const { diff, totalChanges: ruleTotalChanges } = diffRule(
         oldRule,
-      })
+        undefined,
+      )
+
+      totalChanges += ruleTotalChanges
+      ruleChanges.push(diff)
     }
   })
 

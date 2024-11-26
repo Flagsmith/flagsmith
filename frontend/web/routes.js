@@ -40,6 +40,8 @@ import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
+import ProjectChangeRequestsPage from "components/pages/ProjectChangeRequestsPage";
+import ProjectChangeRequestPage from "components/pages/ProjectChangeRequestPage";
 
 export const routes = {
   'account': '/account',
@@ -49,8 +51,10 @@ export const routes = {
   'broken': '/broken',
   'change-request':
     '/project/:projectId/environment/:environmentId/change-requests/:id',
+  'change-request-project': '/project/:projectId/change-requests/:id',
   'change-requests':
     '/project/:projectId/environment/:environmentId/change-requests',
+  'change-requests-project': '/project/:projectId/change-requests',
   'compare': '/project/:projectId/compare',
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
@@ -122,6 +126,16 @@ export default (
         path={routes['change-requests']}
         exact
         component={ChangeRequestsPage}
+      />
+      <ParameterizedRoute
+        path={routes['change-requests-project']}
+        exact
+        component={ProjectChangeRequestsPage}
+      />
+      <ParameterizedRoute
+        path={routes['change-request-project']}
+        exact
+        component={ProjectChangeRequestPage}
       />
       <ParameterizedRoute
         path={routes['scheduled-changes']}

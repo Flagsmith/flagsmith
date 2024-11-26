@@ -33,6 +33,7 @@ export type PaidFeature =
   | 'AUDIT'
   | 'FORCE_2FA'
   | '4_EYES'
+  | '4_EYES_PROJECT'
   | 'STALE_FLAGS'
   | 'VERSIONING_DAYS'
   | 'AUDIT_DAYS'
@@ -439,7 +440,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'RBAC':
       case 'AUDIT':
       case 'FORCE_2FA':
-      case '4_EYES': {
+      case '4_EYES':
+      case '4_EYES_PROJECT': {
         plan = 'scale-up'
         break
       }

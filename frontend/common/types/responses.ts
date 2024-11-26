@@ -1,5 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 
+import { WithoutId } from './requests'
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -75,6 +77,16 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
 }
+export type ProjectChangeRequest = Omit<
+  ChangeRequest,
+  | 'environment_feature_versions'
+  | 'feature_states'
+  | 'change_sets'
+  | 'environment'
+> & {
+  segments: (WithoutId<Segment> & { segment_id: number; version_of: number })[]
+}
+
 export type Environment = {
   id: number
   name: string
@@ -84,7 +96,7 @@ export type Environment = {
   banner_text?: string
   banner_colour?: string
   project: number
-  minimum_change_request_approvals?: number
+  minimum_change_request_approvals: number | null
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
@@ -99,6 +111,7 @@ export type Project = {
   hide_disabled_flags: boolean
   enable_dynamo_db: boolean
   migration_status: string
+  minimum_change_request_approvals: number | null
   use_edge_identities: boolean
   show_edge_identity_overrides_for_feature: boolean
   prevent_flag_defaults: boolean
@@ -753,5 +766,8 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  projectChangeRequests: PagedResponse<ChangeRequestSummary>
+  projectChangeRequest: ProjectChangeRequest
+  actionChangeRequest: {}
   // END OF TYPES
 }
