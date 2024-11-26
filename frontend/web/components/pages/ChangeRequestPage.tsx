@@ -530,9 +530,9 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
               />
               <Row className='mt-4'>
                 <Flex>
-                  {approvedBy?.length && (
+                  {!!approvedBy?.length && (
                     <div className='text-right mb-2 mr-2 font-weight-medium'>
-                      Approved by {approvedBy.join(', ')}
+                      Feature   Approved by {approvedBy.join(', ')}
                     </div>
                   )}
                   {approvedBy.length < minApprovals && (

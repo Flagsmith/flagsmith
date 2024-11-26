@@ -9,6 +9,7 @@ import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import DiffString from './DiffString'
 import Constants from 'common/constants'
 import Utils from 'common/utils/utils'
+import Icon from "components/Icon";
 
 type DiffSegmentType = {
   oldSegment: Segment
