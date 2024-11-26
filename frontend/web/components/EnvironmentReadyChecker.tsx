@@ -28,7 +28,7 @@ const EnvironmentReadyChecker: FC<EnvironmentReadyCheckerType> = ({
     if (!!data && !data?.is_creating) {
       setEnvironmentCreated(true)
     }
-  }, [data?.is_creating])
+  }, [data])
   if (!match?.params?.environmentId) {
     return children
   }
