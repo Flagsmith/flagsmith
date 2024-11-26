@@ -13,11 +13,21 @@ const EnvironmentReadyChecker: FC<EnvironmentReadyCheckerType> = ({
   children,
   match,
 }) => {
+  const { data: isCreatingCheck } = useGetEnvironmentQuery(
+    {
+      id: match.params.environmentId,
+    },
+    { skip: true },
+  )
+  const hasCreateEnvironment = !!isCreatingCheck && !isCreatingCheck.is_creating
   const { data, isLoading } = useGetEnvironmentQuery(
     {
       id: match.params.environmentId,
     },
-    { pollingInterval: 1000, skip: !match.params.environmentId },
+    {
+      pollingInterval: 1000,
+      skip: !match.params.environmentId || hasCreateEnvironment,
+    },
   )
   if (!match?.params?.environmentId) {
     return children
