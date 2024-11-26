@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 
 type EnvironmentReadyCheckerType = {
@@ -13,12 +13,22 @@ const EnvironmentReadyChecker: FC<EnvironmentReadyCheckerType> = ({
   children,
   match,
 }) => {
+  const [environmentCreated, setEnvironmentCreated] = useState(false)
+
   const { data, isLoading } = useGetEnvironmentQuery(
     {
       id: match.params.environmentId,
     },
-    { pollingInterval: 1000, skip: !match.params.environmentId },
+    {
+      pollingInterval: 1000,
+      skip: !match.params.environmentId || environmentCreated,
+    },
   )
+  useEffect(() => {
+    if (!!data && !data?.is_creating) {
+      setEnvironmentCreated(true)
+    }
+  }, [data])
   if (!match?.params?.environmentId) {
     return children
   }
