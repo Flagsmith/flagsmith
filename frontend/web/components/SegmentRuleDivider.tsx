@@ -9,6 +9,7 @@ type SegmentRuleDividerType = {
 }
 
 const SegmentRuleDivider: FC<SegmentRuleDividerType> = ({ index, rule }) => {
+  if (rule?.type === 'ALL') return null
   return (
     <Row
       className={classNames('and-divider my-1', {

@@ -24,6 +24,8 @@ import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
+import DiffSegment from 'components/diff/DiffSegment'
+import { getSegmentDiff } from 'components/diff/diff-utils'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -221,6 +223,7 @@ const FeaturesPage = class extends Component {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
+
     return (
       <div
         data-test='features-page'

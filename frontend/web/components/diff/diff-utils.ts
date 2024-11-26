@@ -202,16 +202,16 @@ export const getVariationDiff = (
     totalChanges,
   } as TDiffVariations
 }
-
+export type TSegmentConditionDiff = {
+  old: SegmentCondition | undefined
+  new: SegmentCondition | undefined
+  hasChanged: boolean
+}
 export type TSegmentRuleDiff = {
   oldRule?: SegmentRule
   newRule?: SegmentRule
   hasChanged: boolean
-  conditions: {
-    old: SegmentCondition | undefined
-    new: SegmentCondition | undefined
-    hasChanged: boolean
-  }[]
+  conditions: TSegmentConditionDiff[]
   rules?: TSegmentRuleDiff[]
 }
 
