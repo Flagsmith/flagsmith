@@ -93,7 +93,7 @@ ingress:
       - /api/
       - /health/
       - /admin/
-      - /static/
+      - /admin/static
 
 frontend:
  extraEnv:
