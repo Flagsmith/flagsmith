@@ -43,6 +43,7 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "show_edge_identity_overrides_for_feature",
             "stale_flags_limit_days",
             "edge_v2_migration_status",
+            "minimum_change_request_approvals",
         )
         read_only_fields = (
             "enable_dynamo_db",
@@ -130,7 +131,7 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
     def get_total_segments(self, instance: Project) -> int:
         # added here to prevent need for annotate(Count("segments", distinct=True))
         # which causes performance issues.
-        return instance.segments.count()
+        return instance.live_segment_count()
 
 
 class CreateUpdateUserProjectPermissionSerializer(
