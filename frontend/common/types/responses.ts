@@ -84,7 +84,10 @@ export type ProjectChangeRequest = Omit<
   | 'change_sets'
   | 'environment'
 > & {
-  segments: (WithoutId<Segment> & { segment_id: number; version_of: number })[]
+  segments: (WithoutId<Segment> & {
+    segment_id?: number
+    version_of?: number
+  })[]
 }
 
 export type Environment = {

@@ -275,6 +275,43 @@ const CreateSegment: FC<CreateSegmentType> = ({
     })
     return Promise.resolve(true)
   }, [valueChanged, isEdit])
+  const onCreateChangeRequest = (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => {
+    closeModal2()
+    setValueChanged(false)
+    createChangeRequest({
+      data: {
+        approvals: (changeRequestData.approvals || []).filter((v) => !!v.user),
+        committed_by: null,
+        conflicts: [],
+        description: changeRequestData.description,
+        group_assignments: (changeRequestData.approvals || []).filter(
+          (v) => !!v.group,
+        ),
+        is_approved: false,
+        is_committed: false,
+        segments: [
+          {
+            description,
+            feature: feature,
+            metadata: metadata as Metadata[],
+            name,
+            project: projectId,
+            rules,
+            segment_id: segment.id!,
+          },
+        ],
+        title: changeRequestData.title,
+      },
+      project_id: `${projectId}`,
+    }).then(() => {
+      closeModal()
+      toast('Created change request')
+    })
+  }
   useEffect(() => {
     setInterceptClose(onClosing)
     return () => setInterceptClose(null)
@@ -533,45 +570,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                       <ChangeRequestModal
                         showAssignees={is4Eyes}
                         hideSchedule
-                        onSave={(changeRequestData: {
-                          approvals: []
-                          description: string
-                          title: string
-                        }) => {
-                          closeModal2()
-                          setValueChanged(false)
-                          createChangeRequest({
-                            data: {
-                              approvals: (
-                                changeRequestData.approvals || []
-                              ).filter((v) => !!v.user),
-                              committed_by: null,
-                              conflicts: [],
-                              description: changeRequestData.description,
-                              group_assignments: (
-                                changeRequestData.approvals || []
-                              ).filter((v) => !!v.group),
-                              is_approved: false,
-                              is_committed: false,
-                              segments: [
-                                {
-                                  description,
-                                  feature: feature,
-                                  metadata: metadata as Metadata[],
-                                  name,
-                                  project: projectId,
-                                  rules,
-                                  segment_id: segment.id!,
-                                },
-                              ],
-                              title: changeRequestData.title,
-                            },
-                            project_id: `${projectId}`,
-                          }).then(() => {
-                            closeModal()
-                            toast('Created change request')
-                          })
-                        }}
+                        onSave={onCreateChangeRequest}
                       />,
                     )
                   }}
@@ -632,7 +631,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   return (
     <>
       <ExistingProjectChangeRequestAlert
-        className="m-2"
+        className='m-2'
         projectId={`${projectId}`}
         segmentId={`${segment.id}`}
       />
