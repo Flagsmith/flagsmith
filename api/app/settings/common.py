@@ -543,7 +543,9 @@ SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER
 
 SECURE_REDIRECT_EXEMPT = env.list("DJANGO_SECURE_REDIRECT_EXEMPT", default=[])
 SECURE_REFERRER_POLICY = env.str("DJANGO_SECURE_REFERRER_POLICY", default="same-origin")
-SECURE_CROSS_ORIGIN_OPENER_POLICY = env.str("DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", default="same-origin")
+SECURE_CROSS_ORIGIN_OPENER_POLICY = env.str(
+    "DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", default="same-origin"
+)
 SECURE_SSL_HOST = env.str("DJANGO_SECURE_SSL_HOST", default=None)
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
 
@@ -579,31 +581,6 @@ else:
         },
         "loggers": {
             "": {"level": LOG_LEVEL, "handlers": ["console"]},
-            # Not sure why the following loggers are necessary, but it doesn't seem to
-            # write log messages for e.g. features.workflows.core.models without adding
-            # them explicitly.
-            # TODO: move all apps to a parent 'apps' directory and configure the logger
-            #  for that dir
-            "features": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-            "task_processor": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-            "app_analytics": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
-            "webhooks": {
-                "level": LOG_LEVEL,
-                "handlers": ["console"],
-                "propagate": False,
-            },
         },
     }
 

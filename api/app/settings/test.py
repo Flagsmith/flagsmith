@@ -19,13 +19,3 @@ AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"
 RETRY_WEBHOOKS = True
 
 INFLUXDB_BUCKET = "test_bucket"
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {},
-    "handlers": {},
-    "loggers": {
-        "": {"level": LOG_LEVEL, "handlers": []},
-    },
-}
