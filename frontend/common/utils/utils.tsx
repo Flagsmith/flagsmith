@@ -590,9 +590,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     // Extract the base domain
     const getBaseDomain = (url: string) => {
-      const hostname = new URL(url).hostname // Extract the full hostname
-      const parts = hostname.split('.') // Split into parts
-      return parts.slice(-2).join('.') // Take the last two parts (e.g., 'flagsmith.com')
+      const hostname = new URL(url).hostname
+      const parts = hostname.split('.')
+      return parts.slice(-2).join('.')
     }
 
     const originBaseDomain = getBaseDomain(document.location.origin)
