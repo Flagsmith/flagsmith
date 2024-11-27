@@ -27,6 +27,9 @@ const ProjectChangeRequestsLink: FC<ProjectChangeRequestsLinkType> = ({
   const changeRequests =
     Utils.changeRequestsEnabled(project?.minimum_change_request_approvals) &&
     changeRequestsData?.count
+  if (!Utils.getFlagsmithHasFeature('segment_change_requests')) {
+    return null
+  }
   return (
     <NavSubLink
       icon={<Icon name='request' />}
