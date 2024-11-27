@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models.signals import post_init, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
@@ -9,6 +11,8 @@ from features.versioning.tasks import (
     create_environment_feature_version_published_audit_log_task,
     trigger_update_version_webhooks,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=EnvironmentFeatureVersion)
@@ -23,6 +27,14 @@ def add_existing_feature_states(
         return
 
     for feature_state in previous_environment_feature_version.feature_states.all():
+        if feature_state.feature_id != instance.feature_id:
+            logger.error(
+                f"Not cloning feature state for feature {feature_state.feature_id} into "
+                f"version {instance.uuid}, which belongs to feature {instance.feature_id}",
+                stack_info=True,
+            )
+            continue
+
         feature_state.clone(
             env=instance.environment, environment_feature_version=instance
         )

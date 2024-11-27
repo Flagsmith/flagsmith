@@ -786,6 +786,23 @@ class FeatureState(
         ):
             self.live_from = timezone.now()
 
+    @hook(BEFORE_CREATE)
+    def validate_environment_feature_version(self) -> None:
+        if (
+            self.environment_feature_version_id
+            and self.feature_id != self.environment_feature_version.feature_id
+        ):
+            msg = (
+                "Cannot create a feature state for feature %d in version %s, which belongs to feature %d."
+                % (
+                    self.feature_id,
+                    self.environment_feature_version_id,
+                    self.environment_feature_version.feature_id,
+                )
+            )
+            logger.error(msg, stack_info=True)
+            raise ValidationError(msg)
+
     @hook(AFTER_CREATE)
     def create_feature_state_value(self):
         # note: this is only performed after create since feature state values are

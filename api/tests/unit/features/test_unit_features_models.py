@@ -3,6 +3,7 @@ from unittest import mock
 
 import freezegun
 import pytest
+from _pytest.logging import LogCaptureFixture
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
@@ -1045,3 +1046,34 @@ def test_webhooks_are_not_called_for_feature_state_with_environment_feature_vers
 
     # Then
     mock_trigger_feature_state_change_webhooks.assert_not_called()
+
+
+def test_save_feature_state_model_with_invalid_environment_feature_version(
+    feature: Feature,
+    project: Project,
+    environment_v2_versioning: Environment,
+    caplog: LogCaptureFixture,
+) -> None:
+    """
+    This test is fairly unrealistic because I can't understand how this is happening, but it's
+    just there to validate the additional logging / exception that I've added to try and catch
+    where this is happening.
+    """
+
+    # Given
+    feature_2 = Feature.objects.create(name="feature_2", project=project)
+
+    feature_1_version_1 = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # When
+    with pytest.raises(ValidationError):
+        FeatureState.objects.create(
+            feature=feature_2,
+            environment=environment_v2_versioning,
+            environment_feature_version=feature_1_version_1,
+        )
+
+    # Then
+    assert caplog.record_tuples
