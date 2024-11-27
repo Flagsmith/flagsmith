@@ -588,6 +588,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (Project.cookieAuthEnabled) {
       return true
     }
+    if (!Utils.isSaas()) return false
     // Extract the base domain
     const getBaseDomain = (url: string) => {
       const hostname = new URL(url).hostname
