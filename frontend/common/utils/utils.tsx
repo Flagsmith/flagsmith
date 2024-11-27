@@ -2,7 +2,6 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  ChangeSet,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -282,7 +281,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'identities'
   },
-
   getIntegrationData() {
     return Utils.getFlagsmithJSONValue(
       'integration_data',
@@ -298,6 +296,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -340,7 +339,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getPermissionList(
     isAdmin: boolean,
     permissions: string[] | undefined | null,
@@ -371,6 +369,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         .map((item) => `${Format.enumeration.get(item)}`),
     }
   },
+
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -431,7 +430,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
-
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -584,6 +582,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
+  },
+
+  includeCookies() {
+    if (Project.cookieAuthEnabled) {
+      return true
+    }
+    // Extract the base domain
+    const getBaseDomain = (url: string) => {
+      const hostname = new URL(url).hostname // Extract the full hostname
+      const parts = hostname.split('.') // Split into parts
+      return parts.slice(-2).join('.') // Take the last two parts (e.g., 'flagsmith.com')
+    }
+
+    const originBaseDomain = getBaseDomain(document.location.origin)
+    const projectApiBaseDomain = getBaseDomain(Project.api)
+
+    return originBaseDomain === projectApiBaseDomain
   },
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType

@@ -9,7 +9,7 @@ const getQueryString = (params) => {
 module.exports = {
   _request(method, _url, data, headers = {}) {
     const options = {
-      credentials: Project.cookieAuthEnabled ? 'include' : undefined,
+      credentials: Utils.includeCookies() ? 'include' : undefined,
       headers: {
         'Accept': 'application/json',
         ...headers,

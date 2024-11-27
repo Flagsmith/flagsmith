@@ -3,6 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react'
 import { FetchBaseQueryArgs } from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
 import { CreateApiOptions } from '@reduxjs/toolkit/dist/query/createApi'
 import { StoreStateType } from './store'
+import Utils from './utils/utils'
 
 const Project = require('./project')
 const _data = require('./data/base/_data.js')
@@ -16,8 +17,11 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
     | 'extractRehydrationInfo'
   > = {
     baseQuery: fetchBaseQuery({
-      credentials: Project.cookieAuthEnabled ? 'include' : 'omit', // 'include' for cookies, 'omit' if not
+      // 'include' for cookies, 'omit' if not
       baseUrl: Project.api,
+      credentials: Utils.includeCookies()
+        ? 'include'
+        : 'omit',
       prepareHeaders: async (headers, { endpoint, getState }) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const state = getState() as StoreStateType
@@ -33,7 +37,7 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
             if (token && !Project.cookieAuthEnabled) {
               headers.set('Authorization', `Token ${token}`)
             }
-          } catch (e) { }
+          } catch (e) {}
         }
 
         return headers
