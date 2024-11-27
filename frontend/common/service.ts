@@ -17,11 +17,8 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
     | 'extractRehydrationInfo'
   > = {
     baseQuery: fetchBaseQuery({
-      // 'include' for cookies, 'omit' if not
       baseUrl: Project.api,
-      credentials: Utils.includeCookies()
-        ? 'include'
-        : 'omit',
+      credentials: Utils.includeCookies() ? 'include' : 'omit',
       prepareHeaders: async (headers, { endpoint, getState }) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const state = getState() as StoreStateType
