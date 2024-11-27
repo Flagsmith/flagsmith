@@ -800,7 +800,7 @@ class FeatureState(
                     self.environment_feature_version.feature_id,
                 )
             )
-            logger.error(msg, stack_info=True)
+            logger.error(msg)
             raise ValidationError(msg)
 
     @hook(AFTER_CREATE)

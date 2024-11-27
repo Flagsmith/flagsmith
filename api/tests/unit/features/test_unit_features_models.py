@@ -1,9 +1,9 @@
+import logging
 from datetime import timedelta
 from unittest import mock
 
 import freezegun
 import pytest
-from _pytest.logging import LogCaptureFixture
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
@@ -1052,7 +1052,7 @@ def test_save_feature_state_model_with_invalid_environment_feature_version(
     feature: Feature,
     project: Project,
     environment_v2_versioning: Environment,
-    caplog: LogCaptureFixture,
+    inspecting_handler: logging.Handler,
 ) -> None:
     """
     This test is fairly unrealistic because I can't understand how this is happening, but it's
@@ -1061,6 +1061,10 @@ def test_save_feature_state_model_with_invalid_environment_feature_version(
     """
 
     # Given
+    features_logger = logging.getLogger("features.models")
+    features_logger.addHandler(inspecting_handler)
+    features_logger.setLevel(logging.ERROR)
+
     feature_2 = Feature.objects.create(name="feature_2", project=project)
 
     feature_1_version_1 = EnvironmentFeatureVersion.objects.get(
@@ -1076,4 +1080,7 @@ def test_save_feature_state_model_with_invalid_environment_feature_version(
         )
 
     # Then
-    assert caplog.record_tuples
+    assert inspecting_handler.messages == [
+        f"Cannot create a feature state for feature {feature_2.id} in version "
+        f"{str(feature_1_version_1.uuid)}, which belongs to feature {feature.id}."
+    ]
