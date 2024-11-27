@@ -532,7 +532,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           })
       } else {
         const body = {
-          permissions: entityPermissions.permissions,
+          permissions:
+            level === 'organisation'
+              ? entityPermissions.permissions.map((v) => v.permission_key)
+              : entityPermissions.permissions,
         } as Partial<Req['createRolePermission']['body']>
         if (level === 'project') {
           body.admin = entityPermissions.admin
@@ -878,7 +881,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                             }}
                             className='react-select select-sm'
                             disabled={disabled || admin() || saving}
-                            options={permissionOptions}
+                            options={
+                              p.supports_tag
+                                ? permissionOptions
+                                : permissionOptions.filter(
+                                    (v) => v.value !== 'GRANTED_FOR_TAGS',
+                                  )
+                            }
                             components={{ SingleValue }}
                           />
                         </div>
