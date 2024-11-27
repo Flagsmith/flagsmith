@@ -41,7 +41,7 @@ const DiffSegment: FC<DiffSegmentType> = ({ newSegment, oldSegment }) => {
             </div>
           ))}
         <div className='d-flex ml-0 me-0 flex-column'>
-          <label className="mb-0">Rules</label>
+          <label className='mb-0'>Rules</label>
           {diff.changes?.map((diff, index) => (
             <>
               <DiffRule key={index} diff={diff} index={index} />
