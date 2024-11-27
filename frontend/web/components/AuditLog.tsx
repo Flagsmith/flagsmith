@@ -163,7 +163,9 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div>
             {author?.first_name} {author?.last_name}
           </div>
-          <div className='list-item-subtitle'>{author?.email}</div>
+          <div className="list-item-subtitle">
+            {author?.email}
+          </div>
         </div>
         {environment?.name ? (
           <Link

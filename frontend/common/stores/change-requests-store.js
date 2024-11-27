@@ -1,15 +1,12 @@
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
-const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
-const { environmentService } = require('common/services/useEnvironment')
 const { changeRequestService } = require('common/services/useChangeRequest')
 const { getStore } = require('common/store')
 
-const PAGE_SIZE = 20
 const transformChangeRequest = async (changeRequest) => {
   const feature_states = await Promise.all(
     changeRequest.feature_states.map(addFeatureSegmentsToFeatureStates),

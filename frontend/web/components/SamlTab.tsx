@@ -13,7 +13,7 @@ import CreateSAML from './modals/CreateSAML'
 import Switch from './Switch'
 import { SAMLConfiguration } from 'common/types/responses'
 import PlanBasedBanner from './PlanBasedAccess'
-
+        
 export type SamlTabType = {
   organisationId: number
 }

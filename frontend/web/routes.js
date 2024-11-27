@@ -40,8 +40,8 @@ import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
-import ProjectChangeRequestsPage from "components/pages/ProjectChangeRequestsPage";
-import ProjectChangeRequestPage from "components/pages/ProjectChangeRequestPage";
+import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
+import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestPage'
 
 export const routes = {
   'account': '/account',

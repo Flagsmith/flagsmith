@@ -1,11 +1,8 @@
-import React, { FC, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import { ChangeRequest } from 'common/types/responses'
 import { useGetFeatureStatesQuery } from 'common/services/useFeatureState'
 import DiffFeature from './DiffFeature'
 import { mergeChangeSets } from 'common/services/useChangeRequest'
-import DiffSegment from './DiffSegment'
-import Tabs from 'components/base/forms/Tabs'
-import TabItem from 'components/base/forms/TabItem'
 
 type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
@@ -50,7 +47,6 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
       </div>
     )
   }
-
   return (
     <DiffFeature
       conflicts={changeRequest.conflicts}

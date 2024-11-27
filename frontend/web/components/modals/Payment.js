@@ -270,7 +270,6 @@ const Payment = class extends Component {
                             className='text-primary fw-bold'
                             target='_blank'
                             href='https://www.flagsmith.com/on-premises-and-private-cloud-hosting'
-                            rel='noreferrer'
                           >
                             On Premise
                           </a>{' '}
@@ -279,7 +278,6 @@ const Payment = class extends Component {
                             className='text-primary fw-bold'
                             target='_blank'
                             href='https://www.flagsmith.com/on-premises-and-private-cloud-hosting'
-                            rel='noreferrer'
                           >
                             Private Cloud
                           </a>{' '}

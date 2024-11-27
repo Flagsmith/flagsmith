@@ -180,15 +180,15 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   }, [])
 
   useEffect(() => {
-    if (!open) {
-      if (projectSearch) {
+    if(!open) {
+      if(projectSearch) {
         setProjectSearch('')
       }
-      if (organisationSearch) {
+      if(organisationSearch) {
         setOrganisationSearch('')
       }
     }
-  }, [open])
+  }, [open]);
 
   const { data: projects } = useGetProjectsQuery(
     {

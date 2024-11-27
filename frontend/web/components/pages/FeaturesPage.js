@@ -24,8 +24,6 @@ import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
-import DiffSegment from 'components/diff/DiffSegment'
-import { getSegmentDiff } from 'components/diff/diff-utils'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'

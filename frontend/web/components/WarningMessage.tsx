@@ -14,7 +14,7 @@ const WarningMessage: FC<WarningMessageType> = (props) => {
   const warningMessageClassName = `alert alert-warning ${
     warningMessageClass || 'flex-1 align-items-center'
   }`
-  if (!props.warningMessage) {
+  if(!props.warningMessage) {
     return null
   }
   return (

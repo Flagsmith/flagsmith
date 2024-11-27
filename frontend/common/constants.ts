@@ -245,7 +245,6 @@ export default {
     property: '',
     value: '',
   } as SegmentCondition,
-  defaultTagColor: '#3d4db6',
   environmentPermissions: (perm: string) =>
     `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
   events: {
@@ -453,6 +452,7 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  defaultTagColor: '#3d4db6',
   isCustomFlagsmithUrl:
     Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {

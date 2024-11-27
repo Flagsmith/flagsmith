@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { close, checkmark } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 
-const PasswordRequirements = ({ onRequirementsMet, password }) => {
+const PasswordRequirements = ({ password, onRequirementsMet }) => {
   const requirements = [
     { label: 'At least 8 characters', test: password.length >= 8 },
     { label: 'Contains a number', test: /\d/.test(password) },
@@ -49,8 +49,8 @@ const PasswordRequirements = ({ onRequirementsMet, password }) => {
 }
 
 PasswordRequirements.propTypes = {
-  onRequirementsMet: PropTypes.func.isRequired,
   password: PropTypes.string.isRequired,
+  onRequirementsMet: PropTypes.func.isRequired,
 }
 
 export default PasswordRequirements

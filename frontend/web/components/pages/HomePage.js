@@ -38,12 +38,12 @@ const HomePage = class extends React.Component {
     // can handle always setting the marketing consent.
     API.setCookie('marketing_consent_given', 'true')
     this.state = {
-      allRequirementsMet: false,
       email: '',
       first_name: '',
       last_name: '',
-      marketing_consent_given: true,
       password: '',
+      marketing_consent_given: true,
+      allRequirementsMet: false,
     }
 
     this.handlePasswordChange = this.handlePasswordChange.bind(this)
