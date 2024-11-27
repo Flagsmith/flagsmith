@@ -241,7 +241,7 @@ def _create_feature_segments_for_segment_match_clauses(
         targeted_segment_name = segments_by_ld_key[targeted_segment_key].name
 
         # We assume segment is already created.
-        segment = Segment.objects.get(name=targeted_segment_name, project=project)
+        segment = Segment.live_objects.get(name=targeted_segment_name, project=project)
 
         feature_segment, _ = FeatureSegment.objects.update_or_create(
             feature=feature,
@@ -368,7 +368,7 @@ def _create_feature_segment_from_clauses(
         )
 
     # Create a feature specific segment for the rule.
-    segment, _ = Segment.objects.update_or_create(
+    segment, _ = Segment.live_objects.update_or_create(
         name=rule_name, project=project, feature=feature
     )
 
@@ -961,7 +961,7 @@ def _create_segments_from_ld(
             continue
 
         # Make sure consecutive updates do not create the same segment.
-        segment, _ = Segment.objects.update_or_create(
+        segment, _ = Segment.live_objects.update_or_create(
             name=_get_segment_name(ld_segment["name"], env),
             project_id=project_id,
         )

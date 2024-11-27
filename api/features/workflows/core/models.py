@@ -18,6 +18,7 @@ from django_lifecycle import (
     AFTER_CREATE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_CREATE,
     BEFORE_DELETE,
     LifecycleModel,
     LifecycleModelMixin,
@@ -77,10 +78,18 @@ class ChangeRequest(
         null=True,
     )
 
+    project = models.ForeignKey(
+        "projects.Project",
+        on_delete=models.CASCADE,
+        related_name="change_requests",
+        null=False,
+    )
+
     environment = models.ForeignKey(
         "environments.Environment",
         on_delete=models.CASCADE,
         related_name="change_requests",
+        null=True,
     )
 
     committed_at = models.DateTimeField(null=True)
@@ -114,6 +123,7 @@ class ChangeRequest(
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
+        self._publish_segments()
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
@@ -181,6 +191,30 @@ class ChangeRequest(
         for change_set in self.change_sets.all():
             change_set.publish(user=published_by)
 
+    def _publish_segments(self) -> None:
+        for segment in self.segments.all():
+            target_segment = segment.version_of
+            assert target_segment != segment
+
+            # Deep clone the segment to establish historical version this is required
+            # because the target segment will be altered when the segment is published.
+            # Think of it like a regular update to a segment where we create the clone
+            # to create the version, then modifying the new 'draft' version with the
+            # data from the change request.
+            target_segment.deep_clone()
+
+            # Set the properties of the change request's segment to the properties
+            # of the target (i.e., canonical) segment.
+            target_segment.name = segment.name
+            target_segment.description = segment.description
+            target_segment.feature = segment.feature
+            target_segment.save()
+
+            # Delete the rules in order to replace them with copies of the segment.
+            target_segment.rules.all().delete()
+            for rule in segment.rules.all():
+                rule.deep_clone(target_segment)
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
 
@@ -208,10 +242,21 @@ class ChangeRequest(
     def _get_environment(self) -> typing.Optional["Environment"]:
         return self.environment
 
-    def _get_project(self) -> typing.Optional["Project"]:
-        return self.environment.project
+    def _get_project(self) -> "Project":
+        return self.project
 
     def is_approved(self):
+        if self.environment:
+            return self.is_approved_via_environment()
+        return self.is_approved_via_project()
+
+    def is_approved_via_project(self):
+        return self.project.minimum_change_request_approvals is None or (
+            self.approvals.filter(approved_at__isnull=False).count()
+            >= self.project.minimum_change_request_approvals
+        )
+
+    def is_approved_via_environment(self):
         return self.environment.minimum_change_request_approvals is None or (
             self.approvals.filter(approved_at__isnull=False).count()
             >= self.environment.minimum_change_request_approvals
@@ -228,14 +273,21 @@ class ChangeRequest(
                 "Change request must be saved before it has a url attribute."
             )
         url = get_current_site_url()
-        url += f"/project/{self.environment.project_id}"
-        url += f"/environment/{self.environment.api_key}"
+        if self.environment:
+            url += f"/project/{self.environment.project_id}"
+            url += f"/environment/{self.environment.api_key}"
+        else:
+            url += f"/projects/{self.project_id}"
         url += f"/change-requests/{self.id}"
         return url
 
     @property
     def email_subject(self):
         return f"Flagsmith Change Request: {self.title} (#{self.id})"
+
+    @hook(BEFORE_CREATE, when="project", is_now=None)
+    def set_project_from_environment(self):
+        self.project_id = self.environment.project_id
 
     @hook(AFTER_CREATE, when="committed_at", is_not=None)
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
@@ -367,6 +419,9 @@ class ChangeRequestApproval(LifecycleModel, abstract_base_auditable_model_factor
 
     def _get_environment(self):
         return self.change_request.environment
+
+    def _get_project(self):
+        return self.change_request._get_project()
 
 
 class ChangeRequestGroupAssignment(AbstractBaseExportableModel, LifecycleModel):

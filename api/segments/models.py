@@ -4,7 +4,6 @@ import uuid
 from copy import deepcopy
 
 from core.models import (
-    SoftDeleteExportableManager,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -31,7 +30,7 @@ from metadata.models import Metadata
 from projects.models import Project
 
 from .helpers import segment_audit_log_helper
-from .managers import SegmentManager
+from .managers import LiveSegmentManager, SegmentManager
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,6 @@ class Segment(
     # This defaults to 1 for newly created segments.
     version = models.IntegerField(null=True)
 
-    # The related_name is not useful without specifying all_objects as a manager.
     version_of = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -68,16 +66,24 @@ class Segment(
         null=True,
         blank=True,
     )
+
+    change_request = models.ForeignKey(
+        "workflows_core.ChangeRequest",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="segments",
+    )
+
     metadata = GenericRelation(Metadata)
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    # Only serves segments that are the canonical version.
     objects = SegmentManager()
 
-    # Includes versioned segments.
-    all_objects = SoftDeleteExportableManager()
+    # Only serves segments that are the canonical version.
+    live_objects = LiveSegmentManager()
 
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
@@ -144,6 +150,26 @@ class Segment(
         self.version_of = self
         self.save()
         segment_audit_log_helper.unset_skip_audit_log(self.id)
+
+    def shallow_clone(
+        self,
+        name: str,
+        description: str,
+        change_request: typing.Optional["ChangeRequest"],  # noqa: F821
+    ) -> "Segment":
+        cloned_segment = Segment(
+            version_of=self,
+            uuid=uuid.uuid4(),
+            name=name,
+            description=description,
+            change_request=change_request,
+            project=self.project,
+            feature=self.feature,
+            version=None,
+        )
+        cloned_segment.history.update()
+        cloned_segment.save()
+        return cloned_segment
 
     def deep_clone(self) -> "Segment":
         cloned_segment = deepcopy(self)
