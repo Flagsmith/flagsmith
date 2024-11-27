@@ -30,16 +30,15 @@ const DiffSegment: FC<DiffSegmentType> = ({ newSegment, oldSegment }) => {
           <label>Name</label>
           <DiffString oldValue={oldSegment.name} newValue={newSegment.name} />
         </div>
-        {!!oldSegment.description ||
-          (!!newSegment.description && (
-            <div className='d-flex flex-column ml-0 me-0 gap-1'>
-              <label>Description</label>
-              <DiffString
-                oldValue={oldSegment.description}
-                newValue={newSegment.description}
-              />
-            </div>
-          ))}
+        {(!!oldSegment.description || !!newSegment.description) && (
+          <div className='d-flex flex-column ml-0 me-0 gap-1'>
+            <label>Description</label>
+            <DiffString
+              oldValue={oldSegment.description}
+              newValue={newSegment.description}
+            />
+          </div>
+        )}
         <div className='d-flex ml-0 me-0 flex-column'>
           <label className='mb-0'>Rules</label>
           {diff.changes?.map((diff, index) => (

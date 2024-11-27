@@ -24,11 +24,7 @@ export const projectChangeRequestService = service
           url: `projects/${query.project_id}/change-requests/${query.id}/${query.actionType}/`,
         }),
         transformResponse: (response, _, req) => {
-          getStore().dispatch(
-            segmentService.util.invalidateTags([
-              { id: `LIST${req.project_id}`, type: 'Segment' },
-            ]),
-          )
+          getStore().dispatch(segmentService.util.invalidateTags(['Segment']))
           return response
         },
       }),

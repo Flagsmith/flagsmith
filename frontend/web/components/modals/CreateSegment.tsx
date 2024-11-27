@@ -57,6 +57,7 @@ import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import { useGetProjectQuery } from 'common/services/useProject'
 import ChangeRequestModal from './ChangeRequestModal'
 import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
+import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
 
 type PageType = {
   number: number
@@ -539,7 +540,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                         }) => {
                           closeModal2()
                           setValueChanged(false)
-                          debugger
                           createChangeRequest({
                             data: {
                               approvals: (
@@ -568,6 +568,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                             },
                             project_id: `${projectId}`,
                           }).then(() => {
+                            closeModal()
                             toast('Created change request')
                           })
                         }}
@@ -630,6 +631,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   return (
     <>
+      <ExistingProjectChangeRequestAlert
+        className="m-2"
+        projectId={`${projectId}`}
+        segmentId={`${segment.id}`}
+      />
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
           <TabItem

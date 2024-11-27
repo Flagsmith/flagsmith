@@ -28,6 +28,7 @@ import JSONReference from 'components/JSONReference'
 import moment from 'moment'
 import Icon from 'components/Icon'
 import v from 'refractor/lang/v'
+import ConfigProvider from 'common/providers/ConfigProvider'
 
 type ChangeRequestsPageType = {
   router: RouterChildContext['router']
@@ -51,19 +52,25 @@ const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
   // @ts-ignore
 
   const { data: committed, isLoading: committedLoading } =
-    useGetChangeRequestsQuery({
-      committed: true,
-      environmentId,
-      page: pageCommitted,
-      page_size: 10,
-    })
+    useGetChangeRequestsQuery(
+      {
+        committed: true,
+        environmentId,
+        page: pageCommitted,
+        page_size: 10,
+      },
+      { refetchOnMountOrArgChange: true },
+    )
 
-  const { data: changeRequests, isLoading } = useGetChangeRequestsQuery({
-    committed: false,
-    environmentId,
-    page,
-    page_size: 10,
-  })
+  const { data: changeRequests, isLoading } = useGetChangeRequestsQuery(
+    {
+      committed: false,
+      environmentId,
+      page,
+      page_size: 10,
+    },
+    { refetchOnMountOrArgChange: true },
+  )
 
   useEffect(() => {
     AppActions.getOrganisation(organisationId)
@@ -268,4 +275,4 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
   )
 }
 
-export default ChangeRequestsPage
+export default ConfigProvider(ChangeRequestsPage)

@@ -38,6 +38,7 @@ import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import v from 'refractor/lang/v'
+import ConfigProvider from "common/providers/ConfigProvider";
 
 type ChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -676,4 +677,4 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   )
 }
 
-export default ChangeRequestPage
+export default ConfigProvider(ChangeRequestPage)
