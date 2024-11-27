@@ -584,23 +584,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return 'VIEW_IDENTITIES'
   },
 
-  includeCookies() {
-    if (Project.cookieAuthEnabled) {
-      return true
-    }
-    if (!Utils.isSaas()) return false
-    // Extract the base domain
-    const getBaseDomain = (url: string) => {
-      const hostname = new URL(url).hostname
-      const parts = hostname.split('.')
-      return parts.slice(-2).join('.')
-    }
-
-    const originBaseDomain = getBaseDomain(document.location.origin)
-    const projectApiBaseDomain = getBaseDomain(Project.api)
-
-    return originBaseDomain === projectApiBaseDomain
-  },
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (

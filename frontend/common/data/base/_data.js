@@ -1,4 +1,5 @@
 import Project from 'common/project'
+import includeCookies from 'common/utils/shouldIncludeCookies';
 const getQueryString = (params) => {
   const esc = encodeURIComponent
   return Object.keys(params)
@@ -9,7 +10,7 @@ const getQueryString = (params) => {
 module.exports = {
   _request(method, _url, data, headers = {}) {
     const options = {
-      credentials: Utils.includeCookies() ? 'include' : undefined,
+      credentials: includeCookies() ? 'include' : undefined,
       headers: {
         'Accept': 'application/json',
         ...headers,

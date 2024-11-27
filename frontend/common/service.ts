@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/dist/query/react'
 import { FetchBaseQueryArgs } from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
 import { CreateApiOptions } from '@reduxjs/toolkit/dist/query/createApi'
 import { StoreStateType } from './store'
-import Utils from './utils/utils'
+import includeCookies from 'common/utils/shouldIncludeCookies';
 
 const Project = require('./project')
 const _data = require('./data/base/_data.js')
@@ -18,7 +18,7 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
   > = {
     baseQuery: fetchBaseQuery({
       baseUrl: Project.api,
-      credentials: Utils.includeCookies() ? 'include' : 'omit',
+      credentials: includeCookies() ? 'include' : 'omit',
       prepareHeaders: async (headers, { endpoint, getState }) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const state = getState() as StoreStateType
