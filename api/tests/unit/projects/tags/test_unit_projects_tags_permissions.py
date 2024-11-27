@@ -1,7 +1,8 @@
 from unittest import mock
 
+from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT
+
 from projects.models import Project
-from projects.permissions import MANAGE_TAGS, VIEW_PROJECT
 from projects.tags.models import Tag
 from projects.tags.permissions import TagPermissions
 from tests.types import WithProjectPermissionsCallable

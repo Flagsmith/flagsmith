@@ -114,7 +114,9 @@ def export_projects(organisation_id: int) -> typing.List[dict]:
 
     return _export_entities(
         _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
-        _EntityExportConfig(Segment, default_filter),
+        _EntityExportConfig(
+            Segment, Q(project__organisation__id=organisation_id, id=F("version_of"))
+        ),
         _EntityExportConfig(
             SegmentRule,
             Q(
