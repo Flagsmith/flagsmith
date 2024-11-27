@@ -38,7 +38,7 @@ import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import v from 'refractor/lang/v'
-import ConfigProvider from "common/providers/ConfigProvider";
+import ConfigProvider from 'common/providers/ConfigProvider'
 
 type ChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -649,7 +649,9 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
                   approvePermission,
                   Constants.environmentPermissions('Approve Change Requests'),
                   <Button
-                    disabled={approved || !approvePermission}
+                    disabled={
+                      approved || !approvePermission || isYourChangeRequest
+                    }
                     onClick={approveChangeRequest}
                     theme='secondary'
                   >

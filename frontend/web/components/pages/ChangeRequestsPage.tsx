@@ -243,7 +243,7 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
                 tabLabel={
                   <span className='flex-row justify-content-center'>
                     Open
-                    {changeRequests?.count && (
+                    {!!changeRequests?.count && (
                       <div className='counter-value ml-1'>
                         {changeRequests.count}
                       </div>

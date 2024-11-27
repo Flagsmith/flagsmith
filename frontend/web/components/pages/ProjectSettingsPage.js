@@ -183,6 +183,11 @@ const ProjectSettingsPage = class extends Component {
               }
             const saveProject = (e) => {
               e?.preventDefault?.()
+              const {
+                minimum_change_request_approvals,
+                name,
+                stale_flags_limit_days,
+              } = this.state
               !isSaving &&
                 name &&
                 editProject(
