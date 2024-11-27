@@ -1,5 +1,6 @@
-from app.settings.common import *  # noqa
-from app.settings.common import REST_FRAMEWORK
+# flake8: noqa F405
+
+from app.settings.common import *
 
 # We dont want to track tests
 ENABLE_TELEMETRY = False
@@ -18,3 +19,13 @@ AWS_SSE_LOGS_BUCKET_NAME = "test_bucket"
 RETRY_WEBHOOKS = True
 
 INFLUXDB_BUCKET = "test_bucket"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {},
+    "handlers": {},
+    "loggers": {
+        "": {"level": LOG_LEVEL, "handlers": []},
+    },
+}

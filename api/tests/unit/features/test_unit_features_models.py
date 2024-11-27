@@ -1052,7 +1052,7 @@ def test_save_feature_state_model_with_invalid_environment_feature_version(
     feature: Feature,
     project: Project,
     environment_v2_versioning: Environment,
-    inspecting_handler: logging.Handler,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """
     This test is fairly unrealistic because I can't understand how this is happening, but it's
@@ -1061,10 +1061,6 @@ def test_save_feature_state_model_with_invalid_environment_feature_version(
     """
 
     # Given
-    features_logger = logging.getLogger("features.models")
-    features_logger.addHandler(inspecting_handler)
-    features_logger.setLevel(logging.ERROR)
-
     feature_2 = Feature.objects.create(name="feature_2", project=project)
 
     feature_1_version_1 = EnvironmentFeatureVersion.objects.get(
@@ -1080,7 +1076,11 @@ def test_save_feature_state_model_with_invalid_environment_feature_version(
         )
 
     # Then
-    assert inspecting_handler.messages == [
-        f"Cannot create a feature state for feature {feature_2.id} in version "
-        f"{str(feature_1_version_1.uuid)}, which belongs to feature {feature.id}."
+    assert caplog.record_tuples == [
+        (
+            "features.models",
+            logging.ERROR,
+            f"Cannot create a feature state for feature {feature_2.id} in version "
+            f"{str(feature_1_version_1.uuid)}, which belongs to feature {feature.id}.",
+        )
     ]
