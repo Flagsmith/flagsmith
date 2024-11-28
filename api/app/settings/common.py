@@ -581,6 +581,11 @@ else:
         },
         "loggers": {
             "": {"level": LOG_LEVEL, "handlers": ["console"]},
+            "task_processor": {
+                "level": LOG_LEVEL,
+                "handlers": ["console"],
+                "propagate": False,
+            },
         },
     }
 
