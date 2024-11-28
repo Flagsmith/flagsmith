@@ -425,6 +425,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
                 audit_log_visibility_days=None,
                 feature_history_visibility_days=None,
             )
+        # TODO: Once we've successfully rolled out licences to enterprises
+        #       remove this branch to force them into the free plan
+        #       if they don't have a licence.
         elif is_enterprise():  # pragma: no cover
             return BaseSubscriptionMetadata(
                 seats=self.max_seats,
