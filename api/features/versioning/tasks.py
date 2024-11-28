@@ -109,7 +109,9 @@ def _create_initial_feature_versions(environment: "Environment"):
             change_request__isnull=False,
             change_request__committed_at__isnull=False,
             change_request__deleted_at__isnull=True,
+            environment=environment,
         ).select_related("change_request")
+
         for feature_state in scheduled_feature_states:
             ef_version = EnvironmentFeatureVersion.objects.create(
                 feature=feature,
