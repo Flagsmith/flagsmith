@@ -35,17 +35,17 @@ API request.
 
 The billable API requests your application makes depends mainly on which [flag evaluation mode](/clients) it uses:
 
--   Remote Evaluation is the default for all applications. Applications using Remote Evaluation call the Flagsmith API
-    when they need to fetch the flags for the current environment or user.
--   Local Evaluation is optional, and only for server-side applications. Each individual application or
-    [Edge Proxy](/advanced-use/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
-    default) to fetch the flags for the current environment and all users in one API request.
+- Remote Evaluation is the default for all applications. Applications using Remote Evaluation call the Flagsmith API
+  when they need to fetch the flags for the current environment or user.
+- Local Evaluation is optional, and only for server-side applications. Each individual application or
+  [Edge Proxy](/advanced-use/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
+  default) to fetch the flags for the current environment and all users in one API request.
 
 The following requests are not billable:
 
--   [Admin API](/clients/rest#private-admin-api-endpoints) requests.
--   Requests made by Flagsmith SDKs to track [Flag Analytics](/advanced-use/flag-analytics).
--   Connecting to a [real-time flag updates](/advanced-use/real-time-flags) stream.
+- [Admin API](/clients/rest#private-admin-api-endpoints) requests.
+- Requests made by Flagsmith SDKs to track [Flag Analytics](/advanced-use/flag-analytics).
+- Connecting to a [real-time flag updates](/advanced-use/real-time-flags) stream.
 
 ### Example: client-side application
 
@@ -85,9 +85,9 @@ its lifecycle could look like this:
 
 "Service" in this context refers to any of the following:
 
--   An instance of your application, running in a container or server, using the Flagsmith SDK with Local Evaluation
-    enabled.
--   An [Edge Proxy](/advanced-use/edge-proxy) container instance.
+- An instance of your application, running in a container or server, using the Flagsmith SDK with Local Evaluation
+  enabled.
+- An [Edge Proxy](/advanced-use/edge-proxy) container instance.
 
 Following the example above, if you used the default polling frequency of 60 seconds, you could estimate your monthly
 API usage as:
