@@ -26,13 +26,16 @@ const fetchJavaVersions = async () =>
         artifactId: 'flagsmith-java-client',
     });
 
-const fetchAndroidVersions = async () =>
-    fetchMavenVersions({
-        groupId: 'com.flagsmith',
-        artifactId: 'flagsmith-kotlin-android-client',
-    });
+const fetchGitHubReleases = async (repo) => {
+    const data = await fetchJSON(`https://api.github.com/repos/${repo}/releases`);
+    return data.map((release) => (release.tag_name.startsWith('v') ? release.tag_name.slice(1) : release.tag_name));
+};
 
-const fetchIOSVersions = async () => {
+const fetchAndroidVersions = async () => fetchGitHubReleases('flagsmith/flagsmith-kotlin-android-client');
+
+const fetchSwiftPMVersions = async () => fetchGitHubReleases('Flagsmith/flagsmith-ios-client');
+
+const fetchCocoapodsVersions = async () => {
     // retrieved from https://cocoapods.org/pods/FlagsmithClient
     const data = await fetchJSON('https://api.github.com/repos/CocoaPods/Specs/contents/Specs/2/8/0/FlagsmithClient');
     return data.map((entry) => entry.name);
@@ -66,13 +69,14 @@ export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
         async loadContent() {
-            const [js, nodejs, java, android, ios, dotnet, rust, elixir] = await Promise.all(
+            const [js, nodejs, java, android, swiftpm, cocoapods, dotnet, rust, elixir] = await Promise.all(
                 [
                     fetchNpmVersions('flagsmith'),
                     fetchNpmVersions('flagsmith-nodejs'),
                     fetchJavaVersions(),
                     fetchAndroidVersions(),
-                    fetchIOSVersions(),
+                    fetchSwiftPMVersions(),
+                    fetchCocoapodsVersions(),
                     fetchDotnetVersions(),
                     fetchRustVersions(),
                     fetchElixirVersions(),
@@ -83,7 +87,8 @@ export default async function fetchFlagsmithVersions(context, options) {
                 nodejs,
                 java,
                 android,
-                ios,
+                swiftpm,
+                cocoapods,
                 dotnet,
                 rust,
                 elixir,

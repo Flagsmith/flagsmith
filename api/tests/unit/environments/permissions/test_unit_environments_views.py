@@ -1,12 +1,12 @@
 import json
 
 import pytest
+from common.environments.permissions import VIEW_ENVIRONMENT
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,

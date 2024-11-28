@@ -81,6 +81,7 @@ The following SDK clients support subscribing to real-time flag updates:
 
 - JavaScript
 - Android
+- iOS
 - Flutter
 - Python
 

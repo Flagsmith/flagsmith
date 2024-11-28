@@ -93,7 +93,7 @@ ingress:
       - /api/
       - /health/
       - /admin/
-      - /static/
+      - /static/admin/
 
 frontend:
  extraEnv:
@@ -198,7 +198,7 @@ should be provided as:
 
 :::caution
 
-It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-SECRET_KEY)
+It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY)
 value in your helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so
 that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
 

@@ -2,6 +2,11 @@ import json
 from unittest import mock
 
 import pytest
+from common.environments.permissions import (
+    TAG_SUPPORTED_PERMISSIONS,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import CREATE_ENVIRONMENT
 from core.constants import STRING
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -18,14 +23,12 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from environments.permissions.constants import VIEW_ENVIRONMENT
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation
 from projects.models import Project
-from projects.permissions import CREATE_ENVIRONMENT
 from segments.models import Condition, Segment, SegmentRule
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
@@ -71,6 +74,23 @@ def test_retrieve_environment(
         response_json["use_mv_v2_evaluation"]
         == environment.use_identity_composite_key_for_hashing
     )
+
+
+def test_user_with_view_environment_permission_can_retrieve_environment(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
+
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_can_clone_environment_with_create_environment_permission(
@@ -917,6 +937,27 @@ def test_get_all_trait_keys_for_environment_only_returns_distinct_keys(
     assert len(res.json().get("keys")) == 2
 
 
+def test_user_with_view_environment_can_get_trait_keys(
+    identity: Identity,
+    staff_client: APIClient,
+    trait: Trait,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-trait-keys", args=[environment.api_key]
+    )
+
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    # When
+    res = staff_client.get(url)
+
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+
 def test_delete_trait_keys_deletes_traits_matching_provided_key_only(
     identity: Identity,
     admin_client_new: APIClient,
@@ -961,6 +1002,13 @@ def test_user_can_list_environment_permission(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == 7
+
+    returned_supported_permissions = [
+        permission["key"]
+        for permission in response.json()
+        if permission["supports_tag"] is True
+    ]
+    assert set(returned_supported_permissions) == set(TAG_SUPPORTED_PERMISSIONS)
 
 
 def test_environment_my_permissions_reruns_400_for_master_api_key(

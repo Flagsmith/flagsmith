@@ -11,6 +11,10 @@ import PanelSearch from './PanelSearch'
 import JSONReference from './JSONReference'
 import moment from 'moment'
 import PlanBasedBanner from './PlanBasedAccess'
+import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
+import AccountStore from 'common/stores/account-store'
+import { isVersionOverLimit } from 'common/services/useFeatureVersion'
+import Tooltip from './Tooltip'
 
 type AuditLogType = {
   environmentId: string
@@ -36,6 +40,9 @@ const AuditLog: FC<AuditLogType> = (props) => {
       setPage(1)
     },
   )
+  const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
+    id: AccountStore.getOrganisation()?.id,
+  })
   const [environments, setEnvironments] = useState(props.environmentId)
 
   useEffect(() => {
@@ -96,17 +103,49 @@ const AuditLog: FC<AuditLogType> = (props) => {
     })
     const colour = index === -1 ? 0 : index
     let link: ReactNode = null
-    if (
-      related_object_uuid &&
-      related_object_type === 'EF_VERSION' &&
-      environment
-    ) {
+    const date = moment(created_date)
+    const isVersionEvent =
+      related_object_uuid && related_object_type === 'EF_VERSION' && environment
+    const versionLimitDays = subscriptionMeta?.feature_history_visibility_days
+
+    const isOverLimit = isVersionEvent
+      ? isVersionOverLimit(versionLimitDays, created_date)
+      : false
+    const VersionButton = (
+      <Button disabled={isOverLimit} theme='text'>
+        View version
+      </Button>
+    )
+
+    if (isVersionEvent) {
       link = (
-        <Link
-          to={`/project/${project.id}/environment/${environment.api_key}/history/${related_object_uuid}/`}
+        <Tooltip
+          title={
+            <div className='d-flex gap-2'>
+              {isOverLimit ? (
+                VersionButton
+              ) : (
+                <Link
+                  to={`/project/${project.id}/environment/${environment.api_key}/history/${related_object_uuid}/`}
+                >
+                  {VersionButton}
+                </Link>
+              )}
+              <PlanBasedBanner
+                force={isOverLimit}
+                feature={'VERSIONING_DAYS'}
+                theme={'badge'}
+              />
+            </div>
+          }
         >
-          <Button theme='text'>View version</Button>
-        </Link>
+          {isOverLimit
+            ? `<div>
+              Unlock your feature's entire history.<br/>Currently limited to${' '}
+              <strong>${versionLimitDays} days</strong>.
+            </div>`
+            : ''}
+        </Tooltip>
       )
     }
     const inner = (
@@ -115,7 +154,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
           className='table-column px-3 fs-small ln-sm'
           style={{ width: widths[0] }}
         >
-          {moment(created_date).format('Do MMM YYYY HH:mma')}
+          {date.format('Do MMM YYYY HH:mma')}
         </div>
         <div
           className='table-column fs-small ln-sm'
@@ -164,63 +203,80 @@ const AuditLog: FC<AuditLogType> = (props) => {
   }
 
   const { env: envFilter } = Utils.fromParam()
+  const auditLimitDays = subscriptionMeta?.audit_log_visibility_days
 
   return (
-    <PanelSearch
-      id='messages-list'
-      title='Log entries'
-      isLoading={isFetching}
-      className='no-pad'
-      items={projectAuditLog?.results}
-      filter={envFilter}
-      search={searchInput}
-      searchPanel={props.searchPanel}
-      onChange={(e: InputEvent) => {
-        setSearchInput(Utils.safeParseEventValue(e))
-      }}
-      paging={{
-        ...(projectAuditLog || {}),
-        page,
-        pageSize: props.pageSize,
-      }}
-      nextPage={() => {
-        setPage(page + 1)
-      }}
-      prevPage={() => {
-        setPage(page - 1)
-      }}
-      goToPage={(page: number) => {
-        setPage(page)
-      }}
-      filterRow={() => true}
-      renderRow={renderRow}
-      header={
-        <Row className='table-header'>
-          <div className='table-column px-3' style={{ width: widths[0] }}>
-            Date
-          </div>
-          <div className='table-column' style={{ width: widths[1] }}>
-            User
-          </div>
-          <div className='table-column' style={{ width: widths[2] }}>
-            Environment
-          </div>
-          <Flex className='table-column'>Content</Flex>
-        </Row>
-      }
-      renderFooter={() => (
-        <JSONReference
-          className='mt-4 ml-2'
-          title={'Audit'}
-          json={projectAuditLog?.results}
+    <>
+      {!!auditLimitDays && (
+        <PlanBasedBanner
+          className='mb-4'
+          force
+          feature={'AUDIT_DAYS'}
+          title={
+            <div>
+              Unlock your audit log history. Currently limited to{' '}
+              <strong>{auditLimitDays} days</strong>.
+            </div>
+          }
+          theme={'description'}
         />
       )}
-      renderNoResults={
-        <FormGroup className='text-center'>
-          You have no log messages for your project.
-        </FormGroup>
-      }
-    />
+      <PanelSearch
+        id='messages-list'
+        title='Log entries'
+        isLoading={isFetching}
+        className='no-pad'
+        items={projectAuditLog?.results}
+        filter={envFilter}
+        search={searchInput}
+        searchPanel={props.searchPanel}
+        onChange={(e: InputEvent) => {
+          setSearchInput(Utils.safeParseEventValue(e))
+        }}
+        paging={{
+          ...(projectAuditLog || {}),
+          page,
+          pageSize: props.pageSize,
+        }}
+        nextPage={() => {
+          setPage(page + 1)
+        }}
+        prevPage={() => {
+          setPage(page - 1)
+        }}
+        goToPage={(page: number) => {
+          setPage(page)
+        }}
+        filterRow={() => true}
+        renderRow={renderRow}
+        header={
+          <Row className='table-header'>
+            <div className='table-column px-3' style={{ width: widths[0] }}>
+              Date
+            </div>
+            <div className='table-column' style={{ width: widths[1] }}>
+              User
+            </div>
+            <div className='table-column' style={{ width: widths[2] }}>
+              Environment
+            </div>
+            <Flex className='table-column'>Content</Flex>
+          </Row>
+        }
+        renderFooter={() => (
+          <JSONReference
+            className='mt-4 ml-2'
+            title={'Audit'}
+            json={projectAuditLog?.results}
+          />
+        )}
+        renderNoResults={
+          <FormGroup className='text-center'>
+            You have no log messages for your project.
+          </FormGroup>
+        }
+      />
+    </>
   )
 }
 

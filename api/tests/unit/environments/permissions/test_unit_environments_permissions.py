@@ -1,5 +1,7 @@
 from unittest import mock
 
+from common.projects.permissions import CREATE_ENVIRONMENT
+
 from environments.identities.models import Identity
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
@@ -13,7 +15,6 @@ from projects.models import (
     ProjectPermissionModel,
     UserProjectPermission,
 )
-from projects.permissions import CREATE_ENVIRONMENT
 from users.models import FFAdminUser
 
 mock_view = mock.MagicMock()
