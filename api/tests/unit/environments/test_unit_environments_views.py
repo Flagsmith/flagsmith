@@ -76,6 +76,43 @@ def test_retrieve_environment(
     )
 
 
+def test_get_by_uuid_returns_environment(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    url = reverse(
+        "api-v1:environments:environment-get-by-uuid",
+        args=[environment.uuid],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(environment.uuid)
+
+
+def test_get_by_uuid_returns_403_for_user_without_permission(
+    staff_client: APIClient, environment: Environment
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-get-by-uuid",
+        args=[environment.uuid],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 def test_user_with_view_environment_permission_can_retrieve_environment(
     staff_client: APIClient,
     environment: Environment,
