@@ -108,14 +108,15 @@ def test_send_audit_log_event_to_grafana__project_grafana_config__calls_expected
     project: Project,
 ) -> None:
     # Given
-    grafana_config = GrafanaProjectConfiguration(base_url="test.com", api_key="test")
-    project.grafana_config = grafana_config
     audit_log_record = AuditLog.objects.create(
         project=project,
         related_object_type=RelatedObjectType.FEATURE.name,
     )
     grafana_wrapper_mock = mocker.patch("audit.signals.GrafanaWrapper", autospec=True)
     grafana_wrapper_instance_mock = grafana_wrapper_mock.return_value
+
+    grafana_config = GrafanaProjectConfiguration(base_url="test.com", api_key="test")
+    project.grafana_config = grafana_config
 
     # When
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
@@ -139,16 +140,17 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     project: Project,
 ) -> None:
     # Given
-    grafana_config = GrafanaOrganisationConfiguration(
-        base_url="test.com", api_key="test"
-    )
-    organisation.grafana_config = grafana_config
     audit_log_record = AuditLog.objects.create(
         project=project,
         related_object_type=RelatedObjectType.FEATURE.name,
     )
     grafana_wrapper_mock = mocker.patch("audit.signals.GrafanaWrapper", autospec=True)
     grafana_wrapper_instance_mock = grafana_wrapper_mock.return_value
+
+    grafana_config = GrafanaOrganisationConfiguration(
+        base_url="test.com", api_key="test"
+    )
+    organisation.grafana_config = grafana_config
 
     # When
     send_audit_log_event_to_grafana(AuditLog, audit_log_record)
@@ -228,10 +230,6 @@ def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_
     environment: Environment,
 ) -> None:
     # Given
-    dynatrace_config = DynatraceConfiguration.objects.create(
-        base_url="http://test.com", api_key="api_123", environment=environment
-    )
-    environment.refresh_from_db()
     audit_log_record = AuditLog.objects.create(
         environment=environment,
         related_object_type=RelatedObjectType.FEATURE.name,
@@ -240,6 +238,10 @@ def test_send_audit_log_event_to_dynatrace__environment_dynatrace_config__calls_
         "audit.signals.DynatraceWrapper", autospec=True
     )
     dynatrace_wrapper_instance_mock = dynatrace_wrapper_mock.return_value
+
+    dynatrace_config = DynatraceConfiguration.objects.create(
+        base_url="http://test.com", api_key="api_123", environment=environment
+    )
 
     # When
     send_audit_log_event_to_dynatrace(AuditLog, audit_log_record)
