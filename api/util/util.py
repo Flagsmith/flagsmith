@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 def postpone(function):
     def decorator(*args, **kwargs):
-        if settings.ENABLE_POSTPONE_DECORATOR:
+        if settings.ENABLE_POSTPONE_DECORATOR:  # pragma: no cover
             t = Thread(target=function, args=args, kwargs=kwargs)
             t.daemon = True
             t.start()
