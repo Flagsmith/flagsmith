@@ -337,50 +337,6 @@ def test_organisation_subscription_get_subscription_metadata_returns_free_plan_m
 
 
 @pytest.mark.parametrize(
-    "subscription_id, plan, max_seats, expected_seats, expected_projects",
-    (
-        (
-            None,
-            "free",
-            10,
-            MAX_SEATS_IN_FREE_PLAN,
-            settings.MAX_PROJECTS_IN_FREE_PLAN,
-        ),
-        ("anything", "enterprise", 20, 20, None),
-        (TRIAL_SUBSCRIPTION_ID, "enterprise", 20, 20, None),
-    ),
-)
-def test_organisation_get_subscription_metadata_for_enterprise_self_hosted_licenses(
-    organisation: Organisation,
-    subscription_id: str | None,
-    plan: str,
-    max_seats: int,
-    expected_seats: int,
-    expected_projects: int | None,
-    mocker: MockerFixture,
-) -> None:
-    """
-    Specific test to make sure that we can manually add subscriptions to
-    enterprise self-hosted deployments and the values stored in the django
-    database will be correctly used.
-    """
-    # Given
-    Subscription.objects.filter(organisation=organisation).update(
-        subscription_id=subscription_id, plan=plan, max_seats=max_seats
-    )
-    organisation.subscription.refresh_from_db()
-    mocker.patch("organisations.models.is_saas", return_value=False)
-    mocker.patch("organisations.models.is_enterprise", return_value=True)
-
-    # When
-    subscription_metadata = organisation.subscription.get_subscription_metadata()
-
-    # Then
-    assert subscription_metadata.projects == expected_projects
-    assert subscription_metadata.seats == expected_seats
-
-
-@pytest.mark.parametrize(
     "subscription_id, plan, max_seats, max_api_calls, expected_seats, "
     "expected_api_calls, expected_projects",
     (

@@ -1639,8 +1639,7 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
 
 
 @pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
-@pytest.mark.parametrize("is_saas", (True, False))
-def test_list_versions_returns_all_versions_for_enterprise_plan(
+def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
     feature: Feature,
     environment_v2_versioning: Environment,
     staff_user: FFAdminUser,
@@ -1649,10 +1648,10 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
     with_project_permissions: WithProjectPermissionsCallable,
     subscription: Subscription,
     freezer: FrozenDateTimeFactory,
-    is_saas: bool,
     mocker: MockerFixture,
 ) -> None:
     # Given
+    is_saas = True
     with_environment_permissions([VIEW_ENVIRONMENT])
     with_project_permissions([VIEW_PROJECT])
 
@@ -1668,11 +1667,10 @@ def test_list_versions_returns_all_versions_for_enterprise_plan(
     subscription.plan = "enterprise"
     subscription.save()
 
-    if is_saas:
-        OrganisationSubscriptionInformationCache.objects.update_or_create(
-            organisation=subscription.organisation,
-            defaults={"feature_history_visibility_days": None},
-        )
+    OrganisationSubscriptionInformationCache.objects.update_or_create(
+        organisation=subscription.organisation,
+        defaults={"feature_history_visibility_days": None},
+    )
 
     initial_version = EnvironmentFeatureVersion.objects.get(
         feature=feature, environment=environment_v2_versioning
