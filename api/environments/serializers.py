@@ -1,10 +1,13 @@
 import typing
 
+from common.metadata.serializers import (
+    MetadataSerializer,
+    SerializerWithMetadata,
+)
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
@@ -41,6 +44,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         model = Environment
         fields = (
             "id",
+            "uuid",
             "name",
             "api_key",
             "description",

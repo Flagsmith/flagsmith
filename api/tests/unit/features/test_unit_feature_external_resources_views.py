@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 import responses
 import simplejson as json
+from common.environments.permissions import UPDATE_FEATURE_STATE
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 from django.utils.formats import get_format
@@ -12,7 +13,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureSegment, FeatureState
 from features.serializers import (
