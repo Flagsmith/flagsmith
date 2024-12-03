@@ -64,9 +64,10 @@ class TheComponent extends Component {
                       'overflow-ellipsis w-100',
                     )}
                   >
-                    {v.first_name || v.last_name
-                      ? `${v.first_name} ${v.last_name}`
-                      : v.email}
+                    {v.first_name} {v.last_name}
+                    <div className="text-muted text-small">
+                      {v.email}
+                    </div>
                   </div>
                   {value.includes(v.id) && (
                     <span className='mr-1'>

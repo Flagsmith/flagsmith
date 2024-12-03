@@ -1,9 +1,4 @@
-import React, {
-  FC,
-  forwardRef,
-  Ref,
-  useState,
-} from 'react'
+import React, { FC, forwardRef, Ref, useState } from 'react'
 import Icon from './Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {

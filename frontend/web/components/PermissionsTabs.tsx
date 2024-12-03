@@ -111,7 +111,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
                 setSearchProject(Utils.safeParseEventValue(e))
               }
               size='small'
-              placeholder='Search'
+              placeholder='Search Projects'
               search
             />
           </Row>
@@ -139,7 +139,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
                 setSearchEnv(Utils.safeParseEventValue(e))
               }
               size='small'
-              placeholder='Search'
+              placeholder='Search Environments'
               search
             />
           </Row>

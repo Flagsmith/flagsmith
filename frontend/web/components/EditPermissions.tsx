@@ -270,15 +270,18 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             results || [],
             (r) => (r as UserPermission).user?.id === user?.id,
           )
-
+      const permissions =
+        (role && (level === 'project' || level === 'environment')
+          ? foundPermission?.permissions
+          : (foundPermission?.permissions || []).map((v) => ({
+              permission_key: v,
+              tags: [],
+            }))) || []
       return {
         ...(foundPermission || {}),
         group: group?.id,
         //Since role permissions and other permissions are different in data structure, adjust permissions to match
-        permissions: (foundPermission?.permissions || []).map((v) => ({
-          permission_key: v,
-          tags: [],
-        })),
+        permissions,
         user: user?.id,
       } as EntityPermissions
     }

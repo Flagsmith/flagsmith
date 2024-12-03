@@ -2,7 +2,11 @@ import React, { FC, ReactNode, useState } from 'react'
 const CreateGroup = require('./modals/CreateGroup')
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
-import { UserGroup, GroupPermission, UserGroupSummary } from 'common/types/responses';
+import {
+  UserGroup,
+  GroupPermission,
+  UserGroupSummary,
+} from 'common/types/responses'
 import {
   useDeleteGroupMutation,
   useGetGroupsQuery,
@@ -237,7 +241,10 @@ const UserGroupList: FC<UserGroupListType> = ({
                 orgId={orgId}
                 permissionSummary={
                   <PermissionsSummaryList
-                    permissions={permissions}
+                    permissions={permissions?.map((v) => ({
+                      permission_key: v,
+                      tags: [],
+                    }))}
                     isAdmin={admin}
                     numberToTruncate={3}
                   />
