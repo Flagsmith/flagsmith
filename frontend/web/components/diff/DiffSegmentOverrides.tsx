@@ -1,24 +1,27 @@
-import { TDiffSegment } from './diff-utils'
+import { TDiffSegmentOverride } from './diff-utils'
 import React, { FC, useMemo } from 'react'
 import DiffString from './DiffString'
 import DiffEnabled from './DiffEnabled'
 import { sortBy } from 'lodash'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
 import { Link } from 'react-router-dom'
 import DiffVariations from './DiffVariations'
 
-type DiffSegment = {
-  diff: TDiffSegment
+type DiffSegmentOverride = {
+  diff: TDiffSegmentOverride
   projectId: string
   environmentId: string
 }
 
 const widths = [200, 80, 105]
-const DiffSegment: FC<DiffSegment> = ({ diff, environmentId, projectId }) => {
+const DiffSegmentOverride: FC<DiffSegmentOverride> = ({
+  diff,
+  environmentId,
+  projectId,
+}) => {
   return (
     <div>
       <div className={'flex-row list-item list-item-sm'}>
@@ -75,21 +78,21 @@ const DiffSegment: FC<DiffSegment> = ({ diff, environmentId, projectId }) => {
   )
 }
 
-type DiffSegmentsType = {
-  diffs: TDiffSegment[] | undefined
+type DiffSegmentOverridesType = {
+  diffs: TDiffSegmentOverride[] | undefined
   projectId: string
   environmentId: string
 }
-const DiffSegments: FC<DiffSegmentsType> = ({
+const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
   diffs,
   environmentId,
   projectId,
 }) => {
   const { created, deleted, modified, unChanged } = useMemo(() => {
-    const created: TDiffSegment[] = []
-    const deleted: TDiffSegment[] = []
-    const modified: TDiffSegment[] = []
-    const unChanged: TDiffSegment[] = []
+    const created: TDiffSegmentOverride[] = []
+    const deleted: TDiffSegmentOverride[] = []
+    const modified: TDiffSegmentOverride[] = []
+    const unChanged: TDiffSegmentOverride[] = []
 
     sortBy(diffs || [], (diff) => diff.newPriority)?.forEach((diff) => {
       if (diff.created) {
@@ -133,7 +136,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
         >
           {tableHeader}
           {created.map((diff, i) => (
-            <DiffSegment
+            <DiffSegmentOverride
               environmentId={environmentId}
               projectId={projectId}
               key={i}
@@ -153,7 +156,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
         >
           {tableHeader}
           {deleted.map((diff, i) => (
-            <DiffSegment
+            <DiffSegmentOverride
               environmentId={environmentId}
               projectId={projectId}
               key={i}
@@ -173,7 +176,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
         >
           {tableHeader}
           {modified.map((diff, i) => (
-            <DiffSegment
+            <DiffSegmentOverride
               environmentId={environmentId}
               projectId={projectId}
               key={i}
@@ -193,7 +196,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
         >
           {tableHeader}
           {unChanged.map((diff, i) => (
-            <DiffSegment
+            <DiffSegmentOverride
               environmentId={environmentId}
               projectId={projectId}
               key={i}
@@ -210,4 +213,4 @@ const DiffSegments: FC<DiffSegmentsType> = ({
   )
 }
 
-export default DiffSegments
+export default DiffSegmentOverrides
