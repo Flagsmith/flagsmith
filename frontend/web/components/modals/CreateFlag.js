@@ -962,8 +962,8 @@ const CreateFlag = class extends Component {
                 (schedule) => {
                   this.setState({ segmentsChanged: false })
 
-                if ((is4Eyes || schedule) && isVersioned && !identity) {
-                  return saveFeatureValue()
+                  if ((is4Eyes || schedule) && isVersioned && !identity) {
+                    return saveFeatureValue()
                   } else {
                     this.save(editFeatureSegments, isSaving)
                   }
