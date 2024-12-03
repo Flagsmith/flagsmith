@@ -38,6 +38,7 @@ import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
+import { useHasPermission } from 'common/providers/Permission'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -68,15 +69,22 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   subscriptionMeta,
   users,
 }) => {
-  const orgId = AccountStore.getOrganisation().id
 
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
-  const permissionsError = !(
-    AccountStore.getUser() && AccountStore.getOrganisationRole() === 'ADMIN'
-  )
+  const manageUsersPermission = useHasPermission({
+    id: AccountStore.getOrganisation()?.id,
+    level: 'organisation',
+    permission: 'MANAGE_USERS',
+  })
+  const manageGroupsPermission = useHasPermission({
+    id: AccountStore.getOrganisation()?.id,
+    level: 'organisation',
+    permission: 'MANAGE_USER_GROUPS',
+  })
+
   const roleChanged = (id: number, { value: role }: { value: string }) => {
     AppActions.updateUserRole(id, role)
   }
@@ -222,11 +230,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                       <Row space className='mt-4'>
                         <h5 className='mb-0'>Team Members</h5>
                         {Utils.renderWithPermission(
-                          !permissionsError,
+                          !manageUsersPermission.permission,
                           Constants.organisationPermissions('Admin'),
                           <Button
                             disabled={
-                              needsUpgradeForAdditionalSeats || permissionsError
+                              needsUpgradeForAdditionalSeats ||
+                              !manageUsersPermission.permission
                             }
                             id='btn-invite'
                             onClick={() =>
@@ -712,11 +721,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         <Row space className='mt-4 mb-1'>
                           <h5 className='mb-0'>User Groups</h5>
                           {Utils.renderWithPermission(
-                            !permissionsError,
-                            Constants.organisationPermissions('Admin'),
+                            !manageGroupsPermission.permission,
+                            Constants.organisationPermissions(
+                              'Manage User Groups',
+                            ),
                             <Button
-                              id='btn-invite'
-                              disabled={permissionsError}
+                              id='btn-invite-groups'
+                              disabled={!manageGroupsPermission.permission}
                               onClick={() =>
                                 openModal(
                                   'Create Group',

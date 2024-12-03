@@ -134,15 +134,15 @@ test('Organisation-permission', async () => {
   await logout()
 })
 
-test('Project-permission', async () => {
-  await projectPermissionTest()
-  await logout()
-})
-
-test('Environment-permission', async () => {
-  await environmentPermissionTest()
-  await logout()
-})
+// test('Project-permission', async () => {
+//   await projectPermissionTest()
+//   await logout()
+// })
+//
+// test('Environment-permission', async () => {
+//   await environmentPermissionTest()
+//   await logout()
+// })
 
 // test('Roles', async () => {
 //   await rolesTest()

@@ -35,6 +35,24 @@ export const waitForElementVisible = async (selector: string) => {
     .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
 }
 
+export const waitForElementNotClickable = async (selector: string) => {
+  logUsingLastSection(`Waiting element visible ${selector}`)
+  await t
+    .expect(Selector(selector).visible)
+    .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
+  await t
+      .expect(Selector(selector).hasAttribute('disabled')).ok()
+}
+
+export const waitForElementClickable = async (selector: string) => {
+  logUsingLastSection(`Waiting element visible ${selector}`)
+  await t
+    .expect(Selector(selector).visible)
+    .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
+  await t
+      .expect(Selector(selector).hasAttribute('disabled')).notOk()
+}
+
 export const logResults = async (requests: LoggedRequest[], t) => {
   if (!t.testRun?.errs?.length) {
     log('Finished without errors')
@@ -86,6 +104,16 @@ export const click = async (selector: string) => {
     .notOk('ready for testing', { timeout: 5000 })
     .hover(selector)
     .click(selector)
+}
+
+export const clickByText = async (text:string) => {
+  const selector = Selector('button').withText(text);
+  await t
+      .scrollIntoView(selector)
+      .expect(Selector(selector).hasAttribute('disabled'))
+      .notOk('ready for testing', { timeout: 5000 })
+      .hover(selector)
+      .click(selector)
 }
 
 export const gotoSegments = async () => {
