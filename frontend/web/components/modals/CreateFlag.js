@@ -958,15 +958,17 @@ const CreateFlag = class extends Component {
                 this.save(editFeatureSettings, isSaving)
               }
 
-              const saveFeatureSegments = saveFeatureWithValidation(() => {
-                this.setState({ segmentsChanged: false })
+              const saveFeatureSegments = saveFeatureWithValidation(
+                (schedule) => {
+                  this.setState({ segmentsChanged: false })
 
-                if (is4Eyes && isVersioned && !identity) {
+                if ((is4Eyes || schedule) && isVersioned && !identity) {
                   return saveFeatureValue()
-                } else {
-                  this.save(editFeatureSegments, isSaving)
-                }
-              })
+                  } else {
+                    this.save(editFeatureSegments, isSaving)
+                  }
+                },
+              )
 
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
@@ -1429,24 +1431,58 @@ const CreateFlag = class extends Component {
                                                           Constants.environmentPermissions(
                                                             'Manage segment overrides',
                                                           ),
-                                                          <Button
-                                                            onClick={
-                                                              saveFeatureSegments
-                                                            }
-                                                            type='button'
-                                                            data-test='update-feature-segments-btn'
-                                                            id='update-feature-segments-btn'
-                                                            disabled={
-                                                              isSaving ||
-                                                              !name ||
-                                                              invalid ||
-                                                              !manageSegmentsOverrides
-                                                            }
-                                                          >
-                                                            {isSaving
-                                                              ? 'Updating'
-                                                              : 'Update Segment Overrides'}
-                                                          </Button>,
+                                                          <>
+                                                            {!is4Eyes &&
+                                                              isVersioned && (
+                                                                <>
+                                                                  <Button
+                                                                    feature='SCHEDULE_FLAGS'
+                                                                    theme='secondary'
+                                                                    onClick={() =>
+                                                                      saveFeatureSegments(
+                                                                        true,
+                                                                      )
+                                                                    }
+                                                                    className='mr-2'
+                                                                    type='button'
+                                                                    data-test='create-change-request'
+                                                                    id='create-change-request-btn'
+                                                                    disabled={
+                                                                      isSaving ||
+                                                                      !name ||
+                                                                      invalid ||
+                                                                      !savePermission
+                                                                    }
+                                                                  >
+                                                                    {isSaving
+                                                                      ? existingChangeRequest
+                                                                        ? 'Updating Change Request'
+                                                                        : 'Scheduling Update'
+                                                                      : existingChangeRequest
+                                                                      ? 'Update Change Request'
+                                                                      : 'Schedule Update'}
+                                                                  </Button>
+                                                                </>
+                                                              )}
+                                                            <Button
+                                                              onClick={
+                                                                saveFeatureSegments
+                                                              }
+                                                              type='button'
+                                                              data-test='update-feature-segments-btn'
+                                                              id='update-feature-segments-btn'
+                                                              disabled={
+                                                                isSaving ||
+                                                                !name ||
+                                                                invalid ||
+                                                                !manageSegmentsOverrides
+                                                              }
+                                                            >
+                                                              {isSaving
+                                                                ? 'Updating'
+                                                                : 'Update Segment Overrides'}
+                                                            </Button>
+                                                          </>,
                                                         )
                                                       }}
                                                     </Permission>
