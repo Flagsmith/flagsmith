@@ -280,8 +280,8 @@ const config: Config = {
     },
 
     plugins: [
+        './plugins/flagsmith-versions',
         [
-            './plugins/flagsmith-versions',
             'docusaurus-plugin-openapi-docs',
             {
                 id: 'openapi',
