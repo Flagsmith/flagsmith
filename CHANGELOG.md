@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.155.0](https://github.com/Flagsmith/flagsmith/compare/v2.154.0...v2.155.0) (2024-12-03)
+
+
+### Features
+
+* Create change requests for segments ([#4265](https://github.com/Flagsmith/flagsmith/issues/4265)) ([355f4e2](https://github.com/Flagsmith/flagsmith/commit/355f4e2827dc0a0cba169a320c7a0db8b522089e))
+* **environment/views:** Add get-by-uuid action  ([#4875](https://github.com/Flagsmith/flagsmith/issues/4875)) ([db8433b](https://github.com/Flagsmith/flagsmith/commit/db8433ba0a307b3e27f078aadf94d6ef4e717391))
+* **org/view:** Add api to get organisation by uuid ([#4878](https://github.com/Flagsmith/flagsmith/issues/4878)) ([06ed466](https://github.com/Flagsmith/flagsmith/commit/06ed466864d723ac43bad9ec8fa738a8e9d0812d))
+
+
+### Bug Fixes
+
+* Environment Ready Checker ([#4865](https://github.com/Flagsmith/flagsmith/issues/4865)) ([2392222](https://github.com/Flagsmith/flagsmith/commit/23922223d4367792b196d798cb2571dc8f589ee1))
+* prevent enabling versioning from affecting scheduled change requests ([#4872](https://github.com/Flagsmith/flagsmith/issues/4872)) ([c7aa30b](https://github.com/Flagsmith/flagsmith/commit/c7aa30bb217deca7ea6a0b0657d1a08076f2ab44))
+
 ## [2.154.0](https://github.com/Flagsmith/flagsmith/compare/v2.153.0...v2.154.0) (2024-11-21)
 
 
