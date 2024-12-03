@@ -245,6 +245,7 @@ const Constants = {
     property: '',
     value: '',
   } as SegmentCondition,
+  defaultTagColor: '#3d4db6',
   environmentPermissions: (perm: string) =>
     `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
   events: {
@@ -441,10 +442,16 @@ const Constants = {
       'TRAITS_ID': 150,
     },
   },
-  getFlagsmithSDKUrl: () =>
-    Utils.isSaas() || Project.api.startsWith('https://api.flagsmith.com')
+
+  getFlagsmithSDKUrl: () => {
+    const apiUrl = Project.api.startsWith('/')
+      ? `${document.location.origin}${Project.api}`
+      : Project.api
+
+    return Utils.isSaas() || apiUrl.startsWith('https://api.flagsmith.com')
       ? Project.flagsmithClientEdgeAPI
-      : Project.api,
+      : apiUrl
+  },
   getUpgradeUrl: (feature?: string) => {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
@@ -458,7 +465,6 @@ const Constants = {
   },
   isCustomFlagsmithUrl: () =>
     Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
-  defaultTagColor: '#3d4db6',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
