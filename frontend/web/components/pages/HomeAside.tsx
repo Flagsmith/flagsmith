@@ -215,18 +215,6 @@ const HomeAside: FC<HomeAsideType> = ({
                                           </span>
                                         ) : null}
                                       </NavLink>
-                                      {environment.use_v2_feature_versioning && (
-                                        <NavLink
-                                          activeClassName='active'
-                                          id='history-link'
-                                          to={`/project/${project.id}/environment/${environment.api_key}/history/`}
-                                        >
-                                          <span className='mr-2'>
-                                            <Icon name='clock' fill='#9DA4AE' />
-                                          </span>
-                                          History
-                                        </NavLink>
-                                      )}
                                       {Utils.renderWithPermission(
                                         manageIdentityPermission,
                                         Constants.environmentPermissions(
@@ -259,7 +247,11 @@ const HomeAside: FC<HomeAsideType> = ({
                                         exact
                                         to={`/project/${project.id}/environment/${environment.api_key}/sdk-keys`}
                                       >
-                                        <IonIcon className='mr-2' icon={code} />
+                                        <IonIcon
+                                          color={'#9DA4AE'}
+                                          className='mr-2'
+                                          icon={code}
+                                        />
                                         SDK Keys
                                       </NavLink>
                                       {environmentAdmin && (

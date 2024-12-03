@@ -47,7 +47,7 @@ Read more about our Client-side SDKs for your language/platform:
 
 ## Server-side SDKs
 
-[Server-side SDKs](/clients/server-side.md) run within _trusted environments_ - typically the server infrastructure that
+[Server-side SDKs](/clients/server-side) run within _trusted environments_ - typically the server infrastructure that
 you have control over. Because of this, you should not share your Server-side Environment keys publicly; they should be
 treated as secret.
 
@@ -55,8 +55,8 @@ treated as secret.
 
 The Server-side SDKs can operate in 2 different modes:
 
-1. `Remote Evaluation`
-2. `Local Evaluation`
+1. Remote Evaluation
+2. Local Evaluation
 
 It's important to understand which mode is right for your use case, and what the pros and cons of each one are. This is
 detailed below.
@@ -70,7 +70,7 @@ the particular request.
 
 ![Remote Evaluation Diagram](/img/sdk-remote-evaluation.svg)
 
-`Remote Evaluation` is the default mode; initialise the SDK and you will be running in `Remote Evaluation` mode.
+Remote Evaluation is the default mode; initialise the SDK and you will be running in Remote Evaluation mode.
 
 This is the same way that the [Client-side SDKs](#client-side-sdks) work.
 
@@ -81,49 +81,55 @@ the Flag Engine, and the engine runs within your server environment within the F
 
 ![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
 
-You have to configure the SDK to run in `Local Evaluation` mode. See the
-[SDK configuration options](server-side.md#configuring-the-sdk) for details on how to do that in your particular
-language.
+You have to configure the SDK to run in Local Evaluation mode. See the
+[SDK configuration options](server-side#configuring-the-sdk) for details on how to do that in your particular language.
 
-When the SDK is initialised in `Local Evaluation` mode, it will grab the entire set of details about the Environment
-from the Flagsmith API. This will include all the Flags, Flag values, Segment rules, Segment overrides etc for that
-Environment. This full complement of data about the Environment enables the Flagsmith SDK to run the Flag Engine
-_locally_ and _natively_ within your server infrastructure.
+When the SDK is initialised in Local Evaluation mode, it grabs the entire set of details about the Environment from the
+Flagsmith API. For a given Environment, this includes:
 
-The benefits to doing this are mainly one of latency and performance. Your server-side code does not need to hit the
-Flagsmith API each time a user requests their flags - the flags can be computed locally. Hence it does not need to block
-and wait for a response back from the Flagsmith API.
+- Flags and flag values
+- Segments, segment rules, and segment overrides
+- Identity overrides
+
+This full complement of Environment data enables the Flagsmith SDK to run the Flag Engine _locally_ and _natively_
+within your server infrastructure.
+
+:::info
+
+When using identity overrides in local evaluation:
+
+- Keep overrides count under 1500-2000, depending on flag value size.
+- Make sure your environment settings enable it.
+- Provide a full set of traits when requesting identity flags.
+
+See [Pros, Cons and Caveats](#for-local-evaluation).
+
+:::
 
 :::tip
 
 The SDK has to request all of the data about an Environment in order to run. Because some of this data could be
 sensitive (for example, your Segment Rules), the SDK requires a specific
-[`Server-side Environment Key`](#server-side-sdk).
+[Server-side Environment Key](#server-side-sdk).
 
 :::
 
-In order to keep their Environment data up-to-date, SDKs running in `Local Evaluation` mode will poll the Flagsmith API
+The benefits to doing this are mainly one of latency and performance. Your server-side code does not need to hit the
+Flagsmith API each time a user requests their flags - the flags can be computed locally. Hence it does not need to block
+and wait for a response back from the Flagsmith API.
+
+In order to keep their Environment data up-to-date, SDKs running in Local Evaluation mode will poll the Flagsmith API
 regularly and update their local Environment data with any changes from the Flagsmith API. By default the SDK will poll
-the Flagsmith every `60` seconds; this rate is configurable within each SDK.
+the Flagsmith every 60 seconds; this rate is configurable within each SDK.
 
-It's important to understand the [pros and cons](#pros-cons-and-caveats) for running `Local Evaluation`.
+It's important to understand the [pros and cons](#pros-cons-and-caveats) for running Local Evaluation.
 
-:::info
-
-Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
-datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a particular
-Identity. Our SDKs all provide relevant methods to achieve this.
-
-[Read up on the other pros, cons and caveats.](#pros-cons-and-caveats)
-
-:::
-
-All our Client-side SDKs run in `Remote Evaluation` mode only; they cannot run in `Local Evaluation mode`. The reason
-for this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
-only allow Client-side SDKs to run in `Remote Evaluation` mode.
+All our Client-side SDKs run in Remote Evaluation mode only; they cannot run in Local Evaluation mode. The reason for
+this is down to data sensitivity. Because some of this data could be sensitive (for example, your Segment Rules), we
+only allow Client-side SDKs to run in Remote Evaluation mode.
 
 Because Clients are almost always operating remotely from your server infrastructure, there is little benefit to them
-running in `Local Evaluation` mode.
+running in Local Evaluation mode.
 
 ## Networking Model
 
@@ -320,13 +326,13 @@ common pattern for networking implementation is:
 
 ## Pros, Cons and Caveats
 
-### Remote Evaluation
+### For Remote Evaluation
 
 - Identities are persisted within the Flagsmith Datastore.
 - Identity overrides specified within the Dashboard.
 - All Integrations work as designed.
 
-### Local Evaluation
+### For Local Evaluation
 
 :::tip
 
@@ -342,15 +348,29 @@ serverless platforms.
 The benefit of running in Local Evaluation mode is that you can process flag evaluations much more efficiently as they
 are all computed locally.
 
+- Make sure **Environment Settings > SDK Settings > Use identity overrides in local evaluation** is toggled on. To keep
+  evaluation consistent, it's off by default for projects created before January 2024.
 - Identities and their Traits are **not** read from or written to the Flagsmith API, and so are not persisted in the
   datastore. This means that you have to provide the full complement of Traits when requesting the Flags for a
   particular Identity. Our SDKs all provide relevant methods to achieve this.
-- [Identity overrides](../basic-features/managing-identities#identity-overrides) work with self-hosted Flagsmith
-  instances. We're rolling them out gradually for the SaaS version. If you are a SaaS customer,
-  <a class="open-chat" data-crisp-chat-message="Hi! I'm interested to try out identity overrides in Local Evaluation mode with Flagsmith SaaS!" href="#local-evaluation-1">contact
-  us</a> to try them out!
 - [Analytics-based Integrations](/integrations#analytics-platforms) do not run.
   [Flag Analytics](/advanced-use/flag-analytics) do still work, if enabled within the
   [SDK setup](/clients/server-side#configuring-the-sdk).
-- In circumstances where you need to target a specific identity, you can do this by creating a segment to target that
-  specific user and subsequently adding a segment override for that segment.
+- Currently, Flagsmith SDKs support up to 1500-2000 identity overrides, depending on flag value sizes, when used with
+  Edge API. If you store more than 1MB of override data, you will need to query the Edge API endpoint directly and use
+  pagination:
+
+```bash
+curl https://edge.api.flagsmith.com/api/v1/environment-document \
+  -H 'x-environment-key: <Your Server-Side Env Key>' \
+  --verbose
+```
+
+The `link` response header will contain the url to next page:
+
+```
+content-type: application/json
+...
+link: </api/v1/environment-document/?page_id=identity_override%3A60074%lastreadid>; rel="next"
+...
+```

@@ -6,7 +6,14 @@ from unittest import mock
 import pytest
 import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from django.conf import settings
 from django.forms import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
@@ -26,11 +33,6 @@ from audit.constants import (
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_SEGMENT_OVERRIDES,
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -40,7 +42,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
-from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
@@ -140,6 +141,7 @@ def test_remove_owners_only_remove_specified_owners(
         "first_name": user_3.first_name,
         "last_name": user_3.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -425,6 +427,7 @@ def test_put_feature_does_not_update_feature_states(
     assert all(fs.enabled is False for fs in feature.feature_states.all())
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 @mock.patch("features.views.get_multiple_event_list_for_feature")
 def test_get_project_features_influx_data(
     mock_get_event_list: mock.MagicMock,
@@ -446,6 +449,7 @@ def test_get_project_features_influx_data(
             "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
         }
     ]
+    one_day_ago = timezone.now() - timedelta(days=1)
 
     # When
     response = admin_client_new.get(url)
@@ -455,9 +459,68 @@ def test_get_project_features_influx_data(
     mock_get_event_list.assert_called_once_with(
         feature_name=feature.name,
         environment_id=str(environment.id),  # provided as a GET param
-        date_start="-24h",  # this is the default but can be provided as a GET param
+        date_start=one_day_ago,  # this is the default but can be provided as a GET param
         aggregate_every="24h",  # this is the default but can be provided as a GET param
     )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@mock.patch("features.views.get_multiple_event_list_for_feature")
+def test_get_project_features_influx_data_with_two_weeks_period(
+    mock_get_event_list: mock.MagicMock,
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=14d"
+    date_start = timezone.now() - timedelta(days=14)
+
+    mock_get_event_list.return_value = [
+        {
+            feature.name: 1,
+            "datetime": datetime(2021, 2, 26, 12, 0, 0, tzinfo=pytz.UTC),
+        }
+    ]
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_event_list.assert_called_once_with(
+        feature_name=feature.name,
+        environment_id=str(environment.id),
+        date_start=date_start,
+        aggregate_every="24h",
+    )
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_get_project_features_influx_data_with_malformed_period(
+    feature: Feature,
+    project: Project,
+    environment: Environment,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-influx-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&period=baddata"
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data[0] == "Malformed period supplied"
 
 
 def test_regular_user_cannot_create_mv_options_when_creating_feature(
@@ -1504,6 +1567,7 @@ def test_add_owners_adds_owner(
         "first_name": staff_user.first_name,
         "last_name": staff_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
     assert json_response["owners"][1] == {
         "id": admin_user.id,
@@ -1511,6 +1575,7 @@ def test_add_owners_adds_owner(
         "first_name": admin_user.first_name,
         "last_name": admin_user.last_name,
         "last_login": None,
+        "uuid": mock.ANY,
     }
 
 
@@ -2128,8 +2193,7 @@ def test_cannot_create_feature_state_for_feature_from_different_project(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["feature"][0] == "Feature does not exist in project"
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_create_feature_state_environment_is_read_only(
@@ -2190,8 +2254,7 @@ def test_cannot_create_feature_state_of_feature_from_different_project(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["feature"][0] == "Feature does not exist in project"
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_create_feature_state_environment_field_is_read_only(
@@ -2259,6 +2322,39 @@ def test_cannot_update_environment_of_a_feature_state(
         response.json()["environment"][0]
         == "Cannot change the environment of a feature state"
     )
+
+
+def test_update_feature_state_without_history_of_fsv(
+    admin_client_new: APIClient,
+    environment: Environment,
+    feature: Feature,
+    feature_state: FeatureState,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-featurestates-detail",
+        args=[environment.api_key, feature_state.id],
+    )
+    new_value = "new-value"
+
+    # Remove historical feature state value
+    feature_state.feature_state_value.history.all().delete()
+
+    data = {
+        "id": feature_state.id,
+        "feature_state_value": new_value,
+        "enabled": False,
+        "feature": feature.id,
+        "environment": environment.id,
+        "identity": None,
+        "feature_segment": None,
+    }
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    # Then
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_cannot_update_feature_of_a_feature_state(
@@ -2578,7 +2674,11 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_features_n_plus_1(
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
+def test_list_features_n_plus_1_without_rbac(
     staff_client: APIClient,
     project: Project,
     feature: Feature,
@@ -2586,7 +2686,49 @@ def test_list_features_n_plus_1(
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
-    # Given
+    _assert_list_feature_n_plus_1(
+        staff_client,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        environment,
+        num_queries=16,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+def test_list_features_n_plus_1_with_rbac(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+) -> None:  # pragma: no cover
+    _assert_list_feature_n_plus_1(
+        staff_client,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        environment,
+        num_queries=17,
+    )
+
+
+def _assert_list_feature_n_plus_1(
+    staff_client: APIClient,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    environment: Environment,
+    num_queries: int,
+) -> None:
     with_project_permissions([VIEW_PROJECT])
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
@@ -2600,7 +2742,7 @@ def test_list_features_n_plus_1(
         v1_feature_state.clone(env=environment, version=i, live_from=timezone.now())
 
     # When
-    with django_assert_num_queries(16):
+    with django_assert_num_queries(num_queries):
         response = staff_client.get(url)
 
     # Then
@@ -2740,7 +2882,6 @@ def test_list_features_with_feature_state(
 ) -> None:
     # Given
     with_project_permissions([VIEW_PROJECT])
-
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2753,18 +2894,22 @@ def test_list_features_with_feature_state(
         project=project,
     )
 
+    # This should be ignored due to versioning.
     feature_state1 = feature.feature_states.filter(environment=environment).first()
     feature_state1.enabled = True
     feature_state1.version = 1
     feature_state1.save()
 
-    feature_state_value1 = feature_state1.feature_state_value
-    feature_state_value1.string_value = None
-    feature_state_value1.integer_value = 1945
-    feature_state_value1.type = INTEGER
-    feature_state_value1.save()
-
-    # This should be ignored due to versioning.
+    # This should be ignored due to less recent live_from compared to the next feature state
+    # event though it has a higher version.
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        live_from=two_hours_ago,
+        enabled=True,
+        version=101,
+    )
+    # This should be returned
     feature_state_versioned = FeatureState.objects.create(
         feature=feature,
         environment=environment,
@@ -2827,16 +2972,15 @@ def test_list_features_with_feature_state(
     url = f"{base_url}?environment={environment.id}"
 
     # When
-    with django_assert_num_queries(16):
-        response = staff_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
     assert len(response.data["results"]) == 3
     results = response.data["results"]
-
     assert results[0]["environment_feature_state"]["enabled"] is True
+    assert results[0]["environment_feature_state"]["id"] == feature_state_versioned.id
     assert results[0]["environment_feature_state"]["feature_state_value"] == 2005
     assert results[0]["name"] == feature.name
     assert results[1]["environment_feature_state"]["enabled"] is True
@@ -3077,8 +3221,12 @@ def test_simple_feature_state_returns_only_latest_versions(
     assert response_json["count"] == 2
 
 
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is True,
+    reason="Skip this test if RBAC is installed",
+)
 @pytest.mark.freeze_time(two_hours_ago)
-def test_feature_list_last_modified_values(
+def test_feature_list_last_modified_values_without_rbac(
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3087,6 +3235,54 @@ def test_feature_list_last_modified_values(
     with_project_permissions: WithProjectPermissionsCallable,
     django_assert_num_queries: DjangoAssertNumQueries,
 ) -> None:
+    _assert_feature_list_last_modified_values(
+        staff_client,
+        staff_user,
+        environment_v2_versioning,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        num_queries=18,
+    )
+
+
+@pytest.mark.skipif(
+    settings.IS_RBAC_INSTALLED is False,
+    reason="Skip this test if RBAC is not installed",
+)
+@pytest.mark.freeze_time(two_hours_ago)
+def test_feature_list_last_modified_values_with_rbac(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:  # pragma: no cover
+    _assert_feature_list_last_modified_values(
+        staff_client,
+        staff_user,
+        environment_v2_versioning,
+        project,
+        feature,
+        with_project_permissions,
+        django_assert_num_queries,
+        num_queries=19,
+    )
+
+
+def _assert_feature_list_last_modified_values(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    environment_v2_versioning: Environment,
+    project: Project,
+    feature: Feature,
+    with_project_permissions: WithProjectPermissionsCallable,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    num_queries: int,
+):
     # Given
     # another v2 versioning environment
     environment_v2_versioning_2 = Environment.objects.create(
@@ -3121,7 +3317,7 @@ def test_feature_list_last_modified_values(
         Feature.objects.create(name=f"feature_{i}", project=project)
 
     # When
-    with django_assert_num_queries(18):  # TODO: reduce this number of queries!
+    with django_assert_num_queries(num_queries):  # TODO: reduce this number of queries!
         response = staff_client.get(url)
 
     # Then

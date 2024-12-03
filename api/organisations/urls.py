@@ -16,6 +16,7 @@ from integrations.github.views import (
     fetch_repo_contributors,
     fetch_repositories,
 )
+from integrations.grafana.views import GrafanaOrganisationConfigurationViewSet
 from metadata.views import MetaDataModelFieldViewSet
 from organisations.views import (
     OrganisationAPIUsageNotificationView,
@@ -75,6 +76,12 @@ organisations_router.register(
 
 organisations_router.register(
     "audit", OrganisationAuditLogViewSet, basename="audit-log"
+)
+
+organisations_router.register(
+    r"integrations/grafana",
+    GrafanaOrganisationConfigurationViewSet,
+    basename="integrations-grafana",
 )
 
 organisations_router.register(
@@ -146,6 +153,20 @@ urlpatterns = [
         name="organisation-api-usage-notification",
     ),
 ]
+
+if settings.LICENSING_INSTALLED:  # pragma: no cover
+    from licensing.views import create_or_update_licence
+
+    urlpatterns.extend(
+        [
+            path(
+                "<int:organisation_id>/licence",
+                create_or_update_licence,
+                name="create-or-update-licence",
+            ),
+        ]
+    )
+
 
 if settings.IS_RBAC_INSTALLED:
     from rbac.views import (

@@ -17,6 +17,11 @@ const config: Config = {
     onBrokenLinks: 'throw',
     onBrokenMarkdownLinks: 'warn',
 
+    markdown: {
+        mermaid: true,
+    },
+    themes: ['@docusaurus/theme-mermaid'],
+
     presets: [
         [
             'classic',
@@ -270,8 +275,13 @@ const config: Config = {
         ],
     } satisfies Preset.ThemeConfig,
 
+    customFields: {
+        CI: process.env.CI,
+    },
+
     plugins: [
         [
+            './plugins/flagsmith-versions',
             'docusaurus-plugin-openapi-docs',
             {
                 id: 'openapi',
@@ -292,7 +302,15 @@ const config: Config = {
 
     themes: ['docusaurus-theme-openapi-docs'],
 
-    scripts: ['/js/crisp-chat.js'],
+    scripts: [
+        '/js/crisp-chat.js',
+        {
+            src: '//js-eu1.hs-scripts.com/143451822.js',
+            async: true,
+            defer: true,
+            id: 'hs-script-loader',
+        },
+    ],
 
     clientModules: [require.resolve('./plugins/crisp-chat-links.js')],
 };

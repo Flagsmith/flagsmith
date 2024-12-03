@@ -1,22 +1,42 @@
+from datetime import timedelta
+
+import pytest
+from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from task_processor.task_run_method import TaskRunMethod
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
+from organisations.models import (
+    Organisation,
+    OrganisationSubscriptionInformationCache,
+    Subscription,
+)
 from organisations.subscription_info_cache import update_caches
 from organisations.subscriptions.constants import SubscriptionCacheEntity
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_update_caches(mocker, organisation, chargebee_subscription, settings):
     # Given
     settings.CHARGEBEE_API_KEY = "api-key"
     settings.INFLUXDB_TOKEN = "token"
     settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
 
-    organisation_usage = {"24h": 25123, "7d": 182957, "30d": 804564}
+    now = timezone.now()
+    day_1 = now - timedelta(days=1)
+    day_7 = now - timedelta(days=7)
+    day_30 = now - timedelta(days=30)
+    organisation_usage = {
+        day_1: 25123,
+        day_7: 182957,
+        day_30: 804564,
+    }
     mocked_get_top_organisations = mocker.patch(
         "organisations.subscription_info_cache.get_top_organisations"
     )
     mocked_get_top_organisations.side_effect = lambda t, _: {
-        organisation.id: organisation_usage.get(f"{t[1:]}")
+        organisation.id: organisation_usage[t]
     }
 
     chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
@@ -35,15 +55,15 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
     # Then
     assert (
         organisation.subscription_information_cache.api_calls_24h
-        == organisation_usage["24h"]
+        == organisation_usage[day_1]
     )
     assert (
         organisation.subscription_information_cache.api_calls_7d
-        == organisation_usage["7d"]
+        == organisation_usage[day_7]
     )
     assert (
         organisation.subscription_information_cache.api_calls_30d
-        == organisation_usage["30d"]
+        == organisation_usage[day_30]
     )
     assert (
         organisation.subscription_information_cache.allowed_seats
@@ -60,7 +80,50 @@ def test_update_caches(mocker, organisation, chargebee_subscription, settings):
 
     assert mocked_get_top_organisations.call_count == 3
     assert [call[0] for call in mocked_get_top_organisations.call_args_list] == [
-        ("-30d", ""),
-        ("-7d", ""),
-        ("-24h", "100"),
+        (day_30, ""),
+        (day_7, ""),
+        (day_1, "100"),
     ]
+
+
+def test_update_caches_empty(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    chargebee_subscription: Subscription,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    settings.CHARGEBEE_API_KEY = "api-key"
+    settings.INFLUXDB_TOKEN = "token"
+    settings.TASK_RUN_METHOD = TaskRunMethod.SYNCHRONOUSLY
+
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        api_calls_24h=1,
+        api_calls_7d=1,
+        api_calls_30d=1,
+    )
+
+    mocked_get_top_organisations = mocker.patch(
+        "organisations.subscription_info_cache.get_top_organisations"
+    )
+    mocked_get_top_organisations.return_value = {}
+
+    chargebee_metadata = ChargebeeObjMetadata(seats=15, api_calls=1000000)
+    mocked_get_subscription_metadata = mocker.patch(
+        "organisations.subscription_info_cache.get_subscription_metadata_from_id"
+    )
+    mocked_get_subscription_metadata.return_value = chargebee_metadata
+
+    # When
+    subscription_cache_entities = (
+        SubscriptionCacheEntity.INFLUX,
+        SubscriptionCacheEntity.CHARGEBEE,
+    )
+    update_caches(subscription_cache_entities)
+
+    # Then
+    organisation.refresh_from_db()
+    assert organisation.subscription_information_cache.api_calls_24h == 0
+    assert organisation.subscription_information_cache.api_calls_7d == 0
+    assert organisation.subscription_information_cache.api_calls_30d == 0

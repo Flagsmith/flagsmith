@@ -4,7 +4,8 @@ from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
 from django.conf import settings
-from django.db.models import F, Max
+from django.core.mail import send_mail
+from django.db.models import F, Max, Q
 from django.utils import timezone
 from task_processor.decorators import (
     register_recurring_task,
@@ -22,12 +23,10 @@ from organisations.models import (
     Organisation,
     OrganisationAPIBilling,
     OrganisationAPIUsageNotification,
+    OrganisationBreachedGracePeriod,
     Subscription,
 )
 from organisations.subscriptions.constants import FREE_PLAN_ID
-from organisations.subscriptions.subscription_service import (
-    get_subscription_metadata,
-)
 from users.models import FFAdminUser
 
 from .constants import (
@@ -54,7 +53,7 @@ logger = logging.getLogger(__name__)
 def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
-    subscription_metadata = get_subscription_metadata(organisation)
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
     FFAdminUser.send_alert_to_admin_users(
         subject=ALERT_EMAIL_SUBJECT,
         message=ALERT_EMAIL_MESSAGE
@@ -72,10 +71,26 @@ def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
 ) -> None:
-    FFAdminUser.send_alert_to_admin_users(
-        subject=f"Organisation {organisation_name} has cancelled their subscription",
-        message=f"Organisation {organisation_name} has cancelled their subscription on {formatted_cancellation_date}",
-    )
+    if recipient_list := settings.ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST:
+        send_mail(
+            subject=f"Organisation {organisation_name} has cancelled their subscription",
+            message=f"Organisation {organisation_name} has cancelled their subscription "
+            f"on {formatted_cancellation_date}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            fail_silently=True,
+        )
+
+
+@register_recurring_task(
+    run_every=timedelta(hours=6),
+)
+def update_organisation_subscription_information_influx_cache_recurring():
+    """
+    We're redefining the task function here to register a recurring task
+    since the decorators don't stack correctly. (TODO)
+    """
+    update_organisation_subscription_information_influx_cache()  # pragma: no cover
 
 
 @register_task_handler()
@@ -123,7 +138,7 @@ def handle_api_usage_notifications() -> None:
 
         try:
             handle_api_usage_notification_for_organisation(organisation)
-        except RuntimeError:
+        except Exception:
             logger.error(
                 f"Error processing api usage for organisation {organisation.id}",
                 exc_info=True,
@@ -173,7 +188,8 @@ def charge_for_api_call_count_overages():
             - month_window_end,
         )
         .exclude(
-            subscription__plan=FREE_PLAN_ID,
+            Q(subscription__plan=FREE_PLAN_ID)
+            | Q(subscription__cancellation_date__isnull=False),
         )
         .select_related(
             "subscription_information_cache",
@@ -191,11 +207,20 @@ def charge_for_api_call_count_overages():
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id, "30d")
+        api_usage = get_current_api_usage(organisation.id)
 
         # Grace period for organisations < 200% of usage.
-        if api_usage / subscription_cache.allowed_30d_api_calls < 2.0:
+        if (
+            not hasattr(organisation, "breached_grace_period")
+            and api_usage / subscription_cache.allowed_30d_api_calls < 2.0
+        ):
             logger.info("API Usage below normal usage or grace period.")
+
+            # Set organisation grace period breach for following months.
+            if api_usage / subscription_cache.allowed_30d_api_calls > 1.0:
+                OrganisationBreachedGracePeriod.objects.get_or_create(
+                    organisation=organisation
+                )
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
@@ -209,19 +234,27 @@ def charge_for_api_call_count_overages():
             logger.info("API Usage below current API limit.")
             continue
 
-        if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-            add_100k_api_calls_scale_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-            add_100k_api_calls_start_up(
-                organisation.subscription.subscription_id,
-                math.ceil(api_overage / 100_000),
-            )
-        else:
+        try:
+            if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
+                add_100k_api_calls_scale_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
+                add_100k_api_calls_start_up(
+                    organisation.subscription.subscription_id,
+                    math.ceil(api_overage / 100_000),
+                )
+            else:
+                logger.error(
+                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
+                    f"for organisation {organisation.id}"
+                )
+                continue
+        except Exception:
             logger.error(
-                f"Unable to bill for API overages for plan `{organisation.subscription.plan}`"
+                f"Unable to charge organisation {organisation.id} due to billing error",
+                exc_info=True,
             )
             continue
 
@@ -243,14 +276,22 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     Since free plans don't have predefined subscription periods, we
     use a rolling thirty day period to filter them.
     """
-
-    grace_period = timezone.now() - timedelta(days=API_USAGE_GRACE_PERIOD)
-    month_start = timezone.now() - timedelta(30)
+    now = timezone.now()
+    grace_period = now - timedelta(days=API_USAGE_GRACE_PERIOD)
+    month_start = now - timedelta(30)
     queryset = (
         OrganisationAPIUsageNotification.objects.filter(
-            notified_at__gt=month_start,
-            notified_at__lt=grace_period,
-            percent_usage__gte=100,
+            Q(
+                notified_at__gte=month_start,
+                notified_at__lte=grace_period,
+                percent_usage__gte=100,
+            )
+            | Q(
+                notified_at__gte=month_start,
+                notified_at__lte=now,
+                percent_usage__gte=100,
+                organisation__breached_grace_period__isnull=False,
+            )
         )
         .values("organisation")
         .annotate(max_value=Max("percent_usage"))
@@ -259,13 +300,14 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     organisation_ids = []
     for result in queryset:
         organisation_ids.append(result["organisation"])
+
     organisations = (
         Organisation.objects.filter(
             id__in=organisation_ids,
             subscription__plan=FREE_PLAN_ID,
             api_limit_access_block__isnull=True,
         )
-        .select_related("subscription")
+        .select_related("subscription", "subscription_information_cache")
         .exclude(
             stop_serving_flags=True,
             block_access_to_admin=True,
@@ -288,6 +330,19 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         block_access = flags.is_feature_enabled("api_limiting_block_access_to_admin")
 
         if not stop_serving and not block_access:
+            continue
+
+        if not organisation.has_subscription_information_cache():
+            continue
+
+        OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
+
+        subscription_cache = organisation.subscription_information_cache
+        api_usage = get_current_api_usage(organisation.id)
+        if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
+            logger.info(
+                f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
+            )
             continue
 
         organisation.stop_serving_flags = stop_serving

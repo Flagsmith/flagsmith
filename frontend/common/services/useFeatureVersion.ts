@@ -1,8 +1,10 @@
 import {
   FeatureState,
   FeatureVersion,
+  PagedResponse,
   Res,
   Segment,
+  TypedFeatureState,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
@@ -10,12 +12,19 @@ import { getStore } from 'common/store'
 import { getVersionFeatureState } from './useVersionFeatureState'
 import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
-import { getFeatureStateDiff, getSegmentDiff } from 'components/diff/diff-utils'
+import {
+  getFeatureStateDiff,
+  getSegmentDiff,
+  getVariationDiff,
+} from 'components/diff/diff-utils'
+import { getSegments } from './useSegment'
+import { getFeatureStates } from './useFeatureState'
+import moment from 'moment'
 
-const transformFeatureStates = (featureStates: FeatureState[]) =>
+const transformFeatureStates = (featureStates: TypedFeatureState[]) =>
   featureStates?.map((v) => ({
     ...v,
-    feature_state_value: Utils.valueToFeatureState(v.feature_state_value),
+    feature_state_value: v.feature_state_value,
     id: undefined,
     multivariate_feature_state_values: v.multivariate_feature_state_values?.map(
       (v) => ({
@@ -26,51 +35,67 @@ const transformFeatureStates = (featureStates: FeatureState[]) =>
   }))
 
 export const getFeatureStateCrud = (
-  featureStates: FeatureState[],
-  oldFeatureStates?: FeatureState[],
+  featureStates: TypedFeatureState[],
+  oldFeatureStates: TypedFeatureState[],
   segments?: Segment[] | null | undefined,
 ) => {
-  const excludeNotChanged = (featureStates: FeatureState[]) => {
+  const excludeNotChanged = (featureStates: TypedFeatureState[]) => {
     if (!oldFeatureStates) {
       return featureStates
     }
-    if (segments?.length) {
-      // filter out feature states that have no changes
-      const segmentDiffs = getSegmentDiff(
-        featureStates,
-        oldFeatureStates,
-        segments,
-      )
-      return featureStates.filter((v) => {
-        const diff = segmentDiffs?.diffs?.find(
-          (diff) => v.feature_segment?.segment === diff.segment.id,
+    const segmentDiffs = segments?.length
+      ? getSegmentDiff(
+          featureStates.filter((v) => !!v.feature_segment),
+          oldFeatureStates.filter((v) => !!v.feature_segment),
+          segments,
         )
-        return !!diff?.totalChanges
-      })
-    } else {
-      // return nothing if feature state isn't different
-      const valueDiff = getFeatureStateDiff(
-        featureStates[0],
-        oldFeatureStates[0],
+      : null
+    const featureStateDiffs = featureStates.filter((v) => {
+      if (!v.feature_segment) return
+      const diff = segmentDiffs?.diffs?.find(
+        (diff) => v.feature_segment?.segment === diff.segment.id,
       )
-      if (!valueDiff.totalChanges) {
-        return []
+      return !!diff?.totalChanges
+    })
+    const newValueFeatureState = featureStates.find((v) => !v.feature_segment)!
+    const oldValueFeatureState = oldFeatureStates.find(
+      (v) => !v.feature_segment,
+    )!
+    // return nothing if feature state isn't different
+    const valueDiff = getFeatureStateDiff(
+      oldValueFeatureState,
+      newValueFeatureState,
+    )
+    if (!valueDiff.totalChanges) {
+      const variationDiff = getVariationDiff(
+        oldValueFeatureState,
+        newValueFeatureState,
+      )
+      if (variationDiff.totalChanges) {
+        featureStateDiffs.push(newValueFeatureState)
       }
-      return featureStates
+    } else {
+      featureStateDiffs.push(newValueFeatureState)
     }
+    return featureStateDiffs
   }
-  const featureStatesToCreate: Req['createFeatureVersion']['feature_states_to_create'] =
-    featureStates.filter((v) => !v.id && !v.toRemove)
-  const featureStatesToUpdate: Req['createFeatureVersion']['feature_states_to_update'] =
-    excludeNotChanged(featureStates.filter((v) => !!v.id && !v.toRemove))
+
+  const featureStatesToCreate = featureStates.filter(
+    (v) => !v.id && !v.toRemove,
+  )
+  const featureStatesToUpdate = excludeNotChanged(
+    featureStates.filter((v) => !!v.id && !v.toRemove),
+  )
   const segment_ids_to_delete_overrides: Req['createFeatureVersion']['segment_ids_to_delete_overrides'] =
     featureStates
       .filter((v) => !!v.id && !!v.toRemove && !!v.feature_segment)
       .map((v) => v.feature_segment!.segment)
 
   // Step 1: Create a new feature version
-  const feature_states_to_create = transformFeatureStates(featureStatesToCreate)
-  const feature_states_to_update = transformFeatureStates(featureStatesToUpdate)
+  const feature_states_to_create: Req['createFeatureVersion']['feature_states_to_create'] =
+    transformFeatureStates(featureStatesToCreate)
+  const feature_states_to_update: Req['createFeatureVersion']['feature_states_to_update'] =
+    transformFeatureStates(featureStatesToUpdate)
   return {
     feature_states_to_create,
     feature_states_to_update,
@@ -87,11 +112,63 @@ export const featureVersionService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
+          // todo: this will be removed when we combine saving value and segment overrides
+          const mode = query.featureStates.find(
+            (v) => !v.feature_segment?.segment,
+          )
+            ? 'VALUE'
+            : 'SEGMENT'
+          const oldFeatureStates: { data: PagedResponse<TypedFeatureState> } =
+            await getFeatureStates(
+              getStore(),
+              {
+                environment: query.environmentId,
+                feature: query.featureId,
+              },
+              {
+                forceRefetch: true,
+              },
+            )
+          const segments =
+            mode === 'VALUE'
+              ? undefined
+              : (
+                  await getSegments(getStore(), {
+                    include_feature_specific: true,
+                    page_size: 1000,
+                    projectId: query.projectId,
+                  })
+                ).data.results
+
           const {
             feature_states_to_create,
             feature_states_to_update,
             segment_ids_to_delete_overrides,
-          } = getFeatureStateCrud(query.featureStates)
+          } = getFeatureStateCrud(
+            query.featureStates.map((v) => ({
+              ...v,
+              feature_state_value: Utils.valueToFeatureState(
+                v.feature_state_value,
+              ),
+            })),
+            oldFeatureStates.data.results.filter((v) => {
+              if (mode === 'VALUE') {
+                return !v.feature_segment?.segment
+              } else {
+                return !!v.feature_segment?.segment
+              }
+            }),
+            segments,
+          )
+
+          if (
+            !feature_states_to_create.length &&
+            !feature_states_to_update.length &&
+            !segment_ids_to_delete_overrides.length
+          ) {
+            throw new Error('Feature contains no changes')
+          }
+
           const versionRes: { data: FeatureVersion } =
             await createFeatureVersion(getStore(), {
               environmentId: query.environmentId,
@@ -253,6 +330,17 @@ export const {
   useGetFeatureVersionsQuery,
   // END OF EXPORTS
 } = featureVersionService
+
+export function isVersionOverLimit(
+  versionLimitDays: number | null | undefined,
+  date: string | undefined,
+) {
+  if (!versionLimitDays) {
+    return false
+  }
+  const days = moment().diff(moment(date), 'days') + 1
+  return !!versionLimitDays && days > versionLimitDays
+}
 
 /* Usage examples:
 const { data, isLoading } = useGetFeatureVersionQuery({ id: 2 }, {}) //get hook

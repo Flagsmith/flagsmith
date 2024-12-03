@@ -179,6 +179,17 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
     //eslint-disable-next-line
   }, [])
 
+  useEffect(() => {
+    if(!open) {
+      if(projectSearch) {
+        setProjectSearch('')
+      }
+      if(organisationSearch) {
+        setOrganisationSearch('')
+      }
+    }
+  }, [open]);
+
   const { data: projects } = useGetProjectsQuery(
     {
       organisationId: `${hoveredOrganisation?.id}`,

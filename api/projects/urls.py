@@ -1,3 +1,6 @@
+import importlib
+
+from django.conf import settings
 from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
@@ -12,7 +15,7 @@ from features.import_export.views import (
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from features.views import FeatureViewSet
 from integrations.datadog.views import DataDogConfigurationViewSet
-from integrations.grafana.views import GrafanaConfigurationViewSet
+from integrations.grafana.views import GrafanaProjectConfigurationViewSet
 from integrations.launch_darkly.views import LaunchDarklyImportRequestViewSet
 from integrations.new_relic.views import NewRelicConfigurationViewSet
 from projects.tags.views import TagViewSet
@@ -59,7 +62,7 @@ projects_router.register(
 )
 projects_router.register(
     r"integrations/grafana",
-    GrafanaConfigurationViewSet,
+    GrafanaProjectConfigurationViewSet,
     basename="integrations-grafana",
 )
 projects_router.register(
@@ -67,6 +70,16 @@ projects_router.register(
     ProjectAuditLogViewSet,
     basename="project-audit",
 )
+
+if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
+    workflow_views = importlib.import_module("workflows_logic.views")
+    projects_router.register(
+        r"change-requests",
+        workflow_views.ProjectChangeRequestViewSet,
+        basename="project-change-requests",
+    )
+
+
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )

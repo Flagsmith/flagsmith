@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
-import color from 'color'
 import Format from 'common/utils/format'
 import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed } from 'ionicons/icons'
@@ -9,6 +8,8 @@ import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
+import Icon from 'components/Icon'
+import Color from 'color'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -17,6 +18,38 @@ function escapeHTML(unsafe: string) {
     /[\u0000-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u00FF]/g,
     (c) => `&#${`000${c.charCodeAt(0)}`.slice(-4)};`,
   )
+}
+
+const renderIcon = (
+  tagType: string,
+  tagColor: string,
+  tagLabel: string,
+  isPermanent: boolean,
+) => {
+  const darkened = tagColor.darken(0.1).string()
+  switch (tagType) {
+    case 'STALE':
+      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+    case 'GITHUB':
+      switch (tagLabel) {
+        case 'PR Open':
+          return <Icon name='pr-linked' />
+        case 'PR Merged':
+          return <Icon name='pr-merged' />
+        case 'PR Closed':
+          return <Icon name='pr-closed' />
+        case 'PR Draft':
+          return <Icon name='pr-draft' />
+        case 'Issue Open':
+          return <Icon name='issue-linked' />
+        case 'Issue Closed':
+          return <Icon name='issue-closed' />
+        default:
+          return
+      }
+    default:
+      return isPermanent ? <IonIcon className='ms-1' icon={lockClosed} color={darkened} /> : null
+  }
 }
 
 const getTooltip = (tag: TTag | undefined) => {
@@ -46,16 +79,14 @@ const getTooltip = (tag: TTag | undefined) => {
     tooltip =
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
-  const tagColor = getTagColor(tag, false)
+  const tagColor = Utils.colour(getTagColor(tag, false))
 
   if (isTruncated) {
     return `<div>
         <span
-          style='background-color: ${color(tagColor).fade(
-            0.92,
-          )}; border: 1px solid ${color(tagColor).fade(0.76)}; color: ${color(
-      tagColor,
-    ).darken(0.1)};'
+          style='background-color: ${tagColor.fade(0.92)};
+          border: 1px solid ${tagColor.fade(0.76)};
+          color: ${tagColor.darken(0.1)};'
           class="chip d-inline-block chip--xs me-1${
             disabled ? ' disabled' : ''
           }"
@@ -86,21 +117,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
           })}
         >
           {tagLabel}
-          {tag.type === 'STALE' ? (
-            <IonIcon
-              className='ms-1'
-              icon={alarmOutline}
-              color={color(tag.color).darken(0.1).string()}
-            />
-          ) : (
-            tag.is_permanent && (
-              <IonIcon
-                className='ms-1'
-                icon={lockClosed}
-                color={color(tag.color).darken(0.1).string()}
-              />
-            )
-          )}
+          {renderIcon(tag.type!, Utils.colour(tag.color), tag.label!)}
         </span>
       }
     >

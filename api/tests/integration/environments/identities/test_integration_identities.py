@@ -1,8 +1,11 @@
+import hashlib
 import json
+from typing import Any, Generator
 from unittest import mock
 
 import pytest
 from django.urls import reverse
+from pytest_lazyfixture import lazy_fixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -224,13 +227,64 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     assert len(second_identity_response_json["flags"]) == 3
 
 
-def test_get_feature_states_for_identity__transient_identity__segment_match_expected(
+@pytest.fixture
+def existing_identity_identifier_data(
+    identity_identifier: str,
+    identity: int,
+) -> dict[str, Any]:
+    return {"identifier": identity_identifier}
+
+
+@pytest.fixture
+def transient_identifier(
+    segment_condition_property: str,
+    segment_condition_value: str,
+) -> Generator[str, None, None]:
+    return hashlib.sha256(
+        f"avalue_a{segment_condition_property}{segment_condition_value}".encode()
+    ).hexdigest()
+
+
+@pytest.mark.parametrize(
+    "transient_data",
+    [
+        pytest.param({"transient": True}, id="with-transient-true"),
+        pytest.param({"transient": False}, id="with-transient-false"),
+        pytest.param({}, id="missing-transient"),
+    ],
+)
+@pytest.mark.parametrize(
+    "identifier_data,expected_identifier",
+    [
+        pytest.param(
+            lazy_fixture("existing_identity_identifier_data"),
+            lazy_fixture("identity_identifier"),
+            id="existing-identifier",
+        ),
+        pytest.param({"identifier": "unseen"}, "unseen", id="new-identifier"),
+        pytest.param(
+            {"identifier": ""},
+            lazy_fixture("transient_identifier"),
+            id="blank-identifier",
+        ),
+        pytest.param(
+            {"identifier": None},
+            lazy_fixture("transient_identifier"),
+            id="null-identifier",
+        ),
+        pytest.param({}, lazy_fixture("transient_identifier"), id="missing-identifier"),
+    ],
+)
+def test_get_feature_states_for_identity__segment_match_expected(
     sdk_client: APIClient,
     feature: int,
     segment: int,
     segment_condition_property: str,
     segment_condition_value: str,
     segment_featurestate: int,
+    identifier_data: dict[str, Any],
+    transient_data: dict[str, Any],
+    expected_identifier: str,
 ) -> None:
     # Given
     url = reverse("api-v1:sdk-identities")
@@ -242,14 +296,16 @@ def test_get_feature_states_for_identity__transient_identity__segment_match_expe
         url,
         data=json.dumps(
             {
-                "identifier": "unseen",
+                **identifier_data,
+                **transient_data,
                 "traits": [
                     {
                         "trait_key": segment_condition_property,
                         "trait_value": segment_condition_value,
-                    }
+                    },
+                    {"trait_key": "a", "trait_value": "value_a"},
+                    {"trait_key": "c", "trait_value": None},
                 ],
-                "transient": True,
             }
         ),
         content_type="application/json",
@@ -258,6 +314,7 @@ def test_get_feature_states_for_identity__transient_identity__segment_match_expe
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
+    assert response_json["identifier"] == expected_identifier
     assert (
         flag_data := next(
             (
@@ -270,6 +327,29 @@ def test_get_feature_states_for_identity__transient_identity__segment_match_expe
     )
     assert flag_data["enabled"] is True
     assert flag_data["feature_state_value"] == "segment override"
+
+
+def test_get_feature_states_for_identity__empty_traits__random_identifier_expected(
+    sdk_client: APIClient,
+    environment: int,
+) -> None:
+    # Given
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    response_1 = sdk_client.post(
+        url,
+        data=json.dumps({"traits": []}),
+        content_type="application/json",
+    )
+    response_2 = sdk_client.post(
+        url,
+        data=json.dumps({"traits": []}),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response_1.json()["identifier"] != response_2.json()["identifier"]
 
 
 def test_get_feature_states_for_identity__transient_trait__segment_match_expected(

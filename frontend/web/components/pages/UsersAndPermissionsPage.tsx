@@ -36,6 +36,8 @@ import sortBy from 'lodash/sortBy'
 import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
+import UsersGroups from 'components/UsersGroups'
+import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -92,7 +94,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       'side-modal',
     )
   }
-  const hasRbacPermission = Utils.getPlansPermission('RBAC')
   const meta = subscriptionMeta || organisation.subscription || { max_seats: 1 }
   const max_seats = meta.max_seats || 1
   const isAWS = AccountStore.getPaymentMethod() === 'AWS_MARKETPLACE'
@@ -103,9 +104,28 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
   const editUserPermissions = (user: User, organisationId: number) => {
     openModal(
-      'Edit Organisation Permissions',
-      <div className='p-4'>
-        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          {user.role !== 'ADMIN' && (
+            <TabItem tabLabel='Permissions'>
+              <div className='pt-4'>
+                <PermissionsTabs
+                  uncontrolled
+                  user={user}
+                  orgId={organisationId}
+                />
+              </div>
+            </TabItem>
+          )}
+          <TabItem tabLabel='Groups'>
+            <div className='pt-4'>
+              <UsersGroups user={user} orgId={organisationId} />
+            </div>
+          </TabItem>
+        </Tabs>
       </div>,
       'p-0 side-modal',
     )
@@ -252,7 +272,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       .
                                     </strong>
                                   ) : needsUpgradeForAdditionalSeats ? (
-                                    <strong>
+                                    <div className='fw-semibold'>
                                       If you wish to invite any additional
                                       members, please{' '}
                                       {
@@ -260,7 +280,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           href='#'
                                           onClick={() => {
                                             router.history.replace(
-                                              Constants.upgradeURL,
+                                              Constants.getUpgradeUrl(),
                                             )
                                           }}
                                         >
@@ -268,7 +288,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                         </a>
                                       }
                                       .
-                                    </strong>
+                                    </div>
                                   ) : (
                                     <strong>
                                       You will automatically be charged
@@ -308,13 +328,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           label: 'Organisation Administrator',
                                           value: 'ADMIN',
                                         },
-                                        {
-                                          isDisabled: !hasRbacPermission,
-                                          label: hasRbacPermission
-                                            ? 'User'
-                                            : 'User - Please upgrade for role based access',
-                                          value: 'USER',
-                                        },
+                                        getPlanBasedOption(
+                                          {
+                                            label: 'User',
+                                            value: 'USER',
+                                          },
+                                          'RBAC',
+                                        ),
                                       ]}
                                       className='react-select select-sm'
                                     />
@@ -463,17 +483,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               )
                             }
                             const onEditClick = () => {
-                              if (role !== 'ADMIN') {
-                                editUserPermissions(user, organisation.id)
-                              }
+                              editUserPermissions(user, organisation.id)
                             }
                             return (
                               <Row
                                 data-test={`user-${i}`}
                                 space
-                                className={classNames('list-item', {
-                                  clickable: role !== 'ADMIN',
-                                })}
+                                className={classNames('list-item clickable')}
                                 onClick={onEditClick}
                                 key={id}
                               >
@@ -512,17 +528,19 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           }
                                           options={map(
                                             Constants.roles,
-                                            (label, value) => ({
-                                              isDisabled:
-                                                value !== 'ADMIN' &&
-                                                !hasRbacPermission,
-                                              label:
-                                                value !== 'ADMIN' &&
-                                                !hasRbacPermission
-                                                  ? `${label} - Please upgrade for role based access`
-                                                  : label,
-                                              value,
-                                            }),
+                                            (label, value) =>
+                                              value === 'ADMIN'
+                                                ? {
+                                                    label,
+                                                    value,
+                                                  }
+                                                : getPlanBasedOption(
+                                                    {
+                                                      label,
+                                                      value,
+                                                    },
+                                                    'RBAC',
+                                                  ),
                                           )}
                                           menuPortalTarget={document.body}
                                           menuPosition='absolute'
@@ -551,13 +569,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   style={{
                                     width: widths[2],
                                   }}
-                                  className='table-column text-end'
+                                  className='table-column d-flex justify-content-end'
                                 >
                                   <UserAction
                                     onRemove={onRemoveClick}
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
-                                    canEdit={role !== 'ADMIN'}
+                                    canEdit={AccountStore.isAdmin()}
                                   />
                                 </div>
                               </Row>
@@ -725,21 +743,16 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                       </div>
                     </TabItem>
                     <TabItem tabLabel='Roles'>
-                      {hasRbacPermission ? (
-                        <>
-                          <RolesTable
-                            organisationId={organisation.id}
-                            users={users}
-                          />
-                        </>
-                      ) : (
-                        <div className='mt-4'>
-                          <InfoMessage>
-                            To use <strong>role</strong> features you have to
-                            upgrade your plan.
-                          </InfoMessage>
-                        </div>
-                      )}
+                      <PlanBasedBanner
+                        feature='RBAC'
+                        theme={'page'}
+                        className='mt-4'
+                      >
+                        <RolesTable
+                          organisationId={organisation.id}
+                          users={users}
+                        />
+                      </PlanBasedBanner>
                     </TabItem>
                   </Tabs>
                 </div>

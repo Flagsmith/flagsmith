@@ -46,7 +46,6 @@ import { cloneDeep } from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
 import Icon from 'components/Icon'
-import Permission from 'common/providers/Permission'
 import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
@@ -125,6 +124,16 @@ const CreateSegment: FC<CreateSegmentType> = ({
     ],
   }
   const [segment, setSegment] = useState(_segment || defaultSegment)
+  const [description, setDescription] = useState(segment.description)
+  const [name, setName] = useState<Segment['name']>(segment.name)
+  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  useEffect(() => {
+    if (segment) {
+      setRules(segment.rules)
+      setDescription(segment.description)
+      setName(segment.name)
+    }
+  }, [segment])
   const isEdit = !!segment.id
   const [
     createSegment,
@@ -147,15 +156,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [description, setDescription] = useState(segment.description)
-  const [name, setName] = useState<Segment['name']>(segment.name)
-  const [rules, setRules] = useState<Segment['rules']>(segment.rules)
   const [tab, setTab] = useState(0)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
-  const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
-
+  const metadataEnable = Utils.getPlansPermission('METADATA')
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
@@ -282,14 +287,12 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [createSuccess])
   useEffect(() => {
     if (updateSuccess && updateSegmentData) {
+      setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
     }
     //eslint-disable-next-line
   }, [updateSuccess])
-  const operators: Operator[] | null =
-    _operators || Utils.getFlagsmithValue('segment_operators')
-      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-      : null
+  const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
   if (operators) {
     _operators = operators
   }
@@ -400,7 +403,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     <form id='create-segment-modal' onSubmit={save}>
       {!condensed && (
         <div className='mt-3'>
-          <InfoMessage>
+          <InfoMessage collapseId={'value-type-conversions'}>
             Learn more about rule and trait value type conversions{' '}
             <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
               here
@@ -583,31 +586,20 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
-              <Permission
-                level='environment'
-                permission={'MANAGE_SEGMENT_OVERRIDES'}
-                id={environmentId}
-              >
-                {({ permission: manageSegmentOverrides }) => {
-                  const isReadOnly = !manageSegmentOverrides
-                  return (
-                    <AssociatedSegmentOverrides
-                      onUnsavedChange={() => {
-                        setValueChanged(true)
-                      }}
-                      feature={segment.feature}
-                      projectId={projectId}
-                      id={segment.id}
-                      readOnly={isReadOnly}
-                    />
-                  )
+              <AssociatedSegmentOverrides
+                onUnsavedChange={() => {
+                  setValueChanged(true)
                 }}
-              </Permission>
+                feature={segment.feature}
+                projectId={projectId}
+                id={segment.id}
+                environmentId={environmentId}
+              />
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
             <div className='my-4'>
-              <InfoMessage>
+              <InfoMessage collapseId={'random-identity-sample'}>
                 This is a random sample of Identities who are either in or out
                 of this Segment based on the current Segment rules.
               </InfoMessage>
@@ -763,7 +755,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
           <TabItem
             tabLabelString='Custom Fields'
-            tabLabel={<Row className='justify-content-center'>Custom Fields</Row>}
+            tabLabel={
+              <Row className='justify-content-center'>Custom Fields</Row>
+            }
           >
             <div className={className || 'my-3 mx-4'}>{MetadataTab}</div>
           </TabItem>

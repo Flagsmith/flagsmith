@@ -27,6 +27,7 @@ from flag_engine.segments.models import (
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
+from segments.models import Segment
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import Identity, Trait
@@ -40,7 +41,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import Segment, SegmentRule
+    from segments.models import SegmentRule
 
 
 __all__ = (
@@ -194,7 +195,11 @@ def map_environment_to_engine(
     organisation: "Organisation" = project.organisation
 
     # Read relationships - grab all the data needed from the ORM here.
-    project_segments: List["Segment"] = project.segments.all()
+
+    project_segments = [
+        ps for ps in project.segments.all() if ps.id == ps.version_of_id
+    ]
+
     project_segment_rules_by_segment_id: Dict[
         int,
         Iterable["SegmentRule"],
@@ -326,6 +331,7 @@ def map_environment_to_engine(
         use_identity_composite_key_for_hashing=environment.use_identity_composite_key_for_hashing,
         hide_sensitive_data=environment.hide_sensitive_data,
         hide_disabled_flags=environment.hide_disabled_flags,
+        use_identity_overrides_in_local_eval=environment.use_identity_overrides_in_local_eval,
         #
         # Relationships:
         project=project_model,

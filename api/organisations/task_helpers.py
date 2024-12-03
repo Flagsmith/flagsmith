@@ -2,6 +2,7 @@ import logging
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
+from core.helpers import get_current_site_url
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
@@ -13,6 +14,7 @@ from organisations.models import (
     OrganisationAPIUsageNotification,
     OrganisationRole,
 )
+from organisations.subscriptions.constants import MAX_API_CALLS_IN_FREE_PLAN
 from users.models import FFAdminUser
 
 from .constants import API_USAGE_ALERT_THRESHOLDS
@@ -25,7 +27,12 @@ def send_api_flags_blocked_notification(organisation: Organisation) -> None:
         userorganisation__organisation=organisation,
     )
 
-    context = {"organisation": organisation}
+    url = get_current_site_url()
+    context = {
+        "organisation": organisation,
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "url": url,
+    }
     message = "organisations/api_flags_blocked_notification.txt"
     html_message = "organisations/api_flags_blocked_notification.html"
 
@@ -68,6 +75,7 @@ def _send_api_usage_notification(
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
+        "grace_period": not hasattr(organisation, "breached_grace_period"),
     }
 
     send_mail(
@@ -89,9 +97,12 @@ def _send_api_usage_notification(
 def handle_api_usage_notification_for_organisation(organisation: Organisation) -> None:
     now = timezone.now()
 
-    if organisation.subscription.is_free_plan:
+    if (
+        organisation.subscription.is_free_plan
+        or organisation.subscription.cancellation_date is not None
+    ):
         allowed_api_calls = organisation.subscription.max_api_calls
-        # Default to a rolling month for free accounts
+        # Default to a rolling month for free accounts or canceled subscriptions.
         days = 30
         period_starts_at = now - timedelta(days)
     elif not organisation.has_subscription_information_cache():
@@ -105,14 +116,24 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         subscription_cache = organisation.subscription_information_cache
         billing_starts_at = subscription_cache.current_billing_term_starts_at
 
+        if billing_starts_at is None:
+            # Since the calling code is a list of many organisations
+            # log the error and return without raising an exception.
+            logger.error(
+                f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
+            )
+            return
+
         # Truncate to the closest active month to get start of current period.
         month_delta = relativedelta(now, billing_starts_at).months
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
-        days = relativedelta(now, period_starts_at).days
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
 
-    api_usage = get_current_api_usage(organisation.id, f"-{days}d")
+    api_usage = get_current_api_usage(organisation.id, period_starts_at)
+
+    # For some reason the allowed API calls is set to 0 so default to the max free plan.
+    allowed_api_calls = allowed_api_calls or MAX_API_CALLS_IN_FREE_PLAN
 
     api_usage_percent = int(100 * api_usage / allowed_api_calls)
 
@@ -128,6 +149,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         return
 
     if OrganisationAPIUsageNotification.objects.filter(
+        organisation_id=organisation.id,
         notified_at__gt=period_starts_at,
         percent_usage__gte=matched_threshold,
     ).exists():

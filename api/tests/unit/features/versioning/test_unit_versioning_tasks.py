@@ -10,6 +10,7 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from rest_framework.exceptions import ValidationError
 
 from environments.identities.models import Identity
@@ -31,6 +32,7 @@ from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
 from features.workflows.core.models import ChangeRequest
+from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Segment
 from users.models import FFAdminUser
@@ -232,6 +234,36 @@ def test_enable_v2_versioning_for_scheduled_changes(
         version=None,
     )
 
+    # and a published, scheduled feature state associated with a different project
+    # Note: this additional test clause is to verify an issue found in testing
+    # where enabling feature versioning 'stole' scheduled feature states from other
+    # projects.
+    another_organisation = Organisation.objects.create(name="another organisation")
+    staff_user.add_organisation(another_organisation)
+    another_project = Project.objects.create(
+        name="another project", organisation=another_organisation
+    )
+    another_environment = Environment.objects.create(
+        name="another environment", project=another_project
+    )
+    another_feature = Feature.objects.create(
+        name="another_feature", project=another_project
+    )
+    published_scheduled_cr_another_environment = ChangeRequest.objects.create(
+        environment=another_environment,
+        title="Published, scheduled change in another environment",
+        user=staff_user,
+    )
+    another_environment_fs = FeatureState.objects.create(
+        feature=another_feature,
+        enabled=True,
+        environment=another_environment,
+        live_from=two_hours_from_now,
+        change_request=published_scheduled_cr_another_environment,
+        version=None,
+    )
+    published_scheduled_cr_another_environment.commit(staff_user)
+
     # When
     enable_v2_versioning(environment.id)
 
@@ -258,6 +290,13 @@ def test_enable_v2_versioning_for_scheduled_changes(
             environment_flags_queryset_two_hours_later.first()
             == scheduled_feature_state
         )
+
+    another_environment_fs.refresh_from_db()
+    assert another_environment_fs.environment_feature_version is None
+    assert (
+        another_environment_fs.change_request
+        == published_scheduled_cr_another_environment
+    )
 
 
 def test_publish_version_change_set_sends_email_to_change_request_owner_if_conflicts_when_scheduled(
@@ -399,6 +438,14 @@ def test_publish_version_change_set_raises_error_when_segment_override_does_not_
         f"An unresolvable conflict occurred: segment override does not exist for segment '{segment.name}'."
     )
 
+    # and we should still only have a single version for the feature
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment_v2_versioning, feature=feature
+        ).count()
+        == 1
+    )
+
 
 def test_publish_version_change_set_raises_error_when_serializer_not_valid(
     change_request: ChangeRequest,
@@ -463,4 +510,54 @@ def test_publish_version_change_set_uses_current_time_for_version_live_from(
         .get(feature=feature)
         .live_from
         == now
+    )
+
+
+def test_scheduled_versioning_change_set_with_ignore_conflicts_sends_email_if_validation_fails(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    admin_user: FFAdminUser,
+    freezer: FrozenDateTimeFactory,
+    mailoutbox: list[EmailMessage],
+) -> None:
+    # Given
+    now = timezone.now()
+    five_minutes_from_now = now + timezone.timedelta(minutes=5)
+
+    change_request = ChangeRequest.objects.create(
+        title="Test CR",
+        environment=environment_v2_versioning,
+        user=admin_user,
+        ignore_conflicts=True,
+    )
+    change_set = VersionChangeSet.objects.create(
+        change_request=change_request,
+        feature=feature,
+        feature_states_to_update=json.dumps(
+            [{"foo": "bar"}]
+        ),  # bad data to force serializer validation failure
+        live_from=five_minutes_from_now,
+    )
+    change_request.commit(admin_user)
+
+    # When
+    freezer.move_to(five_minutes_from_now)
+    with pytest.raises(FeatureVersioningError):
+        publish_version_change_set(
+            version_change_set_id=change_set.id,
+            user_id=admin_user.id,
+            is_scheduled=True,
+        )
+
+    # Then
+    assert len(mailoutbox) == 1
+    assert mailoutbox[0].subject == change_request.email_subject
+    assert mailoutbox[0].to == [admin_user.email]
+    assert mailoutbox[0].body == render_to_string(
+        "versioning/scheduled_change_failed_conflict_email.txt",
+        context={
+            "user": admin_user,
+            "feature": feature,
+            "change_request": change_request,
+        },
     )

@@ -22,8 +22,30 @@ import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import Format from './format'
+import { defaultFlags } from 'common/stores/default-flags'
+import Color from 'color'
 
 const semver = require('semver')
+
+export type PaidFeature =
+  | 'FLAG_OWNERS'
+  | 'RBAC'
+  | 'AUDIT'
+  | 'FORCE_2FA'
+  | '4_EYES'
+  | 'STALE_FLAGS'
+  | 'VERSIONING_DAYS'
+  | 'AUDIT_DAYS'
+  | 'AUTO_SEATS'
+  | 'METADATA'
+  | 'REALTIME'
+  | 'SAML'
+  | 'SCHEDULE_FLAGS'
+  | 'CREATE_ADDITIONAL_PROJECT'
+  | '2FA'
+
+// Define a type for plan categories
+type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
 
 export const planNames = {
   enterprise: 'Enterprise',
@@ -89,11 +111,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
+  colour(
+    c: string,
+    fallback = Constants.defaultTagColor,
+  ): InstanceType<typeof Color> {
+    let res: Color
+    try {
+      res = Color(c)
+    } catch (_) {
+      res = Color(fallback)
+    }
+    return res
+  },
+
   copyFeatureName: (featureName: string) => {
     navigator.clipboard.writeText(featureName)
     toast('Copied to clipboard')
   },
-
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -145,6 +179,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (findAppended) return findAppended
 
     return conditions.find((v) => v.value === operator)
+  },
+  /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
+   *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
+   */
+  flagsmithFeatureExists(flag: string) {
+    return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
@@ -242,6 +282,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'identities'
   },
+
+  getIntegrationData() {
+    return Utils.getFlagsmithJSONValue(
+      'integration_data',
+      defaultFlags.integration_data,
+    )
+  },
+
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -268,6 +316,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+  getNextPlan: (skipFree?: boolean) => {
+    const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
+      return planNames.enterprise
+    }
+    switch (currentPlan) {
+      case planNames.free: {
+        return skipFree ? planNames.startup : planNames.scaleUp
+      }
+      case planNames.startup: {
+        return planNames.startup
+      }
+      default: {
+        return planNames.enterprise
+      }
+    }
+  },
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -275,6 +340,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+
   getPermissionList(
     isAdmin: boolean,
     permissions: string[] | undefined | null,
@@ -305,8 +371,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         .map((item) => `${Format.enumeration.get(item)}`),
     }
   },
-
   getPlanName: (plan: string) => {
+    if (plan && plan.includes('free')) {
+      return planNames.free
+    }
     if (plan && plan.includes('scale-up')) {
       return planNames.scaleUp
     }
@@ -324,73 +392,27 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
-  getPlanPermission: (plan: string, permission: string) => {
-    let valid = true
+  getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
-
     if (!plan || planName === planNames.free) {
       return false
     }
     const isScaleupOrGreater = planName !== planNames.startup
     const isEnterprise = planName === planNames.enterprise
-    const isSaas = Utils.isSaas()
-    switch (permission) {
-      case 'FLAG_OWNERS': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'CREATE_ADDITIONAL_PROJECT': {
-        valid = true // startup or greater
-        break
-      }
-      case '2FA': {
-        valid = true // startup or greater
-        break
-      }
-      case 'RBAC': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUDIT': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'AUTO_SEATS': {
-        valid = isScaleupOrGreater && !isEnterprise
-        break
-      }
-      case 'FORCE_2FA': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'SCHEDULE_FLAGS': {
-        valid = true // startup or greater
-        break
-      }
-      case '4_EYES': {
-        valid = isScaleupOrGreater
-        break
-      }
-      case 'REALTIME': {
-        valid = isEnterprise && isSaas
-        break
-      }
-      case 'STALE_FLAGS': {
-        valid = isEnterprise
-        break
-      }
-      case 'SAML': {
-        valid = isEnterprise
-        break
-      }
-      default:
-        valid = true
-        break
+    if (feature === 'AUTO_SEATS') {
+      return isScaleupOrGreater && !isEnterprise
     }
-    return valid
+
+    const requiredPlan = Utils.getRequiredPlan(feature)
+    if (requiredPlan === 'enterprise') {
+      return isEnterprise
+    } else if (requiredPlan === 'scale-up') {
+      return isScaleupOrGreater
+    }
+    return true
   },
-  getPlansPermission: (permission: string) => {
-    const isOrgPermission = permission !== '2FA'
+  getPlansPermission: (feature: PaidFeature) => {
+    const isOrgPermission = feature !== '2FA'
     const plans = isOrgPermission
       ? AccountStore.getActiveOrgPlan()
         ? [AccountStore.getActiveOrgPlan()]
@@ -401,14 +423,49 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return false
     }
     const found = _.find(
-      plans.map((plan: string) => Utils.getPlanPermission(plan, permission)),
+      plans.map((plan: string) => Utils.getPlanPermission(plan, feature)),
       (perm) => !!perm,
     )
     return !!found
   },
-
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
+  },
+
+  getRequiredPlan: (feature: PaidFeature) => {
+    let plan
+    switch (feature) {
+      case 'FLAG_OWNERS':
+      case 'RBAC':
+      case 'AUDIT':
+      case 'FORCE_2FA':
+      case '4_EYES': {
+        plan = 'scale-up'
+        break
+      }
+      case 'STALE_FLAGS':
+      case 'REALTIME':
+      case 'METADATA':
+      case 'SAML': {
+        plan = 'enterprise'
+        break
+      }
+
+      case 'SCHEDULE_FLAGS':
+      case 'CREATE_ADDITIONAL_PROJECT':
+      case '2FA': {
+        plan = 'start-up' // startup or greater
+        break
+      }
+      default: {
+        plan = null
+        break
+      }
+    }
+    if (plan && !Utils.isSaas()) {
+      plan = 'enterprise'
+    }
+    return plan as Plan
   },
 
   getSDKEndpoint(_project: ProjectType) {
@@ -419,6 +476,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return Project.api
   },
+
+  getSegmentOperators() {
+    return Utils.getFlagsmithJSONValue(
+      'segment_operators',
+      defaultFlags.segment_operators,
+    )
+  },
+
   getShouldHideIdentityOverridesTab(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (!Utils.getIsEdge()) {
@@ -481,7 +546,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     const typedValue = testWithTrim ? str.trim() : str
-    const isNum = /^\d+$/.test(typedValue)
+    const isNum = /^-?\d+$/.test(typedValue)
 
     if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
@@ -536,16 +601,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
   isValidURL(value: any) {
-    const pattern = new RegExp(
-      '^(https?:\\/\\/)?' + // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$',
-      'i',
-    )
-    return !!pattern.test(value)
+    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
+    return regex.test(value)
   },
   loadScriptPromise(url: string) {
     return new Promise((resolve) => {
@@ -625,9 +682,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
 
-    const operators = Utils.getFlagsmithValue('segment_operators')
-      ? JSON.parse(Utils.getFlagsmithValue('segment_operators'))
-      : []
+    const operators = Utils.getSegmentOperators()
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
 
     if (operatorObj?.type === 'number') {

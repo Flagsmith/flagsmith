@@ -1,3 +1,4 @@
+import Constants from 'common/constants'
 module.exports = (
   envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, TRAIT_NAME },
@@ -33,7 +34,11 @@ export default function App({ Component, pageProps, flagsmithState } {
     &lt;FlagsmithProvider
       serverState={flagsmithState}
       options={{
-        environmentID: '${envId}',
+        environmentID: "${envId}",${
+  Constants.isCustomFlagsmithUrl
+    ? `\n        api: "${Project.flagsmithClientAPI}",`
+    : ''
+}
       }}
       flagsmith={flagsmith}&gt;
         &lt;Component {...pageProps} />
@@ -44,7 +49,11 @@ export default function App({ Component, pageProps, flagsmithState } {
 MyApp.getInitialProps = async () => {
   // calls page's \`getInitialProps\` and fills \`appProps.pageProps\`
   await flagsmith.init({ // fetches flags on the server
-      environmentID,
+      environmentID: "${envId}",${
+  Constants.isCustomFlagsmithUrl
+    ? `\n      api: "${Project.flagsmithClientAPI}",`
+    : ''
+}
       preventFetch: true
   });
   await flagsmith.identify('${USER_ID}', {${TRAIT_NAME}: 21}); // Will hydrate the app with the user's flags

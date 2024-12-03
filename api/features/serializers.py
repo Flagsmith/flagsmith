@@ -9,18 +9,21 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from common.metadata.serializers import (
+    MetadataSerializer,
+    SerializerWithMetadata,
+)
 from drf_writable_nested import WritableNestedModelSerializer
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
-from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
+from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -30,9 +33,12 @@ from users.serializers import (
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-from webhooks.webhooks import WebhookEventType
 
 from .constants import INTERSECTION, UNION
+from .feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -478,7 +484,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
 
                 call_github_task(
                     organisation_id=feature_state.feature.project.organisation_id,
-                    type=WebhookEventType.FLAG_UPDATED.value,
+                    type=GitHubEventType.FLAG_UPDATED.value,
                     feature=feature_state.feature,
                     segment_name=None,
                     url=None,
@@ -590,6 +596,10 @@ class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
         fields = ("id", "feature", "environment")
 
 
+class AssociatedFeaturesQuerySerializer(serializers.Serializer):
+    environment = serializers.IntegerField(required=False)
+
+
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"
@@ -599,6 +609,8 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
 class CustomCreateSegmentOverrideFeatureStateSerializer(
     CreateSegmentOverrideFeatureStateSerializer
 ):
+    validate_override_limit = True
+
     feature_segment = CustomCreateSegmentOverrideFeatureSegmentSerializer(
         required=False, allow_null=True
     )
@@ -615,18 +627,8 @@ class CustomCreateSegmentOverrideFeatureStateSerializer(
 
     def create(self, validated_data: dict) -> FeatureState:
         environment = validated_data["environment"]
-        self.validate_environment_segment_override_limit(environment)
-        return super().create(validated_data)
-
-    def validate_environment_segment_override_limit(
-        self, environment: Environment
-    ) -> None:
-        if (
-            environment.feature_segments.count()
-            >= environment.project.max_segment_overrides_allowed
-        ):
+        if self.validate_override_limit and exceeds_segment_override_limit(environment):
             raise serializers.ValidationError(
-                {
-                    "environment": "The environment has reached the maximum allowed segments overrides limit."
-                }
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
             )
+        return super().create(validated_data)

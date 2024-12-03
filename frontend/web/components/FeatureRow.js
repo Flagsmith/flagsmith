@@ -141,6 +141,21 @@ class TheComponent extends Component {
     const changeRequestsEnabled = Utils.changeRequestsEnabled(
       environment && environment.minimum_change_request_approvals,
     )
+    const onChange = () => {
+      if (disableControls) {
+        return
+      }
+      if (
+        projectFlag?.multivariate_options?.length ||
+        Utils.changeRequestsEnabled(
+          environment.minimum_change_request_approvals,
+        )
+      ) {
+        this.editFeature(projectFlag, environmentFlags[id])
+        return
+      }
+      this.confirmToggle()
+    }
     const isCompact = getViewMode() === 'compact'
     if (this.props.condensed) {
       return (
@@ -171,14 +186,7 @@ class TheComponent extends Component {
                     : '-off'
                 }`}
                 checked={environmentFlags[id] && environmentFlags[id].enabled}
-                onChange={() => {
-                  if (disableControls) return
-                  if (changeRequestsEnabled) {
-                    this.editFeature(projectFlag, environmentFlags[id])
-                    return
-                  }
-                  this.confirmToggle()
-                }}
+                onChange={onChange}
               />
             </Row>
           </div>
@@ -232,11 +240,7 @@ class TheComponent extends Component {
       <Row
         className={classNames(
           `list-item ${readOnly ? '' : 'clickable'} ${
-            isCompact
-              ? 'py-0 list-item-xs fs-small'
-              : this.props.widget
-              ? 'py-1'
-              : 'py-2'
+            isCompact ? 'py-0 list-item-xs fs-small' : 'py-1'
           }`,
           this.props.className,
         )}
@@ -261,13 +265,7 @@ class TheComponent extends Component {
                   <span>
                     {created_date ? (
                       <Tooltip place='right' title={<span>{name}</span>}>
-                        {isCompact && description
-                          ? `${description}<br/>Created ${moment(
-                              created_date,
-                            ).format('Do MMM YYYY HH:mma')}`
-                          : `Created ${moment(created_date).format(
-                              'Do MMM YYYY HH:mma',
-                            )}`}
+                        {isCompact && description ? `${description}` : null}
                       </Tooltip>
                     ) : (
                       name
@@ -319,13 +317,13 @@ class TheComponent extends Component {
                 </TagValues>
                 {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
               </Row>
+              {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
               {description && !isCompact && (
                 <div
-                  className='list-item-subtitle mt-1'
+                  className='list-item-subtitle'
                   style={{ lineHeight: '20px', width: width[4] }}
                 >
                   {description}
-                  <StaleFlagWarning projectFlag={projectFlag} />
                 </div>
               )}
             </Flex>
@@ -357,17 +355,7 @@ class TheComponent extends Component {
                 : '-off'
             }`}
             checked={environmentFlags[id] && environmentFlags[id].enabled}
-            onChange={() => {
-              if (
-                Utils.changeRequestsEnabled(
-                  environment.minimum_change_request_approvals,
-                )
-              ) {
-                this.editFeature(projectFlag, environmentFlags[id])
-                return
-              }
-              this.confirmToggle()
-            }}
+            onChange={onChange}
           />
         </div>
 
@@ -392,9 +380,7 @@ class TheComponent extends Component {
             hideHistory={!environment?.use_v2_feature_versioning}
             onShowHistory={() => {
               if (disableControls) return
-              this.context.router.history.push(
-                `/project/${projectId}/environment/${environmentId}/history?feature=${projectFlag.id}`,
-              )
+              this.editFeature(projectFlag, environmentFlags[id], 'history')
             }}
             onShowAudit={() => {
               if (disableControls) return

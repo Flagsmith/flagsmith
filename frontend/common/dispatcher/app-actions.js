@@ -29,14 +29,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       pin,
     })
   },
-  createEnv(name, projectId, cloneId, description, metadata) {
+  createEnv(data) {
     Dispatcher.handleViewAction({
       actionType: Actions.CREATE_ENV,
-      cloneId,
-      description,
-      metadata,
-      name,
-      projectId,
+      ...data,
     })
   },
   createFlag(projectId, environmentId, flag, segmentOverrides) {
@@ -147,7 +143,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     segmentOverrides,
     changeRequest,
     commit,
-    mode,
   ) {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST,
@@ -156,7 +151,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       environmentFlag,
       environmentId,
       flag,
-      mode,
       projectFlag,
       projectId,
       segmentOverrides,

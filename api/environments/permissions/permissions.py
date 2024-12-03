@@ -1,13 +1,13 @@
 import typing
 
+from common.environments.permissions import VIEW_ENVIRONMENT
+from common.projects.permissions import CREATE_ENVIRONMENT
 from django.db.models import Model, Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
 from environments.models import Environment
-from environments.permissions.constants import VIEW_ENVIRONMENT
 from projects.models import Project
-from projects.permissions import CREATE_ENVIRONMENT
 
 
 class EnvironmentKeyPermissions(BasePermission):
@@ -45,6 +45,8 @@ class EnvironmentPermissions(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         if view.action == "clone":
             return request.user.has_project_permission(CREATE_ENVIRONMENT, obj.project)
+        elif view.action in ("get_document", "retrieve", "trait_keys"):
+            return request.user.has_environment_permission(VIEW_ENVIRONMENT, obj)
 
         return request.user.is_environment_admin(obj) or view.action in [
             "user_permissions"

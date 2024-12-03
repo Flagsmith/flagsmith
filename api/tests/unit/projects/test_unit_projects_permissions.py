@@ -1,17 +1,15 @@
+import os
 from unittest import mock
 
 import pytest
+from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from rest_framework.exceptions import APIException, PermissionDenied
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project, UserPermissionGroupProjectPermission
-from projects.permissions import (
-    VIEW_PROJECT,
-    IsProjectAdmin,
-    ProjectPermissions,
-)
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from tests.types import (
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -48,6 +46,31 @@ def test_create_project_has_permission(
     mock_request = mock.MagicMock(
         user=staff_user, data={"name": "Test", "organisation": organisation.id}
     )
+    mock_view = mock.MagicMock(action="create", detail=False)
+    project_permissions = ProjectPermissions()
+
+    # When
+    response = project_permissions.has_permission(mock_request, mock_view)
+
+    # Then
+    assert response is True
+
+
+def test_create_project_has_permission_with_e2e_test_auth_token(
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])
+    mock_request = mock.MagicMock(
+        user=staff_user, data={"name": "Test", "organisation": organisation.id}
+    )
+    token = "test-token"
+    settings.ENABLE_FE_E2E = True
+    os.environ["E2E_TEST_AUTH_TOKEN"] = token
+
+    mock_request.META = {"E2E_TEST_AUTH_TOKEN": token}
     mock_view = mock.MagicMock(action="create", detail=False)
     project_permissions = ProjectPermissions()
 

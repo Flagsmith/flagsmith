@@ -41,12 +41,6 @@ AsyncStorage to be provided (e.g. @react-native-community/async-storage) in orde
 npm i react-native-flagsmith --save
 ```
 
-### Via JavaScript CDN
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/flagsmith/index.js"></script>
-```
-
 ## Basic Usage
 
 The SDK is initialised against a single environment within a project on [https://flagsmith.com](https://flagsmith.com),
@@ -247,7 +241,7 @@ All function and property types can be seen
 | `realtime?:boolean`                                                                         |                                                                                   Whether to listen for [Real Time Flag events](/advanced-use/real-time-flags)                                                                                    |          |                                                 false |
 | `AsyncStorage?:any`                                                                         | Needed in certain frameworks cacheFlags and enableAnalytics options, used to tell the library what implementation of AsyncStorage your app uses, e.g. @react-native-community/async-storage, for web this defaults to an internal implementation. |          | built in implementation for web, otherwise undefined. |
 | `cacheFlags?: boolean`                                                                      |                       Any time flags are retrieved they will be cached, flags and identities will then be retrieved from local storage before hitting the API (see cache options). Requires AsyncStorage to be accessible.                        |          |                                                  null |
-| `cacheOptions?: \{ttl?:number, skipAPI?:boolean\}`                                          |                                                           A ttl in ms (default to 0 which is infinite) and option to skip hitting the API in flagsmith.init if there's cache available.                                                           |          |                              \{ttl:0, skipAPI:false\} |
+| `cacheOptions?: \{ttl?:number, skipAPI?:boolean, loadStale?:boolean\}`                      |              A ttl in ms (default to 0 which means infinite) and option to skip hitting the API in flagsmith.init if there's cache available. Setting `loadStale: true` will still use cached values regardless of skipping the API.              |          |            \{ttl:0, skipAPI:false, loadStale: false\} |
 | `enableAnalytics?: boolean`                                                                 |                                                                     [Enable sending flag analytics](/advanced-use/flag-analytics.md) for getValue and hasFeature evaluations.                                                                     |          |                                                 false |
 | `enableLogs?: boolean`                                                                      |                                                                                                     Enables logging for key Flagsmith events                                                                                                      |          |                                                  null |
 | `defaultFlags?: {flag_name: {enabled: boolean, value: string,number,boolean}}`              |                                                                         Allows you define default features, these will all be overridden on first retrieval of features.                                                                          |          |                                                  null |
@@ -562,8 +556,8 @@ the browser, an onChange event will be fired immediately with the local storage 
 
 5. whenever flags have been retrieved local storage will be updated.
 
-By default, these flags will be persisted indefinitely, you can clear this by removing `"BULLET_TRAIN_DB"` from
-`localStorage`.
+By default, these flags will be persisted indefinitely, you can clear this by removing `"FLAGSMITH_DB_$ENVIRONMENT_ID"`
+from `localStorage`.
 
 **Why am I seeing `ReferenceError: XMLHttpRequest is not defined`?**
 

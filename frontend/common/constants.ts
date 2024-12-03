@@ -1,6 +1,8 @@
 import { OAuthType } from './types/requests'
 import { SegmentCondition } from './types/responses'
+import Utils from './utils/utils'
 
+import Project from './project'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -12,7 +14,6 @@ const keywords = {
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
-  URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
   USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
   USER_FEATURE_NAME: 'my_even_cooler_feature',
   USER_ID: 'user_123456',
@@ -113,7 +114,7 @@ export default {
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
       'React': require('./code-help/init/init-react')(envId, keywords),
-      'React Native': require('./code-help/init/init-js')(
+      'React Native': require('./code-help/init/init-react')(
         envId,
         keywordsReactNative,
       ),
@@ -228,7 +229,6 @@ export default {
       ),
       'iOS': require('./code-help/traits/traits-ios')(envId, keywords, userId),
     }),
-
     keys: {
       'Java': 'java',
       'JavaScript': 'javascript',
@@ -349,6 +349,12 @@ export default {
       }
     },
     'VIEW_FEATURE': { 'category': 'Features', 'event': 'Feature viewed' },
+    VIEW_LOCKED_FEATURE: (feature: string) => {
+      return {
+        'category': 'Locked Feature',
+        'event': `View Locked Feature ${feature}`,
+      }
+    },
     'VIEW_SEGMENT': { 'category': 'Segment', 'event': 'Segment viewed' },
     'VIEW_USER_FEATURE': {
       'category': 'User Features',
@@ -435,10 +441,20 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+  getUpgradeUrl: (feature?: string) => {
+    return Utils.isSaas()
+      ? '/organisation-settings?tab=billing'
+      : `https://www.flagsmith.com/pricing${
+          feature ? `?utm_source=${feature}` : ''
+        }`
+  },
   githubType: {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  defaultTagColor: '#3d4db6',
+  isCustomFlagsmithUrl:
+    Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -548,5 +564,4 @@ export default {
     '#DE3163',
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
-  upgradeURL: '/organisation-settings?tab=billing',
 }

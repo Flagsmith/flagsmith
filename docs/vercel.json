@@ -34,7 +34,7 @@
         },
         {
             "source": "/deployment-overview/",
-            "destination": "/deployment/overview"
+            "destination": "/deployment"
         },
         {
             "source": "/hosted-service/",
@@ -310,7 +310,11 @@
         },
         {
             "source": "/system-administration/metadata",
-            "destination": "/system-administration/custom-fields"
+            "destination": "/advanced-use/custom-fields"
+        },
+        {
+            "source": "/system-administration/custom-fields",
+            "destination": "/advanced-use/custom-fields"
         },
         {
             "source": "/clients/overview",
@@ -323,6 +327,10 @@
         {
             "source": "/basic-features/integrations",
             "destination": "/integrations"
+        },
+        {
+            "source": "/deployment/overview",
+            "destination": "/deployment"
         }
     ]
 }

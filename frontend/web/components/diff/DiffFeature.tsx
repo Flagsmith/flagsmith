@@ -45,6 +45,8 @@ const DiffFeature: FC<FeatureDiffType> = ({
   projectId,
   tabTheme,
 }) => {
+  const {data:projectFlag} = useGetProjectFlagQuery({project:projectId, id: featureId})
+
   const oldEnv = oldState?.find((v) => !v.feature_segment)
   const newEnv = newState?.find((v) => !v.feature_segment)
   const { data: feature } = useGetProjectFlagQuery({
@@ -65,7 +67,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const segmentDiffs = disableSegments
     ? { diffs: [], totalChanges: 0 }
     : getSegmentDiff(oldState, newState, segments?.results, conflicts)
-  const variationDiffs = getVariationDiff(oldEnv, newEnv, feature)
+  const variationDiffs = getVariationDiff(oldEnv, newEnv)
   const totalSegmentChanges = segmentDiffs?.totalChanges
   const totalVariationChanges = variationDiffs?.totalChanges
   useEffect(() => {
@@ -76,7 +78,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
   const hideValue =
     !totalChanges && (diff.newValue === null || diff.newValue === undefined)
   return (
-    <div className='p-2'>
+    <div>
       {!feature ? (
         <div className='text-center'>
           <Loader />
@@ -94,6 +96,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             value={value}
           >
             <TabItem
+              className={'p-0'}
               tabLabel={
                 <div className='d-flex justify-content-center gap-1 align-items-center'>
                   Value
@@ -104,11 +107,6 @@ const DiffFeature: FC<FeatureDiffType> = ({
                 </div>
               }
             >
-              {!totalChanges && (
-                <div className='mt-4'>
-                  <InfoMessage>No Changes Found</InfoMessage>
-                </div>
-              )}
               {!!valueConflict && (
                 <div className='mt-4'>
                   <WarningMessage
@@ -169,6 +167,7 @@ const DiffFeature: FC<FeatureDiffType> = ({
             </TabItem>
             {!!variationDiffs?.diffs?.length && (
               <TabItem
+                className={'p-0'}
                 tabLabel={
                   <div>
                     Variations{' '}
@@ -180,11 +179,12 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   </div>
                 }
               >
-                <DiffVariations diffs={variationDiffs.diffs} />
+                <DiffVariations projectFlag={projectFlag} diffs={variationDiffs.diffs} />
               </TabItem>
             )}
             {!!segmentDiffs?.diffs.length && (
               <TabItem
+                className={'p-0'}
                 tabLabel={
                   <div className='d-flex justify-content-center gap-1 align-items-center'>
                     Segment Overrides

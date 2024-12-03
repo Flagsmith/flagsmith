@@ -10,10 +10,16 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
+import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
-
+import freeEmailDomains from 'free-email-domains'
+import InfoMessage from 'components/InfoMessage'
+const freeEmail = (value) => {
+  const domain = value?.split('@')?.[1]
+  return freeEmailDomains.includes(domain)
+}
 const HomePage = class extends React.Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -32,8 +38,16 @@ const HomePage = class extends React.Component {
     // can handle always setting the marketing consent.
     API.setCookie('marketing_consent_given', 'true')
     this.state = {
+      email: '',
+      first_name: '',
+      last_name: '',
+      password: '',
       marketing_consent_given: true,
+      allRequirementsMet: false,
     }
+
+    this.handlePasswordChange = this.handlePasswordChange.bind(this)
+    this.handleRequirementsMet = this.handleRequirementsMet.bind(this)
   }
 
   addAlbacross() {
@@ -131,6 +145,14 @@ const HomePage = class extends React.Component {
     }
   }
 
+  handlePasswordChange(e) {
+    this.setState({ password: e.target.value })
+  }
+
+  handleRequirementsMet(allRequirementsMet) {
+    this.setState({ allRequirementsMet })
+  }
+
   showForgotPassword = (e) => {
     e.preventDefault()
     openModal(
@@ -204,7 +226,10 @@ const HomePage = class extends React.Component {
         )
       }
 
-      if (Utils.getFlagsmithHasFeature('saml')) {
+      if (
+        !Utils.flagsmithFeatureExists('saml') ||
+        Utils.getFlagsmithHasFeature('saml')
+      ) {
         oauths.push(
           <div className={oauthClasses}>
             <Button
@@ -588,6 +613,13 @@ const HomePage = class extends React.Component {
                                       name='email'
                                       id='email'
                                     />
+                                    {freeEmail(email) && (
+                                      <InfoMessage>
+                                        Signing up with a work email makes it
+                                        easier for co-workers to join your
+                                        Flagsmith organisation.
+                                      </InfoMessage>
+                                    )}
                                     <InputGroup
                                       title='Password'
                                       data-test='password'
@@ -607,11 +639,21 @@ const HomePage = class extends React.Component {
                                       name='password'
                                       id='password'
                                     />
+                                    <PasswordRequirements
+                                      password={this.state.password}
+                                      onRequirementsMet={
+                                        this.handleRequirementsMet
+                                      }
+                                    />
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
                                         name='signup-btn'
-                                        disabled={isLoading || isSaving}
+                                        disabled={
+                                          isLoading ||
+                                          isSaving ||
+                                          !this.state.allRequirementsMet
+                                        }
                                         className='px-4 mt-3 full-width'
                                         type='submit'
                                       >

@@ -13,7 +13,9 @@ import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
-import Constants from 'common/constants'
+import PlanBasedAccess, {
+  featureDescriptions,
+} from 'components/PlanBasedAccess'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -69,35 +71,19 @@ const ChangeRequestsPage = class extends Component {
 
     const environment = ProjectStore.getEnvironment(environmentId)
 
-    const has4EyesPermission = Utils.getPlansPermission('4_EYES')
     return (
       <div
         data-test='change-requests-page'
         id='change-requests-page'
         className='app-container container'
       >
-        <PageTitle title={'Change Requests'}>
-          View and manage proposed feature state changes.
-        </PageTitle>
-        <Flex>
-          {!has4EyesPermission ? (
-            <div className='mt-2'>
-              <InfoMessage>
-                View and manage your feature changes with a Change Request flow
-                with our <Link to={Constants.upgradeURL}>Scale-up plan</Link>.
-                Find out more{' '}
-                <Button
-                  theme='text'
-                  href='https://docs.flagsmith.com/advanced-use/change-requests'
-                  target='_blank'
-                  rel='noreferrer'
-                >
-                  here
-                </Button>
-                .
-              </InfoMessage>
-            </div>
-          ) : (
+        {!!Utils.getPlansPermission('4_EYES') && (
+          <PageTitle title={featureDescriptions['4_EYES'].title}>
+            {featureDescriptions['4_EYES'].description}
+          </PageTitle>
+        )}
+        <PlanBasedAccess feature={'4_EYES'} theme={'page'}>
+          <Flex>
             <div>
               <p>
                 {environment &&
@@ -301,8 +287,8 @@ const ChangeRequestsPage = class extends Component {
                 </TabItem>
               </Tabs>
             </div>
-          )}
-        </Flex>
+          </Flex>
+        </PlanBasedAccess>
       </div>
     )
   }

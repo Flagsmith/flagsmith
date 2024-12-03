@@ -15,6 +15,9 @@ urlpatterns = [
     re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^health", include("health_check.urls", namespace="health")),
+    # Aptible health checks must be on /healthcheck and cannot redirect
+    # see https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks
+    path("healthcheck", include("health_check.urls", namespace="aptible")),
     re_path(r"^version", views.version_info, name="version-info"),
     re_path(
         r"^sales-dashboard/",
@@ -49,7 +52,7 @@ if settings.DEBUG:
 if settings.SAML_INSTALLED:
     urlpatterns.append(path("api/v1/auth/saml/", include("saml.urls")))
 
-if settings.WORKFLOWS_LOGIC_INSTALLED:
+if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
     workflow_views = importlib.import_module("workflows_logic.views")
     urlpatterns.extend(
         [

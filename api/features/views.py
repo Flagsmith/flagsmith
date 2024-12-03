@@ -1,14 +1,17 @@
 import logging
 import typing
+from datetime import timedelta
 from functools import reduce
 
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from common.projects.permissions import VIEW_PROJECT
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Max, Q, QuerySet
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg import openapi
@@ -36,7 +39,6 @@ from environments.permissions.permissions import (
 )
 from features.value_types import BOOLEAN, INTEGER, STRING
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from users.models import FFAdminUser, UserPermissionGroup
 from webhooks.webhooks import WebhookEventType
 
@@ -170,11 +172,11 @@ class FeatureViewSet(viewsets.ModelViewSet):
                 identity__isnull=True,
                 feature_segment__isnull=True,
             )
-            feature_states = FeatureState.objects.get_live_feature_states(
-                self.environment,
+            feature_states = get_environment_flags_list(
+                environment=self.environment,
                 additional_filters=q,
-            ).select_related("feature_state_value", "feature")
-
+                additional_select_related_args=["feature_state_value", "feature"],
+            )
             self._feature_states = {fs.feature_id: fs for fs in feature_states}
 
         return queryset
@@ -352,8 +354,15 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
+        period = query_serializer.data["period"]
+        now = timezone.now()
+        if period.endswith("h"):
+            date_start = now - timedelta(hours=int(period[:-1]))
+        elif period.endswith("d"):
+            date_start = now - timedelta(days=int(period[:-1]))
+        else:
+            raise ValidationError("Malformed period supplied")
 
-        date_start = f"-{query_serializer.data['period']}"
         events_list = get_multiple_event_list_for_feature(
             feature_name=feature.name,
             date_start=date_start,

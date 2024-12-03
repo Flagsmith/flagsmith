@@ -4,12 +4,12 @@ This is a system generated notification related to your Flagsmith API Usage. You
 has reached {{ matched_threshold }}% of your API usage within the current subscription period.
 
 {% if organisation.is_paid %}
-We will charge for overages after our first grace period of 30 days. Please see the pricing page for more information.
+We will charge for overages at the end of the pay period. Please see the pricing page for more information or check the Terms of Service at https://www.flagsmith.com/terms-of-service.
 You can reach out to support@flagsmith.com if you’d like to take advantage of better contracted rates.
 {% else %}
-Please note that the serving of feature flags and admin access will be disabled after a 7 day grace period until the
-next subscription period. If you’d like to continue service you can upgrade your organisation’s account (see pricing
-page).
+Please note that the serving of feature flags and admin access will be disabled{% if grace_period %} after a 7 day
+grace period{% endif %} until the next subscription period. If you’d like to continue service you can upgrade your
+organisation’s account (see pricing page).
 {% endif %}
 
 Thank you!

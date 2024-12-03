@@ -4,12 +4,12 @@ from itertools import chain
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils import timezone
-from flag_engine.identities.traits.types import TraitValue
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
+from environments.sdk.types import SDKTraitData
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from segments.models import Segment
@@ -163,7 +163,9 @@ class Identity(models.Model):
         :return: List of matching segments
         """
         matching_segments = []
-        traits = self.identity_traits.all() if traits is None else traits
+        traits = (
+            self.identity_traits.all() if (traits is None and self.id) else traits or []
+        )
 
         if overrides_only:
             all_segments = self.environment.get_segments_from_cache()
@@ -196,7 +198,11 @@ class Identity(models.Model):
     def __str__(self):
         return "Account %s" % self.identifier
 
-    def generate_traits(self, trait_data_items, persist=False):
+    def generate_traits(
+        self,
+        trait_data_items: list[SDKTraitData],
+        persist: bool = False,
+    ) -> list[Trait]:
         """
         Given a list of trait data items, validated by TraitSerializerFull, generate
         a list of TraitModel objects for the given identity.
@@ -232,7 +238,7 @@ class Identity(models.Model):
 
     def update_traits(
         self,
-        trait_data_items: list[dict[str, TraitValue]],
+        trait_data_items: list[SDKTraitData],
     ) -> list[Trait]:
         """
         Given a list of traits, update any that already exist and create any new ones.

@@ -1,12 +1,17 @@
 import logging
 
+from common.environments.permissions import (
+    TAG_SUPPORTED_PERMISSIONS,
+    VIEW_ENVIRONMENT,
+)
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -141,6 +146,20 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 user=self.request.user, environment=environment, admin=True
             )
 
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):
+        qs = self.get_queryset()
+        environment = get_object_or_404(qs, uuid=uuid)
+        if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):
+            raise PermissionDenied()
+
+        serializer = self.get_serializer(environment)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["GET"], url_path="trait-keys")
     def trait_keys(self, request, *args, **kwargs):
         keys = [
@@ -189,12 +208,14 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(responses={200: PermissionModelSerializer})
+    @swagger_auto_schema(responses={200: PermissionModelSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):
         return Response(
             PermissionModelSerializer(
-                instance=EnvironmentPermissionModel.objects.all(), many=True
+                instance=EnvironmentPermissionModel.objects.all(),
+                many=True,
+                context={"tag_supported_permissions": TAG_SUPPORTED_PERMISSIONS},
             ).data
         )
 
@@ -225,7 +246,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})
     @action(detail=True, methods=["GET"], url_path="document")
     def get_document(self, request, api_key: str):
-        return Response(Environment.get_environment_document(api_key))
+        environment = (
+            self.get_object()
+        )  # use get_object to ensure permissions check is performed
+        return Response(Environment.get_environment_document(environment.api_key))
 
     @swagger_auto_schema(request_body=no_body, responses={202: ""})
     @action(detail=True, methods=["POST"], url_path="enable-v2-versioning")

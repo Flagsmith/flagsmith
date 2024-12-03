@@ -2,7 +2,7 @@
   "api_key": "masked",
   "feature_states": [
     {
-      "django_id": 517915,
+      "django_id": 585364,
       "enabled": false,
       "feature": {
         "id": 91559,
@@ -11,12 +11,12 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "632b424f-dea1-4080-ba0c-55a3772b1712",
+      "featurestate_uuid": "cc446405-e6c8-497c-a2a1-d5a6e6e0c56d",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 554945,
-      "enabled": false,
+      "django_id": 638869,
+      "enabled": true,
       "feature": {
         "id": 96656,
         "name": "api_limiting_stop_serving_flags",
@@ -24,11 +24,11 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "e24072b4-3450-4c8e-8b9f-03d704acb5ac",
+      "featurestate_uuid": "768e6102-7a0c-49f6-9d9f-097e376ed76c",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 543718,
+      "django_id": 638871,
       "enabled": true,
       "feature": {
         "id": 96657,
@@ -37,12 +37,12 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "a0979efc-2ca2-4861-bd79-833064caf4b2",
+      "featurestate_uuid": "346cc272-dabe-4993-9cfa-76afd0d848f1",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 549923,
-      "enabled": false,
+      "django_id": 588488,
+      "enabled": true,
       "feature": {
         "id": 98035,
         "name": "api_usage_overage_charges",
@@ -50,7 +50,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "1866cc74-5fcc-4e8e-8f3c-18524f2b3122",
+      "featurestate_uuid": "3adb2623-f4b4-4407-bdf4-033dc60dc785",
       "multivariate_feature_state_values": []
     }
   ],

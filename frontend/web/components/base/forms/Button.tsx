@@ -2,6 +2,8 @@ import cn from 'classnames'
 import { ButtonHTMLAttributes, FC, HTMLAttributeAnchorTarget } from 'react'
 import Icon, { IconName } from 'components/Icon'
 import Constants from 'common/constants'
+import Utils, { PaidFeature } from 'common/utils/utils'
+import PlanBasedBanner from 'components/PlanBasedAccess'
 
 export const themeClassNames = {
   danger: 'btn btn-danger',
@@ -27,19 +29,23 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   iconLeftColour?: keyof typeof Constants.colours
   iconLeft?: IconName
   href?: string
+  feature?: PaidFeature
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
+  iconSize?: number
 }
 
 export const Button: FC<ButtonType> = ({
   children,
   className,
+  feature,
   href,
   iconLeft,
   iconLeftColour,
   iconRight,
   iconRightColour,
+  iconSize = 24,
   onMouseUp,
   size = 'default',
   target,
@@ -47,21 +53,37 @@ export const Button: FC<ButtonType> = ({
   type = 'button',
   ...rest
 }) => {
-  return href ? (
+  const hasPlan = feature ? Utils.getPlansPermission(feature) : true
+  return href || !hasPlan ? (
     <a
+      onClick={!hasPlan ? undefined : (rest.onClick as React.MouseEventHandler)}
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
-      target={target}
-      href={href}
+      target={!hasPlan ? '_blank' : target}
+      href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
-      {!!iconLeft && (
+      {!!iconLeft && !!hasPlan && (
         <Icon
           fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
           className='me-2'
           name={iconLeft}
+          width={iconSize}
         />
       )}
-      {children}
+      <div className='d-flex align-items-center gap-2'>
+        {children}
+        {!hasPlan && <PlanBasedBanner feature={feature} theme={'badge'} />}
+      </div>
+      {!!iconRight && (
+        <Icon
+          fill={
+            iconRightColour ? Constants.colours[iconRightColour] : undefined
+          }
+          className='ml-2'
+          name={iconRight}
+          width={iconSize}
+        />
+      )}
     </a>
   ) : (
     <button
@@ -80,10 +102,10 @@ export const Button: FC<ButtonType> = ({
           fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
           className='mr-2'
           name={iconLeft}
+          width={iconSize}
         />
       )}
       {children}
-
       {!!iconRight && (
         <Icon
           fill={
@@ -91,6 +113,7 @@ export const Button: FC<ButtonType> = ({
           }
           className='ml-2'
           name={iconRight}
+          width={iconSize}
         />
       )}
     </button>

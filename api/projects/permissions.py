@@ -1,5 +1,6 @@
 import typing
 
+from common.projects.permissions import VIEW_PROJECT
 from django.db.models import Model
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import BasePermission, IsAuthenticated
@@ -7,28 +8,6 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from organisations.models import Organisation
 from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project
-
-VIEW_AUDIT_LOG = "VIEW_AUDIT_LOG"
-
-# Maintain a list of permissions here
-VIEW_PROJECT = "VIEW_PROJECT"
-CREATE_ENVIRONMENT = "CREATE_ENVIRONMENT"
-DELETE_FEATURE = "DELETE_FEATURE"
-CREATE_FEATURE = "CREATE_FEATURE"
-EDIT_FEATURE = "EDIT_FEATURE"
-MANAGE_SEGMENTS = "MANAGE_SEGMENTS"
-
-TAG_SUPPORTED_PERMISSIONS = [DELETE_FEATURE]
-
-PROJECT_PERMISSIONS = [
-    (VIEW_PROJECT, "View permission for the given project."),
-    (CREATE_ENVIRONMENT, "Ability to create an environment in the given project."),
-    (DELETE_FEATURE, "Ability to delete features in the given project."),
-    (CREATE_FEATURE, "Ability to create features in the given project."),
-    (EDIT_FEATURE, "Ability to edit features in the given project."),
-    (MANAGE_SEGMENTS, "Ability to manage segments in the given project."),
-    (VIEW_AUDIT_LOG, "Allows the user to view the audit logs for this organisation."),
-]
 
 
 class ProjectPermissions(IsAuthenticated):
@@ -48,12 +27,14 @@ class ProjectPermissions(IsAuthenticated):
             subscription_metadata = (
                 organisation.subscription.get_subscription_metadata()
             )
+
             total_projects_created = Project.objects.filter(
                 organisation=organisation
             ).count()
             if (
                 subscription_metadata.projects
                 and total_projects_created >= subscription_metadata.projects
+                and not getattr(request, "is_e2e", False) is True
             ):
                 return False
             if organisation.restrict_project_create_to_admin:
@@ -148,6 +129,9 @@ class NestedProjectPermissions(IsAuthenticated):
             return request.user.has_project_permission(
                 self.action_permission_map[view.action], project
             )
+
+        if view.action == "create":
+            return request.user.is_project_admin(project)
 
         return view.detail
 
