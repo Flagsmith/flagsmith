@@ -99,6 +99,16 @@ skip = ['migrations', '.venv', '.direnv']
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 console_output_style = 'count'
 
+[tool.mypy]
+exclude = "^(tests/)$"
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "app.settings.local"
+
+[tool.drf-stubs]
+enabled = true
+
 [tool.poetry]
 name = "flagsmith-api"
 version = "2.68.0"
