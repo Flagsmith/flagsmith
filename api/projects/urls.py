@@ -1,3 +1,6 @@
+import importlib
+
+from django.conf import settings
 from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
@@ -67,6 +70,16 @@ projects_router.register(
     ProjectAuditLogViewSet,
     basename="project-audit",
 )
+
+if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
+    workflow_views = importlib.import_module("workflows_logic.views")
+    projects_router.register(
+        r"change-requests",
+        workflow_views.ProjectChangeRequestViewSet,
+        basename="project-change-requests",
+    )
+
+
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )

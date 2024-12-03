@@ -2,6 +2,11 @@ import json
 from unittest import mock
 
 import pytest
+from common.environments.permissions import (
+    TAG_SUPPORTED_PERMISSIONS,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import CREATE_ENVIRONMENT
 from core.constants import STRING
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -18,17 +23,12 @@ from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from environments.permissions.constants import (
-    TAG_SUPPORTED_PERMISSIONS,
-    VIEW_ENVIRONMENT,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation
 from projects.models import Project
-from projects.permissions import CREATE_ENVIRONMENT
 from segments.models import Condition, Segment, SegmentRule
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
@@ -74,6 +74,43 @@ def test_retrieve_environment(
         response_json["use_mv_v2_evaluation"]
         == environment.use_identity_composite_key_for_hashing
     )
+
+
+def test_get_by_uuid_returns_environment(
+    staff_client: APIClient,
+    environment: Environment,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+
+    url = reverse(
+        "api-v1:environments:environment-get-by-uuid",
+        args=[environment.uuid],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(environment.uuid)
+
+
+def test_get_by_uuid_returns_403_for_user_without_permission(
+    staff_client: APIClient, environment: Environment
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:environments:environment-get-by-uuid",
+        args=[environment.uuid],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_user_with_view_environment_permission_can_retrieve_environment(

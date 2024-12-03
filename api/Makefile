@@ -12,7 +12,7 @@ POETRY_VERSION ?= 1.8.3
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
 SAML_REVISION ?= v1.6.4
-RBAC_REVISION ?= v0.10.0
+RBAC_REVISION ?= v0.11.1
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)

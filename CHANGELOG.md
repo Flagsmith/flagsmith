@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.155.0](https://github.com/Flagsmith/flagsmith/compare/v2.154.0...v2.155.0) (2024-12-03)
+
+
+### Features
+
+* Create change requests for segments ([#4265](https://github.com/Flagsmith/flagsmith/issues/4265)) ([355f4e2](https://github.com/Flagsmith/flagsmith/commit/355f4e2827dc0a0cba169a320c7a0db8b522089e))
+* **environment/views:** Add get-by-uuid action  ([#4875](https://github.com/Flagsmith/flagsmith/issues/4875)) ([db8433b](https://github.com/Flagsmith/flagsmith/commit/db8433ba0a307b3e27f078aadf94d6ef4e717391))
+* **org/view:** Add api to get organisation by uuid ([#4878](https://github.com/Flagsmith/flagsmith/issues/4878)) ([06ed466](https://github.com/Flagsmith/flagsmith/commit/06ed466864d723ac43bad9ec8fa738a8e9d0812d))
+
+
+### Bug Fixes
+
+* Environment Ready Checker ([#4865](https://github.com/Flagsmith/flagsmith/issues/4865)) ([2392222](https://github.com/Flagsmith/flagsmith/commit/23922223d4367792b196d798cb2571dc8f589ee1))
+* prevent enabling versioning from affecting scheduled change requests ([#4872](https://github.com/Flagsmith/flagsmith/issues/4872)) ([c7aa30b](https://github.com/Flagsmith/flagsmith/commit/c7aa30bb217deca7ea6a0b0657d1a08076f2ab44))
+
+## [2.154.0](https://github.com/Flagsmith/flagsmith/compare/v2.153.0...v2.154.0) (2024-11-21)
+
+
+### Features
+
+* Add Hubspot cookie logging ([#4854](https://github.com/Flagsmith/flagsmith/issues/4854)) ([8fe4d41](https://github.com/Flagsmith/flagsmith/commit/8fe4d413ff3a7a5cb7ddcd2f04a5a26ed2651316))
+
+
+### Bug Fixes
+
+* Allow teardown to use FLAGSMITH_API_URL ([#4849](https://github.com/Flagsmith/flagsmith/issues/4849)) ([9ad8da6](https://github.com/Flagsmith/flagsmith/commit/9ad8da6a1b8a034d4436e8579ecadbac1327f9ce))
+* Custom Gunicorn logger not sending StatsD stats ([#4819](https://github.com/Flagsmith/flagsmith/issues/4819)) ([9bbfdf0](https://github.com/Flagsmith/flagsmith/commit/9bbfdf0d2bc4cb95fa0d029144c4bc61fb23f0bc))
+* flagsmith stale flags check ([#4831](https://github.com/Flagsmith/flagsmith/issues/4831)) ([ea6a169](https://github.com/Flagsmith/flagsmith/commit/ea6a169d9f84172850b2b01e5fd7d70b8852c9bf))
+* Google OAuth broken in unified docker image ([#4839](https://github.com/Flagsmith/flagsmith/issues/4839)) ([051cc6f](https://github.com/Flagsmith/flagsmith/commit/051cc6fe0db5a311998bece472982e19926a2bc5))
+* Handle environment admin not being able to check VIEW_PROJECT permissions ([#4827](https://github.com/Flagsmith/flagsmith/issues/4827)) ([23ab3c1](https://github.com/Flagsmith/flagsmith/commit/23ab3c1a8a26284e87503b389c597b58866ee27b))
+* Handle invalid colour codes on tags, allow default colours ([#4822](https://github.com/Flagsmith/flagsmith/issues/4822)) ([a33633f](https://github.com/Flagsmith/flagsmith/commit/a33633f61f9eaf8efd4322af48a862dbebcbe682))
+* prevent lock when adding FFAdmin.uuid column ([#4832](https://github.com/Flagsmith/flagsmith/issues/4832)) ([4a310b0](https://github.com/Flagsmith/flagsmith/commit/4a310b0c314de4499425fbb5584f94a1f77c640c))
+* **project/realtime:** only allow enterprise to enable realtime ([#4843](https://github.com/Flagsmith/flagsmith/issues/4843)) ([9b21af7](https://github.com/Flagsmith/flagsmith/commit/9b21af7652ae2cb5758361c2809a345cc79209d3))
+* **project/serializer:** limit edit to only fields that make sense ([#4846](https://github.com/Flagsmith/flagsmith/issues/4846)) ([86ba762](https://github.com/Flagsmith/flagsmith/commit/86ba762d0e93856209c4b975e7bdd1d207c8bfa8))
+* replace alter field with adding a new field ([#4817](https://github.com/Flagsmith/flagsmith/issues/4817)) ([0d1c64a](https://github.com/Flagsmith/flagsmith/commit/0d1c64a3db04cd7d56f39b5b3fa0fee4340504eb))
+* revert https://github.com/Flagsmith/flagsmith/pull/4817 ([#4850](https://github.com/Flagsmith/flagsmith/issues/4850)) ([793a110](https://github.com/Flagsmith/flagsmith/commit/793a110b031e89589e8e57734aa7fee8818c0812))
+
 ## [2.153.0](https://github.com/Flagsmith/flagsmith/compare/v2.152.0...v2.153.0) (2024-11-12)
 
 
