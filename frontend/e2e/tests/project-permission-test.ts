@@ -1,6 +1,6 @@
 import {
   byId,
-  click,
+  click, createEnvironment,
   createFeature,
   gotoSegments,
   log,
@@ -8,7 +8,7 @@ import {
   setText,
   toggleFeature,
   waitForElementVisible,
-} from '../helpers.cafe'
+} from '../helpers.cafe';
 import {
   PASSWORD,
   E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
@@ -24,15 +24,10 @@ export default async function () {
     .expect(Selector('#project-select-1').exists)
     .notOk('The element"#project-select-1" should not be present')
   log('User with permissions can create an environment')
-  await setText('[name="envName"]', 'Staging')
-  await click('#create-env-btn')
-  await waitForElementVisible(byId('switch-environment-staging-active'))
+  await createEnvironment('Staging')
   log('User with permissions can Handle the Features')
   await createFeature(0, 'test_feature', false)
   await toggleFeature(0, true)
-  await t.eval(() => {
-    window.scrollBy(0, 15000)
-  })
   log('User without permissions cannot Delete any feature')
   await click(byId('feature-action-0'))
   await waitForElementVisible(byId('remove-feature-btn-0'))

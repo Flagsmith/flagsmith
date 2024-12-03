@@ -219,6 +219,13 @@ export const saveFeatureSegments = async () => {
   await waitForElementNotExist('#create-feature-modal')
 }
 
+export const createEnvironment = async (name:string) => {
+  await click('#create-env-link')
+  await setText('[name="envName"]', name)
+  await click('#create-env-btn')
+  await waitForElementVisible(byId(`switch-environment-${name.toLowerCase()}-active`))
+}
+
 export const goToUser = async (index: number) => {
   await click('#features-link')
   await click('#users-link')

@@ -21,6 +21,7 @@ import Constants from 'common/constants'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
+import BuildVersion from 'components/BuildVersion'
 
 type HomeAsideType = {
   environmentId: string
@@ -257,7 +258,6 @@ const HomeAside: FC<HomeAsideType> = ({
                                         <NavLink
                                           id='env-settings-link'
                                           className='aside__environment-list-item'
-                                          data-test='env-settings-link'
                                           to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                         >
                                           <span className='mr-2'>
@@ -281,6 +281,7 @@ const HomeAside: FC<HomeAsideType> = ({
                   />
                 </div>
 
+                <BuildVersion />
               </div>
             )
           }}
