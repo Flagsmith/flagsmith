@@ -1,19 +1,20 @@
 import { FC } from 'react'
-import Tag from './tags/Tag'
 import Constants from 'common/constants'
 import moment from 'moment'
 import { Project, ProjectFlag } from 'common/types/responses'
 import { getProtectedTags } from 'common/utils/getProtectedTags'
 import { IonIcon } from '@ionic/react'
-import { close, warning } from 'ionicons/icons'
+import { warning } from 'ionicons/icons'
 import Tooltip from './Tooltip'
 import ProjectStore from 'common/stores/project-store'
+import Utils from 'common/utils/utils'
 
 type StaleFlagWarningType = {
   projectFlag: ProjectFlag
 }
 
 const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
+  if (!Utils.getFlagsmithHasFeature('feature_versioning')) return null
   const protectedTags = getProtectedTags(projectFlag, `${projectFlag.project}`)
   if (protectedTags?.length) {
     return null

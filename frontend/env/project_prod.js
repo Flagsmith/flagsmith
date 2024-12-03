@@ -20,6 +20,8 @@ module.exports = global.Project = {
   flagsmithClientAPI: 'https://api.flagsmith.com/api/v1/',
 
   flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
+
+  hubspot: '//js-eu1.hs-scripts.com/143451822.js',
   // This is used for Sentry tracking
   maintenance: false,
   plans: {

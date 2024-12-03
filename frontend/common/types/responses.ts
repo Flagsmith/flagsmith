@@ -76,6 +76,7 @@ export type Segment = {
 export type Environment = {
   id: number
   name: string
+  is_creating: boolean
   api_key: string
   description?: string
   banner_text?: string
@@ -181,6 +182,35 @@ export type Repository = {
   name: string
   full_name: string
   owner: { login: string }
+}
+
+export type IntegrationFieldOption = { label: string; value: string }
+export type IntegrationField = {
+  key: string
+  label: string
+  default?: string
+  hidden?: boolean
+  inputType?: 'text' | 'checkbox'
+  options?: IntegrationFieldOption[]
+}
+
+export type IntegrationData = {
+  description: string
+  docs?: string
+  external: boolean
+  image: string
+  fields: IntegrationField[] | undefined
+  isExternalInstallation: boolean
+  perEnvironment: boolean
+  title?: string
+  organisation?: string
+  project?: string
+  isOauth?: boolean
+}
+
+export type ActiveIntegration = {
+  id: string
+  flagsmithEnvironment?: string
 }
 
 export type GithubRepository = {
@@ -390,6 +420,10 @@ export type FeatureState = {
   toRemove?: boolean
 }
 
+export type TypedFeatureState = Omit<FeatureState, 'feature_state_value'> & {
+  feature_state_value: FeatureStateValue
+}
+
 export type ProjectFlag = {
   created_date: string
   default_enabled: boolean
@@ -454,6 +488,8 @@ export type InviteLink = {
 
 export type SubscriptionMeta = {
   max_seats: number | null
+  audit_log_visibility_days: number | null
+  feature_history_visibility_days: number | null
   max_api_calls: number | null
   max_projects: number | null
   payment_source: string | null
@@ -502,7 +538,7 @@ export type FeatureConflict = {
   published_at: string
   is_environment_default: boolean
 }
-export type FeatureStateWithConflict = FeatureState & {
+export type FeatureStateWithConflict = TypedFeatureState & {
   conflict?: FeatureConflict
 }
 export type ChangeRequest = {
@@ -667,7 +703,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string; max_api_calls: number }
+  subscriptionMetadata: SubscriptionMeta
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField

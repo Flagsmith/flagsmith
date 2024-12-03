@@ -16,7 +16,7 @@ from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -124,6 +124,17 @@ class OrganisationViewSet(viewsets.ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(
+        detail=False,
+        url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
+        methods=["get"],
+    )
+    def get_by_uuid(self, request, uuid):
+        qs = self.get_queryset()
+        organisation = get_object_or_404(qs, uuid=uuid)
+        serializer = self.get_serializer(organisation)
+        return Response(serializer.data)
+
     @action(detail=True, permission_classes=[IsAuthenticated])
     def projects(self, request, pk):
         organisation = self.get_object()
@@ -190,7 +201,10 @@ class OrganisationViewSet(viewsets.ModelViewSet):
     def get_subscription_metadata(self, request, pk):
         organisation = self.get_object()
         subscription_details = organisation.subscription.get_subscription_metadata()
-        serializer = self.get_serializer(instance=subscription_details)
+        serializer = self.get_serializer(
+            instance=subscription_details,
+            context={"subscription": organisation.subscription},
+        )
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="portal-url")

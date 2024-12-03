@@ -1,5 +1,7 @@
 import logging
 
+from common.projects.permissions import VIEW_PROJECT
+from common.segments.serializers import SegmentSerializer
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
@@ -10,13 +12,17 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
+from environments.models import Environment
 from features.models import FeatureState
-from features.serializers import SegmentAssociatedFeatureStateSerializer
-from projects.permissions import VIEW_PROJECT
+from features.serializers import (
+    AssociatedFeaturesQuerySerializer,
+    SegmentAssociatedFeatureStateSerializer,
+)
+from features.versioning.models import EnvironmentFeatureVersion
 
 from .models import Segment
 from .permissions import SegmentPermissions
-from .serializers import SegmentListQuerySerializer, SegmentSerializer
+from .serializers import SegmentListQuerySerializer
 
 logger = logging.getLogger()
 
@@ -39,7 +45,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
         )
         project = get_object_or_404(permitted_projects, pk=self.kwargs["project_pk"])
 
-        queryset = project.segments.all()
+        queryset = Segment.live_objects.filter(project=project)
 
         if self.action == "list":
             # TODO: at the moment, the UI only shows the name and description of the segment in the list view.
@@ -77,6 +83,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
+    @swagger_auto_schema(query_serializer=AssociatedFeaturesQuerySerializer())
     @action(
         detail=True,
         methods=["GET"],
@@ -85,7 +92,22 @@ class SegmentViewSet(viewsets.ModelViewSet):
     )
     def associated_features(self, request, *args, **kwargs):
         segment = self.get_object()
-        queryset = FeatureState.objects.filter(feature_segment__segment=segment)
+
+        query_serializer = AssociatedFeaturesQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+
+        filter_kwargs = {"feature_segment__segment": segment}
+        if environment_id := query_serializer.validated_data.get("environment"):
+            environment = Environment.objects.get(pk=environment_id)
+            filter_kwargs["environment"] = environment
+            if environment.use_v2_feature_versioning:
+                filter_kwargs["environment_feature_version__in"] = (
+                    EnvironmentFeatureVersion.objects.get_latest_versions_by_environment_id(
+                        environment_id
+                    )
+                )
+
+        queryset = FeatureState.objects.filter(**filter_kwargs)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -100,7 +122,7 @@ class SegmentViewSet(viewsets.ModelViewSet):
 @api_view(["GET"])
 def get_segment_by_uuid(request, uuid):
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
-    qs = Segment.objects.filter(project__in=accessible_projects)
+    qs = Segment.live_objects.filter(project__in=accessible_projects)
     segment = get_object_or_404(qs, uuid=uuid)
     serializer = SegmentSerializer(instance=segment)
     return Response(serializer.data)

@@ -9,6 +9,10 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from common.metadata.serializers import (
+    MetadataSerializer,
+    SerializerWithMetadata,
+)
 from drf_writable_nested import WritableNestedModelSerializer
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
@@ -20,7 +24,6 @@ from environments.sdk.serializers_mixins import (
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -591,6 +594,10 @@ class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureState
         fields = ("id", "feature", "environment")
+
+
+class AssociatedFeaturesQuerySerializer(serializers.Serializer):
+    environment = serializers.IntegerField(required=False)
 
 
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):

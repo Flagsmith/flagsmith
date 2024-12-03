@@ -5,6 +5,12 @@ from unittest.mock import MagicMock
 
 import boto3
 import pytest
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -18,6 +24,7 @@ from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
+from urllib3 import HTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
@@ -26,11 +33,6 @@ from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
@@ -58,14 +60,19 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
-from organisations.subscriptions.constants import CHARGEBEE, XERO
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    FREE_PLAN_ID,
+    SCALE_UP,
+    STARTUP,
+    XERO,
+)
 from permissions.models import PermissionModel
 from projects.models import (
     Project,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from tests.test_helpers import fix_issue_3869
@@ -163,7 +170,7 @@ def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
         url: str,
         *args,
         **kwargs,
-    ) -> HTTPConnectionPool.ResponseCls:
+    ) -> HTTPResponse:
         if self.host in allowed_hosts:
             return original_urlopen(self, method, url, *args, **kwargs)
 
@@ -318,6 +325,33 @@ def system_tag(project: Project) -> Tag:
 def enterprise_subscription(organisation: Organisation) -> Subscription:
     Subscription.objects.filter(organisation=organisation).update(
         plan="enterprise", subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def startup_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=STARTUP, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def scale_up_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=SCALE_UP, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def free_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=FREE_PLAN_ID, subscription_id="subscription-id"
     )
     organisation.refresh_from_db()
     return organisation.subscription
@@ -513,9 +547,16 @@ def feature(project: Project, environment: Environment) -> Feature:
 
 
 @pytest.fixture()
-def change_request(environment, admin_user):
+def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
     return ChangeRequest.objects.create(
         environment=environment, title="Test CR", user_id=admin_user.id
+    )
+
+
+@pytest.fixture()
+def project_change_request(project: Project, admin_user: FFAdminUser) -> ChangeRequest:
+    return ChangeRequest.objects.create(
+        project=project, title="Test Project CR", user_id=admin_user.id
     )
 
 
@@ -1023,7 +1064,7 @@ def flagsmith_identities_table(
                 "Projection": {"ProjectionType": "ALL"},
             },
             {
-                "IndexName": "environment_api_key-dashboard_alias-index",
+                "IndexName": "environment_api_key-dashboard_alias-index-v2",
                 "KeySchema": [
                     {"AttributeName": "environment_api_key", "KeyType": "HASH"},
                     {"AttributeName": "dashboard_alias", "KeyType": "RANGE"},

@@ -645,18 +645,32 @@ const App = class extends Component {
                                   Usage
                                 </NavSubLink>
                               )}
-
                             {AccountStore.isAdmin() && (
-                              <NavSubLink
-                                icon={<SettingsIcon />}
-                                id='org-settings-link'
+                              <>
+                                {Utils.getFlagsmithHasFeature(
+                                  'organisation_integrations',
+                                ) && (
+                                  <NavSubLink
+                                    icon={<Icon name='layers' />}
+                                    id='integrations-link'
+                                    to={`/organisation/${
+                                      AccountStore.getOrganisation().id
+                                    }/integrations`}
+                                  >
+                                    Organisation Integrations
+                                  </NavSubLink>
+                                )}
+                                <NavSubLink
+                                  icon={<SettingsIcon />}
+                                  id='org-settings-link'
                                 data-test='org-settings-link'
-                                to={`/organisation/${
-                                  AccountStore.getOrganisation().id
-                                }/settings`}
-                              >
-                                Organisation Settings
-                              </NavSubLink>
+                                  to={`/organisation/${
+                                    AccountStore.getOrganisation().id
+                                  }/settings`}
+                                >
+                                  Organisation Settings
+                                </NavSubLink>
+                              </>
                             )}
                           </>
                         )

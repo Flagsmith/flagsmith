@@ -2,6 +2,7 @@ import Constants from 'common/constants'
 import { projectService } from 'common/services/useProject'
 import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
+import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -143,11 +144,9 @@ const controller = {
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                data
-                  .get(
-                    `${Project.api}organisations/${id}/get-subscription-metadata/`,
-                  )
-                  .catch(() => null),
+                getSubscriptionMetadata(getStore(), { id }).then(
+                  (res) => res.data,
+                ),
               ]
             : [],
         ),
