@@ -203,6 +203,7 @@ const controller = {
           : `${Project.api}auth/oauth/${type}/`,
         {
           ...(_data || {}),
+          hubspotutk: API.getCookie('hubspotutk'),
           invite_hash: API.getInvite() || undefined,
           sign_up_type: API.getInviteType(),
         },
@@ -242,6 +243,7 @@ const controller = {
       .post(`${Project.api}auth/users/`, {
         email,
         first_name,
+        hubspotutk: API.getCookie('hubspotutk'),
         invite_hash: API.getInvite() || undefined,
         last_name,
         marketing_consent_given,
