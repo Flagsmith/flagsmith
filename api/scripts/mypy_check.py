@@ -12,7 +12,7 @@ def main():
 
     # Run mypy and capture output
     result = subprocess.run(
-        ["poetry", "run", "mypy", "--config-file", "mypy.ini", "."],
+        ["poetry", "run", "mypy", "--config-file", "pyproject.toml", "."],
         capture_output=True,
         text=True,
     )
