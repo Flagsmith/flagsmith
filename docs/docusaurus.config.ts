@@ -20,7 +20,8 @@ const config: Config = {
     markdown: {
         mermaid: true,
     },
-    themes: ['@docusaurus/theme-mermaid'],
+
+    themes: ['@docusaurus/theme-mermaid', 'docusaurus-theme-openapi-docs'],
 
     presets: [
         [
@@ -299,8 +300,6 @@ const config: Config = {
             },
         ],
     ],
-
-    themes: ['docusaurus-theme-openapi-docs'],
 
     scripts: [
         '/js/crisp-chat.js',
