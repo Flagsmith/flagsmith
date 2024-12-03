@@ -71,6 +71,42 @@ def test_should_return_organisation_list_when_requested(
     assert response.data["results"][0]["name"] == organisation.name
 
 
+def test_get_by_uuid_returns_organisation(
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:organisations:organisation-get-by-uuid",
+        args=[organisation.uuid],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["uuid"] == str(organisation.uuid)
+
+
+def test_get_by_uuid_returns_404_for_organisation_that_does_not_belong_to_the_user(
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    different_org = Organisation.objects.create(name="Different org")
+    url = reverse(
+        "api-v1:organisations:organisation-get-by-uuid",
+        args=[different_org.uuid],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_non_superuser_can_create_new_organisation_by_default(
     staff_client: APIClient,
     staff_user: FFAdminUser,
