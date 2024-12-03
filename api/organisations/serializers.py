@@ -36,6 +36,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
         model = Organisation
         fields = (
             "id",
+            "uuid",
             "name",
             "created_date",
             "webhook_notification_email",
