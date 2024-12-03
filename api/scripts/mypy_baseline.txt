@@ -1530,3 +1530,6 @@ api/urls/v1.py:4: error: Skipping analyzing "drf_yasg": module is installed, but
 api/urls/v1.py:5: error: Skipping analyzing "drf_yasg.views": module is installed, but missing library stubs or py.typed marker  [import-untyped]
 api/urls/v1.py:5: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
 api/urls/v1.py:78: error: Cannot find implementation or library stub for module named "split_testing.views"  [import-not-found]
+util/mappers/sdk.py:51: error: Argument "exclude" to "model_dump" of "BaseModel" has incompatible type "list[str]"; expected "set[int] | set[str] | dict[int, Any] | dict[str, Any] | None"  [arg-type]
+util/pydantic.py:17: note:     def [Model: BaseModel] create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: type[Model] | tuple[type[Model], ...], __module__: str = ..., __validators__: dict[str, classmethod[Any, Any, Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[Model]
+util/pydantic.py:17: note:     def create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: None = ..., __module__: str = ..., __validators__: dict[str, classmethod[Any, Any, Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[BaseModel]
