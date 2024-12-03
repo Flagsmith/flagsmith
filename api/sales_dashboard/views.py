@@ -33,6 +33,7 @@ from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
+    UserOrganisation,
 )
 from organisations.tasks import (
     update_organisation_subscription_information_cache,
@@ -53,6 +54,7 @@ DEFAULT_ORGANISATION_SORT = "subscription_information_cache__api_calls_30d"
 DEFAULT_ORGANISATION_SORT_DIRECTION = "DESC"
 
 email_regex = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+domain_regex = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")
 
 
 @method_decorator(
@@ -126,14 +128,28 @@ class OrganisationList(ListView):
         return data
 
     def _build_search_query(self, search_term: str) -> Q:
-        if email_regex.match(search_term.lower()):
-            # Assume that the search is for the email of a given user
-            user = FFAdminUser.objects.filter(email__iexact=search_term).first()
+        search_term = search_term.lower()
+        if email_regex.match(search_term) and (
+            user := FFAdminUser.objects.filter(email__iexact=search_term).first()
+        ):
             return Q(id__in=user.organisations.values_list("id", flat=True))
+        else:
+            query = Q()
 
-        return Q(name__icontains=search_term) | Q(
-            subscription__subscription_id=search_term
-        )
+            if domain_regex.match(search_term):
+                matching_users = FFAdminUser.objects.filter(
+                    email__iendswith=search_term
+                )
+                org_ids = UserOrganisation.objects.filter(
+                    user__in=matching_users
+                ).values_list("organisation_id", flat=True)
+                query = query & Q(id__in=org_ids)
+
+            return (
+                query
+                | Q(name__icontains=search_term)
+                | Q(subscription__subscription_id__iexact=search_term)
+            )
 
 
 @staff_member_required

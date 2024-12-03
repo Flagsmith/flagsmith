@@ -1,13 +1,13 @@
 import json
 
 import pytest
-from django.urls import reverse
-from rest_framework import status
-
-from environments.permissions.constants import (
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
+from django.urls import reverse
+from rest_framework import status
+
 from tests.unit.environments.helpers import get_environment_user_client
 
 

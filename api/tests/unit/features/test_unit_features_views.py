@@ -6,6 +6,12 @@ from unittest import mock
 import pytest
 import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
@@ -27,11 +33,6 @@ from audit.constants import (
 from audit.models import AuditLog, RelatedObjectType
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_SEGMENT_OVERRIDES,
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
@@ -41,7 +42,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
-from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
@@ -2193,8 +2193,7 @@ def test_cannot_create_feature_state_for_feature_from_different_project(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["feature"][0] == "Feature does not exist in project"
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_create_feature_state_environment_is_read_only(
@@ -2255,8 +2254,7 @@ def test_cannot_create_feature_state_of_feature_from_different_project(
     )
 
     # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["feature"][0] == "Feature does not exist in project"
+    assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_create_feature_state_environment_field_is_read_only(

@@ -47,6 +47,7 @@ const SegmentOverrideInner = class Override extends React.Component {
       confirmRemove,
       controlValue,
       disabled,
+      hideViewSegment,
       index,
       multivariateOptions,
       name,
@@ -142,7 +143,7 @@ const SegmentOverrideInner = class Override extends React.Component {
               <Row className='fs-small'>
                 <SegmentsIcon
                   className='opacity-50'
-                  fill='#1a2634'
+                  fill='#9DA4AE'
                   width={16}
                   height={16}
                 />
@@ -185,6 +186,7 @@ const SegmentOverrideInner = class Override extends React.Component {
                       Constants.projectPermissions('Manage Segments'),
                       <>
                         <SegmentOverrideActions
+                          hideViewSegment={hideViewSegment}
                           onCopyValue={() => {
                             this.setState({ changed: true })
                             setValue(
@@ -346,6 +348,7 @@ const SegmentOverrideListInner = ({
   controlValue,
   disabled,
   environmentId,
+  hideViewSegment,
   id,
   items,
   multivariateOptions,
@@ -370,6 +373,7 @@ const SegmentOverrideListInner = ({
             id={id}
             name={name}
             segment={value.segment}
+            hideViewSegment={hideViewSegment}
             onSortEnd={onSortEnd}
             disabled={disabled}
             showEditSegment={showEditSegment}
@@ -705,6 +709,7 @@ class TheComponent extends Component {
                       setSegmentEditId={this.setSegmentEditId}
                       onSortEnd={this.onSortEnd}
                       projectFlag={this.props.projectFlag}
+                      hideViewSegment={this.props.hideViewSegment}
                     />
                     <div className='text-left mt-4'>
                       <JSONReference

@@ -23,6 +23,7 @@ import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import Format from './format'
 import { defaultFlags } from 'common/stores/default-flags'
+import Color from 'color'
 
 const semver = require('semver')
 
@@ -33,7 +34,8 @@ export type PaidFeature =
   | 'FORCE_2FA'
   | '4_EYES'
   | 'STALE_FLAGS'
-  | 'VERSIONING'
+  | 'VERSIONING_DAYS'
+  | 'AUDIT_DAYS'
   | 'AUTO_SEATS'
   | 'METADATA'
   | 'REALTIME'
@@ -109,11 +111,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
+  colour(
+    c: string,
+    fallback = Constants.defaultTagColor,
+  ): InstanceType<typeof Color> {
+    let res: Color
+    try {
+      res = Color(c)
+    } catch (_) {
+      res = Color(fallback)
+    }
+    return res
+  },
+
   copyFeatureName: (featureName: string) => {
     navigator.clipboard.writeText(featureName)
     toast('Copied to clipboard')
   },
-
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -304,6 +318,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getNextPlan: (skipFree?: boolean) => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
+      return planNames.enterprise
+    }
     switch (currentPlan) {
       case planNames.free: {
         return skipFree ? planNames.startup : planNames.scaleUp

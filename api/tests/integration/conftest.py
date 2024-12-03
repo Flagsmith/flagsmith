@@ -56,11 +56,13 @@ def organisation_with_persist_trait_data_disabled(organisation):
 
 
 @pytest.fixture()
-def dynamo_enabled_project(admin_client, organisation):
+def dynamo_enabled_project(
+    admin_client: APIClient, organisation: Organisation, settings: SettingsWrapper
+):
+    settings.EDGE_ENABLED = True
     project_data = {
         "name": "Test Project",
         "organisation": organisation,
-        "enable_dynamo_db": True,
     }
     url = reverse("api-v1:projects:project-list")
     response = admin_client.post(url, data=project_data)

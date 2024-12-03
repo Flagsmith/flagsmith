@@ -1,5 +1,6 @@
 import logging
 
+from common.environments.permissions import TAG_SUPPORTED_PERMISSIONS
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
@@ -189,12 +190,14 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @swagger_auto_schema(responses={200: PermissionModelSerializer})
+    @swagger_auto_schema(responses={200: PermissionModelSerializer(many=True)})
     @action(detail=False, methods=["GET"])
     def permissions(self, *args, **kwargs):
         return Response(
             PermissionModelSerializer(
-                instance=EnvironmentPermissionModel.objects.all(), many=True
+                instance=EnvironmentPermissionModel.objects.all(),
+                many=True,
+                context={"tag_supported_permissions": TAG_SUPPORTED_PERMISSIONS},
             ).data
         )
 

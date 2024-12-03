@@ -14,7 +14,6 @@ const keywords = {
   NPM_NODE_CLIENT: 'flagsmith-nodejs',
   SEGMENT_NAME: 'superUsers',
   TRAIT_NAME: 'age',
-  URL_CLIENT: 'https://cdn.jsdelivr.net/npm/flagsmith/index.js',
   USER_FEATURE_FUNCTION: 'myEvenCoolerFeature',
   USER_FEATURE_NAME: 'my_even_cooler_feature',
   USER_ID: 'user_123456',
@@ -453,6 +452,7 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  defaultTagColor: '#3d4db6',
   isCustomFlagsmithUrl:
     Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {

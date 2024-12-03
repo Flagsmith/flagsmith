@@ -1,13 +1,12 @@
 import pytest
-from django.conf import settings
-
-from environments.permissions.constants import (
+from common.environments.permissions import (
     APPROVE_CHANGE_REQUEST,
     CREATE_CHANGE_REQUEST,
     MANAGE_IDENTITIES,
     UPDATE_FEATURE_STATE,
     VIEW_IDENTITIES,
 )
+from django.conf import settings
 
 if settings.SKIP_MIGRATION_TESTS is True:
     pytest.skip(
