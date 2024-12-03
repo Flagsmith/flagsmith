@@ -31,7 +31,6 @@ export default async function () {
   log('User without permissions cannot Delete any feature')
   await click(byId('feature-action-0'))
   await waitForElementVisible(byId('remove-feature-btn-0'))
-  await click(byId('remove-feature-btn-0'))
   await Selector(byId('remove-feature-btn-0')).hasClass(
     'feature-action__item_disabled',
   )

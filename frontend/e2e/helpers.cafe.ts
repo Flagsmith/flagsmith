@@ -220,7 +220,6 @@ export const saveFeatureSegments = async () => {
 }
 
 export const createEnvironment = async (name:string) => {
-  await click('#create-env-link')
   await setText('[name="envName"]', name)
   await click('#create-env-btn')
   await waitForElementVisible(byId(`switch-environment-${name.toLowerCase()}-active`))

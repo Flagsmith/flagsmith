@@ -13,6 +13,7 @@ export default async function () {
   await login(E2E_USER, PASSWORD)
   await click('#project-select-0')
   log('Create environment')
+  await click('#create-env-link')
   await createEnvironment('Staging')
   log('Edit Environment')
   await click('#env-settings-link')

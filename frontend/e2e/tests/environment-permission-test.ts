@@ -21,10 +21,7 @@ export default async function () {
   log('User with permissions can Handle the Features')
   await createFeature(0, 'test_feature', false)
   await toggleFeature(0, true)
-  await t.eval(() => {
-    window.scrollBy(0, 15000)
-  })
-  log('User withou permissions cannot create traits')
+  log('User without permissions cannot create traits')
   await gotoTraits()
   const createTraitBtn = Selector(byId('add-trait'))
   await t.expect(createTraitBtn.hasAttribute('disabled')).ok()
