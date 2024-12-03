@@ -1,5 +1,4 @@
 import { OAuthType } from './types/requests'
-import { URL } from 'url';
 import { SegmentCondition } from './types/responses'
 import Utils from './utils/utils'
 
@@ -449,8 +448,8 @@ const Constants = {
       ? `${document.location.origin}${Project.api}`
       : Project.api
 
-    const parsedUrl = new URL(apiUrl);
-    const allowedHosts = ['api.flagsmith.com'];
+    const parsedUrl = new URL(apiUrl)
+    const allowedHosts = ['api.flagsmith.com']
     return Utils.isSaas() || allowedHosts.includes(parsedUrl.host)
       ? Project.flagsmithClientEdgeAPI
       : apiUrl
