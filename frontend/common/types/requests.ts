@@ -14,6 +14,8 @@ import {
   UserGroup,
   AttributeName,
   Identity,
+  Role,
+  RolePermission,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -158,7 +160,7 @@ export type Req = {
   updateRole: {
     organisation_id: number
     role_id: number
-    body: { description: string | null; name: string }
+    body: Role
   }
   deleteRole: { organisation_id: number; role_id: number }
   getRolePermissionEnvironment: {
@@ -179,7 +181,7 @@ export type Req = {
     level: PermissionLevel
     body: {
       admin?: boolean
-      permissions: string[]
+      permissions: RolePermission['permissions']
       project: number
       environment: number
     }

@@ -1,10 +1,4 @@
-import React, {
-  FC,
-  forwardRef,
-  Ref,
-  useImperativeHandle,
-  useState,
-} from 'react'
+import React, { FC, forwardRef, Ref, useState } from 'react'
 import Icon from './Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {
@@ -152,6 +146,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                   role={role}
                   className='mt-2 px-3'
                   isGroup={!!group}
+                  parentId={mainItem.parentId}
                   group={group}
                   user={user}
                 />
@@ -160,7 +155,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
           </div>
         )}
         items={mainItemsFiltered || []}
-        className='no-pad'
+        className='no-pad overflow-visible'
       />
     )
   },

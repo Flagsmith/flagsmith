@@ -113,7 +113,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
                 setSearchProject(Utils.safeParseEventValue(e))
               }
               size='small'
-              placeholder='Search'
+              placeholder='Search Projects'
               search
             />
           </Row>
@@ -122,7 +122,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
             group={group}
             orgId={orgId}
             filter={searchProject}
-            mainItems={projectData}
+            mainItems={projectData.map((v) => ({ ...v, projectId: v.id }))}
             role={role}
             level={'project'}
             ref={tabRef}
@@ -142,7 +142,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
                 setSearchEnv(Utils.safeParseEventValue(e))
               }
               size='small'
-              placeholder='Search'
+              placeholder='Search Environments'
               search
             />
           </Row>
@@ -153,23 +153,26 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               value={project}
             />
           </div>
-          {environments.length > 0 && (
-            <RolePermissionsList
-              user={user}
-              orgId={orgId}
-              group={group}
-              filter={searchEnv}
-              mainItems={(environments || [])?.map((v) => {
-                return {
-                  id: role ? v.id : v.api_key,
-                  name: v.name,
-                }
-              })}
-              role={role}
-              level={'environment'}
-              ref={tabRef}
-            />
-          )}
+          <div className='mt-2'>
+            {environments.length > 0 && (
+              <RolePermissionsList
+                user={user}
+                orgId={orgId}
+                group={group}
+                filter={searchEnv}
+                mainItems={(environments || [])?.map((v) => {
+                  return {
+                    id: role ? v.id : v.api_key,
+                    name: v.name,
+                    parentId: v.project,
+                  }
+                })}
+                role={role}
+                level={'environment'}
+                ref={tabRef}
+              />
+            )}
+          </div>
         </TabItem>
       </Tabs>
     </PlanBasedAccess>

@@ -328,242 +328,227 @@ const FeaturesPage = class extends Component {
                           </Tooltip>{' '}
                           for your selected environment.
                         </PageTitle>
-                        <Permission
-                          level='environment'
-                          permission={Utils.getManageFeaturePermission(
-                            Utils.changeRequestsEnabled(
-                              environment &&
-                                environment.minimum_change_request_approvals,
-                            ),
-                          )}
-                          id={this.props.match.params.environmentId}
+                        <FormGroup
+                          className={classNames('mb-4', {
+                            'opacity-50': isSaving,
+                          })}
                         >
-                          {({ permission }) => (
-                            <FormGroup
-                              className={classNames('mb-4', {
-                                'opacity-50': isSaving,
-                              })}
-                            >
-                              <PanelSearch
-                                className='no-pad overflow-visible'
-                                id='features-list'
-                                renderSearchWithNoResults
-                                itemHeight={65}
-                                isLoading={FeatureListStore.isLoading}
-                                paging={FeatureListStore.paging}
-                                header={
-                                  <Row className='table-header'>
-                                    <div className='table-column flex-row flex-fill'>
-                                      <TableSearchFilter
-                                        onChange={(e) => {
+                          <PanelSearch
+                            className='no-pad overflow-visible'
+                            id='features-list'
+                            renderSearchWithNoResults
+                            itemHeight={65}
+                            isLoading={FeatureListStore.isLoading}
+                            paging={FeatureListStore.paging}
+                            header={
+                              <Row className='table-header'>
+                                <div className='table-column flex-row flex-fill'>
+                                  <TableSearchFilter
+                                    onChange={(e) => {
+                                      this.setState(
+                                        {
+                                          search: Utils.safeParseEventValue(e),
+                                        },
+                                        this.filter,
+                                      )
+                                    }}
+                                    value={this.state.search}
+                                  />
+                                  <Row className='flex-fill justify-content-end'>
+                                    <TableTagFilter
+                                      useLocalStorage
+                                      isLoading={FeatureListStore.isLoading}
+                                      projectId={projectId}
+                                      className='me-4'
+                                      title='Tags'
+                                      tagStrategy={this.state.tag_strategy}
+                                      onChangeStrategy={(
+                                        tag_strategy,
+                                        isAutomated,
+                                      ) => {
+                                        this.setState(
+                                          {
+                                            tag_strategy,
+                                          },
+                                          this.filter,
+                                        )
+                                      }}
+                                      value={this.state.tags}
+                                      onToggleArchived={(value) => {
+                                        if (value !== this.state.showArchived) {
+                                          FeatureListStore.isLoading = true
                                           this.setState(
                                             {
-                                              search:
-                                                Utils.safeParseEventValue(e),
+                                              showArchived:
+                                                !this.state.showArchived,
                                             },
                                             this.filter,
                                           )
-                                        }}
-                                        value={this.state.search}
-                                      />
-                                      <Row className='flex-fill justify-content-end'>
-                                        <TableTagFilter
-                                          useLocalStorage
-                                          isLoading={FeatureListStore.isLoading}
-                                          projectId={projectId}
-                                          className='me-4'
-                                          title='Tags'
-                                          tagStrategy={this.state.tag_strategy}
-                                          onChangeStrategy={(
-                                            tag_strategy,
-                                            isAutomated,
-                                          ) => {
+                                        }
+                                      }}
+                                      showArchived={this.state.showArchived}
+                                      onClearAll={() => {
+                                        FeatureListStore.isLoading = true
+                                        this.setState(
+                                          { showArchived: false, tags: [] },
+                                          this.filter,
+                                        )
+                                      }}
+                                      onChange={(tags, isAutomated) => {
+                                        FeatureListStore.isLoading = true
+                                        if (
+                                          tags.includes('') &&
+                                          tags.length > 1
+                                        ) {
+                                          if (!this.state.tags.includes('')) {
+                                            this.setState(
+                                              { tags: [''] },
+                                              this.filter,
+                                            )
+                                          } else {
                                             this.setState(
                                               {
-                                                tag_strategy,
+                                                tags: tags.filter((v) => !!v),
                                               },
                                               this.filter,
                                             )
-                                          }}
-                                          value={this.state.tags}
-                                          onToggleArchived={(value) => {
-                                            if (
-                                              value !== this.state.showArchived
-                                            ) {
-                                              FeatureListStore.isLoading = true
-                                              this.setState(
-                                                {
-                                                  showArchived:
-                                                    !this.state.showArchived,
-                                                },
-                                                this.filter,
-                                              )
-                                            }
-                                          }}
-                                          showArchived={this.state.showArchived}
-                                          onClearAll={() => {
-                                            FeatureListStore.isLoading = true
-                                            this.setState(
-                                              { showArchived: false, tags: [] },
-                                              this.filter,
-                                            )
-                                          }}
-                                          onChange={(tags, isAutomated) => {
-                                            FeatureListStore.isLoading = true
-                                            if (
-                                              tags.includes('') &&
-                                              tags.length > 1
-                                            ) {
-                                              if (
-                                                !this.state.tags.includes('')
-                                              ) {
-                                                this.setState(
-                                                  { tags: [''] },
-                                                  this.filter,
-                                                )
-                                              } else {
-                                                this.setState(
-                                                  {
-                                                    tags: tags.filter(
-                                                      (v) => !!v,
-                                                    ),
-                                                  },
-                                                  this.filter,
-                                                )
-                                              }
-                                            } else {
-                                              this.setState(
-                                                { tags },
-                                                this.filter,
-                                              )
-                                            }
-                                          }}
-                                        />
-                                        <TableValueFilter
-                                          title={'State'}
-                                          className={'me-4'}
-                                          projectId={projectId}
-                                          useLocalStorage
-                                          value={{
-                                            enabled: this.state.is_enabled,
-                                            valueSearch:
-                                              this.state.value_search,
-                                          }}
-                                          onChange={({
-                                            enabled,
-                                            valueSearch,
-                                          }) => {
-                                            this.setState(
-                                              {
-                                                is_enabled: enabled,
-                                                value_search: valueSearch,
-                                              },
-                                              this.filter,
-                                            )
-                                          }}
-                                        />
-                                        <TableOwnerFilter
-                                          title={'Owners'}
-                                          className={'me-4'}
-                                          useLocalStorage
-                                          value={this.state.owners}
-                                          onChange={(owners) => {
-                                            FeatureListStore.isLoading = true
-                                            this.setState(
-                                              {
-                                                owners: owners,
-                                              },
-                                              this.filter,
-                                            )
-                                          }}
-                                        />
-                                        <TableGroupsFilter
-                                          title={'Groups'}
-                                          className={'me-4'}
-                                          projectId={projectId}
-                                          orgId={
-                                            AccountStore.getOrganisation()?.id
                                           }
-                                          useLocalStorage
-                                          value={this.state.group_owners}
-                                          onChange={(group_owners) => {
-                                            FeatureListStore.isLoading = true
-                                            this.setState(
-                                              {
-                                                group_owners: group_owners,
-                                              },
-                                              this.filter,
-                                            )
-                                          }}
-                                        />
-                                        <TableFilterOptions
-                                          title={'View'}
-                                          className={'me-4'}
-                                          value={getViewMode()}
-                                          onChange={setViewMode}
-                                          options={[
-                                            {
-                                              label: 'Default',
-                                              value: 'default',
-                                            },
-                                            {
-                                              label: 'Compact',
-                                              value: 'compact',
-                                            },
-                                          ]}
-                                        />
-                                        <TableSortFilter
-                                          isLoading={FeatureListStore.isLoading}
-                                          value={this.state.sort}
-                                          options={[
-                                            {
-                                              default: true,
-                                              label: 'Name',
-                                              order: 'asc',
-                                              value: 'name',
-                                            },
-                                            {
-                                              label: 'Created Date',
-                                              order: 'asc',
-                                              value: 'created_date',
-                                            },
-                                          ]}
-                                          onChange={(sort) => {
-                                            FeatureListStore.isLoading = true
-                                            this.setState({ sort }, this.filter)
-                                          }}
-                                        />
-                                      </Row>
-                                    </div>
+                                        } else {
+                                          this.setState({ tags }, this.filter)
+                                        }
+                                      }}
+                                    />
+                                    <TableValueFilter
+                                      title={'State'}
+                                      className={'me-4'}
+                                      projectId={projectId}
+                                      useLocalStorage
+                                      value={{
+                                        enabled: this.state.is_enabled,
+                                        valueSearch: this.state.value_search,
+                                      }}
+                                      onChange={({ enabled, valueSearch }) => {
+                                        this.setState(
+                                          {
+                                            is_enabled: enabled,
+                                            value_search: valueSearch,
+                                          },
+                                          this.filter,
+                                        )
+                                      }}
+                                    />
+                                    <TableOwnerFilter
+                                      title={'Owners'}
+                                      className={'me-4'}
+                                      useLocalStorage
+                                      value={this.state.owners}
+                                      onChange={(owners) => {
+                                        FeatureListStore.isLoading = true
+                                        this.setState(
+                                          {
+                                            owners: owners,
+                                          },
+                                          this.filter,
+                                        )
+                                      }}
+                                    />
+                                    <TableGroupsFilter
+                                      title={'Groups'}
+                                      className={'me-4'}
+                                      projectId={projectId}
+                                      orgId={AccountStore.getOrganisation()?.id}
+                                      useLocalStorage
+                                      value={this.state.group_owners}
+                                      onChange={(group_owners) => {
+                                        FeatureListStore.isLoading = true
+                                        this.setState(
+                                          {
+                                            group_owners: group_owners,
+                                          },
+                                          this.filter,
+                                        )
+                                      }}
+                                    />
+                                    <TableFilterOptions
+                                      title={'View'}
+                                      className={'me-4'}
+                                      value={getViewMode()}
+                                      onChange={setViewMode}
+                                      options={[
+                                        {
+                                          label: 'Default',
+                                          value: 'default',
+                                        },
+                                        {
+                                          label: 'Compact',
+                                          value: 'compact',
+                                        },
+                                      ]}
+                                    />
+                                    <TableSortFilter
+                                      isLoading={FeatureListStore.isLoading}
+                                      value={this.state.sort}
+                                      options={[
+                                        {
+                                          default: true,
+                                          label: 'Name',
+                                          order: 'asc',
+                                          value: 'name',
+                                        },
+                                        {
+                                          label: 'Created Date',
+                                          order: 'asc',
+                                          value: 'created_date',
+                                        },
+                                      ]}
+                                      onChange={(sort) => {
+                                        FeatureListStore.isLoading = true
+                                        this.setState({ sort }, this.filter)
+                                      }}
+                                    />
                                   </Row>
-                                }
-                                nextPage={() =>
-                                  this.filter(FeatureListStore.paging.next)
-                                }
-                                prevPage={() =>
-                                  this.filter(FeatureListStore.paging.previous)
-                                }
-                                goToPage={(page) => this.filter(page)}
-                                items={projectFlags?.filter((v) => !v.ignore)}
-                                renderFooter={() => (
-                                  <>
-                                    <JSONReference
-                                      className='mx-2 mt-4'
-                                      showNamesButton
-                                      title={'Features'}
-                                      json={projectFlags}
-                                    />
-                                    <JSONReference
-                                      className='mx-2'
-                                      title={'Feature States'}
-                                      json={
-                                        environmentFlags &&
-                                        Object.values(environmentFlags)
-                                      }
-                                    />
-                                  </>
+                                </div>
+                              </Row>
+                            }
+                            nextPage={() =>
+                              this.filter(FeatureListStore.paging.next)
+                            }
+                            prevPage={() =>
+                              this.filter(FeatureListStore.paging.previous)
+                            }
+                            goToPage={(page) => this.filter(page)}
+                            items={projectFlags?.filter((v) => !v.ignore)}
+                            renderFooter={() => (
+                              <>
+                                <JSONReference
+                                  className='mx-2 mt-4'
+                                  showNamesButton
+                                  title={'Features'}
+                                  json={projectFlags}
+                                />
+                                <JSONReference
+                                  className='mx-2'
+                                  title={'Feature States'}
+                                  json={
+                                    environmentFlags &&
+                                    Object.values(environmentFlags)
+                                  }
+                                />
+                              </>
+                            )}
+                            renderRow={(projectFlag, i) => (
+                              <Permission
+                                level='environment'
+                                tags={projectFlag.tags}
+                                permission={Utils.getManageFeaturePermission(
+                                  Utils.changeRequestsEnabled(
+                                    environment &&
+                                      environment.minimum_change_request_approvals,
+                                  ),
                                 )}
-                                renderRow={(projectFlag, i) => (
+                                id={this.props.match.params.environmentId}
+                              >
+                                {({ permission }) => (
                                   <FeatureRow
                                     environmentFlags={environmentFlags}
                                     projectFlags={projectFlags}
@@ -577,10 +562,10 @@ const FeaturesPage = class extends Component {
                                     projectFlag={projectFlag}
                                   />
                                 )}
-                              />
-                            </FormGroup>
-                          )}
-                        </Permission>
+                              </Permission>
+                            )}
+                          />
+                        </FormGroup>
                         <FormGroup className='mt-5'>
                           <CodeHelp
                             title='1: Installing the SDK'
