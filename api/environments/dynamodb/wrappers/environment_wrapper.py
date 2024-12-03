@@ -1,5 +1,5 @@
 import typing
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -92,7 +92,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                         )
 
                 results = []
-                for future in as_completed(futures):
+                for future in futures:
                     result = future.result()
                     for item in result:
                         results.append(item)
