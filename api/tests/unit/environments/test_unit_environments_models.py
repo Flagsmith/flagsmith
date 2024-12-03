@@ -145,6 +145,9 @@ def test_environment_clone_clones_the_feature_states(
     # Then
     assert clone.feature_states.first().enabled is True
 
+    clone.refresh_from_db()
+    assert clone.is_creating is False
+
 
 def test_environment_clone_clones_multivariate_feature_state_values(
     environment: Environment,
@@ -993,4 +996,28 @@ def test_clone_environment_v2_versioning(
     assert (
         cloned_environment_flags.get(feature_segment__segment=segment).enabled
         is expected_segment_fs_enabled_value
+    )
+
+
+def test_environment_clone_async(
+    environment: Environment, mocker: MockerFixture
+) -> None:
+    # Given
+    mocked_clone_environment_fs_task = mocker.patch(
+        "environments.tasks.clone_environment_feature_states"
+    )
+
+    # When
+    cloned_environment = environment.clone(
+        name="Cloned environment", clone_feature_states_async=True
+    )
+
+    # Then
+    assert cloned_environment.id != environment.id
+    assert cloned_environment.is_creating is True
+    mocked_clone_environment_fs_task.delay.assert_called_once_with(
+        kwargs={
+            "source_environment_id": environment.id,
+            "clone_environment_id": cloned_environment.id,
+        }
     )

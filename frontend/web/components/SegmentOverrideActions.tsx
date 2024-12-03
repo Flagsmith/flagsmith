@@ -13,12 +13,13 @@ interface SegmentOverrideActionProps {
   canRemove: boolean
   onRemove: () => void
   onEdit: () => void
+  hideViewSegment?: void
   onCopyValue: () => void
   canEdit: boolean
   canCopyValue: boolean
 }
 
-type ActionType = 'edit' | 'remove'
+type ActionType = 'edit' | 'remove' | 'copy'
 
 function calculateListPosition(
   btnEl: HTMLElement,
@@ -33,6 +34,7 @@ export const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
   canCopyValue,
   canEdit,
   canRemove,
+  hideViewSegment,
   onCopyValue,
   onEdit,
   onRemove,
@@ -80,7 +82,7 @@ export const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
     )
   }
 
-  if (!!canEdit && !canRemove) {
+  if (!!canEdit && !canRemove && !hideViewSegment) {
     return (
       <Button onClick={() => handleActionClick('edit')} size='small'>
         View Segment
@@ -111,7 +113,7 @@ export const SegmentOverrideAction: FC<SegmentOverrideActionProps> = ({
           ref={listRef}
           className='feature-action__list'
         >
-          {!!canEdit && (
+          {!!canEdit && !hideViewSegment && (
             <div
               className='feature-action__item'
               onClick={(e) => {

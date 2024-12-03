@@ -65,9 +65,7 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.[MYDOMAIN]
-     paths:
-      - /
+   - flagsmith.[MYDOMAIN]
 ```
 
 Then, once any out-of-cluster DNS or CDN changes have been applied, access `https://flagsmith.[MYDOMAIN]` in a browser.
@@ -85,9 +83,8 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.[MYDOMAIN]
-     paths:
-      - /
+   - flagsmith.[MYDOMAIN]
+
  api:
   enabled: true
   hosts:
@@ -95,6 +92,8 @@ ingress:
      paths:
       - /api/
       - /health/
+      - /admin/
+      - /static/admin/
 
 frontend:
  extraEnv:
@@ -116,9 +115,7 @@ ingress:
  frontend:
   enabled: true
   hosts:
-   - host: flagsmith.local
-     paths:
-      - /
+   - flagsmith.local
 ```
 
 and apply. This will create two ingress resources.
@@ -201,7 +198,7 @@ should be provided as:
 
 :::caution
 
-It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-SECRET_KEY)
+It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY)
 value in your helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so
 that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
 
@@ -457,8 +454,7 @@ The following table lists the configurable parameters of the chart and their def
 | `ingress.frontend.enabled`                         |                                                                           | `false`                        |
 | `ingress.frontend.ingressClassName`                |                                                                           |                                |
 | `ingress.frontend.annotations`                     |                                                                           | `{}`                           |
-| `ingress.frontend.hosts[].host`                    |                                                                           | `chart-example.local`          |
-| `ingress.frontend.hosts[].paths`                   |                                                                           | `[]`                           |
+| `ingress.frontend.hosts`                           | List of hostnames for frontend ingress                                    | `[chart-example.local]`        |
 | `ingress.frontend.tls`                             |                                                                           | `[]`                           |
 | `ingress.api.enabled`                              |                                                                           | `false`                        |
 | `ingress.api.ingressClassName`                     |                                                                           |                                |

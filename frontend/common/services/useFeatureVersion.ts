@@ -19,6 +19,7 @@ import {
 } from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
 import { getFeatureStates } from './useFeatureState'
+import moment from 'moment'
 
 const transformFeatureStates = (featureStates: TypedFeatureState[]) =>
   featureStates?.map((v) => ({
@@ -42,35 +43,43 @@ export const getFeatureStateCrud = (
     if (!oldFeatureStates) {
       return featureStates
     }
-    if (segments?.length) {
-      // filter out feature states that have no changes
-      const segmentDiffs = getSegmentDiff(
-        featureStates,
-        oldFeatureStates,
-        segments,
-      )
-      return featureStates.filter((v) => {
-        const diff = segmentDiffs?.diffs?.find(
-          (diff) => v.feature_segment?.segment === diff.segment.id,
+    const segmentDiffs = segments?.length
+      ? getSegmentDiff(
+          featureStates.filter((v) => !!v.feature_segment),
+          oldFeatureStates.filter((v) => !!v.feature_segment),
+          segments,
         )
-        return !!diff?.totalChanges
-      })
-    } else {
-      // return nothing if feature state isn't different
-      const valueDiff = getFeatureStateDiff(
-        featureStates[0],
-        oldFeatureStates[0],
+      : null
+    const featureStateDiffs = featureStates.filter((v) => {
+      if (!v.feature_segment) return
+      const diff = segmentDiffs?.diffs?.find(
+        (diff) => v.feature_segment?.segment === diff.segment.id,
       )
-      if (!valueDiff.totalChanges) {
-        const variationDiff = getVariationDiff(
-          featureStates[0],
-          oldFeatureStates[0],
-        )
-        if (!variationDiff.totalChanges) return []
+      return !!diff?.totalChanges
+    })
+    const newValueFeatureState = featureStates.find((v) => !v.feature_segment)!
+    const oldValueFeatureState = oldFeatureStates.find(
+      (v) => !v.feature_segment,
+    )!
+    // return nothing if feature state isn't different
+    const valueDiff = getFeatureStateDiff(
+      oldValueFeatureState,
+      newValueFeatureState,
+    )
+    if (!valueDiff.totalChanges) {
+      const variationDiff = getVariationDiff(
+        oldValueFeatureState,
+        newValueFeatureState,
+      )
+      if (variationDiff.totalChanges) {
+        featureStateDiffs.push(newValueFeatureState)
       }
-      return featureStates
+    } else {
+      featureStateDiffs.push(newValueFeatureState)
     }
+    return featureStateDiffs
   }
+
   const featureStatesToCreate = featureStates.filter(
     (v) => !v.id && !v.toRemove,
   )
@@ -321,6 +330,17 @@ export const {
   useGetFeatureVersionsQuery,
   // END OF EXPORTS
 } = featureVersionService
+
+export function isVersionOverLimit(
+  versionLimitDays: number | null | undefined,
+  date: string | undefined,
+) {
+  if (!versionLimitDays) {
+    return false
+  }
+  const days = moment().diff(moment(date), 'days') + 1
+  return !!versionLimitDays && days > versionLimitDays
+}
 
 /* Usage examples:
 const { data, isLoading } = useGetFeatureVersionQuery({ id: 2 }, {}) //get hook

@@ -85,7 +85,7 @@ def test_send_org_over_limit_alert_for_organisation_with_subscription(
     mocked_ffadmin_user = mocker.patch("organisations.tasks.FFAdminUser")
     max_seats = 10
     mocker.patch(
-        "organisations.tasks.get_subscription_metadata",
+        "organisations.models.Subscription.get_subscription_metadata",
         return_value=SubscriptionMetadata(seats=max_seats),
     )
 

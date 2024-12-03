@@ -17,7 +17,11 @@ from tests.integration.helpers import (
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
 def test_clone_environment_clones_feature_states_with_value(
-    client, project, environment, environment_api_key, feature
+    client: APIClient,
+    project: int,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
 ):
     # Firstly, let's update feature state value of the source environment
     # fetch the feature state id to update
@@ -43,10 +47,13 @@ def test_clone_environment_clones_feature_states_with_value(
     # Now, clone the environment
     env_name = "Cloned env"
     url = reverse("api-v1:environments:environment-clone", args=[environment_api_key])
-    res = client.post(url, {"name": env_name})
+    res = client.post(url, {"name": env_name, "clone_feature_states_async": False})
 
     # Then, check that the clone was successful
     assert res.status_code == status.HTTP_200_OK
+
+    # And check that the write only field wasn't returned
+    assert "clone_feature_states_async" not in res.json()
 
     # Now, fetch the feature states of the source environment
     source_env_feature_states = get_env_feature_states_list_with_api(
@@ -58,7 +65,7 @@ def test_clone_environment_clones_feature_states_with_value(
         client, {"environment": res.json()["id"]}
     )
 
-    # Finaly, compare the responses
+    # Finally, compare the responses
     assert source_env_feature_states["count"] == 1
     assert (
         source_env_feature_states["results"][0]["id"]

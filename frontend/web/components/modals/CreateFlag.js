@@ -45,7 +45,7 @@ import ExternalResourcesLinkTab from 'components/ExternalResourcesLinkTab'
 import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
-import WarningMessage from 'components/WarningMessage';
+import WarningMessage from 'components/WarningMessage'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -186,10 +186,7 @@ const CreateFlag = class extends Component {
     ) {
       this.getFeatureUsage()
     }
-    if (
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
-    ) {
+    if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
       }).then((res) => {
@@ -403,17 +400,20 @@ const CreateFlag = class extends Component {
       },
     })
   }
-parseError = (error)=>{
+  parseError = (error) => {
     const { projectFlag } = this.props
-  let featureError = error?.message || error?.name?.[0] || error
-  let featureWarning = ''
-  //Treat multivariate no changes as warnings
-  if(featureError?.includes?.("no changes") && projectFlag?.multivariate_options?.length) {
-    featureWarning = `Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.`
-    featureError = ''
+    let featureError = error?.message || error?.name?.[0] || error
+    let featureWarning = ''
+    //Treat multivariate no changes as warnings
+    if (
+      featureError?.includes?.('no changes') &&
+      projectFlag?.multivariate_options?.length
+    ) {
+      featureWarning = `Your feature contains no changes to its value, enabled state or environment weights. If you have adjusted any variation values this will have been saved for all environments.`
+      featureError = ''
+    }
+    return { featureError, featureWarning }
   }
-  return {featureError, featureWarning}
-}
   drawChart = (data) => {
     return data?.length ? (
       <ResponsiveContainer height={400} width='100%' className='mt-4'>
@@ -566,9 +566,7 @@ parseError = (error)=>{
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true
-    const metadataEnable =
-      Utils.getPlansPermission('METADATA') &&
-      Utils.getFlagsmithHasFeature('enable_metadata')
+    const metadataEnable = Utils.getPlansPermission('METADATA')
 
     try {
       if (!isEdit && name && regex) {
@@ -724,131 +722,134 @@ parseError = (error)=>{
     )
 
     const Value = (error, projectAdmin, createFeature, hideValue) => {
-      const {featureError, featureWarning}= this.parseError(error)
+      const { featureError, featureWarning } = this.parseError(error)
       return (
-          <>
-            {!!isEdit && (
-                <ExistingChangeRequestAlert
-                    className='mb-4'
-                    featureId={projectFlag.id}
-                    environmentId={this.props.environmentId}
-                />
-            )}
-            {!isEdit && (
-                <FormGroup className='mb-4 mt-2'>
-                  <InputGroup
-                      ref={(e) => (this.input = e)}
-                      data-test='featureID'
-                      inputProps={{
-                        className: 'full-width',
-                        maxLength: FEATURE_ID_MAXLENGTH,
-                        name: 'featureID',
-                        readOnly: isEdit,
-                      }}
-                      value={name}
-                      onChange={(e) => {
-                        const newName = Utils.safeParseEventValue(e).replace(/ /g, '_')
-                        this.setState({
-                          name: caseSensitive ? newName.toLowerCase() : newName,
-                        })
-                      }}
-                      isValid={!!name && regexValid}
-                      type='text'
+        <>
+          {!!isEdit && (
+            <ExistingChangeRequestAlert
+              className='mb-4'
+              featureId={projectFlag.id}
+              environmentId={this.props.environmentId}
+            />
+          )}
+          {!isEdit && (
+            <FormGroup className='mb-4 mt-2'>
+              <InputGroup
+                ref={(e) => (this.input = e)}
+                data-test='featureID'
+                inputProps={{
+                  className: 'full-width',
+                  maxLength: FEATURE_ID_MAXLENGTH,
+                  name: 'featureID',
+                  readOnly: isEdit,
+                }}
+                value={name}
+                onChange={(e) => {
+                  const newName = Utils.safeParseEventValue(e).replace(
+                    / /g,
+                    '_',
+                  )
+                  this.setState({
+                    name: caseSensitive ? newName.toLowerCase() : newName,
+                  })
+                }}
+                isValid={!!name && regexValid}
+                type='text'
+                title={
+                  <>
+                    <Tooltip
                       title={
-                        <>
-                          <Tooltip
-                              title={
-                                <Row>
-                                  <span className={'mr-1'}>
-                                    {isEdit ? 'ID / Name' : 'ID / Name*'}
-                                  </span>
-                                  <Icon name='info-outlined' />
-                                </Row>
-                              }
-                          >
-                            The ID that will be used by SDKs to retrieve the feature
-                            value and enabled state. This cannot be edited once the
-                            feature has been created.
-                          </Tooltip>
-                          {!!regex && !isEdit && (
-                              <div className='mt-2'>
-                                {' '}
-                                <InfoMessage collapseId={'flag-regex'}>
-                                  {' '}
-                                  This must conform to the regular expression{' '}
-                                  <pre>{regex}</pre>
-                                </InfoMessage>
-                              </div>
-                          )}
-                        </>
+                        <Row>
+                          <span className={'mr-1'}>
+                            {isEdit ? 'ID / Name' : 'ID / Name*'}
+                          </span>
+                          <Icon name='info-outlined' />
+                        </Row>
                       }
-                      placeholder='E.g. header_size'
-                  />
-                </FormGroup>
-            )}
-            <ErrorMessage error={featureError} />
-            <WarningMessage warningMessage={featureWarning} />
-            {identity && description && (
-                <FormGroup className='mb-4 mt-2 mx-3'>
-                  <InputGroup
-                      value={description}
-                      data-test='featureDesc'
-                      inputProps={{
-                        className: 'full-width',
-                        name: 'featureDesc',
-                        readOnly: !!identity || noPermissions,
-                        valueChanged: true,
-                      }}
-                      onChange={(e) =>
-                          this.setState({ description: Utils.safeParseEventValue(e) })
-                      }
-                      type='text'
-                      title={identity ? 'Description' : 'Description (optional)'}
-                      placeholder='No description'
-                  />
-                </FormGroup>
-            )}
-            {!hideValue && (
-                <div
-                    className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
-                        identity ? 'mx-3' : ''
-                    }`}
-                >
-                  <Feature
-                      readOnly={noPermissions}
-                      multivariate_options={multivariate_options}
-                      environmentVariations={environmentVariations}
-                      isEdit={isEdit}
-                      error={error?.initial_value?.[0]}
-                      canCreateFeature={createFeature}
-                      identity={identity}
-                      removeVariation={this.removeVariation}
-                      updateVariation={this.updateVariation}
-                      addVariation={this.addVariation}
-                      checked={default_enabled}
-                      value={initial_value}
-                      identityVariations={this.state.identityVariations}
-                      onChangeIdentityVariations={(identityVariations) => {
-                        this.setState({ identityVariations, valueChanged: true })
-                      }}
-                      environmentFlag={this.props.environmentFlag}
-                      projectFlag={projectFlag}
-                      onValueChange={(e) => {
-                        const initial_value = Utils.getTypedValue(
-                            Utils.safeParseEventValue(e),
-                        )
-                        this.setState({ initial_value, valueChanged: true })
-                      }}
-                      onCheckedChange={(default_enabled) =>
-                          this.setState({ default_enabled })
-                      }
-                  />
-                </div>
-            )}
-            {!isEdit &&
-                !identity &&
-                Settings(projectAdmin, createFeature, featureContentType)}
-          </>
+                    >
+                      The ID that will be used by SDKs to retrieve the feature
+                      value and enabled state. This cannot be edited once the
+                      feature has been created.
+                    </Tooltip>
+                    {!!regex && !isEdit && (
+                      <div className='mt-2'>
+                        {' '}
+                        <InfoMessage collapseId={'flag-regex'}>
+                          {' '}
+                          This must conform to the regular expression{' '}
+                          <pre>{regex}</pre>
+                        </InfoMessage>
+                      </div>
+                    )}
+                  </>
+                }
+                placeholder='E.g. header_size'
+              />
+            </FormGroup>
+          )}
+          <ErrorMessage error={featureError} />
+          <WarningMessage warningMessage={featureWarning} />
+          {identity && description && (
+            <FormGroup className='mb-4 mt-2 mx-3'>
+              <InputGroup
+                value={description}
+                data-test='featureDesc'
+                inputProps={{
+                  className: 'full-width',
+                  name: 'featureDesc',
+                  readOnly: !!identity || noPermissions,
+                  valueChanged: true,
+                }}
+                onChange={(e) =>
+                  this.setState({ description: Utils.safeParseEventValue(e) })
+                }
+                type='text'
+                title={identity ? 'Description' : 'Description (optional)'}
+                placeholder='No description'
+              />
+            </FormGroup>
+          )}
+          {!hideValue && (
+            <div
+              className={`${identity && !description ? 'mt-4 mx-3' : ''} ${
+                identity ? 'mx-3' : ''
+              }`}
+            >
+              <Feature
+                readOnly={noPermissions}
+                multivariate_options={multivariate_options}
+                environmentVariations={environmentVariations}
+                isEdit={isEdit}
+                error={error?.initial_value?.[0]}
+                canCreateFeature={createFeature}
+                identity={identity}
+                removeVariation={this.removeVariation}
+                updateVariation={this.updateVariation}
+                addVariation={this.addVariation}
+                checked={default_enabled}
+                value={initial_value}
+                identityVariations={this.state.identityVariations}
+                onChangeIdentityVariations={(identityVariations) => {
+                  this.setState({ identityVariations, valueChanged: true })
+                }}
+                environmentFlag={this.props.environmentFlag}
+                projectFlag={projectFlag}
+                onValueChange={(e) => {
+                  const initial_value = Utils.getTypedValue(
+                    Utils.safeParseEventValue(e),
+                  )
+                  this.setState({ initial_value, valueChanged: true })
+                }}
+                onCheckedChange={(default_enabled) =>
+                  this.setState({ default_enabled })
+                }
+              />
+            </div>
+          )}
+          {!isEdit &&
+            !identity &&
+            Settings(projectAdmin, createFeature, featureContentType)}
+        </>
       )
     }
     return (
@@ -876,8 +877,9 @@ parseError = (error)=>{
               },
             ) => {
               const saveFeatureValue = saveFeatureWithValidation((schedule) => {
-                this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {
+                  this.setState({ segmentsChanged: false, valueChanged: false })
+
                   openModal2(
                     schedule
                       ? 'New Scheduled Flag Update'
@@ -939,7 +941,6 @@ parseError = (error)=>{
                                 title,
                               },
                               !is4Eyes,
-                              'VALUE',
                             )
                           },
                         )
@@ -947,6 +948,7 @@ parseError = (error)=>{
                     />,
                   )
                 } else {
+                  this.setState({ valueChanged: false })
                   this.save(editFeatureValue, isSaving)
                 }
               })
@@ -956,80 +958,17 @@ parseError = (error)=>{
                 this.save(editFeatureSettings, isSaving)
               }
 
-              const saveFeatureSegments = saveFeatureWithValidation(() => {
-                this.setState({ segmentsChanged: false })
+              const saveFeatureSegments = saveFeatureWithValidation(
+                (schedule) => {
+                  this.setState({ segmentsChanged: false })
 
-                if (is4Eyes && isVersioned && !identity) {
-                  openModal2(
-                    this.props.changeRequest
-                      ? 'Update Change Request'
-                      : 'New Change Request',
-                    <ChangeRequestModal
-                      showAssignees={is4Eyes}
-                      changeRequest={this.props.changeRequest}
-                      onSave={({
-                        approvals,
-                        description,
-                        live_from,
-                        title,
-                      }) => {
-                        closeModal2()
-                        this.save(
-                          (
-                            projectId,
-                            environmentId,
-                            flag,
-                            projectFlag,
-                            environmentFlag,
-                            segmentOverrides,
-                          ) => {
-                            createChangeRequest(
-                              projectId,
-                              environmentId,
-                              flag,
-                              projectFlag,
-                              environmentFlag,
-                              segmentOverrides,
-                              {
-                                approvals,
-                                description,
-                                featureStateId:
-                                  this.props.changeRequest &&
-                                  this.props.changeRequest.feature_states[0].id,
-                                id:
-                                  this.props.changeRequest &&
-                                  this.props.changeRequest.id,
-                                live_from,
-                                multivariate_options: this.props
-                                  .multivariate_options
-                                  ? this.props.multivariate_options.map((v) => {
-                                      const matching =
-                                        this.state.multivariate_options.find(
-                                          (m) =>
-                                            m.id ===
-                                            v.multivariate_feature_option,
-                                        )
-                                      return {
-                                        ...v,
-                                        percentage_allocation:
-                                          matching.default_percentage_allocation,
-                                      }
-                                    })
-                                  : this.state.multivariate_options,
-                                title,
-                              },
-                              !is4Eyes,
-                              'SEGMENT',
-                            )
-                          },
-                        )
-                      }}
-                    />,
-                  )
-                } else {
-                  this.save(editFeatureSegments, isSaving)
-                }
-              })
+                  if ((is4Eyes || schedule) && isVersioned && !identity) {
+                    return saveFeatureValue()
+                  } else {
+                    this.save(editFeatureSegments, isSaving)
+                  }
+                },
+              )
 
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
@@ -1041,9 +980,7 @@ parseError = (error)=>{
                   project.total_features,
                   project.max_features_allowed,
                 )
-              const {featureError, featureWarning}= this.parseError(error)
-
-
+              const { featureError, featureWarning } = this.parseError(error)
 
               return (
                 <Permission
@@ -1123,7 +1060,11 @@ parseError = (error)=>{
                                     <ModalHR className='mt-4' />
                                     <div className='text-right mt-4 mb-3 fs-small lh-sm modal-caption'>
                                       {is4Eyes
-                                        ? 'This will create a change request for the environment'
+                                        ? `This will create a change request ${
+                                            isVersioned
+                                              ? 'with any value and segment override changes '
+                                              : ''
+                                          }for the environment`
                                         : 'This will update the feature value for the environment'}{' '}
                                       <strong>
                                         {
@@ -1342,13 +1283,11 @@ parseError = (error)=>{
                                                 return (
                                                   <>
                                                     <ErrorMessage
-                                                      error={
-                                                      featureError
-                                                      }
+                                                      error={featureError}
                                                     />
                                                     <WarningMessage
                                                       warningMessage={
-                                                      featureWarning
+                                                        featureWarning
                                                       }
                                                     />
                                                     <SegmentOverrides
@@ -1408,7 +1347,11 @@ parseError = (error)=>{
                                             <div>
                                               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                                                 {is4Eyes && isVersioned
-                                                  ? 'This will create a change request for the environment'
+                                                  ? `This will create a change request ${
+                                                      isVersioned
+                                                        ? 'with any value and segment override changes '
+                                                        : ''
+                                                    }for the environment`
                                                   : 'This will update the segment overrides for the environment'}{' '}
                                                 <strong>
                                                   {
@@ -1488,24 +1431,58 @@ parseError = (error)=>{
                                                           Constants.environmentPermissions(
                                                             'Manage segment overrides',
                                                           ),
-                                                          <Button
-                                                            onClick={
-                                                              saveFeatureSegments
-                                                            }
-                                                            type='button'
-                                                            data-test='update-feature-segments-btn'
-                                                            id='update-feature-segments-btn'
-                                                            disabled={
-                                                              isSaving ||
-                                                              !name ||
-                                                              invalid ||
-                                                              !manageSegmentsOverrides
-                                                            }
-                                                          >
-                                                            {isSaving
-                                                              ? 'Updating'
-                                                              : 'Update Segment Overrides'}
-                                                          </Button>,
+                                                          <>
+                                                            {!is4Eyes &&
+                                                              isVersioned && (
+                                                                <>
+                                                                  <Button
+                                                                    feature='SCHEDULE_FLAGS'
+                                                                    theme='secondary'
+                                                                    onClick={() =>
+                                                                      saveFeatureSegments(
+                                                                        true,
+                                                                      )
+                                                                    }
+                                                                    className='mr-2'
+                                                                    type='button'
+                                                                    data-test='create-change-request'
+                                                                    id='create-change-request-btn'
+                                                                    disabled={
+                                                                      isSaving ||
+                                                                      !name ||
+                                                                      invalid ||
+                                                                      !savePermission
+                                                                    }
+                                                                  >
+                                                                    {isSaving
+                                                                      ? existingChangeRequest
+                                                                        ? 'Updating Change Request'
+                                                                        : 'Scheduling Update'
+                                                                      : existingChangeRequest
+                                                                      ? 'Update Change Request'
+                                                                      : 'Schedule Update'}
+                                                                  </Button>
+                                                                </>
+                                                              )}
+                                                            <Button
+                                                              onClick={
+                                                                saveFeatureSegments
+                                                              }
+                                                              type='button'
+                                                              data-test='update-feature-segments-btn'
+                                                              id='update-feature-segments-btn'
+                                                              disabled={
+                                                                isSaving ||
+                                                                !name ||
+                                                                invalid ||
+                                                                !manageSegmentsOverrides
+                                                              }
+                                                            >
+                                                              {isSaving
+                                                                ? 'Updating'
+                                                                : 'Update Segment Overrides'}
+                                                            </Button>
+                                                          </>,
                                                         )
                                                       }}
                                                     </Permission>
@@ -1906,7 +1883,7 @@ parseError = (error)=>{
                                   error,
                                   projectAdmin,
                                   createFeature,
-                                  project.prevent_flag_defaults,
+                                  project.prevent_flag_defaults && !identity,
                                 )}
                                 <ModalHR
                                   className={`my-4 ${identity ? 'mx-3' : ''}`}
