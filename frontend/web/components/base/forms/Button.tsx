@@ -56,21 +56,25 @@ export const Button: FC<ButtonType> = ({
   const hasPlan = feature ? Utils.getPlansPermission(feature) : true
   return href || !hasPlan ? (
     <a
-      onClick={rest.onClick as React.MouseEventHandler}
+      onClick={!hasPlan ? undefined : (rest.onClick as React.MouseEventHandler)}
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
-      target={target}
+      target={!hasPlan ? '_blank' : target}
       href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
-      {!!iconLeft && (
-        <Icon
-          fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
-          className='me-2'
-          name={iconLeft}
-          width={iconSize}
-        />
-      )}
-      {children}
+      <div className='d-flex align-items-center justify-content-center gap-2'>
+        {!!iconLeft && !!hasPlan && (
+          <Icon
+            fill={
+              iconLeftColour ? Constants.colours[iconLeftColour] : undefined
+            }
+            name={iconLeft}
+            width={iconSize}
+          />
+        )}
+        {children}
+        {!hasPlan && <PlanBasedBanner feature={feature} theme={'badge'} />}
+      </div>
       {!!iconRight && (
         <Icon
           fill={

@@ -1533,3 +1533,81 @@ api/urls/v1.py:78: error: Cannot find implementation or library stub for module 
 util/mappers/sdk.py:51: error: Argument "exclude" to "model_dump" of "BaseModel" has incompatible type "list[str]"; expected "set[int] | set[str] | dict[int, Any] | dict[str, Any] | None"  [arg-type]
 util/pydantic.py:17: note:     def [Model: BaseModel] create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: type[Model] | tuple[type[Model], ...], __module__: str = ..., __validators__: dict[str, classmethod[Any, Any, Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[Model]
 util/pydantic.py:17: note:     def create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: None = ..., __module__: str = ..., __validators__: dict[str, classmethod[Any, Any, Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[BaseModel]
+environments/models.py:142: error: Need type annotation for "is_creating"  [var-annotated]
+environments/serializers.py:87: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:100: error: Need type annotation for "webhook_url"  [var-annotated]
+environments/models.py:175: error: Incompatible default for argument "api_key" (default has type "None", argument has type "str")  [assignment]
+environments/models.py:23: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:447: note: Suggestion: use type[...] instead of type(...)
+environments/models.py:502: error: Need type annotation for "environment"  [var-annotated]
+environments/models.py:102: error: Need type annotation for "allow_client_traits"  [var-annotated]
+environments/models.py:79: error: Need type annotation for "project"  [var-annotated]
+environments/models.py:507: error: Need type annotation for "name"  [var-annotated]
+environments/models.py:93: error: Need type annotation for "api_key"  [var-annotated]
+environments/models.py:175: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/serializers.py:130: error: Item "None" of "Any | Sequence[Any] | None" has no attribute "project"  [union-attr]
+environments/models.py:175: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:292: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:137: error: Need type annotation for "use_identity_overrides_in_local_eval"  [var-annotated]
+organisations/subscriptions/metadata.py:34: error: Unsupported left operand type for + ("None")  [operator]
+environments/models.py:75: error: Need type annotation for "name"  [var-annotated]
+organisations/serializers.py:222: error: Need type annotation for "events_list"  [var-annotated]
+environments/views.py:309: error: Incompatible types in assignment (expression has type "type[Webhook]", base class "NestedEnvironmentViewSet" defined the type as "None")  [assignment]
+integrations/lead_tracking/hubspot/services.py:16: error: Item "AbstractBaseUser" of "AbstractBaseUser | AnonymousUser" has no attribute "email"  [union-attr]
+environments/models.py:77: error: Need type annotation for "created_date"  [var-annotated]
+environments/models.py:78: error: Need type annotation for "description"  [var-annotated]
+environments/models.py:246: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:450: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/serializers.py:89: error: Item "Sequence[Any]" of "Any | Sequence[Any]" has no attribute "project"  [union-attr]
+environments/models.py:448: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:450: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:283: error: Item "None" of "Project | None" has no attribute "enable_dynamo_db"  [union-attr]
+organisations/views.py:313: error: Incompatible types in assignment (expression has type "WebhookType", base class "TriggerSampleWebhookMixin" defined the type as "None")  [assignment]
+organisations/serializers.py:118: error: Need type annotation for "emails"  [var-annotated]
+organisations/urls.py:158: error: Cannot find implementation or library stub for module named "licensing.views"  [import-not-found]
+integrations/lead_tracking/hubspot/services.py:21: error: Item "AbstractBaseUser" of "AbstractBaseUser | AnonymousUser" has no attribute "email"  [union-attr]
+environments/models.py:109: error: Need type annotation for "banner_text"  [var-annotated]
+environments/serializers.py:102: error: Cannot determine type of "fields"  [has-type]
+environments/models.py:123: error: Need type annotation for "use_identity_composite_key_for_hashing"  [var-annotated]
+environments/serializers.py:87: error: Incompatible default for argument "validated_data" (default has type "None", argument has type "dict[Any, Any]")  [assignment]
+environments/serializers.py:87: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:447: error: Invalid type comment or annotation  [valid-type]
+environments/serializers.py:130: error: Item "Sequence[Any]" of "Any | Sequence[Any] | None" has no attribute "project"  [union-attr]
+environments/views.py:324: error: Incompatible types in assignment (expression has type "type[EnvironmentAPIKey]", base class "NestedEnvironmentViewSet" defined the type as "None")  [assignment]
+environments/models.py:131: error: Need type annotation for "hide_sensitive_data"  [var-annotated]
+organisations/subscriptions/metadata.py:34: error: Unsupported operand types for + ("int" and "None")  [operator]
+environments/models.py:288: error: Item "None" of "Project | None" has no attribute "edge_v2_environments_migrated"  [union-attr]
+environments/views.py:311: error: Incompatible types in assignment (expression has type "WebhookType", base class "TriggerSampleWebhookMixin" defined the type as "None")  [assignment]
+environments/models.py:448: error: Incompatible default for argument "identity_id" (default has type "None", argument has type "int | str")  [assignment]
+organisations/subscription_info_cache.py:131: error: Incompatible types in assignment (expression has type "int | None", variable has type "float | int | str | Combinable")  [assignment]
+environments/views.py:10: error: Skipping analyzing "drf_yasg.utils": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:508: error: Need type annotation for "expires_at"  [var-annotated]
+environments/models.py:449: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:246: error: Incompatible default for argument "environment_id" (default has type "None", argument has type "int")  [assignment]
+integrations/lead_tracking/hubspot/services.py:16: error: Item "AnonymousUser" of "AbstractBaseUser | AnonymousUser" has no attribute "email"  [union-attr]
+environments/models.py:136: error: Need type annotation for "use_v2_feature_versioning"  [var-annotated]
+integrations/lead_tracking/hubspot/services.py:21: error: Item "AnonymousUser" of "AbstractBaseUser | AnonymousUser" has no attribute "email"  [union-attr]
+environments/models.py:292: error: Incompatible default for argument "filter_kwargs" (default has type "None", argument has type "dict[Any, Any]")  [assignment]
+environments/models.py:246: error: Incompatible default for argument "project_id" (default has type "None", argument has type "int")  [assignment]
+environments/models.py:449: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+organisations/urls.py:172: error: Cannot find implementation or library stub for module named "rbac.views"  [import-not-found]
+environments/models.py:448: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:115: error: Need type annotation for "hide_disabled_flags"  [var-annotated]
+environments/models.py:449: error: Incompatible default for argument "identity_identifier" (default has type "None", argument has type "str")  [assignment]
+environments/models.py:76: error: Need type annotation for "uuid"  [var-annotated]
+environments/models.py:14: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:505: error: Need type annotation for "key"  [var-annotated]
+environments/models.py:292: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:450: error: Incompatible default for argument "feature_segment" (default has type "None", argument has type "FeatureSegment")  [assignment]
+environments/models.py:66: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+environments/models.py:509: error: Need type annotation for "active"  [var-annotated]
+environments/views.py:9: error: Skipping analyzing "drf_yasg": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:110: error: Need type annotation for "banner_colour"  [var-annotated]
+environments/models.py:246: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:506: error: Need type annotation for "created_at"  [var-annotated]
+environments/models.py:99: error: Need type annotation for "webhooks_enabled"  [var-annotated]
+organisations/subscriptions/metadata.py:34: error: Unsupported operand types for + ("None" and "int")  [operator]
+organisations/subscriptions/metadata.py:34: note: Both left and right operands are unions
+environments/models.py:105: error: Need type annotation for "updated_at"  [var-annotated]
+environments/serializers.py:85: error: Incompatible types in assignment (expression has type tuple[str, str, ... <16 more items>], base class "Meta" defined the type as tuple[str, str, ... <15 more items>])  [assignment]
+environments/models.py:97: error: Need type annotation for "minimum_change_request_approvals"  [var-annotated]

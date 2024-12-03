@@ -1274,3 +1274,27 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
 # subscriptions created before this date full audit log and versioning
 # history.
 VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
+
+SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
+    "SUBSCRIPTION_LICENCE_PUBLIC_KEY",
+    """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs1H23Xv1IlhyTbUP9Z4e
+zN3t6oa97ybLufhqSRCoPxHWAY/pqqjdwiC00AnRbL/guDi1FLPEkLza2gAKfU+f
+04SsNTfYL5MTPnaFtf+B+hlYmlrT1C6n05t+uQW2OQm6mWoqBssmoyR8T5FXfBls
+FrT8dsZg5XG7JaWAyGbbVscHrXHXqVcLbFGO8CcO2BG2whl+7hzm4edNCsxLJqmN
+uASR9KtntdulkRar0A9x+hAQUlrDKv77nMMdljNIqkcCcWrbhiDoTVCDbE99mhMq
+LeC/+C54/ZiCb3r9woq/kpsbRj0Ys2b4czfjWioXooSxA0w3BE6/lV0+hVltjRO6
+5QIDAQAB
+-----END PUBLIC KEY-----
+""",
+)
+
+# For the matching private key to the public key added above
+# search for "Flagsmith licence private key" in Bitwarden.
+SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", None)
+
+LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
+
+if LICENSING_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("licensing")
