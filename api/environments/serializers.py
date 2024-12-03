@@ -44,6 +44,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         model = Environment
         fields = (
             "id",
+            "uuid",
             "name",
             "api_key",
             "description",

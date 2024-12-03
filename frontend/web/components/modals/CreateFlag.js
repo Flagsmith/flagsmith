@@ -967,80 +967,87 @@ const CreateFlag = class extends Component {
                 this.save(editFeatureSettings, isSaving)
               }
 
-              const saveFeatureSegments = saveFeatureWithValidation(() => {
-                this.setState({ segmentsChanged: false })
+              const saveFeatureSegments = saveFeatureWithValidation(
+                (schedule) => {
+                  this.setState({ segmentsChanged: false })
 
-                if (is4Eyes && isVersioned && !identity) {
-                  openModal2(
-                    this.props.changeRequest
-                      ? 'Update Change Request'
-                      : 'New Change Request',
-                    <ChangeRequestModal
-                      showAssignees={is4Eyes}
-                      changeRequest={this.props.changeRequest}
-                      onSave={({
-                        approvals,
-                        description,
-                        live_from,
-                        title,
-                      }) => {
-                        closeModal2()
-                        this.save(
-                          (
-                            projectId,
-                            environmentId,
-                            flag,
-                            projectFlag,
-                            environmentFlag,
-                            segmentOverrides,
-                          ) => {
-                            createChangeRequest(
+                  if ((is4Eyes || schedule) && isVersioned && !identity) {
+                    openModal2(
+                      this.props.changeRequest
+                        ? 'Update Change Request'
+                        : schedule
+                        ? 'Schedule Segment Overrides Update'
+                        : 'New Change Request',
+                      <ChangeRequestModal
+                        showAssignees={is4Eyes}
+                        changeRequest={this.props.changeRequest}
+                        onSave={({
+                          approvals,
+                          description,
+                          live_from,
+                          title,
+                        }) => {
+                          closeModal2()
+                          this.save(
+                            (
                               projectId,
                               environmentId,
                               flag,
                               projectFlag,
                               environmentFlag,
                               segmentOverrides,
-                              {
-                                approvals,
-                                description,
-                                featureStateId:
-                                  this.props.changeRequest &&
-                                  this.props.changeRequest.feature_states[0].id,
-                                id:
-                                  this.props.changeRequest &&
-                                  this.props.changeRequest.id,
-                                live_from,
-                                multivariate_options: this.props
-                                  .multivariate_options
-                                  ? this.props.multivariate_options.map((v) => {
-                                      const matching =
-                                        this.state.multivariate_options.find(
-                                          (m) =>
-                                            m.id ===
-                                            v.multivariate_feature_option,
-                                        )
-                                      return {
-                                        ...v,
-                                        percentage_allocation:
-                                          matching.default_percentage_allocation,
-                                      }
-                                    })
-                                  : this.state.multivariate_options,
-                                title,
-                              },
-                              !is4Eyes,
-                              'SEGMENT',
-                            )
-                          },
-                        )
-                      }}
-                    />,
-                  )
-                } else {
-                  this.save(editFeatureSegments, isSaving)
-                }
-              })
+                            ) => {
+                              createChangeRequest(
+                                projectId,
+                                environmentId,
+                                flag,
+                                projectFlag,
+                                environmentFlag,
+                                segmentOverrides,
+                                {
+                                  approvals,
+                                  description,
+                                  featureStateId:
+                                    this.props.changeRequest &&
+                                    this.props.changeRequest.feature_states[0]
+                                      .id,
+                                  id:
+                                    this.props.changeRequest &&
+                                    this.props.changeRequest.id,
+                                  live_from,
+                                  multivariate_options: this.props
+                                    .multivariate_options
+                                    ? this.props.multivariate_options.map(
+                                        (v) => {
+                                          const matching =
+                                            this.state.multivariate_options.find(
+                                              (m) =>
+                                                m.id ===
+                                                v.multivariate_feature_option,
+                                            )
+                                          return {
+                                            ...v,
+                                            percentage_allocation:
+                                              matching.default_percentage_allocation,
+                                          }
+                                        },
+                                      )
+                                    : this.state.multivariate_options,
+                                  title,
+                                },
+                                !is4Eyes,
+                                'SEGMENT',
+                              )
+                            },
+                          )
+                        }}
+                      />,
+                    )
+                  } else {
+                    this.save(editFeatureSegments, isSaving)
+                  }
+                },
+              )
 
               const onCreateFeature = saveFeatureWithValidation(() => {
                 this.save(createFlag, isSaving)
@@ -1497,24 +1504,58 @@ const CreateFlag = class extends Component {
                                                           Constants.environmentPermissions(
                                                             'Manage segment overrides',
                                                           ),
-                                                          <Button
-                                                            onClick={
-                                                              saveFeatureSegments
-                                                            }
-                                                            type='button'
-                                                            data-test='update-feature-segments-btn'
-                                                            id='update-feature-segments-btn'
-                                                            disabled={
-                                                              isSaving ||
-                                                              !name ||
-                                                              invalid ||
-                                                              !manageSegmentsOverrides
-                                                            }
-                                                          >
-                                                            {isSaving
-                                                              ? 'Updating'
-                                                              : 'Update Segment Overrides'}
-                                                          </Button>,
+                                                          <>
+                                                            {!is4Eyes &&
+                                                              isVersioned && (
+                                                                <>
+                                                                  <Button
+                                                                    feature='SCHEDULE_FLAGS'
+                                                                    theme='secondary'
+                                                                    onClick={() =>
+                                                                      saveFeatureSegments(
+                                                                        true,
+                                                                      )
+                                                                    }
+                                                                    className='mr-2'
+                                                                    type='button'
+                                                                    data-test='create-change-request'
+                                                                    id='create-change-request-btn'
+                                                                    disabled={
+                                                                      isSaving ||
+                                                                      !name ||
+                                                                      invalid ||
+                                                                      !savePermission
+                                                                    }
+                                                                  >
+                                                                    {isSaving
+                                                                      ? existingChangeRequest
+                                                                        ? 'Updating Change Request'
+                                                                        : 'Scheduling Update'
+                                                                      : existingChangeRequest
+                                                                      ? 'Update Change Request'
+                                                                      : 'Schedule Update'}
+                                                                  </Button>
+                                                                </>
+                                                              )}
+                                                            <Button
+                                                              onClick={
+                                                                saveFeatureSegments
+                                                              }
+                                                              type='button'
+                                                              data-test='update-feature-segments-btn'
+                                                              id='update-feature-segments-btn'
+                                                              disabled={
+                                                                isSaving ||
+                                                                !name ||
+                                                                invalid ||
+                                                                !manageSegmentsOverrides
+                                                              }
+                                                            >
+                                                              {isSaving
+                                                                ? 'Updating'
+                                                                : 'Update Segment Overrides'}
+                                                            </Button>
+                                                          </>,
                                                         )
                                                       }}
                                                     </Permission>
