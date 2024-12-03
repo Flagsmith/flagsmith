@@ -35,11 +35,11 @@ def test_join_organisation(
     organisation = Organisation.objects.create(name="test org")
     invite = Invite.objects.create(email=staff_user.email, organisation=organisation)
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
-    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+    data = {HUBSPOT_COOKIE_NAME: "test_cookie_tracker"}
     assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
-    response = staff_client.post(url)
+    response = staff_client.post(url, data)
     staff_user.refresh_from_db()
 
     # Then
@@ -56,11 +56,11 @@ def test_join_organisation_via_link(
     organisation = Organisation.objects.create(name="test org")
     invite = InviteLink.objects.create(organisation=organisation)
     url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
-    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+    data = {HUBSPOT_COOKIE_NAME: "test_cookie_tracker"}
     assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
-    response = staff_client.post(url)
+    response = staff_client.post(url, data)
     staff_user.refresh_from_db()
 
     # Then

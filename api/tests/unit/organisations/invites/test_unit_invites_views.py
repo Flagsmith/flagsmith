@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
-from users.models import FFAdminUser
+from users.models import FFAdminUser, HubspotTracker
 
 
 def test_create_invite_link(
@@ -166,13 +166,17 @@ def test_join_organisation_with_permission_groups(
     subscription.save()
 
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
+    data = {"hubspotutk": "somehubspotdata"}
 
     # When
-    response = test_user_client.post(url)
+    response = test_user_client.post(url, data)
     test_user.refresh_from_db()
 
     # Then
     assert response.status_code == status.HTTP_200_OK
+    hubspot_tracker = HubspotTracker.objects.first()
+    assert hubspot_tracker.user == test_user
+
     assert organisation in test_user.organisations.all()
     assert user_permission_group in test_user.permission_groups.all()
     # and invite is deleted

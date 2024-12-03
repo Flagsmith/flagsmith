@@ -118,8 +118,9 @@ def test_non_superuser_can_create_new_organisation_by_default(
     data = {
         "name": org_name,
         "webhook_notification_email": webhook_notification_email,
+        HUBSPOT_COOKIE_NAME: "test_cookie_tracker",
     }
-    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+
     assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
