@@ -349,6 +349,7 @@ const CreateRole: FC<CreateRoleType> = ({
             className: 'full-width',
             name: 'roleName',
           }}
+          data-test='role-name'
           value={roleName}
           unsaved={isEdit && roleNameChanged}
           onChange={(event: InputEvent) => {
@@ -445,6 +446,7 @@ const CreateRole: FC<CreateRoleType> = ({
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Members</Row>}
+          data-test='members-tab'
         >
           <div>
             <div className='mt-4'>
@@ -513,6 +515,7 @@ const CreateRole: FC<CreateRoleType> = ({
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Permissions</Row>}
+          data-test='permissions-tab'
         >
           <div className='mt-4'>
             <PermissionsTabs
