@@ -46,8 +46,8 @@ def main() -> None:
     with open(baseline_path, "r") as f:
         baseline = set(line.strip() for line in f if line.strip())
 
-    # Detect new errors and remove information line
-    current_errors = set(current_output)
+    # Detect new errors and remove information line filtering out third party packages
+    current_errors = {line for line in current_output if "site-packages" not in line}
     new_errors = current_errors - baseline
     pattern = r"Found (\d+) errors in (\d+) files \(checked (\d+) source files\)"
     removal = None
