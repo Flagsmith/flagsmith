@@ -38,7 +38,7 @@ class TheComponent extends Component {
         />
         <div style={{ maxHeight: 200, overflowX: 'hidden', overflowY: 'auto' }}>
           {users &&
-            users.map((v) => (
+            users.map((v, i) => (
               <div
                 onClick={() => {
                   const isRemove = value.includes(v.id)
@@ -56,6 +56,7 @@ class TheComponent extends Component {
                 }}
                 className='assignees-list-item clickable'
                 key={v.id}
+                data-test={`assignees-list-item-${i}`}
               >
                 <Row className="flex-nowrap w-100 overflow-hidden overflow-ellipsis" space>
                   <div
