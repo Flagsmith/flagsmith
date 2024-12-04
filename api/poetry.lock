@@ -1362,8 +1362,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
-reference = "v1.2.0"
-resolved_reference = "ccb6c0603168c91cfb8f9f24bdfa21741eb5916e"
+reference = "v1.3.0"
+resolved_reference = "d36be973b6dd38c4b0d752c8c023478bbc57756c"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -4060,14 +4060,14 @@ develop = false
 [package.dependencies]
 djangorestframework = "*"
 djangorestframework-recursive = "*"
-flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.2.0"}
+flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.3.0"}
 flagsmith-flag-engine = "*"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.7.0"
-resolved_reference = "3bd546a451e7f2359aa9787ec8ffa5e4315d12cf"
+reference = "v2.7.1"
+resolved_reference = "83fec3e21752a1dadc2fde87bf9e11ddcda33ed9"
 
 [[package]]
 name = "wrapt"
@@ -4186,4 +4186,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "487ea7b46f083a1be71662f027a0b170c60e5aa4e35d083224ad4cd4697ec7d1"
+content-hash = "4c7b0065fcd2a98b5091c6b5546d8355b693b0b4a766bfe1beae4364bf223e85"
