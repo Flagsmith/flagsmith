@@ -331,6 +331,7 @@ button.btn {
 }
 
 .btn-link {
+  display: inline-block;
   text-decoration: none !important;
   vertical-align: baseline;
   font-family: $font-family;
