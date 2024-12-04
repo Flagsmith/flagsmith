@@ -887,8 +887,9 @@ const CreateFlag = class extends Component {
               },
             ) => {
               const saveFeatureValue = saveFeatureWithValidation((schedule) => {
-                this.setState({ valueChanged: false })
                 if ((is4Eyes || schedule) && !identity) {
+                  this.setState({ segmentsChanged: false, valueChanged: false })
+
                   openModal2(
                     schedule
                       ? 'New Scheduled Flag Update'
@@ -950,7 +951,6 @@ const CreateFlag = class extends Component {
                                 title,
                               },
                               !is4Eyes,
-                              'VALUE',
                             )
                           },
                         )
@@ -958,6 +958,7 @@ const CreateFlag = class extends Component {
                     />,
                   )
                 } else {
+                  this.setState({ valueChanged: false })
                   this.save(editFeatureValue, isSaving)
                 }
               })
@@ -972,77 +973,7 @@ const CreateFlag = class extends Component {
                   this.setState({ segmentsChanged: false })
 
                   if ((is4Eyes || schedule) && isVersioned && !identity) {
-                    openModal2(
-                      this.props.changeRequest
-                        ? 'Update Change Request'
-                        : schedule
-                        ? 'Schedule Segment Overrides Update'
-                        : 'New Change Request',
-                      <ChangeRequestModal
-                        showAssignees={is4Eyes}
-                        changeRequest={this.props.changeRequest}
-                        onSave={({
-                          approvals,
-                          description,
-                          live_from,
-                          title,
-                        }) => {
-                          closeModal2()
-                          this.save(
-                            (
-                              projectId,
-                              environmentId,
-                              flag,
-                              projectFlag,
-                              environmentFlag,
-                              segmentOverrides,
-                            ) => {
-                              createChangeRequest(
-                                projectId,
-                                environmentId,
-                                flag,
-                                projectFlag,
-                                environmentFlag,
-                                segmentOverrides,
-                                {
-                                  approvals,
-                                  description,
-                                  featureStateId:
-                                    this.props.changeRequest &&
-                                    this.props.changeRequest.feature_states[0]
-                                      .id,
-                                  id:
-                                    this.props.changeRequest &&
-                                    this.props.changeRequest.id,
-                                  live_from,
-                                  multivariate_options: this.props
-                                    .multivariate_options
-                                    ? this.props.multivariate_options.map(
-                                        (v) => {
-                                          const matching =
-                                            this.state.multivariate_options.find(
-                                              (m) =>
-                                                m.id ===
-                                                v.multivariate_feature_option,
-                                            )
-                                          return {
-                                            ...v,
-                                            percentage_allocation:
-                                              matching.default_percentage_allocation,
-                                          }
-                                        },
-                                      )
-                                    : this.state.multivariate_options,
-                                  title,
-                                },
-                                !is4Eyes,
-                                'SEGMENT',
-                              )
-                            },
-                          )
-                        }}
-                      />,
-                    )
+                    return saveFeatureValue()
                   } else {
                     this.save(editFeatureSegments, isSaving)
                   }
@@ -1139,7 +1070,11 @@ const CreateFlag = class extends Component {
                                     <ModalHR className='mt-4' />
                                     <div className='text-right mt-4 mb-3 fs-small lh-sm modal-caption'>
                                       {is4Eyes
-                                        ? 'This will create a change request for the environment'
+                                        ? `This will create a change request ${
+                                            isVersioned
+                                              ? 'with any value and segment override changes '
+                                              : ''
+                                          }for the environment`
                                         : 'This will update the feature value for the environment'}{' '}
                                       <strong>
                                         {
@@ -1423,7 +1358,11 @@ const CreateFlag = class extends Component {
                                             <div>
                                               <p className='text-right mt-4 fs-small lh-sm modal-caption'>
                                                 {is4Eyes && isVersioned
-                                                  ? 'This will create a change request for the environment'
+                                                  ? `This will create a change request ${
+                                                      isVersioned
+                                                        ? 'with any value and segment override changes '
+                                                        : ''
+                                                    }for the environment`
                                                   : 'This will update the segment overrides for the environment'}{' '}
                                                 <strong>
                                                   {
