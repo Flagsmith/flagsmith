@@ -14,7 +14,7 @@ def exclude_model_fields(
         for field_name, field in model_cls.model_fields.items()
         if field_name not in exclude_fields
     }
-    return create_model(  # type: ignore
+    return create_model(
         model_cls.__name__,
         __config__=model_cls.model_config,
         **fields,
