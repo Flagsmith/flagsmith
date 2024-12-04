@@ -1414,8 +1414,10 @@ const CreateFlag = class extends Component {
                                                               identity,
                                                             ),
                                                             <Button
-                                                              onClick={
-                                                                saveFeatureSegments
+                                                              onClick={() =>
+                                                                saveFeatureSegments(
+                                                                  false,
+                                                                )
                                                               }
                                                               type='button'
                                                               data-test='update-feature-segments-btn'
@@ -1477,8 +1479,10 @@ const CreateFlag = class extends Component {
                                                                 </>
                                                               )}
                                                             <Button
-                                                              onClick={
-                                                                saveFeatureSegments
+                                                              onClick={() =>
+                                                                saveFeatureSegments(
+                                                                  false,
+                                                                )
                                                               }
                                                               type='button'
                                                               data-test='update-feature-segments-btn'
