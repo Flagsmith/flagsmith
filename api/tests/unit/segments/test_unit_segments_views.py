@@ -156,6 +156,44 @@ def test_create_segments_reaching_max_limit(project, client, settings):
     assert project.segments.count() == 1
 
 
+def test_segments_limit_ignores_old_segment_versions(
+    project: Project,
+    segment: Segment,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS])
+
+    # let's reduce the max segments allowed to 2
+    project.max_segments_allowed = 2
+    project.save()
+
+    # and create some older versions for the segment fixture
+    segment.deep_clone()
+    assert Segment.objects.filter(version_of_id=segment.id).count() == 3
+    assert Segment.live_objects.count() == 1
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # When
+    res = staff_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_201_CREATED
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
