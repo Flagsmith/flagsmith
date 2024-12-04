@@ -1525,3 +1525,8 @@
 ../api/integrations/datadog/datadog.py:20: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
 ../api/edge_api/identities/tasks.py:33: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
 ../api/features/versioning/managers.py:6: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+../api/util/pydantic.py:17: note: Possible overload variants:
+../api/util/mappers/sdk.py:51: error: Argument "exclude" to "model_dump" of "BaseModel" has incompatible type "list[str]"; expected "IncEx | None"  [arg-type]
+../api/util/pydantic.py:17: note:     def [ModelT: BaseModel] create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: type[ModelT] | tuple[type[ModelT], ...], __module__: str = ..., __validators__: dict[str, Callable[..., Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[ModelT]
+../api/util/pydantic.py:17: note:     def create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: None = ..., __module__: str = ..., __validators__: dict[str, Callable[..., Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[BaseModel]
+../api/util/pydantic.py:17: error: No overload variant of "create_model" matches argument types "str", "ConfigDict", "dict[str, tuple[type[Any] | None, FieldInfo]]"  [call-overload]
