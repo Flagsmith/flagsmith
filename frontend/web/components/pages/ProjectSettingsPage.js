@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
+import { getRoleProjectPermissions } from 'common/services/useRolePermission'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -58,7 +59,22 @@ const ProjectSettingsPage = class extends Component {
       getStore(),
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
-    )
+    ).then((roles) => {
+      getRoleProjectPermissions(
+        getStore(),
+        {
+          organisation_id: AccountStore.getOrganisation().id,
+          project_id: this.props.match.params.projectId,
+          role_id: roles.data.results[0].id,
+        },
+        { forceRefetch: true },
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
+      })
+    })
   }
 
   onSave = () => {

@@ -11,8 +11,8 @@ import {
 } from '../helpers.cafe';
 import {
   PASSWORD,
-  E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
-} from '../config'
+  E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS
+} from "../config";
 import { Selector, t } from 'testcafe'
 
 export default async function () {
@@ -40,4 +40,5 @@ export default async function () {
   await t.expect(createSegmentBtn.hasAttribute('disabled')).ok()
   log('User with permissions can see the Audit Logs')
   await click(byId('audit-log-link'))
+  log('Login')
 }

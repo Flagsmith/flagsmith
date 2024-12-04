@@ -5,8 +5,8 @@ import {
   gotoTraits,
   log,
   login,
-  toggleFeature,
-} from '../helpers.cafe'
+  toggleFeature, waitForElementNotExist
+} from "../helpers.cafe";
 import { PASSWORD, E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS } from '../config'
 import { Selector, t } from 'testcafe'
 
@@ -25,4 +25,7 @@ export default async function () {
   await gotoTraits()
   const createTraitBtn = Selector(byId('add-trait'))
   await t.expect(createTraitBtn.hasAttribute('disabled')).ok()
+  log('User without permissions cannot see audit logs')
+  await waitForElementNotExist(byId('audit-log-link'))
+
 }

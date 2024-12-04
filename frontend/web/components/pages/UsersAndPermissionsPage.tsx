@@ -721,7 +721,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         <Row space className='mt-4 mb-1'>
                           <h5 className='mb-0'>User Groups</h5>
                           {Utils.renderWithPermission(
-                            !manageGroupsPermission.permission,
+                            manageGroupsPermission.permission,
                             Constants.organisationPermissions(
                               'Manage User Groups',
                             ),

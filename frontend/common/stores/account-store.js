@@ -7,6 +7,8 @@ import Constants from 'common/constants'
 import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 import Project from 'common/project'
+import { getStore } from 'common/store'
+import { service } from "common/service";
 
 const controller = {
   acceptInvite: (id) => {
@@ -341,6 +343,7 @@ const controller = {
         API.reset().finally(() => {
           store.model = user
           store.organisation = null
+          getStore().dispatch(service.util.resetApiState())
           store.trigger('logout')
         })
       })
