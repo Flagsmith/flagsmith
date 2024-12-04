@@ -107,6 +107,7 @@ class CompareEnvironments extends Component {
                   )
                   return (
                     <Permission
+                      tags={this.state.flag?.tags}
                       level='environment'
                       permission={Utils.getManageFeaturePermission(
                         changeRequestsEnabled,

@@ -217,7 +217,11 @@ const AddEditTags: FC<AddEditTagsType> = ({
                           <>
                             <div
                               onClick={() => editTag(tag)}
-                              className='clickable'
+                              className={
+                                !readOnly
+                                  ? 'clickable'
+                                  : 'opacity-0 pointer-events-none'
+                              }
                             >
                               <Icon name='setting' fill='#9DA4AE' />
                             </div>

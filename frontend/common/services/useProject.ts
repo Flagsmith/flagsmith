@@ -18,7 +18,7 @@ export const projectService = service
         query: (data) => ({
           url: `projects/?organisation=${data.organisationId}`,
         }),
-        transformResponse: (res) => sortBy(res, 'name'),
+        transformResponse: (res) => sortBy(res, (v) => v.name.toLowerCase()),
       }),
       // END OF ENDPOINTS
     }),

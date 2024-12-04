@@ -15,6 +15,7 @@ interface FeatureActionProps {
   projectId: string
   featureIndex: number
   readOnly: boolean
+  tags: number[]
   protectedTags: Tag[] | undefined
   hideAudit: boolean
   hideHistory: boolean
@@ -54,6 +55,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   projectId,
   protectedTags,
   readOnly,
+  tags,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
@@ -147,6 +149,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
             <Permission
               level='project'
               permission='DELETE_FEATURE'
+              tags={tags}
               id={projectId}
             >
               {({ permission: removeFeaturePermission }) =>

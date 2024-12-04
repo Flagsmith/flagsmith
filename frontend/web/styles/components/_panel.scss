@@ -77,7 +77,9 @@
     }
   }
 }
-
+.overflow-visible>.panel-content {
+  overflow: visible;
+}
 .dark {
   .panel {
     .icon {

@@ -1,10 +1,4 @@
-import React, {
-  FC,
-  forwardRef,
-  Ref,
-  useImperativeHandle,
-  useState,
-} from 'react'
+import React, { FC, forwardRef, Ref, useState } from 'react'
 import Icon from './Icon'
 import { EditPermissionsModal } from './EditPermissions'
 import {
@@ -110,10 +104,11 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
         renderRow={(mainItem: NameAndId, index: number) => (
           <div
             className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
+            data-test={`permissions-list-item-${level}-${index}`}
             key={mainItem.id}
           >
             <Row
-              className='px-3 flex-fill align-items-center user-select-none'
+              className='px-3 flex-fill align-items-center user-select-none clickable'
               key={index}
               onClick={() => toggleExpand(mainItem.id)}
             >
@@ -151,6 +146,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                   role={role}
                   className='mt-2 px-3'
                   isGroup={!!group}
+                  parentId={mainItem.parentId}
                   group={group}
                   user={user}
                 />
@@ -159,7 +155,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
           </div>
         )}
         items={mainItemsFiltered || []}
-        className='no-pad'
+        className='no-pad overflow-visible'
       />
     )
   },

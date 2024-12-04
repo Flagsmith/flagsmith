@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import InlineModal from './InlineModal'
 import Icon from './Icon'
+import classNames from 'classnames'
 
 class TheComponent extends Component {
   state = {
@@ -35,9 +36,9 @@ class TheComponent extends Component {
           placeholder='Search User'
           search
         />
-        <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 200, overflowX: 'hidden', overflowY: 'auto' }}>
           {users &&
-            users.map((v) => (
+            users.map((v, i) => (
               <div
                 onClick={() => {
                   const isRemove = value.includes(v.id)
@@ -55,13 +56,20 @@ class TheComponent extends Component {
                 }}
                 className='assignees-list-item clickable'
                 key={v.id}
+                data-test={`assignees-list-item-${i}`}
               >
-                <Row space>
-                  <Flex
-                    className={value.includes(v.id) ? 'font-weight-bold' : ''}
+                <Row className="flex-nowrap w-100 overflow-hidden overflow-ellipsis" space>
+                  <div
+                    className={classNames(
+                      value.includes(v.id) ? 'font-weight-bold' : '',
+                      'overflow-ellipsis w-100',
+                    )}
                   >
                     {v.first_name} {v.last_name}
-                  </Flex>
+                    <div className="text-muted text-small">
+                      {v.email}
+                    </div>
+                  </div>
                   {value.includes(v.id) && (
                     <span className='mr-1'>
                       <Icon name='checkmark' fill='#6837FC' />
