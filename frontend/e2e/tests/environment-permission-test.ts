@@ -27,5 +27,4 @@ export default async function () {
   await t.expect(createTraitBtn.hasAttribute('disabled')).ok()
   log('User without permissions cannot see audit logs')
   await waitForElementNotExist(byId('audit-log-link'))
-
 }

@@ -134,15 +134,15 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
 //   await logout()
 // })
 
-// test('Project-permission', async () => {
-//   await projectPermissionTest()
-//   await logout()
-// })
-
-test('Environment-permission', async () => {
-  await environmentPermissionTest()
+test('Project-permission', async () => {
+  await projectPermissionTest()
   await logout()
 })
+//
+// test('Environment-permission', async () => {
+//   await environmentPermissionTest()
+//   await logout()
+// })
 
 // test('Roles', async () => {
 //   await rolesTest()

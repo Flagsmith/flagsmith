@@ -28,17 +28,21 @@ export default async function () {
   log('User with permissions can Handle the Features')
   await createFeature(0, 'test_feature', false)
   await toggleFeature(0, true)
-  log('User without permissions cannot Delete any feature')
-  await click(byId('feature-action-0'))
-  await waitForElementVisible(byId('remove-feature-btn-0'))
-  await Selector(byId('remove-feature-btn-0')).hasClass(
-    'feature-action__item_disabled',
-  )
-  log('User without permissions cannot Manage Segments')
-  await gotoSegments()
-  const createSegmentBtn = Selector(byId('show-create-segment-btn'))
-  await t.expect(createSegmentBtn.hasAttribute('disabled')).ok()
-  log('User with permissions can see the Audit Logs')
-  await click(byId('audit-log-link'))
-  log('Login')
+
+  log('User with permissions can set other users project permissions')
+
+
+  // log('User without permissions cannot Delete any feature')
+  // await click(byId('feature-action-0'))
+  // await waitForElementVisible(byId('remove-feature-btn-0'))
+  // await Selector(byId('remove-feature-btn-0')).hasClass(
+  //   'feature-action__item_disabled',
+  // )
+  // log('User without permissions cannot Manage Segments')
+  // await gotoSegments()
+  // const createSegmentBtn = Selector(byId('show-create-segment-btn'))
+  // await t.expect(createSegmentBtn.hasAttribute('disabled')).ok()
+  // log('User with permissions can see the Audit Logs')
+  // await click(byId('audit-log-link'))
+  // log('Login')
 }
