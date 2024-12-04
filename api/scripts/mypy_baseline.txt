@@ -3065,3 +3065,716 @@ util/pydantic.py:17: note:     def create_model(str, /, *, __config__: ConfigDic
 ../api/util/pydantic.py:17: note:     def [ModelT: BaseModel] create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: type[ModelT] | tuple[type[ModelT], ...], __module__: str = ..., __validators__: dict[str, Callable[..., Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[ModelT]
 ../api/util/pydantic.py:17: note:     def create_model(str, /, *, __config__: ConfigDict | None = ..., __doc__: str | None = ..., __base__: None = ..., __module__: str = ..., __validators__: dict[str, Callable[..., Any]] | None = ..., __cls_kwargs__: dict[str, Any] | None = ..., **field_definitions: Any) -> type[BaseModel]
 ../api/util/pydantic.py:17: error: No overload variant of "create_model" matches argument types "str", "ConfigDict", "dict[str, tuple[type[Any] | None, FieldInfo]]"  [call-overload]
+environments/models.py:115: error: Need type annotation for "hide_disabled_flags"  [var-annotated]
+features/models.py:537: error: Unsupported left operand type for > ("None")  [operator]
+environments/dynamodb/wrappers/identity_wrapper.py:44: error: Item "None" of "Table | None" has no attribute "put_item"  [union-attr]
+permissions/rbac_wrapper.py:12: error: Cannot find implementation or library stub for module named "rbac.permission_service"  [import-not-found]
+environments/dynamodb/wrappers/identity_wrapper.py:177: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+webhooks/webhooks.py:197: error: Incompatible types in assignment (expression has type "Webhook", variable has type "OrganisationWebhook")  [assignment]
+organisations/subscriptions/metadata.py:34: error: Unsupported operand types for + ("int" and "None")  [operator]
+permissions/permission_service.py:272: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:292: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/workflows/core/models.py:353: error: Need type annotation for "approved_at"  [var-annotated]
+users/abc.py:40: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+organisations/subscriptions/metadata.py:34: note: Both left and right operands are unions
+app/settings/common.py:931: error: Module has no attribute "util"  [attr-defined]
+integrations/flagsmith/flagsmith_service.py:27: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/chargebee/chargebee.py:143: error: Missing return statement  [return]
+users/models.py:142: note:          def delete(self, delete_orphan_organisations: bool = ...) -> Any
+environments/dynamodb/wrappers/environment_wrapper.py:125: error: Argument 1 to "query_get_all_items" of "BaseDynamoWrapper" has incompatible type "**QueryInputRequestTypeDef"; expected "dict[Any, Any]"  [arg-type]
+environments/models.py:447: note: Suggestion: use type[...] instead of type(...)
+users/models.py:100: error: Cannot override class variable (previously declared on base class "AbstractUser") with instance variable  [misc]
+environments/dynamodb/types.py:37: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
+app/settings/common.py:956: error: Module has no attribute "util"  [attr-defined]
+environments/dynamodb/types.py:41: error: Item "None" of "Table | None" has no attribute "get_item"  [union-attr]
+features/versioning/versioning_service.py:54: error: Incompatible default for argument "additional_select_related_args" (default has type "None", argument has type "Iterable[str]")  [assignment]
+environments/dynamodb/wrappers/environment_api_key_wrapper.py:31: error: Item "None" of "Table | None" has no attribute "delete_item"  [union-attr]
+permissions/permission_service.py:258: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+users/models.py:268: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/github/github.py:218: error: Item "None" of "Environment | Any | None" has no attribute "api_key"  [union-attr]
+api_keys/user.py:76: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/versioning_service.py:23: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+organisations/subscriptions/xero/metadata.py:6: error: Incompatible types in assignment (expression has type "str", base class "BaseSubscriptionMetadata" defined the type as "None")  [assignment]
+features/versioning/versioning_service.py:53: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/feature_external_resources/models.py:7: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/tasks.py:1: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:430: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+core/models.py:197: error: Incompatible default for argument "change_details_excluded_fields" (default has type "None", argument has type "Sequence[str]")  [assignment]
+environments/models.py:66: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+features/versioning/versioning_service.py:23: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/models.py:16: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+permissions/permission_service.py:63: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+permissions/permission_service.py:232: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+util/mappers/dynamodb.py:214: error: Cannot call function of unknown type  [operator]
+integrations/lead_tracking/hubspot/client.py:13: error: Skipping analyzing "hubspot.crm.contacts": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+projects/serializers.py:110: error: Incompatible types in assignment (expression has type tuple[str, str, ... <19 more items>], base class "Meta" defined the type as tuple[str, str, ... <14 more items>])  [assignment]
+custom_auth/mfa/trench/models.py:22: error: "type[_T]" has no attribute "DoesNotExist"  [attr-defined]
+features/audit_helpers.py:28: error: Item "None" of "datetime | None" has no attribute "strftime"  [union-attr]
+webhooks/webhooks.py:280: error: List item 0 has incompatible type "str | Any | None"; expected "str"  [list-item]
+environments/models.py:136: error: Need type annotation for "use_v2_feature_versioning"  [var-annotated]
+integrations/segment/segment.py:28: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+users/models.py: error: Skipping analyzing "admin_sso.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:619: error: Incompatible default for argument "version" (default has type "None", argument has type "int")  [assignment]
+app_analytics/influxdb_wrapper.py:208: error: Incompatible default for argument "project_id" (default has type "None", argument has type "int")  [assignment]
+integrations/github/tasks.py:46: error: Incompatible types in assignment (expression has type "str | bytes", variable has type "bytes")  [assignment]
+features/versioning/versioning_service.py:54: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/dynamodb/wrappers/identity_wrapper.py:139: error: Argument "capacity_spent" to "CapacityBudgetExceeded" has incompatible type "int"; expected "Decimal"  [arg-type]
+integrations/lead_tracking/hubspot/lead_tracker.py:47: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+permissions/permission_service.py:231: error: Incompatible default for argument "for_model" (default has type "None", argument has type "Organisation | Project | Environment")  [assignment]
+environments/dynamodb/wrappers/identity_wrapper.py:142: error: Argument 1 to "get_all_items" of "DynamoIdentityWrapper" has incompatible type "**dict[str, object]"; expected "dict[str, bytes | bytearray | str | int | Decimal | <8 more items> | None] | None"  [arg-type]
+integrations/amplitude/amplitude.py:34: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+audit/models.py:55: error: Need type annotation for "related_object_type"  [var-annotated]
+core/models.py:71: error: "_BaseHistoricalModel" has no attribute "prev_record"  [attr-defined]
+permissions/permission_service.py:232: error: Incompatible default for argument "permission_key" (default has type "None", argument has type "str")  [assignment]
+features/models.py:95: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+environments/dynamodb/wrappers/environment_wrapper.py:58: error: Item "None" of "Table | None" has no attribute "delete_item"  [union-attr]
+features/versioning/versioning_service.py:57: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/identity_wrapper.py:47: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+users/models.py:388: error: Argument "through_fields" to "ManyToManyField" has incompatible type "list[str]"; expected "tuple[str, str] | None"  [arg-type]
+app_analytics/influxdb_wrapper.py:208: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/serializers.py:85: error: Incompatible types in assignment (expression has type tuple[str, str, ... <16 more items>], base class "Meta" defined the type as tuple[str, str, ... <15 more items>])  [assignment]
+integrations/amplitude/amplitude.py:34: error: Incompatible default for argument "trait_models" (default has type "None", argument has type "list[Trait]")  [assignment]
+features/models.py:479: error: Cannot override class variable (previously declared on base class "SoftDeleteExportableModel") with instance variable  [misc]
+features/feature_segments/serializers.py:1: error: Skipping analyzing "common.environments.permissions": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/serializers.py:5: error: Skipping analyzing "common.features.multivariate.serializers": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/permissions/models.py:48: error: Cannot override class variable (previously declared on base class "PermissionModel") with instance variable  [misc]
+features/workflows/core/models.py:214: error: Item "None" of "Segment | None" has no attribute "rules"  [union-attr]
+integrations/lead_tracking/hubspot/lead_tracker.py:67: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/flagsmith/flagsmith_service.py:27: error: Incompatible default for argument "environment_key" (default has type "None", argument has type "str")  [assignment]
+features/models.py:619: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+segments/helpers.py:3: error: Need type annotation for "skip_audit_log" (hint: "skip_audit_log: dict[<type>, <type>] = ...")  [var-annotated]
+features/models.py:296: error: Incompatible default for argument "environment_feature_version" (default has type "None", argument has type "EnvironmentFeatureVersion")  [assignment]
+features/models.py:1124: error: Item "None" of "Identity | None" has no attribute "identifier"  [union-attr]
+app_analytics/influxdb_wrapper.py:328: error: Need type annotation for "dataset"  [var-annotated]
+users/models.py:142: error: Signature of "delete" incompatible with supertype "Model"  [override]
+organisations/subscriptions/metadata.py:71: note:     def __eq__(self, other: object) -> bool:
+features/versioning/models.py:173: error: Need type annotation for "created_at"  [var-annotated]
+audit/tasks.py:128: error: Incompatible default for argument "user_id" (default has type "None", argument has type "int")  [assignment]
+organisations/models.py:327: error: Argument 1 to "cancel_subscription" has incompatible type "str | None"; expected "str"  [arg-type]
+integrations/github/tasks.py:28: error: Argument 3 to "generate_body_comment" has incompatible type "int | None"; expected "int"  [arg-type]
+features/models.py:418: error: Argument 1 to "call_github_task" has incompatible type "int"; expected "str"  [arg-type]
+environments/dynamodb/wrappers/base.py:25: error: Missing return statement  [return]
+permissions/permission_service.py:159: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+projects/models.py:11: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+core/models.py:72: error: "_BaseHistoricalModel" has no attribute "_change_details_excluded_fields"  [attr-defined]
+features/versioning/models.py:32: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+environments/dynamodb/wrappers/identity_wrapper.py:177: error: Incompatible default for argument "identity_model" (default has type "None", argument has type "IdentityModel")  [assignment]
+environments/tasks.py:49: error: Argument 1 to "delete_environment" of "DynamoEnvironmentV2Wrapper" has incompatible type "str"; expected "int"  [arg-type]
+integrations/webhook/models.py:2: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+core/models.py:26: error: "UUIDNaturalKeyManagerMixin" has no attribute "get"  [attr-defined]
+features/multivariate/models.py:151: error: Item "None" of "Identity | None" has no attribute "identifier"  [union-attr]
+features/import_export/models.py:22: error: Unexpected keyword argument "swappable" for "ForeignKey"  [call-arg]
+environments/dynamodb/wrappers/identity_wrapper.py:142: error: Argument 1 to "get_all_items" of "DynamoIdentityWrapper" has incompatible type "**dict[str, object]"; expected "str | None"  [arg-type]
+integrations/amplitude/amplitude.py:34: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/identity_wrapper.py:156: error: Incompatible default for argument "start_key" (default has type "None", argument has type "dict[Any, Any]")  [assignment]
+environments/models.py:102: error: Need type annotation for "allow_client_traits"  [var-annotated]
+environments/dynamodb/wrappers/environment_wrapper.py:120: error: Missing key "TableName" for TypedDict "QueryInputRequestTypeDef"  [typeddict-item]
+permissions/permission_service.py:63: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/heap/heap.py:31: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:52: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+sse/tasks.py:7: error: Skipping analyzing "influxdb_client": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/chargebee/metadata.py:8: error: Incompatible types in assignment (expression has type "str", base class "BaseSubscriptionMetadata" defined the type as "None")  [assignment]
+features/workflows/core/models.py:403: error: Missing return statement  [return]
+features/serializers.py:316: error: Incompatible types in assignment (expression has type tuple[str, str, ... <19 more items>], base class "Meta" defined the type as tuple[str, str, ... <18 more items>])  [assignment]
+permissions/rbac_wrapper.py:64: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+segments/models.py:370: error: Missing return statement  [return]
+environments/dynamodb/wrappers/identity_wrapper.py:142: error: Argument 1 to "get_all_items" of "DynamoIdentityWrapper" has incompatible type "**dict[str, object]"; expected "bool"  [arg-type]
+environments/dynamodb/wrappers/base.py:37: error: Item "None" of "Table | None" has no attribute "query"  [union-attr]
+webhooks/webhooks.py:262: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+webhooks/webhooks.py:300: error: Item "OrganisationWebhook" of "OrganisationWebhook | Webhook" has no attribute "environment"  [union-attr]
+features/workflows/core/models.py:407: error: Missing return statement  [return]
+integrations/flagsmith/flagsmith_service.py:27: error: Incompatible default for argument "api_url" (default has type "None", argument has type "str")  [assignment]
+core/models.py:197: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:132: error: Cannot override class variable (previously declared on base class "SoftDeleteExportableModel") with instance variable  [misc]
+features/versioning/versioning_service.py:12: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/models.py:746: error: Incompatible return value type (got "Any | None", expected "AbstractBaseFeatureValueModel")  [return-value]
+app_analytics/influxdb_wrapper.py:249: error: Need type annotation for "dataset"  [var-annotated]
+integrations/lead_tracking/hubspot/client.py:8: error: Skipping analyzing "hubspot.crm.companies": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/github/tasks.py:41: error: Argument 4 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+features/workflows/core/models.py:141: error: Argument "environment_id" to "get_next_version_number" of "FeatureState" has incompatible type "int | None"; expected "int"  [arg-type]
+features/models.py:918: error: Item "None" of "FeatureState | None" has no attribute "enabled"  [union-attr]
+features/multivariate/models.py:89: error: Missing return statement  [return]
+environments/models.py:14: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+webhooks/webhooks.py:262: error: Incompatible default for argument "status_code" (default has type "None", argument has type "int | str")  [assignment]
+api_keys/user.py:76: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+environments/dynamodb/wrappers/identity_wrapper.py:109: error: Value of "FilterExpression" has incompatible type "ConditionBase | str"; expected "str"  [typeddict-item]
+audit/models.py:68: error: Need type annotation for "history_record_class_path"  [var-annotated]
+features/models.py:619: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/webhook/webhook.py:34: error: Incompatible default for argument "trait_models" (default has type "None", argument has type "list[Trait]")  [assignment]
+environments/dynamodb/wrappers/identity_wrapper.py:177: error: Incompatible default for argument "identity_pk" (default has type "None", argument has type "str")  [assignment]
+environments/models.py:283: error: Item "None" of "Project | None" has no attribute "enable_dynamo_db"  [union-attr]
+users/models.py:273: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+app_analytics/influxdb_wrapper.py:209: error: Incompatible default for argument "environment_id" (default has type "None", argument has type "int")  [assignment]
+features/models.py:681: error: Argument 1 to "get_multivariate_feature_state_value" of "FeatureState" has incompatible type "str | int"; expected "str"  [arg-type]
+features/versioning/tasks.py:8: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/dynamodb/wrappers/environment_wrapper.py:124: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+integrations/lead_tracking/hubspot/tasks.py:6: error: Incompatible default for argument "organisation_id" (default has type "None", argument has type "int")  [assignment]
+organisations/chargebee/chargebee.py:7: error: Skipping analyzing "chargebee.api_error": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+app_analytics/influxdb_wrapper.py:276: error: Argument "environment_id" to "get_multiple_event_list_for_organisation" has incompatible type "int | None"; expected "int"  [arg-type]
+environments/dynamodb/wrappers/base.py:11: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
+audit/tasks.py:128: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/serializers.py:318: error: Incompatible default for argument "validated_data" (default has type "None", argument has type "dict[Any, Any]")  [assignment]
+organisations/task_helpers.py:6: note: Hint: "python3 -m pip install types-python-dateutil"
+integrations/lead_tracking/hubspot/client.py:163: error: Incompatible default for argument "organisation_id" (default has type "None", argument has type "int")  [assignment]
+features/serializers.py:318: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/dynamodb/wrappers/environment_wrapper.py:73: error: Argument "KeyConditionExpression" to "query_get_all_items" of "BaseDynamoWrapper" has incompatible type "And"; expected "dict[Any, Any]"  [arg-type]
+app/settings/common.py:1150: error: Module has no attribute "util"  [attr-defined]
+environments/models.py:75: error: Need type annotation for "name"  [var-annotated]
+features/versioning/models.py:86: error: Cannot override class variable (previously declared on base class "SoftDeleteExportableModel") with instance variable  [misc]
+audit/models.py:56: error: Need type annotation for "related_object_uuid"  [var-annotated]
+features/workflows/core/models.py:352: error: Need type annotation for "created_at"  [var-annotated]
+environments/dynamodb/types.py:35: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
+environments/dynamodb/wrappers/identity_wrapper.py:66: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+users/abc.py:34: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/versioning_service.py:57: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+util/mappers/engine.py:88: error: Argument "type" to "SegmentRuleModel" has incompatible type "str"; expected "Literal['ALL', 'ANY', 'NONE']"  [arg-type]
+util/mappers/engine.py:419: error: Need type annotation for "prioritised_feature_state_by_feature_id" (hint: "prioritised_feature_state_by_feature_id: dict[<type>, <type>] = ...")  [var-annotated]
+core/models.py:166: error: Incompatible return value type (got "None", expected "RelatedObjectType")  [return-value]
+app/settings/common.py:81: error: Module has no attribute "setdefaultencoding"; maybe "getdefaultencoding"?  [attr-defined]
+integrations/flagsmith/flagsmith_service.py:27: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/environment_wrapper.py:118: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+features/versioning/versioning_service.py:57: error: Incompatible default for argument "additional_prefetch_related_args" (default has type "None", argument has type "Iterable[str | Prefetch]")  [assignment]
+features/models.py:956: error: Item "None" of "Identity | None" has no attribute "identifier"  [union-attr]
+api_keys/models.py:5: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+audit/tasks.py:129: error: Incompatible default for argument "master_api_key_id" (default has type "None", argument has type "int")  [assignment]
+features/workflows/core/exceptions.py:18: error: Incompatible types in assignment (expression has type "Literal[400]", base class "FeatureWorkflowError" defined the type as "Literal[500]")  [assignment]
+features/feature_states/models.py:37: error: Argument 1 to "get" of "dict" has incompatible type "str | None"; expected "str"  [arg-type]
+features/versioning/versioning_service.py:101: error: Incompatible default for argument "additional_filters" (default has type "None", argument has type "Q")  [assignment]
+integrations/lead_tracking/hubspot/tasks.py:6: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+webhooks/webhooks.py:262: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/identity_wrapper.py:60: error: Item "None" of "Table | None" has no attribute "get_item"  [union-attr]
+integrations/heap/heap.py:31: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/audit_helpers.py:40: error: Item "None" of "datetime | None" has no attribute "strftime"  [union-attr]
+users/serializers.py:1: error: Skipping analyzing "djoser.serializers": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:691: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/serializers.py:17: error: Skipping analyzing "drf_yasg.utils": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+app_analytics/influxdb_wrapper.py:275: error: Argument "project_id" to "get_multiple_event_list_for_organisation" has incompatible type "int | None"; expected "int"  [arg-type]
+integrations/lead_tracking/hubspot/lead_tracker.py:67: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+projects/models.py:45: error: Couldn't resolve related manager 'environments' for relation 'environments.models.Environment.project'.  [django-manager-missing]
+features/tasks.py:56: error: Item "None" of "Environment | None" has no attribute "project"  [union-attr]
+features/audit_helpers.py:40: error: Incompatible types in assignment (expression has type "tuple[str | Any, str, str | Any]", variable has type "tuple[str, str | Any]")  [assignment]
+environments/dynamodb/wrappers/environment_wrapper.py:121: error: Incompatible types (expression has type "Equals", TypedDict item "KeyConditionExpression" has type "str")  [typeddict-item]
+permissions/permission_service.py:97: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+projects/models.py:45: error: Couldn't resolve related manager 'audit_logs' for relation 'audit.models.AuditLog.project'.  [django-manager-missing]
+api_keys/user.py:84: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+environments/permissions/models.py:12: error: Cannot override class variable (previously declared on base class "PermissionModel") with instance variable  [misc]
+features/serializers.py:8: error: Skipping analyzing "common.features.serializers": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/task_helpers.py:6: error: Library stubs not installed for "dateutil.relativedelta"  [import-untyped]
+environments/tasks.py:2: error: Skipping analyzing "task_processor.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/mixpanel/mixpanel.py:52: error: Incompatible return value type (got "list[dict[str, Collection[str]]]", expected "dict[Any, Any]")  [return-value]
+users/models.py:296: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:100: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+core/models.py:117: error: Incompatible types in assignment (expression has type "None", variable has type "Sequence[str]")  [assignment]
+environments/serializers.py:87: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:620: error: Incompatible default for argument "environment_feature_version" (default has type "None", argument has type "EnvironmentFeatureVersion")  [assignment]
+segments/models.py:182: note: Left operand is of type "int | None"
+environments/models.py:448: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+users/models.py:100: error: Incompatible types in assignment (expression has type "users.models.UserManager[Self]", base class "AbstractUser" defined the type as "django.contrib.auth.models.UserManager[FFAdminUser]")  [assignment]
+audit/tasks.py:86: error: Incompatible type for lookup 'id': (got "int | None", expected "str | int")  [misc]
+environments/dynamodb/wrappers/identity_wrapper.py:177: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/launch_darkly/models.py:37: error: Need type annotation for "ld_token"  [var-annotated]
+features/versioning/models.py:208: error: Need type annotation for "live_from"  [var-annotated]
+webhooks/webhooks.py:17: error: Skipping analyzing "task_processor.task_run_method": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/versioning/versioning_service.py:73: error: Need type annotation for "feature_states_dict" (hint: "feature_states_dict: dict[<type>, <type>] = ...")  [var-annotated]
+environments/models.py:110: error: Need type annotation for "banner_colour"  [var-annotated]
+integrations/rudderstack/rudderstack.py:4: error: Skipping analyzing "rudderstack": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+audit/models.py:109: error: "type[Model]" has no attribute "objects"  [attr-defined]
+organisations/subscriptions/serializers/mixins.py:26: error: Incompatible types in assignment (expression has type "None", variable has type "Iterable[str]")  [assignment]
+features/workflows/core/models.py:61: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+features/models.py:1070: error: Cannot override class variable (previously declared on base class "SoftDeleteExportableModel") with instance variable  [misc]
+integrations/webhook/webhook.py:34: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/models.py:183: error: Need type annotation for "environment"  [var-annotated]
+features/models.py:153: error: Argument "organisation_id" to "call_github_task" has incompatible type "int"; expected "str"  [arg-type]
+audit/models.py:65: error: Need type annotation for "is_system_event"  [var-annotated]
+projects/models.py:111: error: Cannot override class variable (previously declared on base class "SoftDeleteExportableModel") with instance variable  [misc]
+environments/dynamodb/wrappers/environment_wrapper.py:111: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+features/workflows/core/models.py:211: error: Item "None" of "Segment | None" has no attribute "save"  [union-attr]
+features/versioning/models.py:97: error: Unsupported operand types for >= ("datetime" and "None")  [operator]
+permissions/permission_service.py:81: error: Argument 2 to "get_object_id_from_base_permission_filter" has incompatible type "type[Project]"; expected "Organisation | Project | Environment"  [arg-type]
+integrations/lead_tracking/hubspot/lead_tracker.py:47: error: Incompatible default for argument "organisation" (default has type "None", argument has type "Organisation")  [assignment]
+features/serializers.py:281: error: Missing return statement  [return]
+core/models.py:25: error: "UUIDNaturalKeyManagerMixin" has no attribute "model"  [attr-defined]
+users/models.py:179: error: Module "django.utils.timezone" does not explicitly export attribute "timedelta"  [attr-defined]
+users/models.py:244: error: Missing return statement  [return]
+features/versioning/serializers.py:28: error: Name "CustomCreateSegmentOverrideFeatureStateSerializer.Meta" is not defined  [name-defined]
+organisations/task_helpers.py:6: note: (or run "mypy --install-types" to install all missing stub packages)
+integrations/launch_darkly/models.py:30: error: Need type annotation for "project"  [var-annotated]
+app_analytics/influxdb_wrapper.py:209: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:77: error: Need type annotation for "created_date"  [var-annotated]
+features/models.py:617: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/models.py:296: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/models.py:210: error: Need type annotation for "feature_states_to_create"  [var-annotated]
+app_analytics/influxdb_wrapper.py:194: error: Need type annotation for "labels" (hint: "labels: list[<type>] = ...")  [var-annotated]
+environments/models.py:246: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+core/models.py:197: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+organisations/subscriptions/metadata.py:71: note:             return NotImplemented
+permissions/permission_service.py:185: error: Argument 2 to "get_base_permission_filter" has incompatible type "type[Organisation]"; expected "Organisation | Project | Environment"  [arg-type]
+features/versioning/versioning_service.py:52: error: Incompatible default for argument "feature_name" (default has type "None", argument has type "str")  [assignment]
+webhooks/webhooks.py:223: error: Module "django.utils.timezone" does not explicitly export attribute "timedelta"  [attr-defined]
+features/workflows/core/models.py:17: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/serializers.py:332: error: Incompatible types in assignment (expression has type "tuple[str, str, str, str, str, str, str]", base class "Meta" defined the type as "tuple[str, str, str, str]")  [assignment]
+organisations/subscriptions/metadata.py:71: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
+core/models.py:71: error: "_BaseHistoricalModel" has no attribute "diff_against"  [attr-defined]
+api_keys/models.py:29: error: Cannot find implementation or library stub for module named "rbac.models"  [import-not-found]
+environments/identities/serializers.py:58: error: Need type annotation for "trait_value"  [var-annotated]
+integrations/github/tasks.py:39: error: Argument 1 to "split" of "bytes" has incompatible type "str"; expected "Buffer | None"  [arg-type]
+features/workflows/core/models.py:232: error: Missing return statement  [return]
+features/versioning/versioning_service.py:25: error: Incompatible default for argument "additional_select_related_args" (default has type "None", argument has type "Iterable[str]")  [assignment]
+features/workflows/core/models.py:210: error: Item "None" of "Segment | None" has no attribute "feature"  [union-attr]
+environments/models.py:507: error: Need type annotation for "name"  [var-annotated]
+projects/serializers.py:118: error: Incompatible types in assignment (expression has type "tuple[str, str, str, str, str]", base class "Meta" defined the type as "tuple[str, str]")  [assignment]
+api_keys/user.py:98: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/feature_states/models.py:33: error: Incompatible return value type (got "int | str | None", expected "str | int | bool")  [return-value]
+features/versioning/versioning_service.py:102: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+organisations/subscriptions/metadata.py:71: error: Argument 1 of "__eq__" is incompatible with supertype "object"; supertype defines the argument type as "object"  [override]
+permissions/permission_service.py:214: error: Incompatible default for argument "for_model" (default has type "None", argument has type "Organisation | Project | Environment")  [assignment]
+features/models.py:24: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/versioning/versioning_service.py:58: error: Incompatible default for argument "key_function" (default has type "None", argument has type "Callable[[FeatureState], tuple[Any, ...]]")  [assignment]
+features/workflows/core/models.py:58: error: Couldn't resolve related manager 'change_sets' for relation 'features.versioning.models.VersionChangeSet.change_request'.  [django-manager-missing]
+custom_auth/mfa/trench/exceptions.py:7: error: Generator has incompatible item type "list[_Detail] | dict[str, _Detail] | str"; expected "str"  [misc]
+permissions/permission_service.py:138: error: Argument 2 to "get_object_id_from_base_permission_filter" has incompatible type "type[Environment]"; expected "Organisation | Project | Environment"  [arg-type]
+projects/managers.py:2: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "int"  [arg-type]
+integrations/github/tasks.py:49: error: Argument 4 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+integrations/github/tasks.py:58: error: Argument 3 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+integrations/github/tasks.py:56: error: Argument 1 to "split" of "bytes" has incompatible type "str"; expected "Buffer | None"  [arg-type]
+features/models.py:678: error: Incompatible default for argument "identity_hash_key" (default has type "None", argument has type "str | int")  [assignment]
+features/models.py:898: error: Incompatible return value type (got "Literal[0] | bool | None", expected "bool")  [return-value]
+integrations/common/serializers.py:32: error: Incompatible types in assignment (expression has type "str", base class "_BaseIntegrationModelSerializer" defined the type as "None")  [assignment]
+integrations/lead_tracking/hubspot/client.py:162: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/serializers.py:222: error: Need type annotation for "events_list"  [var-annotated]
+webhooks/webhooks.py:254: error: Cannot determine type of "data"  [has-type]
+organisations/subscriptions/metadata.py:34: error: Unsupported operand types for + ("None" and "int")  [operator]
+permissions/permission_service.py:111: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+environments/models.py:449: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/models.py:97: note: Left operand is of type "datetime | None"
+core/models.py:196: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+core/models.py:80: error: "_BaseHistoricalModel" has no attribute "history_type"  [attr-defined]
+environments/models.py:79: error: Need type annotation for "project"  [var-annotated]
+users/models.py:283: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/dynamodb/wrappers/environment_wrapper.py:95: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+environments/dynamodb/wrappers/identity_wrapper.py:63: error: Item "None" of "Table | None" has no attribute "delete_item"  [union-attr]
+permissions/permission_service.py:215: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:12: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+sse/tasks.py:48: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+features/versioning/managers.py:49: error: Incompatible default for argument "environment_id" (default has type "None", argument has type "int")  [assignment]
+environments/models.py:137: error: Need type annotation for "use_identity_overrides_in_local_eval"  [var-annotated]
+sse/tasks.py:49: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+segments/models.py:14: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/rudderstack/rudderstack.py:28: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/workflows/core/models.py:209: error: Item "None" of "Segment | None" has no attribute "description"  [union-attr]
+features/versioning/versioning_service.py:28: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/serializers.py:123: error: Need type annotation for "segment_ids_to_delete_overrides"  [var-annotated]
+features/managers.py:8: error: Skipping analyzing "ordered_model.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/serializers.py:12: error: Skipping analyzing "common.metadata.serializers": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/common/serializers.py:25: error: "type[_MT?]" has no attribute "objects"  [attr-defined]
+app/settings/common.py:21: error: Skipping analyzing "dj_database_url": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/webhook/serializers.py:52: error: Missing return statement  [return]
+api_keys/user.py:98: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/models.py:187: error: Need type annotation for "change_request"  [var-annotated]
+integrations/common/wrapper.py:23: error: Unexpected "..."  [misc]
+permissions/permission_service.py:258: error: Incompatible default for argument "permission_key" (default has type "None", argument has type "str")  [assignment]
+features/versioning/versioning_service.py:101: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/managers.py:49: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+users/models.py:95: error: Couldn't resolve related manager 'audit_logs' for relation 'audit.models.AuditLog.author'.  [django-manager-missing]
+permissions/permission_service.py:272: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+users/models.py:268: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+projects/serializers.py:100: error: Incompatible types in assignment (expression has type "tuple[str, str, str]", base class "Meta" defined the type as "tuple[str, str]")  [assignment]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "Literal['INDEXES', 'NONE', 'TOTAL']"  [arg-type]
+audit/tasks.py:129: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/identity_wrapper.py:142: error: Argument 1 to "get_all_items" of "DynamoIdentityWrapper" has incompatible type "**dict[str, object]"; expected "str"  [arg-type]
+core/models.py:67: error: Missing return statement  [return]
+features/audit_helpers.py:38: error: Item "None" of "FeatureSegment | None" has no attribute "segment"  [union-attr]
+features/versioning/serializers.py:94: error: Incompatible types in assignment (expression has type tuple[str, str, ... <10 more items>], base class "Meta" defined the type as tuple[str, str, str, str, str, str, str, str, str])  [assignment]
+integrations/launch_darkly/models.py:39: error: Incompatible types in assignment (expression has type "JSONField[Any, Any]", variable has type "LaunchDarklyImportStatus")  [assignment]
+environments/models.py:246: error: Incompatible default for argument "environment_id" (default has type "None", argument has type "int")  [assignment]
+features/versioning/versioning_service.py:23: error: Incompatible default for argument "feature_name" (default has type "None", argument has type "str")  [assignment]
+organisations/tasks.py:10: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+app/settings/common.py:1247: error: Module has no attribute "util"  [attr-defined]
+environments/identities/models.py:75: error: Argument "traits" to "get_segments" of "Identity" has incompatible type "list[Trait] | None"; expected "list[Trait]"  [arg-type]
+integrations/rudderstack/rudderstack.py:28: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+app/utils.py:52: error: Incompatible return value type (got "dict[str, Any]", expected "VersionInfo")  [return-value]
+environments/models.py:449: error: Incompatible default for argument "identity_identifier" (default has type "None", argument has type "str")  [assignment]
+features/versioning/versioning_service.py:105: error: Incompatible default for argument "additional_prefetch_related_args" (default has type "None", argument has type "Iterable[str | Prefetch]")  [assignment]
+features/audit_helpers.py:54: error: Incompatible types in assignment (expression has type "tuple[str | Any, str]", variable has type "tuple[str]")  [assignment]
+features/versioning/models.py:215: error: Need type annotation for "feature_states_to_update"  [var-annotated]
+audit/models.py:40: error: Need type annotation for "author"  [var-annotated]
+features/models.py:535: error: Item "None" of "Environment | None" has no attribute "use_v2_feature_versioning"  [union-attr]
+features/managers.py:28: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/github/tasks.py:41: error: Argument 2 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+app_analytics/influxdb_wrapper.py:10: error: Skipping analyzing "influxdb_client.client.write_api": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/multivariate/models.py:154: error: Item "None" of "FeatureSegment | None" has no attribute "segment"  [union-attr]
+users/models.py:142: note:      Superclass:
+organisations/invites/models.py:8: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+permissions/permission_service.py:232: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+custom_auth/mfa/trench/models.py:27: error: Incompatible return value type (got "_T", expected "MFAMethod")  [return-value]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "Literal['ALL_ATTRIBUTES', 'ALL_PROJECTED_ATTRIBUTES', 'COUNT', 'SPECIFIC_ATTRIBUTES']"  [arg-type]
+environments/models.py:450: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/versioning_service.py:102: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:23: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+audit/tasks.py:7: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:123: error: Need type annotation for "use_identity_composite_key_for_hashing"  [var-annotated]
+features/models.py:691: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+users/models.py:142: note:      Subclass:
+integrations/launch_darkly/models.py:33: error: Need type annotation for "updated_at"  [var-annotated]
+integrations/github/tasks.py:5: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:131: error: Need type annotation for "hide_sensitive_data"  [var-annotated]
+app_analytics/influxdb_wrapper.py:122: note: Perhaps you need "Callable[...]" or a callback protocol?
+users/abc.py:40: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:78: error: Need type annotation for "description"  [var-annotated]
+features/versioning/versioning_service.py:100: error: Incompatible default for argument "feature_name" (default has type "None", argument has type "str")  [assignment]
+environments/dynamodb/types.py:36: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
+features/managers.py:9: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/common/serializers.py:40: error: Incompatible types in assignment (expression has type "str", base class "_BaseIntegrationModelSerializer" defined the type as "None")  [assignment]
+environments/serializers.py:102: error: Cannot determine type of "fields"  [has-type]
+features/audit_helpers.py:25: error: Item "None" of "Identity | None" has no attribute "identifier"  [union-attr]
+integrations/lead_tracking/hubspot/client.py:173: error: Incompatible types in assignment (expression has type "int", target has type "str")  [assignment]
+environments/models.py:449: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/identities/models.py:156: error: Incompatible default for argument "traits" (default has type "None", argument has type "list[Trait]")  [assignment]
+app/settings/common.py:24: error: Skipping analyzing "corsheaders.defaults": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:217: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+audit/tasks.py:130: error: Incompatible default for argument "changed_at" (default has type "None", argument has type "str")  [assignment]
+features/tasks.py:3: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/segment/segment.py:28: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/tasks.py:74: error: Incompatible return value type (got "None", expected "dict[Any, Any]")  [return-value]
+features/versioning/versioning_service.py:58: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+permissions/permission_service.py:215: error: Incompatible default for argument "permission_key" (default has type "None", argument has type "str")  [assignment]
+integrations/segment/segment.py:4: error: Skipping analyzing "analytics.client": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/github/tasks.py:49: error: Argument 3 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+environments/models.py:93: error: Need type annotation for "api_key"  [var-annotated]
+users/models.py:296: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/identities/serializers.py:64: error: Need type annotation for "traits"  [var-annotated]
+features/models.py:1127: error: Item "None" of "FeatureSegment | None" has no attribute "segment"  [union-attr]
+features/feature_segments/serializers.py:2: error: Skipping analyzing "common.features.serializers": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/subscription_info_cache.py:131: error: Incompatible types in assignment (expression has type "int | None", variable has type "float | int | str | Combinable")  [assignment]
+organisations/subscriptions/serializers/mixins.py:27: error: Incompatible types in assignment (expression has type "None", variable has type "Iterable[str]")  [assignment]
+features/workflows/core/models.py:349: error: Need type annotation for "change_request"  [var-annotated]
+core/models.py:77: error: "_BaseHistoricalModel" has no attribute "instance"  [attr-defined]
+app_analytics/influxdb_wrapper.py:256: error: Incompatible return value type (got "list[dict[Any, Any]]", expected "list[UsageData]")  [return-value]
+organisations/subscriptions/metadata.py:71: note:         if not isinstance(other, BaseSubscriptionMetadata):
+segments/models.py:83: error: Cannot override class variable (previously declared on base class "SoftDeleteExportableModel") with instance variable  [misc]
+integrations/launch_darkly/models.py:29: error: Need type annotation for "created_by"  [var-annotated]
+features/versioning/models.py:176: error: Need type annotation for "published_by"  [var-annotated]
+api_keys/user.py:108: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+permissions/permission_service.py:97: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+app_analytics/influxdb_wrapper.py:208: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:537: note: Both left and right operands are unions
+features/models.py:1059: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+users/abc.py:34: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/lead_tracking/hubspot/lead_tracker.py:47: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/versioning_service.py:100: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/identity_wrapper.py:156: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/serializers.py:87: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+audit/models.py:54: error: Need type annotation for "related_object_id"  [var-annotated]
+segments/models.py:182: error: Unsupported operand types for + ("None" and "int")  [operator]
+integrations/lead_tracking/hubspot/client.py:162: error: Incompatible default for argument "active_subscription" (default has type "None", argument has type "str")  [assignment]
+integrations/mixpanel/mixpanel.py:42: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:60: error: Function "key_function" could always be true in boolean context  [truthy-function]
+features/versioning/versioning_service.py:80: note: Perhaps you need a type annotation for "feature_states_dict"? Suggestion: "dict[tuple[Any, ...] | str | int, FeatureState]"
+integrations/github/tasks.py:109: error: Argument "feature_external_resources" to "CallGithubData" has incompatible type "None"; expected "list[dict[str, Any]]"  [arg-type]
+users/models.py:283: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+core/models.py:159: error: "AbstractBaseAuditableModel" has no attribute "id"  [attr-defined]
+integrations/lead_tracking/hubspot/tasks.py:6: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/github/client.py:282: error: Missing return statement  [return]
+features/versioning/managers.py:6: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/workflows/core/models.py:58: error: Couldn't resolve related manager 'approvals' for relation 'features.workflows.core.models.ChangeRequestApproval.change_request'.  [django-manager-missing]
+features/import_export/models.py:56: error: Unexpected keyword argument "swappable" for "ForeignKey"  [call-arg]
+features/feature_external_resources/models.py:107: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+users/models.py:95: error: Couldn't resolve related manager 'versionchangeset_set' for relation 'features.versioning.models.VersionChangeSet.published_by'.  [django-manager-missing]
+app/settings/common.py:46: error: Need type annotation for "ADMINS" (hint: "ADMINS: list[<type>] = ...")  [var-annotated]
+environments/dynamodb/wrappers/identity_wrapper.py:148: error: Incompatible types in assignment (expression has type "dict[str, bytes | bytearray | str | int | Decimal | <8 more items> | None] | None", variable has type "str")  [assignment]
+environments/dynamodb/wrappers/environment_wrapper.py:62: error: Return type "str | None" of "get_table_name" incompatible with return type "str" in supertype "BaseDynamoWrapper"  [override]
+features/multivariate/serializers.py:51: error: Item "Sequence[Any]" of "Any | Sequence[Any]" has no attribute "id"  [union-attr]
+app/settings/common.py:947: error: Module has no attribute "util"  [attr-defined]
+custom_auth/mfa/trench/models.py:21: error: Incompatible return value type (got "_T", expected "MFAMethod")  [return-value]
+util/mappers/engine.py:95: error: Argument "operator" to "SegmentConditionModel" has incompatible type "str"; expected "Literal['EQUAL', 'GREATER_THAN', 'LESS_THAN', 'LESS_THAN_INCLUSIVE', 'CONTAINS', 'GREATER_THAN_INCLUSIVE', 'NOT_CONTAINS', 'NOT_EQUAL', 'REGEX', 'PERCENTAGE_SPLIT', 'MODULO', 'IS_SET', 'IS_NOT_SET', 'IN']"  [arg-type]
+integrations/github/tasks.py:41: error: Argument 3 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+environments/identities/serializers.py:3: error: Skipping analyzing "drf_yasg.utils": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+app_analytics/influxdb_wrapper.py:280: error: Argument 1 to "load" of "Schema" has incompatible type "list[UsageData]"; expected "Mapping[str, Any] | Iterable[Mapping[str, Any]]"  [arg-type]
+integrations/github/client.py:307: error: Incompatible return value type (got "tuple[dict[str, str], int]", expected "dict[str, Any]")  [return-value]
+features/versioning/models.py:30: error: Couldn't resolve related manager 'versionchangeset_set' for relation 'features.versioning.models.VersionChangeSet.environment_feature_version'.  [django-manager-missing]
+features/models.py:934: error: Return value expected  [return-value]
+environments/models.py:100: error: Need type annotation for "webhook_url"  [var-annotated]
+environments/models.py:246: error: Incompatible default for argument "project_id" (default has type "None", argument has type "int")  [assignment]
+app/settings/common.py:1297: error: Module has no attribute "util"  [attr-defined]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "str | ConditionBase"  [arg-type]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "Literal['AND', 'OR']"  [arg-type]
+users/models.py:283: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "str"  [arg-type]
+features/models.py:620: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+audit/tasks.py:129: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:288: error: Item "None" of "Project | None" has no attribute "edge_v2_environments_migrated"  [union-attr]
+util/mappers/engine.py:149: error: Argument "multivariate_feature_state_values" to "FeatureStateModel" has incompatible type "list[MultivariateFeatureStateValueModel]"; expected "MultivariateFeatureStateValueList"  [arg-type]
+environments/serializers.py:87: error: Incompatible default for argument "validated_data" (default has type "None", argument has type "dict[Any, Any]")  [assignment]
+features/workflows/core/models.py:216: error: Argument 1 to "deep_clone" of "SegmentRule" has incompatible type "Segment | None"; expected "Segment"  [arg-type]
+features/versioning/versioning_service.py:24: error: Incompatible default for argument "additional_filters" (default has type "None", argument has type "Q")  [assignment]
+permissions/permission_service.py:272: error: Incompatible default for argument "permission_key" (default has type "None", argument has type "str")  [assignment]
+environments/models.py:99: error: Need type annotation for "webhooks_enabled"  [var-annotated]
+segments/tasks.py:1: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/versioning/versioning_service.py:25: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/lead_tracking/hubspot/lead_tracker.py:18: error: Skipping analyzing "re2": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/workflows/core/models.py:204: error: Item "None" of "Segment | None" has no attribute "deep_clone"  [union-attr]
+users/models.py:13: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:92: error: Couldn't resolve related manager 'versionchangeset_set' for relation 'features.versioning.models.VersionChangeSet.feature'.  [django-manager-missing]
+app/settings/common.py:47: error: Need type annotation for "MANAGERS" (hint: "MANAGERS: list[<type>] = ...")  [var-annotated]
+sse/sse_service.py:8: error: Skipping analyzing "gnupg": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/common/serializers.py:36: error: Incompatible types in assignment (expression has type "str", base class "_BaseIntegrationModelSerializer" defined the type as "None")  [assignment]
+features/versioning/versioning_service.py:24: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/identity_wrapper.py:142: error: Argument 1 to "get_all_items" of "DynamoIdentityWrapper" has incompatible type "**dict[str, object]"; expected "ConditionBase | str | None"  [arg-type]
+features/versioning/versioning_service.py:58: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:28: error: Incompatible default for argument "additional_prefetch_related_args" (default has type "None", argument has type "Iterable[str | Prefetch]")  [assignment]
+integrations/heap/heap.py:31: error: Incompatible default for argument "trait_models" (default has type "None", argument has type "list[Trait]")  [assignment]
+features/models.py:817: error: Incompatible return value type (got "str | None", expected "str")  [return-value]
+api_keys/user.py:84: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/webhook/webhook.py:34: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+permissions/permission_service.py:111: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/tasks.py:14: error: Module "features.models" has no attribute "HistoricalFeatureState"  [attr-defined]
+organisations/subscriptions/metadata.py:34: error: Unsupported left operand type for + ("None")  [operator]
+permissions/permission_service.py:231: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/models.py:401: error: Incompatible types in assignment (expression has type "ChargebeeObjMetadata | None", variable has type "ChargebeeObjMetadata")  [assignment]
+permissions/permission_service.py:207: error: Argument 2 to "get_base_permission_filter" has incompatible type "type[Project] | type[Environment]"; expected "Organisation | Project | Environment"  [arg-type]
+api_keys/user.py:76: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/identities/traits/serializers.py:81: error: Need type annotation for "keys"  [var-annotated]
+features/versioning/models.py:220: error: Need type annotation for "segment_ids_to_delete_overrides"  [var-annotated]
+features/versioning/versioning_service.py:54: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/models.py:598: error: Item "None" of "Environment | None" has no attribute "use_v2_feature_versioning"  [union-attr]
+permissions/permission_service.py:111: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:52: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+core/models.py:196: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:691: error: Incompatible default for argument "identity" (default has type "None", argument has type "Identity")  [assignment]
+projects/serializers.py:94: error: Item "Sequence[Any]" of "Any | Sequence[Any]" has no attribute "organisation"  [union-attr]
+integrations/lead_tracking/hubspot/lead_tracker.py:109: error: Return value expected  [return-value]
+audit/models.py:29: error: Need type annotation for "project"  [var-annotated]
+environments/dynamodb/wrappers/identity_wrapper.py:101: error: Missing key "TableName" for TypedDict "QueryInputRequestTypeDef"  [typeddict-item]
+permissions/permission_service.py:214: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:448: error: Incompatible default for argument "identity_id" (default has type "None", argument has type "int | str")  [assignment]
+permissions/permission_service.py:159: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:1117: error: Return value expected  [return-value]
+util/mappers/engine.py:453: error: Unsupported operand types for in ("UUID | None" and "Iterable[UUID]")  [operator]
+features/feature_external_resources/models.py:143: error: Argument "organisation_id" to "call_github_task" has incompatible type "int"; expected "str"  [arg-type]
+audit/models.py:67: error: Need type annotation for "history_record_id"  [var-annotated]
+users/models.py:101: error: CharField is nullable but its generic get type parameter is not optional  [misc]
+users/models.py:273: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+features/multivariate/models.py:32: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+webhooks/webhooks.py:290: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+audit/models.py:58: error: Need type annotation for "skip_signals_and_hooks"  [var-annotated]
+app_analytics/influxdb_wrapper.py:8: error: Skipping analyzing "influxdb_client": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:530: error: Unsupported left operand type for < ("None")  [operator]
+permissions/permission_service.py:215: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+permissions/permission_service.py:258: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+projects/tasks.py:5: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+core/models.py:78: error: "_BaseHistoricalModel" has no attribute "_change_details_excluded_fields"  [attr-defined]
+features/models.py:267: error: Cannot override class variable (previously declared on base class "AbstractBaseExportableModel") with instance variable  [misc]
+environments/models.py:448: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:80: error: Incompatible return value type (got "dict[tuple[Any, ...], FeatureState]", expected "dict[tuple[Any, ...] | str | int, FeatureState]")  [return-value]
+features/managers.py:28: error: Incompatible default for argument "additional_filters" (default has type "None", argument has type "Q")  [assignment]
+features/versioning/models.py:174: error: Need type annotation for "updated_at"  [var-annotated]
+environments/dynamodb/wrappers/identity_wrapper.py:156: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+api_keys/models.py:21: error: Cannot override class variable (previously declared on base class "AbstractAPIKey") with instance variable  [misc]
+audit/models.py:8: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+users/models.py:268: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/mixpanel/mixpanel.py:42: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+permissions/permission_service.py:231: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/serializers.py:3: error: Skipping analyzing "common.metadata.serializers": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+core/models.py:50: error: Cannot override class variable (previously declared on base class "AbstractBaseExportableModel") with instance variable  [misc]
+features/versioning/versioning_service.py:28: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+util/mappers/engine.py:411: error: Argument "identity_features" to "IdentityModel" has incompatible type "list[FeatureStateModel]"; expected "IdentityFeaturesList"  [arg-type]
+features/versioning/versioning_service.py:102: error: Incompatible default for argument "additional_select_related_args" (default has type "None", argument has type "Iterable[str]")  [assignment]
+environments/models.py:175: error: Incompatible default for argument "api_key" (default has type "None", argument has type "str")  [assignment]
+api_keys/user.py:84: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/lead_tracking/hubspot/lead_tracker.py:95: error: Argument 1 to "_get_or_create_company_by_domain" of "HubspotLeadTracker" has incompatible type "Any | None"; expected "str"  [arg-type]
+api_keys/models.py:3: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:175: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:296: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/launch_darkly/models.py:34: error: Need type annotation for "completed_at"  [var-annotated]
+features/versioning/versioning_service.py:105: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+core/models.py:9: error: Skipping analyzing "simple_history.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:505: error: Need type annotation for "key"  [var-annotated]
+features/models.py:678: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/launch_darkly/models.py:22: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "bool"  [arg-type]
+environments/models.py:292: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/serializers.py:565: error: Need type annotation for "events_list"  [var-annotated]
+features/versioning/managers.py:49: error: Incompatible default for argument "environment_api_key" (default has type "None", argument has type "str")  [assignment]
+features/serializers.py:349: error: Incompatible types in assignment (expression has type "tuple[str, str, str, str, str, str, str]", base class "Meta" defined the type as "tuple[str, str, str, str]")  [assignment]
+webhooks/webhooks.py:299: error: Item "OrganisationWebhook" of "OrganisationWebhook | Webhook" has no attribute "environment"  [union-attr]
+features/versioning/models.py:194: error: Need type annotation for "environment_feature_version"  [var-annotated]
+audit/tasks.py:71: error: "type[Model]" has no attribute "objects"  [attr-defined]
+environments/managers.py:2: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/identities/models.py:156: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+core/models.py:118: error: Incompatible types in assignment (expression has type "None", variable has type "Sequence[str]")  [assignment]
+permissions/permission_service.py:63: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/models.py:1114: error: Return value expected  [return-value]
+users/models.py:296: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+features/versioning/versioning_service.py:25: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+app_analytics/influxdb_wrapper.py:122: error: Function "builtins.id" is not valid as a type  [valid-type]
+organisations/chargebee/cache.py:4: error: Skipping analyzing "chargebee.result": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/models.py:142: error: Need type annotation for "is_creating"  [var-annotated]
+environments/serializers.py:130: error: Item "None" of "Any | Sequence[Any] | None" has no attribute "project"  [union-attr]
+features/models.py:34: error: Skipping analyzing "simple_history.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/multivariate/models.py:103: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+projects/models.py:45: error: Couldn't resolve related manager 'launchdarklyimportrequest_set' for relation 'integrations.launch_darkly.models.LaunchDarklyImportRequest.project'.  [django-manager-missing]
+features/models.py:620: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:53: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+webhooks/webhooks.py:139: error: Cannot determine type of "data"  [has-type]
+features/models.py:1116: error: Item "None" of "ChangeRequest | None" has no attribute "committed_at"  [union-attr]
+environments/models.py:175: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/workflows/core/models.py:144: error: Argument "identity_id" to "get_next_version_number" of "FeatureState" has incompatible type "int | None"; expected "int"  [arg-type]
+environments/models.py:447: error: Invalid type comment or annotation  [valid-type]
+environments/models.py:509: error: Need type annotation for "active"  [var-annotated]
+users/models.py:95: error: Couldn't resolve related manager 'changerequestapproval_set' for relation 'features.workflows.core.models.ChangeRequestApproval.user'.  [django-manager-missing]
+integrations/lead_tracking/hubspot/tasks.py:2: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/github/tasks.py:49: error: Argument 2 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+audit/models.py:106: error: Return value expected  [return-value]
+features/models.py:984: error: Argument "environment" to "get_live_feature_states" of "FeatureStateManager" has incompatible type "Environment | None"; expected "Environment"  [arg-type]
+features/multivariate/models.py:161: error: Incompatible return value type (got "None", expected "int")  [return-value]
+integrations/lead_tracking/hubspot/client.py:163: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+app/settings/common.py:952: error: Module has no attribute "util"  [attr-defined]
+features/models.py:530: note: Both left and right operands are unions
+projects/serializers.py:142: error: Incompatible types in assignment (expression has type "tuple[str, str, str, str]", base class "Meta" defined the type as "tuple[str, str, str]")  [assignment]
+integrations/lead_tracking/hubspot/lead_tracker.py:67: error: Incompatible default for argument "organisation" (default has type "None", argument has type "Organisation")  [assignment]
+integrations/github/models.py:6: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/subscriptions/metadata.py:71: note: It is recommended for "__eq__" to work with arbitrary objects, for example:
+integrations/launch_darkly/models.py:36: error: Need type annotation for "ld_project_key"  [var-annotated]
+environments/serializers.py:130: error: Item "Sequence[Any]" of "Any | Sequence[Any] | None" has no attribute "project"  [union-attr]
+audit/tasks.py:130: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+projects/serializers.py:154: error: Incompatible types in assignment (expression has type "tuple[str, str, str, str]", base class "Meta" defined the type as "tuple[str, str, str]")  [assignment]
+organisations/models.py:19: error: Skipping analyzing "simple_history.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+webhooks/webhooks.py:16: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/versioning/versioning_service.py:105: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+api_keys/user.py:108: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+integrations/segment/segment.py:28: error: Incompatible default for argument "trait_models" (default has type "None", argument has type "list[Trait]")  [assignment]
+features/versioning/managers.py:49: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+environments/models.py:506: error: Need type annotation for "created_at"  [var-annotated]
+core/models.py:10: error: Skipping analyzing "softdelete.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+edge_api/identities/events.py:19: error: Item "None" of "Any | None" has no attribute "put_events"  [union-attr]
+features/multivariate/models.py:10: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+permissions/permission_service.py:97: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+webhooks/webhooks.py:270: error: Item "OrganisationWebhook" of "OrganisationWebhook | Webhook" has no attribute "environment"  [union-attr]
+environments/dynamodb/wrappers/identity_wrapper.py:142: error: Argument 1 to "get_all_items" of "DynamoIdentityWrapper" has incompatible type "**dict[str, object]"; expected "int"  [arg-type]
+audit/tasks.py:130: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/environment_api_key_wrapper.py:22: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+environments/dynamodb/wrappers/base.py:37: error: Argument 1 to "query" of "Table" has incompatible type "**dict[str, dict[Any, Any]]"; expected "Sequence[str]"  [arg-type]
+environments/dynamodb/services.py:105: error: Argument "environment_id" to "map_engine_feature_state_to_identity_override" has incompatible type "str"; expected "int"  [arg-type]
+environments/serializers.py:89: error: Item "Sequence[Any]" of "Any | Sequence[Any]" has no attribute "project"  [union-attr]
+users/models.py:95: error: Couldn't resolve related manager 'launchdarklyimportrequest_set' for relation 'integrations.launch_darkly.models.LaunchDarklyImportRequest.created_by'.  [django-manager-missing]
+features/audit_helpers.py:28: error: Incompatible types in assignment (expression has type "tuple[str | Any, str, str | Any]", variable has type "tuple[str, str | Any]")  [assignment]
+integrations/github/tasks.py:58: error: Argument 4 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+environments/dynamodb/wrappers/identity_wrapper.py:37: error: Return type "str | None" of "get_table_name" incompatible with return type "str" in supertype "BaseDynamoWrapper"  [override]
+organisations/subscriptions/metadata.py:71: note:         return <logic to compare two BaseSubscriptionMetadata instances>
+api_keys/models.py:14: error: Couldn't resolve related manager 'audit_logs' for relation 'audit.models.AuditLog.master_api_key'.  [django-manager-missing]
+integrations/mixpanel/mixpanel.py:35: error: If x = b'abc' then "%s" % x produces "b'abc'", not "abc". If this is desired behavior use "%r" % x. Otherwise, decode the bytes  [str-bytes-safe]
+organisations/subscriptions/metadata.py:71: note: This violates the Liskov substitution principle
+permissions/permission_service.py:214: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/models.py:204: error: Need type annotation for "feature"  [var-annotated]
+integrations/lead_tracking/hubspot/client.py:163: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+segments/models.py:314: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+users/abc.py:40: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+users/models.py:273: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+projects/models.py:227: error: Cannot override class variable (previously declared on base class "PermissionModel") with instance variable  [misc]
+features/models.py:931: error: Item "None" of "Environment | None" has no attribute "created_date"  [union-attr]
+environments/dynamodb/wrappers/identity_wrapper.py:103: error: Incompatible types (expression has type "Equals", TypedDict item "KeyConditionExpression" has type "str")  [typeddict-item]
+features/versioning/models.py:165: error: Incompatible types in assignment (expression has type "None", variable has type "str | UUID")  [assignment]
+app_analytics/influxdb_wrapper.py:9: error: Skipping analyzing "influxdb_client.client.exceptions": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/dynamodb/wrappers/identity_wrapper.py:52: error: Argument 1 to "len" has incompatible type "dict[str, DocumentValue] | str | bool | Decimal | None"; expected "Sized"  [arg-type]
+environments/dynamodb/wrappers/environment_wrapper.py:41: error: Return type "str | None" of "get_table_name" incompatible with return type "str" in supertype "BaseDynamoWrapper"  [override]
+environments/models.py:105: error: Need type annotation for "updated_at"  [var-annotated]
+integrations/github/tasks.py:47: error: Argument 1 to "split" of "bytes" has incompatible type "str"; expected "Buffer | None"  [arg-type]
+features/versioning/serializers.py:228: error: Item "None" of "FeatureSegment | None" has no attribute "segment"  [union-attr]
+features/workflows/core/models.py:342: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+features/versioning/versioning_service.py:24: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:33: error: Skipping analyzing "ordered_model.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/workflows/core/models.py:224: error: Missing return statement  [return]
+environments/models.py:292: error: Incompatible default for argument "filter_kwargs" (default has type "None", argument has type "dict[Any, Any]")  [assignment]
+features/versioning/dataclasses.py:11: error: Decorators on top of @property are not supported  [prop-decorator]
+features/models.py:617: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/versioning_service.py:101: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/models.py:12: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/tasks.py:51: error: Item "None" of "Environment | None" has no attribute "id"  [union-attr]
+features/workflows/core/exceptions.py:10: error: Incompatible types in assignment (expression has type "Literal[400]", base class "FeatureWorkflowError" defined the type as "Literal[500]")  [assignment]
+integrations/lead_tracking/hubspot/client.py:5: error: Skipping analyzing "hubspot": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+webhooks/webhooks.py:290: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/models.py:401: error: Argument 1 to "get_subscription_metadata_from_id" has incompatible type "str | None"; expected "str"  [arg-type]
+permissions/rbac_wrapper.py:64: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/subscriptions/serializers/mixins.py:28: error: Incompatible types in assignment (expression has type "None", variable has type "str")  [assignment]
+audit/models.py:39: error: Need type annotation for "log"  [var-annotated]
+features/serializers.py:318: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+features/versioning/versioning_service.py:53: error: Incompatible default for argument "additional_filters" (default has type "None", argument has type "Q")  [assignment]
+environments/models.py:502: error: Need type annotation for "environment"  [var-annotated]
+permissions/permission_service.py:159: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+integrations/github/tasks.py:58: error: Argument 2 to "post_comment_to_github" has incompatible type "bytes"; expected "str"  [arg-type]
+features/models.py:612: error: Incompatible return value type (got "datetime | bool | None", expected "bool")  [return-value]
+sse/tasks.py:8: error: Skipping analyzing "task_processor.decorators": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/models.py:699: error: Argument 1 to "get_feature_state_value_by_hash_key" of "FeatureState" has incompatible type "str | None"; expected "str | int"  [arg-type]
+permissions/rbac_wrapper.py:64: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+integrations/launch_darkly/models.py:32: error: Need type annotation for "created_at"  [var-annotated]
+features/workflows/core/models.py:348: error: Need type annotation for "user"  [var-annotated]
+app_analytics/influxdb_wrapper.py:209: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+app/settings/common.py:28: error: Skipping analyzing "task_processor.task_run_method": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+segments/models.py:158: error: Name "ChangeRequest" is not defined  [name-defined]
+api_keys/user.py:108: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/versioning/models.py:175: error: Need type annotation for "published_at"  [var-annotated]
+segments/models.py:374: error: Missing return statement  [return]
+integrations/github/tasks.py:28: error: Argument 5 to "generate_body_comment" has incompatible type "list[dict[str, Any]] | None"; expected "list[dict[str, Any]]"  [arg-type]
+features/models.py:678: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/github/github.py:212: error: Item "None" of "Environment | Any | None" has no attribute "name"  [union-attr]
+environments/models.py:76: error: Need type annotation for "uuid"  [var-annotated]
+util/mappers/engine.py:442: error: Need type annotation for "feature_states_by_segment_id" (hint: "feature_states_by_segment_id: dict[<type>, <type>] = ...")  [var-annotated]
+features/feature_segments/serializers.py:174: error: Need type annotation for "feature_states" (hint: "feature_states: list[<type>] = ...")  [var-annotated]
+app/settings/common.py:961: error: Module has no attribute "util"  [attr-defined]
+features/multivariate/serializers.py:27: error: Incompatible types in assignment (expression has type "tuple[str, str, str, str, str, str, str, str]", base class "Meta" defined the type as "tuple[str, str, str, str, str, str, str]")  [assignment]
+environments/dynamodb/wrappers/identity_wrapper.py:41: error: Item "None" of "Table | None" has no attribute "query"  [union-attr]
+features/workflows/core/models.py:311: error: Item "None" of "Environment | None" has no attribute "deleted_at"  [union-attr]
+organisations/serializers.py:118: error: Need type annotation for "emails"  [var-annotated]
+audit/tasks.py:8: error: Skipping analyzing "task_processor.models": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/models.py:271: error: Argument 1 to "get_by_plan_id" of "SubscriptionPlanFamily" has incompatible type "str | None"; expected "str"  [arg-type]
+permissions/rbac_wrapper.py:13: error: Cannot find implementation or library stub for module named "rbac.permissions_calculator"  [import-not-found]
+environments/models.py:450: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+integrations/common/models.py:5: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+integrations/rudderstack/rudderstack.py:28: error: Incompatible default for argument "trait_models" (default has type "None", argument has type "list[Trait]")  [assignment]
+audit/tasks.py:128: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/dynamodb/wrappers/environment_wrapper.py:53: error: Item "None" of "Table | None" has no attribute "get_item"  [union-attr]
+integrations/lead_tracking/hubspot/lead_tracker.py:103: error: Return value expected  [return-value]
+custom_auth/mfa/trench/models.py:28: error: "type[_T]" has no attribute "DoesNotExist"  [attr-defined]
+core/models.py:68: error: "_BaseHistoricalModel" has no attribute "history_type"  [attr-defined]
+audit/models.py:47: error: Need type annotation for "master_api_key"  [var-annotated]
+environments/dynamodb/wrappers/environment_wrapper.py:45: error: Item "None" of "Table | None" has no attribute "batch_writer"  [union-attr]
+app/routers.py:101: error: Missing return statement  [return]
+webhooks/serializers.py:6: error: Incompatible types in assignment (expression has type "DictField", base class "Serializer" defined the type as "ReturnDict[Any, Any]")  [assignment]
+segments/models.py:41: error: Unsupported dynamic base class "abstract_base_auditable_model_factory"  [misc]
+features/versioning/models.py:15: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+environments/dynamodb/wrappers/identity_wrapper.py:145: error: Incompatible types in assignment (expression has type "float", variable has type "int")  [assignment]
+environments/models.py:450: error: Incompatible default for argument "feature_segment" (default has type "None", argument has type "FeatureSegment")  [assignment]
+features/audit_helpers.py:54: error: Item "None" of "datetime | None" has no attribute "strftime"  [union-attr]
+integrations/github/client.py:116: error: Missing return statement  [return]
+features/serializers.py:252: error: Item "Sequence[Any]" of "Any | Sequence[Any]" has no attribute "id"  [union-attr]
+users/models.py:142: note:          def delete(self, using: Any | None = ..., keep_parents: bool = ...) -> tuple[int, dict[str, int]]
+environments/identities/models.py:156: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+features/models.py:924: error: Return value expected  [return-value]
+core/models.py:74: error: "_BaseHistoricalModel" has no attribute "history_type"  [attr-defined]
+environments/models.py:246: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+integrations/mixpanel/mixpanel.py:42: error: Incompatible default for argument "trait_models" (default has type "None", argument has type "list[Trait]")  [assignment]
+features/workflows/core/exceptions.py:14: error: Incompatible types in assignment (expression has type "Literal[400]", base class "FeatureWorkflowError" defined the type as "Literal[500]")  [assignment]
+audit/models.py:32: error: Need type annotation for "environment"  [var-annotated]
+environments/models.py:23: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+audit/models.py:27: error: Need type annotation for "created_date"  [var-annotated]
+webhooks/webhooks.py:290: error: Incompatible default for argument "status_code" (default has type "None", argument has type "int | str")  [assignment]
+features/workflows/core/models.py:143: error: Argument "feature_segment_id" to "get_next_version_number" of "FeatureState" has incompatible type "int | None"; expected "int"  [arg-type]
+core/models.py:196: error: Incompatible default for argument "historical_records_excluded_fields" (default has type "None", argument has type "list[str]")  [assignment]
+users/abc.py:34: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+features/models.py:617: error: Incompatible default for argument "live_from" (default has type "None", argument has type "datetime")  [assignment]
+features/managers.py:28: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+organisations/chargebee/cache.py:3: error: Skipping analyzing "chargebee": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/versioning/versioning_service.py:12: error: Incompatible default for argument "feature_name" (default has type "None", argument has type "str")  [assignment]
+environments/models.py:109: error: Need type annotation for "banner_text"  [var-annotated]
+features/models.py:898: error: Item "None" of "ChangeRequest | None" has no attribute "committed_at"  [union-attr]
+environments/models.py:508: error: Need type annotation for "expires_at"  [var-annotated]
+webhooks/webhooks.py:268: error: Item "Webhook" of "OrganisationWebhook | Webhook" has no attribute "organisation"  [union-attr]
+api_keys/user.py:98: error: Incompatible default for argument "tag_ids" (default has type "None", argument has type "list[int]")  [assignment]
+integrations/lead_tracking/hubspot/client.py:162: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+environments/models.py:97: error: Need type annotation for "minimum_change_request_approvals"  [var-annotated]
+features/workflows/core/models.py:208: error: Item "None" of "Segment | None" has no attribute "name"  [union-attr]
+integrations/webhook/serializers.py:32: error: Argument 1 to "map_identity_to_engine" has incompatible type "Any | None"; expected "Identity"  [arg-type]
+features/custom_lifecycle.py:3: error: Skipping analyzing "django_lifecycle": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+organisations/chargebee/chargebee.py:6: error: Skipping analyzing "chargebee": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+features/versioning/serializers.py:138: error: Incompatible types in assignment (expression has type tuple[str, str, ... <11 more items>], base class "Meta" defined the type as tuple[str, str, str, str, str, str, str, str, str])  [assignment]
