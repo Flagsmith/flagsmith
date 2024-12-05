@@ -314,20 +314,24 @@ button.btn {
   }
   &-lg {
     line-height: $btn-line-height-lg;
+    height: $btn-line-height-lg;
   }
 
   &-sm {
     line-height: $btn-line-height-sm;
+    height: $btn-line-height-sm;
   }
   &-xsm {
     padding: 0 12px;
     line-height: $btn-line-height-xsm;
+    height: $btn-line-height-xsm;
     font-size: $font-caption-sm;
     border-radius: $border-radius-sm;
   }
 }
 
 .btn-link {
+  display: inline-block;
   text-decoration: none !important;
   vertical-align: baseline;
   font-family: $font-family;

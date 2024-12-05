@@ -62,7 +62,7 @@ export const Button: FC<ButtonType> = ({
       href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
-      <div className='d-flex align-items-center justify-content-center gap-2'>
+      <div className='d-flex h-100 align-items-center justify-content-center gap-2'>
         {!!iconLeft && !!hasPlan && (
           <Icon
             fill={
