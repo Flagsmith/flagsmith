@@ -9,13 +9,13 @@ class BaseSubscriptionMetadata:
     def __init__(
         self,
         seats: int = 0,
-        api_calls: int = 0,
-        projects: typing.Optional[int] = None,
-        chargebee_email: str = None,
+        api_calls: None | int = None,
+        projects: None | int = None,
+        chargebee_email: None | str = None,
         audit_log_visibility_days: int | None = 0,
         feature_history_visibility_days: int | None = DEFAULT_VERSION_LIMIT_DAYS,
         **kwargs,  # allows for extra unknown attrs from CB json metadata
-    ):
+    ) -> None:
         self.seats = seats
         self.api_calls = api_calls
         self.projects = projects
