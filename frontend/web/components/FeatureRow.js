@@ -371,6 +371,7 @@ class TheComponent extends Component {
             featureIndex={this.props.index}
             readOnly={readOnly}
             protectedTags={protectedTags}
+            tags={projectFlag.tags}
             isCompact={isCompact}
             hideAudit={
               AccountStore.getOrganisationRole() !== 'ADMIN' ||
