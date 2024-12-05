@@ -33,7 +33,6 @@ def main() -> None:
 
     # Mypy failed in some other way other than listing failing file lines
     if result.returncode != 1:
-        print(command)
         print(
             f"Error running mypy with return code {result.returncode} and error:",
             result.stderr,
