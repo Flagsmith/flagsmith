@@ -8,7 +8,7 @@ module.exports = (
 flagsmith = Flagsmith(\n    environment_key="${envId}"${
   Constants.isCustomFlagsmithUrl()
     ? `,\n    api_url="${Constants.getFlagsmithSDKUrl()}",\n`
-    : ','
+    : ',\n'
 })
 
 # The method below triggers a network request
