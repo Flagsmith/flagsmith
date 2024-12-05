@@ -5,9 +5,10 @@ module.exports = (
   { FEATURE_NAME, FEATURE_NAME_ALT },
 ) => `from flagsmith import Flagsmith
 
-flagsmith = Flagsmith(environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl() &&
-  `,\n api_url="${Constants.getFlagsmithSDKUrl()}"\n`
+flagsmith = Flagsmith(\n    environment_key="${envId}"${
+  Constants.isCustomFlagsmithUrl()
+    ? `,\n    api_url="${Constants.getFlagsmithSDKUrl()}",\n`
+    : ','
 })
 
 # The method below triggers a network request

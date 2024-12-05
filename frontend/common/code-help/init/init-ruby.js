@@ -7,9 +7,10 @@ module.exports = (
 ) => `require "flagsmith"
 
 $flagsmith = Flagsmith::Client.new(
-    environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl() &&
-  `,\n    api_url="${Constants.getFlagsmithSDKUrl()}"\n`
+    environment_key: "${envId}"${
+  Constants.isCustomFlagsmithUrl()
+    ? `,\n    api_url: "${Constants.getFlagsmithSDKUrl()}"\n`
+    : '\n'
 })
 
 // Load the environment's flags locally
