@@ -1,0 +1,71 @@
+---
+id: get-identity-flags-and-traits
+title: "Get identity flags and traits"
+description: "Retrieve the flags and traits for an identity. Note: identity will be lazily created if it does not already exist."
+sidebar_label: "Get identity flags and traits"
+hide_title: true
+hide_table_of_contents: true
+api: eJzFVW1r2zAQ/itCnzZwkrbsU76ltCul0I40g0EpQbHPsTpZciU5bWb833cnv8RJS/YCY58S6170PPfcnSruxdrx6QO/TNbAZl+u+WPEE3CxlYWXRvMpn4O3EjbAfAYsVejPhE6Yt0J6x1Jj8ZPJBLSXfjtmt8bDtP9mL1IptgKmxA+ptiy2IDwkTKZMepYYcEwbz4TC82TL4FU6P+YRL4QVOXiwBK7iGj8QSpM1lWDRRRK45xLslh9Cvu5uvwEyWngupYWET70tIeIuziAXfFpxvy0or0OGev0mzQIJNyZmIQULOqb/VIfuBl7Xj3SBK4x24Cjn2ckJ/eynurvB7LHRHsPIKopCyViQdfLkyKUawJIecjfAZ1ZPEHsqizUFWC+bm4IYAzdhrSC+vxkOWqwUVaV3XBmjQGheRzxFnUoLS+dRr+VGqBLI0Wi4S4Mkh6WDV5EXKsAYWcixC0bIN5XrURNcR32MLvNVkLCP+XQ2MHcoBnbSjQqtS6UIdHvSwwwcpA/Xd0fRL+jLIXOJyqwDJmrEO622XbPsYWwb8Rh7l5mXZQbWLFdCa0xZd0CORd0vZrcXs/kF9lNNAS2Xzw2XexKBB0OYur/XPMQvv+NYHIVzSzS76/5M/fPxbMzOcXzj0v0T0QflWRA8vlexdjCR7rwdylBScsF9khkUna8hFEb4DD8mso/AQwd20y2d0iq0Z94XbjqZAC7IsSjkOExdLn02jk0+wZPJ5vTN6ujXKRFwEJeWlgVlvdQbaY3O8VLcTrOSQDw8Dt3uaQ80cr3nvJO+kM1+C5sww74N9W135bfRIHhEjlQDqVMzHJYeZ8SJdwP+lKQvjPO5CIupzXgFfrfXDx+CwwpUu233f16QtkgeXv2kUEKGrRYkrVrpH/hAeqx/hozptKpWwsFXq+qajpsnhqRLpGs3ZiqUgyOMP8zbJ+cjO3iL3oUV5nH/dWtnjocG2ggrmwnATok6qQlSEzmLYyj8IOrN80JZ+v6/ulxgM/wEbOXBQg==
+sidebar_class_name: "get api-method"
+info_path: edge-api/edge-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get identity flags and traits"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/identities"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve the flags and traits for an identity. Note: identity will be lazily created if it does not already exist.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"name":"identifier","in":"query","description":"Identity Key","required":true,"schema":{"type":"string","description":"The string referencing the Identity"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"OK","content":{"application/json":{"schema":{"items":{"type":"object","properties":{"flags":{"type":"array","items":{"type":"object","properties":{"enabled":{"type":"boolean"},"feature_state_value":{"oneOf":[{"type":"string","example":"a-remote-config-value"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true},"feature":{"title":"feature","type":"object","properties":{"id":{"type":"integer","readOnly":true,"example":42},"name":{"type":"string","example":"show_hero_banner"},"type":{"type":"string","example":"STANDARD"}}}},"title":"FeatureState"}},"traits":{"type":"array","items":{"type":"object","properties":{"trait_key":{"type":"string","example":"Name"},"trait_value":{"oneOf":[{"type":"string","example":"B.A. Baracus"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true}},"title":"Trait"}}},"title":"IdentitiesResponse"}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      
