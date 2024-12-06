@@ -2,7 +2,7 @@ import typing
 from concurrent.futures import ThreadPoolExecutor
 
 from edge_api.identities.edge_identity_service import (
-    get_edge_identity_overrides,
+    get_edge_identity_overrides_for_feature_ids,
 )
 from features.dataclasses import EnvironmentFeatureOverridesData
 from features.versioning.versioning_service import get_environment_flags_list
@@ -82,13 +82,16 @@ def get_edge_overrides_data(
     :param environment: the environment to get the overrides data for
     :return OverridesData: dictionary of {feature_id: EnvironmentFeatureOverridesData}
     """
+
+    assert feature_ids is not None
+
     with ThreadPoolExecutor() as executor:
         get_environment_flags_list_future = executor.submit(
             get_environment_flags_list,
             environment,
         )
         get_overrides_data_future = executor.submit(
-            get_edge_identity_overrides,
+            get_edge_identity_overrides_for_feature_ids,
             environment_id=environment.id,
             feature_ids=feature_ids,
         )
@@ -100,14 +103,18 @@ def get_edge_overrides_data(
         )
         if feature_state.feature_segment_id:
             env_feature_overrides_data.num_segment_overrides += 1
-    for identity_override in get_overrides_data_future.result():
-        # Only override features that exists in core
-        if identity_override.feature_state.feature.id in all_overrides_data:
-            all_overrides_data[
-                identity_override.feature_state.feature.id
-            ].add_identity_override()
-            all_overrides_data[
-                identity_override.feature_state.feature.id
-            ].more_identity_overrides = identity_override.more_identity_overrides
+    for identity_overrides_v2_list in get_overrides_data_future.result():
+
+        for identity_override in identity_overrides_v2_list.identity_overrides:
+            # Only override features that exists in core
+            if identity_override.feature_state.feature.id in all_overrides_data:
+                all_overrides_data[
+                    identity_override.feature_state.feature.id
+                ].add_identity_override()
+                all_overrides_data[
+                    identity_override.feature_state.feature.id
+                ].is_num_identity_overrides_complete = (
+                    identity_overrides_v2_list.is_num_identity_overrides_complete
+                )
 
     return all_overrides_data
