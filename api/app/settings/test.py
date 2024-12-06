@@ -61,3 +61,5 @@ PAhkbx1Jf3FftZf4YL9X3W3ghczPPatemfylyAFiTGH5FrjlhlRJn+8owfWjK3zN
 3wIDAQAB
 -----END PUBLIC KEY-----
 """
+
+ENABLE_POSTPONE_DECORATOR = False

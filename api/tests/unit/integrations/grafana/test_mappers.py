@@ -10,7 +10,6 @@ from integrations.grafana.mappers import (
     map_audit_log_record_to_grafana_annotation,
 )
 from projects.models import Project
-from projects.tags.models import Tag
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -26,17 +25,6 @@ def audit_log_record(
         author=superuser,
         project=project,
     )
-
-
-@pytest.fixture
-def tagged_feature(
-    feature: Feature,
-    tag_one: Tag,
-    tag_two: Tag,
-) -> Feature:
-    feature.tags.add(tag_one, tag_two)
-    feature.save()
-    return feature
 
 
 def test_map_audit_log_record_to_grafana_annotation__feature__return_expected(

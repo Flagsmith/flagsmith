@@ -4,8 +4,9 @@ import logging
 import requests
 
 from audit.models import AuditLog
-from audit.related_object_type import RelatedObjectType
-from features.models import Feature
+from audit.services import get_audited_instance_from_audit_log_record
+from features.models import Feature, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from segments.models import Segment
 
@@ -57,45 +58,27 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
 
 
 def _get_deployment_name(audit_log_record: AuditLog) -> str:
-    try:
-        related_object_type = RelatedObjectType[audit_log_record.related_object_type]
+    audited_instance = get_audited_instance_from_audit_log_record(audit_log_record)
 
-        if related_object_type in (
-            RelatedObjectType.FEATURE,
-            RelatedObjectType.FEATURE_STATE,
-        ):
-            return _get_deployment_name_for_feature(
-                audit_log_record.related_object_id, related_object_type
-            )
-        elif related_object_type == RelatedObjectType.SEGMENT:
-            return _get_deployment_name_for_segment(audit_log_record.related_object_id)
-    except KeyError:
-        pass
+    if isinstance(audited_instance, Feature):
+        deployment_name = _get_deployment_name_for_feature(audited_instance)
+    elif isinstance(audited_instance, FeatureState) or isinstance(
+        audited_instance, EnvironmentFeatureVersion
+    ):
+        deployment_name = _get_deployment_name_for_feature(audited_instance.feature)
+    elif isinstance(audited_instance, Segment):
+        deployment_name = _get_deployment_name_for_segment(audited_instance)
+    else:
+        # use 'Deployment' as a fallback to maintain current behaviour in the
+        # event that we cannot determine the correct name to return.
+        deployment_name = DEFAULT_DEPLOYMENT_NAME
 
-    # use 'Deployment' as a fallback to maintain current behaviour in the
-    # event that we cannot determine the correct name to return.
-    return DEFAULT_DEPLOYMENT_NAME
+    return deployment_name
 
 
-def _get_deployment_name_for_feature(
-    object_id: int, object_type: RelatedObjectType
-) -> str:
-    qs = Feature.objects.all_with_deleted()
-    if object_type == RelatedObjectType.FEATURE:
-        qs = qs.filter(id=object_id)
-    elif object_type == RelatedObjectType.FEATURE_STATE:
-        qs = qs.filter(feature_states__id=object_id).distinct()
-
-    if feature := qs.first():
-        return f"Flagsmith Deployment - Flag Changed: {feature.name}"
-
-    # use 'Deployment' as a fallback to maintain current behaviour in the
-    # event that we cannot determine the correct name to return.
-    return DEFAULT_DEPLOYMENT_NAME
+def _get_deployment_name_for_feature(feature: Feature) -> str:
+    return f"Flagsmith Deployment - Flag Changed: {feature.name}"
 
 
-def _get_deployment_name_for_segment(object_id: int) -> str:
-    if segment := Segment.live_objects.all_with_deleted().filter(id=object_id).first():
-        return f"Flagsmith Deployment - Segment Changed: {segment.name}"
-
-    return DEFAULT_DEPLOYMENT_NAME
+def _get_deployment_name_for_segment(segment: Segment) -> str:
+    return f"Flagsmith Deployment - Segment Changed: {segment.name}"

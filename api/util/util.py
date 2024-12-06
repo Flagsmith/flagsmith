@@ -3,14 +3,19 @@ from math import ceil
 from threading import Thread
 from typing import Generator, Iterable, TypeVar
 
+from django.conf import settings
+
 T = TypeVar("T")
 
 
 def postpone(function):
     def decorator(*args, **kwargs):
-        t = Thread(target=function, args=args, kwargs=kwargs)
-        t.daemon = True
-        t.start()
+        if settings.ENABLE_POSTPONE_DECORATOR:  # pragma: no cover
+            t = Thread(target=function, args=args, kwargs=kwargs)
+            t.daemon = True
+            t.start()
+        else:
+            return function(*args, **kwargs)
 
     return decorator
 

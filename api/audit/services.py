@@ -54,6 +54,7 @@ def get_audited_instance_from_audit_log_record(
                     uuid=audit_log_record.related_object_uuid,
                     environment=audit_log_record.environment,
                 )
+                .select_related("feature")
                 .first()
             )
 

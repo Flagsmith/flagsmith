@@ -61,6 +61,7 @@ def track_only_feature_related_events(signal_function):
             RelatedObjectType.FEATURE.name,
             RelatedObjectType.FEATURE_STATE.name,
             RelatedObjectType.SEGMENT.name,
+            RelatedObjectType.EF_VERSION.name,
         ]:
             return None
         return signal_function(sender, instance, **kwargs)
