@@ -16,7 +16,9 @@ const controller = {
     API.setInvite('')
     API.setInviteType('')
     return data
-      .post(`${Project.api}users/join/link/${id}/`)
+      .post(`${Project.api}users/join/link/${id}/`, {
+        hubspotutk: API.getCookie('hubspotutk'),
+      })
       .catch((error) => {
         if (
           Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
@@ -25,7 +27,9 @@ const controller = {
           API.ajaxHandler(store, error)
           return
         }
-        return data.post(`${Project.api}users/join/${id}/`)
+        return data.post(`${Project.api}users/join/${id}/`, {
+          hubspotutk: API.getCookie('hubspotutk'),
+        })
       })
       .then((res) => {
         store.savedId = res.id
@@ -87,24 +91,34 @@ const controller = {
       API.postEvent(`${name}`)
     }
 
-    data.post(`${Project.api}organisations/`, { name }).then((res) => {
-      store.model.organisations = store.model.organisations.concat([
-        { ...res, role: 'ADMIN' },
-      ])
-      AsyncStorage.setItem('user', JSON.stringify(store.model))
-      store.savedId = res.id
-      store.saved()
+    data
+      .post(`${Project.api}organisations/`, {
+        hubspotutk: API.getCookie('hubspotutk'),
+        name,
+      })
+      .then((res) => {
+        store.model.organisations = store.model.organisations.concat([
+          { ...res, role: 'ADMIN' },
+        ])
+        AsyncStorage.setItem('user', JSON.stringify(store.model))
+        store.savedId = res.id
+        store.saved()
 
-      const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
-      const sendRelayEvent =
-        Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
-      window.lintrk?.('track', { conversion_id: 16798338 })
-      if (sendRelayEvent) {
-        dataRelay.sendEvent(AccountStore.getUser(), {
-          apiKey: relayEventKey,
-        })
-      }
-    })
+        const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+        const sendRelayEvent =
+          Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+
+        if (Project.linkedinConversionId) {
+          window.lintrk?.('track', {
+            conversion_id: Project.linkedinConversionId,
+          })
+        }
+        if (sendRelayEvent) {
+          dataRelay.sendEvent(AccountStore.getUser(), {
+            apiKey: relayEventKey,
+          })
+        }
+      })
   },
   deleteOrganisation: () => {
     API.trackEvent(Constants.events.DELETE_ORGANISATION)
