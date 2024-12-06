@@ -148,10 +148,11 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         "in the environment provided by the `environment` query parameter. "
         "Note: will return null for Edge enabled projects."
     )
-    more_identity_overrides = serializers.SerializerMethodField(
+    is_num_identity_overrides_complete = serializers.SerializerMethodField(
         help_text="A boolean that indicates whether there are more"
-        " identity overrides than are being listed in order to "
-        "improve performance of the features list endpoint."
+        " identity overrides than are being listed, if `False`. This field is "
+        "`True` when querying overrides data for a features list page and "
+        "exact data has been returned."
     )
 
     last_modified_in_any_environment = serializers.SerializerMethodField(
@@ -186,7 +187,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "environment_feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
-            "more_identity_overrides",
+            "is_num_identity_overrides_complete",
             "is_server_key_only",
             "last_modified_in_any_environment",
             "last_modified_in_current_environment",
@@ -304,9 +305,11 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         except (KeyError, AttributeError):
             return None
 
-    def get_more_identity_overrides(self, instance) -> typing.Optional[int]:
+    def get_is_num_identity_overrides_complete(self, instance) -> typing.Optional[int]:
         try:
-            return self.context["overrides_data"][instance.id].more_identity_overrides
+            return self.context["overrides_data"][
+                instance.id
+            ].is_num_identity_overrides_complete
         except (KeyError, AttributeError):
             return None
 
