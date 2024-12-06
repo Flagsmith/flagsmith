@@ -5,7 +5,9 @@ module.exports = (
 ) => `use Flagsmith\\Flagsmith;
 
 $flagsmith = new Flagsmith('${envId}'${
-  Constants.isCustomFlagsmithUrl && `,\n  '${Project.flagsmithClientAPI}'\n`
+  Constants.isCustomFlagsmithUrl()
+    ? `, '${Constants.getFlagsmithSDKUrl()}'`
+    : ''
 });
 
 // Check for a feature

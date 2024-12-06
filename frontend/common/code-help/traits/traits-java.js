@@ -7,9 +7,9 @@ module.exports = (
 ) => `${LIB_NAME_JAVA} ${LIB_NAME} = ${LIB_NAME_JAVA}
 .newBuilder()
 .setApiKey("${envId}")${
-  Constants.isCustomFlagsmithUrl &&
+  Constants.isCustomFlagsmithUrl() &&
   `\n    .withConfiguration(FlagsmithConfig.builder()
-        .baseUri("${Project.flagsmithClientAPI}")
+        .baseUri("${Constants.getFlagsmithSDKUrl()}")
         .build())`
 }
 .build();
