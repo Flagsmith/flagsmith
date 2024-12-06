@@ -90,7 +90,8 @@ def create_audit_log_from_historical_record(
         return
 
     environment = project = None
-    if instance.__class__.objects.filter(pk=instance.pk).exists():
+    queryset = getattr(instance.__class__, "all_objects", instance.__class__.objects)
+    if queryset.filter(pk=instance.pk).exists():
         environment, project = instance.get_environment_and_project()
 
     related_object_id = instance.get_audit_log_related_object_id(history_instance)

@@ -6,6 +6,7 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.constants import SEGMENT_FEATURE_STATE_DELETED_MESSAGE
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 
@@ -342,3 +343,42 @@ def test_retrieve_audit_log_includes_changes_when_segment_override_created_for_f
     assert audit_log_details["change_details"] == [
         {"field": "string_value", "old": "default_value", "new": "foo"},
     ]
+
+
+def test_delete_segment_override_creates_audit_log(
+    admin_client: APIClient,
+    project: int,
+    segment_name: str,
+    segment: int,
+    environment: int,
+    feature_name: str,
+    feature: int,
+    segment_featurestate: int,
+    feature_segment: int,
+) -> None:
+    # Given
+    delete_feature_segment_url = reverse(
+        "api-v1:features:feature-segment-detail", args=[feature_segment]
+    )
+    audit_log_url = reverse("api-v1:projects:project-audit-list", args=[project])
+
+    # When
+    delete_feature_segment_response = admin_client.delete(delete_feature_segment_url)
+    audit_log_response = admin_client.get(audit_log_url)
+
+    # Then
+    assert delete_feature_segment_response.status_code == status.HTTP_204_NO_CONTENT
+    assert audit_log_response.status_code == status.HTTP_200_OK
+
+    audit_log_records = audit_log_response.json()["results"]
+    # 1. Environment created
+    # 2. Feature created (project)
+    # 3. Feature state created (environment)
+    # 4. Segment created
+    # 5. Segment override created
+    # 6. Segment override deleted?
+    assert len(audit_log_records) == 6
+    assert audit_log_records[0]["log"] == SEGMENT_FEATURE_STATE_DELETED_MESSAGE % (
+        feature_name,
+        segment_name,
+    )
