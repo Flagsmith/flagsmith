@@ -105,7 +105,12 @@ const controller = {
         const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
         const sendRelayEvent =
           Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
-        window.lintrk?.('track', { conversion_id: 16798338 })
+
+        if (Project.linkedinConversionId) {
+          window.lintrk?.('track', {
+            conversion_id: Project.linkedinConversionId,
+          })
+        }
         if (sendRelayEvent) {
           dataRelay.sendEvent(AccountStore.getUser(), {
             apiKey: relayEventKey,
