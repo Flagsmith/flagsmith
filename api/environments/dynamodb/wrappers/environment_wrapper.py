@@ -1,5 +1,6 @@
 import typing
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import Any, Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -28,6 +29,12 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
 
     from environments.models import Environment
+
+
+@dataclass
+class IdentityOverridesQueryResponse:
+    items: list[dict[str, Any]]
+    is_num_identity_overrides_complete: bool
 
 
 class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
@@ -68,7 +75,8 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         environment_id: int,
         feature_id: int | None = None,
         feature_ids: None | list[int] = None,
-    ) -> typing.List[dict[str, Any]]:
+    ) -> list[dict[str, Any]] | list[IdentityOverridesQueryResponse]:
+
         try:
             if feature_ids is None:
                 return list(
@@ -79,6 +87,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                         )
                     )
                 )
+
             else:
                 futures = []
                 with ThreadPoolExecutor() as executor:
@@ -91,12 +100,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                             )
                         )
 
-                results = []
-                for future in futures:
-                    result = future.result()
-                    for item in result:
-                        results.append(item)
-
+                results = [future.result() for future in futures]
                 return results
 
         except KeyError as e:
@@ -104,7 +108,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
 
     def get_identity_overrides_page(
         self, environment_id: int, feature_id: int
-    ) -> list[dict[str, Any]]:
+    ) -> IdentityOverridesQueryResponse:
         query_response = self.table.query(
             KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
                 environment_id=environment_id,
@@ -112,9 +116,10 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             )
         )
         last_evaluated_key = query_response.get("LastEvaluatedKey")
-        for item in query_response["Items"]:
-            item["more_identity_overrides"] = last_evaluated_key is not None
-        return query_response["Items"]
+        return IdentityOverridesQueryResponse(
+            items=query_response["Items"],
+            is_num_identity_overrides_complete=last_evaluated_key is None,
+        )
 
     def get_identity_overrides_key_condition_expression(
         self,
