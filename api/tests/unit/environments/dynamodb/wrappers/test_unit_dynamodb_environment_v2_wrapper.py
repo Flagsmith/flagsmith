@@ -94,8 +94,45 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__set_f
 
     # Then
     assert len(results) == 1
-    override_document["more_identity_overrides"] = False
-    assert results[0] == override_document
+    assert results[0].items == [override_document]
+    assert results[0].is_num_identity_overrides_complete is True
+
+
+def test_environment_v2_wrapper__get_identity_overrides_by_environment_id_with_paging__set_feature_ids__return_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+    flagsmith_environments_v2_table: Table,
+    feature: Feature,
+) -> None:
+    # Given
+    settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO = flagsmith_environments_v2_table.name
+    wrapper = DynamoEnvironmentV2Wrapper()
+
+    environment_document = map_environment_to_environment_v2_document(environment)
+    flagsmith_environments_v2_table.put_item(Item=environment_document)
+    for i in range(10_000):
+        identifier = f"identity{i}"
+        override_document = {
+            "environment_id": str(environment.id),
+            "document_key": get_environments_v2_identity_override_document_key(
+                feature_id=feature.id, identity_uuid=str(uuid.uuid4())
+            ),
+            "environment_api_key": environment.api_key,
+            "identifier": identifier,
+            "feature_state": {},
+        }
+        flagsmith_environments_v2_table.put_item(Item=override_document)
+
+    # When
+    results = wrapper.get_identity_overrides_by_environment_id(
+        environment_id=environment.id,
+        feature_ids=[feature.id],
+    )
+
+    # Then
+    assert len(results) == 1
+    assert len(results[0].items) == 6215
+    assert results[0].is_num_identity_overrides_complete is False
 
 
 def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(
