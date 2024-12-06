@@ -241,8 +241,13 @@ def test_feature_get_edge_overrides_data(
     )
     edge_identity.save(admin_user)
 
+    feature_ids = [
+        distinct_identity_featurestate.feature.id,
+        feature.id,
+    ]
+
     # When
-    overrides_data = get_edge_overrides_data(environment)
+    overrides_data = get_edge_overrides_data(environment, feature_ids)
 
     # Then
     assert overrides_data[feature.id].num_identity_overrides == 1
@@ -290,11 +295,12 @@ def test_get_edge_overrides_data_skips_deleted_features(
     )
     edge_identity.save(admin_user)
 
+    feature_ids = [distinct_identity_featurestate.feature.id, feature.id]
     # Now, delete one of the feature
     feature.delete()
 
     # When
-    overrides_data = get_edge_overrides_data(environment)
+    overrides_data = get_edge_overrides_data(environment, feature_ids)
 
     # Then - we only have one identity override(for the feature that still exists)
     assert len(overrides_data) == 1
