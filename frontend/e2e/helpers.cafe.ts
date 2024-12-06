@@ -447,6 +447,14 @@ export const toggleFeature = async (index: number, toValue: boolean) => {
   )
 }
 
+export const setUserPermissions = async (index: number, toValue: boolean) => {
+  await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
+  await click('#confirm-toggle-feature-btn')
+  await waitForElementVisible(
+    byId(`feature-switch-${index}${toValue ? '-on' : 'off'}`),
+  )
+}
+
 export const setSegmentRule = async (
   ruleIndex: number,
   orIndex: number,
