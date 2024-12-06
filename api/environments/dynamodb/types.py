@@ -88,13 +88,18 @@ class IdentityOverrideV2(BaseModel):
     identifier: str
     identity_uuid: str
     feature_state: FeatureStateModel
-    more_identity_overrides: bool = False
 
 
 @dataclass
 class IdentityOverridesV2Changeset:
     to_delete: list[IdentityOverrideV2]
     to_put: list[IdentityOverrideV2]
+
+
+@dataclass
+class IdentityOverridesV2List:
+    identity_overrides: list[IdentityOverrideV2]
+    is_num_identity_overrides_complete: bool
 
 
 @dataclass
