@@ -2720,8 +2720,10 @@ def test_list_features_n_plus_1_without_rbac(
     environment: Environment,
 ) -> None:
     """
-    NOTE: When running locally, this test can come up with an extra query.
-          It should be tested against CI to ensure it passes.
+    TODO: When running locally, this test can come up with an extra query.
+          It should be tested against CI to ensure it passes, but it would
+          be even better to solve the underlying issue while runnig locally.
+          See: https://github.com/Flagsmith/flagsmith/issues/4898
     """
     _assert_list_feature_n_plus_1(
         staff_client,
