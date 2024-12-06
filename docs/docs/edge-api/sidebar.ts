@@ -4,7 +4,7 @@ const sidebar: SidebarsConfig = {
     apisidebar: [
         {
             type: 'doc',
-            id: 'edge-api/overview',
+            id: 'edge-api/edge-api',
         },
         {
             type: 'category',

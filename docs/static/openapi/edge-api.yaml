@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Edge API
   version: '1'
@@ -14,13 +14,26 @@ paths:
       tags: ['Edge API']
       summary: Get flags
       description: Retrieve the flags for an environment.
+      parameters:
+        - in: query
+          name: feature
+          schema:
+            type: integer
+          required: false
+          description:
+            'ID of the feature to filter for. Note that, if provided, response is a single object, not an array.'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Flags'
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/FeatureState'
+                  - type: object
+                    $ref: '#/components/schemas/FeatureState'
   /identities:
     get:
       tags: ['Edge API']
@@ -146,20 +159,20 @@ components:
       in: header
       name: X-Environment-Key
   schemas:
-    Flags:
-      type: object
-      properties:
-        flags:
-          type: array
-          $ref: '#/components/schemas/FeatureState'
     FeatureState:
       type: object
       properties:
         enabled:
           type: boolean
         feature_state_value:
-          type: Can be any of the following - string, integer, boolean, float
-          example: 'a-remote-config-value'
+          oneOf:
+            - type: string
+              example: 'a-remote-config-value'
+            - type: number
+              example: 42
+            - type: boolean
+              example: true
+          nullable: true
         feature:
           $ref: '#/components/schemas/Feature'
     Feature:
@@ -183,14 +196,21 @@ components:
           type: string
           example: Name
         trait_value:
-          type: string
-          example: B.A. Baracus
+          oneOf:
+            - type: string
+              example: B.A. Baracus
+            - type: number
+              example: 42
+            - type: boolean
+              example: true
+          nullable: true
     IdentitiesResponse:
       type: object
       properties:
         flags:
           type: array
-          $ref: '#/components/schemas/Flags'
+          items:
+            $ref: '#/components/schemas/FeatureState'
         traits:
           type: array
           items:
@@ -200,10 +220,11 @@ components:
       properties:
         identifier:
           type: string
-          example: ba@hotmail.com
+          example: '27a483b1-ab92-4c26-9800-d5fad201ca6a'
         flags:
           type: array
-          $ref: '#/components/schemas/Flags'
+          items:
+            $ref: '#/components/schemas/FeatureState'
         traits:
           type: array
           items:
