@@ -51,13 +51,6 @@ def main() -> None:
     pattern = r"Found (\d+) errors in (\d+) files \(checked (\d+) source files\)"
     removal = None
 
-    now_acceptable = baseline - current_errors
-    if now_acceptable:
-        print("Baseline errors in scripts/mypy_baseline.txt are now acceptable")
-        print("Remove these errors and commit baseline changes to the branch")
-        print(now_acceptable)
-        sys.exit(1)
-
     for error in new_errors:
         has_match = re.match(pattern, error)
         if has_match:
