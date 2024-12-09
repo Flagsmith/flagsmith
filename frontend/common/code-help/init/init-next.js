@@ -12,8 +12,8 @@ export default function App({ Component, pageProps, flagsmithState } {
       serverState={flagsmithState}
       options={{
         environmentID: "${envId}",${
-  Constants.isCustomFlagsmithUrl
-    ? `\n        api: "${Project.flagsmithClientAPI}",`
+  Constants.isCustomFlagsmithUrl()
+    ? `\n        api: "${Constants.getFlagsmithSDKUrl()}",`
     : ''
 }
       }}
@@ -26,8 +26,8 @@ export default function App({ Component, pageProps, flagsmithState } {
 App.getInitialProps = async () => {
   await flagsmith.init({ // fetches flags on the server and passes them to the App 
       environmentID: "${envId}",${
-  Constants.isCustomFlagsmithUrl
-    ? `\n      api: "${Project.flagsmithClientAPI}",`
+  Constants.isCustomFlagsmithUrl()
+    ? `\n      api: "${Constants.getFlagsmithSDKUrl()}",`
     : ''
 }
   });

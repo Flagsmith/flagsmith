@@ -38,6 +38,18 @@ If you want to apply any fixes discovered, you can run the following command:
 npx prettier <YOUR_DOC> --write
 ```
 
+## OpenAPI generator
+
+We are using the https://github.com/PaloAltoNetworks/docusaurus-openapi-docs plugin to generate the OpenAPI docs. If
+`static/api-static/edge-api.yaml` changes you will need to rebuild the static files with:
+
+```bash
+npm run docusaurus clean-api-docs all
+npm run docusaurus gen-api-docs all
+```
+
+and then commit them.
+
 ## Build
 
 ```console

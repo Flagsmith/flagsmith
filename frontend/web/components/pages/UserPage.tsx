@@ -1189,7 +1189,7 @@ const UserPage: FC<UserPageType> = (props) => {
                             title='Managing user traits and segments'
                             snippets={Constants.codeHelp.USER_TRAITS(
                               environmentId,
-                              identity,
+                              identity?.identifier,
                             )}
                           />
                         </FormGroup>

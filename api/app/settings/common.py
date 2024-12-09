@@ -1010,6 +1010,9 @@ ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
 
+# Allows us to prevent the postpone decorator from running things async
+ENABLE_POSTPONE_DECORATOR = env.bool("ENABLE_POSTPONE_DECORATOR", default=True)
+
 ENABLE_CLEAN_UP_OLD_TASKS = env.bool("ENABLE_CLEAN_UP_OLD_TASKS", default=True)
 TASK_DELETE_RETENTION_DAYS = env.int("TASK_DELETE_RETENTION_DAYS", default=30)
 TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
