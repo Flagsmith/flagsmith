@@ -1,0 +1,74 @@
+---
+id: bulk-insert-identities-overwrite
+title: "Bulk insert identities (overwrite)"
+description: "Bulk uploading identities and traits. If there is an existing identity, using POST will overwrite the existing identity with the data from the request."
+sidebar_label: "Bulk insert identities (overwrite)"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVd9P2zAQ/lcsP21SmxbWp77RDaRqEiBg0iRAk5NcGoNje7ZTqKL+77tzQmso2st4Wh+q+Pzd7+/OHQ9i5fn8lp+WK2Anl0t+P+Il+MJJG6TRfM4XrXpkrVVGlFKvmCxBBxkkeCZ0yYITMviMLSsWanDAJMkZPEsfEvhmxFpP58uL6xv2JJViZg3uyckApHiogKBQx6tSBMEqZ5p4cvC7BR+yO32nl4HVAv0xJRsZmKnY0XSaRmjBJQp8xIfDwpQbPu94YXRAMH0Ka5UsBCU9efCUecd9UUMj6CtsLGAtTP4ARUA78Cwaq1DUbUfcOoOOyCFBKdxERTgnNqiBiTb+PVOvtft6/qP+r0fYJFAfHFY2jZqfiwY4ht7D10K1lAs3Gi4qpMPfVBfZScYWwomi9WhiB9Vtk4NLobPj5Do3RoHQ6X1wLWyRb7pVSuQ7CYUlQ/R1Q+FxkvRNrSR6OEgs1Vjumn/Vt/obtWObQojQe9jL/ZbI4a3Rvi/k8fQ4dvPVLJwUBdgAJZVuNp0eAhaiZINjzDShV4DnMLFKyPeJtavza3PnsaZE7ITUTesD0yawHFhjHM0PThwyf0hjNv1yGNiZcbks0chHhHXhVkJLH4eFBr7Eb+xf2U+pB7emSa4U7pZsF9TsMKhzTOLMtLr8iKBO9Vo6oxs0EqtTRcPb3n0DoTYloqyJnbEi1Hia5MiF8b62eEPRg/NxCFqnEFSHYP18MgFckZmwMouJ4cKps8I0E5RM1keH4bwsVGK4h6LFVbeJVpNAv9Oc3t6nkGtKt6fgW+B+J1hJApwK8lSDKOPgaRrqOf85ThTHBKQK0E672m+/03SBSV2ZaH6YkF3sI0616BM6ItJT+RoR+zJ4i8+DxKlxISXpp916//y2NMna/b8el6E7CX2xYpFD3UC4W/6WcNj5miiJV12XCw8/nNpuSYyGXWQHNkE42S9I5MropeHEpbjo+de+nuMbCoDgcZ0fPmm0jnuNfpEl2DTo+2ReqKQIy4cHszEloZ14oscU/+ccP0zsbORslHVcCb1qxYqwvWf6/QF6le6J
+sidebar_class_name: "post api-method"
+info_path: edge-api/edge-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Bulk insert identities (overwrite)"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/bulk-identities"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Bulk uploading identities and traits. If there is an existing identity, using POST will overwrite the existing identity with the data from the request.
+
+It has a limit of 100 identities per request.
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"content":{"application/json":{"schema":{"type":"object","example":{},"properties":{"data":{"type":"array","items":{"type":"object","properties":{"traits":{"type":"array","items":{"type":"object","properties":{"trait_key":{"type":"string","example":"Name"},"trait_value":{"oneOf":[{"type":"string","example":"B.A. Baracus"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true}},"title":"Trait"}},"identifier":{"type":"string"}},"title":"IdentitiesRequestData"}}},"title":"BulkIdentitiesData"}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"202":{"description":"Accepted"},"400":{"description":"Bad Request","content":{"text/plain":{"schema":{"type":"string","description":"Number of identities must not be more than 100"}}}},"403":{"description":"Forbidden","content":{"text/plain":{"schema":{"type":"string","description":"Organisation is disabled from serving flags."}}}},"404":{"description":"Not Found","content":{"text/plain":{"schema":{"type":"string","description":"Environment not found"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

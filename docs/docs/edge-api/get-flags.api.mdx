@@ -1,0 +1,71 @@
+---
+id: get-flags
+title: "Get flags"
+description: "Retrieve the flags for an environment."
+sidebar_label: "Get flags"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVV1P2zAU/SuWn9MG0J76VgmGEBJMwKRJqKrc5CYxc2xj32RUUf77fOM0hI6hPe1hWl+q+H74nHPt446jKD1fPfKLvAS2/nLFNwnPwWdOWpRG8xW/A3QSWmBYAStUyGeFcUxoBrqVzugaNC55wq1wogYERw07Lqn4uQG3DzEdIuGzAIGNg7DgswpqwVcdx72lkNQIJTjeJ9zBcyMd5HxVCOXhGNDVOTNFRBPbMTSskCrsTMiW7MYgoRWYMFkw60wrc8gT5sBboz0w6ZlgXupSATO7J8hCpjZInIRzYr/k/YZgxHRPKM9OTujvLZLb68AkMwG5RooKa5XMBEXTJ08p3Yyo0XBbDNKMlIe9QgeJUPuZFBESKeqMBYcyQgAtdopUmRJ3xigQmjQbpdh6FAjbVqgG3t3Th2HqMvSGF1FbNcBYOKiDZIvApJDlIhb3yVSjm3oXJjOr+XQ2Cx9QzOLoGiAJdaMUgR5XJpgDB4nq7Zn4mL7M3zktNCWR32q1j1scYRzP3UfsfWV+bCtwZrsTWscDGLM/qrp/WN+cr+/OeR9+ycTlc+RyT0MIoeT/SP+xkW76GA0+V5mAnpcw0BJYhY90sEdyN3DtwQcbp0KoQrR+laYQfHYprFwOqbXEapmZOg0raXvKj61ucmVS3kPWOIn7oevFq/deAy1t5in3ZDpR4+PEV/exkhaSaNRV0HwQf3Tqb4tZ4YISibbUhZkPesKXcOIbQZ+S3tZ4rMXggGPHS0B20OcNy+7VQv/8sRlJILxgapWQw40ZpO7GaTzyuFuQpQpgaKHrdsLDV6f6npbj40Rq5tKPF/G9F2cO8G88Pr9h953GN7tboyPw4XC0wsl4LcNJSA7jJG6xbJ1lYHFW9ctbRV2mY3158RAG/hNN1chh
+sidebar_class_name: "get api-method"
+info_path: edge-api/edge-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Get flags"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"get"}
+  path={"/flags"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Retrieve the flags for an environment.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"in":"query","name":"feature","schema":{"type":"integer"},"required":false,"description":"ID of the feature to filter for. Note that, if provided, response is a single object, not an array."}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"OK","content":{"application/json":{"schema":{"oneOf":[{"type":"array","items":{"type":"object","properties":{"enabled":{"type":"boolean"},"feature_state_value":{"oneOf":[{"type":"string","example":"a-remote-config-value"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true},"feature":{"title":"feature","type":"object","properties":{"id":{"type":"integer","readOnly":true,"example":42},"name":{"type":"string","example":"show_hero_banner"},"type":{"type":"string","example":"STANDARD"}}}},"title":"FeatureState"}},{"type":"object","properties":{"enabled":{"type":"boolean"},"feature_state_value":{"oneOf":[{"type":"string","example":"a-remote-config-value"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true},"feature":{"title":"feature","type":"object","properties":{"id":{"type":"integer","readOnly":true,"example":42},"name":{"type":"string","example":"show_hero_banner"},"type":{"type":"string","example":"STANDARD"}}}},"title":"FeatureState"}]}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

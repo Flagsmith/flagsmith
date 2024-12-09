@@ -1,0 +1,74 @@
+---
+id: bulk-insert-identities-update
+title: "Bulk insert identities (update)"
+description: "Bulk uploading identities and traits. If there is an existing identity, using PUT will update the existing identity with the data from the request."
+sidebar_label: "Bulk insert identities (update)"
+hide_title: true
+hide_table_of_contents: true
+api: eJzdVd9P2zAQ/lcsP21SmxbWp77RDaRqEiAG0iRAkxNfGkNie7ZTqKL+77tzQmso2st4Wh+q+Pzd7+/OHQ9i5fn8lp/KFbCTyyW/H3EJvnDKBmU0n/NFWz+y1tZGSKVXTEnQQQUFngktWXBCBZ+xZclCBQ6YIjmDZ+VDAt+MWOvpfHlzzZ5UXaNFKQKQ0iEYEaGKV4gRrHSmiScHv1vwIbvTd3oZWCXQF6tVowIzJTuaTtPoLLhEgY/4cFgYueHzjhdGBwTTp7C2VoWghCcPnrLuuC8qaAR9hY0FrIPJH6AIaAeeRWNrFHXbEbfOoCNySFAKN1ERzokNaqgAjX/P1Gvtvpb/qP/rETYJ1AeHlU2j5ueiAY6h9/C1qFvKhRsNFyVS4W+qi+wkYwvhRNF6NLGD6rbJwaXQ2XFynRtTg9DpfXAtbJFruq1rke8kFJYK0dc1hcdJ0je1VOjhILFUY7lr/lXf6m/Ujm0KITLvYS/3WyKHt0b7vpDH0+PYzVdzcFIUYANIKt1sOj0ELIRkg2PMNKFXgOcwsbVQ7xNrV+fX5s5jTYnYCamb1gemTWA5sMY4mh+cNmT+kMZs+uUwsDPjciXRyEeEdeFWQisfh4WGXeI39k/2U+rBrWmSyxr3SrYLanYY1DkmcWZaLT8iqFO9Vs7oBo3E6pTR8LZ330CojESUbePMiFDhYZIjFcb70uINBQ/OxxloXY2gKgTr55MJ4HbMhFVZzAv3TZUVppmgZLI+OozmZZcSwT0UrcOdFq0mcX6nMb29TyE/KNuegW+B+5VgFQlwKMhTBULGudM003P+c5wojglIBaCVdrVffqfp/lK6NNH8MCC72EecatEndESct8aHRsS2DN7iy6BwaFxIOfqpX+2f39YlWbn/z6MytCWhLZYqkqcbmHbL3zINW15hMemq63Lh4cbV2y2J0bCLtMDqC6f6xYgkGb10mkgUFzz/2tdyfE0BEDyu8cOnjNZwr9EvsASbBn2fzAmWE1H58E42RhLYiSd6Q/F/zvHDxKZGrkZZx2uhV61YEbZ3TL8/nsHpCQ==
+sidebar_class_name: "put api-method"
+info_path: edge-api/edge-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Bulk insert identities (update)"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"put"}
+  path={"/bulk-identities"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Bulk uploading identities and traits. If there is an existing identity, using PUT will update the existing identity with the data from the request.
+
+It has a limit of 100 identities per request.
+
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"content":{"application/json":{"schema":{"type":"object","example":{},"properties":{"data":{"type":"array","items":{"type":"object","properties":{"traits":{"type":"array","items":{"type":"object","properties":{"trait_key":{"type":"string","example":"Name"},"trait_value":{"oneOf":[{"type":"string","example":"B.A. Baracus"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true}},"title":"Trait"}},"identifier":{"type":"string"}},"title":"IdentitiesRequestData"}}},"title":"BulkIdentitiesData"}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"202":{"description":"Accepted"},"400":{"description":"Bad Request","content":{"text/plain":{"schema":{"type":"string","description":"Number of identities must not be more than 100"}}}},"403":{"description":"Forbidden","content":{"text/plain":{"schema":{"type":"string","description":"Organisation is disabled from serving flags."}}}},"404":{"description":"Not Found","content":{"text/plain":{"schema":{"type":"string","description":"Environment not found"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      
