@@ -135,6 +135,40 @@ def test_non_superuser_can_create_new_organisation_by_default(
     assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
+def test_colliding_hubspot_cookies_are_ignored(
+    staff_client: APIClient,
+    staff_user: FFAdminUser,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    org_name = "Test create org"
+    webhook_notification_email = "test@email.com"
+    url = reverse("api-v1:organisations:organisation-list")
+    colliding_cookie = "test_cookie_tracker"
+    HubspotTracker.objects.create(
+        user=admin_user,
+        hubspot_cookie=colliding_cookie,
+    )
+    data = {
+        "name": org_name,
+        "webhook_notification_email": webhook_notification_email,
+        HUBSPOT_COOKIE_NAME: colliding_cookie,
+    }
+
+    assert not HubspotTracker.objects.filter(user=staff_user).exists()
+
+    # When
+    response = staff_client.post(url, data=data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert (
+        Organisation.objects.get(name=org_name).webhook_notification_email
+        == webhook_notification_email
+    )
+    assert not HubspotTracker.objects.filter(user=staff_user).exists()
+
+
 @override_settings(RESTRICT_ORG_CREATE_TO_SUPERUSERS=True)
 def test_create_new_orgnisation_returns_403_with_non_superuser(
     staff_client: APIClient,
