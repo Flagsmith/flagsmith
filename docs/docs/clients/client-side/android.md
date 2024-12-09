@@ -25,12 +25,6 @@ In your project path `app/build.gradle` add a new dependency:
 
 <CodeBlock>{`implementation("com.flagsmith:flagsmith-kotlin-android-client:`}<AndroidVersion />"{`)`}</CodeBlock>
 
-:::info
-
-Note: jitpack support has been deprecated as of `v1.7.1`.
-
-:::
-
 ## Basic Usage
 
 The SDK is initialised against a single environment within a project on [https://flagsmith.com](https://flagsmith.com),
