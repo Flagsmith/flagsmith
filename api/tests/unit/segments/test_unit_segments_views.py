@@ -156,6 +156,44 @@ def test_create_segments_reaching_max_limit(project, client, settings):
     assert project.segments.count() == 1
 
 
+def test_segments_limit_ignores_old_segment_versions(
+    project: Project,
+    segment: Segment,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS])
+
+    # let's reduce the max segments allowed to 2
+    project.max_segments_allowed = 2
+    project.save()
+
+    # and create some older versions for the segment fixture
+    segment.deep_clone()
+    assert Segment.objects.filter(version_of_id=segment.id).count() == 3
+    assert Segment.live_objects.count() == 1
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # When
+    res = staff_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_201_CREATED
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
@@ -668,6 +706,148 @@ def test_update_segment_add_new_condition(
         == new_condition_property
     )
     assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
+
+
+def test_update_mismatched_rule_and_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    false_segment = Segment.objects.create(name="False segment", project=project)
+    segment_rule.segment = false_segment
+    segment_rule.save()
+
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"segment": "Mismatched segment is not allowed"}
+    segment_rule.refresh_from_db()
+    assert segment_rule.segment == false_segment
+
+
+def test_update_mismatched_condition_and_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    false_segment = Segment.objects.create(name="False segment", project=project)
+    false_segment_rule = SegmentRule.objects.create(
+        segment=false_segment, type=SegmentRule.ALL_RULE
+    )
+    false_nested_rule = SegmentRule.objects.create(
+        rule=false_segment_rule, type=SegmentRule.ANY_RULE
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+
+    existing_condition = Condition.objects.create(
+        rule=false_nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"segment": "Mismatched segment is not allowed"}
+    existing_condition.refresh_from_db()
+    assert existing_condition._get_segment() != segment
 
 
 def test_update_segment_versioned_segment(

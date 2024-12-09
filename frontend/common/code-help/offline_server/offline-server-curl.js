@@ -1,4 +1,6 @@
+import Constants from 'common/constants'
+
 module.exports = (serversideEnvironmentKey) => `
-curl -i '${Project.flagsmithClientAPI}environment-document/' \\
+curl -i '${Constants.getFlagsmithSDKUrl()}environment-document/' \\
      -H 'x-environment-key: ${serversideEnvironmentKey}' | tee flagsmith.json
 `

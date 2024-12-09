@@ -339,6 +339,7 @@ const ChangeRequestsPage = class extends Component {
           <Permission
             level='environment'
             permission='UPDATE_FEATURE_STATE'
+            tags={projectFlag?.tags}
             id={this.props.match.params.environmentId}
           >
             {({ permission: publishPermission }) => (
