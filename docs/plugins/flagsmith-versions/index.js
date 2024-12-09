@@ -31,7 +31,11 @@ const fetchGitHubReleases = async (repo) => {
     return data.map((release) => (release.tag_name.startsWith('v') ? release.tag_name.slice(1) : release.tag_name));
 };
 
-const fetchAndroidVersions = async () => fetchGitHubReleases('flagsmith/flagsmith-kotlin-android-client');
+const fetchAndroidVersions = async () =>
+    fetchMavenVersions({
+        groupId: 'com.flagsmith',
+        artifactId: 'flagsmith-kotlin-android-client',
+    });
 
 const fetchSwiftPMVersions = async () => fetchGitHubReleases('Flagsmith/flagsmith-ios-client');
 
