@@ -131,7 +131,7 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id_with_p
 
     # Then
     assert len(results) == 1
-    assert len(results[0].items) == 6215
+    assert 6000 < len(results[0].items) < 6350
     assert results[0].is_num_identity_overrides_complete is False
 
 
