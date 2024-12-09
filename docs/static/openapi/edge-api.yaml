@@ -6,7 +6,7 @@ servers:
   - url: https://edge.api.flagsmith.com/api/v1
     description: Edge API
 security:
-  - EnvironmentKeyAuth: []
+  - EnvironmentKey: []
 tags: []
 paths:
   /flags:
@@ -154,7 +154,7 @@ paths:
                 description: Environment not found
 components:
   securitySchemes:
-    EnvironmentKeyAuth:
+    EnvironmentKey:
       type: apiKey
       in: header
       name: X-Environment-Key
