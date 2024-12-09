@@ -48,8 +48,9 @@ repos:
     hooks:
       - id: mypy-check
         name: mypy check
+        additional_dependencies: ['poetry']
         entry: bash -c "cd api && poetry run python scripts/mypy_check.py $(git diff --name-only --cached -- '*.py')"
-        language: system
+        language: python
         types: [python]
 
 ci:
