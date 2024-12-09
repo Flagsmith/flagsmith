@@ -724,13 +724,13 @@ files = [
 
 [[package]]
 name = "django"
-version = "4.2.16"
+version = "4.2.17"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "Django-4.2.16-py3-none-any.whl", hash = "sha256:1ddc333a16fc139fd253035a1606bb24261951bbc3a6ca256717fa06cc41a898"},
-    {file = "Django-4.2.16.tar.gz", hash = "sha256:6f1616c2786c408ce86ab7e10f792b8f15742f7b7b7460243929cb371e7f1dad"},
+    {file = "Django-4.2.17-py3-none-any.whl", hash = "sha256:3a93350214ba25f178d4045c0786c61573e7dbfa3c509b3551374f1e11ba8de0"},
+    {file = "Django-4.2.17.tar.gz", hash = "sha256:6b56d834cc94c8b21a8f4e775064896be3b4a4ca387f2612d4406a5927cd2fdc"},
 ]
 
 [package.dependencies]
@@ -1345,7 +1345,7 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "0.1.0"
+version = "1.4.2"
 description = "A repository for including code that is required in multiple flagsmith repositories"
 optional = false
 python-versions = "^3.10"
@@ -1362,8 +1362,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
-reference = "v1.2.0"
-resolved_reference = "ccb6c0603168c91cfb8f9f24bdfa21741eb5916e"
+reference = "v1.4.2"
+resolved_reference = "5ac44b7c8dce96c043c9a0c38c7cbde04886fcf9"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -3340,6 +3340,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -4050,7 +4051,7 @@ test = ["pytest"]
 
 [[package]]
 name = "workflows-logic"
-version = "2.0.0"
+version = "2.7.4"
 description = "Workflows logic plugin for Flagsmith application."
 optional = false
 python-versions = ">=3.10,<4.0"
@@ -4060,14 +4061,14 @@ develop = false
 [package.dependencies]
 djangorestframework = "*"
 djangorestframework-recursive = "*"
-flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.2.0"}
+flagsmith-common = {git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2"}
 flagsmith-flag-engine = "*"
 
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.7.0"
-resolved_reference = "3bd546a451e7f2359aa9787ec8ffa5e4315d12cf"
+reference = "v2.7.4"
+resolved_reference = "aba7b848a13ed589c8f46fea5fa7c63a2c047d82"
 
 [[package]]
 name = "wrapt"
@@ -4186,4 +4187,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "487ea7b46f083a1be71662f027a0b170c60e5aa4e35d083224ad4cd4697ec7d1"
+content-hash = "03dcc629288ed09eca14b7be8c902a801c68011a5aaa12d65980bc5c20e4f24b"
