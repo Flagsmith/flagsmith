@@ -1,6 +1,5 @@
 import logging
 
-from django.db import IntegrityError
 from rest_framework.request import Request
 
 from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
@@ -18,18 +17,23 @@ def register_hubspot_tracker(request: Request) -> None:
         )
         return
 
-    try:
-        HubspotTracker.objects.update_or_create(
-            user=request.user,
-            defaults={
-                "hubspot_cookie": hubspot_cookie,
-            },
-        )
-        logger.info(
-            f"Created HubspotTracker instance for user {request.user.email} with cookie {hubspot_cookie}"
-        )
-    except IntegrityError:
+    if (
+        HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)
+        .exclude(user=request.user)
+        .exists()
+    ):
         logger.info(
             f"HubspotTracker could not be created for user {request.user.email}"
             f" due to cookie conflict with cookie {hubspot_cookie}"
         )
+        return
+
+    HubspotTracker.objects.update_or_create(
+        user=request.user,
+        defaults={
+            "hubspot_cookie": hubspot_cookie,
+        },
+    )
+    logger.info(
+        f"Created HubspotTracker instance for user {request.user.email} with cookie {hubspot_cookie}"
+    )
