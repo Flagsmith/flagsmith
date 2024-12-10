@@ -54,7 +54,7 @@ def test_migrate_to_edge_v2__new_projects__dont_migrate(
 
 
 def test_migrate_to_edge_v2__core_projects__dont_migrate(
-    mocker: MockerFixture, project: Project
+    mocker: "MockerFixture", project: Project
 ) -> None:
     # Given
     # unmigrated Core projects are present
@@ -90,7 +90,7 @@ def test_migrate_to_edge_v2__core_projects__dont_migrate(
 
 def test_ensure_identity_traits_blanks__calls_expected(
     flagsmith_identities_table: "Table",
-    mocker: MockerFixture,
+    mocker: "MockerFixture",
 ) -> None:
     # Given
     environment_api_key = "test"
