@@ -18,9 +18,9 @@ We assume you already have the [Flagsmith API](/deployment/hosting/locally-api.m
 
 Real-time flags require additional infrastructure that your Flagsmith deployment will use:
 
-- **Server-sent events (SSE) service containers**, running the private [`flagsmith/sse`](https://hub.docker.
-  com/repository/docker/flagsmith/sse) Docker image (tag `v4.0.0-beta` or later). These serve the real-time endpoint
-  that Flagsmith clients can connect to.
+- **Server-sent events (SSE) service containers**, running the private
+- [`flagsmith/sse`](https://hub.docker.com/repository/docker/flagsmith/sse) Docker image (tag `v4.0.0-beta` or later).
+  These serve the real-time endpoint that Flagsmith clients can connect to.
 - A **[NATS](https://docs.nats.io/)** cluster with persistent storage, which guarantees at-least-once delivery for
   updates.
 
