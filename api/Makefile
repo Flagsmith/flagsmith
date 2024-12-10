@@ -2,7 +2,7 @@
 
 DOCKER_TAG ?= flagsmith/flagsmith-api:local
 
-COMPOSE_FILE ?= ../docker/db.yml
+COMPOSE_FILE ?= ../docker/api/docker-compose.local.yml
 COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
