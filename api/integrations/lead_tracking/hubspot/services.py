@@ -12,9 +12,7 @@ def register_hubspot_tracker(request: Request) -> None:
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
 
     if not hubspot_cookie:
-        logger.info(
-            f"Request did not included Hubspot data for user {request.user.email}"
-        )
+        logger.info(f"Request did not included Hubspot data for user {request.user.id}")
         return
 
     if (
@@ -23,7 +21,7 @@ def register_hubspot_tracker(request: Request) -> None:
         .exists()
     ):
         logger.info(
-            f"HubspotTracker could not be created for user {request.user.email}"
+            f"HubspotTracker could not be created for user {request.user.id}"
             f" due to cookie conflict with cookie {hubspot_cookie}"
         )
         return
@@ -35,5 +33,5 @@ def register_hubspot_tracker(request: Request) -> None:
         },
     )
     logger.info(
-        f"Created HubspotTracker instance for user {request.user.email} with cookie {hubspot_cookie}"
+        f"Created HubspotTracker instance for user {request.user.id} with cookie {hubspot_cookie}"
     )
