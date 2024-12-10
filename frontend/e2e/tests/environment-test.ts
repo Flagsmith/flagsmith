@@ -1,6 +1,7 @@
 import {
   byId,
-  click, createEnvironment,
+  click,
+  createEnvironment,
   log,
   login,
   setText,
