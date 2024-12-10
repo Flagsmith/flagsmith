@@ -1,4 +1,5 @@
 import typing
+from functools import partial
 
 import boto3
 from botocore.config import Config
@@ -33,8 +34,13 @@ class BaseDynamoWrapper:
         return self.table is not None
 
     def query_get_all_items(self, **kwargs: dict) -> typing.Generator[dict, None, None]:
+        if kwargs:
+            response_getter = partial(self.table.query, **kwargs)
+        else:
+            response_getter = partial(self.table.scan)
+
         while True:
-            query_response = self.table.query(**kwargs)
+            query_response = response_getter()
             for item in query_response["Items"]:
                 yield item
 
@@ -42,4 +48,4 @@ class BaseDynamoWrapper:
             if not last_evaluated_key:
                 break
 
-            kwargs["ExclusiveStartKey"] = last_evaluated_key
+            response_getter.keywords["ExclusiveStartKey"] = last_evaluated_key
