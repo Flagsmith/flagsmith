@@ -124,6 +124,10 @@ test('Project', async () => {
   await logout()
 })
 
+test('Versioning', async () => {
+  await versioningTests()
+  await logout()
+})
 
 // test('Organisation-permission', async () => {
 //   await organisationPermissionTest()
