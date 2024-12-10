@@ -3192,6 +3192,21 @@ pytest = ">=5.0"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
+name = "pytest-structlog"
+version = "1.1"
+description = "Structured logging assertions"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest_structlog-1.1-py3-none-any.whl", hash = "sha256:928475948f886bc027f1550dccb892fb46bfb8bb1ddb0c44ab4fa3c5b3f3079a"},
+    {file = "pytest_structlog-1.1.tar.gz", hash = "sha256:440123b0a7f93482383995b3fb796ed8c1b9a37edf405683a34774993ef09543"},
+]
+
+[package.dependencies]
+pytest = "*"
+structlog = ">=22.2.0"
+
+[[package]]
 name = "pytest-xdist"
 version = "3.6.1"
 description = "pytest xdist plugin for distributed testing, most importantly across multiple CPUs"
@@ -3872,6 +3887,23 @@ files = [
 ]
 
 [[package]]
+name = "structlog"
+version = "24.4.0"
+description = "Structured Logging for Python"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "structlog-24.4.0-py3-none-any.whl", hash = "sha256:597f61e80a91cc0749a9fd2a098ed76715a1c8a01f73e336b746504d1aad7610"},
+    {file = "structlog-24.4.0.tar.gz", hash = "sha256:b27bfecede327a6d2da5fbc96bd859f114ecc398a6389d664f62085ee7ae6fc4"},
+]
+
+[package.extras]
+dev = ["freezegun (>=0.2.8)", "mypy (>=1.4)", "pretend", "pytest (>=6.0)", "pytest-asyncio (>=0.17)", "rich", "simplejson", "twisted"]
+docs = ["cogapp", "furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-mermaid", "sphinxext-opengraph", "twisted"]
+tests = ["freezegun (>=0.2.8)", "pretend", "pytest (>=6.0)", "pytest-asyncio (>=0.17)", "simplejson"]
+typing = ["mypy (>=1.4)", "rich", "twisted"]
+
+[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -4184,4 +4216,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "0ce87586d79a9020506bd58a46bd4ab38ce5e6215a978c33f8062f3cdc3d0276"
+content-hash = "3a490ddf78d714b0fb4394a3f384856576d1db5b5c9ad270a29d1434aa2562f6"

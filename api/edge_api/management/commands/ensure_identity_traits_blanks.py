@@ -1,7 +1,8 @@
-import logging
 from typing import Any
 
 from django.core.management import BaseCommand
+from structlog import get_logger
+from structlog.stdlib import BoundLogger
 
 from environments.dynamodb import DynamoIdentityWrapper
 
@@ -11,14 +12,14 @@ identity_wrapper = DynamoIdentityWrapper()
 LOG_COUNT_EVERY = 100_000
 
 
-logger = logging.getLogger(__name__)
-
-
 class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         total_count = identity_wrapper.table.item_count
         scanned_count = 0
         fixed_count = 0
+
+        log: BoundLogger = get_logger(total_count=total_count)
+        log.info("started")
 
         for identity_document in identity_wrapper.query_get_all_items():
             should_write_identity_document = False
@@ -34,30 +35,31 @@ class Command(BaseCommand):
                     trait_data["trait_value"] = ""
 
             scanned_count += 1
+            scanned_percentage = scanned_count / total_count * 100
 
             if should_write_identity_document:
                 identity_wrapper.put_item(identity_document)
                 fixed_count += 1
-                self.stdout.write(
-                    "fixed identity "
-                    f"scanned={scanned_count}/{total_count} "
-                    f"percentage={scanned_count/total_count*100:.2f} "
-                    f"fixed={fixed_count} "
-                    f"id={identity_document['identity_uuid']}",
+
+                log.info(
+                    "identity-fixed",
+                    identity_uuid=identity_document["identity_uuid"],
+                    scanned_count=scanned_count,
+                    scanned_percentage=scanned_percentage,
+                    fixed_count=fixed_count,
                 )
 
             if not (scanned_count % LOG_COUNT_EVERY):
-                self.stdout.write(
-                    f"scanned={scanned_count}/{total_count} "
-                    f"percentage={scanned_count/total_count*100:.2f} "
-                    f"fixed={fixed_count}"
+                log.info(
+                    "in-progress",
+                    scanned_count=scanned_count,
+                    scanned_percentage=scanned_percentage,
+                    fixed_count=fixed_count,
                 )
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                "finished "
-                f"scanned={scanned_count}/{total_count} "
-                f"percentage={scanned_count/total_count*100:.2f} "
-                f"fixed={fixed_count}"
-            )
+        log.info(
+            "finished",
+            scanned_count=scanned_count,
+            scanned_percentage=scanned_percentage,
+            fixed_count=fixed_count,
         )

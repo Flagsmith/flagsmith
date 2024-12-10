@@ -1,7 +1,7 @@
 import typing
+import uuid
 
 from django.core.management import call_command
-from pytest_mock import MockerFixture
 
 from edge_api.management.commands.ensure_identity_traits_blanks import (
     identity_wrapper,
@@ -10,10 +10,12 @@ from projects.models import EdgeV2MigrationStatus, Project
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
+    from pytest_mock import MockerFixture
+    from pytest_structlog import StructuredLogCapture
 
 
 def test_migrate_to_edge_v2__new_projects__dont_migrate(
-    mocker: MockerFixture, project: Project
+    mocker: "MockerFixture", project: Project
 ) -> None:
     # Given
     # unmigrated projects are present
@@ -144,3 +146,75 @@ def test_ensure_identity_traits_blanks__calls_expected(
     identity_wrapper_put_item_mock.assert_called_once_with(
         fixed_identity_with_skipped_blank_trait_value,
     )
+
+
+def test_ensure_identity_traits_blanks__logs_expected(
+    flagsmith_identities_table: "Table",
+    log: "StructuredLogCapture",
+    mocker: "MockerFixture",
+) -> None:
+    # Given
+    environment_api_key = "test"
+    expected_log_count_every = 10
+    mocker.patch(
+        "edge_api.management.commands.ensure_identity_traits_blanks.LOG_COUNT_EVERY",
+        new=expected_log_count_every,
+    )
+    identity_with_skipped_blank_trait_value = {
+        "composite_key": f"{environment_api_key}_identity_with_skipped_blank_trait_value",
+        "identifier": "identity_with_skipped_blank_trait_value",
+        "environment_api_key": environment_api_key,
+        "identity_uuid": "33e11400-3a34-4b09-9541-3c99e9bf713a",
+        "identity_traits": [
+            {"trait_key": "key", "trait_value": "value"},
+            {"trait_key": "blank"},
+        ],
+    }
+
+    for i in range(expected_log_count_every):
+        flagsmith_identities_table.put_item(
+            Item={
+                "composite_key": f"{environment_api_key}_identity_without_traits_{i}",
+                "identifier": f"identity_without_traits_{i}",
+                "environment_api_key": environment_api_key,
+                "identity_uuid": str(uuid.uuid4()),
+            }
+        )
+    flagsmith_identities_table.put_item(Item=identity_with_skipped_blank_trait_value)
+
+    # When
+    call_command("ensure_identity_traits_blanks")
+
+    # Then
+    assert log.events == [
+        {
+            "event": "started",
+            "level": "info",
+            "total_count": 11,
+        },
+        {
+            "event": "in-progress",
+            "fixed_count": 0,
+            "level": "info",
+            "scanned_count": 10,
+            "scanned_percentage": 90.9090909090909,
+            "total_count": 11,
+        },
+        {
+            "event": "identity-fixed",
+            "fixed_count": 1,
+            "identity_uuid": "33e11400-3a34-4b09-9541-3c99e9bf713a",
+            "level": "info",
+            "scanned_count": 11,
+            "scanned_percentage": 100.0,
+            "total_count": 11,
+        },
+        {
+            "event": "finished",
+            "fixed_count": 1,
+            "level": "info",
+            "scanned_count": 11,
+            "scanned_percentage": 100.0,
+            "total_count": 11,
+        },
+    ]
