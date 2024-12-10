@@ -32,6 +32,8 @@ class Command(BaseCommand):
                     should_write_identity_document = True
                     trait_data["trait_value"] = ""
 
+            scanned_count += 1
+
             if should_write_identity_document:
                 identity_wrapper.put_item(identity_document)
                 self.stdout.write(
@@ -41,7 +43,6 @@ class Command(BaseCommand):
                     f"id={identity_document['identity_uuid']}",
                 )
 
-            scanned_count += 1
             if not (scanned_count % LOG_COUNT_EVERY):
                 self.stdout.write(
                     f"scanned={scanned_count}/{total_count}"
