@@ -21,8 +21,9 @@ Real-time flags require additional infrastructure that your Flagsmith deployment
 - **Server-sent events (SSE) service containers**, running the private
   [`flagsmith/sse`](https://hub.docker.com/repository/docker/flagsmith/sse) Docker image (tag `v4.0.0-beta` or later).
   These serve the real-time endpoint that Flagsmith clients can connect to.
-- A **[NATS](https://docs.nats.io/)** cluster with persistent storage, which guarantees at-least-once delivery for
-  updates.
+- A **[NATS](https://docs.nats.io/)** cluster with [JetStream](https://docs.nats.io/nats-concepts/jetstream) persistent
+  storage, which guarantees at-least-once delivery for updates.
+  [What is NATS\?](https://docs.nats.io/nats-concepts/what-is-nats)
 
 This diagram shows how all the components initiate connections to each other:
 
@@ -63,7 +64,7 @@ sequenceDiagram
     Client-->Client: Store latest update timestamp
 ```
 
-## SSE service
+### SSE service
 
 The **server-sent events (SSE)** service provides the real-time API endpoints that Flagsmith clients connect to. Clients
 connect to any service instance and hold an HTTP connection open for as long as they want to receive updates over SSE.
@@ -77,7 +78,7 @@ Any SSE service instance can serve any client's request. Stateful or sticky sess
 for client connections, especially if the clients are web browsers. h2c (HTTP/2 over plaintext TCP) is supported, but
 TLS is strongly recommended for performance and security.
 
-## NATS
+### NATS
 
 NATS persists a subject for each environment using a JetStream stream. SSE service instances subscribe and publish to
 these subjects and fan out the updates over SSE to the relevant connected clients.
@@ -107,6 +108,46 @@ actually received the message, e.g. if intermediate proxies accept these message
 
 </details>
 
+## How to deploy
+
+### NATS with JetStream
+
+First, deploy NATS with JetStream enabled. NATS nodes can be deployed in
+[many different ways](https://docs.nats.io/nats-concepts/overview). If you don't require high availability for real-time
+flags, a single NATS can support tens of thousands of clients.
+
+The only required configuration is to enable [JetStream](https://docs.nats.io/nats-concepts/jetstream). In the
+[NATS Helm chart](https://github.com/nats-io/k8s/tree/main/helm/charts/nats), set `config.jetstream` to `true`.
+
+If you are using the [NATS CLI](https://github.com/nats-io/natscli), use the `-js` or `--jetstream` flag:
+
+```
+nats-server --jetstream
+```
+
+See the [JetStream docs](https://docs.nats.io/running-a-nats-service/configuration/resource_management) for more
+details.
+
+### API and task processor
+
+The Flagsmith API and task processor need to know about the SSE service. On both the API and task processor, set these
+environment variables:
+
+- `SSE_SERVER_BASE_URL` points to the SSE service. For example: http://my-sse-service-url:8088
+- `SSE_AUTHENTICATION_TOKEN` can be set to any non-empty string, as long as the SSE service and task processor share the
+  same value.
+
+### SSE service
+
+Run the `flagsmith/sse:v4.0.0-beta` image using the environment variables described in this guide.
+
+### Flagsmith configuration
+
+Make sure the Flagsmith projects you are updating have real-time updates enabled. If not, no tasks will be queued when
+its environments are updated.
+
+Lastly, client applications should set their Flagsmith SDK's realtime endpoint URL to the base URL of the SSE service.
+
 ## Security
 
 Subscribing to real-time updates via the SSE service does not require authentication. The SSE service allows all CORS
@@ -121,9 +162,16 @@ curl -X POST -H "Authorization: Token ..." -H "Content-Type: application/json" -
 
 In most cases, the `/queue-change` endpoint can be exposed only to the Flagsmith cluster and not client applications.
 
+### NATS
+
 If NATS is not used by other applications and is not exposed to the network, the default security settings for NATS
-(allow publishing or subscribing to any subject without authentication) will be sufficient for most use cases. The SSE
-service only supports URL-based authentication for NATS.
+(allow publishing or subscribing to any subject without authentication) will be sufficient for most use cases.
+
+You can configure NATS to
+[require authentication](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/auth_intro). The SSE
+can only authenticate using URL-based methods.
+[Token authentication](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/auth_intro/tokens) is the
+simplest method if you don't have other requirements.
 
 One NATS subject is used per environment with the format `flagsmith.environment.YOUR_ENVIRONMENT_ID`.
 
@@ -236,6 +284,9 @@ data: {"updated_at":2}
 ```
 
 The `queue-change` endpoint can achieve at least 20.000 requests per second on the same hardware.
+
+If you want to benchmark NATS itself, you can use its
+[first-party benchmarking tools](https://docs.nats.io/using-nats/nats-tools/nats_cli/natsbench).
 
 ## How to use it
 
