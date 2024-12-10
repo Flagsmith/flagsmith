@@ -171,7 +171,7 @@ If NATS is not used by other applications and is not exposed to the network, the
 
 You can configure NATS to
 [require authentication](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/auth_intro). The SSE
-can only authenticate using URL-based methods.
+service can only authenticate using URL-based methods.
 [Token authentication](https://docs.nats.io/running-a-nats-service/configuration/securing_nats/auth_intro/tokens) is the
 simplest method if you don't have other requirements.
 
