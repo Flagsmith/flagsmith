@@ -309,5 +309,5 @@ The stream protocol is described in the
 | Variable name              | Description                                                      | Default                 |
 | -------------------------- | ---------------------------------------------------------------- | ----------------------- |
 | `NATS_URL`                 | URL of any NATS node                                             | `nats://127.0.0.1:4222` |
-| `LISTEN_ADDR`              | Addresses to listen for HTTP connections on                      | `:8080`                 |
+| `LISTEN_ADDR`              | Addresses to listen for HTTP connections on                      | `:8088`                 |
 | `SSE_AUTHENTICATION_TOKEN` | Shared secret for authentication on the `/queue-change` endpoint | **Required**            |
