@@ -76,7 +76,6 @@ const EnvironmentSettingsPage = class extends Component {
         },
         { forceRefetch: true },
       ).then((res) => {
-        debugger
         const matchingItems = roles.data.results.filter((item1) =>
           res.data.results.some((item2) => item2.role === item1.id),
         )
