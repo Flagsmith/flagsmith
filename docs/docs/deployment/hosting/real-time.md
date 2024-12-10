@@ -235,6 +235,8 @@ data: {"updated_at":1}
 data: {"updated_at":2}
 ```
 
+The `queue-change` endpoint can achieve at least 20.000 requests per second on the same hardware.
+
 ## How to use it
 
 The `flagsmith/sse` service provides the following HTTP endpoints:
