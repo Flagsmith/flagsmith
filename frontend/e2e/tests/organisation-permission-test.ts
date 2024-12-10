@@ -28,7 +28,7 @@ export default async function () {
   await click(byId('users-and-permissions'))
   await clickByText('Groups')
   await waitForElementClickable("#btn-invite-groups")
-  await logout(t)
+  await logout()
   log('Login as project user')
   await login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
   log('User cannot manage users or groups')

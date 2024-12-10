@@ -1,5 +1,7 @@
 import { RequestLogger, Selector, t } from 'testcafe'
 import { FlagsmithValue } from '../common/types/responses';
+import { E2E_USER, PASSWORD } from './config';
+import { cli } from 'yaml/dist/cli';
 
 export const LONG_TIMEOUT = 40000
 
@@ -106,8 +108,9 @@ export const click = async (selector: string) => {
     .click(selector)
 }
 
-export const clickByText = async (text:string) => {
-  const selector = Selector('button').withText(text);
+export const clickByText = async (text:string, element = 'button') => {
+  logUsingLastSection(`Click by text ${text} ${element}`)
+  const selector = Selector(element).withText(text);
   await t
       .scrollIntoView(selector)
       .expect(Selector(selector).hasAttribute('disabled'))
@@ -291,7 +294,7 @@ export const login = async (email: string, password: string) => {
   await click('#login-btn')
   await waitForElementVisible('#project-manage-widget')
 }
-export const logout = async (t) => {
+export const logout = async () => {
   await click('#account-settings-link')
   await click('#logout-link')
   await waitForElementVisible('#login-page')
@@ -518,6 +521,43 @@ export const refreshUntilElementVisible = async (selector: string, maxRetries=20
     retries++;
   }
   return t.scrollIntoView(element)
+}
+
+const permissionsMap = {
+  'CREATE_PROJECT': 'organisation',
+  'MANAGE_USERS': 'organisation',
+  'MANAGE_USER_GROUPS': 'organisation',
+  'VIEW_PROJECT': 'project',
+  'CREATE_ENVIRONMENT': 'project',
+  'DELETE_FEATURE': 'project',
+  'CREATE_FEATURE': 'project',
+  'MANAGE_SEGMENTS': 'project',
+  'VIEW_AUDIT_LOG': 'project',
+  'VIEW_ENVIRONMENT': 'environment',
+  'UPDATE_FEATURE_STATE': 'environment',
+  'MANAGE_IDENTITIES': 'environment',
+  'CREATE_CHANGE_REQUEST': 'environment',
+  'APPROVE_CHANGE_REQUEST': 'environment',
+  'VIEW_IDENTITIES': 'environment',
+  'MANAGE_SEGMENT_OVERRIDES': 'environment',
+  'MANAGE_TAGS': 'project',
+} as const;
+
+
+export const setUserPermission = async (email: string, permission: keyof typeof permissionsMap | 'ADMIN', entityName:string|null, entityLevel?: 'project'|'environment'|'organisation') => {
+  await click(byId('users-and-permissions'))
+  await click(byId(`user-${email}`))
+  const level = permissionsMap[permission] || entityLevel
+  await click(byId(`${level}-permissions-tab`))
+  if(entityName) {
+    await click(byId(`permissions-${entityName.toLowerCase()}`))
+  }
+  if(permission==='ADMIN') {
+    await click(byId(`admin-switch-${level}`))
+  } else {
+    await click(byId(`permission-switch-${permission}`))
+  }
+  await closeModal()
 }
 
 export default {}
