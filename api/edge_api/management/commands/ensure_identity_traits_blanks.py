@@ -48,4 +48,11 @@ class Command(BaseCommand):
                     f"scanned={scanned_count}/{total_count}"
                     f"percentage={scanned_count/total_count*100:.2f}"
                 )
-        self.stdout.write(self.style.SUCCESS("Finished."))
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                "finished"
+                f"scanned={scanned_count}/{total_count}"
+                f"percentage={scanned_count/total_count*100:.2f}"
+            )
+        )
