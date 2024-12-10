@@ -35,12 +35,16 @@ class Command(BaseCommand):
             if should_write_identity_document:
                 identity_wrapper.put_item(identity_document)
                 self.stdout.write(
-                    f"fixed identity scanned={scanned_count}/{total_count} id={identity_document['identity_uuid']}",
+                    "fixed identity"
+                    f"scanned={scanned_count}/{total_count}"
+                    f"percentage={scanned_count/total_count*100:.2f}"
+                    f"id={identity_document['identity_uuid']}",
                 )
 
             scanned_count += 1
             if not (scanned_count % LOG_COUNT_EVERY):
                 self.stdout.write(
-                    f"scanned={scanned_count}/{total_count} percentage={scanned_count/total_count*100:.2f}"
+                    f"scanned={scanned_count}/{total_count}"
+                    f"percentage={scanned_count/total_count*100:.2f}"
                 )
         self.stdout.write(self.style.SUCCESS("Finished."))
