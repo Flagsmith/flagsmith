@@ -48,8 +48,12 @@ future.
 
 ## How it works
 
+Real-time flags use a fully distributed and horizontally scalable architecture. Any SSE service instance or NATS server
+can respond to any client's request. All components can be scaled out or in as needed. Stateful or sticky sessions are
+not used.
+
 The following sequence diagram shows how a Flagsmith client application connects to the real-time updates stream and
-receives messages when the environment is updated:
+receives messages when the environment is updated.
 
 ```mermaid
 sequenceDiagram
@@ -71,8 +75,6 @@ connect to any service instance and hold an HTTP connection open for as long as 
 
 This service also accepts HTTP requests from the Flagsmith task processor to get notified of environment updates. NATS
 is used as the messaging system to ensure these updates are distributed to clients.
-
-Any SSE service instance can serve any client's request. Stateful or sticky sessions are not required.
 
 [HTTP/2 is recommended](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 for client connections, especially if the clients are web browsers. h2c (HTTP/2 over plaintext TCP) is supported, but
@@ -133,7 +135,7 @@ details.
 The Flagsmith API and task processor need to know about the SSE service. On both the API and task processor, set these
 environment variables:
 
-- `SSE_SERVER_BASE_URL` points to the SSE service. For example: http://my-sse-service-url:8088
+- `SSE_SERVER_BASE_URL` points to the SSE service load balancer. For example: http://my-sse-service:8088
 - `SSE_AUTHENTICATION_TOKEN` can be set to any non-empty string, as long as the SSE service and task processor share the
   same value.
 
@@ -191,7 +193,7 @@ The performance of real-time flags will depend mainly on these factors:
 
 If an environment was updated in the past hour, any client that subscribes to it using the SSE service will immediately
 receive the latest update timestamp. This means that SSE service instances can be replaced as needed without updates
-being lost, assuming client applications can reconnect.
+being lost, assuming client applications can reconnect. Flagsmith SDKs will try to reconnect by default.
 
 All NATS subscriber and publisher state is persisted, so NATS nodes can also be replaced as needed without coordination.
 At least one healthy NATS node is required at all times.
