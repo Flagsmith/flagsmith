@@ -1,4 +1,4 @@
-# A Compose file with minimal dependencies to be able to run Flagsmith, including its test suite, locally.
+# A Compose file with minimal dependencies to be able to run Flagsmith, including its test suite, locally (not in Docker).
 
 name: flagsmith
 
