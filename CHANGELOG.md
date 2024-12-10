@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.156.0](https://github.com/Flagsmith/flagsmith/compare/v2.155.0...v2.156.0) (2024-12-04)
+
+
+### Features
+
+* combine value + segment change requests for versioned environments ([#4738](https://github.com/Flagsmith/flagsmith/issues/4738)) ([e6b0e2f](https://github.com/Flagsmith/flagsmith/commit/e6b0e2f799d0c6bc513e622ca19b9698f6f76db2))
+* Enterprise licensing ([#3624](https://github.com/Flagsmith/flagsmith/issues/3624)) ([fbd1a13](https://github.com/Flagsmith/flagsmith/commit/fbd1a13497ef805e3b23e1877e7ccfe087cf197b))
+* Scheduled segment overrides ([#4805](https://github.com/Flagsmith/flagsmith/issues/4805)) ([bb7849c](https://github.com/Flagsmith/flagsmith/commit/bb7849c799fff98c1750adf1d5a057479994d41b))
+* tag based permissions ([#4853](https://github.com/Flagsmith/flagsmith/issues/4853)) ([7c4e2ff](https://github.com/Flagsmith/flagsmith/commit/7c4e2ff23ea66bf8e3dfb57b3492454a831b1bed))
+
+
+### Bug Fixes
+
+* add migration to clean up corrupt data caused by feature versioning ([#4873](https://github.com/Flagsmith/flagsmith/issues/4873)) ([e17f92d](https://github.com/Flagsmith/flagsmith/commit/e17f92df02c5b08a8f6ba498ce49185d37beb994))
+* button style ([#4884](https://github.com/Flagsmith/flagsmith/issues/4884)) ([679acdd](https://github.com/Flagsmith/flagsmith/commit/679acdd26cb18f16626a4809caa0aea65060e466))
+* cannot create new segments due to segment validation ([#4886](https://github.com/Flagsmith/flagsmith/issues/4886)) ([05ab7cf](https://github.com/Flagsmith/flagsmith/commit/05ab7cf876611de613aececc0f70f5987955e446))
+* Set Hubspot cookie name from request body ([#4880](https://github.com/Flagsmith/flagsmith/issues/4880)) ([7d3b253](https://github.com/Flagsmith/flagsmith/commit/7d3b2531c9abc02aceeee5193472ddc92bc772ac))
+
 ## [2.155.0](https://github.com/Flagsmith/flagsmith/compare/v2.154.0...v2.155.0) (2024-12-03)
 
 
