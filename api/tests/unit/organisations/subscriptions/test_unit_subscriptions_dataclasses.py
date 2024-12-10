@@ -47,6 +47,11 @@ def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_sou
             SourceASubscriptionMetadata(seats=1, api_calls=50000, projects=1),
             SourceASubscriptionMetadata(seats=2, api_calls=100000, projects=None),
         ),
+        (
+            SourceASubscriptionMetadata(seats=1, api_calls=50000),
+            SourceASubscriptionMetadata(seats=1),
+            SourceASubscriptionMetadata(seats=2, api_calls=50000),
+        ),
     ),
 )
 def test_base_subscription_metadata_add(add_to, add, expected_result):

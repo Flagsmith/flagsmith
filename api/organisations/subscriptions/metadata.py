@@ -9,7 +9,7 @@ class BaseSubscriptionMetadata:
     def __init__(
         self,
         seats: int = 0,
-        api_calls: None | int = None,
+        api_calls: int = 0,
         projects: None | int = None,
         chargebee_email: None | str = None,
         audit_log_visibility_days: int | None = 0,
