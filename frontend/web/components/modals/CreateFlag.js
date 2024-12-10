@@ -589,7 +589,7 @@ const CreateFlag = class extends Component {
           {!identity && this.state.tags && (
             <FormGroup className='mb-3 setting'>
               <InputGroup
-                title={identity ? 'Tags' : 'Tags'}
+                title={'Tags'}
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
