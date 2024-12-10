@@ -18,6 +18,7 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         total_count = identity_wrapper.table.item_count
         scanned_count = 0
+        fixed_count = 0
 
         for identity_document in identity_wrapper.query_get_all_items():
             should_write_identity_document = False
@@ -36,23 +37,27 @@ class Command(BaseCommand):
 
             if should_write_identity_document:
                 identity_wrapper.put_item(identity_document)
+                fixed_count += 1
                 self.stdout.write(
                     "fixed identity "
                     f"scanned={scanned_count}/{total_count} "
                     f"percentage={scanned_count/total_count*100:.2f} "
+                    f"fixed={fixed_count} "
                     f"id={identity_document['identity_uuid']}",
                 )
 
             if not (scanned_count % LOG_COUNT_EVERY):
                 self.stdout.write(
                     f"scanned={scanned_count}/{total_count} "
-                    f"percentage={scanned_count/total_count*100:.2f}"
+                    f"percentage={scanned_count/total_count*100:.2f} "
+                    f"fixed={fixed_count}"
                 )
 
         self.stdout.write(
             self.style.SUCCESS(
                 "finished "
                 f"scanned={scanned_count}/{total_count} "
-                f"percentage={scanned_count/total_count*100:.2f}"
+                f"percentage={scanned_count/total_count*100:.2f} "
+                f"fixed={fixed_count}"
             )
         )
