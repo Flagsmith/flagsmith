@@ -37,6 +37,10 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     description: 'Invite additional members.',
     title: 'Invite additional members',
   },
+  'AUDIT_DAYS': {
+    description: 'Access all of your audit logs.',
+    title: 'Audit Log History',
+  },
   'CREATE_ADDITIONAL_PROJECT': {
     description: 'Free organisations are limited to one Flagsmith project',
     title: 'Create additional projects',
@@ -86,10 +90,6 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'VERSIONING_DAYS': {
     description: 'Access all of your feature versions.',
     title: 'Version History',
-  },
-  'AUDIT_DAYS': {
-    description: 'Access all of your audit logs.',
-    title: 'Audit Log History',
   },
 }
 

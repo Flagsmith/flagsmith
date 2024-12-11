@@ -39,9 +39,9 @@ const AuditLog: FC<AuditLogType> = (props) => {
     Utils.fromParam().search,
     () => {
       if (searchInput !== search) {
-        return setPage(1);
+        return setPage(1)
       }
-      
+
       setPage(Utils.fromParam().page)
     },
   )
@@ -65,6 +65,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
 
   useEffect(() => {
     props.onPageChange?.(page)
+    //eslint-disable-next-line
   }, [page])
 
   const hasHadResults = useRef(false)
@@ -172,9 +173,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div>
             {author?.first_name} {author?.last_name}
           </div>
-          <div className="list-item-subtitle">
-            {author?.email}
-          </div>
+          <div className='list-item-subtitle'>{author?.email}</div>
         </div>
         {environment?.name ? (
           <Link
