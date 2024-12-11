@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.157.0](https://github.com/Flagsmith/flagsmith/compare/v2.156.2...v2.157.0) (2024-12-10)
+
+
+### Features
+
+* Heal all identities with blank traits ([#4908](https://github.com/Flagsmith/flagsmith/issues/4908)) ([5405cc5](https://github.com/Flagsmith/flagsmith/commit/5405cc59b4e49a8936a278439c018072fcdc7df4))
+
+
+### Bug Fixes
+
+* **chargebee:** ensure that missing api calls are handled correctly ([#4901](https://github.com/Flagsmith/flagsmith/issues/4901)) ([38b4300](https://github.com/Flagsmith/flagsmith/commit/38b43004d139278a1cadc4935c5b36ab9c1cf360))
+* Relax Hubspot cookie tracking ([#4905](https://github.com/Flagsmith/flagsmith/issues/4905)) ([4f20e5a](https://github.com/Flagsmith/flagsmith/commit/4f20e5a551a6d2f70329d4851188f5ebedd55f4b))
+* Restore `make docker-up` ([#4907](https://github.com/Flagsmith/flagsmith/issues/4907)) ([f97c56f](https://github.com/Flagsmith/flagsmith/commit/f97c56fd79703212354d8dbbb6a7e6ca438e78a3))
+
 ## [2.156.2](https://github.com/Flagsmith/flagsmith/compare/v2.156.1...v2.156.2) (2024-12-10)
 
 
