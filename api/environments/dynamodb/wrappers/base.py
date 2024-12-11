@@ -1,11 +1,18 @@
 import typing
+from decimal import Context
 from functools import partial
 
 import boto3
+import boto3.dynamodb.types
 from botocore.config import Config
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
+
+
+# Avoid `decimal.Rounded` when reading large numbers
+# See https://github.com/boto/boto3/issues/2500
+boto3.dynamodb.types.DYNAMODB_CONTEXT = Context(prec=100)
 
 
 class BaseDynamoWrapper:
