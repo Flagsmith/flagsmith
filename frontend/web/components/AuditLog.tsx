@@ -21,6 +21,7 @@ type AuditLogType = {
   projectId: string
   pageSize: number
   onSearchChange?: (search: string) => void
+  onPageChange?: (page: number) => void
   searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
   match: {
@@ -33,11 +34,15 @@ type AuditLogType = {
 
 const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(Utils.fromParam().page ?? 1)
   const { search, searchInput, setSearchInput } = useSearchThrottle(
     Utils.fromParam().search,
     () => {
-      setPage(1)
+      if (searchInput !== search) {
+        return setPage(1);
+      }
+      
+      setPage(Utils.fromParam().page)
     },
   )
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
@@ -57,6 +62,10 @@ const AuditLog: FC<AuditLogType> = (props) => {
     }
     //eslint-disable-next-line
   }, [search])
+
+  useEffect(() => {
+    props.onPageChange?.(page)
+  }, [page])
 
   const hasHadResults = useRef(false)
 

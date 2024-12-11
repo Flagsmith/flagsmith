@@ -30,6 +30,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
         `${document.location.pathname}?${Utils.toParam({
           env: environment,
           search: currentParams.search,
+          page: currentParams.page,
         })}`,
       )
     }
@@ -53,6 +54,16 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                         `${document.location.pathname}?${Utils.toParam({
                           env: environment,
                           search,
+                          page: Utils.fromParam().page,
+                        })}`,
+                      )
+                    }}
+                    onPageChange={(page: number) => {
+                      props.router.history.replace(
+                        `${document.location.pathname}?${Utils.toParam({
+                          env: environment,
+                          search: Utils.fromParam().search,
+                          page,
                         })}`,
                       )
                     }}
