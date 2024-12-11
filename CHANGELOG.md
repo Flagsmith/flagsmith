@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.157.1](https://github.com/Flagsmith/flagsmith/compare/v2.157.0...v2.157.1) (2024-12-11)
+
+
+### Bug Fixes
+
+* Numbers such as 1e100 cannot be retrieved from DynamoDB ([#4916](https://github.com/Flagsmith/flagsmith/issues/4916)) ([5d02ab1](https://github.com/Flagsmith/flagsmith/commit/5d02ab17cda6854d17933d0eff5a835ad2ea99ea))
+* Preserve Page number in URL at AuditLogs page ([#4913](https://github.com/Flagsmith/flagsmith/issues/4913)) ([6cd6cb8](https://github.com/Flagsmith/flagsmith/commit/6cd6cb866af2ec17357b13a51e9fad56af743446))
+
 ## [2.157.0](https://github.com/Flagsmith/flagsmith/compare/v2.156.2...v2.157.0) (2024-12-10)
 
 
