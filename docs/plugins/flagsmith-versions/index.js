@@ -4,6 +4,8 @@ const fetchJSON = async (url, options) => {
     return response.json();
 };
 
+const userAgent = 'Flagsmith-Docs <support@flagsmith.com>';
+
 const fallback = (value) => (promise) => {
     if (!process.env.CI)
         return promise.catch((e) => {
@@ -53,7 +55,7 @@ const fetchDotnetVersions = async () => {
 const fetchRustVersions = async () => {
     // https://crates.io/data-access#api
     const headers = new Headers({
-        'User-Agent': 'Flagsmith-Docs <support@flagsmith.com>',
+        'User-Agent': userAgent,
     });
     const data = await fetchJSON('https://crates.io/api/v1/crates/flagsmith', { headers });
     return data.versions.map((version) => version.num);
@@ -69,11 +71,21 @@ const fetchNpmVersions = async (pkg) => {
     return Object.keys(data.versions);
 };
 
+const fetchFlutterVersions = async () => {
+    const data = await fetchJSON('https://pub.dev/api/packages/flagsmith', {
+        headers: {
+            Accept: 'application/vnd.pub.v2+json',
+            'User-Agent': userAgent,
+        },
+    });
+    return data.versions.map((v) => v.version);
+};
+
 export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
         async loadContent() {
-            const [js, nodejs, java, android, swiftpm, cocoapods, dotnet, rust, elixir] = await Promise.all(
+            const [js, nodejs, java, android, swiftpm, cocoapods, dotnet, rust, elixir, flutter] = await Promise.all(
                 [
                     fetchNpmVersions('flagsmith'),
                     fetchNpmVersions('flagsmith-nodejs'),
@@ -84,6 +96,7 @@ export default async function fetchFlagsmithVersions(context, options) {
                     fetchDotnetVersions(),
                     fetchRustVersions(),
                     fetchElixirVersions(),
+                    fetchFlutterVersions(),
                 ].map(fallback([])),
             );
             return {
@@ -96,6 +109,7 @@ export default async function fetchFlagsmithVersions(context, options) {
                 dotnet,
                 rust,
                 elixir,
+                flutter,
             };
         },
         async contentLoaded({ content, actions }) {
