@@ -28,3 +28,4 @@ export const ElixirVersion = ({ spec = '~2' }) => Version({ sdk: 'elixir', spec 
 export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
 export const JsVersion = ({ spec = '~7' }) => Version({ sdk: 'js', spec });
 export const NodejsVersion = ({ spec } = { spec: '~5' }) => Version({ sdk: 'nodejs', spec });
+export const FlutterVersion = ({ spec = '~6' }) => Version({ sdk: 'flutter', spec });
