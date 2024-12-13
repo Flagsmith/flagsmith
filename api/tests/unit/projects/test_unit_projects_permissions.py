@@ -2,17 +2,14 @@ import os
 from unittest import mock
 
 import pytest
+from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from rest_framework.exceptions import APIException, PermissionDenied
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.permissions import CREATE_PROJECT
 from projects.models import Project, UserPermissionGroupProjectPermission
-from projects.permissions import (
-    VIEW_PROJECT,
-    IsProjectAdmin,
-    ProjectPermissions,
-)
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from tests.types import (
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,

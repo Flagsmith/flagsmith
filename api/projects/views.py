@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from common.projects.permissions import TAG_SUPPORTED_PERMISSIONS, VIEW_PROJECT
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi
@@ -33,20 +34,16 @@ from projects.models import (
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import (
-    TAG_SUPPORTED_PERMISSIONS,
-    VIEW_PROJECT,
-    IsProjectAdmin,
-    ProjectPermissions,
-)
+from projects.permissions import IsProjectAdmin, ProjectPermissions
 from projects.serializers import (
     CreateUpdateUserPermissionGroupProjectPermissionSerializer,
     CreateUpdateUserProjectPermissionSerializer,
     ListUserPermissionGroupProjectPermissionSerializer,
     ListUserProjectPermissionSerializer,
+    ProjectCreateSerializer,
     ProjectListSerializer,
     ProjectRetrieveSerializer,
-    ProjectUpdateOrCreateSerializer,
+    ProjectUpdateSerializer,
 )
 
 
@@ -75,11 +72,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [ProjectPermissions]
 
     def get_serializer_class(self):
-        if self.action == "retrieve":
-            return ProjectRetrieveSerializer
-        elif self.action in ("create", "update", "partial_update"):
-            return ProjectUpdateOrCreateSerializer
-        return ProjectListSerializer
+        serializers = {
+            "retrieve": ProjectRetrieveSerializer,
+            "create": ProjectCreateSerializer,
+            "update": ProjectUpdateSerializer,
+            "partial_update": ProjectUpdateSerializer,
+        }
+        return serializers.get(self.action, ProjectListSerializer)
 
     pagination_class = None
 

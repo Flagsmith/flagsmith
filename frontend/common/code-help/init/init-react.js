@@ -12,8 +12,8 @@ export default function App() {
     &lt;FlagsmithProvider
       options={{
         environmentID: '${envId}',${
-  Constants.isCustomFlagsmithUrl
-    ? `\n        api: '${Project.flagsmithClientAPI}',`
+  Constants.isCustomFlagsmithUrl()
+    ? `\n        api: '${Constants.getFlagsmithSDKUrl()}',`
     : ''
 }
       }}

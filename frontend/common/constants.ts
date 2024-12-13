@@ -22,7 +22,7 @@ const keywordsReactNative = {
   ...keywords,
   NPM_CLIENT: 'react-native-flagsmith',
 }
-export default {
+const Constants = {
   archivedTag: { color: '#8f8f8f', label: 'Archived' },
   codeHelp: {
     'CREATE_USER': (envId: string, userId: string = keywords.USER_ID) => ({
@@ -245,6 +245,7 @@ export default {
     property: '',
     value: '',
   } as SegmentCondition,
+  defaultTagColor: '#3d4db6',
   environmentPermissions: (perm: string) =>
     `To manage this feature you need the <i>${perm}</i> permission for this environment.<br/>Please contact a member of this environment who has administrator privileges.`,
   events: {
@@ -441,6 +442,18 @@ export default {
       'TRAITS_ID': 150,
     },
   },
+
+  getFlagsmithSDKUrl: () => {
+    const apiUrl = Project.api.startsWith('/')
+      ? `${document.location.origin}${Project.api}`
+      : Project.api
+
+    const parsedUrl = new URL(apiUrl)
+    const allowedHosts = ['api.flagsmith.com']
+    return Utils.isSaas() || allowedHosts.includes(parsedUrl.host)
+      ? Project.flagsmithClientEdgeAPI
+      : apiUrl
+  },
   getUpgradeUrl: (feature?: string) => {
     return Utils.isSaas()
       ? '/organisation-settings?tab=billing'
@@ -452,8 +465,8 @@ export default {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
-  isCustomFlagsmithUrl:
-    Project.flagsmithClientAPI !== 'https://edge.api.flagsmith.com/api/v1/',
+  isCustomFlagsmithUrl: () =>
+    Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {
     'PAYMENT': 'Payment Modal',
   },
@@ -564,3 +577,5 @@ export default {
   ],
   untaggedTag: { color: '#dedede', label: 'Untagged' },
 }
+
+export default Constants

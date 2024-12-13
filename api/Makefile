@@ -2,7 +2,7 @@
 
 DOCKER_TAG ?= flagsmith/flagsmith-api:local
 
-COMPOSE_FILE ?= ../docker/db.yml
+COMPOSE_FILE ?= ../docker/api/docker-compose.local.yml
 COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
@@ -12,7 +12,7 @@ POETRY_VERSION ?= 1.8.3
 GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
 
 SAML_REVISION ?= v1.6.4
-RBAC_REVISION ?= v0.9.0
+RBAC_REVISION ?= v0.11.2
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
