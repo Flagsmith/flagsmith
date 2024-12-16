@@ -277,7 +277,7 @@ class ChangeRequest(
             url += f"/project/{self.environment.project_id}"
             url += f"/environment/{self.environment.api_key}"
         else:
-            url += f"/projects/{self.project_id}"
+            url += f"/project/{self.project_id}"
         url += f"/change-requests/{self.id}"
         return url
 
