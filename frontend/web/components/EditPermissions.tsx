@@ -467,7 +467,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           })
       }
       //eslint-disable-next-line
-    }, [])
+  }, [])
 
     const admin = () => entityPermissions && entityPermissions.admin
 
