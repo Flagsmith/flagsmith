@@ -80,9 +80,6 @@ export default async function () {
   await editRemoteConfig(0, 'bar')
   await logout()
 
-  log('Remove UPDATE_FEATURE_STATE permission ')
-  await login(E2E_USER, PASSWORD)
-  await setUserPermission(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, 'UPDATE_FEATURE_STATE', 'Production', 'project', 'My Test Project 6 Env Permission' )
   log('User without permissions can update feature state')
   await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await click('#project-select-0')
