@@ -836,6 +836,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                       Administrator
                     </div>
                   </Flex>
+
                   <Switch
                     disabled={saving}
                     data-test={`admin-switch-${level}`}
