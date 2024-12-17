@@ -467,7 +467,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           })
       }
       //eslint-disable-next-line
-  }, [])
+    }, [])
 
     const admin = () => entityPermissions && entityPermissions.admin
 
@@ -804,8 +804,23 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         })
     }
 
+    const getEditText = () => {
+      if (isGroup) {
+        return `the ${group?.name || ''} group`
+      }
+      if (user) {
+        return `${user.first_name || ''} ${user.last_name || ''}`
+      }
+      if (role) {
+        return role.name
+      }
+      return name
+    }
+
     const rolesAdded = getRoles(roles, rolesSelected || [])
     const isAdmin = admin()
+
+    console.log('aosidjaosijaosijosi', level)
 
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
@@ -826,15 +841,15 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   <Switch
                     disabled={saving}
                     data-test={`admin-switch-${level}`}
-                  onChange={() => {
-                    toggleAdmin()
-                    setValueChanged(true)
-                  }}
-                  checked={isAdmin}
-                />
-              </Row>
-            </div>
-          )}
+                    onChange={() => {
+                      toggleAdmin()
+                      setValueChanged(true)
+                    }}
+                    checked={isAdmin}
+                  />
+                </Row>
+              </div>
+            )}
             <PanelSearch
               filterRow={(item: AvailablePermission, search: string) => {
                 const name = Format.enumeration.get(item.key).toLowerCase()
@@ -844,24 +859,24 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               className='no-pad mb-2 overflow-visible'
               items={permissions}
               renderRow={(p: AvailablePermission, index: number) => {
-              const levelUpperCase = level.toUpperCase()
-              const disabled =
-                level !== 'organisation' &&
-                p.key !== `VIEW_${levelUpperCase}` &&
-                !hasPermission(`VIEW_${levelUpperCase}`)
+                const levelUpperCase = level.toUpperCase()
+                const disabled =
+                  level !== 'organisation' &&
+                  p.key !== `VIEW_${levelUpperCase}` &&
+                  !hasPermission(`VIEW_${levelUpperCase}`)
                 const permission = entityPermissions.permissions.find(
                   (v) => v.permission_key === p.key,
                 )
                 const permissionType = getPermissionType(p.key)
-              return (
-                <Row
-                  key={p.key}
-                  style={admin() ? { opacity: 0.5 } : undefined}
+                return (
+                  <Row
+                    key={p.key}
+                    style={admin() ? { opacity: 0.5 } : undefined}
                     className='list-item list-item-sm px-3 py-2'
-                >
-                  <Row space>
-                    <Flex>
-                      <strong>{Format.enumeration.get(p.key)}</strong>
+                  >
+                    <Row space>
+                      <Flex>
+                        <strong>{Format.enumeration.get(p.key)}</strong>
                         <div className='list-item-subtitle'>
                           {p.description}
                         </div>
@@ -875,7 +890,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                             }}
                           />
                         )}
-                    </Flex>
+                      </Flex>
                       {tagBasedPermissions ? (
                         <div className='ms-2' style={{ width: 200 }}>
                           <Select
@@ -899,8 +914,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                           />
                         </div>
                       ) : (
-                    <Switch
-                      data-test={`permission-switch-${level}-${index}`}
+                        <Switch
+                          data-test={`permission-switch-${level}-${index}`}
                           onChange={() => {
                             setValueChanged(true)
                             togglePermission(p.key)
@@ -917,20 +932,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
             <p className='text-right mt-5 text-dark'>
               This will edit the permissions for{' '}
-              <strong>
-                {isGroup ? (
-                  `the ${group?.name || ''} group`
-                ) : user ? (
-                  <>
-                    {user.first_name || ''} {user.last_name || ''}
-                  </>
-                ) : role ? (
-                  ` ${role.name}`
-                ) : (
-                  ` ${name}`
-                )}
-              </strong>
-              .
+              <strong>{getEditText()}</strong>.
             </p>
 
             {!!parentWarning && (
