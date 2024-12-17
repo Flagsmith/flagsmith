@@ -67,20 +67,22 @@ const EnvironmentSettingsPage = class extends Component {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     ).then((roles) => {
-      getRoleEnvironmentPermissions(
-        getStore(),
-        {
-          env_id: env.id,
-          organisation_id: AccountStore.getOrganisation().id,
-          role_id: roles.data.results[0].id,
-        },
-        { forceRefetch: true },
-      ).then((res) => {
-        const matchingItems = roles.data.results.filter((item1) =>
-          res.data.results.some((item2) => item2.role === item1.id),
-        )
-        this.setState({ roles: matchingItems })
-      })
+      if (roles.data.results[0]) {
+        getRoleEnvironmentPermissions(
+          getStore(),
+          {
+            env_id: env.id,
+            organisation_id: AccountStore.getOrganisation().id,
+            role_id: roles.data.results[0].id,
+          },
+          { forceRefetch: true },
+        ).then((res) => {
+          const matchingItems = roles.data.results.filter((item1) =>
+            res.data.results.some((item2) => item2.role === item1.id),
+          )
+          this.setState({ roles: matchingItems })
+        })
+      }
     })
 
     if (Utils.getPlansPermission('METADATA')) {
