@@ -102,6 +102,10 @@ class ChangeRequest(
 
     ignore_conflicts = models.BooleanField(default=False)
 
+    class Meta:
+        # Explicit ordering to prevent pagination warnings.
+        ordering = ("id",)
+
     def approve(self, user: "FFAdminUser"):
         if user.id == self.user_id:
             raise CannotApproveOwnChangeRequest(
