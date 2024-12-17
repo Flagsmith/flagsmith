@@ -544,11 +544,14 @@ const permissionsMap = {
 } as const;
 
 
-export const setUserPermission = async (email: string, permission: keyof typeof permissionsMap | 'ADMIN', entityName:string|null, entityLevel?: 'project'|'environment'|'organisation') => {
+export const setUserPermission = async (email: string, permission: keyof typeof permissionsMap | 'ADMIN', entityName:string|null, entityLevel?: 'project'|'environment'|'organisation', parentName?: string) => {
   await click(byId('users-and-permissions'))
   await click(byId(`user-${email}`))
   const level = permissionsMap[permission] || entityLevel
   await click(byId(`${level}-permissions-tab`))
+  if(parentName) {
+    await clickByText(parentName, 'a')
+  }
   if(entityName) {
     await click(byId(`permissions-${entityName.toLowerCase()}`))
   }
