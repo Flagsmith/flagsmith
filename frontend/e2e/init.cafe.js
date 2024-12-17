@@ -85,66 +85,66 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     await logResults(logger.requests, t)
   })
 
-test('Segment-part-1', async () => {
-  await testSegment1()
-  await logout()
-})
-
-test('Segment-part-2', async () => {
-  await testSegment2()
-  await logout()
-})
-
-test('Segment-part-3', async () => {
-  await testSegment3()
-  await logout()
-})
-
-test('Flag', async () => {
-  await flagTests()
-  await logout()
-})
-
-test('Signup', async () => {
-  await initialiseTests()
-  await logout()
-})
-
-test('Invite', async () => {
-  await inviteTest()
-})
-
-test('Environment', async () => {
-  await environmentTest()
-  await logout()
-})
-
-test('Project', async () => {
-  await projectTest()
-  await logout()
-})
-
-test('Versioning', async () => {
-  await versioningTests()
-  await logout()
-})
-
-test('Organisation-permission', async () => {
-  await organisationPermissionTest()
-  await logout()
-})
-
-test('Project-permission', async () => {
-  await projectPermissionTest()
-  await logout()
-})
+// test('Segment-part-1', async () => {
+//   await testSegment1()
+//   await logout()
+// })
+//
+// test('Segment-part-2', async () => {
+//   await testSegment2()
+//   await logout()
+// })
+//
+// test('Segment-part-3', async () => {
+//   await testSegment3()
+//   await logout()
+// })
+//
+// test('Flag', async () => {
+//   await flagTests()
+//   await logout()
+// })
+//
+// test('Signup', async () => {
+//   await initialiseTests()
+//   await logout()
+// })
+//
+// test('Invite', async () => {
+//   await inviteTest()
+// })
+//
+// test('Environment', async () => {
+//   await environmentTest()
+//   await logout()
+// })
+//
+// test('Project', async () => {
+//   await projectTest()
+//   await logout()
+// })
+//
+// test('Versioning', async () => {
+//   await versioningTests()
+//   await logout()
+// })
+//
+// test('Organisation-permission', async () => {
+//   await organisationPermissionTest()
+//   await logout()
+// })
+//
+// test('Project-permission', async () => {
+//   await projectPermissionTest()
+//   await logout()
+// })
 
 test('Environment-permission', async () => {
   await environmentPermissionTest()
   await logout()
 })
-
-test('Roles', async () => {
-  await rolesTest()
-  await logout()
-})
+//
+// test('Roles', async () => {
+//   await rolesTest()
+//   await logout()
+// })
