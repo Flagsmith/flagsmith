@@ -67,22 +67,22 @@ const EnvironmentSettingsPage = class extends Component {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     ).then((roles) => {
-      if (roles.data.results[0]) {
-        getRoleEnvironmentPermissions(
-          getStore(),
-          {
-            env_id: env.id,
-            organisation_id: AccountStore.getOrganisation().id,
-            role_id: roles.data.results[0].id,
-          },
-          { forceRefetch: true },
-        ).then((res) => {
-          const matchingItems = roles.data.results.filter((item1) =>
-            res.data.results.some((item2) => item2.role === item1.id),
-          )
-          this.setState({ roles: matchingItems })
-        })
-      }
+      if (!roles?.data?.results?.length) return
+
+      getRoleEnvironmentPermissions(
+        getStore(),
+        {
+          env_id: env.id,
+          organisation_id: AccountStore.getOrganisation().id,
+          role_id: roles.data.results[0].id,
+        },
+        { forceRefetch: true },
+      ).then((res) => {
+        const matchingItems = roles.data.results.filter((item1) =>
+          res.data.results.some((item2) => item2.role === item1.id),
+        )
+        this.setState({ roles: matchingItems })
+      })
     })
 
     if (Utils.getPlansPermission('METADATA')) {
@@ -157,7 +157,7 @@ const EnvironmentSettingsPage = class extends Component {
       api_key: this.props.match.params.environmentId,
     })
 
-    const { description, name } = this.state
+    const { name } = this.state
     if (ProjectStore.isSaving || !name) {
       return
     }
@@ -167,7 +167,7 @@ const EnvironmentSettingsPage = class extends Component {
         allow_client_traits: !!this.state.allow_client_traits,
         banner_colour: this.state.banner_colour,
         banner_text: this.state.banner_text,
-        description: description || env.description,
+        description: this.state?.env?.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
         minimum_change_request_approvals: has4EyesPermission
@@ -366,17 +366,16 @@ const EnvironmentSettingsPage = class extends Component {
                             <InputGroup
                               textarea
                               ref={(e) => (this.input = e)}
-                              value={
-                                typeof this.state.description === 'string'
-                                  ? this.state.description
-                                  : env.description
-                              }
+                              value={this.state?.env?.description ?? ''}
                               inputProps={{
                                 className: 'input--wide textarea-lg',
                               }}
                               onChange={(e) =>
                                 this.setState({
-                                  description: Utils.safeParseEventValue(e),
+                                  env: {
+                                    ...this.state.env,
+                                    description: Utils.safeParseEventValue(e),
+                                  },
                                 })
                               }
                               isValid={name && name.length}

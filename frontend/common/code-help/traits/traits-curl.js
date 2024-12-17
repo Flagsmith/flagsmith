@@ -1,8 +1,10 @@
+import Constants from 'common/constants'
+
 module.exports = (
   envId,
   { TRAIT_NAME, USER_ID },
   userId,
-) => `curl -i -X POST '${Project.flagsmithClientAPI}identities/' \\
+) => `curl -i -X POST '${Constants.getFlagsmithSDKUrl()}identities/' \\
      -H 'x-environment-key: ${envId}' \\
      -H 'Content-Type: application/json; charset=utf-8' \\
      -d $'{

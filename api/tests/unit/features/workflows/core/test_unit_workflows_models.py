@@ -1001,7 +1001,5 @@ def test_url_via_project(project_change_request: ChangeRequest) -> None:
     # Then
     project_id = project_change_request.project_id
     expected_url = get_current_site_url()
-    expected_url += (
-        f"/projects/{project_id}/change-requests/{project_change_request.id}"
-    )
+    expected_url += f"/project/{project_id}/change-requests/{project_change_request.id}"
     assert url == expected_url
