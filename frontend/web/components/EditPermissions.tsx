@@ -820,8 +820,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const rolesAdded = getRoles(roles, rolesSelected || [])
     const isAdmin = admin()
 
-    console.log('aosidjaosijaosijosi', level)
-
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
         <Loader />
