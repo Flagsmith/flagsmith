@@ -62,7 +62,7 @@ def main() -> None:
 
     if new_errors:
         print("New mypy errors detected:")
-        print("\n".join(new_errors))
+        print("\n".join(sorted(new_errors)))
         sys.exit(1)
 
     print("No new mypy errors detected.")
