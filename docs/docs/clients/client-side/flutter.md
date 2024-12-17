@@ -5,6 +5,8 @@ description: Manage your Feature Flags and Remote Config in your Flutter applica
 slug: /clients/flutter
 ---
 
+import CodeBlock from '@theme/CodeBlock'; import { FlutterVersion } from '@site/src/components/SdkVersions.js';
+
 This SDK can be used for Flutter applications. The source code for the client is available on
 [GitHub](https://github.com/flagsmith/flagsmith-flutter-client).
 
@@ -12,12 +14,12 @@ The Flagsmith Flutter SDK supports iOS, Android and Web targets.
 
 ## Getting Started
 
-The client library is available from the [https://pub.dev/packages/flagsmith](https://pub.dev/packages/flagsmith):
+Install the [client library](https://pub.dev/packages/flagsmith) by adding it to your application's pubspec.yaml file:
 
-```dart
-dependencies:
-  flagsmith:
-```
+<CodeBlock>
+{`dependencies:
+    flagsmith: ^`}<FlutterVersion />
+</CodeBlock>
 
 ## Basic Usage
 

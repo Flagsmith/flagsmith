@@ -60,6 +60,8 @@ const ProjectSettingsPage = class extends Component {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     ).then((roles) => {
+      if (!roles?.data?.results?.length) return
+
       getRoleProjectPermissions(
         getStore(),
         {
