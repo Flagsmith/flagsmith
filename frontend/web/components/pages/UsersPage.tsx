@@ -138,7 +138,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
               <FormGroup className='float-right'>
                 <Button
                   className='float-right'
-                  data-test='show-create-feature-btn'
+                  data-test='show-create-identity-btn'
                   id='show-create-feature-btn'
                   onClick={newUser}
                 >
@@ -150,8 +150,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 title={
                   <Button
                     disabled
-                    data-test='show-create-feature-btn'
-                    id='show-create-feature-btn'
+                    data-test='show-create-identity-btn'
+                    id='show-create-identity-btn'
                     onClick={newUser}
                   >
                     Create Identities
