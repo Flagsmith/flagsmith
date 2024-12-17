@@ -96,7 +96,7 @@ export default async function () {
   await click(byId('segment_overrides'))
   await waitForElementClickable('#update-feature-segments-btn')
   await closeModal()
-
+  await logout()
 
   log('User without permissions cannot update feature state')
   await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
