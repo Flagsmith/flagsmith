@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.157.1](https://github.com/Flagsmith/flagsmith/compare/v2.157.0...v2.157.1) (2024-12-16)
+
+
+### Bug Fixes
+
+* description state management in EnvironmentSettingsPage ([#4917](https://github.com/Flagsmith/flagsmith/issues/4917)) ([0223227](https://github.com/Flagsmith/flagsmith/commit/02232278a1309a1b04bbe5ea03ed8019b0eec849))
+* Numbers such as 1e100 cannot be retrieved from DynamoDB ([#4916](https://github.com/Flagsmith/flagsmith/issues/4916)) ([5d02ab1](https://github.com/Flagsmith/flagsmith/commit/5d02ab17cda6854d17933d0eff5a835ad2ea99ea))
+* Preserve Page number in URL at AuditLogs page ([#4913](https://github.com/Flagsmith/flagsmith/issues/4913)) ([6cd6cb8](https://github.com/Flagsmith/flagsmith/commit/6cd6cb866af2ec17357b13a51e9fad56af743446))
+* Set project change requests url ([#4920](https://github.com/Flagsmith/flagsmith/issues/4920)) ([e94e5c6](https://github.com/Flagsmith/flagsmith/commit/e94e5c6064c4b0df1a4cd09ddb9a0b8d30c75612))
+
 ## [2.157.0](https://github.com/Flagsmith/flagsmith/compare/v2.156.2...v2.157.0) (2024-12-10)
 
 
