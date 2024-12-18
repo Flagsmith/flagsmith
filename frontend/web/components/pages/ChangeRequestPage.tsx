@@ -78,6 +78,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
     id: environmentId,
     level: 'environment',
     permission: 'UPDATE_FEATURE_STATE',
+    tags: projectFlag?.tags,
   })
 
   useEffect(() => {
