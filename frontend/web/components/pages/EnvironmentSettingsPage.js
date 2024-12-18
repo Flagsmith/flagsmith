@@ -26,6 +26,8 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 import Format from 'common/utils/format'
 import Setting from 'components/Setting'
+import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
+import Utils from 'common/utils/utils'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -526,75 +528,25 @@ const EnvironmentSettingsPage = class extends Component {
                             }
                           />
                         </div>
-                        <FormGroup className='mt-4 col-md-8'>
-                          <Setting
-                            feature='4_EYES'
-                            checked={
-                              has4EyesPermission &&
-                              Utils.changeRequestsEnabled(
-                                this.state.minimum_change_request_approvals,
-                              )
-                            }
-                            onChange={(v) =>
-                              this.setState(
-                                {
-                                  minimum_change_request_approvals: v
-                                    ? 0
-                                    : null,
-                                },
-                                this.saveEnv,
-                              )
-                            }
-                          />
-                          {Utils.changeRequestsEnabled(
-                            this.state.minimum_change_request_approvals,
-                          ) &&
-                            has4EyesPermission && (
-                              <div className='mt-4'>
-                                <div className='mb-2'>
-                                  <strong>Minimum number of approvals</strong>
-                                </div>
-                                <Row>
-                                  <Flex>
-                                    <Input
-                                      ref={(e) => (this.input = e)}
-                                      value={`${this.state.minimum_change_request_approvals}`}
-                                      inputClassName='input input--wide'
-                                      name='env-name'
-                                      min={0}
-                                      style={{ minWidth: 50 }}
-                                      onChange={(e) => {
-                                        if (!Utils.safeParseEventValue(e))
-                                          return
-                                        this.setState({
-                                          minimum_change_request_approvals:
-                                            parseInt(
-                                              Utils.safeParseEventValue(e),
-                                            ),
-                                        })
-                                      }}
-                                      isValid={name && name.length}
-                                      type='number'
-                                      placeholder='Minimum number of approvals'
-                                    />
-                                  </Flex>
-                                  <Button
-                                    type='button'
-                                    onClick={this.saveEnv}
-                                    id='save-env-btn'
-                                    className='ml-3'
-                                    disabled={
-                                      this.saveDisabled() ||
-                                      isSaving ||
-                                      isLoading
-                                    }
-                                  >
-                                    {isSaving || isLoading ? 'Saving' : 'Save'}
-                                  </Button>
-                                </Row>
-                              </div>
-                            )}
-                        </FormGroup>
+                        <ChangeRequestsSetting
+                          feature='4_EYES'
+                          isLoading={this.saveDisabled()}
+                          value={this.state.minimum_change_request_approvals}
+                          onSave={this.saveEnv}
+                          onToggle={(v) =>
+                            this.setState(
+                              {
+                                minimum_change_request_approvals: v,
+                              },
+                              this.saveEnv,
+                            )
+                          }
+                          onChange={(v) => {
+                            this.setState({
+                              minimum_change_request_approvals: v,
+                            })
+                          }}
+                        />
                         <hr className='py-0 my-4' />
                         <FormGroup className='mt-4 col-md-8'>
                           <Row space>
