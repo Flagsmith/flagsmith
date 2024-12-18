@@ -543,7 +543,9 @@ SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER
 
 SECURE_REDIRECT_EXEMPT = env.list("DJANGO_SECURE_REDIRECT_EXEMPT", default=[])
 SECURE_REFERRER_POLICY = env.str("DJANGO_SECURE_REFERRER_POLICY", default="same-origin")
-SECURE_CROSS_ORIGIN_OPENER_POLICY = env.str("DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", default="same-origin")
+SECURE_CROSS_ORIGIN_OPENER_POLICY = env.str(
+    "DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", default="same-origin"
+)
 SECURE_SSL_HOST = env.str("DJANGO_SECURE_SSL_HOST", default=None)
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
 
@@ -1008,6 +1010,9 @@ ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
 
+# Allows us to prevent the postpone decorator from running things async
+ENABLE_POSTPONE_DECORATOR = env.bool("ENABLE_POSTPONE_DECORATOR", default=True)
+
 ENABLE_CLEAN_UP_OLD_TASKS = env.bool("ENABLE_CLEAN_UP_OLD_TASKS", default=True)
 TASK_DELETE_RETENTION_DAYS = env.int("TASK_DELETE_RETENTION_DAYS", default=30)
 TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
@@ -1272,3 +1277,27 @@ ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
 # subscriptions created before this date full audit log and versioning
 # history.
 VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
+
+SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
+    "SUBSCRIPTION_LICENCE_PUBLIC_KEY",
+    """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs1H23Xv1IlhyTbUP9Z4e
+zN3t6oa97ybLufhqSRCoPxHWAY/pqqjdwiC00AnRbL/guDi1FLPEkLza2gAKfU+f
+04SsNTfYL5MTPnaFtf+B+hlYmlrT1C6n05t+uQW2OQm6mWoqBssmoyR8T5FXfBls
+FrT8dsZg5XG7JaWAyGbbVscHrXHXqVcLbFGO8CcO2BG2whl+7hzm4edNCsxLJqmN
+uASR9KtntdulkRar0A9x+hAQUlrDKv77nMMdljNIqkcCcWrbhiDoTVCDbE99mhMq
+LeC/+C54/ZiCb3r9woq/kpsbRj0Ys2b4czfjWioXooSxA0w3BE6/lV0+hVltjRO6
+5QIDAQAB
+-----END PUBLIC KEY-----
+""",
+)
+
+# For the matching private key to the public key added above
+# search for "Flagsmith licence private key" in Bitwarden.
+SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", None)
+
+LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
+
+if LICENSING_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("licensing")

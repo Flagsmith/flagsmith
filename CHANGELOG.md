@@ -1,5 +1,78 @@
 # Changelog
 
+## [2.157.1](https://github.com/Flagsmith/flagsmith/compare/v2.157.0...v2.157.1) (2024-12-16)
+
+
+### Bug Fixes
+
+* description state management in EnvironmentSettingsPage ([#4917](https://github.com/Flagsmith/flagsmith/issues/4917)) ([0223227](https://github.com/Flagsmith/flagsmith/commit/02232278a1309a1b04bbe5ea03ed8019b0eec849))
+* Numbers such as 1e100 cannot be retrieved from DynamoDB ([#4916](https://github.com/Flagsmith/flagsmith/issues/4916)) ([5d02ab1](https://github.com/Flagsmith/flagsmith/commit/5d02ab17cda6854d17933d0eff5a835ad2ea99ea))
+* Preserve Page number in URL at AuditLogs page ([#4913](https://github.com/Flagsmith/flagsmith/issues/4913)) ([6cd6cb8](https://github.com/Flagsmith/flagsmith/commit/6cd6cb866af2ec17357b13a51e9fad56af743446))
+* Set project change requests url ([#4920](https://github.com/Flagsmith/flagsmith/issues/4920)) ([e94e5c6](https://github.com/Flagsmith/flagsmith/commit/e94e5c6064c4b0df1a4cd09ddb9a0b8d30c75612))
+
+## [2.157.0](https://github.com/Flagsmith/flagsmith/compare/v2.156.2...v2.157.0) (2024-12-10)
+
+
+### Features
+
+* Heal all identities with blank traits ([#4908](https://github.com/Flagsmith/flagsmith/issues/4908)) ([5405cc5](https://github.com/Flagsmith/flagsmith/commit/5405cc59b4e49a8936a278439c018072fcdc7df4))
+
+
+### Bug Fixes
+
+* **chargebee:** ensure that missing api calls are handled correctly ([#4901](https://github.com/Flagsmith/flagsmith/issues/4901)) ([38b4300](https://github.com/Flagsmith/flagsmith/commit/38b43004d139278a1cadc4935c5b36ab9c1cf360))
+* Relax Hubspot cookie tracking ([#4905](https://github.com/Flagsmith/flagsmith/issues/4905)) ([4f20e5a](https://github.com/Flagsmith/flagsmith/commit/4f20e5a551a6d2f70329d4851188f5ebedd55f4b))
+* Restore `make docker-up` ([#4907](https://github.com/Flagsmith/flagsmith/issues/4907)) ([f97c56f](https://github.com/Flagsmith/flagsmith/commit/f97c56fd79703212354d8dbbb6a7e6ca438e78a3))
+
+## [2.156.2](https://github.com/Flagsmith/flagsmith/compare/v2.156.1...v2.156.2) (2024-12-10)
+
+
+### Bug Fixes
+
+* anchor button height ([#4891](https://github.com/Flagsmith/flagsmith/issues/4891)) ([7048c4c](https://github.com/Flagsmith/flagsmith/commit/7048c4c213ed60077aa85c30812d03544b10327a))
+* audit log integrations for versioned environments ([#4876](https://github.com/Flagsmith/flagsmith/issues/4876)) ([486bcd1](https://github.com/Flagsmith/flagsmith/commit/486bcd1d2fc6a360f002183027186d70798b4f06))
+* **pre-commit:** refactor prettier hook ([#4902](https://github.com/Flagsmith/flagsmith/issues/4902)) ([cbecde7](https://github.com/Flagsmith/flagsmith/commit/cbecde7cb53fd0865807f947de04f99407eacdaf))
+
+## [2.156.1](https://github.com/Flagsmith/flagsmith/compare/v2.156.0...v2.156.1) (2024-12-04)
+
+
+### Bug Fixes
+
+* save versioned segment overrides ([#4892](https://github.com/Flagsmith/flagsmith/issues/4892)) ([f5e3410](https://github.com/Flagsmith/flagsmith/commit/f5e3410dec3ed09ffe99a913836ce2ebd1044a6d))
+
+## [2.156.0](https://github.com/Flagsmith/flagsmith/compare/v2.155.0...v2.156.0) (2024-12-04)
+
+
+### Features
+
+* combine value + segment change requests for versioned environments ([#4738](https://github.com/Flagsmith/flagsmith/issues/4738)) ([e6b0e2f](https://github.com/Flagsmith/flagsmith/commit/e6b0e2f799d0c6bc513e622ca19b9698f6f76db2))
+* Enterprise licensing ([#3624](https://github.com/Flagsmith/flagsmith/issues/3624)) ([fbd1a13](https://github.com/Flagsmith/flagsmith/commit/fbd1a13497ef805e3b23e1877e7ccfe087cf197b))
+* Scheduled segment overrides ([#4805](https://github.com/Flagsmith/flagsmith/issues/4805)) ([bb7849c](https://github.com/Flagsmith/flagsmith/commit/bb7849c799fff98c1750adf1d5a057479994d41b))
+* tag based permissions ([#4853](https://github.com/Flagsmith/flagsmith/issues/4853)) ([7c4e2ff](https://github.com/Flagsmith/flagsmith/commit/7c4e2ff23ea66bf8e3dfb57b3492454a831b1bed))
+
+
+### Bug Fixes
+
+* add migration to clean up corrupt data caused by feature versioning ([#4873](https://github.com/Flagsmith/flagsmith/issues/4873)) ([e17f92d](https://github.com/Flagsmith/flagsmith/commit/e17f92df02c5b08a8f6ba498ce49185d37beb994))
+* button style ([#4884](https://github.com/Flagsmith/flagsmith/issues/4884)) ([679acdd](https://github.com/Flagsmith/flagsmith/commit/679acdd26cb18f16626a4809caa0aea65060e466))
+* cannot create new segments due to segment validation ([#4886](https://github.com/Flagsmith/flagsmith/issues/4886)) ([05ab7cf](https://github.com/Flagsmith/flagsmith/commit/05ab7cf876611de613aececc0f70f5987955e446))
+* Set Hubspot cookie name from request body ([#4880](https://github.com/Flagsmith/flagsmith/issues/4880)) ([7d3b253](https://github.com/Flagsmith/flagsmith/commit/7d3b2531c9abc02aceeee5193472ddc92bc772ac))
+
+## [2.155.0](https://github.com/Flagsmith/flagsmith/compare/v2.154.0...v2.155.0) (2024-12-03)
+
+
+### Features
+
+* Create change requests for segments ([#4265](https://github.com/Flagsmith/flagsmith/issues/4265)) ([355f4e2](https://github.com/Flagsmith/flagsmith/commit/355f4e2827dc0a0cba169a320c7a0db8b522089e))
+* **environment/views:** Add get-by-uuid action  ([#4875](https://github.com/Flagsmith/flagsmith/issues/4875)) ([db8433b](https://github.com/Flagsmith/flagsmith/commit/db8433ba0a307b3e27f078aadf94d6ef4e717391))
+* **org/view:** Add api to get organisation by uuid ([#4878](https://github.com/Flagsmith/flagsmith/issues/4878)) ([06ed466](https://github.com/Flagsmith/flagsmith/commit/06ed466864d723ac43bad9ec8fa738a8e9d0812d))
+
+
+### Bug Fixes
+
+* Environment Ready Checker ([#4865](https://github.com/Flagsmith/flagsmith/issues/4865)) ([2392222](https://github.com/Flagsmith/flagsmith/commit/23922223d4367792b196d798cb2571dc8f589ee1))
+* prevent enabling versioning from affecting scheduled change requests ([#4872](https://github.com/Flagsmith/flagsmith/issues/4872)) ([c7aa30b](https://github.com/Flagsmith/flagsmith/commit/c7aa30bb217deca7ea6a0b0657d1a08076f2ab44))
+
 ## [2.154.0](https://github.com/Flagsmith/flagsmith/compare/v2.153.0...v2.154.0) (2024-11-21)
 
 

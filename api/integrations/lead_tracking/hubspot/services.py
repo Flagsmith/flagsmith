@@ -9,23 +9,29 @@ logger = logging.getLogger(__name__)
 
 
 def register_hubspot_tracker(request: Request) -> None:
-    hubspot_cookie = request.COOKIES.get(HUBSPOT_COOKIE_NAME)
+    hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
 
-    # TODO: Remove this temporary debugging logger statement.
-    logger.info(f"Request cookies for user {request.user.email}: {request.COOKIES}")
+    if not hubspot_cookie:
+        logger.info(f"Request did not included Hubspot data for user {request.user.id}")
+        return
 
-    if hubspot_cookie:
+    if (
+        HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)
+        .exclude(user=request.user)
+        .exists()
+    ):
         logger.info(
-            f"Creating HubspotTracker instance for user {request.user.email} with cookie {hubspot_cookie}"
+            f"HubspotTracker could not be created for user {request.user.id}"
+            f" due to cookie conflict with cookie {hubspot_cookie}"
         )
+        return
 
-        HubspotTracker.objects.update_or_create(
-            user=request.user,
-            defaults={
-                "hubspot_cookie": hubspot_cookie,
-            },
-        )
-    else:
-        logger.info(
-            f"Could not create HubspotTracker instance for user {request.user.email} since no cookie"
-        )
+    HubspotTracker.objects.update_or_create(
+        user=request.user,
+        defaults={
+            "hubspot_cookie": hubspot_cookie,
+        },
+    )
+    logger.info(
+        f"Created HubspotTracker instance for user {request.user.id} with cookie {hubspot_cookie}"
+    )

@@ -342,36 +342,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return `/organisation/${orgId}/projects`
   },
 
-  getPermissionList(
-    isAdmin: boolean,
-    permissions: string[] | undefined | null,
-    numberToTruncate = 3,
-  ): {
-    items: string[]
-    truncatedItems: string[]
-  } {
-    if (isAdmin) {
-      return {
-        items: ['Administrator'],
-        truncatedItems: [],
-      }
-    }
-    if (!permissions) return { items: [], truncatedItems: [] }
-
-    const items =
-      permissions && permissions.length
-        ? permissions
-            .slice(0, numberToTruncate)
-            .map((item) => `${Format.enumeration.get(item)}`)
-        : []
-
-    return {
-      items,
-      truncatedItems: (permissions || [])
-        .slice(numberToTruncate)
-        .map((item) => `${Format.enumeration.get(item)}`),
-    }
-  },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free

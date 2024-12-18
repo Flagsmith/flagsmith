@@ -1,10 +1,18 @@
 import typing
+from decimal import Context
+from functools import partial
 
 import boto3
+import boto3.dynamodb.types
 from botocore.config import Config
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
+
+
+# Avoid `decimal.Rounded` when reading large numbers
+# See https://github.com/boto/boto3/issues/2500
+boto3.dynamodb.types.DYNAMODB_CONTEXT = Context(prec=100)
 
 
 class BaseDynamoWrapper:
@@ -33,8 +41,13 @@ class BaseDynamoWrapper:
         return self.table is not None
 
     def query_get_all_items(self, **kwargs: dict) -> typing.Generator[dict, None, None]:
+        if kwargs:
+            response_getter = partial(self.table.query, **kwargs)
+        else:
+            response_getter = partial(self.table.scan)
+
         while True:
-            query_response = self.table.query(**kwargs)
+            query_response = response_getter()
             for item in query_response["Items"]:
                 yield item
 
@@ -42,4 +55,4 @@ class BaseDynamoWrapper:
             if not last_evaluated_key:
                 break
 
-            kwargs["ExclusiveStartKey"] = last_evaluated_key
+            response_getter.keywords["ExclusiveStartKey"] = last_evaluated_key

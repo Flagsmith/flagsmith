@@ -12,12 +12,12 @@ import {
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
 import {
-  ChangeRequest,
-  Environment,
-  FeatureState,
-  PagedResponse,
-  ProjectFlag,
-} from 'common/types/responses'
+    ChangeRequest,
+    Environment,
+    FeatureState,
+    PagedResponse,
+    ProjectFlag, TypedFeatureState,
+} from 'common/types/responses';
 import Utils from 'common/utils/utils'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
@@ -466,14 +466,13 @@ const controller = {
     segmentOverrides: any,
     changeRequest: Req['createChangeRequest'],
     commit: boolean,
-    mode: 'VALUE' | 'SEGMENT',
   ) => {
     store.saving()
     try {
       API.trackEvent(Constants.events.EDIT_FEATURE)
       const env: Environment = ProjectStore.getEnvironment(environmentId) as any
       // Detect differences between change request and existing feature states
-      const res: { data: PagedResponse<FeatureState> } = await getFeatureStates(
+      const res: { data: PagedResponse<TypedFeatureState> } = await getFeatureStates(
         getStore(),
         {
           environment: environmentFlag.environment,
@@ -483,18 +482,14 @@ const controller = {
           forceRefetch: true,
         },
       )
-      let segments = null
-      if (mode === 'SEGMENT') {
-        const res = await getSegments(getStore(), {
-          include_feature_specific: true,
-          page_size: 1000,
-          projectId,
-        })
-        segments = res.data.results
-      }
-      const oldFeatureStates = res.data.results.filter((v) => {
-        return mode === 'VALUE' ? !v.feature_segment : !!v.feature_segment
+      const segmentResult = await getSegments(getStore(), {
+        include_feature_specific: true,
+        page_size: 1000,
+        projectId,
       })
+
+      const segments = segmentResult.data.results
+      const oldFeatureStates = res.data.results
 
       let feature_states_to_create:
           | Req['createFeatureVersion']['feature_states_to_create']
@@ -506,23 +501,20 @@ const controller = {
           | Req['createFeatureVersion']['segment_ids_to_delete_overrides']
           | undefined = undefined
       if (env.use_v2_feature_versioning) {
-        let featureStates
-        if (mode === 'SEGMENT') {
-          featureStates = segmentOverrides?.map((override: any, i: number) =>
+        const featureStates = (segmentOverrides || [])
+          .map((override: any, i: number) =>
             convertSegmentOverrideToFeatureState(override, i, changeRequest),
           )
-        } else {
-          featureStates = [
+          .concat([
             Object.assign({}, environmentFlag, {
               enabled: flag.default_enabled,
               feature_state_value: flag.initial_value,
               live_from: flag.live_from,
             }),
-          ]
-        }
+          ])
 
         const version = getFeatureStateCrud(
-          featureStates.map((v) => ({
+          featureStates.map((v: FeatureState) => ({
             ...v,
             // endpoint returns object for feature_state_value rather than the value
             feature_state_value: Utils.valueToFeatureState(
@@ -1076,7 +1068,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.segmentOverrides,
         action.changeRequest,
         action.commit,
-        action.mode,
       )
       break
     case Actions.EDIT_FEATURE:

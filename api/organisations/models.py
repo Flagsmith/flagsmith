@@ -415,16 +415,29 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         return cb_metadata
 
     def _get_subscription_metadata_for_self_hosted(self) -> BaseSubscriptionMetadata:
-        if not is_enterprise():
-            return FREE_PLAN_SUBSCRIPTION_METADATA
+        if is_enterprise() and hasattr(
+            self.organisation, "licence"
+        ):  # pragma: no cover
+            licence_information = self.organisation.licence.get_licence_information()
+            return BaseSubscriptionMetadata(
+                seats=licence_information.num_seats,
+                projects=licence_information.num_projects,
+                audit_log_visibility_days=None,
+                feature_history_visibility_days=None,
+            )
+        # TODO: Once we've successfully rolled out licences to enterprises
+        #       remove this branch to force them into the free plan
+        #       if they don't have a licence.
+        elif is_enterprise():  # pragma: no cover
+            return BaseSubscriptionMetadata(
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
+                projects=None,
+                audit_log_visibility_days=None,
+                feature_history_visibility_days=None,
+            )
 
-        return BaseSubscriptionMetadata(
-            seats=self.max_seats,
-            api_calls=self.max_api_calls,
-            projects=None,
-            audit_log_visibility_days=None,
-            feature_history_visibility_days=None,
-        )
+        return FREE_PLAN_SUBSCRIPTION_METADATA
 
     def add_single_seat(self):
         if not self.can_auto_upgrade_seats:

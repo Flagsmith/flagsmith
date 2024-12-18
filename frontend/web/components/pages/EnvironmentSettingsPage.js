@@ -17,7 +17,7 @@ import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import { getRolesEnvironmentPermissions } from 'common/services/useRolePermission'
+import { getRoleEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import { Link } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
@@ -69,7 +69,9 @@ const EnvironmentSettingsPage = class extends Component {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     ).then((roles) => {
-      getRolesEnvironmentPermissions(
+      if (!roles?.data?.results?.length) return
+
+      getRoleEnvironmentPermissions(
         getStore(),
         {
           env_id: env.id,
@@ -157,7 +159,7 @@ const EnvironmentSettingsPage = class extends Component {
       api_key: this.props.match.params.environmentId,
     })
 
-    const { description, name } = this.state
+    const { name } = this.state
     if (ProjectStore.isSaving || !name) {
       return
     }
@@ -167,7 +169,7 @@ const EnvironmentSettingsPage = class extends Component {
         allow_client_traits: !!this.state.allow_client_traits,
         banner_colour: this.state.banner_colour,
         banner_text: this.state.banner_text,
-        description: description || env.description,
+        description: this.state?.env?.description,
         hide_disabled_flags: this.state.hide_disabled_flags,
         hide_sensitive_data: !!this.state.hide_sensitive_data,
         minimum_change_request_approvals: has4EyesPermission
@@ -366,17 +368,16 @@ const EnvironmentSettingsPage = class extends Component {
                             <InputGroup
                               textarea
                               ref={(e) => (this.input = e)}
-                              value={
-                                typeof this.state.description === 'string'
-                                  ? this.state.description
-                                  : env.description
-                              }
+                              value={this.state?.env?.description ?? ''}
                               inputProps={{
                                 className: 'input--wide textarea-lg',
                               }}
                               onChange={(e) =>
                                 this.setState({
-                                  description: Utils.safeParseEventValue(e),
+                                  env: {
+                                    ...this.state.env,
+                                    description: Utils.safeParseEventValue(e),
+                                  },
                                 })
                               }
                               isValid={name && name.length}
@@ -449,15 +450,18 @@ const EnvironmentSettingsPage = class extends Component {
                         {Utils.getFlagsmithHasFeature('feature_versioning') && (
                           <div>
                             <div className='col-md-8 mt-4'>
-                              <EnvironmentVersioningListener
-                                id={env.api_key}
-                                versioningEnabled={use_v2_feature_versioning}
-                                onChange={() => {
-                                  this.setState({
-                                    use_v2_feature_versioning: true,
-                                  })
-                                }}
-                              />
+                              {use_v2_feature_versioning === false && (
+                                <EnvironmentVersioningListener
+                                  id={env.api_key}
+                                  versioningEnabled={use_v2_feature_versioning}
+                                  onChange={() => {
+                                    this.setState({
+                                      use_v2_feature_versioning: true,
+                                    })
+                                  }}
+                                />
+                              )}
+
                               <Setting
                                 title={'Feature Versioning'}
                                 description={

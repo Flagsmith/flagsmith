@@ -4,6 +4,8 @@ const fetchJSON = async (url, options) => {
     return response.json();
 };
 
+const userAgent = 'Flagsmith-Docs <support@flagsmith.com>';
+
 const fallback = (value) => (promise) => {
     if (!process.env.CI)
         return promise.catch((e) => {
@@ -31,7 +33,11 @@ const fetchGitHubReleases = async (repo) => {
     return data.map((release) => (release.tag_name.startsWith('v') ? release.tag_name.slice(1) : release.tag_name));
 };
 
-const fetchAndroidVersions = async () => fetchGitHubReleases('flagsmith/flagsmith-kotlin-android-client');
+const fetchAndroidVersions = async () =>
+    fetchMavenVersions({
+        groupId: 'com.flagsmith',
+        artifactId: 'flagsmith-kotlin-android-client',
+    });
 
 const fetchSwiftPMVersions = async () => fetchGitHubReleases('Flagsmith/flagsmith-ios-client');
 
@@ -49,7 +55,7 @@ const fetchDotnetVersions = async () => {
 const fetchRustVersions = async () => {
     // https://crates.io/data-access#api
     const headers = new Headers({
-        'User-Agent': 'Flagsmith-Docs <support@flagsmith.com>',
+        'User-Agent': userAgent,
     });
     const data = await fetchJSON('https://crates.io/api/v1/crates/flagsmith', { headers });
     return data.versions.map((version) => version.num);
@@ -65,13 +71,24 @@ const fetchNpmVersions = async (pkg) => {
     return Object.keys(data.versions);
 };
 
+const fetchFlutterVersions = async () => {
+    const data = await fetchJSON('https://pub.dev/api/packages/flagsmith', {
+        headers: {
+            Accept: 'application/vnd.pub.v2+json',
+            'User-Agent': userAgent,
+        },
+    });
+    return data.versions.map((v) => v.version);
+};
+
 export default async function fetchFlagsmithVersions(context, options) {
     return {
         name: 'flagsmith-versions',
         async loadContent() {
-            const [js, java, android, swiftpm, cocoapods, dotnet, rust, elixir] = await Promise.all(
+            const [js, nodejs, java, android, swiftpm, cocoapods, dotnet, rust, elixir, flutter] = await Promise.all(
                 [
                     fetchNpmVersions('flagsmith'),
+                    fetchNpmVersions('flagsmith-nodejs'),
                     fetchJavaVersions(),
                     fetchAndroidVersions(),
                     fetchSwiftPMVersions(),
@@ -79,10 +96,12 @@ export default async function fetchFlagsmithVersions(context, options) {
                     fetchDotnetVersions(),
                     fetchRustVersions(),
                     fetchElixirVersions(),
+                    fetchFlutterVersions(),
                 ].map(fallback([])),
             );
             return {
                 js,
+                nodejs,
                 java,
                 android,
                 swiftpm,
@@ -90,6 +109,7 @@ export default async function fetchFlagsmithVersions(context, options) {
                 dotnet,
                 rust,
                 elixir,
+                flutter,
             };
         },
         async contentLoaded({ content, actions }) {
