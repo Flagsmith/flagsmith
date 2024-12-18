@@ -173,6 +173,10 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
               />
             )}
           </div>
+          <p className='text-right mt-5 text-dark'>
+            This will edit the permissions for{' '}
+            <strong>the {group?.name} group</strong>.
+          </p>
         </TabItem>
       </Tabs>
     </PlanBasedAccess>
