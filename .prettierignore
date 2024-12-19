@@ -1,14 +1,8 @@
-# Ignore a bunch of files:
-*.html
-*.json
-*.handlebars
-*.css
-*.py
-*.png
-*.jpg
+# Ignore everything by default
+**
 
-.bablerc
-**/CHANGELOG.md
+# Include only specific extensions
+!*.{md,mdx,js,jsx,ts,tsx,json,css,html}
 
 .github/docker_build_comment_template.md
 
