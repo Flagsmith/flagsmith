@@ -243,7 +243,7 @@ const OrganisationSettingsPage = class extends Component {
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
-                        isEnterprise && !isSaas === false
+                        isEnterprise && isSaas === false
                           ? SettingsTab.Licensing
                           : null,
                         SettingsTab.Keys,
