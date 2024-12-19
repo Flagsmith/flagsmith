@@ -390,7 +390,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "djoser.auth_backends.LoginFieldBackend",
     "admin_sso.auth.DjangoSSOAuthBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
