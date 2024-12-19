@@ -67,7 +67,6 @@ class TheComponent extends Component {
                     groups={groups}
                     value={this.state.groupOwners}
                     isOpen={this.state.showUsers}
-                    size={null}
                     onAdd={this.addOwner}
                     onRemove={this.removeOwner}
                     onToggle={() =>

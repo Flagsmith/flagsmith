@@ -10,7 +10,7 @@ export const projectService = service
       getProject: builder.query<Res['project'], Req['getProject']>({
         providesTags: (res) => [{ id: res?.id, type: 'Project' }],
         query: (query: Req['getProject']) => ({
-          url: `projects/${query.id}`,
+          url: `projects/${query.id}/`,
         }),
       }),
       getProjects: builder.query<Res['projects'], Req['getProjects']>({

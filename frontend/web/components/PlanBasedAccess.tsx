@@ -26,6 +26,11 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
     title: 'Change Requests',
   },
+  '4_EYES_PROJECT': {
+    description: 'Add a 4-eyes approval mechanism to your segment changes.',
+    docs: 'https://docs.flagsmith.com/advanced-use/change-requests',
+    title: 'Change Requests',
+  },
   'AUDIT': {
     description:
       'View and search through a history of all changes made in your Flagsmith organisation.',
@@ -33,6 +38,10 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Audit Log',
   },
 
+  'AUDIT_DAYS': {
+    description: 'Access all of your audit logs.',
+    title: 'Audit Log History',
+  },
   'AUTO_SEATS': {
     description: 'Invite additional members.',
     title: 'Invite additional members',
@@ -86,10 +95,6 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'VERSIONING_DAYS': {
     description: 'Access all of your feature versions.',
     title: 'Version History',
-  },
-  'AUDIT_DAYS': {
-    description: 'Access all of your audit logs.',
-    title: 'Audit Log History',
   },
 }
 

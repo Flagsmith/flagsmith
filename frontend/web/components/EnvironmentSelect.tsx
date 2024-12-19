@@ -2,7 +2,7 @@ import React, { FC, useMemo } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { Props } from 'react-select/lib/Select'
 
-export type EnvironmentSelectType = Partial<Props> & {
+export type EnvironmentSelectType = Omit<Partial<Props>, 'value'> & {
   projectId: string
   value?: string
   label?: string
@@ -11,6 +11,7 @@ export type EnvironmentSelectType = Partial<Props> & {
   readOnly?: boolean
   idField?: 'id' | 'api_key'
   ignore?: string[]
+  dataTest?: (value: { label: string }) => string
 }
 
 const EnvironmentSelect: FC<EnvironmentSelectType> = ({

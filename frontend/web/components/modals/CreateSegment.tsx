@@ -11,6 +11,7 @@ import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
 import AccountStore from 'common/stores/account-store'
 import {
+  ChangeRequest,
   EdgePagedResponse,
   Identity,
   Metadata,
@@ -52,6 +53,11 @@ import AddMetadataToEntity, {
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
+import SegmentRuleDivider from 'components/SegmentRuleDivider'
+import { useGetProjectQuery } from 'common/services/useProject'
+import ChangeRequestModal from './ChangeRequestModal'
+import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
+import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
 
 type PageType = {
   number: number
@@ -127,6 +133,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -135,6 +142,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }, [segment])
   const isEdit = !!segment.id
+  const { data: project } = useGetProjectQuery(
+    { id: `${projectId}` },
+    { skip: !projectId },
+  )
+  const is4Eyes =
+    isEdit &&
+    Utils.changeRequestsEnabled(project?.minimum_change_request_approvals)
+
   const [
     createSegment,
     {
@@ -153,7 +168,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
       isSuccess: updateSuccess,
     },
   ] = useUpdateSegmentMutation()
-
+  const [createChangeRequest, { isLoading: isCreatingChangeRequest }] =
+    useCreateProjectChangeRequestMutation({})
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(0)
@@ -259,6 +275,43 @@ const CreateSegment: FC<CreateSegmentType> = ({
     })
     return Promise.resolve(true)
   }, [valueChanged, isEdit])
+  const onCreateChangeRequest = (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => {
+    closeModal2()
+    setValueChanged(false)
+    createChangeRequest({
+      data: {
+        approvals: (changeRequestData.approvals || []).filter((v) => !!v.user),
+        committed_by: null,
+        conflicts: [],
+        description: changeRequestData.description,
+        group_assignments: (changeRequestData.approvals || []).filter(
+          (v) => !!v.group,
+        ),
+        is_approved: false,
+        is_committed: false,
+        segments: [
+          {
+            description,
+            feature: feature,
+            metadata: metadata as Metadata[],
+            name,
+            project: projectId,
+            rules,
+            segment_id: segment.id!,
+          },
+        ],
+        title: changeRequestData.title,
+      },
+      project_id: `${projectId}`,
+    }).then(() => {
+      closeModal()
+      toast('Created change request')
+    })
+  }
   useEffect(() => {
     setInterceptClose(onClosing)
     return () => setInterceptClose(null)
@@ -337,21 +390,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             const displayIndex = rulesToShow.indexOf(rule)
             return (
               <div key={i}>
-                <Row
-                  className={classNames('and-divider my-1', {
-                    'text-danger': rule.type !== 'ANY',
-                  })}
-                >
-                  <Flex className='and-divider__line' />
-                  {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
-                    }`,
-                  )}
-                  <Flex className='and-divider__line' />
-                </Row>
+                <SegmentRuleDivider rule={rule} index={displayIndex} />
                 <Rule
                   showDescription={showDescriptions}
                   readOnly={readOnly}
@@ -523,14 +562,34 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Button>
             )}
             {isEdit ? (
-              <Button
-                type='submit'
-                data-test='update-segment'
-                id='update-feature-btn'
-                disabled={isSaving || !name || !isValid}
-              >
-                {isSaving ? 'Creating' : 'Update Segment'}
-              </Button>
+              is4Eyes ? (
+                <Button
+                  onClick={() => {
+                    openModal2(
+                      'New Change Request',
+                      <ChangeRequestModal
+                        showAssignees={is4Eyes}
+                        hideSchedule
+                        onSave={onCreateChangeRequest}
+                      />,
+                    )
+                  }}
+                  data-test='update-segment'
+                  id='update-feature-btn'
+                  disabled={isSaving || !name || !isValid}
+                >
+                  {isSaving ? 'Creating' : 'Create Change Request'}
+                </Button>
+              ) : (
+                <Button
+                  type='submit'
+                  data-test='update-segment'
+                  id='update-feature-btn'
+                  disabled={isSaving || !name || !isValid}
+                >
+                  {isSaving ? 'Creating' : 'Update Segment'}
+                </Button>
+              )
             ) : (
               <Button
                 disabled={isSaving || !name || !isValid || isLimitReached}
@@ -571,6 +630,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   return (
     <>
+      <ExistingProjectChangeRequestAlert
+        className='m-2'
+        projectId={`${projectId}`}
+        segmentId={`${segment.id}`}
+      />
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
           <TabItem
@@ -782,14 +846,18 @@ type LoadingCreateSegmentType = {
 
 const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   const [environmentId, setEnvironmentId] = useState(props.environmentId)
-  const { data: segmentData, isLoading } = useGetSegmentQuery(
+  const { data: segmentData, isLoading: segmentLoading } = useGetSegmentQuery(
     {
       id: `${props.segment}`,
       projectId: `${props.projectId}`,
     },
     { skip: !props.segment },
   )
-
+  const { isLoading: projectLoading } = useGetProjectQuery(
+    { id: `${props.projectId}` },
+    { skip: !props.projectId },
+  )
+  const isLoading = projectLoading || segmentLoading
   const [page, setPage] = useState<PageType>({
     number: 1,
     pageType: undefined,

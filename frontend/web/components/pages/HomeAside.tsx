@@ -1,8 +1,7 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useRef } from 'react'
 import ProjectStore from 'common/stores/project-store'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
-import { Environment, Project } from 'common/types/responses'
+import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
@@ -22,6 +21,8 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
+import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
+import moment from 'moment'
 
 type HomeAsideType = {
   environmentId: string
@@ -34,34 +35,33 @@ const HomeAside: FC<HomeAsideType> = ({
   history,
   projectId,
 }) => {
-  useEffect(() => {
-    if (environmentId) {
-      AppActions.getChangeRequests(environmentId, {})
-    }
-  }, [environmentId])
-  const [_, setChangeRequestsUpdated] = useState(Date.now())
+  const date = useRef(moment().toISOString())
 
-  useEffect(() => {
-    const onChangeRequestsUpdated = () => setChangeRequestsUpdated(Date.now())
-    ChangeRequestStore.on('change', onChangeRequestsUpdated)
-    return () => {
-      ChangeRequestStore.off('change', onChangeRequestsUpdated)
-    }
-    //eslint-disable-next-line
-  }, [])
+  const { data: scheduledData } = useGetChangeRequestsQuery({
+    committed: true,
+    environmentId,
+    live_from_after: date.current,
+    page_size: 1,
+  })
+
+  const { data: changeRequestsData } = useGetChangeRequestsQuery({
+    committed: false,
+    environmentId,
+    page_size: 1,
+  })
 
   const environment: Environment | null =
     environmentId === 'create'
       ? null
       : (ProjectStore.getEnvironment(environmentId) as any)
-  const changeRequest = Utils.changeRequestsEnabled(
-    environment?.minimum_change_request_approvals,
-  )
-    ? ChangeRequestStore.model[environmentId]
-    : null
-  const changeRequests = changeRequest?.count || 0
-  const scheduled =
-    (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
+
+  const changeRequests =
+    (Utils.changeRequestsEnabled(
+      environment?.minimum_change_request_approvals,
+    ) &&
+      changeRequestsData?.count) ||
+    0
+  const scheduled = scheduledData?.count || 0
   const onProjectSave = () => {
     AppActions.refreshOrganisation()
   }
@@ -69,7 +69,8 @@ const HomeAside: FC<HomeAsideType> = ({
     <OrganisationProvider>
       {() => (
         <ProjectProvider id={projectId} onSave={onProjectSave}>
-          {({ project }: { project: Project }) => {
+          {({ project }) => {
+            if (!project) return null
             const createEnvironmentButton = (
               <Permission
                 level='project'
