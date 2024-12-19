@@ -25,7 +25,7 @@ docker run \
 
 <details>
 <summary>Docker Compose</summary>
-```yaml
+```yaml title="compose.yaml"
 services:
  edge_proxy:
   image: flagsmith/edge-proxy:latest
@@ -56,7 +56,7 @@ Environment variables are case-insensitive, and are processed using
 
 <summary>Configuration file</summary>
 
-```json
+```json title="/app/config.json"
 {
  "environment_key_pairs": [
   {
@@ -277,10 +277,13 @@ return 200
 
 ### Environment Variables
 
-You can configure the Edge Proxy with the following Environment Variables:
+You can configure the Edge Proxy with the following environment variables:
 
 - `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`. Set to the number of
   available CPU cores.
+- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: These variables let you configure an HTTP proxy that the 
+  Edge Proxy should use for all its outgoing HTTP requests.
+  [Learn more](https://www.python-httpx.org/environment_variables)
 
 ## Monitoring
 
