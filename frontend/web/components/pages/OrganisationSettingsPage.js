@@ -232,9 +232,8 @@ const OrganisationSettingsPage = class extends Component {
 
                   const displayedTabs = []
                   const isEnterprise =
-                    Utils.getPlanName(
-                      _.get(organisation, 'subscription.plan'),
-                    )?.toLowerCase() === 'enterprise'
+                    global.flagsmithVersion?.backend.is_enterprise
+                  const isSaas = global.flagsmithVersion?.backend?.isSaas
 
                   if (
                     AccountStore.getUser() &&
@@ -244,7 +243,7 @@ const OrganisationSettingsPage = class extends Component {
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
-                        isEnterprise && !Utils.isSaas()
+                        isEnterprise && !isSaas === false
                           ? SettingsTab.Licensing
                           : null,
                         SettingsTab.Keys,
