@@ -18,11 +18,14 @@ import PageTitle from 'components/PageTitle'
 import SamlTab from 'components/SamlTab'
 import Setting from 'components/Setting'
 import AccountProvider from 'common/providers/AccountProvider'
+import LicensingTabContent from 'components/LicensingTabContent'
+import Utils from 'common/utils/utils'
 
 const SettingsTab = {
   'Billing': 'billing',
   'General': 'general',
   'Keys': 'keys',
+  'Licensing': 'licensing',
   'SAML': 'saml',
   'Usage': 'usage',
   'Webhooks': 'webhooks',
@@ -228,6 +231,10 @@ const OrganisationSettingsPage = class extends Component {
                   const { chargebee_email } = subscriptionMeta || {}
 
                   const displayedTabs = []
+                  const isEnterprise =
+                    Utils.getPlanName(
+                      _.get(organisation, 'subscription.plan'),
+                    )?.toLowerCase() === 'enterprise'
 
                   if (
                     AccountStore.getUser() &&
@@ -237,6 +244,9 @@ const OrganisationSettingsPage = class extends Component {
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
+                        isEnterprise && !Utils.isSaas()
+                          ? SettingsTab.Licensing
+                          : null,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
                         SettingsTab.SAML,
@@ -460,6 +470,14 @@ const OrganisationSettingsPage = class extends Component {
                               <h5>Manage Payment Plan</h5>
                               <Payment viewOnly={false} />
                             </div>
+                          </TabItem>
+                        )}
+
+                        {displayedTabs.includes(SettingsTab.Licensing) && (
+                          <TabItem tabLabel='Licensing'>
+                            <LicensingTabContent
+                              organisationId={organisation.id}
+                            />
                           </TabItem>
                         )}
 
