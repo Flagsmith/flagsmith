@@ -36,7 +36,6 @@ repos:
           - prettier@3.4.2
         args:
           - --check
-        exclude: ^(frontend/|CHANGELOG.md|.github/docker_build_comment_template.md)
 
   - repo: https://github.com/python-poetry/poetry
     rev: 1.8.0
