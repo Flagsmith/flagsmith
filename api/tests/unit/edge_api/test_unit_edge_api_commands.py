@@ -218,3 +218,25 @@ def test_ensure_identity_traits_blanks__logs_expected(
             "total_count": 11,
         },
     ]
+
+
+def test_ensure_identity_traits_blanks__exclusive_start_key__calls_expected(
+    flagsmith_identities_table: "Table",
+    mocker: "MockerFixture",
+) -> None:
+    # Given
+    exclusive_start_key = '{"composite_key":"test_hello"}'
+    expected_kwargs = {"ExclusiveStartKey": {"composite_key": "test_hello"}}
+
+    identity_wrapper_mock = mocker.patch(
+        "edge_api.management.commands.ensure_identity_traits_blanks.identity_wrapper"
+    )
+
+    # When
+    call_command(
+        "ensure_identity_traits_blanks",
+        exclusive_start_key=exclusive_start_key,
+    )
+
+    # Then
+    identity_wrapper_mock.scan_get_all_items.assert_called_once_with(**expected_kwargs)
