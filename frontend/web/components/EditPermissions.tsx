@@ -804,6 +804,19 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         })
     }
 
+    const getEditText = () => {
+      if (isGroup) {
+        return `the ${group?.name || ''} group`
+      }
+      if (user) {
+        return `${user.first_name || ''} ${user.last_name || ''}`
+      }
+      if (role) {
+        return role.name
+      }
+      return name
+    }
+
     const rolesAdded = getRoles(roles, rolesSelected || [])
     const isAdmin = admin()
 
@@ -917,20 +930,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
             <p className='text-right mt-5 text-dark'>
               This will edit the permissions for{' '}
-              <strong>
-                {isGroup ? (
-                  `the ${group?.name || ''} group`
-                ) : user ? (
-                  <>
-                    {user.first_name || ''} {user.last_name || ''}
-                  </>
-                ) : role ? (
-                  ` ${role.name}`
-                ) : (
-                  ` ${name}`
-                )}
-              </strong>
-              .
+              <strong>{getEditText()}</strong>.
             </p>
 
             {!!parentWarning && (
