@@ -69,6 +69,13 @@ export type Req = {
     environments?: string
   }>
   getOrganisations: {}
+  uploadOrganisationLicence: {
+    id: number
+    body: {
+      licence_signature: File
+      licence: File
+    }
+  }
   getProjects: {
     organisationId: string
   }
