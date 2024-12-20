@@ -1,9 +1,3 @@
-# Ignore everything by default
-**
-
-# Include only specific extensions
-!*.{md,mdx,js,jsx,ts,tsx,json,css,html}
-
 .github/docker_build_comment_template.md
 
 # Frontend has it's own prettier setup
@@ -13,4 +7,18 @@ frontend/
 docs/docs/edge-api/*.mdx
 docs/docs/edge-api/sidebar.ts
 
-.prettierignore
+# Since we use prettier via pre-commit, and it's not possible to pass both an explicit list of file types
+# to lint, and a specific list of files, we have to explicitly ignore all file types that we don't
+# care about here.
+*.py
+*.conf*
+*.sh
+*.txt
+*.png
+*.jpg
+*.svg
+*.drawio
+*.woff*
+*.jmx
+
+.gitignore
