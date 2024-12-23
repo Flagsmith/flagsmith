@@ -61,30 +61,34 @@ def distinct_identity_featurestate(
 
 
 @pytest.mark.parametrize(
-    "enable_dynamo_db, edge_v2_migration_status, expected_overrides_getter_name, expected_kwargs",
+    "enable_dynamo_db, edge_v2_migration_status, expected_overrides_getter_name, expected_args, expected_kwargs",
     [
         (
             True,
             EdgeV2MigrationStatus.NOT_STARTED,
             "get_core_overrides_data",
+            [],
             {"skip_identity_overrides": True},
         ),
         (
             True,
             EdgeV2MigrationStatus.IN_PROGRESS,
             "get_core_overrides_data",
+            [],
             {"skip_identity_overrides": True},
         ),
         (
             True,
             EdgeV2MigrationStatus.COMPLETE,
             "get_edge_overrides_data",
+            [None],
             {},
         ),
         (
             False,
             ANY,
             "get_core_overrides_data",
+            [],
             {},
         ),
     ],
@@ -95,6 +99,7 @@ def test_feature_get_overrides_data__call_expected(
     enable_dynamo_db: bool,
     edge_v2_migration_status: str,
     expected_overrides_getter_name: str,
+    expected_args: list[None],
     expected_kwargs: dict[str, bool],
 ) -> None:
     # Given
@@ -117,6 +122,7 @@ def test_feature_get_overrides_data__call_expected(
     # Then
     mocked_override_getters.pop(expected_overrides_getter_name).assert_called_once_with(
         environment,
+        *expected_args,
         **expected_kwargs,
     )
     [remaining_override_getter_mock] = mocked_override_getters.values()
@@ -235,8 +241,13 @@ def test_feature_get_edge_overrides_data(
     )
     edge_identity.save(admin_user)
 
+    feature_ids = [
+        distinct_identity_featurestate.feature.id,
+        feature.id,
+    ]
+
     # When
-    overrides_data = get_edge_overrides_data(environment)
+    overrides_data = get_edge_overrides_data(environment, feature_ids)
 
     # Then
     assert overrides_data[feature.id].num_identity_overrides == 1
@@ -284,11 +295,12 @@ def test_get_edge_overrides_data_skips_deleted_features(
     )
     edge_identity.save(admin_user)
 
+    feature_ids = [distinct_identity_featurestate.feature.id, feature.id]
     # Now, delete one of the feature
     feature.delete()
 
     # When
-    overrides_data = get_edge_overrides_data(environment)
+    overrides_data = get_edge_overrides_data(environment, feature_ids)
 
     # Then - we only have one identity override(for the feature that still exists)
     assert len(overrides_data) == 1
