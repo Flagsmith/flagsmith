@@ -314,6 +314,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                       />
                       <IdentityOverridesIcon
                         count={data.num_identity_overrides}
+                        showPlusIndicator={
+                          data.is_num_identity_overrides_complete === false
+                        }
                       />
                     </Row>
                   </div>
