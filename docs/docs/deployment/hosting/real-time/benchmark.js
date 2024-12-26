@@ -3,7 +3,6 @@
 
 import { sleep } from 'k6';
 import http from 'k6/http';
-import exec from 'k6/execution';
 
 export const options = {
     discardResponseBodies: true,
@@ -12,7 +11,7 @@ export const options = {
         subscribe: {
             exec: 'subscribers',
             executor: 'ramping-vus',
-            stages: [{ duration: '1m', target: 20000 }],
+            stages: [{ duration: '1m', target: 10000 }],
         },
         // Publish an update to the same environment every 10s
         publish: {
@@ -36,7 +35,7 @@ export function subscribers() {
 
 export function publish() {
     const body = JSON.stringify({
-        updated_at: exec.vu.iterationInScenario,
+        updated_at: new Date().toISOString(),
     });
     http.post(`http://localhost:8088/sse/environments/${env}/queue-change`, body, {
         headers: {
