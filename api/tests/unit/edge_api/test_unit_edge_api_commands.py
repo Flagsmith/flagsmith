@@ -239,4 +239,4 @@ def test_ensure_identity_traits_blanks__exclusive_start_key__calls_expected(
     )
 
     # Then
-    identity_wrapper_mock.scan_get_all_items.assert_called_once_with(**expected_kwargs)
+    identity_wrapper_mock.scan_iter_all_items.assert_called_once_with(**expected_kwargs)
