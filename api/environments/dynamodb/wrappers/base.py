@@ -4,9 +4,8 @@ from functools import partial
 
 import boto3
 import boto3.dynamodb.types
-import structlog
 from botocore.config import Config
-from sentry_sdk import set_context
+from sentry_sdk import set_context  # TODO @kgustyr: Replace with OTel
 
 if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
@@ -25,15 +24,11 @@ if typing.TYPE_CHECKING:
 boto3.dynamodb.types.DYNAMODB_CONTEXT = Context(prec=100)
 
 
-logger: structlog.BoundLogger = structlog.get_logger()
-
-
 class BaseDynamoWrapper:
     table_name: str = None
 
     def __init__(self) -> None:
         self._table: typing.Optional["Table"] = None
-        self._log = logger.bind(table_name=self.table_name)
 
     @property
     def table(self) -> typing.Optional["Table"]:
