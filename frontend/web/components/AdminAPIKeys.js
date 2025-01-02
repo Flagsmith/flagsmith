@@ -190,7 +190,7 @@ export class CreateAPIKey extends PureComponent {
                 <Input
                   ref={(v) => {
                     setTimeout(() => {
-                      v?.focus()
+                      v.focus()
                     }, 500)
                   }}
                   value={this.state.name}

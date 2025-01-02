@@ -354,10 +354,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (
-      global.flagsmithVersion?.backend.is_enterprise ||
-      (plan && plan.includes('enterprise'))
-    ) {
+    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
       return planNames.enterprise
     }
     return planNames.free
@@ -555,6 +552,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+  isEnterpriseImage: () => global.flagsmithVersion?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -566,7 +564,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
-
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },

@@ -231,9 +231,8 @@ const OrganisationSettingsPage = class extends Component {
                   const { chargebee_email } = subscriptionMeta || {}
 
                   const displayedTabs = []
-                  const isEnterprise =
-                    global.flagsmithVersion?.backend.is_enterprise
-                  const isSaas = global.flagsmithVersion?.backend?.isSaas
+                  const isEnterprise = Utils.isEnterpriseImage()
+                  const isSaas = Utils.isSaas()
 
                   if (
                     AccountStore.getUser() &&

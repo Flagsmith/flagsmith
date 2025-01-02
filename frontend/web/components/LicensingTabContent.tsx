@@ -28,7 +28,7 @@ const LicensingTabContent: React.FC<LicensingTabContentProps> = ({
       toast(
         Array.isArray(error?.data)
           ? error?.data[0]
-          : 'Upload was not successfull',
+          : 'Upload was not successful',
         'danger',
       )
     }
