@@ -4076,8 +4076,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.7.4"
-resolved_reference = "aba7b848a13ed589c8f46fea5fa7c63a2c047d82"
+reference = "v2.7.5"
+resolved_reference = "ab87df687b177099b9e361d0847ca295ce24f153"
 
 [[package]]
 name = "wrapt"
@@ -4196,4 +4196,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "3c5d952893efccfa1b76e8b96c30147293003d81a9be5fcf02c48983e74b27b7"
+content-hash = "896835ab89b6fb275fea1ea29c97c03453268055d63ae9726b0f185905264c1d"
