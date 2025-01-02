@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.158.0](https://github.com/Flagsmith/flagsmith/compare/v2.157.1...v2.158.0) (2025-01-02)
+
+
+### Features
+
+* Displays what entity is being edited in side modal ([#4927](https://github.com/Flagsmith/flagsmith/issues/4927)) ([c1e0aea](https://github.com/Flagsmith/flagsmith/commit/c1e0aeaf5d0141f10ebb4b9dbefff0cc9cc99305))
+* Support `--exclusive-start-key` option for `ensure_identity_traits_blanks` ([#4941](https://github.com/Flagsmith/flagsmith/issues/4941)) ([4f71482](https://github.com/Flagsmith/flagsmith/commit/4f71482f06221dee2f22fdf75156991623bfead8))
+
+
+### Bug Fixes
+
+* Add explicit pagination to change requests ([#4925](https://github.com/Flagsmith/flagsmith/issues/4925)) ([cafb663](https://github.com/Flagsmith/flagsmith/commit/cafb663f423d1a34efeeac6442c2c26ae2ab2e65))
+
 ## [2.157.1](https://github.com/Flagsmith/flagsmith/compare/v2.157.0...v2.157.1) (2024-12-16)
 
 
