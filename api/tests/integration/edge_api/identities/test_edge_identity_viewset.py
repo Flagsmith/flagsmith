@@ -163,7 +163,7 @@ def test_delete_identity(
         KeyConditionExpression=Key("identity_uuid").eq(identity_uuid),
     )["Count"]
     assert not list(
-        dynamodb_wrapper_v2.query_get_all_items(
+        dynamodb_wrapper_v2.query_iter_all_items(
             KeyConditionExpression=Key("environment_id").eq(
                 str(dynamo_enabled_environment)
             )

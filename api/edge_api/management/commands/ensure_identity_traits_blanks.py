@@ -1,27 +1,42 @@
+import json
+from argparse import ArgumentParser
 from typing import Any
 
+import structlog
 from django.core.management import BaseCommand
-from structlog import get_logger
-from structlog.stdlib import BoundLogger
 
 from environments.dynamodb import DynamoIdentityWrapper
 
 identity_wrapper = DynamoIdentityWrapper()
 
+logger: structlog.BoundLogger = structlog.get_logger()
 
 LOG_COUNT_EVERY = 100_000
 
 
 class Command(BaseCommand):
-    def handle(self, *args: Any, **options: Any) -> None:
-        total_count = identity_wrapper.table.item_count
-        scanned_count = 0
-        fixed_count = 0
+    def add_arguments(self, parser: ArgumentParser) -> None:
+        parser.add_argument(
+            "--exclusive-start-key",
+            dest="exclusive_start_key",
+            type=str,
+            default="",
+            help="Exclusive start key in valid JSON",
+        )
 
-        log: BoundLogger = get_logger(total_count=total_count)
+    def handle(self, *args: Any, exclusive_start_key: str, **options: Any) -> None:
+        total_count = identity_wrapper.table.item_count
+        scanned_count = scanned_percentage = fixed_count = 0
+
+        log: structlog.BoundLogger = logger.bind(total_count=total_count)
+
+        kwargs = {}
+        if exclusive_start_key:
+            kwargs["ExclusiveStartKey"] = json.loads(exclusive_start_key)
+
         log.info("started")
 
-        for identity_document in identity_wrapper.query_get_all_items():
+        for identity_document in identity_wrapper.scan_iter_all_items(**kwargs):
             should_write_identity_document = False
 
             if identity_traits_data := identity_document.get("identity_traits"):
