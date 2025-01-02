@@ -69,7 +69,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     ) -> typing.List[dict[str, Any]]:
         try:
             return list(
-                self.query_get_all_items(
+                self.query_iter_all_items(
                     KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
                         str(environment_id),
                     )
@@ -122,7 +122,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             "ProjectionExpression": "document_key",
         }
         with self.table.batch_writer() as writer:
-            for item in self.query_get_all_items(**query_kwargs):
+            for item in self.query_iter_all_items(**query_kwargs):
                 writer.delete_item(
                     Key={
                         ENVIRONMENTS_V2_PARTITION_KEY: environment_id,

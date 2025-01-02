@@ -34,7 +34,7 @@ def identity_overrides_v2(
     edge_identity.save(admin_user)
     return [
         item["document_key"]
-        for item in dynamodb_wrapper_v2.query_get_all_items(
+        for item in dynamodb_wrapper_v2.query_iter_all_items(
             KeyConditionExpression=Key("environment_id").eq(
                 str(dynamo_enabled_environment)
             ),
