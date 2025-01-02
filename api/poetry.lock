@@ -1420,8 +1420,8 @@ simplejson = "~3.19.1"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.0.2"
-resolved_reference = "1424d95cbadd18dfc57debbdf0ea2d3d13ea1446"
+reference = "v1.1.1"
+resolved_reference = "f92adfd703075b2487bf08d01cf5d88946b818a6"
 
 [[package]]
 name = "freezegun"
@@ -4094,8 +4094,8 @@ flagsmith-flag-engine = "*"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
-reference = "v2.7.4"
-resolved_reference = "aba7b848a13ed589c8f46fea5fa7c63a2c047d82"
+reference = "v2.7.5"
+resolved_reference = "ab87df687b177099b9e361d0847ca295ce24f153"
 
 [[package]]
 name = "wrapt"
@@ -4214,4 +4214,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "69321153ca0302afcfcb7ec43f64de2092d86c7707fc09c2774dbf551a5d15c9"
+content-hash = "e1a9a475bfcf2fe405649d2f59bce5ec8e9e45dcb0a058d6e8f0714f7540ca9a"
