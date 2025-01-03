@@ -21,9 +21,7 @@ const GithubStar: FC<GithubStarType> = ({}) => {
         .then(function (res) {
           setStars(res.stargazers_count)
         })
-        .catch(() => {
-          setStars(undefined)
-        })
+        .catch(() => {})
     }
   }, [planName])
 
