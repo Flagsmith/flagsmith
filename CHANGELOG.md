@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.158.1](https://github.com/Flagsmith/flagsmith/compare/v2.158.0...v2.158.1) (2025-01-03)
+
+
+### Bug Fixes
+
+* **tests:** Incorrect mock in `test_ensure_identity_traits_blanks__exclusive_start_key__calls_expected` ([#4944](https://github.com/Flagsmith/flagsmith/issues/4944)) ([bbe7db1](https://github.com/Flagsmith/flagsmith/commit/bbe7db188657ec542e8a2dd15648c3de3b6dbd6e))
+
 ## [2.158.0](https://github.com/Flagsmith/flagsmith/compare/v2.157.1...v2.158.0) (2025-01-02)
 
 
