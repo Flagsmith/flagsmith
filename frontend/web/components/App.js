@@ -37,6 +37,7 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
+import ProjectChangeRequestsLink from './ProjectChangeRequestsLink'
 
 const App = class extends Component {
   static propTypes = {
@@ -561,6 +562,7 @@ const App = class extends Component {
                           >
                             Segments
                           </NavSubLink>
+                          <ProjectChangeRequestsLink projectId={projectId} />
                           <Permission
                             level='project'
                             permission='VIEW_AUDIT_LOG'
