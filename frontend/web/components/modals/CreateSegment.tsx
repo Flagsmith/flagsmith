@@ -52,6 +52,7 @@ import AddMetadataToEntity, {
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
+import AppActions from 'common/dispatcher/app-actions'
 
 type PageType = {
   number: number
@@ -127,6 +128,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+  const [shouldUpdateIdentities, setShouldUpdateIdentities] = useState(false)
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -282,6 +284,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (createSuccess && createSegmentData) {
       setSegment(createSegmentData)
       onComplete?.(createSegmentData)
+      setShouldUpdateIdentities(true)
     }
     //eslint-disable-next-line
   }, [createSuccess])
@@ -289,9 +292,25 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (updateSuccess && updateSegmentData) {
       setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
+      setShouldUpdateIdentities(true)
     }
     //eslint-disable-next-line
   }, [updateSuccess])
+
+  useEffect(() => {
+    if (
+      shouldUpdateIdentities &&
+      tab === 2 &&
+      environmentId &&
+      environmentId !== 'ENVIRONMENT_API_KEY'
+    ) {
+      identities?.results.forEach((identity) =>
+        AppActions.getIdentitySegments(projectId, identity.id),
+      )
+      setShouldUpdateIdentities(false)
+    }
+  }, [shouldUpdateIdentities, tab, identities, projectId, environmentId])
+
   const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
   if (operators) {
     _operators = operators
