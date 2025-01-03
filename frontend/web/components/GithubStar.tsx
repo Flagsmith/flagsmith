@@ -21,6 +21,9 @@ const GithubStar: FC<GithubStarType> = ({}) => {
         .then(function (res) {
           setStars(res.stargazers_count)
         })
+        .catch(() => {
+          setStars(undefined)
+        })
     }
   }, [planName])
 
@@ -28,8 +31,8 @@ const GithubStar: FC<GithubStarType> = ({}) => {
     return <></>
   }
 
-  return (
-    <>
+  if (!stars) {
+    return (
       <a
         style={{ width: 90 }}
         target='_blank'
@@ -37,12 +40,24 @@ const GithubStar: FC<GithubStarType> = ({}) => {
         className='btn btn-sm btn-with-icon text-body'
         rel='noreferrer'
       >
-        <div className='d-flex flex-row justify-content-center align-items-center'>
-          <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
-          <div className='ms-1'>{stars}</div>
-        </div>
+        <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
       </a>
-    </>
+    )
+  }
+
+  return (
+    <a
+      style={{ width: 90 }}
+      target='_blank'
+      href='https://github.com/flagsmith/flagsmith'
+      className='btn btn-sm btn-with-icon text-body'
+      rel='noreferrer'
+    >
+      <div className='d-flex flex-row justify-content-center align-items-center'>
+        <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
+        <div className='ms-1'>{stars}</div>
+      </div>
+    </a>
   )
 }
 
