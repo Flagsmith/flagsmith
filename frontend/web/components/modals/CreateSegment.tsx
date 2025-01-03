@@ -120,7 +120,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
-  const [shouldUpdateIdentities, setShouldUpdateIdentities] = useState(false)
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -251,7 +250,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
         resolve(true)
       }
     })
-    return Promise.resolve(true)
   }, [valueChanged, isEdit])
   useEffect(() => {
     setInterceptClose(onClosing)
@@ -276,7 +274,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (createSuccess && createSegmentData) {
       setSegment(createSegmentData)
       onComplete?.(createSegmentData)
-      setShouldUpdateIdentities(true)
     }
     //eslint-disable-next-line
   }, [createSuccess])
@@ -284,24 +281,17 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (updateSuccess && updateSegmentData) {
       setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
-      setShouldUpdateIdentities(true)
     }
     //eslint-disable-next-line
   }, [updateSuccess])
 
   useEffect(() => {
-    if (
-      shouldUpdateIdentities &&
-      tab === 2 &&
-      environmentId &&
-      environmentId !== 'ENVIRONMENT_API_KEY'
-    ) {
+    if (tab === 2 && environmentId) {
       identities?.results.forEach((identity) =>
         AppActions.getIdentitySegments(projectId, identity.id),
       )
-      setShouldUpdateIdentities(false)
     }
-  }, [shouldUpdateIdentities, tab, identities, projectId, environmentId])
+  }, [tab, identities, projectId, environmentId])
 
   const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
   if (operators) {
@@ -632,15 +622,20 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =
-    useGetIdentitiesQuery({
-      environmentId,
-      isEdge,
-      page: page.number,
-      pageType: page.pageType,
-      page_size: 10,
-      pages: page.pages,
-      search,
-    })
+    useGetIdentitiesQuery(
+      {
+        environmentId,
+        isEdge,
+        page: page.number,
+        pageType: page.pageType,
+        page_size: 10,
+        pages: page.pages,
+        search,
+      },
+      {
+        skip: !environmentId,
+      },
+    )
 
   return isLoading ? (
     <div className='text-center'>

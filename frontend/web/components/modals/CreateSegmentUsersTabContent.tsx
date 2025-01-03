@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import PanelSearch from 'components/PanelSearch'
@@ -35,10 +35,6 @@ const CreateSegmentUsersTabContent: React.FC<
   setPage,
   setSearchInput,
 }) => {
-  useEffect(() => {
-    console.log({ identities })
-  }, [identities])
-
   return (
     <div className='my-4'>
       <InfoMessage collapseId={'random-identity-sample'}>
