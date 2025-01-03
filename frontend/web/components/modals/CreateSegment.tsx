@@ -75,7 +75,14 @@ type CreateSegmentType = {
   segment?: Segment
 }
 
+enum UserTabs {
+  RULES = 0,
+  FEATURES = 1,
+  USERS = 2,
+}
+
 let _operators: Operator[] | null = null
+
 const CreateSegment: FC<CreateSegmentType> = ({
   className,
   condensed,
@@ -149,7 +156,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [tab, setTab] = useState(0)
+  const [tab, setTab] = useState(UserTabs.RULES)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
@@ -286,7 +293,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   }, [updateSuccess])
 
   useEffect(() => {
-    if (tab === 2 && environmentId) {
+    if (tab === UserTabs.USERS && environmentId) {
       identities?.results.forEach((identity) =>
         AppActions.getIdentitySegments(projectId, identity.id),
       )
@@ -425,7 +432,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   return (
     <>
       {isEdit && !condensed ? (
-        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Rules'
             tabLabel={
@@ -505,7 +512,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
           )}
         </Tabs>
       ) : metadataEnable && segmentContentType?.id ? (
-        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Basic configuration'
             tabLabel={'Basic configuration'}
