@@ -29,6 +29,11 @@
             "section": "Infrastructure (Flagsmith SaaS Only)"
         },
         {
+            "type": "deps",
+            "hidden": false,
+            "section": "Dependency Updates"
+        },
+        {
             "type": "ci",
             "hidden": true,
             "section": "CI"
@@ -37,11 +42,6 @@
             "type": "docs",
             "hidden": true,
             "section": "Docs"
-        },
-        {
-            "type": "deps",
-            "hidden": true,
-            "section": "Dependency Updates"
         },
         {
             "type": "perf",
