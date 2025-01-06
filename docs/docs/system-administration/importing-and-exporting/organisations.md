@@ -3,26 +3,29 @@ title: Organisations
 sidebar_position: 110
 ---
 
-The Organisations data migration option is useful when you want to migrate your Flagsmith Organisation from one location
-to another. It's not a useful tool to merge Flagsmith data into another Flagsmith instance, for that use-case consider
-[feature flag importing](/system-administration/importing-and-exporting/features).
+You can import and export an entire Flagsmith organisation. This lets you:
 
-If, for example, you wanted to move from self hosting Flagsmith to our SaaS version, the process looks something like
-this:
+* Migrate from self-hosted Flagsmith to SaaS, or the other way around.
+* Migrate from one self-hosted Flagsmith instance to another.
 
-- **Step 1.** Contact Flagsmith support to confirm you would like to migrate from self hosted to cloud
-- **Step 2.** Generate a JSON file from your self hosted instance (more information below)
-- **Step 3.** Send the JSON file to Flagsmith support
-- **Step 4.** Flagsmith support will import the JSON file into our cloud offering
-- **Step 5.** Register and re-add your users and passwords (Flagsmith support will need to assign at least one
-  organisation administrator to the newly imported organisation)
+:::note
 
-:::tip
-
-You can import and export from any combination of self-hosted/SaaS to and from self-hosted/SaaS. If you need to go to or
-from our SaaS platform, you will need to get in touch with us to operate that part of the process for you.
+This process **does not** support merging data with an existing Flagsmith organisation. A new organisation is created
+as part of the import process.
 
 :::
+
+## Prerequisites
+
+Importing or exporting an organisation requires shell access to any machine or container where Flagsmith is 
+installed and can connect to your Flagsmith database.
+
+Exported organisations can be read from or written to the local file system or S3-compatible storage.
+
+Importing or exporting an organisation does not require downtime. However, it is a one-shot operation that does not
+continuously migrate data. You should plan a convenient time to perform imports and exports.
+
+If you need to copy an organisation from or to Flagsmith SaaS, please contact Flagsmith support.
 
 ## What is exported?
 
@@ -33,23 +36,35 @@ We **will** export the following entities:
 - Segments
 - Identities
 - Integrations
+- Client-side and server-side SDK keys
 
 We **will not** export the following entities:
 
-- Flagsmith Users that log into the Dashboard and manage Flagsmith
+- Flagsmith users
+- Flag analytics
 - Audit logs
 - Change requests
 - Scheduled flag changes
+- Admin API keys
+- Groups and custom roles
+- SAML configurations and login method restrictions
 
-## Dealing with existing data
+## Running shell commands
 
-The data migration process is designed to import data into a completely new Organisation within the target Flagsmith
-instance. This target instance could be a completely new installation, or it could have existing data in it, in separate
-Organisations.
+Importing or exporting is performed using shell commands on a Flagsmith container that has access to your Flagsmith 
+database. You can also create a new container just for this operation.
 
-This process does **not** support importing data into an existing Organisation.
+### Kubernetes
+
+
+
+### Docker Compose
+
+
 
 ## Exporting
+
+
 
 The export process involves running a command from a terminal window. This must either be run from a running container
 in your self hosted deployment or, alternatively, you can run a separate container that can connect to the same database
