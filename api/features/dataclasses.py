@@ -14,6 +14,7 @@ class EnvironmentFeatureOverridesData:
 
     num_segment_overrides: int = 0
     num_identity_overrides: typing.Optional[int] = None
+    is_num_identity_overrides_complete: bool = True
 
     def add_identity_override(self):
         """

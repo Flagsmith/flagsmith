@@ -165,10 +165,10 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         if environment_id:
             page = self.paginate_queryset(queryset)
-
             self.environment = Environment.objects.get(id=environment_id)
+            self.feature_ids = [feature.id for feature in page]
             q = Q(
-                feature_id__in=[feature.id for feature in page],
+                feature_id__in=self.feature_ids,
                 identity__isnull=True,
                 feature_segment__isnull=True,
             )
@@ -205,7 +205,6 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-
         feature_states = getattr(self, "_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
         context.update(
@@ -216,7 +215,9 @@ class FeatureViewSet(viewsets.ModelViewSet):
             environment = get_object_or_404(
                 Environment, id=self.request.query_params["environment"]
             )
-            context["overrides_data"] = get_overrides_data(environment)
+            context["overrides_data"] = get_overrides_data(
+                environment, self.feature_ids
+            )
 
         return context
 
