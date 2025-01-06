@@ -1029,17 +1029,17 @@ files = [
 
 [[package]]
 name = "django-test-migrations"
-version = "1.2.0"
+version = "1.4.0"
 description = "Test django schema and data migrations, including ordering"
 optional = false
-python-versions = ">=3.6,<4.0"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "django-test-migrations-1.2.0.tar.gz", hash = "sha256:874884ff4e980583cd9f1c986bb9fbfe72b436e759be23004e4f52c26a15f363"},
-    {file = "django_test_migrations-1.2.0-py3-none-any.whl", hash = "sha256:9e8b9b4364fef70dde10a5f85c5a75d447ca2189ec648325610fab1268daec97"},
+    {file = "django_test_migrations-1.4.0-py3-none-any.whl", hash = "sha256:294dff98f6d43d020d4046b971bac5339e7c71458a35e9ad6450c388fe16ed6b"},
+    {file = "django_test_migrations-1.4.0.tar.gz", hash = "sha256:f0c9c92864ed27d0c9a582e92056637e91227f54bd868a50cb9a1726668c563e"},
 ]
 
 [package.dependencies]
-typing_extensions = ">=3.6,<5"
+typing_extensions = ">=4.0"
 
 [[package]]
 name = "djangorestframework"
@@ -4235,4 +4235,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "e1a9a475bfcf2fe405649d2f59bce5ec8e9e45dcb0a058d6e8f0714f7540ca9a"
+content-hash = "cf4cb6279f46b77b386ef5227e2bc7b6ecd575b67948c296b2cca3c88bc81194"

@@ -206,7 +206,7 @@ optional = true
 licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.1.0" }
 
 [tool.poetry.group.dev.dependencies]
-django-test-migrations = "~1.2.0"
+django-test-migrations = "~1.4.0"
 responses = "~0.22.0"
 pre-commit = "^4.0.1"
 pytest-mock = "~3.10.0"
