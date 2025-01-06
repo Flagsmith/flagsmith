@@ -127,7 +127,7 @@
     "react-window": "^1.8.10",
     "react-window-infinite-loader": "^1.0.9",
     "reactstrap": "9.0.1",
-    "recharts": "^2.1.14",
+    "recharts": "^2.15.0",
     "redux-persist": "^6.0.0",
     "refractor": "^4.8.1",
     "sass": "1.54.8",
