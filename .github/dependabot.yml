@@ -1,8 +1,13 @@
 # $schema: https://json.schemastore.org/dependabot-2.0.json
 
+
 version: 2
 updates:
   - package-ecosystem: "pip"
+    # we only want security updates from dependabot, so we set the limit to 0
+    # for regular updates. See documentation for further information here:
+    # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#open-pull-requests-limit-
+    open-pull-requests-limit: 0
     directory: "/api"
     schedule:
       interval: "daily"
@@ -15,6 +20,7 @@ updates:
       - "dependencies"
 
   - package-ecosystem: "npm"
+    open-pull-requests-limit: 0  # only security updates
     directory: "/frontend"
     schedule:
       interval: "daily"
@@ -27,6 +33,7 @@ updates:
       - "dependencies"
 
   - package-ecosystem: "npm"
+    open-pull-requests-limit: 0  # only security updates
     directory: "/docs"
     schedule:
       interval: "daily"
