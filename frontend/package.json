@@ -110,7 +110,7 @@
     "react-async-script": "1.2.0",
     "react-click-outside": "3.0.1",
     "react-datepicker": "6.2.0",
-    "react-device-detect": "1.9.9",
+    "react-device-detect": "2.2.3",
     "react-diff-viewer-continued": "^3.3.1",
     "react-dom": "16.14.0",
     "react-dropzone": "^14.2.3",
