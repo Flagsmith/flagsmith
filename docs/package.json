@@ -20,7 +20,7 @@
     "clean-api-docs:version": "docusaurus clean-api-docs:version"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.6.3",
+    "@docusaurus/core": "^3.7.0",
     "@docusaurus/plugin-google-tag-manager": "^3.6.3",
     "@docusaurus/preset-classic": "^3.6.3",
     "@docusaurus/theme-mermaid": "^3.6.3",
