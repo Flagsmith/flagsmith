@@ -11,10 +11,14 @@ export type TooltipProps = {
   plainText?: boolean
   titleClassName?: string
   tooltipClassName?: string
+  effect?: _TooltipProps['effect']
+  afterShow?: _TooltipProps['afterShow']
 }
 
 const Tooltip: FC<TooltipProps> = ({
+  afterShow,
   children,
+  effect,
   place,
   plainText,
   title,
@@ -39,6 +43,8 @@ const Tooltip: FC<TooltipProps> = ({
           className={classNames('rounded', tooltipClassName)}
           id={id}
           place={place || 'top'}
+          effect={effect}
+          afterShow={afterShow}
         >
           {plainText ? (
             `${children}`
