@@ -27,7 +27,7 @@ const RuleInputValue = (props: RuleInputValueProps) => {
     hasTrailingWhitespace ||
     hasBothLeadingAndTrailingWhitespace ||
     isOnlyWhitespace
-  const isLargeText = String(value).length >= 8
+  const isLongText = String(value).length >= 10
 
   const ref = useRef(null)
 
@@ -35,7 +35,6 @@ const RuleInputValue = (props: RuleInputValueProps) => {
     if (isOnlyWhitespace) {
       return 'This value is only whitespaces'
     }
-
     if (hasBothLeadingAndTrailingWhitespace) {
       return 'This value starts and ends with whitespaces'
     }
@@ -45,7 +44,7 @@ const RuleInputValue = (props: RuleInputValueProps) => {
     if (hasTrailingWhitespace) {
       return 'This value ends with whitespaces'
     }
-    if (isLargeText) {
+    if (isLongText) {
       return String(value)
     }
     return ''
