@@ -34,7 +34,7 @@ jobs:
 #    needs: run-tests
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
-      gh_environment: prod
+      gh_environment: production
       npm_build_environment: prod
     secrets: inherit
 
