@@ -19,7 +19,7 @@ defaults:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.gh_environment }}
 
     permissions:
       contents: read
