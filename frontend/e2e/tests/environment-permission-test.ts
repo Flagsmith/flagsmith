@@ -19,7 +19,7 @@ import { cli } from 'yaml/dist/cli';
 export default async function () {
   log('Login')
   await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
-  log('User only can see an project')
+  log('User can only view project')
   await click('#project-select-0')
   await t
     .expect(Selector('#project-select-1').exists)
@@ -143,5 +143,6 @@ export default async function () {
   log('User without permissions cannot view identities')
   await login(E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS, PASSWORD)
   await click('#project-select-0')
-  await waitForElementNotExist('#users-link')
+  await click('#users-link')
+  await waitForElementVisible(byId('missing-view-identities'))
 }
