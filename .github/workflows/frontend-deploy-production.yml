@@ -4,41 +4,40 @@ on:
   push:
     branches:
       - main
-      - ci/fix-frontend-deploy-workflow
     paths:
       - frontend/**
       - .github/**
 
 jobs:
-#  run-tests:
-#    runs-on: ubuntu-latest
-#    name: Run E2E Tests
-#    environment: production
-#    concurrency:
-#      group: e2e-tests-prod
-#      cancel-in-progress: true
-#
-#    steps:
-#      - name: Cloning repo
-#        uses: actions/checkout@v4
-#
-#      - name: Run E2E tests against production
-#        uses: ./.github/actions/e2e-tests
-#        with:
-#          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
-#          slack_token: ${{ secrets.SLACK_TOKEN }}
-#          environment: prod
+  run-tests:
+    runs-on: ubuntu-latest
+    name: Run E2E Tests
+    environment: production
+    concurrency:
+      group: e2e-tests-prod
+      cancel-in-progress: true
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Run E2E tests against production
+        uses: ./.github/actions/e2e-tests
+        with:
+          e2e_test_token: ${{ secrets.E2E_TEST_TOKEN }}
+          slack_token: ${{ secrets.SLACK_TOKEN }}
+          environment: prod
 
   deploy-production:
     name: Deploy to Vercel Production
-#    needs: run-tests
+    needs: run-tests
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
       environment: prod
 
   deploy-demo:
     name: Deploy to Vercel Demo
-#    needs: run-tests
+    needs: run-tests
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
       environment: demo
