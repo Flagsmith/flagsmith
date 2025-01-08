@@ -140,7 +140,7 @@ jobs:
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
     secrets:
-      gcr-token: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+      GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
@@ -167,7 +167,7 @@ jobs:
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
     secrets:
-      gcr-token: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+      GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
