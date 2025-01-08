@@ -8,6 +8,9 @@ on:
         description: Github environment to use for secret / variable access
         required: true
 
+defaults:
+  run:
+    working-directory: frontend
 
 jobs:
   deploy:

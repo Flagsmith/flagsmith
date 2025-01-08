@@ -9,10 +9,6 @@ on:
       - frontend/**
       - .github/**
 
-defaults:
-  run:
-    working-directory: frontend
-
 jobs:
 #  run-tests:
 #    runs-on: ubuntu-latest
