@@ -33,13 +33,13 @@ jobs:
     needs: run-tests
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
-      environment: prod
-      npm_build_env: prod
+      gh_environment: prod
+      npm_build_environment: prod
 
   deploy-demo:
     name: Deploy to Vercel Demo
     needs: run-tests
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
-      environment: demo
-      npm_build_env: prod
+      gh_environment: demo
+      npm_build_environment: prod

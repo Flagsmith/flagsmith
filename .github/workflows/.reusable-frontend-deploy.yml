@@ -3,11 +3,11 @@
 on:
   workflow_call:
     inputs:
-      environment:
+      gh_environment:
         type: string
         description: Github environment to use for secret / variable access
         required: true
-      npm_build_env:
+      npm_build_environment:
         type: string
         description: The environment set as the ENV environment variable when running npm run env
         required: true
