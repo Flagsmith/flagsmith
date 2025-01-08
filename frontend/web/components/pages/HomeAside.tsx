@@ -69,7 +69,7 @@ const HomeAside: FC<HomeAsideType> = ({
     <OrganisationProvider>
       {() => (
         <ProjectProvider id={projectId} onSave={onProjectSave}>
-          {({ project }: { project: Project }) => {
+          {({ project }) => {
             const createEnvironmentButton = (
               <Permission
                 level='project'
