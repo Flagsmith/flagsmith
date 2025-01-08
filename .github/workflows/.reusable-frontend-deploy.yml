@@ -51,4 +51,4 @@ jobs:
           npm run bundle
           echo ${{ github.sha }} > CI_COMMIT_SHA
           npm install --global vercel@31.2.0
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+#          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
