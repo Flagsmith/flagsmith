@@ -116,36 +116,40 @@ const ChangeRequestModal = class extends Component {
                   placeholder='Add an optional description...'
                 />
               </FormGroup>
-              <div>
-                <InputGroup
-                  tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
-                  title='Schedule Change'
-                  component={
-                    <Row>
-                      <DateSelect
-                        dateFormat='MMMM d, yyyy h:mm aa'
-                        onChange={(e) => {
-                          this.setState({
-                            live_from: e.toISOString(),
-                          })
-                        }}
-                        selected={moment(this.state.live_from)._d}
-                      />
+              {!this.props.hideSchedule && (
+                <div>
+                  {' '}
+                  <InputGroup
+                    tooltip='Allows you to set a date and time in which your change will only become active. All dates are displayed in your local timezone.'
+                    title='Schedule Change'
+                    component={
+                      <Row>
+                        <DateSelect
+                          dateFormat='MMMM d, yyyy h:mm aa'
+                          onChange={(e) => {
+                            this.setState({
+                              live_from: e.toISOString(),
+                            })
+                          }}
+                          selected={moment(this.state.live_from)._d}
+                        />
 
-                      <Button
-                        className='ml-2'
-                        onClick={() => {
-                          this.setState({ live_from: undefined })
-                        }}
-                        theme='secondary'
-                        size='large'
-                      >
-                        Clear
-                      </Button>
-                    </Row>
-                  }
-                />
-              </div>
+                        <Button
+                          className='ml-2'
+                          onClick={() => {
+                            this.setState({ live_from: undefined })
+                          }}
+                          theme='secondary'
+                          size='large'
+                        >
+                          Clear
+                        </Button>
+                      </Row>
+                    }
+                  />
+                </div>
+              )}
+
               {moment(this.state.live_from).isAfter(moment()) && (
                 <InfoMessage>
                   This change will be scheduled to go live at{' '}
