@@ -44,7 +44,7 @@ jobs:
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          ENV: ${{ inputs.node_env }}
+          ENV: ${{ inputs.npm_build_environment }}
         run: |
           npm ci --only=prod
           npm run env
