@@ -342,10 +342,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlanName: (plan: string) => {
-    console.error(
-      `Plan: ${plan} Enterprise: ${global.flagsmithVersion?.backend.is_enterprise}`,
-    )
-
     if (plan && plan.includes('free')) {
       return planNames.free
     }

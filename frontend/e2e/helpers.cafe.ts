@@ -133,6 +133,28 @@ export const getLogger = () =>
     stringifyResponseBody: true,
   })
 
+export const createRole = async (roleName: string, index: number, users: number[]) => {
+  await click(byId('tab-item-roles'))
+  await click(byId('create-role'))
+  await setText(byId('role-name'), roleName)
+  await click(byId('save-role'))
+  await click(byId(`role-${index}`))
+  await click(byId('members-tab'))
+  await click(byId('assigned-users'))
+  for (const userId of users) {
+    await click(byId(`assignees-list-item-${userId}`))
+  }
+  await closeModal()
+}
+
+
+export const editRoleMembers = async (index:number)=>{
+  await click(byId('tab-item-roles'))
+  await click(byId('create-role'))
+  await setText(byId('role-name'), roleName)
+  await click(byId('save-role'))
+}
+
 export const gotoTraits = async () => {
   await click('#features-link')
   await click('#users-link')
