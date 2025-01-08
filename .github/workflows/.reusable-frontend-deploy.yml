@@ -44,11 +44,13 @@ jobs:
         env:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           ENV: ${{ inputs.node_env }}
         run: |
-          npm ci --only=prod
-          npm run env
-          npm run bundle
-          echo ${{ github.sha }} > CI_COMMIT_SHA
-          npm install --global vercel@31.2.0
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+          echo "$VERCEL_ORG_ID"
+#          npm ci --only=prod
+#          npm run env
+#          npm run bundle
+#          echo ${{ github.sha }} > CI_COMMIT_SHA
+#          npm install --global vercel@31.2.0
+#          vercel --prod --token $VERCEL_TOKEN
