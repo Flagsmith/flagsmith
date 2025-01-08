@@ -2,11 +2,16 @@
 
 on:
   workflow_call:
+    environment:
+      type: string
+      description: Github environment to use for secret / variable access
+      required: true
 
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
 
     permissions:
       contents: read
