@@ -93,12 +93,14 @@ const CreateSegmentUsersTabContent: React.FC<
                 pages: undefined,
               })
             }}
-            onRefresh={() => {
-              if (!environmentId) return
-              identities?.results.forEach((identity) =>
-                AppActions.getIdentitySegments(projectId, identity.id),
-              )
-            }}
+            onRefresh={
+              environmentId
+                ? () =>
+                    identities?.results.forEach((identity) =>
+                      AppActions.getIdentitySegments(projectId, identity.id),
+                    )
+                : undefined
+            }
             renderRow={(
               { id, identifier }: { id: string; identifier: string },
               index: number,
