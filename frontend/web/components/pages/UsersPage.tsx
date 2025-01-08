@@ -23,6 +23,7 @@ import PageTitle from 'components/PageTitle'
 import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
+import { index } from 'd3-array'
 
 type UsersPageType = {
   router: RouterChildContext['router']
@@ -299,18 +300,34 @@ const UsersPage: FC<UsersPageType> = (props) => {
               )
             }
             renderNoResults={
-              <Row className='list-item p-3'>
-                You have no identities in this environment
-                {search ? (
-                  <span>
+              !permission ? (
+                <div
+                  className='list-item p-3 text-center'
+                  data-test={`missing-view-identities`}
+                >
+                  To view the list of identities feature you will need the
+                  <i> View Identities</i> permission for this environment.
+                  <br />
+                  Please contact a member of this environment who has
+                  administrator privileges.
+                </div>
+              ) : (
+                <Row className='list-item p-3'>
+                  <>
                     {' '}
-                    for <strong>"{search}"</strong>
-                  </span>
-                ) : (
-                  ''
-                )}
-                .
-              </Row>
+                    You have no identities in this environment
+                    {search ? (
+                      <span>
+                        {' '}
+                        for <strong>"{search}"</strong>
+                      </span>
+                    ) : (
+                      ''
+                    )}
+                    .
+                  </>
+                </Row>
+              )
             }
             filterRow={() => true}
             search={searchInput}
