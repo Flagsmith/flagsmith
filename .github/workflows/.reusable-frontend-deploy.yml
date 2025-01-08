@@ -1,0 +1,54 @@
+# reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      gh_environment:
+        type: string
+        description: Github environment to use for secret / variable access
+        required: true
+      npm_build_environment:
+        type: string
+        description: The environment set as the ENV environment variable when running npm run env
+        required: true
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Cloning repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 16.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16.x
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          ENV: ${{ inputs.node_env }}
+        run: |
+          npm ci --only=prod
+          npm run env
+          npm run bundle
+          echo ${{ github.sha }} > CI_COMMIT_SHA
+          npm install --global vercel@31.2.0
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
