@@ -36,6 +36,7 @@ jobs:
     with:
       gh_environment: prod
       npm_build_environment: prod
+    secrets: inherit
 
   deploy-demo:
     name: Deploy to Vercel Demo
@@ -44,3 +45,4 @@ jobs:
     with:
       gh_environment: demo
       npm_build_environment: prod
+    secrets: inherit
