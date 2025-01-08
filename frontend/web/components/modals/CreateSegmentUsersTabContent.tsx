@@ -5,15 +5,16 @@ import PanelSearch from 'components/PanelSearch'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { Segment } from 'common/types/responses'
+import { Res, Segment } from 'common/types/responses'
 import Icon from 'components/Icon'
+import AppActions from 'common/dispatcher/app-actions'
 
 interface CreateSegmentUsersTabContentProps {
   projectId: string | number
   environmentId: string
   setEnvironmentId: (environmentId: string) => void
   identitiesLoading: boolean
-  identities: any
+  identities: Res['identities']
   page: any
   setPage: (page: any) => void
   name: string
@@ -91,6 +92,12 @@ const CreateSegmentUsersTabContent: React.FC<
                 pageType: undefined,
                 pages: undefined,
               })
+            }}
+            onRefresh={() => {
+              if (!environmentId) return
+              identities?.results.forEach((identity) =>
+                AppActions.getIdentitySegments(projectId, identity.id),
+              )
             }}
             renderRow={(
               { id, identifier }: { id: string; identifier: string },
