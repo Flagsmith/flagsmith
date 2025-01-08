@@ -15,6 +15,8 @@ import PlanBasedBanner, {
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
+import { IonIcon } from '@ionic/react';
+import { calendar } from 'ionicons/icons';
 
 type ScheduledChangesPageType = {
   router: RouterChildContext['router']
@@ -96,6 +98,7 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
                   created_at,
                   id,
                   title,
+                    live_from,
                   user: _user,
                 }: ChangeRequestSummary) => {
                   const user = users?.find((v) => v.id === _user)
@@ -105,7 +108,13 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
                       className='flex-row list-item clickable'
                     >
                       <Flex className='table-column px-3'>
-                        <div className='font-weight-medium'>{title}</div>
+                        <div className='font-weight-medium'>
+                          <div className="d-flex gap-2">
+                            {title}
+                            <IonIcon name={calendar}/>
+                            {moment(live_from).format("Do MMM HH:mm")}
+                          </div>
+                        </div>
                         <div className='list-item-subtitle mt-1'>
                           Created{' '}
                           {moment(created_at).format('Do MMM YYYY HH:mma')} by{' '}

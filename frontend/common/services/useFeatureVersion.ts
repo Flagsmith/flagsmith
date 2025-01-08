@@ -43,14 +43,12 @@ export const getFeatureStateCrud = (
     if (!oldFeatureStates) {
       return featureStates
     }
-    if (segments?.length) {
-      // filter out feature states that have no changes
-      const segmentDiffs = getSegmentOverrideDiff(
-          featureStates.filter((v) => !!v.feature_segment),
-          oldFeatureStates.filter((v) => !!v.feature_segment),
-          segments,
-        )
-      : null
+    const segmentDiffs = getSegmentOverrideDiff(
+      featureStates.filter((v) => !!v.feature_segment),
+      oldFeatureStates.filter((v) => !!v.feature_segment),
+      segments,
+    )
+
     const featureStateDiffs = featureStates.filter((v) => {
       if (!v.feature_segment) return
       const diff = segmentDiffs?.diffs?.find(
@@ -103,6 +101,7 @@ export const getFeatureStateCrud = (
     segment_ids_to_delete_overrides,
   }
 }
+
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
   .injectEndpoints({

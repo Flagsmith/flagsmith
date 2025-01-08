@@ -74,7 +74,10 @@ const ProjectSettingsPage = class extends Component {
       ).then((res) => {
         const matchingItems = roles.data.results.filter((item1) =>
           res.data.results.some((item2) => item2.role === item1.id),
-    )
+        )
+        this.setState({ roles: matchingItems })
+      })
+    })
   }
 
   onSave = () => {
