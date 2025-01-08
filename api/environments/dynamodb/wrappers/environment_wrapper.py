@@ -1,4 +1,6 @@
 import typing
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import Any, Iterable
 
 from boto3.dynamodb.conditions import Key
@@ -27,6 +29,12 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.type_defs import QueryInputRequestTypeDef
 
     from environments.models import Environment
+
+
+@dataclass
+class IdentityOverridesQueryResponse:
+    items: list[dict[str, Any]]
+    is_num_identity_overrides_complete: bool
 
 
 class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
@@ -66,22 +74,65 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         self,
         environment_id: int,
         feature_id: int | None = None,
-    ) -> typing.List[dict[str, Any]]:
+        feature_ids: None | list[int] = None,
+    ) -> list[dict[str, Any]] | list[IdentityOverridesQueryResponse]:
+
         try:
-            return list(
-                self.query_get_all_items(
-                    KeyConditionExpression=Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
-                        str(environment_id),
-                    )
-                    & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
-                        get_environments_v2_identity_override_document_key(
+            if feature_ids is None:
+                return list(
+                    self.query_iter_all_items(
+                        KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
+                            environment_id=environment_id,
                             feature_id=feature_id,
-                        ),
+                        )
                     )
                 )
-            )
+
+            else:
+                futures = []
+                with ThreadPoolExecutor() as executor:
+                    for feature_id in feature_ids:
+                        futures.append(
+                            executor.submit(
+                                self.get_identity_overrides_page,
+                                environment_id,
+                                feature_id,
+                            )
+                        )
+
+                results = [future.result() for future in futures]
+                return results
+
         except KeyError as e:
             raise ObjectDoesNotExist() from e
+
+    def get_identity_overrides_page(
+        self, environment_id: int, feature_id: int
+    ) -> IdentityOverridesQueryResponse:
+        query_response = self.table.query(
+            KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
+                environment_id=environment_id,
+                feature_id=feature_id,
+            )
+        )
+        last_evaluated_key = query_response.get("LastEvaluatedKey")
+        return IdentityOverridesQueryResponse(
+            items=query_response["Items"],
+            is_num_identity_overrides_complete=last_evaluated_key is None,
+        )
+
+    def get_identity_overrides_key_condition_expression(
+        self,
+        environment_id: int,
+        feature_id: None | int,
+    ) -> Key:
+        return Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+            str(environment_id),
+        ) & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
+            get_environments_v2_identity_override_document_key(
+                feature_id=feature_id,
+            ),
+        )
 
     def update_identity_overrides(
         self,
@@ -122,7 +173,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             "ProjectionExpression": "document_key",
         }
         with self.table.batch_writer() as writer:
-            for item in self.query_get_all_items(**query_kwargs):
+            for item in self.query_iter_all_items(**query_kwargs):
                 writer.delete_item(
                     Key={
                         ENVIRONMENTS_V2_PARTITION_KEY: environment_id,

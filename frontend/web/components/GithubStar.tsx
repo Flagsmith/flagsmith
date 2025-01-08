@@ -21,6 +21,7 @@ const GithubStar: FC<GithubStarType> = ({}) => {
         .then(function (res) {
           setStars(res.stargazers_count)
         })
+        .catch(() => {})
     }
   }, [planName])
 
@@ -29,20 +30,24 @@ const GithubStar: FC<GithubStarType> = ({}) => {
   }
 
   return (
-    <>
-      <a
-        style={{ width: 90 }}
-        target='_blank'
-        href='https://github.com/flagsmith/flagsmith'
-        className='btn btn-sm btn-with-icon text-body'
-        rel='noreferrer'
+    <a
+      style={{ width: 90 }}
+      target='_blank'
+      href='https://github.com/flagsmith/flagsmith'
+      className='btn btn-sm btn-with-icon text-body'
+      rel='noreferrer'
+    >
+      <div
+        className={
+          stars
+            ? 'd-flex flex-row justify-content-center align-items-center'
+            : ''
+        }
       >
-        <div className='d-flex flex-row justify-content-center align-items-center'>
-          <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
-          <div className='ms-1'>{stars}</div>
-        </div>
-      </a>
-    </>
+        <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
+        {stars && <div className='ms-1'>{stars}</div>}
+      </div>
+    </a>
   )
 }
 

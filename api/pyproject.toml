@@ -153,7 +153,7 @@ pymemcache = "~4.0.0"
 google-re2 = "^1.0"
 django-softdelete = "~0.10.5"
 simplejson = "~3.19.1"
-djoser = "~2.2.2"
+djoser = "~2.3.0"
 django-storages = "~1.10.1"
 django-environ = "~0.4.5"
 influxdb-client = "~1.28.0"
@@ -169,7 +169,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.0.2" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.1.1" }
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
@@ -197,7 +197,13 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.4" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.5" }
+
+[tool.poetry.group.licensing]
+optional = true
+
+[tool.poetry.group.licensing.dependencies]
+licensing = { git = "https://github.com/flagsmith/licensing", tag = "v0.1.0" }
 
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"

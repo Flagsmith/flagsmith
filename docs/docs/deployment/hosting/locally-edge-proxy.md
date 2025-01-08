@@ -25,7 +25,7 @@ docker run \
 
 <details>
 <summary>Docker Compose</summary>
-```yaml
+```yaml title="compose.yaml"
 services:
  edge_proxy:
   image: flagsmith/edge-proxy:latest
@@ -56,7 +56,7 @@ Environment variables are case-insensitive, and are processed using
 
 <summary>Configuration file</summary>
 
-```json
+```json title="/app/config.json"
 {
  "environment_key_pairs": [
   {
@@ -253,6 +253,8 @@ fetch all its configured environment documents. If any environment document coul
 grace period, the health check will fail with a 500 status code. This allows the Edge Proxy to continue reporting as
 healthy even if the Flagsmith API is temporarily unavailable.
 
+You can point your orchestration health checks to this endpoint.
+
 #### `health_check.environment_update_grace_period_seconds`
 
 Default: `30`.
@@ -277,20 +279,13 @@ return 200
 
 ### Environment Variables
 
-You can configure the Edge Proxy with the following Environment Variables:
+You can configure the Edge Proxy with the following environment variables:
 
 - `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`. Set to the number of
   available CPU cores.
-
-## Monitoring
-
-There are 2 health check endpoints for the Edge Proxy.
-
-### SDK Proxy Health Check
-
-When making a request to `/proxy/health` the proxy will respond with a HTTP `200` and `{"status": "ok"}`. You can point
-your orchestration health checks to this endpoint. This endpoint checks that the
-[Environment Document](/clients#the-environment-document) is not stale, and that the proxy is serving SDK requests.
+- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: These variables let you configure an HTTP proxy that the
+  Edge Proxy should use for all its outgoing HTTP requests.
+  [Learn more](https://www.python-httpx.org/environment_variables)
 
 ## Architecture
 
