@@ -139,7 +139,10 @@ jobs:
       api-image: ${{ needs.docker-build-api.outputs.image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
-    secrets: inherit
+    secrets:
+      gcr-token: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+      SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
+
     strategy:
       matrix:
         runs-on: [ubuntu-latest, ARM64-2c]
@@ -163,7 +166,10 @@ jobs:
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
-    secrets: inherit
+    secrets:
+      gcr-token: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
+      SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
+
     strategy:
       matrix:
         runs-on: [ubuntu-latest, ARM64-2c]
