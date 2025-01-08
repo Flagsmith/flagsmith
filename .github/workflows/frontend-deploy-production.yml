@@ -34,6 +34,7 @@ jobs:
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
       environment: prod
+      npm_build_env: prod
 
   deploy-demo:
     name: Deploy to Vercel Demo
@@ -41,3 +42,4 @@ jobs:
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
       environment: demo
+      npm_build_env: prod
