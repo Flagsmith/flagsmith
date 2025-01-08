@@ -342,6 +342,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlanName: (plan: string) => {
+    console.error(
+      `Plan: ${plan} Enterprise: ${global.flagsmithVersion?.backend.is_enterprise}`,
+    )
+
     if (plan && plan.includes('free')) {
       return planNames.free
     }
@@ -354,6 +358,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
+
     if (
       global.flagsmithVersion?.backend.is_enterprise ||
       (plan && plan.includes('enterprise'))
