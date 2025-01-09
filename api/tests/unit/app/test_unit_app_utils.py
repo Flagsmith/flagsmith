@@ -15,7 +15,7 @@ def clear_get_version_info_cache() -> Generator[None, None, None]:
     get_version_info.cache_clear()
 
 
-def test_get_version_info(mocker: MockerFixture) -> None:
+def test_get_version_info(mocker: MockerFixture, db: None) -> None:
     # Given
     mocked_pathlib = mocker.patch("app.utils.pathlib")
 
@@ -48,6 +48,11 @@ def test_get_version_info(mocker: MockerFixture) -> None:
         "is_enterprise": True,
         "is_saas": False,
         "package_versions": {".": "2.66.2"},
+        "self_hosted_data": {
+            "has_users": False,
+            "has_logins": False,
+            "is_bootstrapped": False,
+        },
     }
 
 
