@@ -40,8 +40,7 @@ type SegmentsPageType = {
 
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { projectId } = props.match.params
-  const environmentId =
-    ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
+  const environmentId = ProjectStore.getEnvironment()?.api_key
   const params = Utils.fromParam()
   const id = params.id
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
