@@ -1,5 +1,10 @@
-import React, { RefObject, useRef } from 'react'
+import React from 'react'
 import Input from 'components/base/forms/Input'
+import Icon from 'components/Icon'
+import InputGroup from 'components/base/forms/InputGroup'
+import Button from 'components/base/forms/Button'
+import Utils from 'common/utils/utils'
+import ModalHR from './ModalHR'
 
 type RuleInputValueProps = {
   'data-test'?: string
@@ -10,7 +15,72 @@ type RuleInputValueProps = {
   disabled?: boolean
   readOnly?: boolean
   isValid?: boolean
-  error?: string
+}
+
+const TextAreaModal = ({
+  disabled,
+  isValid,
+  onChange,
+  placeholder,
+  readOnly,
+  style,
+  value,
+}: RuleInputValueProps) => {
+  const [textAreaValue, setTextAreaValue] = React.useState(value)
+
+  return (
+    <div>
+      <div className='modal-body'>
+        <InputGroup
+          id='rule-value-textarea'
+          data-test='rule-value-textarea'
+          value={textAreaValue}
+          inputProps={{
+            style: style,
+          }}
+          isValid={isValid}
+          onChange={(e: InputEvent) => {
+            const value = Utils.safeParseEventValue(e)
+            setTextAreaValue(value.replace(/\n/g, ''))
+          }}
+          type='text'
+          className='w-100'
+          readOnly={readOnly}
+          placeholder={placeholder}
+          disabled={disabled}
+          textarea
+        />
+      </div>
+      <ModalHR />
+      <div className='modal-footer'>
+        <Button
+          className='mr-2'
+          theme='secondary'
+          id='rule-value-textarea-cancel'
+          data-tests='rule-value-textarea-cancel'
+          onClick={closeModal2}
+        >
+          Cancel
+        </Button>
+        <Button
+          type='button'
+          id='rule-value-textarea-save'
+          data-tests='rule-value-textarea-save'
+          onClick={() => {
+            const event = new InputEvent('input', { bubbles: true })
+            Object.defineProperty(event, 'target', {
+              value: { value: textAreaValue },
+              writable: false,
+            })
+            onChange?.(event)
+            closeModal2()
+          }}
+        >
+          Apply
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 const RuleInputValue = (props: RuleInputValueProps) => {
@@ -29,8 +99,6 @@ const RuleInputValue = (props: RuleInputValueProps) => {
     isOnlyWhitespace
   const isLongText = String(value).length >= 10
 
-  const ref = useRef(null)
-
   const validate = () => {
     if (isOnlyWhitespace) {
       return 'This value is only whitespaces'
@@ -45,31 +113,57 @@ const RuleInputValue = (props: RuleInputValueProps) => {
       return 'This value ends with whitespaces'
     }
     if (isLongText) {
-      return String(value)
+      return 'Click to edit text in a larger area'
     }
     return ''
   }
 
+  const showIcon = hasWarning || isLongText
   return (
-    <Tooltip
-      title={
-        <div>
-          <Input
-            type='text'
-            {...props}
-            ref={ref}
-            inputClassName={hasWarning && 'border-warning'}
-          />
+    <div className='relative'>
+      <Input
+        type='text'
+        {...props}
+        inputClassName={
+          showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
+        }
+      />
+      {showIcon && (
+        <div style={{ position: 'absolute', right: 5, top: 10 }}>
+          <Tooltip
+            title={
+              <div
+                className={`flex bg-white bg-opacity-10 rounded-2 p-1 ${
+                  hasWarning ? '' : 'cursor-pointer'
+                }`}
+                onClick={() => {
+                  if (hasWarning) return
+                  openModal2(
+                    'Edit Value',
+                    <TextAreaModal
+                      value={value}
+                      onChange={props.onChange}
+                      isValid={props.isValid}
+                    />,
+                  )
+                }}
+              >
+                <Icon
+                  name={hasWarning ? 'warning' : 'unfold'}
+                  fill={hasWarning ? undefined : '#fff'}
+                  width={18}
+                  height={18}
+                />
+              </div>
+            }
+            place='top'
+            effect='solid'
+          >
+            {validate()}
+          </Tooltip>
         </div>
-      }
-      place='top'
-      effect='solid'
-      afterShow={() => {
-        ;(ref as RefObject<HTMLElement>).current?.focus()
-      }}
-    >
-      {validate()}
-    </Tooltip>
+      )}
+    </div>
   )
 }
 
