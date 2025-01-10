@@ -198,6 +198,38 @@ class Segment(
 
         return cloned_segment
 
+    def match_rules_to_segment(self, segment: "Segment") -> None:
+        _rules = self.rules.all()
+        matched_rules = set()
+        matched_sub_rules = set()
+
+        for rule in segment.rules.all():
+            sub_rules = rule.rules.all()
+            for sub_rule in sub_rules:
+                sub_rule_matched = False
+                for _rule in _rules:
+                    if sub_rule_matched:
+                        break
+
+                    if _rule in matched_rules and _rule.version_of != rule:
+                        continue
+
+                    if rule.type != _rule.type:
+                        continue
+                    for _sub_rule in _rule.rules.all():
+                        if _sub_rule in matched_sub_rules:  # pragma: no cover
+                            continue
+                        if _sub_rule.matches_rule(sub_rule):
+                            _sub_rule.version_of = sub_rule
+                            sub_rule_matched = True
+                            matched_sub_rules.add(_sub_rule)
+                            _rule.version_of = rule
+                            matched_rules.add(_rule)
+                            break
+        SegmentRule.objects.bulk_update(
+            matched_rules | matched_sub_rules, fields=["version_of"]
+        )
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
 
@@ -223,6 +255,13 @@ class SegmentRule(SoftDeleteExportableModel):
     )
     rule = models.ForeignKey(
         "self", on_delete=models.CASCADE, related_name="rules", null=True, blank=True
+    )
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="versioned_rules",
+        null=True,
+        blank=True,
     )
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
@@ -261,6 +300,36 @@ class SegmentRule(SoftDeleteExportableModel):
             rule = rule.rule
         return rule.segment
 
+    def matches_rule(self, rule: "SegmentRule") -> bool:
+        if rule.type != self.type:
+            return False
+
+        conditions = rule.conditions.all()
+        _conditions = self.conditions.all()
+
+        if not conditions and not _conditions:
+            # Empty rule with the same type matches.
+            return True
+
+        matched_conditions = set()
+
+        for condition in conditions:
+            for _condition in _conditions:
+                if _condition in matched_conditions:
+                    continue
+                if (
+                    condition.operator == _condition.operator
+                    and condition.property == _condition.property
+                ):
+                    matched_conditions.add(_condition)
+                    _condition.version_of = condition
+                    break
+        if not matched_conditions:
+            return False
+
+        Condition.objects.bulk_update(matched_conditions, fields=["version_of"])
+        return True
+
     def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
         if self.rule:
             # Since we're expecting a rule that is only belonging to a
@@ -268,6 +337,7 @@ class SegmentRule(SoftDeleteExportableModel):
             # to a rule, we don't expect there also to be a rule associated.
             assert False, "Unexpected rule, expecting segment set not rule"
         cloned_rule = deepcopy(self)
+        cloned_rule.version_of = self
         cloned_rule.segment = cloned_segment
         cloned_rule.uuid = uuid.uuid4()
         cloned_rule.id = None
@@ -284,6 +354,7 @@ class SegmentRule(SoftDeleteExportableModel):
                 assert False, "Expected two layers of rules, not more"
 
             cloned_sub_rule = deepcopy(sub_rule)
+            cloned_sub_rule.version_of = sub_rule
             cloned_sub_rule.rule = cloned_rule
             cloned_sub_rule.uuid = uuid.uuid4()
             cloned_sub_rule.id = None
@@ -296,6 +367,7 @@ class SegmentRule(SoftDeleteExportableModel):
             cloned_conditions = []
             for condition in sub_rule.conditions.all():
                 cloned_condition = deepcopy(condition)
+                cloned_condition.version_of = condition
                 cloned_condition.rule = cloned_sub_rule
                 cloned_condition.uuid = uuid.uuid4()
                 cloned_condition.id = None
@@ -347,6 +419,13 @@ class Condition(
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
+    )
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="versioned_conditions",
+        null=True,
+        blank=True,
     )
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
