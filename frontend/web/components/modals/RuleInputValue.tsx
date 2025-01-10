@@ -119,6 +119,8 @@ const RuleInputValue = (props: RuleInputValueProps) => {
   }
 
   const showIcon = hasWarning || isLongText
+  const isDarkMode = Utils.getFlagsmithHasFeature('dark_mode')
+
   return (
     <div className='relative'>
       <Input
@@ -129,11 +131,13 @@ const RuleInputValue = (props: RuleInputValueProps) => {
         }
       />
       {showIcon && (
-        <div style={{ position: 'absolute', right: 5, top: 10 }}>
+        <div style={{ position: 'absolute', right: 5, top: 9 }}>
           <Tooltip
             title={
               <div
-                className={`flex bg-white bg-opacity-10 rounded-2 p-1 ${
+                className={`flex ${
+                  isDarkMode ? 'bg-white' : 'bg-black'
+                } bg-opacity-10 rounded-2 p-1 ${
                   hasWarning ? '' : 'cursor-pointer'
                 }`}
                 onClick={() => {
@@ -150,7 +154,11 @@ const RuleInputValue = (props: RuleInputValueProps) => {
               >
                 <Icon
                   name={hasWarning ? 'warning' : 'unfold'}
-                  fill={hasWarning ? undefined : '#fff'}
+                  fill={
+                    hasWarning
+                      ? undefined
+                      : `${isDarkMode ? '#fff' : '#1A2634'}`
+                  }
                   width={18}
                   height={18}
                 />
