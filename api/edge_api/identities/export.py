@@ -67,7 +67,7 @@ def export_edge_identity_and_overrides(  # noqa: C901
                 )
 
                 # We always want to create the FeatureStateValue, but if there is none in the
-                # dynamo object, we just create a default class with a value of null.
+                # dynamo object, we just create a default object with a value of null.
                 featurestate_value = override.get("feature_state_value")
                 identity_override_export.append(
                     export_featurestate_value(featurestate_value, featurestate_uuid)
