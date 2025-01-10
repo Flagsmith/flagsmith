@@ -65,13 +65,15 @@ def export_edge_identity_and_overrides(  # noqa: C901
                         override["enabled"],
                     )
                 )
-                featurestate_value = override["feature_state_value"]
-                if featurestate_value is not None:
-                    # export feature state value
-                    identity_override_export.append(
-                        export_featurestate_value(featurestate_value, featurestate_uuid)
-                    )
-                if mvfsv_overrides := override["multivariate_feature_state_values"]:
+
+                # We always want to create the FeatureStateValue, but if there is none in the
+                # dynamo object, we just create a default class with a value of null.
+                featurestate_value = override.get("feature_state_value")
+                identity_override_export.append(
+                    export_featurestate_value(featurestate_value, featurestate_uuid)
+                )
+
+                if mvfsv_overrides := override.get("multivariate_feature_state_values"):
                     for mvfsv_override in mvfsv_overrides:
                         mv_feature_option_id = mvfsv_override[
                             "multivariate_feature_option"
