@@ -346,6 +346,11 @@ def test_export_edge_identities(
         project=project, name="mv_feature_with_deleted_option", type=MULTIVARIATE
     )
 
+    # and a feature that we will override with missing attributes
+    feature_to_override_with_missing_attrs = Feature.objects.create(
+        project=project, name="feature_to_override_with_missing_attrs"
+    )
+
     mv_option = multivariate_options[0]
 
     identity_identifier = "Development_user_123456"
@@ -458,6 +463,19 @@ def test_export_edge_identities(
                     }
                 ],
             },
+            # An override with missing feature_state_value and multivariate_feature_state_values
+            # that should be handled correctly
+            {
+                "django_id": None,
+                "enabled": False,
+                "feature": {
+                    "id": feature_to_override_with_missing_attrs.id,
+                    "name": feature_to_override_with_missing_attrs.name,
+                    "type": "STANDARD",
+                },
+                "featurestate_uuid": "53ab4fc5-0027-47a4-85b3-825abe2287eb",
+                "feature_segment": None,
+            },
         ],
         "identity_traits": [
             {"trait_key": "int_trait", "trait_value": 123},
@@ -517,7 +535,7 @@ def test_export_edge_identities(
     assert bool_trait.trait_value is True
 
     all_feature_states = identity.get_all_feature_states()
-    assert len(all_feature_states) == 6
+    assert len(all_feature_states) == 7
 
     actual_mv_override = all_feature_states[0]
     assert str(actual_mv_override.uuid) == mv_override_fs_uuid
@@ -548,6 +566,13 @@ def test_export_edge_identities(
         == "control"
     )
     assert override_without_mv_option.identity == identity
+
+    override_with_missing_attributes = all_feature_states[6]
+    assert override_with_missing_attributes.feature_state_value.value is None
+    assert (
+        override_with_missing_attributes.multivariate_feature_state_values.exists()
+        is False
+    )
 
 
 @mock_s3
