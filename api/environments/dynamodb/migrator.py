@@ -6,6 +6,7 @@ from environments.models import Environment, EnvironmentAPIKey
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from projects.models import Project
+from projects.tasks import migrate_project_environments_to_v2
 from util.queryset import iterator_with_prefetch
 
 from .types import DynamoProjectMetadata, ProjectIdentityMigrationStatus
@@ -81,4 +82,5 @@ class IdentityMigrator:
             )
         )
         identity_wrapper.write_identities(iterator_with_prefetch(identities))
+        migrate_project_environments_to_v2(project_id)
         self.project_metadata.finish_identity_migration()
