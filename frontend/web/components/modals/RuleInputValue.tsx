@@ -153,7 +153,7 @@ const RuleInputValue = (props: RuleInputValueProps) => {
                 }}
               >
                 <Icon
-                  name={hasWarning ? 'warning' : 'unfold'}
+                  name={hasWarning ? 'warning' : 'expand'}
                   fill={
                     hasWarning
                       ? undefined
