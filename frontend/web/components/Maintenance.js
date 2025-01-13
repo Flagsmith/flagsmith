@@ -25,7 +25,7 @@ const HomePage = class extends React.Component {
             Check{' '}
             <a
               target='_blank'
-              href='https://twitter.com/getflagsmith'
+              href='https://x.com/getflagsmith'
               rel='noreferrer'
             >
               @getflagsmith
