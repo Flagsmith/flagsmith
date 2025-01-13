@@ -5,12 +5,14 @@ from django.db.models import (
     CASCADE,
     BooleanField,
     CharField,
+    DateTimeField,
     ForeignKey,
     Manager,
-    Model,
     QuerySet,
     TextField,
 )
+from django.utils import timezone
+from django_lifecycle import BEFORE_CREATE, BEFORE_SAVE, LifecycleModel, hook
 
 from custom_auth.mfa.trench.exceptions import MFAMethodDoesNotExistError
 
@@ -35,7 +37,7 @@ class MFAUserMethodManager(Manager):
         return self.filter(user_id=user_id, is_primary=True).exists()
 
 
-class MFAMethod(Model):
+class MFAMethod(LifecycleModel):
     _BACKUP_CODES_DELIMITER = ","
 
     user = ForeignKey(
@@ -50,6 +52,9 @@ class MFAMethod(Model):
     is_active = BooleanField("is active", default=False)
     _backup_codes = TextField("backup codes", blank=True)
 
+    created_at = DateTimeField(null=True, default=None)
+    updated_at = DateTimeField(null=True, default=None)
+
     class Meta:
         verbose_name = "MFA Method"
         verbose_name_plural = "MFA Methods"
@@ -59,3 +64,11 @@ class MFAMethod(Model):
     @property
     def backup_codes(self) -> Iterable[str]:
         return self._backup_codes.split(self._BACKUP_CODES_DELIMITER)
+
+    @hook(BEFORE_CREATE)
+    def set_created_at(self):
+        self.created_at = timezone.now()
+
+    @hook(BEFORE_SAVE)
+    def set_updated_at(self):
+        self.updated_at = timezone.now()
