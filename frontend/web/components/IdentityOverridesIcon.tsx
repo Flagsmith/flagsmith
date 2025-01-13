@@ -4,16 +4,19 @@ import UsersIcon from './svg/UsersIcon'
 
 type IdentityOverridesIconType = {
   count: number | null
+  showPlusIndicator?: boolean
   onClick?: (e: FormEvent) => void
 }
 
 const IdentityOverridesIcon: FC<IdentityOverridesIconType> = ({
   count,
   onClick,
+  showPlusIndicator,
 }) => {
   if (!count) {
     return null
   }
+  const plusIndicatorText = showPlusIndicator ? '+' : ''
   return (
     <div onClick={onClick}>
       <Tooltip
@@ -23,12 +26,17 @@ const IdentityOverridesIcon: FC<IdentityOverridesIconType> = ({
             style={{ border: 'none' }}
           >
             <UsersIcon className='chip-svg-icon' />
-            <span>{count}</span>
+            <span>
+              {count}
+              {plusIndicatorText}
+            </span>
           </span>
         }
         place='top'
       >
-        {`${count} Identity Override${count !== 1 ? 's' : ''}`}
+        {`${count}${plusIndicatorText} Identity Override${
+          count !== 1 || showPlusIndicator ? 's' : ''
+        }`}
       </Tooltip>
     </div>
   )
