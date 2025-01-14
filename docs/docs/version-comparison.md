@@ -48,7 +48,7 @@ organisation.
 - [Okta](/system-administration/authentication/Okta), [LDAP](/system-administration/authentication/LDAP),
   [SAML](/system-administration/authentication/SAML) and [ADFS](/system-administration/authentication/ADFS)
   authentication, as well as the ability to lock authentication to a single provider.
-- Additional database engines: Oracle, SQL Server and MySQL.
+- Additional database engines: Oracle and MySQL.
 - Additional deployment and orchestration options as detailed below.
 
 ## Open Source Benefits
