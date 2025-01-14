@@ -15,8 +15,8 @@ import PlanBasedBanner, {
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
-import { IonIcon } from '@ionic/react';
-import { calendar } from 'ionicons/icons';
+import { IonIcon } from '@ionic/react'
+import { calendar } from 'ionicons/icons'
 
 type ScheduledChangesPageType = {
   router: RouterChildContext['router']
@@ -79,7 +79,7 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
               <PanelSearch
                 renderSearchWithNoResults
                 id='users-list'
-                title='Scheduled Changes'
+                title=''
                 className='no-pad'
                 isLoading={isLoading || !dataScheduled || !organisation}
                 paging={dataScheduled}
@@ -97,8 +97,8 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
                 renderRow={({
                   created_at,
                   id,
+                  live_from,
                   title,
-                    live_from,
                   user: _user,
                 }: ChangeRequestSummary) => {
                   const user = users?.find((v) => v.id === _user)
@@ -109,10 +109,16 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
                     >
                       <Flex className='table-column px-3'>
                         <div className='font-weight-medium'>
-                          <div className="d-flex gap-2">
+                          <div className='d-flex align-items-center gap-2'>
                             {title}
-                            <IonIcon name={calendar}/>
-                            {moment(live_from).format("Do MMM HH:mm")}
+                            <div className='d-flex align-items-center gap-1'>
+                              <Icon
+                                width={18}
+                                name='calendar'
+                                fill={'#1A2634'}
+                              />
+                              {moment(live_from).format('Do MMM HH:mm')}
+                            </div>
                           </div>
                         </div>
                         <div className='list-item-subtitle mt-1'>
