@@ -522,7 +522,9 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
         <div className='col-md-6 mb-4'>
           <InfoMessage icon='calendar' title='Scheduled Change'>
             This feature change will go live at{' '}
-            {moment(scheduledDate).format('Do MMM YYYY hh:mma')}
+            <strong>
+              {moment(scheduledDate).format('Do MMM YYYY hh:mma')}
+            </strong>
             {changeRequest.committed_at
               ? ' unless it is edited or deleted'
               : ' if it is approved and published'}
