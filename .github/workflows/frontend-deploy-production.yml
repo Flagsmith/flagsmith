@@ -8,10 +8,6 @@ on:
       - frontend/**
       - .github/**
 
-defaults:
-  run:
-    working-directory: frontend
-
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -33,70 +29,19 @@ jobs:
           environment: prod
 
   deploy-production:
-    runs-on: ubuntu-latest
     name: Deploy to Vercel Production
-    environment: production
     needs: run-tests
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 16.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 16.x
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          ENV: prod
-        run: |
-          npm ci --only=prod
-          npm run env
-          npm run bundle
-          echo ${{ github.sha }} > CI_COMMIT_SHA
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+    uses: ./.github/workflows/.reusable-frontend-deploy.yml
+    with:
+      gh_environment: production
+      npm_build_environment: prod
+    secrets: inherit
 
   deploy-demo:
-    runs-on: ubuntu-latest
     name: Deploy to Vercel Demo
-    environment: demo
     needs: run-tests
-
-    steps:
-      - name: Cloning repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 16.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 16.x
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
-
-      - name: Deploy to Vercel
-        env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          ENV: prod
-        run: |
-          npm ci --only=prod
-          npm run env
-          npm run bundle
-          echo ${{ github.sha }} > CI_COMMIT_SHA
-          npm install --global vercel@31.2.0
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+    uses: ./.github/workflows/.reusable-frontend-deploy.yml
+    with:
+      gh_environment: demo
+      npm_build_environment: prod
+    secrets: inherit

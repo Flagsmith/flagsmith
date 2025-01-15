@@ -410,8 +410,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'RBAC':
       case 'AUDIT':
       case 'FORCE_2FA':
-      case '4_EYES':
-      case '4_EYES_PROJECT': {
+      case '4_EYES': {
         plan = 'scale-up'
         break
       }
@@ -425,7 +424,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
       case 'SCHEDULE_FLAGS':
       case 'CREATE_ADDITIONAL_PROJECT':
-      case '2FA': {
+      case '2FA':
+      case 'FORCE_2FA': {
         plan = 'start-up' // startup or greater
         break
       }
