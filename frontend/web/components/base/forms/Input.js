@@ -153,9 +153,7 @@ const Input = class extends React.Component {
             value={this.props.value}
             className={innerClassName}
             disabled={disabled}
-            autoComplete={
-              this.props.enableAutoComplete ? undefined : 'one-time-code'
-            }
+            autoComplete={this.props.enableAutoComplete}
           />
         )}
         {this.props.type === 'password' && (
