@@ -113,7 +113,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "username" if settings.LDAP_ENABLED else "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:

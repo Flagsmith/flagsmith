@@ -39,7 +39,11 @@ const controller = {
         )
       : ['Development', 'Production']
     data
-      .post(`${Project.api}projects/`, { name, organisation: store.id })
+      .post(
+        `${Project.api}projects/`,
+        { name, organisation: store.id },
+        E2E ? { 'X-E2E-Test-Auth-Token': Project.e2eToken } : {},
+      )
       .then((project) => {
         Promise.all(
           defaultEnvironmentNames.map((envName) => {
@@ -140,7 +144,9 @@ const controller = {
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                getSubscriptionMetadata(getStore(), { id }),
+                getSubscriptionMetadata(getStore(), { id }).then(
+                  (res) => res.data,
+                ),
               ]
             : [],
         ),

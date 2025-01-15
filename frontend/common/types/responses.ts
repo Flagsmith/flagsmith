@@ -76,6 +76,7 @@ export type Segment = {
 export type Environment = {
   id: number
   name: string
+  is_creating: boolean
   api_key: string
   description?: string
   banner_text?: string
@@ -260,8 +261,12 @@ export type UserPermission = {
   id: number
   role?: number
 }
+
+export type RolePermission = Omit<UserPermission, 'permissions'> & {
+  permissions: { permission_key: string; tags: number[] }[]
+}
 export type GroupPermission = Omit<UserPermission, 'user'> & {
-  group: UserGroup
+  group: UserGroupSummary
 }
 
 export type AuditLogItem = {
@@ -327,6 +332,7 @@ export type Identity = {
 export type AvailablePermission = {
   key: string
   description: string
+  supports_tag: boolean
 }
 
 export type APIKey = {
@@ -656,7 +662,10 @@ export type Res = {
   }
   identity: { id: string } //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
-  permission: Record<string, boolean>
+  permission: Record<string, boolean> & {
+    ADMIN: boolean
+    tag_based_permissions?: { permissions: string[]; tags: number[] }[]
+  }
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
@@ -694,7 +703,7 @@ export type Res = {
   versionFeatureState: FeatureState[]
   role: Role
   roles: PagedResponse<Role>
-  rolePermission: PagedResponse<UserPermission>
+  rolePermission: PagedResponse<RolePermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStatesAll: IdentityFeatureState[]

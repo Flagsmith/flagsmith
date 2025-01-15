@@ -7,12 +7,12 @@ import {
   AvailablePermission,
   GroupPermission,
   Role,
+  RolePermission,
   User,
   UserGroup,
   UserGroupSummary,
   UserPermission,
 } from 'common/types/responses'
-import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import Format from 'common/utils/format'
 import PanelSearch from './PanelSearch'
@@ -62,8 +62,29 @@ import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
 import PlanBasedAccess from './PlanBasedAccess'
+import { useGetTagsQuery } from 'common/services/useTag'
+import { components } from 'react-select'
+import { SingleValueProps } from 'react-select/lib/components/SingleValue'
+import Utils from 'common/utils/utils'
+import AddEditTags from './tags/AddEditTags'
 
 const Project = require('common/project')
+
+const SingleValue = (props: SingleValueProps<any>) => {
+  return (
+    <components.SingleValue {...props}>
+      <div className='d-flex gap-1 align-items-center'>
+        {props.data.value === 'GRANTED' && (
+          <Icon width={18} name='checkmark' fill='#27AB95' />
+        )}
+        {props.data.value === 'GRANTED_FOR_TAGS' && (
+          <Icon width={18} name='shield' fill='#ff9f43' />
+        )}
+        {props.children}
+      </div>
+    </components.SingleValue>
+  )
+}
 
 type EditPermissionModalType = {
   group?: UserGroupSummary
@@ -83,7 +104,7 @@ type EditPermissionModalType = {
   user?: User
   role?: Role
   roles?: Role[]
-  permissionChanged: () => void
+  permissionChanged?: () => void
   isEditUserPermission?: boolean
   isEditGroupPermission?: boolean
 }
@@ -95,12 +116,19 @@ type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
   tabClassName?: string
 }
 type EntityPermissions = Omit<
-  UserPermission,
+  RolePermission,
   'user' | 'id' | 'group' | 'isGroup'
 > & {
   id?: number
+  group?: number
   user?: number
+  tags?: number[]
 }
+const permissionOptions = [
+  { label: 'Granted', value: 'GRANTED' },
+  { label: 'Granted for tags', value: 'GRANTED_FOR_TAGS' },
+  { label: 'None', value: 'NONE' },
+]
 const withAdminPermissions = (InnerComponent: any) => {
   const WrappedComponent: FC<EditPermissionModalType> = (props) => {
     const { id, level } = props
@@ -120,7 +148,10 @@ const withAdminPermissions = (InnerComponent: any) => {
     }
     if (!permission) {
       return (
-        <div className='my-4 text-center text-muted'>
+        <div
+          className='my-4 text-center text-muted'
+          data-test='no-organisation-permissions'
+        >
           To manage permissions you need to be admin of this {level}.
         </div>
       )
@@ -131,24 +162,7 @@ const withAdminPermissions = (InnerComponent: any) => {
   return WrappedComponent
 }
 const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
-  forwardRef((props) => {
-    const [entityPermissions, setEntityPermissions] =
-      useState<EntityPermissions>({ admin: false, permissions: [] })
-    const [parentError, setParentError] = useState(false)
-    const [saving, setSaving] = useState(false)
-    const [showRoles, setShowRoles] = useState<boolean>(false)
-    const [valueChanged, setValueChanged] = useState(false)
-
-    const [permissionWasCreated, setPermissionWasCreated] =
-      useState<boolean>(false)
-    const [rolesSelected, setRolesSelected] = useState<
-      {
-        role: number
-        user_role_id?: number
-        group_role_id?: number
-      }[]
-    >([])
-
+  forwardRef((props: EditPermissionModalType) => {
     const {
       className,
       envId,
@@ -169,6 +183,38 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       roles,
       user,
     } = props
+
+    const [entityPermissions, setEntityPermissions] =
+      useState<EntityPermissions>({
+        admin: false,
+        permissions: [],
+      })
+    const [parentError, setParentError] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [showRoles, setShowRoles] = useState<boolean>(false)
+    const [valueChanged, setValueChanged] = useState(false)
+
+    const projectId =
+      props.level === 'project'
+        ? props.id
+        : props.level === 'environment'
+        ? props.parentId
+        : undefined
+
+    const { data: tags, isLoading: tagsLoading } = useGetTagsQuery(
+      { projectId: `${projectId}` },
+      { skip: !projectId },
+    )
+
+    const [permissionWasCreated, setPermissionWasCreated] =
+      useState<boolean>(false)
+    const [rolesSelected, setRolesSelected] = useState<
+      {
+        role: number
+        user_role_id: number | undefined
+        group_role_id: number | undefined
+      }[]
+    >([])
 
     const { data: permissions } = useGetAvailablePermissionsQuery({ level })
     const { data: userWithRolesData, isSuccess: userWithRolesDataSuccesfull } =
@@ -194,6 +240,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     useEffect(() => {
       if (user && userWithRolesDataSuccesfull) {
         const resultArray = userWithRolesData?.results?.map((userRole) => ({
+          group_role_id: undefined,
           role: userRole.id,
           user_role_id: user?.id,
         }))
@@ -207,6 +254,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         const resultArray = groupWithRolesData?.results?.map((groupRole) => ({
           group_role_id: group?.id,
           role: groupRole.id,
+          user_role_id: undefined,
         }))
         setRolesSelected(resultArray)
       }
@@ -214,13 +262,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     }, [groupWithRolesDataSuccesfull])
 
     const processResults = (results: (UserPermission | GroupPermission)[]) => {
-      let entityPermissions:
-        | (Omit<EntityPermissions, 'user' | 'group' | 'role'> & {
-            user?: any
-            group?: any
-            role?: any
-          })
-        | undefined = isGroup
+      const foundPermission = isGroup
         ? find(
             results || [],
             (r) => (r as GroupPermission).group.id === group?.id,
@@ -231,18 +273,22 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             results || [],
             (r) => (r as UserPermission).user?.id === user?.id,
           )
-
-      if (!entityPermissions) {
-        entityPermissions = { admin: false, permissions: [] }
-      }
-      if (user) {
-        entityPermissions.user = user.id
-      }
-      if (group) {
-        entityPermissions.group = group.id
-      }
-      return entityPermissions
+      const permissions =
+        (role && (level === 'project' || level === 'environment')
+          ? foundPermission?.permissions
+          : (foundPermission?.permissions || []).map((v) => ({
+              permission_key: v,
+              tags: [],
+            }))) || []
+      return {
+        ...(foundPermission || {}),
+        group: group?.id,
+        //Since role permissions and other permissions are different in data structure, adjust permissions to match
+        permissions,
+        user: user?.id,
+      } as EntityPermissions
     }
+
     const [
       createRolePermissionUser,
       { data: usersData, isSuccess: userAdded },
@@ -255,6 +301,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       createRolePermissionGroup,
       { data: groupsData, isSuccess: groupAdded },
     ] = useCreateRolePermissionGroupMutation()
+    const [parentWarning, setParentWarning] = useState(false)
 
     const [deleteRolePermissionGroup] = useDeleteRolePermissionGroupMutation()
 
@@ -276,6 +323,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       },
     ] = useCreateRolePermissionsMutation()
 
+    const tagBasedPermissions =
+      Utils.getFlagsmithHasFeature('tag_based_permissions') && !!role
     useEffect(() => {
       const isSaving = isRolePermCreating || isRolePermUpdating
       if (isSaving) {
@@ -385,7 +434,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             if (
               !entityPermissions.admin &&
               !entityPermissions.permissions.find(
-                (v) => v === `VIEW_${parentLevel.toUpperCase()}`,
+                (v) => v.permission_key === `VIEW_${parentLevel.toUpperCase()}`,
               )
             ) {
               // e.g. trying to set an environment permission but don't have view_project
@@ -393,6 +442,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             } else {
               setParentError(false)
             }
+          })
+          .catch(() => {
+            setParentWarning(true)
+            return []
           })
       }
       if (!role) {
@@ -420,7 +473,24 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const hasPermission = (key: string) => {
       if (admin()) return true
-      return entityPermissions.permissions.includes(key)
+      return entityPermissions.permissions.find(
+        (permission) => permission.permission_key === key,
+      )
+    }
+
+    const getPermissionType = (key: string) => {
+      if (admin()) return 'GRANTED'
+      const permission = entityPermissions.permissions.find(
+        (v) => v.permission_key === key,
+      )
+
+      if (!permission) return 'NONE'
+
+      if (permission.tags?.length || limitedPermissions.includes(key)) {
+        return 'GRANTED_FOR_TAGS'
+      }
+
+      return 'GRANTED'
     }
 
     const save = useCallback(() => {
@@ -433,19 +503,33 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           : `${level}s/${id}/user-permissions/${entityId}`
         setSaving(true)
         const action = entityId ? 'put' : 'post'
-        _data[action](
-          `${Project.api}${url}${entityId && '/'}`,
-          entityPermissions,
-        )
-          .then((res: EntityPermissions) => {
-            setEntityPermissions(res)
-            toast(
-              `${
-                level.charAt(0).toUpperCase() + level.slice(1)
-              } Permissions Saved`,
-            )
-            onSave && onSave()
-          })
+        _data[action](`${Project.api}${url}${entityId && '/'}`, {
+          ...entityPermissions,
+          permissions: entityPermissions.permissions.map(
+            (v) => v.permission_key,
+          ),
+        })
+          .then(
+            (
+              res: Omit<EntityPermissions, 'permissions'> & {
+                permissions: string[]
+              },
+            ) => {
+              setEntityPermissions({
+                ...res,
+                permissions: (res.permissions || []).map((v) => ({
+                  permission_key: v,
+                  tags: [],
+                })),
+              })
+              toast(
+                `${
+                  level.charAt(0).toUpperCase() + level.slice(1)
+                } Permissions Saved`,
+              )
+              onSave && onSave()
+            },
+          )
           .catch(() => {
             toast(`Error Saving Permissions`, 'danger')
           })
@@ -454,7 +538,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           })
       } else {
         const body = {
-          permissions: entityPermissions.permissions,
+          permissions:
+            level === 'organisation'
+              ? entityPermissions.permissions.map((v) => v.permission_key)
+              : entityPermissions.permissions,
         } as Partial<Req['createRolePermission']['body']>
         if (level === 'project') {
           body.admin = entityPermissions.admin
@@ -462,7 +549,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         }
         if (level === 'environment') {
           body.admin = entityPermissions.admin
-          body.environment = envId || id
+          body.environment = (envId || id) as number
         }
         if (entityId || permissionWasCreated) {
           updateRolePermissions({
@@ -499,6 +586,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       role,
       updateRolePermissions,
     ])
+    const [limitedPermissions, setLimitedPermissions] = useState<string[]>([])
 
     useEffect(() => {
       if (valueChanged) {
@@ -506,13 +594,51 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       }
       //eslint-disable-next-line
     }, [valueChanged])
+
+    const selectPermissions = (
+      key: string,
+      value: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
+      tags: number[] = [],
+    ) => {
+      const updatedPermissions = [
+        ...entityPermissions.permissions.filter(
+          (v) => v.permission_key !== key,
+        ),
+      ]
+      const updatedLimitedPermissions = limitedPermissions.filter(
+        (v) => v !== key,
+      )
+      if (value === 'NONE') {
+        setEntityPermissions({
+          ...entityPermissions,
+          permissions: updatedPermissions,
+        })
+      } else {
+        setEntityPermissions({
+          ...entityPermissions,
+          permissions: updatedPermissions.concat([
+            {
+              permission_key: key,
+              tags,
+            },
+          ]),
+        })
+      }
+      if (value === 'GRANTED_FOR_TAGS') {
+        setLimitedPermissions(updatedLimitedPermissions.concat([key]))
+      } else {
+        setLimitedPermissions(updatedLimitedPermissions)
+      }
+    }
     const togglePermission = (key: string) => {
       if (role) {
         permissionChanged?.()
         const updatedPermissions = [...entityPermissions.permissions]
-        const index = updatedPermissions.indexOf(key)
+        const index = updatedPermissions.findIndex(
+          (v) => v.permission_key === key,
+        )
         if (index === -1) {
-          updatedPermissions.push(key)
+          updatedPermissions.push({ permission_key: key, tags: [] })
         } else {
           updatedPermissions.splice(index, 1)
         }
@@ -524,10 +650,14 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       } else {
         const newEntityPermissions = { ...entityPermissions }
 
-        const index = newEntityPermissions.permissions.indexOf(key)
-
+        const index = newEntityPermissions.permissions.findIndex(
+          (v) => v.permission_key === key,
+        )
         if (index === -1) {
-          newEntityPermissions.permissions.push(key)
+          newEntityPermissions.permissions.push({
+            permission_key: key,
+            tags: [],
+          })
         } else {
           newEntityPermissions.permissions.splice(index, 1)
         }
@@ -594,7 +724,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             deleteRolePermissionUser({
               organisation_id: id,
               role_id: roleId,
-              user_id: roleSelected?.user_role_id,
+              user_id: roleSelected?.user_role_id!,
             }).then(onRoleRemoved as any)
           }
         }
@@ -607,7 +737,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
             }).then(onRoleRemoved as any)
           } else if (roleSelected) {
             deleteRolePermissionGroup({
-              group_id: roleSelected.group_role_id,
+              group_id: roleSelected.group_role_id!,
               organisation_id: id,
               role_id: roleId,
             }).then(onRoleRemoved as any)
@@ -622,7 +752,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         if (user) {
           setRolesSelected(
             (rolesSelected || []).concat({
-              role: usersData?.role,
+              group_role_id: undefined,
+              role: usersData?.role!,
               user_role_id: usersData?.id,
             }),
           )
@@ -631,7 +762,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           setRolesSelected(
             (rolesSelected || []).concat({
               group_role_id: groupsData?.id,
-              role: groupsData?.role,
+              role: groupsData?.role!,
+              user_role_id: undefined,
             }),
           )
         }
@@ -651,26 +783,42 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           if (matchedRole) {
             if (user) {
               return {
+                group_role_id: undefined,
                 ...role,
                 user_role_id: matchedRole.user_role_id,
               }
             }
             if (group) {
               return {
+                user_role_id: undefined,
                 ...role,
                 group_role_id: matchedRole.group_role_id,
               }
             }
           }
-          return role
+          return {
+            group_role_id: undefined,
+            user_role_id: undefined,
+            ...role,
+          }
         })
     }
 
+    const getEditText = () => {
+      if (isGroup) {
+        return `the ${group?.name || ''} group`
+      }
+      if (user) {
+        return `${user.first_name || ''} ${user.last_name || ''}`
+      }
+      if (role) {
+        return role.name
+      }
+      return name
+    }
+
     const rolesAdded = getRoles(roles, rolesSelected || [])
-
     const isAdmin = admin()
-
-    const [search, setSearch] = useState()
 
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
@@ -690,50 +838,90 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   </Flex>
                   <Switch
                     disabled={saving}
-                    onChange={() => {
-                      toggleAdmin()
-                      setValueChanged(true)
-                    }}
-                    checked={isAdmin}
-                  />
-                </Row>
-              </div>
-            )}
+                    data-test={`admin-switch-${level}`}
+                  onChange={() => {
+                    toggleAdmin()
+                    setValueChanged(true)
+                  }}
+                  checked={isAdmin}
+                />
+              </Row>
+            </div>
+          )}
             <PanelSearch
-              filterRow={(item: AvailablePermission, search) => {
+              filterRow={(item: AvailablePermission, search: string) => {
                 const name = Format.enumeration.get(item.key).toLowerCase()
                 return name.includes(search?.toLowerCase() || '')
               }}
               title='Permissions'
-              className='no-pad mb-2'
+              className='no-pad mb-2 overflow-visible'
               items={permissions}
-              renderRow={(p: AvailablePermission) => {
-                const levelUpperCase = level.toUpperCase()
-                const disabled =
-                  level !== 'organisation' &&
-                  p.key !== `VIEW_${levelUpperCase}` &&
-                  !hasPermission(`VIEW_${levelUpperCase}`)
-                return (
-                  <Row
-                    key={p.key}
-                    style={admin() ? { opacity: 0.5 } : undefined}
-                    className='list-item list-item-sm px-3'
-                  >
-                    <Row space>
-                      <Flex>
-                        <strong>{Format.enumeration.get(p.key)}</strong>
+              renderRow={(p: AvailablePermission, index: number) => {
+              const levelUpperCase = level.toUpperCase()
+              const disabled =
+                level !== 'organisation' &&
+                p.key !== `VIEW_${levelUpperCase}` &&
+                !hasPermission(`VIEW_${levelUpperCase}`)
+                const permission = entityPermissions.permissions.find(
+                  (v) => v.permission_key === p.key,
+                )
+                const permissionType = getPermissionType(p.key)
+              return (
+                <Row
+                  key={p.key}
+                  style={admin() ? { opacity: 0.5 } : undefined}
+                    className='list-item list-item-sm px-3 py-2'
+                >
+                  <Row space>
+                    <Flex>
+                      <strong>{Format.enumeration.get(p.key)}</strong>
                         <div className='list-item-subtitle'>
                           {p.description}
                         </div>
-                      </Flex>
-                      <Switch
-                        onChange={() => {
-                          setValueChanged(true)
-                          togglePermission(p.key)
-                        }}
-                        disabled={disabled || admin() || saving}
-                        checked={!disabled && hasPermission(p.key)}
-                      />
+                        {permissionType === 'GRANTED_FOR_TAGS' && (
+                          <AddEditTags
+                            projectId={`${projectId}`}
+                            value={permission?.tags || []}
+                            onChange={(v) => {
+                              setValueChanged(true)
+                              selectPermissions(p.key, 'GRANTED_FOR_TAGS', v)
+                            }}
+                          />
+                        )}
+                    </Flex>
+                      {tagBasedPermissions ? (
+                        <div className='ms-2' style={{ width: 200 }}>
+                          <Select
+                            value={permissionOptions.find(
+                              (v) => v.value === permissionType,
+                            )}
+                            onChange={(v) => {
+                              setValueChanged(true)
+                              selectPermissions(p.key, v.value)
+                            }}
+                            className='react-select select-sm'
+                            disabled={disabled || admin() || saving}
+                            options={
+                              p.supports_tag
+                                ? permissionOptions
+                                : permissionOptions.filter(
+                                    (v) => v.value !== 'GRANTED_FOR_TAGS',
+                                  )
+                            }
+                            components={{ SingleValue }}
+                          />
+                        </div>
+                      ) : (
+                    <Switch
+                      data-test={`permission-switch-${level}-${index}`}
+                          onChange={() => {
+                            setValueChanged(true)
+                            togglePermission(p.key)
+                          }}
+                          disabled={disabled || admin() || saving}
+                          checked={!disabled && hasPermission(p.key)}
+                        />
+                      )}
                     </Row>
                   </Row>
                 )
@@ -742,22 +930,16 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
             <p className='text-right mt-5 text-dark'>
               This will edit the permissions for{' '}
-              <strong>
-                {isGroup ? (
-                  `the ${group?.name || ''} group`
-                ) : user ? (
-                  <>
-                    {user.first_name || ''} {user.last_name || ''}
-                  </>
-                ) : role ? (
-                  ` ${role.name}`
-                ) : (
-                  ` ${name}`
-                )}
-              </strong>
-              .
+              <strong>{getEditText()}</strong>.
             </p>
 
+            {!!parentWarning && (
+              <InfoMessage>
+                You do not have permission to verify whether this user has view
+                access for this {parentLevel}. If you need assistance, please
+                contact a {parentLevel} administrator.
+              </InfoMessage>
+            )}
             {parentError && !role && (
               <div className='mt-4'>
                 <InfoMessage>
@@ -846,7 +1028,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
 export const EditPermissionsModal = ConfigProvider(
   _EditPermissionsModal,
-) as FC<EditPermissionModalType>
+) as unknown as FC<EditPermissionModalType>
 
 const rolesWidths = [250, 600, 100]
 const EditPermissions: FC<EditPermissionsType> = (props) => {
@@ -911,6 +1093,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         envId={envId}
         level={level}
         role={role}
+        push={router.history.push}
       />,
       'p-0 side-modal',
     )
@@ -964,22 +1147,12 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                               </div>
                             </Row>
                           }
-                          renderRow={({
-                            email,
-                            first_name,
-                            id,
-                            last_name,
-                            role,
-                          }: User) => {
+                          renderRow={(user: User) => {
+                            const { email, first_name, id, last_name, role } =
+                              user
                             const onClick = () => {
                               if (role !== 'ADMIN') {
-                                editUserPermissions({
-                                  email,
-                                  first_name,
-                                  id,
-                                  last_name,
-                                  role,
-                                })
+                                editUserPermissions(user)
                               }
                             }
                             const matchingPermissions = permissions?.find(
@@ -1070,7 +1243,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
               <UserGroupList
                 noTitle
                 orgId={AccountStore.getOrganisation().id}
-                projectId={level === 'project' && id}
+                projectId={level === 'project' ? id : undefined}
                 onClick={(group: UserGroup) => editGroupPermissions(group)}
               />
             </div>

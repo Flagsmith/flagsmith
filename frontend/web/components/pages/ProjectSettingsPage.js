@@ -15,7 +15,6 @@ import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
@@ -26,6 +25,7 @@ import { Link } from 'react-router-dom'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
+import { getRoleProjectPermissions } from 'common/services/useRolePermission'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -60,7 +60,9 @@ const ProjectSettingsPage = class extends Component {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     ).then((roles) => {
-      getRolesProjectPermissions(
+      if (!roles?.data?.results?.length) return
+
+      getRoleProjectPermissions(
         getStore(),
         {
           organisation_id: AccountStore.getOrganisation().id,

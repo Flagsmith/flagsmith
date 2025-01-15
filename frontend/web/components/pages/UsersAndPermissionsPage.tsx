@@ -36,7 +36,9 @@ import sortBy from 'lodash/sortBy'
 import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
+import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
+import { useHasPermission } from 'common/providers/Permission'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -67,15 +69,22 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   subscriptionMeta,
   users,
 }) => {
-  const orgId = AccountStore.getOrganisation().id
 
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
-  const permissionsError = !(
-    AccountStore.getUser() && AccountStore.getOrganisationRole() === 'ADMIN'
-  )
+  const manageUsersPermission = useHasPermission({
+    id: AccountStore.getOrganisation()?.id,
+    level: 'organisation',
+    permission: 'MANAGE_USERS',
+  })
+  const manageGroupsPermission = useHasPermission({
+    id: AccountStore.getOrganisation()?.id,
+    level: 'organisation',
+    permission: 'MANAGE_USER_GROUPS',
+  })
+
   const roleChanged = (id: number, { value: role }: { value: string }) => {
     AppActions.updateUserRole(id, role)
   }
@@ -103,9 +112,28 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
 
   const editUserPermissions = (user: User, organisationId: number) => {
     openModal(
-      'Edit Organisation Permissions',
-      <div className='p-4'>
-        <PermissionsTabs uncontrolled user={user} orgId={organisationId} />
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          {user.role !== 'ADMIN' && (
+            <TabItem tabLabel='Permissions'>
+              <div className='pt-4'>
+                <PermissionsTabs
+                  uncontrolled
+                  user={user}
+                  orgId={organisationId}
+                />
+              </div>
+            </TabItem>
+          )}
+          <TabItem tabLabel='Groups'>
+            <div className='pt-4'>
+              <UsersGroups user={user} orgId={organisationId} />
+            </div>
+          </TabItem>
+        </Tabs>
       </div>,
       'p-0 side-modal',
     )
@@ -202,11 +230,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                       <Row space className='mt-4'>
                         <h5 className='mb-0'>Team Members</h5>
                         {Utils.renderWithPermission(
-                          !permissionsError,
+                          !manageUsersPermission.permission,
                           Constants.organisationPermissions('Admin'),
                           <Button
                             disabled={
-                              needsUpgradeForAdditionalSeats || permissionsError
+                              needsUpgradeForAdditionalSeats ||
+                              !manageUsersPermission.permission
                             }
                             id='btn-invite'
                             onClick={() =>
@@ -463,17 +492,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               )
                             }
                             const onEditClick = () => {
-                              if (role !== 'ADMIN') {
-                                editUserPermissions(user, organisation.id)
-                              }
+                              editUserPermissions(user, organisation.id)
                             }
                             return (
                               <Row
                                 data-test={`user-${i}`}
                                 space
-                                className={classNames('list-item', {
-                                  clickable: role !== 'ADMIN',
-                                })}
+                                className={classNames('list-item clickable')}
                                 onClick={onEditClick}
                                 key={id}
                               >
@@ -553,13 +578,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   style={{
                                     width: widths[2],
                                   }}
-                                  className='table-column text-end'
+                                  className='table-column d-flex justify-content-end'
                                 >
                                   <UserAction
                                     onRemove={onRemoveClick}
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
-                                    canEdit={role !== 'ADMIN'}
+                                    canEdit={AccountStore.isAdmin()}
                                   />
                                 </div>
                               </Row>
@@ -691,16 +716,18 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         </FormGroup>
                       ) : null}
                     </TabItem>
-                    <TabItem tabLabel='Groups'>
+                    <TabItem tabLabel='Groups' data-test='tab-item-groups'>
                       <div>
                         <Row space className='mt-4 mb-1'>
                           <h5 className='mb-0'>User Groups</h5>
                           {Utils.renderWithPermission(
-                            !permissionsError,
-                            Constants.organisationPermissions('Admin'),
+                            manageGroupsPermission.permission,
+                            Constants.organisationPermissions(
+                              'Manage User Groups',
+                            ),
                             <Button
-                              id='btn-invite'
-                              disabled={permissionsError}
+                              id='btn-invite-groups'
+                              disabled={!manageGroupsPermission.permission}
                               onClick={() =>
                                 openModal(
                                   'Create Group',
@@ -726,7 +753,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                         />
                       </div>
                     </TabItem>
-                    <TabItem tabLabel='Roles'>
+                    <TabItem tabLabel='Roles' data-test='tab-item-roles'>
                       <PlanBasedBanner
                         feature='RBAC'
                         theme={'page'}

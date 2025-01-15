@@ -1,67 +1,69 @@
 import { FC } from 'react'
 
 export type IconName =
-  | 'plus'
-  | 'eye'
-  | 'eye-off'
-  | 'search'
-  | 'github'
-  | 'google'
-  | 'sun'
-  | 'moon'
-  | 'checkmark-square'
+  | 'arrow-left'
+  | 'arrow-right'
+  | 'bar-chart'
+  | 'bell'
+  | 'calendar'
   | 'checkmark'
-  | 'info'
-  | 'star'
-  | 'info-outlined'
-  | 'close-circle'
-  | 'chevron-right'
+  | 'checkmark-circle'
+  | 'checkmark-square'
   | 'chevron-down'
   | 'chevron-left'
-  | 'arrow-left'
-  | 'file-text'
-  | 'copy'
-  | 'paste'
-  | 'copy-outlined'
-  | 'trash-2'
-  | 'setting'
-  | 'calendar'
-  | 'edit'
-  | 'clock'
-  | 'diff'
-  | 'person'
-  | 'edit-outlined'
-  | 'refresh'
-  | 'warning'
-  | 'bell'
-  | 'layout'
-  | 'height'
+  | 'chevron-right'
   | 'chevron-up'
-  | 'nav-logo'
-  | 'options-2'
-  | 'pie-chart'
-  | 'bar-chart'
-  | 'list'
-  | 'layers'
-  | 'flash'
-  | 'checkmark-circle'
-  | 'minus-circle'
+  | 'clock'
+  | 'close-circle'
+  | 'copy'
+  | 'copy-outlined'
+  | 'dash'
+  | 'diff'
+  | 'edit'
+  | 'edit-outlined'
   | 'email'
-  | 'arrow-right'
-  | 'settings-2'
-  | 'rocket'
-  | 'timer'
-  | 'request'
-  | 'people'
-  | 'required'
-  | 'more-vertical'
-  | 'open-external-link'
+  | 'eye'
+  | 'eye-off'
+  | 'file-text'
+  | 'flash'
+  | 'github'
+  | 'google'
+  | 'height'
+  | 'info'
+  | 'info-outlined'
   | 'issue-closed'
   | 'issue-linked'
-  | 'pr-merged'
+  | 'layers'
+  | 'layout'
+  | 'list'
+  | 'minus-circle'
+  | 'moon'
+  | 'more-vertical'
+  | 'nav-logo'
+  | 'open-external-link'
+  | 'options-2'
+  | 'paste'
+  | 'people'
+  | 'person'
+  | 'pie-chart'
+  | 'plus'
+  | 'pr-closed'
   | 'pr-draft'
   | 'pr-linked'
-  | 'pr-closed'
+  | 'pr-merged'
+  | 'refresh'
+  | 'request'
+  | 'required'
+  | 'rocket'
+  | 'search'
+  | 'setting'
+  | 'settings-2'
+  | 'shield'
+  | 'star'
+  | 'sun'
+  | 'timer'
+  | 'trash-2'
+  | 'warning'
 
 export type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,
@@ -77,6 +79,27 @@ export type IconType = React.DetailedHTMLProps<
 
 const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
   switch (name) {
+    case 'shield': {
+      return (
+        <svg
+          width='24'
+          height='24'
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/shield'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M12 4.14649L5 8.08449V8.22949C5 12.9695 7.566 17.3585 11.698 19.6835L12 19.8535L12.302 19.6835C16.434 17.3585 19 12.9695 19 8.22949V8.08449L12 4.14649ZM12 21.8505C11.661 21.8505 11.322 21.7665 11.021 21.5965L10.718 21.4255C5.957 18.7485 3 13.6915 3 8.22949V8.08449C3 7.36549 3.39 6.69749 4.018 6.34249L11.02 2.40449C11.625 2.06449 12.376 2.06349 12.979 2.40349L19.98 6.34149C20.61 6.69749 21 7.36549 21 8.08449V8.22949C21 13.6915 18.043 18.7485 13.282 21.4255L12.98 21.5955C12.678 21.7655 12.339 21.8505 12 21.8505Z'
+              fill={fill}
+            />
+          </g>
+        </svg>
+      )
+    }
     case 'star': {
       return (
         <svg
@@ -91,6 +114,26 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
             fill={fill}
             className='ionicon-stroke-width'
           ></path>
+        </svg>
+      )
+    }
+    case 'dash': {
+      return (
+        <svg
+          width={width}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/minus'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M19 13H5C4.448 13 4 12.553 4 12C4 11.447 4.448 11 5 11H19C19.553 11 20 11.447 20 12C20 12.553 19.553 13 19 13Z'
+              fill={fill}
+            />
+          </g>
         </svg>
       )
     }

@@ -44,6 +44,7 @@ const ProjectFilter: FC<ProjectFilterType> = ({
       onChange={(value: { value: string; label: string }) =>
         onChange(value.value || '', value.label || '')
       }
+      data-test='project-select'
     />
   )
 }

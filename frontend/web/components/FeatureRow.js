@@ -240,11 +240,7 @@ class TheComponent extends Component {
       <Row
         className={classNames(
           `list-item ${readOnly ? '' : 'clickable'} ${
-            isCompact
-              ? 'py-0 list-item-xs fs-small'
-              : this.props.widget
-              ? 'py-1'
-              : 'py-2'
+            isCompact ? 'py-0 list-item-xs fs-small' : 'py-1'
           }`,
           this.props.className,
         )}
@@ -269,13 +265,7 @@ class TheComponent extends Component {
                   <span>
                     {created_date ? (
                       <Tooltip place='right' title={<span>{name}</span>}>
-                        {isCompact && description
-                          ? `${description}<br/>Created ${moment(
-                              created_date,
-                            ).format('Do MMM YYYY HH:mma')}`
-                          : `Created ${moment(created_date).format(
-                              'Do MMM YYYY HH:mma',
-                            )}`}
+                        {isCompact && description ? `${description}` : null}
                       </Tooltip>
                     ) : (
                       name
@@ -327,13 +317,13 @@ class TheComponent extends Component {
                 </TagValues>
                 {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
               </Row>
+              {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
               {description && !isCompact && (
                 <div
-                  className='list-item-subtitle mt-1'
+                  className='list-item-subtitle'
                   style={{ lineHeight: '20px', width: width[4] }}
                 >
                   {description}
-                  <StaleFlagWarning projectFlag={projectFlag} />
                 </div>
               )}
             </Flex>
@@ -381,6 +371,7 @@ class TheComponent extends Component {
             featureIndex={this.props.index}
             readOnly={readOnly}
             protectedTags={protectedTags}
+            tags={projectFlag.tags}
             isCompact={isCompact}
             hideAudit={
               AccountStore.getOrganisationRole() !== 'ADMIN' ||

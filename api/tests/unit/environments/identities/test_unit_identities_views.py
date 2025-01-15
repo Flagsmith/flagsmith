@@ -4,6 +4,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
+from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
 from django.test import override_settings
 from django.urls import reverse
@@ -21,10 +22,6 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.identities.views import IdentityViewSet
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration

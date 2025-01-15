@@ -23,6 +23,7 @@ import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import Format from './format'
 import { defaultFlags } from 'common/stores/default-flags'
+import Color from 'color'
 
 const semver = require('semver')
 
@@ -110,11 +111,23 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
+  colour(
+    c: string,
+    fallback = Constants.defaultTagColor,
+  ): InstanceType<typeof Color> {
+    let res: Color
+    try {
+      res = Color(c)
+    } catch (_) {
+      res = Color(fallback)
+    }
+    return res
+  },
+
   copyFeatureName: (featureName: string) => {
     navigator.clipboard.writeText(featureName)
     toast('Copied to clipboard')
   },
-
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -331,36 +344,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return `/organisation/${orgId}/projects`
   },
 
-  getPermissionList(
-    isAdmin: boolean,
-    permissions: string[] | undefined | null,
-    numberToTruncate = 3,
-  ): {
-    items: string[]
-    truncatedItems: string[]
-  } {
-    if (isAdmin) {
-      return {
-        items: ['Administrator'],
-        truncatedItems: [],
-      }
-    }
-    if (!permissions) return { items: [], truncatedItems: [] }
-
-    const items =
-      permissions && permissions.length
-        ? permissions
-            .slice(0, numberToTruncate)
-            .map((item) => `${Format.enumeration.get(item)}`)
-        : []
-
-    return {
-      items,
-      truncatedItems: (permissions || [])
-        .slice(numberToTruncate)
-        .map((item) => `${Format.enumeration.get(item)}`),
-    }
-  },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free

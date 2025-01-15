@@ -15,8 +15,8 @@ module.exports = (
 // Option 1: initialise with an identity and traits
 ${LIB_NAME}.init({
     environmentID: "${envId}",${
-  Constants.isCustomFlagsmithUrl
-    ? `\n    api: "${Project.flagsmithClientAPI}",`
+  Constants.isCustomFlagsmithUrl()
+    ? `\n    api: "${Constants.getFlagsmithSDKUrl()}",`
     : ''
 }
     identity: "${userId || USER_ID}",
