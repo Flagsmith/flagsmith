@@ -200,7 +200,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'CREATE_PROJECT'
   },
-  showOnboarding() {return true},
   getCreateProjectPermissionDescription(organisation: Organisation) {
     if (organisation?.restrict_project_create_to_admin) {
       return 'Administrator'
@@ -285,7 +284,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'identities'
   },
-
   getIntegrationData() {
     return Utils.getFlagsmithJSONValue(
       'integration_data',
@@ -301,6 +299,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -343,7 +342,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
-
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -365,6 +363,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
+
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -404,7 +403,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
-
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -558,6 +556,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -569,10 +568,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
-
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
+
   isValidURL(value: any) {
     const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
     return regex.test(value)
@@ -608,7 +607,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       zE('messenger', 'open')
     }
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -622,6 +620,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+
+  showOnboarding() {return true},
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''

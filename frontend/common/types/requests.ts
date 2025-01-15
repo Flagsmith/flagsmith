@@ -529,5 +529,6 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  createOnboarding: {}
   // END OF TYPES
 }

@@ -758,5 +758,6 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  onboarding: { id: string }
   // END OF TYPES
 }
