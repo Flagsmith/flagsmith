@@ -228,7 +228,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                     onChange={(e) => {
                       setFieldValue('password', e)
                     }}
-                    className='input-default full-width'
+                    className='mb-0 full-width'
                     type='password'
                     name='password'
                     id='password'
@@ -292,7 +292,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
             <div className='text-center'>
               <Logo size={100} />
               <h3 className='fw-semibold mt-2'>
-                Welcome to Flagsmith {AccountStore.getUser()?.first_name}
+                Welcome to Flagsmith
               </h3>
               <h5 className='fw-normal text-muted'>
                 You've successfully installed Flagsmith v{version?.tag}, let's
