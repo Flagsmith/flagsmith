@@ -7,6 +7,7 @@ import { Operator, SegmentCondition, SegmentRule } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
+import RuleInputValue from './RuleInputValue'
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
@@ -100,7 +101,7 @@ export default class Rule extends PureComponent<{
               style={{ width: '190px' }}
             />
           )}
-          <Input
+          <RuleInputValue
             readOnly={this.props.readOnly}
             data-test={`${this.props['data-test']}-value-${i}`}
             value={value || ''}
