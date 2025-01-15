@@ -304,6 +304,29 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
             </div>
           )}
         </div>
+
+        <hr />
+        <div className='text-center mb-4'>
+          Unsure about something?<br/>View our{' '}
+          <a
+            className='text-primary'
+            href='https://docs.flagsmith.com/deployment'
+            target={'_blank'}
+            rel='noreferrer'
+          >
+            self hosting documentation
+          </a>{' '}
+          or{' '}
+          <a
+            className='text-primary'
+            target='_blank'
+            href='https://www.flagsmith.com/contact-us'
+            rel='noreferrer'
+          >
+            get in touch
+          </a>
+          .
+        </div>
       </div>
     </div>
   )
