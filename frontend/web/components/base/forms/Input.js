@@ -153,7 +153,9 @@ const Input = class extends React.Component {
             value={this.props.value}
             className={innerClassName}
             disabled={disabled}
-            autoComplete={this.props.enableAutoComplete}
+            autoComplete={
+              this.props.enableAutoComplete ?? this.props.autocomplete
+            }
           />
         )}
         {this.props.type === 'password' && (
@@ -212,6 +214,7 @@ Input.defaultProps = {
 }
 
 Input.propTypes = {
+  autocomplete: propTypes.string,
   className: propTypes.any,
   inputClassName: OptionalString,
   isValid: propTypes.any,
