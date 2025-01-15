@@ -61,20 +61,10 @@ const ProjectSettingsPage = class extends Component {
       { forceRefetch: true },
     ).then((roles) => {
       if (!roles?.data?.results?.length) return
-
-      getRoleProjectPermissions(
-        getStore(),
-        {
-          organisation_id: AccountStore.getOrganisation().id,
-          project_id: this.props.match.params.projectId,
-          role_id: roles.data.results[0].id,
-        },
-        { forceRefetch: true },
-      ).then((res) => {
-        const matchingItems = roles.data.results.filter((item1) =>
-          res.data.results.some((item2) => item2.role === item1.id),
-        )
-        this.setState({ roles: matchingItems })
+      getRoles(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        this.setState({ roles: res.data.results })
       })
     })
   }

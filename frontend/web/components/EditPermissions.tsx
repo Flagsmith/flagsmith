@@ -1307,7 +1307,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                 <Panel title={'Roles'} className='no-pad'>
                   <div className='search-list'>
                     <Row className='list-item p-3 text-muted'>
-                      {`You currently have no roles with ${level} permissions.`}
+                      {`You currently have no roles.`}
                     </Row>
                   </div>
                 </Panel>
