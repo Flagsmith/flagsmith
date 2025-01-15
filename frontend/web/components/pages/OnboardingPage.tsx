@@ -8,12 +8,11 @@ import Card from 'components/Card'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
-import AppActions from 'common/dispatcher/app-actions'
-import API from 'project/api'
 import { RouterChildContext } from 'react-router'
 import Checkbox from 'components/base/forms/Checkbox'
 import { useCreateOnboardingMutation } from 'common/services/useOnboarding'
 import PasswordRequirements from 'components/PasswordRequirements'
+import passwordRequirements from 'components/PasswordRequirements'
 
 // Types
 interface OnboardingPageProps {
@@ -152,7 +151,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
       console.error(e)
     }
   }
-
+  const isValidEmail = Utils.isValidEmail(onboarding.email)
   return (
     <div className='position-fixed overflow-auto top-0 bottom-0 left-0 w-100'>
       <div className='min-vh-100 w-100 d-flex flex-1 flex-column justify-content-center align-items-center'>
@@ -167,8 +166,8 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                 value={step}
                 setValue={setStep}
                 title='Your account'
-                description='This account will be set as the Django Admin. You will be able to set up SSO and OAuth for your team members.'
-                completedTitle={`Hey ${onboarding.first_name}`}
+                description='This account will be set as the superuser for the Django Admin. You will be able to set up SSO and OAuth for your team members.'
+                completedTitle={`Hey, ${onboarding.first_name}!`}
                 onSubmit={onSubmitStep1}
                 isValid={isStep1Valid}
               >
@@ -176,10 +175,11 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                   <InputGroup
                     title='First Name'
                     className='mb-0'
+                    isValid={!!onboarding.first_name && !error?.first_name}
                     inputProps={{
                       autoFocus: true,
                       className: 'full-width',
-                      error: error && error.first_name,
+                      error: error?.first_name,
                       name: 'first_name',
                     }}
                     value={onboarding.first_name}
@@ -190,9 +190,10 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                   <InputGroup
                     title='Last Name'
                     className='mb-0'
+                    isValid={!!onboarding.last_name && !error?.last_name}
                     inputProps={{
                       className: 'full-width',
-                      error: error && error.last_name,
+                      error: error?.last_name,
                       name: 'last_name',
                     }}
                     value={onboarding.last_name}
@@ -204,9 +205,10 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                     title='Email'
                     type='email'
                     className='mb-0'
+                    isValid={isValidEmail && !error?.email}
                     inputProps={{
                       className: 'full-width',
-                      error: error && error.email,
+                      error: error?.email,
                       name: 'email',
                     }}
                     value={onboarding.email}
@@ -217,9 +219,10 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                   <InputGroup
                     title='Password'
                     data-test='password'
+                    isValid={requirementsMet}
                     inputProps={{
                       className: 'full-width',
-                      error: error && error.password,
+                      isValid: requirementsMet,
                       name: 'password',
                     }}
                     onChange={(e) => {
@@ -265,7 +268,6 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                     inputProps={{
                       autoFocus: true,
                       className: 'full-width',
-                      error: error && error.organisation_name,
                       name: 'organisation_name',
                     }}
                     value={onboarding.organisation_name}
@@ -284,26 +286,6 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                     Next
                   </Button>
                 </div>
-              </Step>
-              <Step
-                step={3}
-                value={step}
-                title='Usage data preferences'
-                isValid={true}
-              >
-                <div className='d-flex gap-2'>
-                  <Button
-                    className='px-4'
-                    onClick={() => setStep(2)}
-                    theme='secondary'
-                  >
-                    Back
-                  </Button>
-                  <Button type='submit' disabled={isLoading}>
-                    Complete
-                  </Button>
-                </div>
-                <div className='col-md-6'></div>
               </Step>
             </div>
           ) : (
