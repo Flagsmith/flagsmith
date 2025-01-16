@@ -198,37 +198,70 @@ class Segment(
 
         return cloned_segment
 
-    def match_rules_to_segment(self, segment: "Segment") -> None:
-        _rules = self.rules.all()
+    def match_rules_to_segment(self, segment: "Segment") -> bool:
+        """
+        Matches the rules of the current object to the rules of the given segment.
+
+        This method iterates through the rules of the provided `Segment` and
+        attempts to match them to the current object's rules and sub-rules,
+        updating versioning where matches are found.
+
+        Args:
+            segment (Segment): The segment whose rules are being matched
+                               against the current object's rules.
+
+        Returns:
+            bool:
+                - `True` if any rules or sub-rules match between the current
+                  object and the segment.
+                - `False` if no matches are found.
+
+        Process:
+            1. Retrieve all rules associated with the current object and the segment.
+            2. For each rule in the segment:
+               - Check its sub-rules against the current object's rules and sub-rules.
+               - A match is determined if the sub-rule's type and properties align
+                 with those of the current object's sub-rules.
+               - If a match is found:
+                 - Update the `version_of` field for the matched sub-rule and rule.
+                 - Track the matched rules and sub-rules to avoid duplicate processing.
+            3. Perform a bulk update on matched rules and sub-rules to persist
+               versioning changes.
+
+        Side Effects:
+            - Updates the `version_of` field for matched rules and sub-rules.
+        """
+
+        self_rules = self.rules.all()
         matched_rules = set()
         matched_sub_rules = set()
 
         for rule in segment.rules.all():
-            sub_rules = rule.rules.all()
-            for sub_rule in sub_rules:
+            for sub_rule in rule.rules.all():
                 sub_rule_matched = False
-                for _rule in _rules:
+                for self_rule in self_rules:
                     if sub_rule_matched:
                         break
 
-                    if _rule in matched_rules and _rule.version_of != rule:
+                    if self_rule in matched_rules and self_rule.version_of != rule:
                         continue
 
-                    if rule.type != _rule.type:
+                    if rule.type != self_rule.type:
                         continue
-                    for _sub_rule in _rule.rules.all():
-                        if _sub_rule in matched_sub_rules:  # pragma: no cover
+                    for self_sub_rule in self_rule.rules.all():
+                        if self_sub_rule in matched_sub_rules:
                             continue
-                        if _sub_rule.matches_rule(sub_rule):
-                            _sub_rule.version_of = sub_rule
+                        if self_sub_rule.matches_rule(sub_rule):
+                            self_sub_rule.version_of = sub_rule
                             sub_rule_matched = True
-                            matched_sub_rules.add(_sub_rule)
-                            _rule.version_of = rule
-                            matched_rules.add(_rule)
+                            matched_sub_rules.add(self_sub_rule)
+                            self_rule.version_of = rule
+                            matched_rules.add(self_rule)
                             break
         SegmentRule.objects.bulk_update(
             matched_rules | matched_sub_rules, fields=["version_of"]
         )
+        return bool(matched_rules | matched_sub_rules)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
@@ -301,28 +334,52 @@ class SegmentRule(SoftDeleteExportableModel):
         return rule.segment
 
     def matches_rule(self, rule: "SegmentRule") -> bool:
+        """
+        Determines whether the current object matches the given rule.
+
+        This method compares the type and conditions of the current object with
+        the specified `SegmentRule` to determine if they are compatible.
+
+        Returns:
+            bool:
+                - `True` if the current object's type matches the rule's type
+                  and the conditions are compatible.
+                - `False` if the types do not match or no conditions are compatible.
+
+        Process:
+            1. If the types do not match, return `False`.
+            2. If both the rule and current object have no conditions, return `True`.
+            3. Compare each condition in the rule against the current object's conditions:
+               - A condition matches if both `operator` and `property` are equal.
+               - Mark matched conditions and update the versioning.
+            4. Return `True` if at least one condition matches; otherwise, return `False`.
+
+        Side Effects:
+            Updates the `version_of` field for matched conditions using a bulk update.
+        """
+
         if rule.type != self.type:
             return False
 
         conditions = rule.conditions.all()
-        _conditions = self.conditions.all()
+        self_conditions = self.conditions.all()
 
-        if not conditions and not _conditions:
+        if not conditions and not self_conditions:
             # Empty rule with the same type matches.
             return True
 
         matched_conditions = set()
 
         for condition in conditions:
-            for _condition in _conditions:
-                if _condition in matched_conditions:
+            for self_condition in self_conditions:
+                if self_condition in matched_conditions:
                     continue
                 if (
-                    condition.operator == _condition.operator
-                    and condition.property == _condition.property
+                    condition.operator == self_condition.operator
+                    and condition.property == self_condition.property
                 ):
-                    matched_conditions.add(_condition)
-                    _condition.version_of = condition
+                    matched_conditions.add(self_condition)
+                    self_condition.version_of = condition
                     break
         if not matched_conditions:
             return False
