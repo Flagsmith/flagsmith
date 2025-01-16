@@ -638,6 +638,7 @@ def test_match_rules_to_segment_multiple_sub_rules(project: Project) -> None:
 
     rule9 = SegmentRule.objects.create(rule=rule3, type=SegmentRule.ALL_RULE)
     rule10 = SegmentRule.objects.create(rule=rule4, type=SegmentRule.ALL_RULE)
+    rule11 = SegmentRule.objects.create(rule=rule4, type=SegmentRule.ALL_RULE)
 
     # When
     segment1.match_rules_to_segment(segment2)
@@ -660,9 +661,10 @@ def test_match_rules_to_segment_multiple_sub_rules(project: Project) -> None:
     assert rule5.version_of == rule9
     assert rule6.version_of is None
     assert rule7.version_of == rule10
-    assert rule8.version_of is None
+    assert rule8.version_of == rule11
     assert rule9.version_of is None
     assert rule10.version_of is None
+    assert rule11.version_of is None
 
 
 def test_match_rules_to_segment_with_multiple_conditions(
