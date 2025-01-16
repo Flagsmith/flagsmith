@@ -154,7 +154,7 @@ const Input = class extends React.Component {
             className={innerClassName}
             disabled={disabled}
             autoComplete={
-              this.props.enableAutoComplete ? undefined : 'one-time-code'
+              this.props.enableAutoComplete ?? this.props.autocomplete
             }
           />
         )}
@@ -214,6 +214,7 @@ Input.defaultProps = {
 }
 
 Input.propTypes = {
+  autocomplete: propTypes.string,
   className: propTypes.any,
   inputClassName: OptionalString,
   isValid: propTypes.any,
