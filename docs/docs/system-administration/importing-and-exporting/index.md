@@ -20,4 +20,4 @@ There are several ways of importing or exporting Flagsmith data:
 
 ## Import from third-party services
 
-You can directly import [LaunchDarkly flags and segments](launchdarkly) into Flagsmith.
+You can [import LaunchDarkly flags and segments](launchdarkly) into Flagsmith.

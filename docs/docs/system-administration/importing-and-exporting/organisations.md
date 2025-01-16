@@ -10,8 +10,8 @@ You can import and export an entire Flagsmith organisation. This lets you:
 
 :::note
 
-This process **does not** support merging data with an existing Flagsmith organisation. A new organisation is created
-as part of the import process.
+Merging data between existing Flagsmith organisations **is not** supported. A new Flagsmith organisation is created as
+part of the import process.
 
 :::
 
@@ -20,9 +20,9 @@ as part of the import process.
 Importing or exporting an organisation requires shell access to any machine or container where Flagsmith is 
 installed and can connect to your Flagsmith database.
 
-Organisations can imported or exported using the local file system or S3-compatible storage.
+Organisations can be imported or exported using the local file system or S3-compatible storage.
 
-Importing or exporting an organisation does not require downtime. However, it is a one-shot operation that does not
+Importing or exporting an organisation does not require downtime. However, it is a one-time operation that does not
 continuously migrate data. You should plan a convenient time to perform imports and exports.
 
 **If you need to copy an organisation from or to Flagsmith SaaS, please contact Flagsmith support.**
@@ -107,7 +107,7 @@ python /app/manage.py health_check
 
 ## Exporting
 
-To export your Flagsmith organisation, you need to know its ID number. To find the organisation ID, use one of the 
+To export your Flagsmith organisation, you need to know its ID. To find an organisation's ID, use one of the 
 following methods:
 
 * From the Flagsmith dashboard, click your organisation name in the top left. The organisation ID is displayed in 
@@ -129,7 +129,7 @@ To export the organisation with ID 1234 to a JSON file in the local file system:
 python manage.py dumporganisationtolocalfs 1234 /tmp/organisation-1234.json
 ```
 
-Then, copy the JSON file to a secure location.
+Then, copy the exported JSON file to a secure location.
 
 <details>
 
@@ -196,7 +196,8 @@ To export the organisation with ID 1234 to a key named `1234.json` in the S3 buc
 python manage.py dumporganisationtos3 1234 my-bucket 1234.json
 ```
 
-You may need to provide [additional S3 configuration](#s3-configuration) before running this command.
+You can provide [additional S3 configuration](#s3-configuration) for authentication or to use services other than AWS
+S3.
 
 ## Importing
 
@@ -219,29 +220,29 @@ from a Flagsmith container:
 python manage.py importorganisationfroms3 my-bucket org-1234.json
 ```
 
-You may need to provide [additional S3 configuration](#s3-configuration) before running this command.
+You can provide [additional S3 configuration](#s3-configuration) for authentication or to use services other than AWS
+S3.
 
 ### Accessing an imported organisation
 
-After you import an organisation, you will need to add your Flagsmith user to it. You can achieve this by editing 
-the imported organisation from [Django Admin](/deployment/configuration/django-admin) and making sure your user has
-Admin permissions on it:
+After you import an organisation, you will need to add your Flagsmith user to it. To do this, edit the imported
+organisation from [Django Admin](/deployment/configuration/django-admin) and add your user to it with Admin permissions:
 
 ![](django-admin.png)
 
 ## Additional S3 configuration {#s3-configuration}
 
-If you need to provide credentials, set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables 
-before running any commands. For example:
+To provide credentials, set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables before running
+any commands. For example:
 
 ```
 export AWS_ACCESS_KEY_ID='abc123'
-export AWS_ACCESS_KEY_ID='xyz456'
-python manage.py dumporganisationtos3 1234 my-bucket 1234.json
+export AWS_SECRET_ACCESS_KEY='xyz456'
 ```
 
-To export to an S3-compatible service such as Google Cloud Storage, set the `AWS_ENDPOINT_URL_S3` environment variable:
+By default, all commands will interact with buckets hosted on AWS S3. To use other S3-compatible services such as Google
+Cloud Storage, set the `AWS_ENDPOINT_URL_S3` environment variable:
 
 ```
-export AWS_ENDPOINT_URL_S3='AWS_ENDPOINT_URL_S3=https://storage.googleapis.com'
+export AWS_ENDPOINT_URL_S3='https://storage.googleapis.com'
 ```
