@@ -2,8 +2,7 @@
 title: Importing and exporting
 ---
 
-Flagsmith lets you import and export your data between Flagsmith organisations, instances, or other feature flagging 
-services.
+You can import and export your data between Flagsmith organisations, instances, or other feature flagging services.
 
 We recommend understanding the [Flagsmith data model](/basic-features/#flagsmith-model) before importing or 
 exporting any data.
