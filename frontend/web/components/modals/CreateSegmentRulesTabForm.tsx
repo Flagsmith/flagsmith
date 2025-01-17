@@ -10,6 +10,7 @@ import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import { Segment } from 'common/types/responses'
+import ChangeRequestModal from './ChangeRequestModal'
 
 type DefaultSegmentType = Omit<Segment, 'id' | 'project' | 'uuid'> & {
   id?: number
@@ -22,6 +23,12 @@ interface CreateSegmentRulesTabFormProps {
   condensed?: boolean
   segmentsLimitAlert: { percentage: number }
   name: string
+  is4Eyes?: boolean
+  onCreateChangeRequest: (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => void
   setName: (name: string) => void
   setValueChanged: (value: boolean) => void
   description: string
@@ -47,12 +54,14 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   description,
   error,
   identity,
+  is4Eyes,
   isEdit,
   isLimitReached,
   isSaving,
   isValid,
   name,
   onCancel,
+  onCreateChangeRequest,
   readOnly,
   rulesEl,
   save,
@@ -189,14 +198,34 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
               </Button>
             )}
             {isEdit ? (
-              <Button
-                type='submit'
-                data-test='update-segment'
-                id='update-feature-btn'
-                disabled={isSaving || !name || !isValid}
-              >
-                {isSaving ? 'Updating' : 'Update Segment'}
-              </Button>
+              is4Eyes ? (
+                <Button
+                  onClick={() => {
+                    openModal2(
+                      'New Change Request',
+                      <ChangeRequestModal
+                        showAssignees={is4Eyes}
+                        hideSchedule
+                        onSave={onCreateChangeRequest}
+                      />,
+                    )
+                  }}
+                  data-test='update-segment'
+                  id='update-feature-btn'
+                  disabled={isSaving || !name || !isValid}
+                >
+                  {isSaving ? 'Creating' : 'Create Change Request'}
+                </Button>
+              ) : (
+                <Button
+                  type='submit'
+                  data-test='update-segment'
+                  id='update-feature-btn'
+                  disabled={isSaving || !name || !isValid}
+                >
+                  {isSaving ? 'Creating' : 'Update Segment'}
+                </Button>
+              )
             ) : (
               <Button
                 disabled={isSaving || !name || !isValid || isLimitReached}

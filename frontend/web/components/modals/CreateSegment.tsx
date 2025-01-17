@@ -11,7 +11,6 @@ import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
 import AccountStore from 'common/stores/account-store'
 import {
-  ChangeRequest,
   EdgePagedResponse,
   Identity,
   Metadata,
@@ -26,7 +25,6 @@ import {
   useGetSegmentQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
-import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
@@ -39,7 +37,6 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { cloneDeep } from 'lodash'
 import ProjectStore from 'common/stores/project-store'
-import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
@@ -47,7 +44,6 @@ import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedCon
 import { setInterceptClose } from './base/ModalDefault'
 import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import { useGetProjectQuery } from 'common/services/useProject'
-import ChangeRequestModal from './ChangeRequestModal'
 import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
 import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
 import AppActions from 'common/dispatcher/app-actions'
@@ -447,174 +443,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </div>
   )
 
-  const Tab1 = (
-    <form id='create-segment-modal' onSubmit={save}>
-      {!condensed && (
-        <div className='mt-3'>
-          <InfoMessage collapseId={'value-type-conversions'}>
-            Learn more about rule and trait value type conversions{' '}
-            <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
-              here
-            </a>
-            .
-          </InfoMessage>
-          {segmentsLimitAlert.percentage &&
-            Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
-        </div>
-      )}
-
-      <div className='mb-3'>
-        <label htmlFor='segmentID'>Name*</label>
-        <Flex>
-          <Input
-            data-test='segmentID'
-            name='id'
-            id='segmentID'
-            maxLength={SEGMENT_ID_MAXLENGTH}
-            value={name}
-            onChange={(e: InputEvent) => {
-              setValueChanged(true)
-              setName(
-                Format.enumeration
-                  .set(Utils.safeParseEventValue(e))
-                  .toLowerCase(),
-              )
-            }}
-            isValid={name && name.length}
-            type='text'
-            placeholder='E.g. power_users'
-          />
-        </Flex>
-      </div>
-      {!condensed && (
-        <InputGroup
-          className='mb-3'
-          value={description}
-          inputProps={{
-            className: 'full-width',
-            name: 'featureDesc',
-            readOnly: !!identity || readOnly,
-          }}
-          onChange={(e: InputEvent) => {
-            setValueChanged(true)
-            setDescription(Utils.safeParseEventValue(e))
-          }}
-          isValid={name && name.length}
-          type='text'
-          title='Description'
-          placeholder="e.g. 'People who have spent over $100' "
-        />
-      )}
-
-      <div className='form-group '>
-        <Row className='mb-3'>
-          <Switch
-            checked={showDescriptions}
-            onChange={() => {
-              setShowDescriptions(!showDescriptions)
-            }}
-            className={'ml-0'}
-          />
-          <span
-            style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 fs-small text-dark'
-          >
-            Show condition descriptions
-          </span>
-        </Row>
-        <Flex className='mb-3'>
-          <label className='cols-sm-2 control-label mb-1'>
-            Include users when all of the following rules apply:
-          </label>
-          <span className='fs-caption text-faint'>
-            Note: Trait names are case sensitive
-          </span>
-        </Flex>
-        {allWarnings?.map((warning, i) => (
-          <InfoMessage key={i}>
-            <div dangerouslySetInnerHTML={{ __html: warning }} />
-          </InfoMessage>
-        ))}
-        {rulesEl}
-      </div>
-
-      <ErrorMessage error={error} />
-      {isEdit && <JSONReference title={'Segment'} json={segment} />}
-      {readOnly ? (
-        <div className='text-right'>
-          <Tooltip
-            title={
-              <Button
-                disabled
-                data-test='show-create-feature-btn'
-                id='show-create-feature-btn'
-              >
-                Update Segment
-              </Button>
-            }
-            place='left'
-          >
-            {Constants.projectPermissions('Admin')}
-          </Tooltip>
-        </div>
-      ) : (
-        <div className='text-right' style={{ marginTop: '32px' }}>
-          <Row className='justify-content-end'>
-            {condensed && (
-              <Button
-                theme='secondary'
-                type='button'
-                onClick={onCancel}
-                className='mr-2'
-              >
-                Cancel
-              </Button>
-            )}
-            {isEdit ? (
-              is4Eyes ? (
-                <Button
-                  onClick={() => {
-                    openModal2(
-                      'New Change Request',
-                      <ChangeRequestModal
-                        showAssignees={is4Eyes}
-                        hideSchedule
-                        onSave={onCreateChangeRequest}
-                      />,
-                    )
-                  }}
-                  data-test='update-segment'
-                  id='update-feature-btn'
-                  disabled={isSaving || !name || !isValid}
-                >
-                  {isSaving ? 'Creating' : 'Create Change Request'}
-                </Button>
-              ) : (
-                <Button
-                  type='submit'
-                  data-test='update-segment'
-                  id='update-feature-btn'
-                  disabled={isSaving || !name || !isValid}
-                >
-                  {isSaving ? 'Creating' : 'Update Segment'}
-                </Button>
-              )
-            ) : (
-              <Button
-                disabled={isSaving || !name || !isValid || isLimitReached}
-                type='submit'
-                data-test='create-segment'
-                id='create-feature-btn'
-              >
-                {isSaving ? 'Creating' : 'Create Segment'}
-              </Button>
-            )}
-          </Row>
-        </div>
-      )}
-    </form>
-  )
-
   const MetadataTab = (
     <FormGroup className='mt-5 setting'>
       <InputGroup
@@ -657,6 +485,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
           >
             <div className='my-4'>
               <CreateSegmentRulesTabForm
+                is4Eyes={is4Eyes}
+                onCreateChangeRequest={onCreateChangeRequest}
                 save={save}
                 condensed={condensed}
                 segmentsLimitAlert={segmentsLimitAlert}
@@ -730,7 +560,33 @@ const CreateSegment: FC<CreateSegmentType> = ({
             tabLabelString='Basic configuration'
             tabLabel={'Basic configuration'}
           >
-            <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+            <div className={className || 'my-3 mx-4'}>
+              <CreateSegmentRulesTabForm
+                save={save}
+                is4Eyes={is4Eyes}
+                onCreateChangeRequest={onCreateChangeRequest}
+                condensed={condensed}
+                segmentsLimitAlert={segmentsLimitAlert}
+                name={name}
+                setName={setName}
+                setValueChanged={setValueChanged}
+                description={description}
+                setDescription={setDescription}
+                identity={identity}
+                readOnly={readOnly}
+                showDescriptions={showDescriptions}
+                setShowDescriptions={setShowDescriptions}
+                allWarnings={allWarnings}
+                rulesEl={rulesEl}
+                error={error}
+                isEdit={isEdit}
+                segment={segment}
+                isSaving={isSaving}
+                isValid={isValid}
+                isLimitReached={isLimitReached}
+                onCancel={onCancel}
+              />
+            </div>
           </TabItem>
           <TabItem
             tabLabelString='Custom Fields'
@@ -742,7 +598,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
         </Tabs>
       ) : (
-        <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+        <div className={className || 'my-3 mx-4'}>
+          <CreateSegmentRulesTabForm
+            save={save}
+            condensed={condensed}
+            segmentsLimitAlert={segmentsLimitAlert}
+            name={name}
+            setName={setName}
+            setValueChanged={setValueChanged}
+            description={description}
+            setDescription={setDescription}
+            identity={identity}
+            readOnly={readOnly}
+            showDescriptions={showDescriptions}
+            setShowDescriptions={setShowDescriptions}
+            allWarnings={allWarnings}
+            rulesEl={rulesEl}
+            error={error}
+            isEdit={isEdit}
+            segment={segment}
+            isSaving={isSaving}
+            isValid={isValid}
+            isLimitReached={isLimitReached}
+            onCancel={onCancel}
+          />
+        </div>
       )}
     </>
   )
