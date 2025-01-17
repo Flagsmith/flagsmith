@@ -28,6 +28,7 @@ export default class TheComponent extends PureComponent {
         >
           <InputGroup
             inputProps={{
+              autocomplete: 'one-time-code',
               className: 'full-width',
               style: { paddingLeft: 10, textIndent: 0 },
             }}

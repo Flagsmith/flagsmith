@@ -104,8 +104,8 @@ const config: Config = {
                             to: 'https://flagsmith.com/',
                         },
                         {
-                            label: 'Twitter',
-                            href: 'https://twitter.com/getflagsmith',
+                            label: 'X',
+                            href: 'https://x.com/getflagsmith',
                         },
                     ],
                 },
@@ -113,7 +113,7 @@ const config: Config = {
                     title: 'Open Source',
                     items: [
                         {
-                            label: 'Github',
+                            label: 'GitHub',
                             href: 'https://github.com/Flagsmith',
                         },
                         {
@@ -205,7 +205,7 @@ const config: Config = {
         },
         announcementBar: {
             id: 'support_us',
-            content: `If you like Flagsmith, give us a star 🌟 on <a target="_blank" rel="noopener noreferrer" href="https://github.com/Flagsmith/flagsmith">GitHub</a> and follow us ❤️ on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/getflagsmith">Twitter</a>`,
+            content: `If you like Flagsmith, give us a star 🌟 on <a target="_blank" rel="noopener noreferrer" href="https://github.com/Flagsmith/flagsmith">GitHub</a> and follow us ❤️ on <a target="_blank" rel="noopener noreferrer" href="https://x.com/getflagsmith">X</a>`,
             backgroundColor: '#5d60cc',
             textColor: '#ffffff',
             isCloseable: true,

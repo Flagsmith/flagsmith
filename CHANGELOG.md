@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.159.0](https://github.com/Flagsmith/flagsmith/compare/v2.158.0...v2.159.0) (2025-01-13)
+
+
+### Features
+
+* Adds plus indicator when `is_num_identity_overrides_complete` is false ([#4938](https://github.com/Flagsmith/flagsmith/issues/4938)) ([df074cb](https://github.com/Flagsmith/flagsmith/commit/df074cb9028cd90bdba8112238259772c86f8ca1))
+
+
+### Bug Fixes
+
+* **export:** fixes issue exporting identity feature states with missing attributes ([#4987](https://github.com/Flagsmith/flagsmith/issues/4987)) ([8cd2731](https://github.com/Flagsmith/flagsmith/commit/8cd27318bd9de08cd45785868e7d77541c9e3a61))
+* handle fetch github stars errors ([#4952](https://github.com/Flagsmith/flagsmith/issues/4952)) ([580dcae](https://github.com/Flagsmith/flagsmith/commit/580dcaea4e7aaa45a439f5d95d31fd4ea752140d))
+* Speed up identity overrides ([#4840](https://github.com/Flagsmith/flagsmith/issues/4840)) ([60d042d](https://github.com/Flagsmith/flagsmith/commit/60d042da8a4ce11f4a3adb893df7dc71f6c75524))
+* **tests:** Incorrect mock in `test_ensure_identity_traits_blanks__exclusive_start_key__calls_expected` ([#4944](https://github.com/Flagsmith/flagsmith/issues/4944)) ([bbe7db1](https://github.com/Flagsmith/flagsmith/commit/bbe7db188657ec542e8a2dd15648c3de3b6dbd6e))
+* Update boto3 and dependencies to latest versions - autoinstrumentation Datadog ([#4986](https://github.com/Flagsmith/flagsmith/issues/4986)) ([645b408](https://github.com/Flagsmith/flagsmith/commit/645b40842aba30f516402018942a6c42d597df9b))
+* Updates user segment tab when a segment is created/updated ([#4950](https://github.com/Flagsmith/flagsmith/issues/4950)) ([6c9ad03](https://github.com/Flagsmith/flagsmith/commit/6c9ad03001576b1fab48f5ebb06992e52cd51233))
+
+
+### Dependency Updates
+
+* add licensing to private installation ([#4947](https://github.com/Flagsmith/flagsmith/issues/4947)) ([fe949c8](https://github.com/Flagsmith/flagsmith/commit/fe949c82dc8d9a71db9b37c1b3e3e9943368802e))
+* bump task processor v1.1.1 and workflows v2.7.5 ([#4942](https://github.com/Flagsmith/flagsmith/issues/4942)) ([95ebbdf](https://github.com/Flagsmith/flagsmith/commit/95ebbdf05e716a47fa9a3ef1017c862ea76c4c8d))
+
 ## [2.158.0](https://github.com/Flagsmith/flagsmith/compare/v2.157.1...v2.158.0) (2025-01-02)
 
 
