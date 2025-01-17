@@ -2,7 +2,6 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  ChangeSet,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -21,7 +20,6 @@ import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
-import Format from './format'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 
@@ -176,10 +174,20 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return conditions.find((v) => v.value === operator)
   },
+  
+  copyToClipboard: async (value: string, successMessage?: string, errorMessage?: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast(successMessage ?? 'Copied to clipboard')
+    } catch (error) {
+      toast(errorMessage ?? 'Failed to copy to clipboard')
+      throw error
+    }
+  },
   /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
-  flagsmithFeatureExists(flag: string) {
+flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
   getApproveChangeRequestPermission() {
@@ -270,15 +278,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
-  },
-  copyToClipboard: async (value: string, successMessage?: string, errorMessage?: string) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast(successMessage ?? 'Copied to clipboard')
-    } catch (error) {
-      toast(errorMessage ?? 'Failed to copy to clipboard')
-      throw error
-    }
   },
 
   getIdentitiesEndpoint(_project: ProjectType) {
