@@ -198,13 +198,18 @@ class Segment(
 
         return cloned_segment
 
-    def match_rules_to_segment(self, segment: "Segment") -> bool:
+    def assign_matching_rules_to_segment(self, segment: "Segment") -> bool:
         """
-        Matches the rules of the current object to the rules of the given segment.
+        Assign matching rules of the current object to the rules of the given segment.
 
         This method iterates through the rules of the provided `Segment` and
         attempts to match them to the current object's rules and sub-rules,
         updating versioning where matches are found.
+
+        This is done in order to set the `version_of` field for matched rules
+        and conditions so that the frontend can more reliably diff rules and
+        conditions between a change request for a segment and the target segment
+        itself.
 
         Args:
             segment (Segment): The segment whose rules are being matched
@@ -251,7 +256,7 @@ class Segment(
                     for self_sub_rule in self_rule.rules.all():
                         if self_sub_rule in matched_sub_rules:
                             continue
-                        if self_sub_rule.matches_rule(sub_rule):
+                        if self_sub_rule.assign_conditions_if_matching_rule(sub_rule):
                             self_sub_rule.version_of = sub_rule
                             sub_rule_matched = True
                             matched_sub_rules.add(self_sub_rule)
@@ -333,9 +338,15 @@ class SegmentRule(SoftDeleteExportableModel):
             rule = rule.rule
         return rule.segment
 
-    def matches_rule(self, rule: "SegmentRule") -> bool:
+    def assign_conditions_if_matching_rule(self, rule: "SegmentRule") -> bool:
         """
-        Determines whether the current object matches the given rule.
+        Determines whether the current object matches the given rule
+        and assigns conditions with the `version_of` field.
+
+        These assignments are done in order to allow the frontend to
+        provide a diff capability during change requests for segments.
+        By knowing which version a condition is for the frontend can
+        show a more accurate diff between the segment and the change request.
 
         This method compares the type and conditions of the current object with
         the specified `SegmentRule` to determine if they are compatible.
