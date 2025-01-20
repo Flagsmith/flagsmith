@@ -724,13 +724,13 @@ files = [
 
 [[package]]
 name = "django"
-version = "4.2.17"
+version = "4.2.18"
 description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "Django-4.2.17-py3-none-any.whl", hash = "sha256:3a93350214ba25f178d4045c0786c61573e7dbfa3c509b3551374f1e11ba8de0"},
-    {file = "Django-4.2.17.tar.gz", hash = "sha256:6b56d834cc94c8b21a8f4e775064896be3b4a4ca387f2612d4406a5927cd2fdc"},
+    {file = "Django-4.2.18-py3-none-any.whl", hash = "sha256:ba52eff7e228f1c775d5b0db2ba53d8c49d2f8bfe6ca0234df6b7dd12fb25b19"},
+    {file = "Django-4.2.18.tar.gz", hash = "sha256:52ae8eacf635617c0f13b44f749e5ea13dc34262819b2cc8c8636abb08d82c4b"},
 ]
 
 [package.dependencies]
@@ -4115,7 +4115,7 @@ flagsmith-flag-engine = "*"
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-workflows"
 reference = "feat/add_matches_to_workflows"
-resolved_reference = "2ac9740ded9540176246d3be34bd031b50a117d9"
+resolved_reference = "3a9a9d9d4ffa9270eb0769f96a81c5c4df0ba0bf"
 
 [[package]]
 name = "wrapt"
@@ -4234,4 +4234,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11, <3.13"
-content-hash = "53544da7fc084c590737bcec9975fd1014f22e9e1d9d4e8b2044f4b8d3b72192"
+content-hash = "0dc17597e3e660a32b76c20042ccbd476dbd0126a395961fd684a091b4b12423"
