@@ -487,7 +487,7 @@ def test_saving_condition_with_version_of_set(segment: Segment) -> None:
     assert condition2.version_of == condition1
 
 
-def test_match_rules_to_segment_simple(project: Project) -> None:
+def test_assign_matching_rules_to_segment_simple(project: Project) -> None:
     # Given
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
@@ -503,7 +503,7 @@ def test_match_rules_to_segment_simple(project: Project) -> None:
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.match_rules_to_segment(segment2)
+    segment1.assign_matching_rules_to_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -520,7 +520,7 @@ def test_match_rules_to_segment_simple(project: Project) -> None:
     assert condition2.version_of is None
 
 
-def test_match_rules_to_segment_with_condition_operator_mismatch(
+def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
     project: Project,
 ) -> None:
     # Given
@@ -538,7 +538,7 @@ def test_match_rules_to_segment_with_condition_operator_mismatch(
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.match_rules_to_segment(segment2)
+    segment1.assign_matching_rules_to_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -555,7 +555,9 @@ def test_match_rules_to_segment_with_condition_operator_mismatch(
     assert condition2.version_of is None
 
 
-def test_match_rules_to_segment_mismatched_rule_type(project: Project) -> None:
+def test_assign_matching_rules_to_segment_mismatched_rule_type(
+    project: Project,
+) -> None:
     # Given
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
@@ -571,7 +573,7 @@ def test_match_rules_to_segment_mismatched_rule_type(project: Project) -> None:
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.match_rules_to_segment(segment2)
+    segment1.assign_matching_rules_to_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -588,7 +590,9 @@ def test_match_rules_to_segment_mismatched_rule_type(project: Project) -> None:
     assert condition2.version_of is None
 
 
-def test_match_rules_to_segment_mismatched_sub_rule_type(project: Project) -> None:
+def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
+    project: Project,
+) -> None:
     # Given
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
@@ -604,7 +608,7 @@ def test_match_rules_to_segment_mismatched_sub_rule_type(project: Project) -> No
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.match_rules_to_segment(segment2)
+    segment1.assign_matching_rules_to_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -621,7 +625,7 @@ def test_match_rules_to_segment_mismatched_sub_rule_type(project: Project) -> No
     assert condition2.version_of is None
 
 
-def test_match_rules_to_segment_multiple_sub_rules(project: Project) -> None:
+def test_assign_matching_rules_to_segment_multiple_sub_rules(project: Project) -> None:
     # Given
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
@@ -641,7 +645,7 @@ def test_match_rules_to_segment_multiple_sub_rules(project: Project) -> None:
     rule11 = SegmentRule.objects.create(rule=rule4, type=SegmentRule.ALL_RULE)
 
     # When
-    segment1.match_rules_to_segment(segment2)
+    segment1.assign_matching_rules_to_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -667,7 +671,7 @@ def test_match_rules_to_segment_multiple_sub_rules(project: Project) -> None:
     assert rule11.version_of is None
 
 
-def test_match_rules_to_segment_with_multiple_conditions(
+def test_assign_matching_rules_to_segment_with_multiple_conditions(
     project: Project,
 ) -> None:
     # Given
@@ -692,7 +696,7 @@ def test_match_rules_to_segment_with_multiple_conditions(
         operator=PERCENTAGE_SPLIT, value=0.4, rule=rule4
     )
     # When
-    segment1.match_rules_to_segment(segment2)
+    segment1.assign_matching_rules_to_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
