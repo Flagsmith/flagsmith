@@ -105,6 +105,70 @@ python /app/manage.py health_check
 
 </details>
 
+## Working with files in Flagsmith containers {#files}
+
+You can use the [`kubectl cp`](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_cp/) or 
+[`docker cp`](https://docs.docker.com/reference/cli/docker/container/cp/) commands to copy files to and from Flagsmith
+containers. This lets you import a previously exported organisation, or copy an organisation you just exported to a
+secure location.
+
+<details>
+
+<summary>Kubernetes</summary>
+
+From a Flagsmith API container shell, run the `hostname` command to get the current pod name. For example:
+
+```
+$ hostname
+flagsmith-api-59d68fd74d-4kw2k
+```
+
+Then, from a different machine, use `kubectl cp` to copy the exported file for further processing. For example, this
+command copies a file from your pod's `/tmp` directory to your local machine's home directory:
+
+```
+kubectl cp --container flagsmith-api YOUR_API_POD_NAME:/tmp/organisation-1234.json ~/organisation-1234.json
+```
+
+<h3>Read-only file systems</h3>
+
+In some situations, you may not be able to write to `/tmp` or any directory in the container's root file system. If
+this is the case, attach a writable volume to your API pods. For example, if you are using the Flagsmith Helm chart,
+these values will create an [emptyDir volume](https://kubernetes.io/docs/concepts/storage/volumes/#emptydir) on your
+Flagsmith API pods that can be used for exporting data:
+
+```yaml title="values.yaml"
+api:
+  extraVolumes:
+    - name: exports
+      emptyDir: {}
+  volumeMounts:
+    - name: exports
+      mountPath: /exports
+```
+
+</details>
+
+<details>
+
+<summary>Docker</summary>
+
+From a Flagsmith API container shell, run the `hostname` command to get the container ID. For example:
+
+```
+$ hostname
+6893461b8a7e
+```
+
+Then, from the host machine, you can copy files to/from this container using `docker cp`. For example, this command
+copies an exported organisation from your container's `/tmp` directory into your host machine's current directory:
+
+```
+docker cp 6893461b8a7e:/tmp/organisation-1234.json .
+```
+
+</details>
+
 ## Exporting
 
 To export your Flagsmith organisation, you need to know its ID. To find an organisation's ID, use one of the 
@@ -129,64 +193,7 @@ To export the organisation with ID 1234 to a JSON file in the local file system:
 python manage.py dumporganisationtolocalfs 1234 /tmp/organisation-1234.json
 ```
 
-Then, copy the exported JSON file to a secure location.
-
-<details>
-
-<summary>Kubernetes</summary>
-
-
-From the same shell you exported the organisation from, run the `hostname` command to get the current pod name. For 
-example:
-
-```
-$ hostname
-flagsmith-api-59d68fd74d-4kw2k
-```
-
-Then, from a different machine, use `kubectl cp` to copy the exported file for further processing:
-
-```
-kubectl cp --container flagsmith-api YOUR_API_POD_NAME:/tmp/organisation-1234.json ~/organisation-1234.json
-```
-
-<h3>Read-only file systems</h3>
-
-In some situations, you may not be able to write to `/tmp` or any directory in the container's root file system. If
-this is the case, attach a writable volume to your API pods. For example, if you are using the Flagsmith Helm chart:
-
-```yaml title="values.yaml"
-api:
-  extraVolumes:
-    - name: exports
-      emptyDir: {}
-  volumeMounts:
-    - name: exports
-      mountPath: /exports
-```
-
-Then, export your organisation to this directory and copy it following the previous steps.
-
-</details>
-
-<details>
-
-<summary>Docker</summary>
-
-From the same shell you exported the organisation from, run the `hostname` command to get the container ID. For example:
-
-```
-$ hostname
-6893461b8a7e
-```
-
-Then, from the host machine, copy the exported file from the container using `docker cp`. For example:
-
-```
-docker cp 6893461b8a7e:/tmp/organisation-1234.json .
-```
-
-</details>
+Then, [copy the exported JSON file](#files) to a secure location.
 
 ### Exporting to S3-compatible storage
 
