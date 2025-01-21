@@ -781,5 +781,9 @@ export type Res = {
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}
+  featureAnalytics: {
+    day: string
+    [environmentId: string]: string | number | undefined // Dynamic properties for environment IDs
+  }[]
   // END OF TYPES
 }

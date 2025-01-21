@@ -213,15 +213,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       projectId,
     })
   },
-  getFeatureUsage(projectId, environmentId, flag, period) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_FEATURE_USAGE,
-      environmentId,
-      flag,
-      period,
-      projectId,
-    })
-  },
   getFeatures(
     projectId,
     environmentId,

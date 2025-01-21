@@ -8,7 +8,7 @@ import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
-import { service } from "common/service";
+import { service } from 'common/service'
 
 const controller = {
   acceptInvite: (id) => {

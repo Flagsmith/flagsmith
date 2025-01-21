@@ -562,5 +562,11 @@ export type Req = {
     id: string
   }
   deleteProjectChangeRequest: { project_id: string; id: string }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
+  }
   // END OF TYPES
 }
