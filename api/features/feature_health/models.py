@@ -19,6 +19,7 @@ from features.feature_health.constants import (
 
 if typing.TYPE_CHECKING:
     from features.models import Feature
+    from projects.models import Project
     from users.models import FFAdminUser
 
 
@@ -65,6 +66,16 @@ class FeatureHealthProvider(
 class FeatureHealthEventManager(models.Manager):
     def get_latest_by_feature(self, feature: "Feature") -> "FeatureHealthEvent | None":
         return self.filter(feature=feature).order_by("-created_at").first()
+
+    def get_latest_by_project(
+        self,
+        project: "Project",
+    ) -> "models.QuerySet[FeatureHealthEvent]":
+        return (
+            self.filter(feature__project=project)
+            .order_by("provider_name", "feature", "-created_at")
+            .distinct("provider_name", "feature")
+        )
 
 
 class FeatureHealthEvent(

@@ -52,7 +52,11 @@ def get_provider_response(
 ) -> "FeatureHealthProviderResponse | None":
     if provider.type == FeatureHealthProviderType.SAMPLE:
         return sample.map_payload_to_provider_response(payload)
-    logger.error("invalid-provider-type-requested", provider_type=provider.type)
+    logger.error(
+        "invalid-provider-type-requested",
+        provider_type=provider.type,
+        provider_id=provider.uuid,
+    )
     return None
 
 

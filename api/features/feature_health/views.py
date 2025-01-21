@@ -10,9 +10,13 @@ from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from features.feature_health.models import FeatureHealthProvider
+from features.feature_health.models import (
+    FeatureHealthEvent,
+    FeatureHealthProvider,
+)
 from features.feature_health.serializers import (
     CreateFeatureHealthProviderSerializer,
+    FeatureHealthEventSerializer,
     FeatureHealthProviderSerializer,
 )
 from features.feature_health.services import (
@@ -20,6 +24,25 @@ from features.feature_health.services import (
 )
 from projects.models import Project
 from projects.permissions import NestedProjectPermissions
+
+
+class FeatureHealthEventViewSet(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = FeatureHealthEventSerializer
+    pagination_class = None  # set here to ensure documentation is correct
+    model_class = FeatureHealthEvent
+
+    def get_permissions(self) -> list[BasePermission]:
+        return [NestedProjectPermissions()]
+
+    def get_queryset(self) -> QuerySet[FeatureHealthProvider]:
+        if getattr(self, "swagger_fake_view", False):
+            return self.model_class.objects.none()
+
+        project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
+        return self.model_class.objects.get_latest_by_project(project)
 
 
 class FeatureHealthProviderViewSet(

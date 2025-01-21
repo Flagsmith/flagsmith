@@ -8,7 +8,10 @@ from audit.views import ProjectAuditLogViewSet
 from features.feature_external_resources.views import (
     FeatureExternalResourceViewSet,
 )
-from features.feature_health.views import FeatureHealthProviderViewSet
+from features.feature_health.views import (
+    FeatureHealthEventViewSet,
+    FeatureHealthProviderViewSet,
+)
 from features.import_export.views import (
     FeatureExportListView,
     FeatureImportListView,
@@ -72,9 +75,14 @@ projects_router.register(
     basename="project-audit",
 )
 projects_router.register(
-    "feature-health-providers",
+    "feature-health/providers",
     FeatureHealthProviderViewSet,
     basename="feature-health-providers",
+)
+projects_router.register(
+    "feature-health/events",
+    FeatureHealthEventViewSet,
+    basename="feature-health-events",
 )
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover

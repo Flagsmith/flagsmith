@@ -1,10 +1,23 @@
 from rest_framework import serializers
 
 from features.feature_health.models import (
+    FeatureHealthEvent,
     FeatureHealthProvider,
     FeatureHealthProviderType,
 )
 from features.feature_health.services import get_webhook_path_from_provider
+
+
+class FeatureHealthEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FeatureHealthEvent
+        fields = read_only_fields = (
+            "created_at",
+            "environment",
+            "feature",
+            "reason",
+            "type",
+        )
 
 
 class FeatureHealthProviderSerializer(serializers.ModelSerializer):
@@ -19,10 +32,9 @@ class FeatureHealthProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeatureHealthProvider
         fields = (
-            "uuid",
-            "type",
-            "project",
             "created_by",
+            "project",
+            "type",
             "webhook_url",
         )
 
