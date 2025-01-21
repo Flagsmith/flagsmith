@@ -1,8 +1,9 @@
 from datetime import timedelta
+
 import pytest
+from django.conf import settings as test_settings
 from django.utils import timezone
 from django_test_migrations.migrator import Migrator
-from django.conf import settings as test_settings
 
 
 @pytest.mark.skipif(
