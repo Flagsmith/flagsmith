@@ -473,17 +473,16 @@ const controller = {
       API.trackEvent(Constants.events.EDIT_FEATURE)
       const env: Environment = ProjectStore.getEnvironment(environmentId) as any
       // Detect differences between change request and existing feature states
-      const res: { data: PagedResponse<TypedFeatureState> } =
-        await getFeatureStates(
-          getStore(),
-          {
-            environment: environmentFlag.environment,
-            feature: projectFlag.id,
-          },
-          {
-            forceRefetch: true,
-          },
-        )
+      const res: { data: PagedResponse<TypedFeatureState> } = await getFeatureStates(
+        getStore(),
+        {
+          environment: environmentFlag.environment,
+          feature: projectFlag.id,
+        },
+        {
+          forceRefetch: true,
+        },
+      )
       const segmentResult = await getSegments(getStore(), {
         include_feature_specific: true,
         page_size: 1000,
