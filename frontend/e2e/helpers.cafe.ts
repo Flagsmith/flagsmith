@@ -1,7 +1,5 @@
 import { RequestLogger, Selector, t } from 'testcafe'
 import { FlagsmithValue } from '../common/types/responses';
-import { E2E_USER, PASSWORD } from './config';
-import { cli } from 'yaml/dist/cli';
 
 export const LONG_TIMEOUT = 40000
 

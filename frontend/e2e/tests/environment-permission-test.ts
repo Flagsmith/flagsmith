@@ -11,10 +11,8 @@ import {
   PASSWORD,
   E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
   E2E_USER,
-  E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
 } from '../config';
 import { Selector, t } from 'testcafe'
-import { cli } from 'yaml/dist/cli';
 
 export default async function () {
   log('Login')
