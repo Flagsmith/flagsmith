@@ -87,9 +87,9 @@ def create_feature_health_event_from_webhook(
 
 
 def update_feature_unhealthy_tag(feature: "Feature") -> None:
-    if feature_health_event := FeatureHealthEvent.objects.get_latest_by_feature(
-        feature
-    ):
+    if feature_health_events := [
+        *FeatureHealthEvent.objects.get_latest_by_feature(feature)
+    ]:
         unhealthy_tag, _ = Tag.objects.get_or_create(
             name="Unhealthy",
             project=feature.project,
@@ -97,7 +97,10 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
             is_system_tag=True,
             type=TagType.UNHEALTHY,
         )
-        if feature_health_event.type == FeatureHealthEventType.UNHEALTHY:
+        if any(
+            feature_health_event.type == FeatureHealthEventType.UNHEALTHY
+            for feature_health_event in feature_health_events
+        ):
             feature.tags.add(unhealthy_tag)
         else:
             feature.tags.remove(unhealthy_tag)
