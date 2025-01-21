@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 from pytest_mock import MockerFixture
+from pytest_django.fixtures import SettingsWrapper
 
 from app.utils import get_version_info
 
@@ -83,16 +84,13 @@ def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
     }
 
 
-def test_get_version_info_with_email_config_smtp(mocker: MockerFixture) -> None:
+def test_get_version_info_with_email_config_smtp(settings: SettingsWrapper) -> None:
 
-    mocker.patch(
-        "app.utils.EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
-    )
-    mocker.patch("app.utils.EMAIL_HOST_USER", "user")
-    # When
+    settings.EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    settings.EMAIL_HOST_USER = "user"
+
     result = get_version_info()
 
-    # Then
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -102,14 +100,13 @@ def test_get_version_info_with_email_config_smtp(mocker: MockerFixture) -> None:
     }
 
 
-def test_get_version_info_with_email_config_sendgrid(mocker: MockerFixture) -> None:
+def test_get_version_info_with_email_config_sendgrid(settings: SettingsWrapper) -> None:
 
-    mocker.patch("app.utils.EMAIL_BACKEND", "sgbackend.SendGridBackend")
-    mocker.patch("app.utils.SENDGRID_API_KEY", "key")
-    # When
+    settings.EMAIL_BACKEND = "sgbackend.SendGridBackend"
+    settings.SENDGRID_API_KEY = "key"
+
     result = get_version_info()
 
-    # Then
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -119,14 +116,13 @@ def test_get_version_info_with_email_config_sendgrid(mocker: MockerFixture) -> N
     }
 
 
-def test_get_version_info_with_email_config_ses(mocker: MockerFixture) -> None:
+def test_get_version_info_with_email_config_ses(settings: SettingsWrapper) -> None:
 
-    mocker.patch("app.utils.EMAIL_BACKEND", "django_ses.SESBackend")
-    mocker.patch("app.utils.AWS_SES_REGION_ENDPOINT", "endpoint")
-    # When
+    settings.EMAIL_BACKEND = "django_ses.SESBackend"
+    settings.AWS_SES_REGION_ENDPOINT = "endpoint"
+
     result = get_version_info()
 
-    # Then
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -136,7 +132,7 @@ def test_get_version_info_with_email_config_ses(mocker: MockerFixture) -> None:
     }
 
 
-def test_get_version_info_without_email_config(mocker: MockerFixture) -> None:
+def test_get_version_info_without_email_config(settings: SettingsWrapper) -> None:
     expected = {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -145,22 +141,25 @@ def test_get_version_info_without_email_config(mocker: MockerFixture) -> None:
         "is_saas": False,
     }
 
-    mocker.patch(
-        "app.utils.EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
-    )
-    mocker.patch("app.utils.EMAIL_HOST_USER", None)
+    settings.EMAIL_BACKEND = None
 
     result = get_version_info()
     assert result == expected
 
-    mocker.patch("app.utils.EMAIL_BACKEND", "django_ses.SESBackend")
-    mocker.patch("app.utils.AWS_SES_REGION_ENDPOINT", None)
+    settings.EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    settings.EMAIL_HOST_USER = None
 
     result = get_version_info()
     assert result == expected
 
-    mocker.patch("app.utils.EMAIL_BACKEND", "sgbackend.SendGridBackend")
-    mocker.patch("app.utils.SENDGRID_API_KEY", None)
+    settings.EMAIL_BACKEND = "django_ses.SESBackend"
+    settings.AWS_SES_REGION_ENDPOINT = None
+
+    result = get_version_info()
+    assert result == expected
+
+    settings.EMAIL_BACKEND = "sgbackend.SendGridBackend"
+    settings.SENDGRID_API_KEY = None
 
     result = get_version_info()
     assert result == expected

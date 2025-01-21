@@ -4,12 +4,8 @@ from functools import lru_cache
 from typing import TypedDict
 
 import shortuuid
-from app.settings.common import (
-    EMAIL_BACKEND,
-    EMAIL_HOST_USER,
-    SENDGRID_API_KEY,
-    AWS_SES_REGION_ENDPOINT,
-)
+
+from django.conf import settings
 
 UNKNOWN = "unknown"
 VERSIONS_INFO_FILE_LOCATION = ".versions.json"
@@ -37,13 +33,13 @@ def is_saas() -> bool:
 
 
 def has_email_provider() -> bool:
-    match EMAIL_BACKEND:
+    match settings.EMAIL_BACKEND:
         case "django.core.mail.backends.smtp.EmailBackend":
-            return EMAIL_HOST_USER is not None
+            return settings.EMAIL_HOST_USER is not None
         case "sgbackend.SendGridBackend":
-            return SENDGRID_API_KEY is not None
+            return settings.SENDGRID_API_KEY is not None
         case "django_ses.SESBackend":
-            return AWS_SES_REGION_ENDPOINT is not None
+            return settings.AWS_SES_REGION_ENDPOINT is not None
         case _:
             return False
 
