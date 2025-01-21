@@ -1,6 +1,6 @@
 import React from 'react'
 
-function SparklesIcon({}) {
+const SparklesIcon: React.FC<{}> = () => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
