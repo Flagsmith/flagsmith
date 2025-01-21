@@ -354,11 +354,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-
-    if (
-      global.flagsmithVersion?.backend.is_enterprise ||
-      (plan && plan.includes('enterprise'))
-    ) {
+    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
       return planNames.enterprise
     }
     return planNames.free
@@ -409,7 +405,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'FLAG_OWNERS':
       case 'RBAC':
       case 'AUDIT':
-      case 'FORCE_2FA':
       case '4_EYES': {
         plan = 'scale-up'
         break
@@ -424,7 +419,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
       case 'SCHEDULE_FLAGS':
       case 'CREATE_ADDITIONAL_PROJECT':
-      case '2FA': {
+      case '2FA':
+      case 'FORCE_2FA': {
         plan = 'start-up' // startup or greater
         break
       }
@@ -556,6 +552,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+  isEnterpriseImage: () => global.flagsmithVersion?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -567,7 +564,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
-
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
