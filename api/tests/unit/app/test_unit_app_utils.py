@@ -137,15 +137,30 @@ def test_get_version_info_with_email_config_ses(mocker: MockerFixture) -> None:
 
 
 def test_get_version_info_without_email_config(mocker: MockerFixture) -> None:
-
-    # When
-    result = get_version_info()
-
-    # Then
-    assert result == {
+    expected = {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
         "has_email_provider": False,
         "is_enterprise": False,
         "is_saas": False,
     }
+
+    mocker.patch(
+        "app.utils.EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+    )
+    mocker.patch("app.utils.EMAIL_HOST_USER", None)
+
+    result = get_version_info()
+    assert result == expected
+
+    mocker.patch("app.utils.EMAIL_BACKEND", "django_ses.SESBackend")
+    mocker.patch("app.utils.AWS_SES_REGION_ENDPOINT", None)
+
+    result = get_version_info()
+    assert result == expected
+
+    mocker.patch("app.utils.EMAIL_BACKEND", "sgbackend.SendGridBackend")
+    mocker.patch("app.utils.SENDGRID_API_KEY", None)
+
+    result = get_version_info()
+    assert result == expected
