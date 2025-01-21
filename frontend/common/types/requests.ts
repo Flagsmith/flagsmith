@@ -529,5 +529,11 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
+  }
   // END OF TYPES
 }

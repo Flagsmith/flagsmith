@@ -759,5 +759,9 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  featureAnalytics: {
+    day: string
+    [environmentId: string]: string | number | undefined // Dynamic properties for environment IDs
+  }[]
   // END OF TYPES
 }

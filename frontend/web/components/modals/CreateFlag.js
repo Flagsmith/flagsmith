@@ -46,6 +46,7 @@ import { saveFeatureWithValidation } from 'components/saveFeatureWithValidation'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
+import FeatureAnalytics from 'components/FeatureAnalytics'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -179,13 +180,6 @@ const CreateFlag = class extends Component {
         this.focusTimeout = null
       }, 500)
     }
-    if (
-      !Project.disableAnalytics &&
-      this.props.projectFlag &&
-      this.props.environmentFlag
-    ) {
-      this.getFeatureUsage()
-    }
     if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
@@ -264,16 +258,6 @@ const CreateFlag = class extends Component {
       })
   }
 
-  getFeatureUsage = () => {
-    if (this.props.environmentFlag) {
-      AppActions.getFeatureUsage(
-        this.props.projectId,
-        this.props.environmentFlag.environment,
-        this.props.projectFlag.id,
-        this.state.period,
-      )
-    }
-  }
   save = (func, isSaving) => {
     const {
       environmentFlag,
@@ -877,7 +861,7 @@ const CreateFlag = class extends Component {
             }}
           >
             {(
-              { error, isSaving, usageData },
+              { error, isSaving },
               {
                 createChangeRequest,
                 createFlag,
@@ -1806,32 +1790,13 @@ const CreateFlag = class extends Component {
                                   )}
                                 {!Project.disableAnalytics && (
                                   <TabItem tabLabel={'Analytics'}>
-                                    <FormGroup className='mb-4'>
-                                      {!!usageData && (
-                                        <h5 className='mb-2'>
-                                          Flag events for last 30 days
-                                        </h5>
-                                      )}
-                                      {!usageData && (
-                                        <div className='text-center'>
-                                          <Loader />
-                                        </div>
-                                      )}
-
-                                      {this.drawChart(usageData)}
-                                    </FormGroup>
-                                    <InfoMessage>
-                                      The Flag Analytics data will be visible in
-                                      the Dashboard between 30 minutes and 1
-                                      hour after it has been collected.{' '}
-                                      <a
-                                        target='_blank'
-                                        href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                        rel='noreferrer'
-                                      >
-                                        View docs
-                                      </a>
-                                    </InfoMessage>
+                                    <FeatureAnalytics
+                                      projectId={`${project.id}`}
+                                      featureId={`${projectFlag.id}`}
+                                      defaultEnvironmentIds={[
+                                        `${environment.id}`,
+                                      ]}
+                                    />
                                   </TabItem>
                                 )}
                                 {Utils.getFlagsmithHasFeature(
