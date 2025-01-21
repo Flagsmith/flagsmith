@@ -656,6 +656,12 @@ const controller = {
                 }
               })
               prom.then(() => {
+                AppActions.getChangeRequests(environmentId, {})
+                AppActions.getChangeRequests(environmentId, { committed: true })
+                AppActions.getChangeRequests(environmentId, {
+                  live_from_after: new Date().toISOString(),
+                })
+
                 if (featureStateId) {
                   AppActions.getChangeRequest(
                     changeRequestData.id,
