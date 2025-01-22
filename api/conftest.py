@@ -471,7 +471,7 @@ def with_project_permissions(
 
 
 @pytest.fixture()
-def environment_v2_versioning(environment: Environment):
+def environment_v2_versioning(environment: Environment) -> Environment:
     enable_v2_versioning(environment.id)
     environment.refresh_from_db()
     return environment
