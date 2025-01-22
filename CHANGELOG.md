@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.160.1](https://github.com/Flagsmith/flagsmith/compare/v2.160.0...v2.160.1) (2025-01-22)
+
+
+### Bug Fixes
+
+* **ci:** Fix Dockerfile casing warnings ([#5031](https://github.com/Flagsmith/flagsmith/issues/5031)) ([29b7a90](https://github.com/Flagsmith/flagsmith/commit/29b7a9002367c18c74270baa6b226dfcc18b4549))
+* **migration-test:** add decorator to skip if not enabled ([#5024](https://github.com/Flagsmith/flagsmith/issues/5024)) ([33cabfc](https://github.com/Flagsmith/flagsmith/commit/33cabfc5a68f541cb999559951c0c4a0b2561c07))
+
+
+### Dependency Updates
+
+* Bump flagsmith-workflows to 2.7.6 ([#5027](https://github.com/Flagsmith/flagsmith/issues/5027)) ([638e97d](https://github.com/Flagsmith/flagsmith/commit/638e97d49469058d9b6d365853948ce47c8ff421))
+* update poetry ([#5019](https://github.com/Flagsmith/flagsmith/issues/5019)) ([9cbf058](https://github.com/Flagsmith/flagsmith/commit/9cbf058cb1d3da474b1a61fb1ef4b853c27bacd9))
+
 ## [2.160.0](https://github.com/Flagsmith/flagsmith/compare/v2.159.0...v2.160.0) (2025-01-20)
 
 
