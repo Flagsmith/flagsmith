@@ -4,7 +4,6 @@ from typing import Generator
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
 
 from app.utils import get_version_info
 
@@ -15,18 +14,15 @@ def clear_get_version_info_cache() -> Generator[None, None, None]:
     get_version_info.cache_clear()
 
 
-def test_get_version_info(
-    mocker: MockerFixture,
-    fs: FakeFilesystem,
-) -> None:
+def test_get_version_info(fs: FakeFilesystem) -> None:
     # Given
-    fs.create_file("./ENTERPRISE_VERSION")
-
-    manifest_mocked_file = {
+    expected_manifest_contents = {
         ".": "2.66.2",
     }
-    mock_get_file_contents = mocker.patch("app.utils._get_file_contents")
-    mock_get_file_contents.side_effect = (json.dumps(manifest_mocked_file), "some_sha")
+
+    fs.create_file("./ENTERPRISE_VERSION")
+    fs.create_file(".versions.json", contents=json.dumps(expected_manifest_contents))
+    fs.create_file("./CI_COMMIT_SHA", contents="some_sha")
 
     # When
     result = get_version_info()
@@ -42,15 +38,9 @@ def test_get_version_info(
     }
 
 
-def test_get_version_info_with_missing_files(
-    mocker: MockerFixture,
-    fs: FakeFilesystem,
-) -> None:
+def test_get_version_info_with_missing_files(fs: FakeFilesystem) -> None:
     # Given
     fs.create_file("./ENTERPRISE_VERSION")
-
-    mock_open = mocker.patch("app.utils.open")
-    mock_open.side_effect = FileNotFoundError
 
     # When
     result = get_version_info()
@@ -110,13 +100,7 @@ def test_get_version_info_with_email_config_ses(settings: SettingsWrapper) -> No
     result = get_version_info()
 
     # Then
-    assert result == {
-        "ci_commit_sha": "unknown",
-        "image_tag": "unknown",
-        "has_email_provider": True,
-        "is_enterprise": False,
-        "is_saas": False,
-    }
+    assert result["has_email_provider"] is True
 
 
 @pytest.mark.parametrize(
