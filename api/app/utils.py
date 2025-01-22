@@ -4,7 +4,6 @@ from functools import lru_cache
 from typing import TypedDict
 
 import shortuuid
-
 from django.conf import settings
 
 UNKNOWN = "unknown"
@@ -42,6 +41,7 @@ def has_email_provider() -> bool:
             return settings.AWS_SES_REGION_ENDPOINT is not None
         case _:
             return False
+
 
 @lru_cache
 def get_version_info() -> VersionInfo:
