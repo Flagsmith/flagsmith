@@ -3024,6 +3024,18 @@ files = [
 typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
+name = "pyfakefs"
+version = "5.7.4"
+description = "pyfakefs implements a fake file system that mocks the Python file system modules."
+optional = false
+python-versions = ">=3.7"
+groups = ["dev"]
+files = [
+    {file = "pyfakefs-5.7.4-py3-none-any.whl", hash = "sha256:3e763d700b91c54ade6388be2cfa4e521abc00e34f7defb84ee511c73031f45f"},
+    {file = "pyfakefs-5.7.4.tar.gz", hash = "sha256:4971e65cc80a93a1e6f1e3a4654909c0c493186539084dc9301da3d68c8878fe"},
+]
+
+[[package]]
 name = "pygithub"
 version = "2.1.1"
 description = "Use the full Github API v3"
@@ -4445,4 +4457,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11, <3.13"
-content-hash = "f84f3af64a1c29bc2abe064d3cf08ce75dfe1541d9dc8370a78e41183d09c2fc"
+content-hash = "1d3c289404e691bbe2c044d0794e81a46fc982104960f1edcfd8a07c2100c49e"
