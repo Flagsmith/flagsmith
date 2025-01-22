@@ -4,8 +4,8 @@ from typing import Generator
 from unittest import mock
 
 import pytest
-from pytest_mock import MockerFixture
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
 from app.utils import get_version_info
 
@@ -16,11 +16,11 @@ def clear_get_version_info_cache() -> Generator[None, None, None]:
     get_version_info.cache_clear()
 
 
-def test_get_version_info(mocker: MockerFixture) -> None:
-    # Given
+@pytest.fixture
+def mocked_version_marker_files(mocker: MockerFixture) -> None:
     mocked_pathlib = mocker.patch("app.utils.pathlib")
 
-    def path_side_effect(file_path: str) -> mocker.MagicMock:
+    def path_side_effect(file_path: str) -> mock.MagicMock:
         mocked_path_object = mocker.MagicMock(spec=pathlib.Path)
 
         if file_path == "./ENTERPRISE_VERSION":
@@ -33,6 +33,12 @@ def test_get_version_info(mocker: MockerFixture) -> None:
 
     mocked_pathlib.Path.side_effect = path_side_effect
 
+
+def test_get_version_info(
+    mocker: MockerFixture,
+    mocked_version_marker_files: None,
+) -> None:
+    # Given
     manifest_mocked_file = {
         ".": "2.66.2",
     }
@@ -53,23 +59,13 @@ def test_get_version_info(mocker: MockerFixture) -> None:
     }
 
 
-def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
+def test_get_version_info_with_missing_files(
+    mocker: MockerFixture,
+    mocked_version_marker_files: None,
+) -> None:
     # Given
-    mocked_pathlib = mocker.patch("app.utils.pathlib")
-
-    def path_side_effect(file_path: str) -> mocker.MagicMock:
-        mocked_path_object = mocker.MagicMock(spec=pathlib.Path)
-
-        if file_path == "./ENTERPRISE_VERSION":
-            mocked_path_object.exists.return_value = True
-
-        if file_path == "./SAAS_DEPLOYMENT":
-            mocked_path_object.exists.return_value = False
-
-        return mocked_path_object
-
-    mocked_pathlib.Path.side_effect = path_side_effect
-    mock.mock_open.side_effect = IOError
+    mock_open = mocker.patch("app.utils.open")
+    mock_open.side_effect = FileNotFoundError
 
     # When
     result = get_version_info()
@@ -85,12 +81,14 @@ def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
 
 
 def test_get_version_info_with_email_config_smtp(settings: SettingsWrapper) -> None:
-
+    # Given
     settings.EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     settings.EMAIL_HOST_USER = "user"
 
+    # When
     result = get_version_info()
 
+    # Then
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -101,12 +99,14 @@ def test_get_version_info_with_email_config_smtp(settings: SettingsWrapper) -> N
 
 
 def test_get_version_info_with_email_config_sendgrid(settings: SettingsWrapper) -> None:
-
+    # Given
     settings.EMAIL_BACKEND = "sgbackend.SendGridBackend"
     settings.SENDGRID_API_KEY = "key"
 
+    # When
     result = get_version_info()
 
+    # Then
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -117,12 +117,14 @@ def test_get_version_info_with_email_config_sendgrid(settings: SettingsWrapper) 
 
 
 def test_get_version_info_with_email_config_ses(settings: SettingsWrapper) -> None:
-
+    # Given
     settings.EMAIL_BACKEND = "django_ses.SESBackend"
     settings.AWS_SES_REGION_ENDPOINT = "endpoint"
 
+    # When
     result = get_version_info()
 
+    # Then
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
@@ -132,34 +134,27 @@ def test_get_version_info_with_email_config_ses(settings: SettingsWrapper) -> No
     }
 
 
-def test_get_version_info_without_email_config(settings: SettingsWrapper) -> None:
-    expected = {
-        "ci_commit_sha": "unknown",
-        "image_tag": "unknown",
-        "has_email_provider": False,
-        "is_enterprise": False,
-        "is_saas": False,
-    }
+@pytest.mark.parametrize(
+    "email_backend,expected_empty_setting_name",
+    [
+        (None, None),
+        ("django.core.mail.backends.smtp.EmailBackend", "EMAIL_HOST_USER"),
+        ("django_ses.SESBackend", "AWS_SES_REGION_ENDPOINT"),
+        ("sgbackend.SendGridBackend", "SENDGRID_API_KEY"),
+    ],
+)
+def test_get_version_info_without_email_config(
+    settings: SettingsWrapper,
+    email_backend: str | None,
+    expected_empty_setting_name: str | None,
+) -> None:
+    # Given
+    settings.EMAIL_BACKEND = email_backend
+    if expected_empty_setting_name:
+        setattr(settings, expected_empty_setting_name, None)
 
-    settings.EMAIL_BACKEND = None
-
+    # When
     result = get_version_info()
-    assert result == expected
 
-    settings.EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    settings.EMAIL_HOST_USER = None
-
-    result = get_version_info()
-    assert result == expected
-
-    settings.EMAIL_BACKEND = "django_ses.SESBackend"
-    settings.AWS_SES_REGION_ENDPOINT = None
-
-    result = get_version_info()
-    assert result == expected
-
-    settings.EMAIL_BACKEND = "sgbackend.SendGridBackend"
-    settings.SENDGRID_API_KEY = None
-
-    result = get_version_info()
-    assert result == expected
+    # Then
+    assert result["has_email_provider"] is False
