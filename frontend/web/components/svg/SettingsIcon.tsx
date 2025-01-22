@@ -1,9 +1,19 @@
 import React from 'react'
 
-function SettingsIcon({ fill = 'white', height = 24, width = 24 }) {
+interface SettingsIconProps {
+  fill?: string
+  height?: number
+  width?: number
+}
+
+const SettingsIcon: React.FC<SettingsIconProps> = ({
+  fill = 'white',
+  height = 24,
+  width = 24,
+}) => {
   return (
     <svg
-      width={width || '100%'}
+      width={width}
       height={height}
       viewBox='0 0 24 24'
       fill='none'

@@ -1,6 +1,10 @@
 import React from 'react'
 
-function PlayIcon({ className }) {
+interface PlayIconProps {
+  className?: string
+}
+
+const PlayIcon: React.FC<PlayIconProps> = ({ className }) => {
   return (
     <svg className={className} viewBox='0 0 315 315'>
       <path

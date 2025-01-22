@@ -1,6 +1,10 @@
 import React from 'react'
 
-function LogoutIcon({ className }) {
+interface LogoutIconProps {
+  className?: string
+}
+
+const LogoutIcon: React.FC<LogoutIconProps> = ({ className }) => {
   return (
     <svg className={className} width={18} height={14} viewBox='0 0 18 14'>
       <path
