@@ -926,7 +926,13 @@ def test_list_user_groups(
     group_2 = response_json["results"][1]
     group_2_users = group_2["users"]
     assert len(group_2_users) == 2
-    assert tuple((user["id"], user["group_admin"]) for user in group_2_users) == (
-        (user1.pk, False),
-        (user2.pk, True),
-    )
+
+    for user in group_2_users:
+        if user["id"] == user1.pk:
+            assert user["group_admin"] is False
+            continue
+        if user["id"] == user2.pk:
+            assert user["group_admin"] is True
+            continue
+        # We should only match the two users.
+        assert False
