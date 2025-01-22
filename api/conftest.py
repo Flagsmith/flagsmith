@@ -478,7 +478,7 @@ def environment_v2_versioning(environment: Environment):
 
 
 @pytest.fixture()
-def identity(environment: Environment):
+def identity(environment: Environment) -> Identity:
     return Identity.objects.create(identifier="test_identity", environment=environment)
 
 
