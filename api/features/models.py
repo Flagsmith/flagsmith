@@ -533,6 +533,14 @@ class FeatureState(
 
         if self.type == other.type:
             if self.environment.use_v2_feature_versioning:
+                if (
+                    self.environment_feature_version is None
+                    or other.environment_feature_version is None
+                ):
+                    raise ValueError(
+                        "Cannot compare feature states as they are missing environment_feature_version."
+                    )
+
                 return (
                     self.environment_feature_version > other.environment_feature_version
                 )

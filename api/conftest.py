@@ -471,14 +471,14 @@ def with_project_permissions(
 
 
 @pytest.fixture()
-def environment_v2_versioning(environment):
+def environment_v2_versioning(environment: Environment) -> Environment:
     enable_v2_versioning(environment.id)
     environment.refresh_from_db()
     return environment
 
 
 @pytest.fixture()
-def identity(environment):
+def identity(environment: Environment) -> Identity:
     return Identity.objects.create(identifier="test_identity", environment=environment)
 
 
