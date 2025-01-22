@@ -1,6 +1,10 @@
 import React from 'react'
 
-function CaretRightIcon({ className }) {
+interface CaretRightIconProps {
+  className?: string
+}
+
+const CaretRightIcon: React.FC<CaretRightIconProps> = ({ className }) => {
   return (
     <svg className={className} width={9} height={10} viewBox='0 0 9 10'>
       <path

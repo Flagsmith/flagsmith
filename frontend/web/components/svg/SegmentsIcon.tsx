@@ -1,6 +1,18 @@
 import React from 'react'
 
-function SegmentsIcon({ className, fill = '#FFF', height, width }) {
+interface SegmentsIconProps {
+  className?: string
+  fill?: string
+  height?: number | string
+  width?: number | string
+}
+
+const SegmentsIcon: React.FC<SegmentsIconProps> = ({
+  className,
+  fill = '#FFF',
+  height,
+  width,
+}) => {
   return (
     <svg
       width={width}

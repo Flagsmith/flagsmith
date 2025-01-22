@@ -1,6 +1,10 @@
 import React from 'react'
 
-function CaretDownIcon({ className }) {
+interface CaretDownIconProps {
+  className?: string
+}
+
+const CaretDownIcon: React.FC<CaretDownIconProps> = ({ className }) => {
   return (
     <div style={{ paddingRight: 2 }}>
       <svg

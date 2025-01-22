@@ -1,10 +1,20 @@
 import React from 'react'
 
-function DocumentationIcon({ className, height, width }) {
+type DocumentationIconProps = {
+  className?: string
+  height?: string | number
+  width?: string | number
+}
+
+const DocumentationIcon: React.FC<DocumentationIconProps> = ({
+  className,
+  height,
+  width = '100%',
+}) => {
   return (
     <svg
       className={className}
-      width={width || '100%'}
+      width={width}
       height={height}
       viewBox='0 0 16 21'
     >

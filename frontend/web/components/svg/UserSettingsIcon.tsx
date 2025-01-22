@@ -1,6 +1,16 @@
 import React from 'react'
 
-function UserSettingsIcon({ className, height, width }) {
+interface UserSettingsIconProps {
+  className?: string
+  height?: string | number
+  width?: string | number
+}
+
+const UserSettingsIcon: React.FC<UserSettingsIconProps> = ({
+  className,
+  height,
+  width,
+}) => {
   return (
     <svg
       className={className}

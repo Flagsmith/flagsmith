@@ -1,6 +1,12 @@
 import React from 'react'
 
-function EnvironmentSettingsIcon({ className }) {
+interface EnvironmentSettingsIconProps {
+  className?: string
+}
+
+const EnvironmentSettingsIcon: React.FC<EnvironmentSettingsIconProps> = ({
+  className,
+}) => {
   return (
     <svg className={className} viewBox='0 0 26 21'>
       <path

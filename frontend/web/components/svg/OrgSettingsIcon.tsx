@@ -1,10 +1,22 @@
-import React from 'react'
+import React, { FC } from 'react'
 
-function OrgSettingsIcon({ className, fill, height, width }) {
+interface OrgSettingsIconProps {
+  className?: string
+  fill?: string
+  height?: string | number
+  width?: string | number
+}
+
+const OrgSettingsIcon: FC<OrgSettingsIconProps> = ({
+  className,
+  fill,
+  height,
+  width = '100%',
+}) => {
   return (
     <svg
       className={className}
-      width={width || '100%'}
+      width={width}
       height={height}
       viewBox='0 0 26 18'
     >
