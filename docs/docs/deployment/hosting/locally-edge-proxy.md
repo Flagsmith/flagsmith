@@ -4,11 +4,10 @@ title: Edge Proxy
 sidebar_position: 25
 ---
 
-## Running
-
-The Edge Proxy runs as a [Docker container](https://hub.docker.com/repository/docker/flagsmith/edge-proxy) with no
-external dependencies. It connects to the Flagsmith API to download environment documents, and your Flagsmith client
-applications connect to it using [remote flag evaluation](/clients/#remote-evaluation).
+The [Edge Proxy](/advanced-use/edge-proxy) runs as a
+[Docker container](https://hub.docker.com/repository/docker/flagsmith/edge-proxy) with no external dependencies.
+It connects to the Flagsmith API to download environment documents, and your Flagsmith client applications connect to it
+using [remote flag evaluation](/clients/#remote-evaluation).
 
 The examples below assume you have a configuration file located at `./config.json`. Your Flagsmith client applications
 can then consume the Edge Proxy by setting their API URL to `http://localhost:8000/api/v1/`.
@@ -47,7 +46,7 @@ The Edge Proxy can be configured with any combination of:
 
 Environment variables take priority over their corresponding options defined in the configuration file.
 
-Environment variables are case-insensitive, and are processed using
+Environment variable names are case-insensitive, and are processed using
 [Pydantic](https://docs.pydantic.dev/2.7/concepts/pydantic_settings/#environment-variable-names).
 
 ### Example configuration
@@ -64,7 +63,7 @@ Environment variables are case-insensitive, and are processed using
    "client_side_key": "your_client_side_key_1"
   }
  ],
- "api_poll_frequency": 5,
+ "api_poll_frequency_seconds": 5,
  "logging": {
   "log_level": "DEBUG",
   "log_format": "json"
@@ -80,13 +79,13 @@ Environment variables are case-insensitive, and are processed using
 
 ```ruby
 ENVIRONMENT_KEY_PAIRS='[{"server_side_key":"ser.your_server_side_key_1","client_side_key":"your_client_side_key_1"}]'
-API_POLL_FREQUENCY=5
+API_POLL_FREQUENCY_SECONDS=5
 LOGGING='{"log_level":"DEBUG","log_format":"json"}'
 ```
 
 </details>
 
-### Basic Settings
+### Basic settings
 
 #### `environment_key_pairs`
 
@@ -108,20 +107,20 @@ If you are self-hosting Flagsmith, set this to your API URL:
 "api_url": "https://flagsmith.example.com/api/v1"
 ```
 
-#### `api_poll_frequency`
+#### `api_poll_frequency_seconds`
 
 How often to poll the Flagsmith API for changes, in seconds. Defaults to 10.
 
 ```json
-"api_poll_frequency": 30
+"api_poll_frequency_seconds": 30
 ```
 
-#### `api_poll_timeout`
+#### `api_poll_timeout_seconds`
 
 The request timeout when trying to retrieve new changes, in seconds. Defaults to 5.
 
 ```json
-"api_poll_timeout": 1
+"api_poll_timeout_seconds": 1
 ```
 
 #### `allow_origins`
@@ -132,7 +131,7 @@ Set a value for the `Access-Control-Allow-Origin` header. Defaults to `*`.
 "allow_origins": "https://my-flagsmith.domain.com"
 ```
 
-### Endpoint Caches
+### Endpoint caches
 
 #### `endpoint_caches`
 
@@ -246,7 +245,7 @@ Or, log access logs to file in generic format while logging everything else to s
 When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
 specified by the [`"logging.log_format"`](#logginglog_format) setting.
 
-### Health Check
+### Health check
 
 The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
 fetch all its configured environment documents. If any environment document could not be fetched during a configurable
@@ -277,22 +276,13 @@ if last_updated_all_environments_at < datetime.now() - timedelta(seconds=total_g
 return 200
 ```
 
-### Environment Variables
+### Environment variables
 
-You can configure the Edge Proxy with the following environment variables:
+Some Edge Proxy settings can only be set using environment variables:
 
-- `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`. Set to the number of
-  available CPU cores.
+- `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`, which is 
+  [recommended when running multiple Edge Proxy containers behind a load balancer](https://fastapi.tiangolo.com/deployment/docker/#one-load-balancer-multiple-worker-containers).
+  If running on a single node, set this [based on your number of CPU cores and threads](https://docs.gunicorn.org/en/latest/design.html#how-many-workers).
 - `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: These variables let you configure an HTTP proxy that the
   Edge Proxy should use for all its outgoing HTTP requests.
   [Learn more](https://www.python-httpx.org/environment_variables)
-
-## Architecture
-
-The standard Flagsmith architecture:
-
-![Image](/img/edge-proxy-existing.svg)
-
-With the proxy added to the mix:
-
-![Image](/img/edge-proxy-proxy.svg)
