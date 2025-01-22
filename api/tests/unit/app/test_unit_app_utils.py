@@ -1,9 +1,8 @@
 import json
-import pathlib
 from typing import Generator
-from unittest import mock
 
 import pytest
+from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -16,29 +15,13 @@ def clear_get_version_info_cache() -> Generator[None, None, None]:
     get_version_info.cache_clear()
 
 
-@pytest.fixture
-def mocked_version_marker_files(mocker: MockerFixture) -> None:
-    mocked_pathlib = mocker.patch("app.utils.pathlib")
-
-    def path_side_effect(file_path: str) -> mock.MagicMock:
-        mocked_path_object = mocker.MagicMock(spec=pathlib.Path)
-
-        if file_path == "./ENTERPRISE_VERSION":
-            mocked_path_object.exists.return_value = True
-
-        if file_path == "./SAAS_DEPLOYMENT":
-            mocked_path_object.exists.return_value = False
-
-        return mocked_path_object
-
-    mocked_pathlib.Path.side_effect = path_side_effect
-
-
 def test_get_version_info(
     mocker: MockerFixture,
-    mocked_version_marker_files: None,
+    fs: FakeFilesystem,
 ) -> None:
     # Given
+    fs.create_file("./ENTERPRISE_VERSION")
+
     manifest_mocked_file = {
         ".": "2.66.2",
     }
@@ -61,9 +44,11 @@ def test_get_version_info(
 
 def test_get_version_info_with_missing_files(
     mocker: MockerFixture,
-    mocked_version_marker_files: None,
+    fs: FakeFilesystem,
 ) -> None:
     # Given
+    fs.create_file("./ENTERPRISE_VERSION")
+
     mock_open = mocker.patch("app.utils.open")
     mock_open.side_effect = FileNotFoundError
 
