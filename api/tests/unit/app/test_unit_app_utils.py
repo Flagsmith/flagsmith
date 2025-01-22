@@ -1,17 +1,10 @@
 import json
-from typing import Generator
 
 import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
 
 from app.utils import get_version_info
-
-
-@pytest.fixture(autouse=True)
-def clear_get_version_info_cache() -> Generator[None, None, None]:
-    yield
-    get_version_info.cache_clear()
 
 
 def test_get_version_info(fs: FakeFilesystem) -> None:
