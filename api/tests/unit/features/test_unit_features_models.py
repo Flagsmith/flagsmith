@@ -367,6 +367,36 @@ def test_feature_state_gt_operator_order(
     assert segment_2_state > default_env_state
 
 
+def test_feature_state_gt_operator_order_when_environment_feature_version_is_none(
+    identity: Identity,
+    feature: Feature,
+    feature_state: FeatureState,
+    environment: Environment,
+    environment_v2_versioning: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state2 = FeatureState.objects.create(
+        identity=identity, feature=feature, environment=environment
+    )
+    mocker.patch.object(
+        FeatureState,
+        "type",
+        new_callable=mocker.PropertyMock,
+        return_value="ENVIRONMENT",
+    )
+
+    # When
+    with pytest.raises(ValueError) as exception:
+        assert feature_state > feature_state2
+
+    # Then
+    assert (
+        exception.value.args[0]
+        == "Cannot compare feature states as they are missing environment_feature_version."
+    )
+
+
 def test_feature_state_gt_operator_throws_value_error_if_different_environments(
     project: Project,
     environment: Environment,
