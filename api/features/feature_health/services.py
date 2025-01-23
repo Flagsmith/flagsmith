@@ -13,7 +13,6 @@ from features.feature_health.models import (
     FeatureHealthEvent,
     FeatureHealthEventType,
     FeatureHealthProvider,
-    FeatureHealthProviderType,
 )
 from features.feature_health.providers import sample
 from projects.tags.models import Tag, TagType
@@ -50,11 +49,11 @@ def get_provider_from_webhook_path(path: str) -> FeatureHealthProvider | None:
 def get_provider_response(
     provider: FeatureHealthProvider, payload: str
 ) -> "FeatureHealthProviderResponse | None":
-    if provider.type == FeatureHealthProviderType.SAMPLE.value:
+    if provider.name == FeatureHealthProvider.SAMPLE.value:
         return sample.map_payload_to_provider_response(payload)
     logger.error(
-        "invalid-provider-type-requested",
-        provider_type=provider.type,
+        "invalid-provider-requested",
+        provider_name=provider.name,
         provider_id=provider.uuid,
     )
     return None
@@ -79,8 +78,8 @@ def create_feature_health_event_from_webhook(
                 return FeatureHealthEvent.objects.create(
                     feature=feature,
                     environment=environment,
-                    type=response.event_type,
                     provider_name=provider.name,
+                    type=response.event_type,
                     reason=response.reason,
                 )
     return None

@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
-class FeatureHealthProviderType(models.Choices):
+class FeatureHealthProviderName(models.Choices):
     SAMPLE = "Sample"
     GRAFANA = "Grafana"
 
@@ -37,7 +37,7 @@ class FeatureHealthProvider(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
-    type = models.CharField(max_length=50, choices=FeatureHealthProviderType.choices)
+    name = models.CharField(max_length=50, choices=FeatureHealthProviderName.choices)
     project = models.ForeignKey("projects.Project", on_delete=models.CASCADE)
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
 

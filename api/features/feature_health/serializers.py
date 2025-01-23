@@ -3,7 +3,7 @@ from rest_framework import serializers
 from features.feature_health.models import (
     FeatureHealthEvent,
     FeatureHealthProvider,
-    FeatureHealthProviderType,
+    FeatureHealthProviderName,
 )
 from features.feature_health.services import get_webhook_path_from_provider
 
@@ -15,6 +15,7 @@ class FeatureHealthEventSerializer(serializers.ModelSerializer):
             "created_at",
             "environment",
             "feature",
+            "provider_name",
             "reason",
             "type",
         )
@@ -33,11 +34,11 @@ class FeatureHealthProviderSerializer(serializers.ModelSerializer):
         model = FeatureHealthProvider
         fields = (
             "created_by",
+            "name",
             "project",
-            "type",
             "webhook_url",
         )
 
 
 class CreateFeatureHealthProviderSerializer(serializers.Serializer):
-    type = serializers.ChoiceField(choices=FeatureHealthProviderType.choices)
+    name = serializers.ChoiceField(choices=FeatureHealthProviderName.choices)

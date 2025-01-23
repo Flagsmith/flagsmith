@@ -82,7 +82,7 @@ class FeatureHealthProviderViewSet(
 
         instance = self.model_class.objects.create(
             project=project,
-            type=request_serializer.validated_data["type"],
+            name=request_serializer.validated_data["name"],
             created_by=self.request.user,
         )
 
@@ -100,7 +100,6 @@ class FeatureHealthProviderViewSet(
 def feature_health_webhook(request: Request, **kwargs: typing.Any) -> Response:
     path = kwargs["path"]
     payload = request.body.decode("utf-8")
-    instance = create_feature_health_event_from_webhook(path=path, payload=payload)
-    if instance:
+    if create_feature_health_event_from_webhook(path=path, payload=payload):
         return Response(status=status.HTTP_200_OK)
     return Response(status=status.HTTP_404_NOT_FOUND)
