@@ -20,7 +20,7 @@ def map_sample_event_status_to_feature_health_event_type(
 
 def map_payload_to_provider_response(
     payload: str,
-) -> FeatureHealthProviderResponse | None:
+) -> FeatureHealthProviderResponse:
     event_data: SampleEvent = json.loads(payload)
 
     return FeatureHealthProviderResponse(
