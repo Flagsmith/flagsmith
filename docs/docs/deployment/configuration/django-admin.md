@@ -6,7 +6,7 @@ sidebar_position: 100
 
 # Django Admin
 
-The Flagsmith API is a Django application. As such, certain administrative tasks can be performed with
+The Flagsmith API is a Django application. As such, certain administrative tasks can be performed using
 [Django's built-in admin interface](https://docs.djangoproject.com/en/4.2/ref/contrib/admin/), which we refer to as
 Django Admin.
 
