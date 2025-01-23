@@ -1,5 +1,46 @@
 # Changelog
 
+## [2.160.1](https://github.com/Flagsmith/flagsmith/compare/v2.160.0...v2.160.1) (2025-01-22)
+
+
+### Bug Fixes
+
+* **ci:** Fix Dockerfile casing warnings ([#5031](https://github.com/Flagsmith/flagsmith/issues/5031)) ([29b7a90](https://github.com/Flagsmith/flagsmith/commit/29b7a9002367c18c74270baa6b226dfcc18b4549))
+* **migration-test:** add decorator to skip if not enabled ([#5024](https://github.com/Flagsmith/flagsmith/issues/5024)) ([33cabfc](https://github.com/Flagsmith/flagsmith/commit/33cabfc5a68f541cb999559951c0c4a0b2561c07))
+
+
+### Dependency Updates
+
+* Bump flagsmith-workflows to 2.7.6 ([#5027](https://github.com/Flagsmith/flagsmith/issues/5027)) ([638e97d](https://github.com/Flagsmith/flagsmith/commit/638e97d49469058d9b6d365853948ce47c8ff421))
+* update poetry ([#5019](https://github.com/Flagsmith/flagsmith/issues/5019)) ([9cbf058](https://github.com/Flagsmith/flagsmith/commit/9cbf058cb1d3da474b1a61fb1ef4b853c27bacd9))
+
+## [2.160.0](https://github.com/Flagsmith/flagsmith/compare/v2.159.0...v2.160.0) (2025-01-20)
+
+
+### Features
+
+* Adds Licensing upload tab ([#4934](https://github.com/Flagsmith/flagsmith/issues/4934)) ([5e1c1be](https://github.com/Flagsmith/flagsmith/commit/5e1c1be60304385f578dc538c31ad0877cf3ff1c))
+* Improves segment rule value validation and feedback ([#4975](https://github.com/Flagsmith/flagsmith/issues/4975)) ([8db1a3d](https://github.com/Flagsmith/flagsmith/commit/8db1a3d98908c65267cf44081a4e9df5a8a0c2e1))
+
+
+### Bug Fixes
+
+* `POST /identities` incorrectly applies segment overrides when using null or empty identifier, only in Core API ([#5018](https://github.com/Flagsmith/flagsmith/issues/5018)) ([3557e14](https://github.com/Flagsmith/flagsmith/commit/3557e1480ae8cbc7f4e60492fba87b4328a39fd1))
+* Action dropdown not properly overflowing ([#5000](https://github.com/Flagsmith/flagsmith/issues/5000)) ([5fc9fef](https://github.com/Flagsmith/flagsmith/commit/5fc9fefbcb84f1227b80cd890c974a0669af1774))
+* Adds force-2fa to startup plan ([#4994](https://github.com/Flagsmith/flagsmith/issues/4994)) ([d0e2f76](https://github.com/Flagsmith/flagsmith/commit/d0e2f760cd47f70512f7ba73e15167aef411dcc4))
+* Don't display password managers on irrelevant input fields ([#5004](https://github.com/Flagsmith/flagsmith/issues/5004)) ([c04eb95](https://github.com/Flagsmith/flagsmith/commit/c04eb95101c8baf366e3a39cad6404e9fbacc3a0))
+* Remove AWS IMDS endpoint request on API startup ([#5008](https://github.com/Flagsmith/flagsmith/issues/5008)) ([2e79ff4](https://github.com/Flagsmith/flagsmith/commit/2e79ff4b5f26a5537758011e2cbda8af2cfc4d97))
+* role permissions ([#4996](https://github.com/Flagsmith/flagsmith/issues/4996)) ([4a90cf6](https://github.com/Flagsmith/flagsmith/commit/4a90cf6b576962e6d6b66326e86aa5f1a3c3cb91))
+* Set logger for skipping API usage ([#5003](https://github.com/Flagsmith/flagsmith/issues/5003)) ([3c49ae0](https://github.com/Flagsmith/flagsmith/commit/3c49ae06c3fcb151d920cb3222cd3a4de6b5cdc7))
+* Use "Flagsmith" as default TOTP issuer ([#4992](https://github.com/Flagsmith/flagsmith/issues/4992)) ([0681988](https://github.com/Flagsmith/flagsmith/commit/0681988d33a38c885a63eb1eaca1bd4ddcff567f))
+
+
+### Dependency Updates
+
+* bump django from 4.2.17 to 4.2.18 in /api ([#5012](https://github.com/Flagsmith/flagsmith/issues/5012)) ([3ac455d](https://github.com/Flagsmith/flagsmith/commit/3ac455d5cab524a09083b8126379f6cc868b535d))
+* bump katex from 0.16.11 to 0.16.21 in /docs ([#5015](https://github.com/Flagsmith/flagsmith/issues/5015)) ([fc437d5](https://github.com/Flagsmith/flagsmith/commit/fc437d5905db87d12fd500e63d01f84309adac57))
+* bump task-processor ([#4995](https://github.com/Flagsmith/flagsmith/issues/4995)) ([a122146](https://github.com/Flagsmith/flagsmith/commit/a1221468f9debd103e8d9039b32d2dd0acafdc05))
+
 ## [2.159.0](https://github.com/Flagsmith/flagsmith/compare/v2.158.0...v2.159.0) (2025-01-13)
 
 
