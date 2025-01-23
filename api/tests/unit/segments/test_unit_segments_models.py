@@ -1,7 +1,11 @@
 from unittest.mock import PropertyMock
 
 import pytest
-from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
+from flag_engine.segments.constants import (
+    EQUAL,
+    GREATER_THAN,
+    PERCENTAGE_SPLIT,
+)
 from pytest_mock import MockerFixture
 
 from features.models import Feature
@@ -487,15 +491,23 @@ def test_saving_condition_with_version_of_set(segment: Segment) -> None:
     assert condition2.version_of == condition1
 
 
-def test_assign_matching_rules_to_segment_simple(project: Project) -> None:
+def test_assign_matching_rules_to_segment_with_two_levels_of_rules_and_two_conditions(
+    project: Project,
+) -> None:
     # Given
+    # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create two parent rules, both with the same type and then two
+    # matching subrules, both with matching types as well.
     rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
     rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
     rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
+    # Finally we create the conditions associated with the subrules with different
+    # values set between them and a missing description on the second condition.
     condition1 = Condition.objects.create(
         operator=PERCENTAGE_SPLIT, value=0.1, rule=rule3, description="SomeDescription"
     )
@@ -512,6 +524,10 @@ def test_assign_matching_rules_to_segment_simple(project: Project) -> None:
     rule4.refresh_from_db()
     condition1.refresh_from_db()
     condition2.refresh_from_db()
+
+    # Now we see that the rules and conditions match for the segment that was
+    # assigned to, since the condition matching logic allowed the rules to match
+    # as well.
     assert rule1.version_of == rule2
     assert rule2.version_of is None
     assert rule3.version_of == rule4
@@ -524,19 +540,35 @@ def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
     project: Project,
 ) -> None:
     # Given
+    # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create two parent rules, both with the same type and then two
+    # matching subrules, both with matching types as well.
     rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
     rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
     rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
+    # Finally we create conditions that have matching property names with
+    # mismatched operators so the frontend will be able to diff even when
+    # a condition's operator is different.
     condition1 = Condition.objects.create(
-        operator=EQUAL, value=0.1, rule=rule3, description="SomeDescription"
+        property="scale",
+        operator=EQUAL,
+        value=0.1,
+        rule=rule3,
+        description="Setting scale to equal",
     )
     condition2 = Condition.objects.create(
-        operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
+        property="scale",
+        operator=GREATER_THAN,
+        value=0.2,
+        rule=rule4,
+        description="Setting scale to greater than",
     )
+
     # When
     segment1.assign_matching_rules_to_segment(segment2)
 
@@ -547,11 +579,13 @@ def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
     rule4.refresh_from_db()
     condition1.refresh_from_db()
     condition2.refresh_from_db()
-    assert rule1.version_of is None
+    # The parent rule and subrule of the target segment match
+    assert rule1.version_of == rule2
     assert rule2.version_of is None
-    assert rule3.version_of is None
+    assert rule3.version_of == rule4
     assert rule4.version_of is None
-    assert condition1.version_of is None
+    # The condition with the mismatched operator matches.
+    assert condition1.version_of == condition2
     assert condition2.version_of is None
 
 
@@ -559,13 +593,18 @@ def test_assign_matching_rules_to_segment_mismatched_rule_type(
     project: Project,
 ) -> None:
     # Given
+    # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create parent rules with mismatched types with subrules with
+    # matching subrule types.
     rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.NONE_RULE)
     rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
     rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
+    # We next create matching conditions.
     condition1 = Condition.objects.create(
         operator=PERCENTAGE_SPLIT, value=0.1, rule=rule3, description="SomeDescription"
     )
@@ -582,6 +621,8 @@ def test_assign_matching_rules_to_segment_mismatched_rule_type(
     rule4.refresh_from_db()
     condition1.refresh_from_db()
     condition2.refresh_from_db()
+    # Note that none of the rules or conditions matched because the parent rule
+    # had a mismatched type so the entire collection is skipped.
     assert rule1.version_of is None
     assert rule2.version_of is None
     assert rule3.version_of is None
@@ -594,13 +635,18 @@ def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
     project: Project,
 ) -> None:
     # Given
+    # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create matching parent rules (based on type) and mismatched
+    # subrules which have different types.
     rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
     rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.NONE_RULE)
     rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
+    # Finally we create matching conditions.
     condition1 = Condition.objects.create(
         operator=PERCENTAGE_SPLIT, value=0.1, rule=rule3, description="SomeDescription"
     )
@@ -617,6 +663,8 @@ def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
     rule4.refresh_from_db()
     condition1.refresh_from_db()
     condition2.refresh_from_db()
+    # See that since the subrules didn't match none of the collection is
+    # assigned to be a version_of.
     assert rule1.version_of is None
     assert rule2.version_of is None
     assert rule3.version_of is None
@@ -627,19 +675,26 @@ def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
 
 def test_assign_matching_rules_to_segment_multiple_sub_rules(project: Project) -> None:
     # Given
+    # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create two parent rules for each segment.
     rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule3 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
     rule4 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
 
+    # We assign two rules to the first parent rule.
     rule5 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
     rule6 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
 
+    # We assign two rules to the second parent rule.
     rule7 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
     rule8 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
+    # We assign one rule to the third parent rule and two rules to the fourth
+    # parent rule.
     rule9 = SegmentRule.objects.create(rule=rule3, type=SegmentRule.ALL_RULE)
     rule10 = SegmentRule.objects.create(rule=rule4, type=SegmentRule.ALL_RULE)
     rule11 = SegmentRule.objects.create(rule=rule4, type=SegmentRule.ALL_RULE)
@@ -658,10 +713,16 @@ def test_assign_matching_rules_to_segment_multiple_sub_rules(project: Project) -
     rule8.refresh_from_db()
     rule9.refresh_from_db()
     rule10.refresh_from_db()
+
+    # First we verify that the two parent rules match each other.
     assert rule1.version_of == rule3
     assert rule2.version_of == rule4
+
+    # Next we verify that the non-targeted parent rules are not assigned.
     assert rule3.version_of is None
     assert rule4.version_of is None
+
+    # Lastly we verify that our subrules are assigned to their proper targets.
     assert rule5.version_of == rule9
     assert rule6.version_of is None
     assert rule7.version_of == rule10
@@ -675,14 +736,17 @@ def test_assign_matching_rules_to_segment_with_multiple_conditions(
     project: Project,
 ) -> None:
     # Given
+    # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
     segment2 = Segment.objects.create(name="Segment2", project=project)
 
+    # Next we create the parent rules for the segments and each with one subrule.
     rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
     rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
     rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
+    # Lastly we create two sets of conditions per subrule with matching conditions.
     condition1 = Condition.objects.create(
         operator=PERCENTAGE_SPLIT, value=0.1, rule=rule3, description="SomeDescription"
     )
@@ -708,11 +772,70 @@ def test_assign_matching_rules_to_segment_with_multiple_conditions(
     condition3.refresh_from_db()
     condition4.refresh_from_db()
 
+    # Now the parent rule (rule1) is set to the other parent rule and the
+    # subrule (rule3) is set to the other subrule with both conditions
+    # set to their matching conditions from the other subrule.
     assert rule1.version_of == rule2
     assert rule2.version_of is None
     assert rule3.version_of == rule4
     assert rule4.version_of is None
     assert condition1.version_of == condition3
     assert condition2.version_of == condition4
+    assert condition3.version_of is None
+    assert condition4.version_of is None
+
+
+def test_assign_matching_rules_to_segment_with_exact_condition_match(
+    project: Project,
+) -> None:
+    # Given
+    # First we create our two segments, one that will be assign from the other.
+    segment1 = Segment.objects.create(name="Segment1", project=project)
+    segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create the parent rules for the segments and each with one subrule.
+    rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
+    rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
+    rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
+    rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
+
+    # Lastly we create a number of conditions to attempt matching to, with an exact
+    # matching condition present.
+    condition1 = Condition.objects.create(
+        operator=PERCENTAGE_SPLIT,
+        value=0.1,
+        rule=rule3,
+    )
+    condition2 = Condition.objects.create(
+        operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
+    )
+    condition3 = Condition.objects.create(
+        operator=PERCENTAGE_SPLIT, value=0.1, rule=rule4
+    )
+    condition4 = Condition.objects.create(
+        operator=PERCENTAGE_SPLIT, value=0.4, rule=rule4
+    )
+    # When
+    segment1.assign_matching_rules_to_segment(segment2)
+
+    # Then
+    rule1.refresh_from_db()
+    rule2.refresh_from_db()
+    rule3.refresh_from_db()
+    rule4.refresh_from_db()
+    condition1.refresh_from_db()
+    condition2.refresh_from_db()
+    condition3.refresh_from_db()
+    condition4.refresh_from_db()
+
+    # Now the parent rule (rule1) is set to the other parent rule and the
+    # subrule (rule3) is set to the other subrule with the exact
+    # matching conditions being set.
+    assert rule1.version_of == rule2
+    assert rule2.version_of is None
+    assert rule3.version_of == rule4
+    assert rule4.version_of is None
+    assert condition1.version_of == condition3
+    assert condition2.version_of is None
     assert condition3.version_of is None
     assert condition4.version_of is None
