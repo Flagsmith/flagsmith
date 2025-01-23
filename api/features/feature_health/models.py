@@ -80,8 +80,8 @@ class FeatureHealthEventManager(models.Manager):
     ) -> "models.QuerySet[FeatureHealthEvent]":
         return (
             self.filter(feature__project=project)
-            .order_by("provider_name", "feature", "-created_at")
-            .distinct("provider_name", "feature")
+            .order_by("provider_name", "feature_id", "-created_at")
+            .distinct("provider_name", "feature_id")
         )
 
 
