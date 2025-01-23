@@ -42,19 +42,19 @@ class FeatureHealthProvider(
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("type", "project")
+        unique_together = ("name", "project")
 
     def get_create_log_message(
         self,
         history_instance: "FeatureHealthProvider",
     ) -> str | None:
-        return FEATURE_HEALTH_PROVIDER_CREATED_MESSAGE % (self.type, self.project.name)
+        return FEATURE_HEALTH_PROVIDER_CREATED_MESSAGE % (self.name, self.project.name)
 
     def get_delete_log_message(
         self,
         history_instance: "FeatureHealthProvider",
     ) -> str | None:
-        return FEATURE_HEALTH_PROVIDER_DELETED_MESSAGE % (self.type, self.project.name)
+        return FEATURE_HEALTH_PROVIDER_DELETED_MESSAGE % (self.name, self.project.name)
 
     def get_audit_log_author(
         self,

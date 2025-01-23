@@ -11,7 +11,7 @@ from features.feature_health.services import get_webhook_path_from_provider
 class FeatureHealthProviderAdmin(admin.ModelAdmin):
     list_display = (
         "project",
-        "type",
+        "name",
         "created_by",
         "webhook_url",
     )

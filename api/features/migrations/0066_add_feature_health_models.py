@@ -264,7 +264,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "unique_together": {("type", "project")},
+                "unique_together": {("name", "project")},
             },
         ),
     ]
