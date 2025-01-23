@@ -243,19 +243,35 @@ class Segment(
 
         for rule in segment.rules.all():
             for sub_rule in rule.rules.all():
+
+                # Set a bool flag to be used to break out of the
+                # below self_rules iteration if a sub_rule matches.
                 sub_rule_matched = False
                 for self_rule in self_rules:
                     if sub_rule_matched:
                         break
 
+                    # If a self_rule has already been matched then
+                    # the only time we care about it is when we
+                    # further iterate on the the same sub_rules
+                    # that are present in the matching parent rule.
                     if self_rule in matched_rules and self_rule.version_of != rule:
                         continue
 
+                    # To eliminate false matches we force the types
+                    # to be the same for the rules.
                     if rule.type != self_rule.type:
                         continue
+
                     for self_sub_rule in self_rule.rules.all():
+                        # If a subrule has already been matched,
+                        # we avoid assigning conditions since it
+                        # has already been handled.
                         if self_sub_rule in matched_sub_rules:
                             continue
+
+                        # If a subrule matches, we assign the parent
+                        # rule and the subrule together.
                         if self_sub_rule.assign_conditions_if_matching_rule(sub_rule):
                             self_sub_rule.version_of = sub_rule
                             sub_rule_matched = True
@@ -263,6 +279,7 @@ class Segment(
                             self_rule.version_of = rule
                             matched_rules.add(self_rule)
                             break
+
         SegmentRule.objects.bulk_update(
             matched_rules | matched_sub_rules, fields=["version_of"]
         )
@@ -338,7 +355,9 @@ class SegmentRule(SoftDeleteExportableModel):
             rule = rule.rule
         return rule.segment
 
-    def assign_conditions_if_matching_rule(self, rule: "SegmentRule") -> bool:
+    def assign_conditions_if_matching_rule(  # noqa: C901
+        self, rule: "SegmentRule"
+    ) -> bool:
         """
         Determines whether the current object matches the given rule
         and assigns conditions with the `version_of` field.
@@ -361,7 +380,10 @@ class SegmentRule(SoftDeleteExportableModel):
             1. If the types do not match, return `False`.
             2. If both the rule and current object have no conditions, return `True`.
             3. Compare each condition in the rule against the current object's conditions:
-               - A condition matches if both `operator` and `property` are equal.
+               - First match conditions that are an exact match of property, operator,
+                 and value.
+               - A condition matches if the `property` attributes are equal or if there
+                 is no property but has a matching operator.
                - Mark matched conditions and update the versioning.
             4. Return `True` if at least one condition matches; otherwise, return `False`.
 
@@ -381,21 +403,49 @@ class SegmentRule(SoftDeleteExportableModel):
 
         matched_conditions = set()
 
+        # In order to provide accurate diffs we first go through the conditions
+        # and collect conditions that have matching values (property, operator, value).
         for condition in conditions:
             for self_condition in self_conditions:
                 if self_condition in matched_conditions:
                     continue
                 if (
-                    condition.operator == self_condition.operator
-                    and condition.property == self_condition.property
+                    condition.property == self_condition.property
+                    and condition.operator == self_condition.operator
+                    and condition.value == self_condition.value
                 ):
                     matched_conditions.add(self_condition)
                     self_condition.version_of = condition
                     break
+
+        # Next we go through the collection again and collect matching conditions
+        # with special logic to collect conditions that have no properties based
+        # on their operator equivalence.
+        for condition in conditions:
+            for self_condition in self_conditions:
+                if self_condition in matched_conditions:
+                    continue
+                if not condition.property and not self_condition.property:
+                    if condition.operator == self_condition.operator:
+                        matched_conditions.add(self_condition)
+                        self_condition.version_of = condition
+                        break
+
+                elif condition.property == self_condition.property:
+                    matched_conditions.add(self_condition)
+                    self_condition.version_of = condition
+                    break
+
+        # If the subrule has no matching conditions we consider the response to
+        # be False, as the subrule could be a better match for some other candidate
+        # subrule, so the calling method can try the next subrule available.
         if not matched_conditions:
             return False
 
         Condition.objects.bulk_update(matched_conditions, fields=["version_of"])
+
+        # Since the subrule has at least partial condition overlap, we return True
+        # for the match indicator.
         return True
 
     def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
