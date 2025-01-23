@@ -91,7 +91,7 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
         *FeatureHealthEvent.objects.get_latest_by_feature(feature)
     ]:
         unhealthy_tag, _ = Tag.objects.get_or_create(
-            name="Unhealthy",
+            label="Unhealthy",
             project=feature.project,
             defaults={"color": UNHEALTHY_TAG_COLOUR},
             is_system_tag=True,
