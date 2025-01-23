@@ -277,9 +277,9 @@ Creating an identity override requires the following information:
 * Desired feature state
 
 To create an identity override, use the
-[Update Edge Identity Feature States endpoint](https://api.flagsmith.com/api/v1/docs/#/operations-api-api_v1_environments_edge-identities_list).
-For example, the following request would set the feature named `custom_background_colour` to enabled with a value of
-`blue` for the identity `my_user_id`:
+[Update Edge Identity Feature State endpoint](https://api.flagsmith.com/api/v1/docs/#/operations-api-api_v1_environments_edge-identities_list).
+For example, the following request would enable the feature named `custom_background_colour` with a value of `blue`
+for the identity `my_user_id`:
 
 ```
 curl --request PUT \
@@ -302,7 +302,7 @@ Creating an identity override in non-SaaS environments requires additional infor
 
 * Internal ID of the feature to override
 * Internal ID of the target identity
-* ID of the identity feature state to override
+* ID of the identity feature state to update, if an override already exists
 
 Make sure you have [JSON View](#json) enabled.
 
