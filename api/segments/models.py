@@ -29,7 +29,6 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
-from .helpers import segment_audit_log_helper
 from .managers import LiveSegmentManager, SegmentManager
 
 logger = logging.getLogger(__name__)
@@ -92,10 +91,6 @@ class Segment(
         return "Segment - %s" % self.name
 
     def get_skip_create_audit_log(self) -> bool:
-        skip = segment_audit_log_helper.should_skip_audit_log(self.id)
-        if skip is not None:
-            return skip
-
         try:
             if self.version_of_id and self.version_of_id != self.id:
                 return True
@@ -146,10 +141,8 @@ class Segment(
         This allows the segment model to reference all versions of
         itself including itself.
         """
-        segment_audit_log_helper.set_skip_audit_log(self.id)
         self.version_of = self
-        self.save()
-        segment_audit_log_helper.unset_skip_audit_log(self.id)
+        self.save_without_historical_record()
 
     def shallow_clone(
         self,
@@ -178,10 +171,8 @@ class Segment(
         cloned_segment.version_of = self
         cloned_segment.save()
 
-        segment_audit_log_helper.set_skip_audit_log(self.id)
         self.version += 1
-        self.save()
-        segment_audit_log_helper.unset_skip_audit_log(self.id)
+        self.save_without_historical_record()
 
         cloned_rules = []
         for rule in self.rules.all():
@@ -211,7 +202,10 @@ class Segment(
         return self.project
 
 
-class SegmentRule(SoftDeleteExportableModel):
+class SegmentRule(
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),
+):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
     NONE_RULE = "NONE"
@@ -230,6 +224,8 @@ class SegmentRule(SoftDeleteExportableModel):
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
+    history_record_class_path = "segments.models.HistoricalSegmentRule"
+
     def clean(self):
         super().clean()
         parents = [self.segment, self.rule]
@@ -247,7 +243,13 @@ class SegmentRule(SoftDeleteExportableModel):
 
     def get_skip_create_audit_log(self) -> bool:
         segment = self.get_segment()
+        if segment.deleted_at:
+            return True
+
         return segment.version_of_id != segment.id
+
+    def _get_project(self) -> typing.Optional[Project]:
+        return self.get_segment().project
 
     def get_segment(self):
         """
@@ -361,6 +363,9 @@ class Condition(
         )
 
     def get_skip_create_audit_log(self) -> bool:
+        if self.rule.deleted_at:
+            return True
+
         segment = self.rule.get_segment()
         return segment.version_of_id != segment.id
 

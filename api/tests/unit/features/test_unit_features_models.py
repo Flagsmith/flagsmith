@@ -470,6 +470,23 @@ def test_feature_state_save_calls_trigger_webhooks(
     mock_trigger_webhooks.assert_called_with(feature_state)
 
 
+def test_delete_feature_should_not_trigger_fs_change_webhooks(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given
+    mock_trigger_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature.delete()
+
+    # Then
+    mock_trigger_webhooks.assert_not_called()
+
+
 def test_feature_state_type_environment(
     feature: Feature,
     environment: Environment,
