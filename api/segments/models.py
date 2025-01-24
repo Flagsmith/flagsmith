@@ -205,11 +205,11 @@ class Segment(
         Assign matching rules of the calling object (i.e., self) to the rules
         of the given segment (i.e., current_segment) in order to update the
         rules, subrules, and conditions of the calling object. This is done
-        from the context of a change request related calling object.
+        from the context of a change request related to the calling object.
 
         This method iterates through the rules of the provided `Segment` and
-        attempts to match them to the calling object's (i.e., self) rules and sub-rules,
-        updating versioning where matches are found.
+        attempts to match them to the calling object's (i.e., self) rules and
+        sub-rules, updating versioning where matches are found.
 
         This is done in order to set the `version_of` field for matched rules
         and conditions so that the frontend can more reliably diff rules and
@@ -223,16 +223,16 @@ class Segment(
 
         Returns:
             bool:
-                - `True` if any rules or sub-rules match between the current
-                  object and the segment.
+                - `True` if any rules or sub-rules match between the calling
+                  object (i.e., self) and the current segment.
                 - `False` if no matches are found.
 
         Process:
-            1. Retrieve all rules associated with the current object and the segment.
-            2. For each rule in the segment:
-               - Check its sub-rules against the current object's rules and sub-rules.
+            1. Retrieve all rules associated with the calling object and the segment.
+            2. For each rule in the current segment:
+               - Check its sub-rules against the calling object's rules and sub-rules.
                - A match is determined if the sub-rule's type and properties align
-                 with those of the current object's sub-rules.
+                 with those of the calling object's sub-rules.
                - If a match is found:
                  - Update the `version_of` field for the matched sub-rule and rule.
                  - Track the matched rules and sub-rules to avoid duplicate processing.
@@ -241,7 +241,8 @@ class Segment(
 
         Side Effects:
             - Updates the `version_of` field for matched rules and sub-rules for the
-              calling segment (i.e., self).
+              calling object (i.e., self).
+            - Indirectly updates the `version_of` field on sub-rules' conditions.
         """
 
         modified_rules = self.rules.all()
@@ -251,17 +252,24 @@ class Segment(
         for current_rule in current_segment.rules.all():
             for current_sub_rule in current_rule.rules.all():
 
-                # Set a bool flag to be used to break out of the
-                # below modified_rules iteration if a sub_rule matches.
+                # Because we must proceed to the next current_sub_rule
+                # to get the next available match since it has now been
+                # matched to a candidate modified_sub_rule we set the
+                # sub_rule_matched bool to track the state between
+                # iterations. Otherwise different rules would have the
+                # same value for their version_of field.
                 sub_rule_matched = False
                 for modified_rule in modified_rules:
                     if sub_rule_matched:
                         break
 
-                    # If a modified_rule has already been matched then
-                    # the only time we care about it is when we
-                    # further iterate on the same sub_rules that are
-                    # present in the matching parent rule.
+                    # Because a segment's rules can only have subrules that match
+                    # if the segment-level rules also match, we need to ensure that
+                    # the currently matched rules correspond to the current rule.
+                    # Consider a scenario where a subrule's version_of attribute
+                    # points to a different subrule, whose owning rule differs
+                    # from the subrule's sibling's parent rule. Such a mismatch
+                    # would lead to inconsistencies and unintended behavior.
                     if (
                         modified_rule in matched_rules
                         and modified_rule.version_of != current_rule
