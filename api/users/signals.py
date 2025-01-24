@@ -37,15 +37,3 @@ def create_pipedrive_lead_signal(sender, instance, created, **kwargs):
         return
 
     create_pipedrive_lead.delay(args=(user.id,))
-
-
-@receiver(post_save, sender=FFAdminUser)
-def send_warning_email(sender, instance, created, **kwargs):
-    if instance._initial_state and (instance._initial_state["email"] != instance.email):
-        send_email_changed_notification_email.delay(
-            args=(
-                instance.first_name,
-                settings.DEFAULT_FROM_EMAIL,
-                instance._initial_state["email"],
-            )
-        )

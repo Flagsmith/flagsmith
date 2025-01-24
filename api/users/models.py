@@ -10,8 +10,8 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
-
+from django_lifecycle import AFTER_CREATE, LifecycleModel, hook, AFTER_SAVE
+from django_lifecycle.conditions import WhenFieldHasChanged
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_without_organisation,
 )
@@ -133,6 +133,18 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                     minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
                 ),
             )
+
+    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
+    def send_warning_email(self):
+        from users.tasks import send_email_changed_notification_email
+
+        send_email_changed_notification_email.delay(
+            args=(
+                self.first_name,
+                settings.DEFAULT_FROM_EMAIL,
+                self.initial_value("email"),
+            )
+        )
 
     def delete_orphan_organisations(self):
         Organisation.objects.filter(
