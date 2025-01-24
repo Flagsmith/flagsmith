@@ -491,7 +491,7 @@ def test_saving_condition_with_version_of_set(segment: Segment) -> None:
     assert condition2.version_of == condition1
 
 
-def test_assign_matching_rules_to_segment_with_two_levels_of_rules_and_two_conditions(
+def test_update_segment_with_matches_from_current_segment_with_two_levels_of_rules_and_two_conditions(
     project: Project,
 ) -> None:
     # Given
@@ -515,7 +515,7 @@ def test_assign_matching_rules_to_segment_with_two_levels_of_rules_and_two_condi
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -536,7 +536,7 @@ def test_assign_matching_rules_to_segment_with_two_levels_of_rules_and_two_condi
     assert condition2.version_of is None
 
 
-def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
+def test_update_segment_with_matches_from_current_segment_with_condition_operator_mismatch(
     project: Project,
 ) -> None:
     # Given
@@ -570,7 +570,7 @@ def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
     )
 
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -589,7 +589,7 @@ def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
     assert condition2.version_of is None
 
 
-def test_assign_matching_rules_to_segment_with_conditions_not_matching(
+def test_update_segment_with_matches_from_current_segment_with_conditions_not_matching(
     project: Project,
 ) -> None:
     # Given
@@ -622,7 +622,7 @@ def test_assign_matching_rules_to_segment_with_conditions_not_matching(
     )
 
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -641,7 +641,7 @@ def test_assign_matching_rules_to_segment_with_conditions_not_matching(
     assert condition2.version_of is None
 
 
-def test_assign_matching_rules_to_segment_mismatched_rule_type(
+def test_update_segment_with_matches_from_current_segment_mismatched_rule_type(
     project: Project,
 ) -> None:
     # Given
@@ -664,7 +664,7 @@ def test_assign_matching_rules_to_segment_mismatched_rule_type(
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -683,7 +683,7 @@ def test_assign_matching_rules_to_segment_mismatched_rule_type(
     assert condition2.version_of is None
 
 
-def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
+def test_update_segment_with_matches_from_current_segment_mismatched_sub_rule_type(
     project: Project,
 ) -> None:
     # Given
@@ -706,7 +706,7 @@ def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
         operator=PERCENTAGE_SPLIT, value=0.2, rule=rule4
     )
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -725,7 +725,9 @@ def test_assign_matching_rules_to_segment_mismatched_sub_rule_type(
     assert condition2.version_of is None
 
 
-def test_assign_matching_rules_to_segment_multiple_sub_rules(project: Project) -> None:
+def test_update_segment_with_matches_from_current_segment_multiple_sub_rules(
+    project: Project,
+) -> None:
     # Given
     # First we create our two segments, one that will be assign from the other.
     segment1 = Segment.objects.create(name="Segment1", project=project)
@@ -752,7 +754,7 @@ def test_assign_matching_rules_to_segment_multiple_sub_rules(project: Project) -
     rule11 = SegmentRule.objects.create(rule=rule4, type=SegmentRule.ALL_RULE)
 
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -784,7 +786,7 @@ def test_assign_matching_rules_to_segment_multiple_sub_rules(project: Project) -
     assert rule11.version_of is None
 
 
-def test_assign_matching_rules_to_segment_with_multiple_conditions(
+def test_update_segment_with_matches_from_current_segment_with_multiple_conditions(
     project: Project,
 ) -> None:
     # Given
@@ -812,7 +814,7 @@ def test_assign_matching_rules_to_segment_with_multiple_conditions(
         operator=PERCENTAGE_SPLIT, value=0.4, rule=rule4
     )
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
@@ -837,7 +839,7 @@ def test_assign_matching_rules_to_segment_with_multiple_conditions(
     assert condition4.version_of is None
 
 
-def test_assign_matching_rules_to_segment_with_exact_condition_match(
+def test_update_segment_with_matches_from_current_segment_with_exact_condition_match(
     project: Project,
 ) -> None:
     # Given
@@ -868,7 +870,7 @@ def test_assign_matching_rules_to_segment_with_exact_condition_match(
         operator=PERCENTAGE_SPLIT, value=0.4, rule=rule4
     )
     # When
-    segment1.assign_matching_rules_to_segment(segment2)
+    segment1.update_segment_with_matches_from_current_segment(segment2)
 
     # Then
     rule1.refresh_from_db()
