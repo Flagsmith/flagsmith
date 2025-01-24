@@ -96,3 +96,37 @@ def test_merge_duplicate_permissions_migration(migrator):
 
     # and non_duplicate permission still exists
     assert UserProjectPermission.objects.filter(id=non_duplicate_permission.id).exists()
+
+
+@pytest.mark.skipif(
+    settings.SKIP_MIGRATION_TESTS is True,
+    reason="Skip migration tests to speed up tests where necessary",
+)
+def test_make_project_name_unique_per_organisation_migration(migrator):
+    # Given - the migration state is at 0026 (before the migration we want to test)
+    old_state = migrator.apply_initial_migration(
+        ("projects", "0026_add_change_request_approval_limit_to_projects")
+    )
+
+    Organisation = old_state.apps.get_model("organisations", "Organisation")
+    Project = old_state.apps.get_model("projects", "Project")
+
+    organisation = Organisation.objects.create(name="Test Organisation")
+
+    duplicate_project_name = "Duplicate project"
+    project_1 = Project.objects.create(name=duplicate_project_name, organisation=organisation)
+    duplicate_project = Project.objects.create(name=duplicate_project_name, organisation=organisation)
+
+    non_duplicate_project_name = "Non duplicate project"
+    non_duplicate_project = Project.objects.create(name=non_duplicate_project_name, organisation=organisation)
+
+    # When - we run the migration
+    new_state = migrator.apply_tested_migration(
+        ("projects", "0027_make_project_name_unique_per_organisation")
+    )
+    NewProject = new_state.apps.get_model("projects", "Project")
+
+    # Then
+    assert NewProject.objects.get(id=project_1.id).name == duplicate_project_name
+    assert NewProject.objects.get(id=duplicate_project.id).name == f"{duplicate_project_name} (1)"
+    assert NewProject.objects.get(id=non_duplicate_project.id).name == non_duplicate_project_name
