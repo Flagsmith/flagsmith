@@ -22,7 +22,7 @@ export type ProjectProviderType = {
     isLoading: boolean
     isSaving: boolean
     project: Project | null
-  }) => ReactNode
+  }) => ReactNode | React.FC<any>
   id?: string
   onRemove?: () => void
   onRemoveEnvironment?: (environment: Environment) => void

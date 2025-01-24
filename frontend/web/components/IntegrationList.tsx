@@ -70,7 +70,7 @@ const Integration: FC<IntegrationProps> = (props) => {
       props.addIntegration(props.integration, props.id)
     }
   }
-
+  
   const openChildWin = () => {
     const childWindow = window.open(
       `${Project.githubAppURL}`,
@@ -440,7 +440,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
       'p-0',
     )
   }
-
+  console.log(props.integrations)
   return (
     <div>
       <div

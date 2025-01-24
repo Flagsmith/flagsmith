@@ -491,6 +491,7 @@ emailRegex: /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|
   },
 
   safeParseEventValue(e) {
+    console.log('prout')
     // safe attempt to parse form value
     if (!e) {
       return e

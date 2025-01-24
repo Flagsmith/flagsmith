@@ -1,7 +1,18 @@
-import React, { Component } from 'react'
-import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
+import { Dispatch, FC, SetStateAction } from 'react'
+import OrganisationStore from 'common/stores/organisation-store'
+import AppActions from 'common/dispatcher/app-actions'
+import { Environment, Metadata, Project } from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
+import _ from 'lodash'
+import moment from 'moment'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
+import { getStore } from 'common/store'
+import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
+import React, { Component, useEffect, useState } from 'react'
+import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import withWebhooks from 'common/providers/withWebhooks'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
@@ -10,378 +21,89 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import ColourSelect from 'components/tags/ColourSelect'
-import Constants from 'common/constants'
 import Switch from 'components/Switch'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRoleEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import { Link } from 'react-router-dom'
-import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
+import { Link, RouterChildContext } from 'react-router-dom'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 import Format from 'common/utils/format'
 import Setting from 'components/Setting'
-import {
-  createWebhook,
-  deleteWebhook,
-  getWebhooks,
-  updateWebhook,
-} from 'common/services/useWebhooks'
-
-import EnvironmentSettingsPageTS from './EnvironmentSettingsPage.tsx'
-const showDisabledFlagOptions = [
-  { label: 'Inherit from Project', value: null },
-  { label: 'Disabled', value: false },
-  { label: 'Enabled', value: true },
-]
-
-const EnvironmentSettingsPage = class extends Component {
-  static displayName = 'EnvironmentSettingsPage'
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-// DONE
-  constructor(props, context) {
-    super(props, context)
-    this.state = {
-      env: {},
-      environmentContentType: {},
-      roles: [],
-      showMetadataList: false,
-      webhooks: [],
-      webhooksLoading: true,
-    }
-    AppActions.getProject(this.props.match.params.projectId)
-  }
-// DONE
-  componentDidMount = () => {
-    API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
-    this.getEnvironment()
-    this.fetchWebhooks(this.props.match.params.environmentId)
-  }
-
-  fetchWebhooks = (environmentId) => {
-    if (!environmentId) return
-
-    this.setState({ webhooksLoading: true })
-    getWebhooks(getStore(), { environmentId })
-      .then((res) => {
-        this.setState({
-          webhooks: res.data,
-        })
-      })
-      .finally(() => {
-        this.setState({ webhooksLoading: false })
-      })
-  }
-// DONE
-  getEnvironment = () => {
-    const env = ProjectStore.getEnvs().find(
-      (v) => v.api_key === this.props.match.params.environmentId,
-    )
-    this.setState({ env })
-    getRoles(
-      getStore(),
-      { organisation_id: AccountStore.getOrganisation().id },
-      { forceRefetch: true },
-    ).then((roles) => {
-      if (!roles?.data?.results?.length) return
-
-      getRoleEnvironmentPermissions(
-        getStore(),
-        {
-          env_id: env.id,
-          organisation_id: AccountStore.getOrganisation().id,
-          role_id: roles.data.results[0].id,
-        },
-        { forceRefetch: true },
-      ).then((res) => {
-        const matchingItems = roles.data.results.filter((item1) =>
-          res.data.results.some((item2) => item2.role === item1.id),
-        )
-        this.setState({ roles: matchingItems })
-      })
-    })
-
-    if (Utils.getPlansPermission('METADATA')) {
-      getSupportedContentType(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        const environmentContentType = Utils.getContentType(
-          res.data,
-          'model',
-          'environment',
-        )
-        this.setState({ environmentContentType: environmentContentType })
-      })
-    }
-    this.fetchWebhooks(this.props.match.params.environmentId)
-  }
-
-  onSave = () => {
-    toast('Environment Saved')
-  }
-
-  componentDidUpdate(prevProps) {
-    if (
-      this.props.match.params.projectId !== prevProps.match.params.projectId
-    ) {
-      AppActions.getProject(this.props.match.params.projectId)
-    }
-    if (
-      this.props.match.params.environmentId !==
-      prevProps.match.params.environmentId
-    ) {
-      this.getEnvironment()
+import { useWebhooks } from 'components/hooks/useWebhooks'
+import API from 'project/api'
+{/* <EnvironmentSettingsPageTS match={this.props.match} router={this.context.router} /> */}
+interface EnvironmentSettingsFormProps {
+  deleteEnv: (env: Environment) => void
+  isLoading: boolean
+  isSaving: boolean
+  project: Project
+  match: {
+    params: {
+      environmentId: string
+      projectId: string
     }
   }
+  currentEnv: Environment
+  setCurrentEnv: Dispatch<SetStateAction<Environment>>
+}
 
-  onRemove = () => {
-    toast('Your project has been removed')
-    this.context.router.history.replace(Utils.getOrganisationHomePage())
-  }
-
-  confirmRemove = (environment, cb) => {
-    openModal(
-      'Remove Environment',
-      <ConfirmRemoveEnvironment environment={environment} cb={cb} />,
-      'p-0',
-    )
-  }
-
-  onRemoveEnvironment = (environment) => {
-    const envs = ProjectStore.getEnvs()
-    if (envs && envs.length) {
-      this.context.router.history.replace(
-        `/project/${this.props.match.params.projectId}/environment` +
-          `/${envs[0].api_key}/features`,
-      )
-    } else {
-      this.context.router.history.replace(
-        `/project/${this.props.match.params.projectId}/environment/create`,
-      )
-    }
-    toast(
-      <div>
-        Removed Environment: <strong>{environment.name}</strong>
-      </div>,
-    )
-  }
-
-  saveEnv = (e) => {
-    e && e.preventDefault()
-
-    const env = _.find(ProjectStore.getEnvs(), {
-      api_key: this.props.match.params.environmentId,
-    })
-
-    const { name } = this.state
-    if (ProjectStore.isSaving || !name) {
-      return
-    }
-    const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-    AppActions.editEnv(
-      Object.assign({}, env, {
-        allow_client_traits: !!this.state.allow_client_traits,
-        banner_colour: this.state.banner_colour,
-        banner_text: this.state.banner_text,
-        description: this.state?.env?.description,
-        hide_disabled_flags: this.state.hide_disabled_flags,
-        hide_sensitive_data: !!this.state.hide_sensitive_data,
-        minimum_change_request_approvals: has4EyesPermission
-          ? this.state.minimum_change_request_approvals
-          : null,
-        name: name || env.name,
-        use_identity_composite_key_for_hashing:
-          !!this.state.use_identity_composite_key_for_hashing,
-        use_identity_overrides_in_local_eval:
-          this.state.use_identity_overrides_in_local_eval,
-        use_mv_v2_evaluation: !!this.state.use_mv_v2_evaluation,
-      }),
-    )
-  }
-
-  saveDisabled = () => {
-    const { name } = this.state
-    if (ProjectStore.isSaving || !name) {
-      return true
-    }
-
-    // Must have name
-    return !name
-  }
-
-  createWebhook = () => {
-    openModal(
-      'New Webhook',
-      <CreateWebhookModal
-        router={this.context.router}
-        environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
-        save={(webhook) =>
-          createWebhook(getStore(), {
-            environmentId: this.props.match.params.environmentId,
-            ...webhook,
-          }).then((res) => {
-            this.setState({
-              webhooks: this.state.webhooks.concat(res.data),
-            })
-          })
-        }
-      />,
-      'side-modal',
-    )
-  }
-
-  editWebhook = (webhook) => {
-    openModal(
-      'Edit Webhook',
-      <CreateWebhookModal
-        router={this.context.router}
-        webhook={webhook}
-        isEdit
-        environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
-        save={(webhook) =>
-          updateWebhook(getStore(), {
-            environmentId: this.props.match.params.environmentId,
-            ...webhook,
-          }).then(() => {
-            this.setState({
-              webhooks: this.state.webhooks.map((w) =>
-                w.id === webhook.id ? webhook : w,
-              ),
-            })
-          })
-        }
-      />,
-      'side-modal',
-    )
-  }
-
-  deleteWebhook = (webhook) => {
-    openModal(
-      'Remove Webhook',
-      <ConfirmRemoveWebhook
-        environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
-        url={webhook.url}
-        cb={() =>
-          deleteWebhook(getStore(), {
-            environmentId: this.props.match.params.environmentId,
-            id: webhook.id,
-          }).then(() => {
-            this.setState({
-              webhooks: this.state.webhooks.filter((w) => w.id !== webhook.id),
-            })
-          })
-        }
-      />,
-      'p-0',
-    )
-  }
-
-  confirmToggle = (title, environmentProperty, environmentPropertyValue) => {
-    openModal(
-      title,
-      <ConfirmToggleEnvFeature
-        description={'Are you sure that you want to change this value?'}
-        feature={Format.enumeration.get(environmentProperty)}
-        featureValue={environmentPropertyValue}
-        onToggleChange={() => {
-          this.setState(
-            { [environmentProperty]: !environmentPropertyValue },
-            this.saveEnv,
-          )
-          closeModal()
-        }}
-      />,
-      'p-0 modal-sm',
-    )
-  }
-
-  render() {
-    console.log(this.state.env, this.state.roles, this.state.environmentContentType, "old")
-    const {
-      state: {
-        allow_client_traits,
-        hide_sensitive_data,
-        name,
-        use_identity_composite_key_for_hashing,
-        use_identity_overrides_in_local_eval,
-        use_v2_feature_versioning,
-        webhooks,
-        webhooksLoading,
-      },
-    } = this
-    const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-    const metadataEnable = Utils.getPlansPermission('METADATA')
-    return (
-      <div className='app-container container'>
-        <EnvironmentSettingsPageTS match={this.props.match} router={this.context.router} />
-        {/* <ProjectProvider
-          onRemoveEnvironment={this.onRemoveEnvironment}
-          id={this.props.match.params.projectId}
-          onRemove={this.onRemove}
-          onSave={this.onSave}
-        >
-          {({ deleteEnv, isLoading, isSaving, project }) => {
+const EnvironmentSettingsForm: FC<EnvironmentSettingsFormProps> = ({ match, deleteEnv, isLoading, isSaving, project, currentEnv, setCurrentEnv }) => {
             const env = _.find(project.environments, {
-              api_key: this.props.match.params.environmentId,
+              api_key: match.params.environmentId,
             })
-            console.log('old')
             if (
               (env &&
-                typeof this.state.minimum_change_request_approvals ===
+                typeof env?.minimum_change_request_approvals ===
                   'undefined') ||
-              this.state.env?.api_key !== this.props.match.params.environmentId
+              env?.api_key !== match.params.environmentId
             ) {
               setTimeout(() => {
-                this.setState({
-                  allow_client_traits: !!env.allow_client_traits,
-                  banner_colour: env.banner_colour || Constants.tagColors[0],
-                  banner_text: env.banner_text,
-                  hide_disabled_flags: env.hide_disabled_flags,
-                  hide_sensitive_data: !!env.hide_sensitive_data,
+                setCurrentEnv({
+                  allow_client_traits: !!env?.allow_client_traits,
+                  banner_colour: env?.banner_colour || Constants.tagColors[0],
+                  banner_text: env?.banner_text,
+                  hide_disabled_flags: env?.hide_disabled_flags,
+                  hide_sensitive_data: !!env?.hide_sensitive_data,
                   minimum_change_request_approvals: Utils.changeRequestsEnabled(
-                    env.minimum_change_request_approvals,
+                    env?.minimum_change_request_approvals,
                   )
-                    ? env.minimum_change_request_approvals
+                    ? env?.minimum_change_request_approvals
                     : null,
-                  name: env.name,
+                  name: env?.name,
                   use_identity_composite_key_for_hashing:
-                    !!env.use_identity_composite_key_for_hashing,
+                    !!env?.use_identity_composite_key_for_hashing,
                   use_identity_overrides_in_local_eval:
-                    !!env.use_identity_overrides_in_local_eval,
-                  use_v2_feature_versioning: !!env.use_v2_feature_versioning,
+                    !!env?.use_identity_overrides_in_local_eval,
+                  use_v2_feature_versioning: !!env?.use_v2_feature_versioning,
                 })
               }, 10)
             }
+            
             const onEnableVersioning = () => {
               openConfirm({
                 body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
-                onYes: () => {
-                  enableFeatureVersioning(getStore(), {
-                    environmentId: env.api_key,
-                  }).then((res) => {
+                title: 'Enable "Feature Versioning"',
+                onYes: async () => {
+                  const res = await enableFeatureVersioning(getStore(), {
+                    environmentId: env?.api_key,
+                  })
                     toast(
                       'Feature Versioning Enabled, this may take several minutes to process.',
                     )
-                    this.setState({
+                    setCurrentEnv((currentEnvState) => ({
+                      ...currentEnvState,
                       enabledFeatureVersioning: true,
-                    })
-                  })
+                    }))
                 },
-                title: 'Enable "Feature Versioning"',
               })
             }
             return (
               <>
+                
                 <PageTitle title='Settings' />
                 {isLoading && (
                   <div className='centered-container'>
@@ -779,21 +501,25 @@ const EnvironmentSettingsPage = class extends Component {
                                 }
                               />
                             </div>
-                            <div className='mt-4'>
-                              <Setting
-                                title='Use identity overrides in local evaluation'
-                                description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
-                                checked={use_identity_overrides_in_local_eval}
-                                onChange={(v) => {
-                                  this.setState(
-                                    {
-                                      use_identity_overrides_in_local_eval: v,
-                                    },
-                                    this.saveEnv,
-                                  )
-                                }}
-                              />
-                            </div>
+                            {Utils.getFlagsmithHasFeature(
+                              'use_identity_overrides_in_local_eval',
+                            ) && (
+                              <div className='mt-4'>
+                                <Setting
+                                  title='Use identity overrides in local evaluation'
+                                  description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
+                                  checked={use_identity_overrides_in_local_eval}
+                                  onChange={(v) => {
+                                    this.setState(
+                                      {
+                                        use_identity_overrides_in_local_eval: v,
+                                      },
+                                      this.saveEnv,
+                                    )
+                                  }}
+                                />
+                              </div>
+                            )}
                           </form>
                         </div>
                       </div>
@@ -964,12 +690,3 @@ const EnvironmentSettingsPage = class extends Component {
               </>
             )
           }}
-        </ProjectProvider> */}
-      </div>
-    )
-  }
-}
-
-EnvironmentSettingsPage.propTypes = {}
-
-module.exports = ConfigProvider(EnvironmentSettingsPage)
