@@ -198,22 +198,28 @@ class Segment(
 
         return cloned_segment
 
-    def assign_matching_rules_to_segment(self, segment: "Segment") -> bool:
+    def update_segment_with_matches_from_current_segment(
+        self, current_segment: "Segment"
+    ) -> bool:
         """
-        Assign matching rules of the current object to the rules of the given segment.
+        Assign matching rules of the calling object (i.e., self) to the rules
+        of the given segment (i.e., current_segment) in order to update the
+        rules, subrules, and conditions of the calling object. This is done
+        from the context of a change request related calling object.
 
         This method iterates through the rules of the provided `Segment` and
-        attempts to match them to the current object's rules and sub-rules,
+        attempts to match them to the calling object's (i.e., self) rules and sub-rules,
         updating versioning where matches are found.
 
         This is done in order to set the `version_of` field for matched rules
         and conditions so that the frontend can more reliably diff rules and
-        conditions between a change request for a segment and the target segment
-        itself.
+        conditions between a change request for a the current segment and the
+        calling object (i.e., self) itself.
 
         Args:
-            segment (Segment): The segment whose rules are being matched
-                               against the current object's rules.
+            current_segment (Segment): The segment whose rules are being matched
+                                       against the current object's rules which
+                                       will have its rules and conditions updated.
 
         Returns:
             bool:
@@ -234,50 +240,56 @@ class Segment(
                versioning changes.
 
         Side Effects:
-            - Updates the `version_of` field for matched rules and sub-rules.
+            - Updates the `version_of` field for matched rules and sub-rules for the
+              calling segment (i.e., self).
         """
 
-        self_rules = self.rules.all()
+        modified_rules = self.rules.all()
         matched_rules = set()
         matched_sub_rules = set()
 
-        for rule in segment.rules.all():
-            for sub_rule in rule.rules.all():
+        for current_rule in current_segment.rules.all():
+            for current_sub_rule in current_rule.rules.all():
 
                 # Set a bool flag to be used to break out of the
-                # below self_rules iteration if a sub_rule matches.
+                # below modified_rules iteration if a sub_rule matches.
                 sub_rule_matched = False
-                for self_rule in self_rules:
+                for modified_rule in modified_rules:
                     if sub_rule_matched:
                         break
 
-                    # If a self_rule has already been matched then
+                    # If a modified_rule has already been matched then
                     # the only time we care about it is when we
-                    # further iterate on the the same sub_rules
-                    # that are present in the matching parent rule.
-                    if self_rule in matched_rules and self_rule.version_of != rule:
+                    # further iterate on the same sub_rules that are
+                    # present in the matching parent rule.
+                    if (
+                        modified_rule in matched_rules
+                        and modified_rule.version_of != current_rule
+                    ):
                         continue
 
                     # To eliminate false matches we force the types
                     # to be the same for the rules.
-                    if rule.type != self_rule.type:
+                    if current_rule.type != modified_rule.type:
                         continue
 
-                    for self_sub_rule in self_rule.rules.all():
+                    for modified_sub_rule in modified_rule.rules.all():
                         # If a subrule has already been matched,
                         # we avoid assigning conditions since it
                         # has already been handled.
-                        if self_sub_rule in matched_sub_rules:
+                        if modified_sub_rule in matched_sub_rules:
                             continue
 
                         # If a subrule matches, we assign the parent
                         # rule and the subrule together.
-                        if self_sub_rule.assign_conditions_if_matching_rule(sub_rule):
-                            self_sub_rule.version_of = sub_rule
+                        if modified_sub_rule.assign_conditions_if_matching_rule(
+                            current_sub_rule
+                        ):
+                            modified_sub_rule.version_of = current_sub_rule
                             sub_rule_matched = True
-                            matched_sub_rules.add(self_sub_rule)
-                            self_rule.version_of = rule
-                            matched_rules.add(self_rule)
+                            matched_sub_rules.add(modified_sub_rule)
+                            modified_rule.version_of = current_rule
+                            matched_rules.add(modified_rule)
                             break
 
         SegmentRule.objects.bulk_update(
@@ -356,7 +368,7 @@ class SegmentRule(SoftDeleteExportableModel):
         return rule.segment
 
     def assign_conditions_if_matching_rule(  # noqa: C901
-        self, rule: "SegmentRule"
+        self, current_sub_rule: "SegmentRule"
     ) -> bool:
         """
         Determines whether the current object matches the given rule
@@ -372,14 +384,14 @@ class SegmentRule(SoftDeleteExportableModel):
 
         Returns:
             bool:
-                - `True` if the current object's type matches the rule's type
+                - `True` if the calling object's (i.e., self) type matches the rule's type
                   and the conditions are compatible.
                 - `False` if the types do not match or no conditions are compatible.
 
         Process:
             1. If the types do not match, return `False`.
-            2. If both the rule and current object have no conditions, return `True`.
-            3. Compare each condition in the rule against the current object's conditions:
+            2. If both the rule and calling object (i.e., self) have no conditions, return `True`.
+            3. Compare each condition in the rule against the calling object's (i.e., self) conditions:
                - First match conditions that are an exact match of property, operator,
                  and value.
                - A condition matches if the `property` attributes are equal or if there
@@ -388,16 +400,17 @@ class SegmentRule(SoftDeleteExportableModel):
             4. Return `True` if at least one condition matches; otherwise, return `False`.
 
         Side Effects:
-            Updates the `version_of` field for matched conditions using a bulk update.
+            Updates the `version_of` field for matched conditions using a bulk update for the
+            conditions of the calling object (i.e., self).
         """
 
-        if rule.type != self.type:
+        if current_sub_rule.type != self.type:
             return False
 
-        conditions = rule.conditions.all()
-        self_conditions = self.conditions.all()
+        current_conditions = current_sub_rule.conditions.all()
+        modified_conditions = self.conditions.all()
 
-        if not conditions and not self_conditions:
+        if not current_conditions and not modified_conditions:
             # Empty rule with the same type matches.
             return True
 
@@ -405,35 +418,35 @@ class SegmentRule(SoftDeleteExportableModel):
 
         # In order to provide accurate diffs we first go through the conditions
         # and collect conditions that have matching values (property, operator, value).
-        for condition in conditions:
-            for self_condition in self_conditions:
-                if self_condition in matched_conditions:
+        for current_condition in current_conditions:
+            for modified_condition in modified_conditions:
+                if modified_condition in matched_conditions:
                     continue
                 if (
-                    condition.property == self_condition.property
-                    and condition.operator == self_condition.operator
-                    and condition.value == self_condition.value
+                    current_condition.property == modified_condition.property
+                    and current_condition.operator == modified_condition.operator
+                    and current_condition.value == modified_condition.value
                 ):
-                    matched_conditions.add(self_condition)
-                    self_condition.version_of = condition
+                    matched_conditions.add(modified_condition)
+                    modified_condition.version_of = current_condition
                     break
 
         # Next we go through the collection again and collect matching conditions
         # with special logic to collect conditions that have no properties based
         # on their operator equivalence.
-        for condition in conditions:
-            for self_condition in self_conditions:
-                if self_condition in matched_conditions:
+        for current_condition in current_conditions:
+            for modified_condition in modified_conditions:
+                if modified_condition in matched_conditions:
                     continue
-                if not condition.property and not self_condition.property:
-                    if condition.operator == self_condition.operator:
-                        matched_conditions.add(self_condition)
-                        self_condition.version_of = condition
+                if not current_condition.property and not modified_condition.property:
+                    if current_condition.operator == modified_condition.operator:
+                        matched_conditions.add(modified_condition)
+                        modified_condition.version_of = current_condition
                         break
 
-                elif condition.property == self_condition.property:
-                    matched_conditions.add(self_condition)
-                    self_condition.version_of = condition
+                elif current_condition.property == modified_condition.property:
+                    matched_conditions.add(modified_condition)
+                    modified_condition.version_of = current_condition
                     break
 
         # If the subrule has no matching conditions we consider the response to
