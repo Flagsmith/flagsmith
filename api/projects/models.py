@@ -112,7 +112,6 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
 
     class Meta:
         ordering = ["id"]
-        unique_together = (("name", "organisation"),)
 
     def __str__(self):
         return "Project %s" % self.name
