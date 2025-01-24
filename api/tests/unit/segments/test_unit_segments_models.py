@@ -589,6 +589,58 @@ def test_assign_matching_rules_to_segment_with_condition_operator_mismatch(
     assert condition2.version_of is None
 
 
+def test_assign_matching_rules_to_segment_with_conditions_not_matching(
+    project: Project,
+) -> None:
+    # Given
+    # First we create our two segments, one that will be assign from the other.
+    segment1 = Segment.objects.create(name="Segment1", project=project)
+    segment2 = Segment.objects.create(name="Segment2", project=project)
+
+    # Next we create two parent rules, both with the same type and then two
+    # matching subrules, both with matching types as well.
+    rule1 = SegmentRule.objects.create(segment=segment1, type=SegmentRule.ALL_RULE)
+    rule2 = SegmentRule.objects.create(segment=segment2, type=SegmentRule.ALL_RULE)
+    rule3 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
+    rule4 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
+
+    # Finally we create conditions that have mis-matched property names so
+    # the frontend will not to be able to diff them since there will be no match
+    condition1 = Condition.objects.create(
+        property="age",
+        operator=EQUAL,
+        value=21,
+        rule=rule3,
+        description="Setting age to equal",
+    )
+    condition2 = Condition.objects.create(
+        property="scale",
+        operator=GREATER_THAN,
+        value=0.2,
+        rule=rule4,
+        description="Setting scale to greater than",
+    )
+
+    # When
+    segment1.assign_matching_rules_to_segment(segment2)
+
+    # Then
+    rule1.refresh_from_db()
+    rule2.refresh_from_db()
+    rule3.refresh_from_db()
+    rule4.refresh_from_db()
+    condition1.refresh_from_db()
+    condition2.refresh_from_db()
+    # The parent rule and subrule of the target segments do not match.
+    assert rule1.version_of is None
+    assert rule2.version_of is None
+    assert rule3.version_of is None
+    assert rule4.version_of is None
+    # The condition with the mismatched property also doesn't match.
+    assert condition1.version_of is None
+    assert condition2.version_of is None
+
+
 def test_assign_matching_rules_to_segment_mismatched_rule_type(
     project: Project,
 ) -> None:
