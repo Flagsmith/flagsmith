@@ -875,3 +875,26 @@ def test_delete_project_delete_handles_cascade_delete(
     mocked_handle_cascade_delete.delay.assert_called_once_with(
         kwargs={"project_id": project.id}
     )
+
+
+def test_cannot_create_duplicate_project_name(
+    admin_client: APIClient,
+    project: Project,
+) -> None:
+    # Given
+    data = {
+        "name": project.name,
+        "organisation": project.organisation_id,
+    }
+    url = reverse("api-v1:projects:project-list")
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "non_field_errors": ["A project with this name already exists."]
+    }
