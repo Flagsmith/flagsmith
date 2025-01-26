@@ -27,7 +27,7 @@ class FeatureHealthProviderSerializer(serializers.ModelSerializer):
 
     def get_webhook_url(self, instance: FeatureHealthProvider) -> str:
         request = self.context["request"]
-        path = get_webhook_path_from_provider(instance, self.context["request"])
+        path = get_webhook_path_from_provider(instance)
         return request.build_absolute_uri(path)
 
     class Meta:

@@ -86,7 +86,10 @@ class FeatureHealthProviderViewSet(
             created_by=self.request.user,
         )
 
-        serializer = FeatureHealthProviderSerializer(instance)
+        serializer = FeatureHealthProviderSerializer(
+            instance,
+            context={"request": request},
+        )
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data,

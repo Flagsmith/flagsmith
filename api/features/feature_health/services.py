@@ -13,13 +13,14 @@ from features.feature_health.models import (
     FeatureHealthEvent,
     FeatureHealthEventType,
     FeatureHealthProvider,
+    FeatureHealthProviderName,
 )
 from features.feature_health.providers import sample
+from features.models import Feature
 from projects.tags.models import Tag, TagType
 
 if typing.TYPE_CHECKING:
     from features.feature_health.types import FeatureHealthProviderResponse
-    from features.models import Feature
 
 logger = structlog.get_logger("feature_health")
 
@@ -49,7 +50,7 @@ def get_provider_from_webhook_path(path: str) -> FeatureHealthProvider | None:
 def get_provider_response(
     provider: FeatureHealthProvider, payload: str
 ) -> "FeatureHealthProviderResponse | None":
-    if provider.name == FeatureHealthProvider.SAMPLE.value:
+    if provider.name == FeatureHealthProviderName.SAMPLE.value:
         return sample.map_payload_to_provider_response(payload)
     logger.error(
         "invalid-provider-requested",
@@ -97,7 +98,7 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
             type=TagType.UNHEALTHY,
         )
         if any(
-            feature_health_event.type == FeatureHealthEventType.UNHEALTHY
+            feature_health_event.type == FeatureHealthEventType.UNHEALTHY.value
             for feature_health_event in feature_health_events
         ):
             feature.tags.add(unhealthy_tag)
