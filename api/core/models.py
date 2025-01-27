@@ -43,7 +43,9 @@ class AbstractBaseExportableModel(models.Model):
 
 
 class SoftDeleteAwareHistoricalRecords(HistoricalRecords):
-    def create_historical_record(self, instance, history_type, using=None):
+    def create_historical_record(
+        self, instance: models.Model, history_type: str, using: str = None
+    ) -> None:
         if getattr(instance, "deleted_at", None) is not None and history_type == "~":
             # Don't create `update` historical record for soft-deleted objects
             return
