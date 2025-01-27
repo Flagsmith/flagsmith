@@ -2,5 +2,5 @@ from core.apps import BaseAppConfig
 
 
 class FeatureHealthConfig(BaseAppConfig):
-    name = "features.feature_heath"
+    name = "features.feature_health"
     default = True

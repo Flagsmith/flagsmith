@@ -18,6 +18,7 @@ from features.feature_health.constants import (
 )
 
 if typing.TYPE_CHECKING:
+    from environments.models import Environment
     from features.models import Feature
     from projects.models import Project
     from users.models import FFAdminUser
@@ -37,6 +38,11 @@ class FeatureHealthProvider(
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),
 ):
+    history_record_class_path = (
+        "features.feature_health.models.HistoricalFeatureHealthProvider"
+    )
+    related_object_type = RelatedObjectType.FEATURE_HEALTH
+
     name = models.CharField(max_length=50, choices=FeatureHealthProviderName.choices)
     project = models.ForeignKey("projects.Project", on_delete=models.CASCADE)
     created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
@@ -61,6 +67,9 @@ class FeatureHealthProvider(
         history_instance: "FeatureHealthProvider",
     ) -> "FFAdminUser | None":
         return self.created_by
+
+    def _get_project(self) -> "Project":
+        return self.project
 
 
 class FeatureHealthEventManager(models.Manager):
@@ -94,6 +103,9 @@ class FeatureHealthEvent(
     Holds the events that are generated when a feature health is changed.
     """
 
+    history_record_class_path = (
+        "features.feature_health.models.HistoricalFeatureHealthEvent"
+    )
     related_object_type = RelatedObjectType.FEATURE_HEALTH
 
     objects: FeatureHealthEventManager = FeatureHealthEventManager()
@@ -143,3 +155,9 @@ class FeatureHealthEvent(
         if self.reason:
             message += FEATURE_HEALTH_EVENT_CREATED_REASON_MESSAGE % self.reason
         return message
+
+    def _get_project(self) -> "Project":
+        return self.feature.project
+
+    def _get_environment(self) -> "Environment | None":
+        return self.environment
