@@ -10,8 +10,9 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook, AFTER_SAVE
+from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
 from django_lifecycle.conditions import WhenFieldHasChanged
+
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_without_organisation,
 )
