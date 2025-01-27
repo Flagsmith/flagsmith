@@ -53,16 +53,24 @@ def test_feature_health_provider__get_audit_log_author__return_expected(
 def test_feature_health_event__get_latest_by_feature__return_expected(
     project: Project,
     feature: Feature,
+    environment: Environment,
 ) -> None:
     # Given
     unrelated_feature = Feature.objects.create(
         project=project, name="unrelated_feature"
     )
+    environment_2 = Environment.objects.create(project=project, name="Environment 2")
 
     latest_provider1_event = FeatureHealthEvent.objects.create(
         feature=feature,
         type="UNHEALTHY",
         provider_name="provider1",
+    )
+    latest_provider1_environment_event = FeatureHealthEvent.objects.create(
+        feature=feature,
+        type="UNHEALTHY",
+        provider_name="provider1",
+        environment=environment,
     )
     with freeze_time(now - datetime.timedelta(hours=1)):
         older_provider1_event = FeatureHealthEvent.objects.create(
@@ -70,11 +78,29 @@ def test_feature_health_event__get_latest_by_feature__return_expected(
             type="HEALTHY",
             provider_name="provider1",
         )
+        older_provider1_environment_event = FeatureHealthEvent.objects.create(
+            feature=feature,
+            type="HEALTHY",
+            provider_name="provider1",
+            environment=environment,
+        )
+        latest_provider_1_environment_2_event = FeatureHealthEvent.objects.create(
+            feature=feature,
+            type="UNHEALTHY",
+            provider_name="provider1",
+            environment=environment_2,
+        )
     with freeze_time(now - datetime.timedelta(hours=2)):
         latest_provider2_event = FeatureHealthEvent.objects.create(
             feature=feature,
             type="UNHEALTHY",
             provider_name="provider2",
+        )
+        older_provider_1_environment_2_event = FeatureHealthEvent.objects.create(
+            feature=feature,
+            type="HEALTHY",
+            provider_name="provider1",
+            environment=environment_2,
         )
     unrelated_feature_event = FeatureHealthEvent.objects.create(
         feature=unrelated_feature,
@@ -86,8 +112,15 @@ def test_feature_health_event__get_latest_by_feature__return_expected(
     feature_health_events = [*FeatureHealthEvent.objects.get_latest_by_feature(feature)]
 
     # Then
-    assert feature_health_events == [latest_provider1_event, latest_provider2_event]
+    assert feature_health_events == [
+        latest_provider1_environment_event,
+        latest_provider_1_environment_2_event,
+        latest_provider1_event,
+        latest_provider2_event,
+    ]
     assert older_provider1_event not in feature_health_events
+    assert older_provider1_environment_event not in feature_health_events
+    assert older_provider_1_environment_2_event not in feature_health_events
     assert unrelated_feature_event not in feature_health_events
 
 

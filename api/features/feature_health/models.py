@@ -79,8 +79,8 @@ class FeatureHealthEventManager(models.Manager):
     ) -> "models.QuerySet[FeatureHealthEvent]":
         return (
             self.filter(feature=feature)
-            .order_by("provider_name", "-created_at")
-            .distinct("provider_name")
+            .order_by("provider_name", "environment_id", "-created_at")
+            .distinct("provider_name", "environment_id")
         )
 
     def get_latest_by_project(
@@ -89,8 +89,8 @@ class FeatureHealthEventManager(models.Manager):
     ) -> "models.QuerySet[FeatureHealthEvent]":
         return (
             self.filter(feature__project=project)
-            .order_by("provider_name", "feature_id", "-created_at")
-            .distinct("provider_name", "feature_id")
+            .order_by("provider_name", "environment_id", "feature_id", "-created_at")
+            .distinct("provider_name", "environment_id", "feature_id")
         )
 
 
