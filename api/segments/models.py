@@ -252,14 +252,14 @@ class Segment(
         for current_rule in current_segment.rules.all():
             for current_sub_rule in current_rule.rules.all():
 
-                # Because we must proceed to the next current_sub_rule
-                # to get the next available match since it has now been
-                # matched to a candidate modified_sub_rule we set the
-                # sub_rule_matched bool to track the state between
-                # iterations. Otherwise different rules would have the
-                # same value for their version_of field.
                 sub_rule_matched = False
                 for modified_rule in modified_rules:
+                    # Because we must proceed to the next current_sub_rule
+                    # to get the next available match since it has now been
+                    # matched to a candidate modified_sub_rule we set the
+                    # sub_rule_matched bool to track the state between
+                    # iterations. Otherwise different rules would have the
+                    # same value for their version_of field.
                     if sub_rule_matched:
                         break
 
@@ -268,7 +268,7 @@ class Segment(
                     # the currently matched rules correspond to the current rule.
                     # Consider a scenario where a subrule's version_of attribute
                     # points to a different subrule, whose owning rule differs
-                    # from the subrule's sibling's parent rule. Such a mismatch
+                    # from the subrule's version_of's parent rule. Such a mismatch
                     # would lead to inconsistencies and unintended behavior.
                     if (
                         modified_rule in matched_rules
