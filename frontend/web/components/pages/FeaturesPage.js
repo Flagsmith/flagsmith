@@ -273,7 +273,7 @@ const FeaturesPage = class extends Component {
 
     const envUnhealthyTags = this.state.unhealthyTags
     const isShowingUnhealthyTags = this.state.tags?.includes(
-      envUnhealthyTags?.id,
+      envUnhealthyTags?.[0]?.id,
     )
     const currEnvUnhealthyEvents = this.getCurrEnvUnhealthyEvents(
       environment?.id,
@@ -407,7 +407,7 @@ const FeaturesPage = class extends Component {
                                           this.setState(
                                             {
                                               showArchived: false,
-                                              tags: [envUnhealthyTags.id],
+                                              tags: [envUnhealthyTags[0].id],
                                             },
                                             this.filter,
                                           )

@@ -16,6 +16,7 @@ import Button from './base/forms/Button'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import StaleFlagWarning from './StaleFlagWarning'
+import WarningMessage from './WarningMessage'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -105,6 +106,20 @@ class TheComponent extends Component {
         >
           <Icon name='copy' />
         </Button>
+        {this.props?.latestUnhealthyEvent && (
+          <div style={{ marginBottom: -16, marginLeft: '11rem' }}>
+            <WarningMessage
+              warningMessage={
+                <div>
+                  Feature is unhealthy{' '}
+                  <Tooltip title={<Icon name='info-outlined' />} place='bottom'>
+                    {this.props?.latestUnhealthyEvent?.reason}
+                  </Tooltip>
+                </div>
+              }
+            />
+          </div>
+        )}
       </Row>,
       <CreateFlagModal
         history={this.context.router.history}

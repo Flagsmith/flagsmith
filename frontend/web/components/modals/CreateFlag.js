@@ -1872,26 +1872,6 @@ const CreateFlag = class extends Component {
                                       />
                                     </TabItem>
                                   )}
-                                <TabItem
-                                  data-test='unhealthy_event'
-                                  tabLabelString='Unhealthy Event'
-                                  tabLabel={
-                                    <Row
-                                      className={`justify-content-center ${
-                                        this.state.segmentsChanged ? 'pr-1' : ''
-                                      }`}
-                                    >
-                                      Unhealthy Event{' '}
-                                      {this.state.segmentsChanged && (
-                                        <div className='unread ml-2 px-2'>
-                                          *
-                                        </div>
-                                      )}
-                                    </Row>
-                                  }
-                                >
-                                  oi
-                                </TabItem>
                                 {!existingChangeRequest && (
                                   <TabItem
                                     data-test='settings'
