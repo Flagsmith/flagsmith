@@ -242,11 +242,14 @@ class SegmentRule(
         )
 
     def get_skip_create_audit_log(self) -> bool:
-        segment = self.get_segment()
-        if segment.deleted_at:
+        try:
+            segment = self.get_segment()
+            if segment.deleted_at:
+                return True
+            return segment.version_of_id != segment.id
+        except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
+            # handle hard delete
             return True
-
-        return segment.version_of_id != segment.id
 
     def _get_project(self) -> typing.Optional[Project]:
         return self.get_segment().project
@@ -363,11 +366,19 @@ class Condition(
         )
 
     def get_skip_create_audit_log(self) -> bool:
-        if self.rule.deleted_at:
-            return True
+        try:
 
-        segment = self.rule.get_segment()
-        return segment.version_of_id != segment.id
+            if self.rule.deleted_at:
+                return True
+
+            segment = self.rule.get_segment()
+            if segment.deleted_at:
+                return True
+
+            return segment.version_of_id != segment.id
+        except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
+            # handle hard delete
+            return True
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         return f"Condition updated on segment '{self._get_segment().name}'."
