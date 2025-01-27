@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 from django.http import HttpRequest
 from django.test import RequestFactory
@@ -41,19 +39,24 @@ def test_feature_health_provider_admin__webhook_url__return_expected(
     mocker: MockerFixture,
 ) -> None:
     # Given
+    get_webhook_path_from_provider_mock = mocker.patch(
+        "features.feature_health.admin.get_webhook_path_from_provider"
+    )
+    get_webhook_path_from_provider_mock.return_value = (
+        "/api/v1/feature-health/"
+        "IjgxZjU1OTU3NjJiMjRlYzNiMmIyY2QzYjA0NzM1YTljIg/OgsuQAL_3ZtIJEoS_L8W0B2Kb1f_1b70wY7IGWOakcs"
+    )
     admin_instance = FeatureHealthProviderAdmin(
         FeatureHealthProvider, mocker.MagicMock()
     )
-    feature_health_provider = FeatureHealthProvider(
-        name="Sample",
-        uuid=uuid.UUID("81f55957-62b2-4ec3-b2b2-cd3b04735a9c"),
-    )
+    feature_health_provider = FeatureHealthProvider(name="Sample")
     admin_instance.changelist_view(feature_health_provider_admin_request)
 
     # When
     webhook_url = admin_instance.webhook_url(feature_health_provider)
 
     # Then
+    get_webhook_path_from_provider_mock.assert_called_once_with(feature_health_provider)
     assert (
         webhook_url == "http://testserver/api/v1/feature-health/"
         "IjgxZjU1OTU3NjJiMjRlYzNiMmIyY2QzYjA0NzM1YTljIg/OgsuQAL_3ZtIJEoS_L8W0B2Kb1f_1b70wY7IGWOakcs"
