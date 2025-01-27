@@ -1,13 +1,53 @@
 import datetime
 
 from freezegun import freeze_time
+from pytest_mock import MockerFixture
 
-from features.feature_health.models import FeatureHealthEvent
+from environments.models import Environment
+from features.feature_health.models import (
+    FeatureHealthEvent,
+    FeatureHealthProvider,
+)
 from features.models import Feature
 from organisations.models import Organisation
 from projects.models import Project
+from users.models import FFAdminUser
 
 now = datetime.datetime.now()
+
+
+def test_feature_health_provider__get_create_log_message__return_expected(
+    feature_health_provider: FeatureHealthProvider,
+    mocker: MockerFixture,
+) -> None:
+    # When
+    log_message = feature_health_provider.get_create_log_message(mocker.Mock())
+
+    # Then
+    assert log_message == "Health provider Sample set up for project Test Project."
+
+
+def test_feature_health_provider__get_delete_log_message__return_expected(
+    feature_health_provider: FeatureHealthProvider,
+    mocker: MockerFixture,
+) -> None:
+    # When
+    log_message = feature_health_provider.get_delete_log_message(mocker.Mock())
+
+    # Then
+    assert log_message == "Health provider Sample removed from project Test Project."
+
+
+def test_feature_health_provider__get_audit_log_author__return_expected(
+    feature_health_provider: FeatureHealthProvider,
+    mocker: MockerFixture,
+    staff_user: FFAdminUser,
+) -> None:
+    # When
+    audit_log_author = feature_health_provider.get_audit_log_author(mocker.Mock())
+
+    # Then
+    assert audit_log_author == staff_user
 
 
 def test_feature_health_event__get_latest_by_feature__return_expected(
@@ -105,3 +145,47 @@ def test_feature_health_event__get_latest_by_project__return_expected(
     ]
     assert older_provider1_event not in feature_health_events
     assert unrelated_feature_event not in feature_health_events
+
+
+def test_feature_health_event__get_create_log_message__return_expected(
+    feature: Feature,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_health_event = FeatureHealthEvent.objects.create(
+        feature=feature,
+        type="UNHEALTHY",
+        provider_name="provider1",
+        reason="Test reason",
+    )
+
+    # When
+    log_message = feature_health_event.get_create_log_message(mocker.Mock())
+
+    # Then
+    assert (
+        log_message == "Health status changed to UNHEALTHY for feature Test Feature1."
+        "\n\nProvided by provider1\n\nReason:\nTest reason"
+    )
+
+
+def test_feature_health_event__get_create_log_message__environment__return_expected(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_health_event = FeatureHealthEvent.objects.create(
+        feature=feature,
+        environment=environment,
+        type="UNHEALTHY",
+    )
+
+    # When
+    log_message = feature_health_event.get_create_log_message(mocker.Mock())
+
+    # Then
+    assert (
+        log_message
+        == "Health status changed to UNHEALTHY for feature Test Feature1 in environment Test Environment."
+    )

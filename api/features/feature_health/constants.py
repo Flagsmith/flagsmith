@@ -1,5 +1,5 @@
 FEATURE_HEALTH_PROVIDER_CREATED_MESSAGE = "Health provider %s set up for project %s."
-FEATURE_HEALTH_PROVIDER_DELETED_MESSAGE = "Health provider %s removed for project %s."
+FEATURE_HEALTH_PROVIDER_DELETED_MESSAGE = "Health provider %s removed from project %s."
 
 FEATURE_HEALTH_EVENT_CREATED_MESSAGE = "Health status changed to %s for feature %s."
 FEATURE_HEALTH_EVENT_CREATED_FOR_ENVIRONMENT_MESSAGE = (

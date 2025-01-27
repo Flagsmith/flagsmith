@@ -20,7 +20,8 @@ from features.feature_health.serializers import (
     FeatureHealthProviderSerializer,
 )
 from features.feature_health.services import (
-    create_feature_health_event_from_webhook,
+    create_feature_health_event_from_provider,
+    get_provider_from_webhook_path,
 )
 from projects.models import Project
 from projects.permissions import NestedProjectPermissions
@@ -102,7 +103,9 @@ class FeatureHealthProviderViewSet(
 @permission_classes([AllowAny])
 def feature_health_webhook(request: Request, **kwargs: typing.Any) -> Response:
     path = kwargs["path"]
+    if not (provider := get_provider_from_webhook_path(path)):
+        return Response(status=status.HTTP_404_NOT_FOUND)
     payload = request.body.decode("utf-8")
-    if create_feature_health_event_from_webhook(path=path, payload=payload):
+    if create_feature_health_event_from_provider(provider=provider, payload=payload):
         return Response(status=status.HTTP_200_OK)
-    return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(status=status.HTTP_400_BAD_REQUEST)

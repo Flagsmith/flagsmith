@@ -39,7 +39,7 @@ def get_provider_from_webhook_path(path: str) -> FeatureHealthProvider | None:
     try:
         hex_string = _provider_webhook_signer.unsign_object(path)
     except signing.BadSignature:
-        logger.warning("invalid-webhook-path-requested", path=path)
+        logger.warning("invalid-feature-health-webhook-path-requested", path=path)
         return None
     feature_health_provider_uuid = uuid.UUID(hex_string)
     return FeatureHealthProvider.objects.filter(
@@ -53,36 +53,44 @@ def get_provider_response(
     if provider.name == FeatureHealthProviderName.SAMPLE.value:
         return sample.map_payload_to_provider_response(payload)
     logger.error(
-        "invalid-provider-requested",
+        "invalid-feature-health-provider-requested",
         provider_name=provider.name,
         provider_id=provider.uuid,
     )
     return None
 
 
-def create_feature_health_event_from_webhook(
-    path: str,
+def create_feature_health_event_from_provider(
+    provider: FeatureHealthProvider,
     payload: str,
 ) -> FeatureHealthEvent | None:
-    if provider := get_provider_from_webhook_path(path):
-        if response := get_provider_response(provider, payload):
-            project = provider.project
-            if feature := Feature.objects.filter(
-                project=provider.project, name=response.feature_name
-            ).first():
-                if response.environment_name:
-                    environment = Environment.objects.filter(
-                        project=project, name=response.environment_name
-                    ).first()
-                else:
-                    environment = None
-                return FeatureHealthEvent.objects.create(
-                    feature=feature,
-                    environment=environment,
-                    provider_name=provider.name,
-                    type=response.event_type,
-                    reason=response.reason,
-                )
+    try:
+        response = get_provider_response(provider, payload)
+    except Exception as exc:
+        logger.error(
+            "error-creating-feature-health-event",
+            provider_name=provider.name,
+            project_id=provider.project.id,
+            exc_info=exc,
+        )
+        return None
+    project = provider.project
+    if feature := Feature.objects.filter(
+        project=provider.project, name=response.feature_name
+    ).first():
+        if response.environment_name:
+            environment = Environment.objects.filter(
+                project=project, name=response.environment_name
+            ).first()
+        else:
+            environment = None
+        return FeatureHealthEvent.objects.create(
+            feature=feature,
+            environment=environment,
+            provider_name=provider.name,
+            type=response.event_type,
+            reason=response.reason,
+        )
     return None
 
 
