@@ -113,6 +113,7 @@ class TheComponent extends Component {
         projectFlag={projectFlag}
         noPermissions={!this.props.permission}
         environmentFlag={environmentFlag}
+        latestUnhealthyEvent={this.props.latestUnhealthyEvent}
         tab={tab}
         flagId={environmentFlag.id}
       />,

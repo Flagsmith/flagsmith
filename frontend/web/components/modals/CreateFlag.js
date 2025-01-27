@@ -575,7 +575,7 @@ const CreateFlag = class extends Component {
     const invalid =
       !!multivariate_options && multivariate_options.length && controlValue < 0
     const existingChangeRequest = this.props.changeRequest
-    const hasUnhealthyEvent = this.props.hasUnhealthyEvent
+    const latestUnhealthyEvent = this.props.latestUnhealthyEvent
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true

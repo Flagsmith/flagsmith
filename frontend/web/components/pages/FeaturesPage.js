@@ -505,7 +505,7 @@ const FeaturesPage = class extends Component {
                                           this.filter,
                                         )
                                       }}
-                                      onChange={(tags, isAutomated) => {
+                                      onChange={(tags) => {
                                         FeatureListStore.isLoading = true
                                         if (
                                           tags.includes('') &&
@@ -668,6 +668,10 @@ const FeaturesPage = class extends Component {
                                     projectId={projectId}
                                     index={i}
                                     canDelete={permission}
+                                    latestUnhealthyEvent={currEnvUnhealthyEvents?.find(
+                                      (event) =>
+                                        event.feature === projectFlag.id,
+                                    )}
                                     toggleFlag={toggleFlag}
                                     removeFlag={removeFlag}
                                     projectFlag={projectFlag}
