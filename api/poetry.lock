@@ -1440,7 +1440,7 @@ flagsmith-flag-engine = "*"
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-common"
 reference = "feat/add_version_of_to_rules_and_conditions"
-resolved_reference = "18ca20eac4fc192b1de0a98d642b21b9f1bc927e"
+resolved_reference = "b52f94ac3d44f4f028347a98d35f9a53396b7d94"
 
 [[package]]
 name = "flagsmith-flag-engine"
