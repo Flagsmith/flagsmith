@@ -1,6 +1,5 @@
 import typing
 
-from common.projects.permissions import VIEW_PROJECT
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
@@ -56,13 +55,7 @@ class FeatureHealthProviderViewSet(
     model_class = FeatureHealthProvider
 
     def get_permissions(self) -> list[BasePermission]:
-        return [
-            NestedProjectPermissions(
-                action_permission_map={
-                    "create": VIEW_PROJECT,  # TODO @kgustyr Add dedicated feature health permission?
-                }
-            ),
-        ]
+        return [NestedProjectPermissions()]
 
     def get_queryset(self) -> QuerySet[FeatureHealthProvider]:
         if getattr(self, "swagger_fake_view", False):
