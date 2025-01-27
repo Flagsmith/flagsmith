@@ -4,7 +4,38 @@ from datetime import datetime, timedelta
 import pytest
 from django.urls import reverse
 from freezegun import freeze_time
+from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
+
+
+def test_feature_health_providers__get__expected_response(
+    project: int,
+    admin_client: APIClient,
+    admin_user_email: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
+    expected_feature_health_provider_data = admin_client.post(
+        url,
+        data={"name": "Sample"},
+    ).json()
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert expected_feature_health_provider_data == {
+        "created_by": admin_user_email,
+        "name": "Sample",
+        "project": project,
+        "webhook_url": mocker.ANY,
+    }
+    assert expected_feature_health_provider_data["webhook_url"].startswith(
+        "http://testserver/api/v1/feature-health/"
+    )
+    assert response.status_code == 200
+    assert response.json() == [expected_feature_health_provider_data]
 
 
 def test_webhook__invalid_path__expected_response(
