@@ -74,6 +74,15 @@ class ProjectCreateSerializer(ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
     invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
     field_names = ("stale_flags_limit_days", "enable_realtime_updates")
 
+    class Meta(ProjectListSerializer.Meta):
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=ProjectListSerializer.Meta.model.objects.all(),
+                fields=("name", "organisation"),
+                message="A project with this name already exists.",
+            )
+        ]
+
     def get_subscription(self) -> typing.Optional[Subscription]:
         view = self.context["view"]
 
