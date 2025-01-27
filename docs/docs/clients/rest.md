@@ -271,7 +271,7 @@ Creating identity overrides varies depending on if you are using Flagsmith SaaS 
 
 Creating an identity override requires the following information:
 
-* Environment ID to create the override in
+* Client-side API key of the environment to create the override in
 * Identifier to create the override for
 * Name of the feature to create the override for
 * Desired feature state
@@ -283,7 +283,7 @@ for the identity `my_user_id`:
 
 ```
 curl --request PUT \
-  --url https://api.flagsmith.com/api/v1/environments/environments/YOUR_ENVIRONMENT_ID/edge-identities-featurestates \
+  --url https://api.flagsmith.com/api/v1/environments/environments/YOUR_ENVIRONMENT_API_KEY/edge-identities-featurestates \
   --header 'Accept: application/json' \
   --header 'Authorization: Token YOUR_ADMIN_API_KEY' \
   --header 'content-type: application/json' \
