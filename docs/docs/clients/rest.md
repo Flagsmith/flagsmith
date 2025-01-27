@@ -313,7 +313,7 @@ To obtain the internal IDs of the target identity, browse to the target identity
 Flagsmith dashboard. The identity's internal ID is displayed in the URL, which is `1234` in this example:
 
 ```
-https://flagsmith.example.com/project/5/environment/AbCxYz/users/my_user_id/1234
+https://flagsmith.example.com/project/5/environment/AbCxYz/users/my_identifier/1234
 ```
 
 To obtain the ID of the identity feature state, from the same page on the Flagsmith dashboard, expand the "JSON 
