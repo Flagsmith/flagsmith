@@ -114,6 +114,7 @@ export type Req = {
   getPermission: { id: string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: string }
+  getHealthEvents: { projectId: number | string }
   updateTag: { projectId: string; tag: Tag }
   deleteTag: {
     id: number

@@ -637,6 +637,15 @@ export type SAMLAttributeMapping = {
   idp_attribute_name: string
 }
 
+export type HealthEvent = {
+  created_at: string
+  environment: number
+  feature: number
+  provider_name: string
+  reason: string
+  type: 'HEALTHY' | 'UNHEALTHY'
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -671,6 +680,7 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  healthEvents: HealthEvent[]
   account: Account
   userEmail: {}
   groupAdmin: { id: string }
