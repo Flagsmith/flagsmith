@@ -7,11 +7,22 @@ from freezegun import freeze_time
 from pytest_mock import MockerFixture
 from rest_framework.test import APIClient
 
+from tests.types import AdminClientAuthType
+
+
+def expected_created_by(
+    admin_client_auth_type: AdminClientAuthType,
+    admin_user_email: str,
+) -> str | None:
+    if admin_client_auth_type == "user":
+        return admin_user_email
+    return None
+
 
 def test_feature_health_providers__get__expected_response(
     project: int,
     admin_client_new: APIClient,
-    admin_user_email: str,
+    expected_created_by: str | None,
     mocker: MockerFixture,
 ) -> None:
     # Given
@@ -26,7 +37,7 @@ def test_feature_health_providers__get__expected_response(
 
     # Then
     assert expected_feature_health_provider_data == {
-        "created_by": admin_user_email,
+        "created_by": expected_created_by,
         "name": "Sample",
         "project": project,
         "webhook_url": mocker.ANY,
