@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from tests.types import AdminClientAuthType
 
 
+@pytest.fixture
 def expected_created_by(
     admin_client_auth_type: AdminClientAuthType,
     admin_user_email: str,
