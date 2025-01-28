@@ -2,10 +2,8 @@ import uuid
 
 import structlog
 from django.core import signing
+from django.urls import reverse
 
-from features.feature_health.constants import (
-    FEATURE_HEALTH_WEBHOOK_PATH_PREFIX,
-)
 from features.feature_health.models import FeatureHealthProvider
 
 logger = structlog.get_logger("feature_health")
@@ -16,8 +14,12 @@ _provider_webhook_signer = signing.Signer(sep="/", salt="feature_health")
 def get_webhook_path_from_provider(
     provider: FeatureHealthProvider,
 ) -> str:
-    return FEATURE_HEALTH_WEBHOOK_PATH_PREFIX + _provider_webhook_signer.sign_object(
+    webhook_path = _provider_webhook_signer.sign_object(
         provider.uuid.hex,
+    )
+    return reverse(
+        "api-v1:feature-health-webhook",
+        args=[webhook_path],
     )
 
 
