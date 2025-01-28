@@ -34,6 +34,8 @@ def create_audit_log_from_historical_record(
         if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
         else None
     )
+    if instance.get_skip_create_audit_log():
+        return
 
     try:
         environment, project = instance.get_environment_and_project()
