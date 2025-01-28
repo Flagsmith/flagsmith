@@ -744,9 +744,9 @@ def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_ve
     assert feature_state.feature_state_value.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_state(
+def test_feature_state_value__get_skip_create_audit_log_for_feature_segment_delete(
     feature: Feature, feature_segment: FeatureSegment, environment: Environment
-):
+) -> None:
     # Give
     feature_state = FeatureState.objects.create(
         feature=feature, feature_segment=feature_segment, environment=environment
@@ -763,7 +763,51 @@ def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_stat
         id=feature_state_value.id, history_type="-"
     ).first()
 
-    assert fsv_history_instance.instance.get_skip_create_audit_log() is False
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value__get_skip_create_audit_log_for_identity_delete(
+    feature: Feature,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Give
+    feature_state = FeatureState.objects.create(
+        feature=feature, identity=identity, environment=environment
+    )
+    feature_state_value = feature_state.feature_state_value
+
+    # When
+    # Delete identity to cascade delete feature state
+    # instead of soft delete
+    identity.delete()
+
+    # Then
+    fsv_history_instance = FeatureStateValue.history.filter(
+        id=feature_state_value.id, history_type="-"
+    ).first()
+
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value__get_skip_create_audit_log_for_feature_delete(
+    feature: Feature,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Give
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    feature_state_value = feature_state.feature_state_value
+
+    # When
+    feature.delete()
+
+    # Then
+    fsv_history_instance = FeatureStateValue.history.filter(
+        id=feature_state_value.id, history_type="-"
+    ).first()
+
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is True
 
 
 @pytest.mark.parametrize(
