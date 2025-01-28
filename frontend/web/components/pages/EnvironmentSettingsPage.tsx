@@ -71,7 +71,7 @@ const EnvironmentSettingsPageTS: React.FC<EnvironmentSettingsPageProps> = ({ cre
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  
+
   const onDiscard = () => {
     const env = ProjectStore?.getEnvs()?.find(
       (env: Environment) => env.api_key === match.params.environmentId,
