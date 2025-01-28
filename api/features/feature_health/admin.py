@@ -4,7 +4,9 @@ from django.contrib import admin
 from django.http import HttpRequest
 
 from features.feature_health.models import FeatureHealthProvider
-from features.feature_health.services import get_webhook_path_from_provider
+from features.feature_health.providers.services import (
+    get_webhook_path_from_provider,
+)
 
 
 @admin.register(FeatureHealthProvider)

@@ -5,7 +5,9 @@ from features.feature_health.models import (
     FeatureHealthProvider,
     FeatureHealthProviderName,
 )
-from features.feature_health.services import get_webhook_path_from_provider
+from features.feature_health.providers.services import (
+    get_webhook_path_from_provider,
+)
 
 
 class FeatureHealthEventSerializer(serializers.ModelSerializer):

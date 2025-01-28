@@ -13,6 +13,9 @@ from features.feature_health.models import (
     FeatureHealthEvent,
     FeatureHealthProvider,
 )
+from features.feature_health.providers.services import (
+    get_provider_from_webhook_path,
+)
 from features.feature_health.serializers import (
     CreateFeatureHealthProviderSerializer,
     FeatureHealthEventSerializer,
@@ -20,7 +23,6 @@ from features.feature_health.serializers import (
 )
 from features.feature_health.services import (
     create_feature_health_event_from_provider,
-    get_provider_from_webhook_path,
 )
 from projects.models import Project
 from projects.permissions import NestedProjectPermissions
