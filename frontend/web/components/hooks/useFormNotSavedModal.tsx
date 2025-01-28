@@ -45,7 +45,7 @@ const useFormNotSavedModal = (
         };
     }, [isDirty, history]);
 
-    const confirmNavigation = useCallback(() => {
+    const discardAndConfirmNavigation = useCallback(() => {
         // allow the route change to happen
         if (unblockRef.current) {
             unblockRef.current(); // unblocks
@@ -92,7 +92,7 @@ const useFormNotSavedModal = (
                 <p>{warningMessage}</p>
             </ModalBody>
             <div className="modal-footer">
-                <Button onClick={confirmNavigation} theme="secondary" className="mr-2">Yes, discard changes</Button>
+                <Button onClick={discardAndConfirmNavigation} theme="secondary" className="mr-2">Yes, discard changes</Button>
                 <Button onClick={cancelNavigation} class="btn-primary">Cancel</Button>
             </div>
         </Modal>
