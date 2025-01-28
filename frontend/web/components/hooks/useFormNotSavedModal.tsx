@@ -12,13 +12,13 @@ import { Modal, ModalHeader, ModalBody } from "reactstrap"
 type UseFormNotSavedModalReturn = [React.FC, React.Dispatch<React.SetStateAction<boolean>>, boolean]
 
 interface UseFormNotSavedModalOptions {
-  warningMessage?: string
-  onDiscard?: () => void
+    warningMessage?: string
+    onDiscard?: () => void
 }
 
 const useFormNotSavedModal = (
-  history: RouterChildContext['router']['history'],
-  options: UseFormNotSavedModalOptions = {}
+    history: RouterChildContext['router']['history'],
+    options: UseFormNotSavedModalOptions = {}
 ): UseFormNotSavedModalReturn => {
     const { onDiscard, warningMessage = "You have unsaved changes, are you sure you want to leave?" } = options
 
