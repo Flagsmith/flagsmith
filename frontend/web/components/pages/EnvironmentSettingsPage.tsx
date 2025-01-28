@@ -63,7 +63,7 @@ interface EnvironmentSettingsPageProps {
   deleteWebhook: (webhook: Webhook) => Promise<void>
 }
 
-const EnvironmentSettingsPageTS: React.FC<EnvironmentSettingsPageProps> = ({ createWebhook, deleteWebhook, getWebhooks, match, router, saveWebhook, webhooks, webhooksLoading }) => {
+const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ createWebhook, deleteWebhook, getWebhooks, match, router, saveWebhook, webhooks, webhooksLoading }) => {
   const store = getStore()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<any[]>([])
@@ -83,7 +83,6 @@ const EnvironmentSettingsPageTS: React.FC<EnvironmentSettingsPageProps> = ({ cre
 
   const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal(router.history, { onDiscard: onDiscard })
 
-  // TODO: types
   const getEnvironment = useCallback(async () => {
     const env = ProjectStore?.getEnvs()?.find(
       (env: Environment) => env.api_key === match.params.environmentId,
@@ -886,6 +885,6 @@ const EnvironmentSettingsPageTS: React.FC<EnvironmentSettingsPageProps> = ({ cre
 
 
 
-EnvironmentSettingsPageTS.displayName = 'EnvironmentSettingsPage'
+EnvironmentSettingsPage.displayName = 'EnvironmentSettingsPage'
 
-export default ConfigProvider(withWebhooks(EnvironmentSettingsPageTS))
+export default ConfigProvider(withWebhooks(EnvironmentSettingsPage))
