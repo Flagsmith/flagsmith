@@ -42,7 +42,7 @@ def create_feature_health_event_from_provider(
 ) -> FeatureHealthEvent | None:
     try:
         response = get_provider_response(provider, payload)
-    except ValueError as exc:
+    except (KeyError, ValueError) as exc:
         logger.error(
             "invalid-feature-health-event-data",
             provider_name=provider.name,
