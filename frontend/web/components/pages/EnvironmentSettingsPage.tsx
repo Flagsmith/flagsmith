@@ -1,4 +1,4 @@
-import React, { Component, useEffect, useState, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -27,7 +27,6 @@ import { getSupportedContentType } from 'common/services/useSupportedContentType
 import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 import Format from 'common/utils/format'
 import Setting from 'components/Setting'
-import { useWebhooks } from 'components/hooks/useWebhooks'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
 import { Environment } from 'common/types/responses'
@@ -37,15 +36,10 @@ import Panel from 'components/base/grid/Panel'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-type WebhookType = {
-  id: string
-  url: string
-  secret: string
-  enabled: boolean
-  created_at: string
-}
+import { Webhook } from 'common/types/webhooks'
+import useFormNotSavedModal from 'components/hooks/useFormNotSavedModal'
 
-const showDisabledFlagOptions = [
+const showDisabledFlagOptions: { label: string, value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
   { label: 'Disabled', value: false },
   { label: 'Enabled', value: true },
@@ -59,55 +53,40 @@ interface EnvironmentSettingsPageProps {
       environmentId: string
     }
   }
-
+  router: RouterChildContext['router']
   // Webhook props from HOC
-  webhooks: WebhookType[]
+  webhooks: Webhook[]
   webhooksLoading: boolean
   getWebhooks: () => void
-  createWebhook: (webhook: Partial<WebhookType>) => Promise<void>
-  saveWebhook: (webhook: WebhookType) => Promise<void>
-  deleteWebhook: (webhook: WebhookType) => Promise<void>
-  // ConfigProvider props
-  error?: any
-  getValue?: (key: string) => any
-  hasFeature?: (key: string) => boolean
+  createWebhook: (webhook: Partial<Webhook>) => Promise<void>
+  saveWebhook: (webhook: Webhook) => Promise<void>
+  deleteWebhook: (webhook: Webhook) => Promise<void>
 }
 
 const EnvironmentSettingsPageTS: React.FC<EnvironmentSettingsPageProps> = ({ createWebhook, deleteWebhook, getWebhooks, match, router, saveWebhook, webhooks, webhooksLoading }) => {
-  // TODO: Improve Environment type
+  const store = getStore()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
-  const [myName, setMyName] = useState<string | null>(null)
   const [roles, setRoles] = useState<any[]>([])
   const [environmentContentType, setEnvironmentContentType] = useState<any>(null)
-const inputRef = useRef<HTMLInputElement | null>(null)
-  const store = getStore()
-
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
+  
+  const onDiscard = () => {
+    const env = ProjectStore?.getEnvs()?.find(
+      (env: Environment) => env.api_key === match.params.environmentId,
+    )
+    if (env && currentEnv) {
+      setCurrentEnv({ ...currentEnv, description: env.description, name: env.name })
+    }
+  }
 
-  useEffect(() => {
-    AppActions.getProject(match.params.projectId)
-    console.log('yiha')
-  }, [match.params.projectId])
-
-  useEffect(() => {
-    getEnvironment()
-    console.log('plop')
-  }, [match.params.environmentId])
-
-  useEffect(() => {
-    API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
-    getEnvironment()
-    getWebhooks()
-    console.log('yala')
-  }, [])
+  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal(router.history, { onDiscard: onDiscard })
 
   // TODO: types
-  const getEnvironment = async () => {
-    console.log('getEnvironment')
+  const getEnvironment = useCallback(async () => {
     const env = ProjectStore?.getEnvs()?.find(
-      (v) => v.api_key === match.params.environmentId,
+      (env: Environment) => env.api_key === match.params.environmentId,
     )
     setCurrentEnv(env)
 
@@ -147,12 +126,26 @@ const inputRef = useRef<HTMLInputElement | null>(null)
     }
 
     await getWebhooks()
-  }
+  }, [match.params.environmentId, getWebhooks, store])
+
+  useEffect(() => {
+    AppActions.getProject(match.params.projectId)
+  }, [match.params.projectId])
+
+  useEffect(() => {
+    getEnvironment()
+  }, [match.params.environmentId, getEnvironment])
+
+  useEffect(() => {
+    API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
+    getEnvironment()
+    getWebhooks()
+  }, [getEnvironment, getWebhooks])
 
   const onSave = () => {
     toast('Environment Saved')
   }
-  console.log('currentEnv', currentEnv)
+
   const onRemove = () => {
     toast('Your project has been removed')
     router.history.replace(Utils.getOrganisationHomePage())
@@ -165,7 +158,6 @@ const inputRef = useRef<HTMLInputElement | null>(null)
       'p-0',
     )
   }
-
 
   const onRemoveEnvironment = (environment: Environment) => {
     const envs = ProjectStore.getEnvs() as Environment[] | null
@@ -186,38 +178,33 @@ const inputRef = useRef<HTMLInputElement | null>(null)
     )
   }
 
-  const saveEnv = (newEnv: Partial<Environment>) => {
-    // e && e.preventDefault()
-    //   console.log
-    const env = _.find(ProjectStore.getEnvs(), {
-      api_key: match.params.environmentId,
-    }) as Environment
+  const updateCurrentEnv = (newEnv: Partial<Environment> = {}, shouldSaveUpdate?: boolean, isDirtyDisabled?: boolean) => {
+    console.log(newEnv)
+    if (!isDirtyDisabled) {
+      console.log("dirtying")
+      setIsDirty(true)
+    }
+    setCurrentEnv((currentEnvState) => {
+      if (!currentEnvState) return null
+      const newEnvState = {
+        ...currentEnvState,
+        ...newEnv,
+      }
+      if (shouldSaveUpdate) {
+        saveEnv(newEnvState)
+      }
+      return newEnvState
+    })
+  }
 
-    const { name } = env
-    if (ProjectStore.isSaving || !name) {
+  const saveEnv = (newEnv: Partial<Environment> = {}) => {
+    if (ProjectStore.isSaving || !currentEnv?.name) {
       return
     }
     const editedEnv = { ...currentEnv, ...newEnv }
-    console.log('editing', Object.assign({}, env, {
-        allow_client_traits: !!currentEnv?.allow_client_traits,
-        banner_colour: currentEnv?.banner_colour,
-        banner_text: currentEnv?.banner_text,
-        description: currentEnv?.description,
-        hide_disabled_flags: currentEnv?.hide_disabled_flags,
-        hide_sensitive_data: !!currentEnv?.hide_sensitive_data,
-        minimum_change_request_approvals: has4EyesPermission
-          ? currentEnv?.minimum_change_request_approvals
-          : null,
-        name: editedEnv.name || env.name,
-        use_identity_composite_key_for_hashing:
-          !!currentEnv?.use_identity_composite_key_for_hashing,
-        use_identity_overrides_in_local_eval:
-          !!currentEnv?.use_identity_overrides_in_local_eval,
-        use_mv_v2_evaluation: !!currentEnv?.use_mv_v2_evaluation,
-      }),)
+
     AppActions.editEnv(
-      // Can it be a spread ?
-      Object.assign({}, env, {
+      Object.assign({}, currentEnv, {
         allow_client_traits: !!editedEnv?.allow_client_traits,
         banner_colour: editedEnv?.banner_colour,
         banner_text: editedEnv?.banner_text,
@@ -227,7 +214,7 @@ const inputRef = useRef<HTMLInputElement | null>(null)
         minimum_change_request_approvals: has4EyesPermission
           ? editedEnv?.minimum_change_request_approvals
           : null,
-        name: editedEnv.name || env.name,
+        name: editedEnv.name || currentEnv.name,
         use_identity_composite_key_for_hashing:
           !!editedEnv?.use_identity_composite_key_for_hashing,
         use_identity_overrides_in_local_eval:
@@ -235,6 +222,7 @@ const inputRef = useRef<HTMLInputElement | null>(null)
         use_mv_v2_evaluation: !!editedEnv?.use_mv_v2_evaluation,
       }),
     )
+    setIsDirty(false)
   }
 
   const handleCreateWebhook = () => {
@@ -250,7 +238,7 @@ const inputRef = useRef<HTMLInputElement | null>(null)
     )
   }
 
-  const handleEditWebhook = (webhook: WebhookType) => {
+  const handleEditWebhook = (webhook: Webhook) => {
     openModal(
       'Edit Webhook',
       <CreateWebhookModal
@@ -265,7 +253,7 @@ const inputRef = useRef<HTMLInputElement | null>(null)
     )
   }
 
-  const handleDeleteWebhook = (webhook: WebhookType) => {
+  const handleDeleteWebhook = (webhook: Webhook) => {
     openModal(
       'Remove Webhook',
       <ConfirmRemoveWebhook
@@ -288,19 +276,32 @@ const inputRef = useRef<HTMLInputElement | null>(null)
         feature={Format.enumeration.get(environmentProperty)}
         featureValue={environmentPropertyValue}
         onToggleChange={() => {
-          setCurrentEnv((currentEnvState) => {
-            const newEnv = { ...currentEnvState, [environmentProperty]: environmentPropertyValue }
-            console.log('newEnv', newEnv)
-            // TODO: Fix env type
-            saveEnv(newEnv as Environment)
-            return newEnv
-          })
-
+          updateCurrentEnv({ [environmentProperty]: environmentPropertyValue }, true)
           closeModal()
         }}
       />,
       'p-0 modal-sm',
     )
+  }
+
+  const onEnableVersioning = () => {
+    if (!currentEnv?.api_key) return
+    openConfirm({
+      body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
+      onYes: () => {
+        enableFeatureVersioning(store, {
+          environmentId: currentEnv?.api_key,
+        }).then(() => {
+          toast(
+            'Feature Versioning Enabled, this may take several minutes to process.',
+          )
+          updateCurrentEnv({
+            enabledFeatureVersioning: true,
+          }, false, true)
+        })
+      },
+      title: 'Enable "Feature Versioning"',
+    })
   }
 
   return (
@@ -312,60 +313,39 @@ const inputRef = useRef<HTMLInputElement | null>(null)
         onSave={onSave}
       >
         {({ deleteEnv, isLoading, isSaving, project }) => {
-          console.log('new', isLoading, deleteEnv)
           const env = _.find(project?.environments, {
             api_key: match.params.environmentId,
           })
           if (
             (env &&
-              typeof currentEnv?.minimum_change_request_approvals ===
+              typeof env?.minimum_change_request_approvals ===
               'undefined') ||
-            currentEnv?.api_key !== match.params.environmentId
+            env?.api_key !== match.params.environmentId
           ) {
-            // setTimeout(() => {
-            //   setCurrentEnv({
-            //     allow_client_traits: !!env.allow_client_traits,
-            //     banner_colour: env.banner_colour || Constants.tagColors[0],
-            //     banner_text: env.banner_text,
-            //     hide_disabled_flags: env.hide_disabled_flags,
-            //     hide_sensitive_data: !!env.hide_sensitive_data,
-            //     minimum_change_request_approvals: Utils.changeRequestsEnabled(
-            //       env.minimum_change_request_approvals,
-            //     )
-            //       ? env.minimum_change_request_approvals
-            //       : null,
-            //     name: env.name,
-            //     use_identity_composite_key_for_hashing:
-            //       !!env.use_identity_composite_key_for_hashing,
-            //     use_identity_overrides_in_local_eval:
-            //       !!env.use_identity_overrides_in_local_eval,
-            //     use_v2_feature_versioning: !!env.use_v2_feature_versioning,
-            //   })
-            // }, 10)
-          }
-          const onEnableVersioning = () => {
-            openConfirm({
-              body: 'This will allow you to attach versions to updating feature values and segment overrides. Note: this may take several minutes to process',
-              onYes: () => {
-                enableFeatureVersioning(getStore(), {
-                  environmentId: env.api_key,
-                }).then((res) => {
-                  toast(
-                    'Feature Versioning Enabled, this may take several minutes to process.',
-                  )
-                  setCurrentEnv((currentEnvState) => ({
-                    ...currentEnvState,
-                    enabledFeatureVersioning: true,
-                  }))
-                })
-              },
-              title: 'Enable "Feature Versioning"',
-            })
+            setTimeout(() => {
+              const minimumChangeRequestApprovals = Utils.changeRequestsEnabled(env?.minimum_change_request_approvals)
+              updateCurrentEnv({
+                allow_client_traits: !!env?.allow_client_traits,
+                banner_colour: env?.banner_colour || Constants.tagColors[0],
+                banner_text: env?.banner_text,
+                hide_disabled_flags: env?.hide_disabled_flags || false,
+                hide_sensitive_data: !!env?.hide_sensitive_data,
+                minimum_change_request_approvals: minimumChangeRequestApprovals
+                  ? env?.minimum_change_request_approvals
+                  : null,
+                name: env?.name || "",
+                use_identity_composite_key_for_hashing:
+                  !!env?.use_identity_composite_key_for_hashing,
+                use_identity_overrides_in_local_eval:
+                  !!env?.use_identity_overrides_in_local_eval,
+                use_v2_feature_versioning: !!env?.use_v2_feature_versioning,
+              }, false, true)
+            }, 10)
           }
 
           return (
             <>
-              {/* <EnvironmentSettingsPageTS match={this.props.match} router={this.context.router} /> */}
+              <DirtyFormModal />
               <PageTitle title='Settings' />
               {isLoading && (
                 <div className='centered-container'>
@@ -373,29 +353,24 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                 </div>
               )}
               {!isLoading && (
-                <Tabs urlParam='tab' className='mt-0' uncontrolled>
+                <Tabs urlParam='tab' className='mt-0' uncontrolled noFocus>
                   <TabItem tabLabel='General'>
                     <div className='mt-4'>
                       <h5 className='mb-5'>General Settings</h5>
                       <JSONReference title={'Environment'} json={env} />
                       <div className='col-md-8'>
-                        <form onSubmit={saveEnv}>
+                        <form onSubmit={() => saveEnv()}>
                           <InputGroup
-                            value={currentEnv?.name || "test"}
+                            value={currentEnv?.name}
                             inputProps={{
                               className: 'full-width',
                               name: 'env-name',
                             }}
                             className='full-width'
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>{
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               const value = Utils.safeParseEventValue(e)
-                              setCurrentEnv((currentEnvState) => {
-                                return {
-                                  ...currentEnvState,
-                                  name: value,
-                                }
-                              })}
-                            }
+                              updateCurrentEnv({ name: value }, false)
+                            }}
                             isValid={currentEnv?.name && currentEnv?.name.length}
                             type='text'
                             title='Environment Name'
@@ -408,12 +383,10 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                             inputProps={{
                               className: 'input--wide textarea-lg',
                             }}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>{
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                               const value = Utils.safeParseEventValue(e)
-                              setCurrentEnv((currentEnvState) => ({
-                                ...currentEnvState,
-                                description: value
-                              }))}
+                              updateCurrentEnv({ description: value })
+                            }
                             }
                             isValid={currentEnv?.description && currentEnv?.description.length}
                             type='text'
@@ -434,18 +407,9 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                       <hr className='py-0 my-4' />
                       <div className='col-md-8 mt-4'>
                         <Setting
-                          onChange={(value) =>
-                            setCurrentEnv((currentEnvState) => {
-                              const newEnv = {
-                                ...currentEnvState,
-                                banner_text: value
-                                  ? `${env.name} Environment`
-                                  : null,
-                              }
-                              saveEnv(newEnv)
-                              return newEnv
-                            })
-                          }
+                          onChange={(value) => updateCurrentEnv({
+                            banner_text: value ? `${currentEnv?.name} Environment` : null
+                          }, true)}
                           checked={typeof currentEnv?.banner_text === 'string'}
                           title={'Environment Banner'}
                           description={
@@ -463,26 +427,21 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                             <Input
                               placeholder='Banner text'
                               value={currentEnv?.banner_text}
-                              onChange={(e) => {
-                                setCurrentEnv((currentEnvState) => ({
-                                  ...currentEnvState,
-                                  banner_text: Utils.safeParseEventValue(e),
-                                }))
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                const bannerText = Utils.safeParseEventValue(e)
+                                updateCurrentEnv({ banner_text: bannerText }, false)
                               }}
                               className='full-width'
                             />
                             <div className='ml-2'>
                               <ColourSelect
-                                value={currentEnv?.banner_colour}
+                                value={currentEnv?.banner_colour || ''}
                                 onChange={(banner_colour) =>
-                                  setCurrentEnv((currentEnvState) => ({
-                                    ...currentEnvState,
-                                    banner_colour,
-                                  }))
+                                  updateCurrentEnv({ banner_colour }, false)
                                 }
                               />
                             </div>
-                            <Button onClick={saveEnv} size='small'>
+                            <Button onClick={() => saveEnv()} size='small'>
                               Save
                             </Button>
                           </Row>
@@ -493,17 +452,14 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                           <div className='col-md-8 mt-4'>
                             {currentEnv?.use_v2_feature_versioning === false && (
                               <EnvironmentVersioningListener
+                                // TODO: Should be listening on Id or API_KEY ?
                                 id={env.api_key}
                                 versioningEnabled={currentEnv?.use_v2_feature_versioning}
                                 onChange={() => {
-                                  setCurrentEnv((currentEnvState) => ({
-                                    ...currentEnvState,
-                                    use_v2_feature_versioning: true,
-                                  }))
+                                  updateCurrentEnv({ use_v2_feature_versioning: true }, false, true)
                                 }}
                               />
                             )}
-
                             <Setting
                               title={'Feature Versioning'}
                               description={
@@ -538,12 +494,11 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                         <Setting
                           title='Hide sensitive data'
                           checked={currentEnv?.hide_sensitive_data}
-                          onChange={(v) => {
-                            console.log('v', v)
+                          onChange={(value) => {
                             confirmToggle(
                               'Confirm Environment Setting',
                               'hide_sensitive_data',
-                              v,
+                              value,
                             )
                           }}
                           description={
@@ -580,17 +535,8 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                               currentEnv?.minimum_change_request_approvals,
                             )
                           }
-                          onChange={(v) =>
-                            setCurrentEnv((currentEnvState) => {
-                              const newEnv = {
-                                ...currentEnvState,
-                                minimum_change_request_approvals: v
-                                  ? 0
-                                  : null,
-                              }
-                              saveEnv(newEnv)
-                              return newEnv
-                            })
+                          onChange={(value) =>
+                            updateCurrentEnv({ minimum_change_request_approvals: value ? 0 : undefined }, true)
                           }
                         />
                         {Utils.changeRequestsEnabled(
@@ -610,15 +556,8 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                                     min={0}
                                     style={{ minWidth: 50 }}
                                     onChange={(e) => {
-                                      if (!Utils.safeParseEventValue(e))
-                                        return
-                                      setCurrentEnv((currentEnvState) => ({
-                                        ...currentEnvState,
-                                        minimum_change_request_approvals:
-                                          parseInt(
-                                            Utils.safeParseEventValue(e),
-                                          ),
-                                      }))
+                                      const value = Utils.safeParseEventValue(e)
+                                      updateCurrentEnv({ minimum_change_request_approvals: value ? parseInt(value) : undefined }, false)
                                     }}
                                     isValid={currentEnv?.minimum_change_request_approvals && currentEnv?.minimum_change_request_approvals.length}
                                     type='number'
@@ -653,21 +592,19 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                           </div>
                           <Button
                             id='delete-env-btn'
-                            onClick={() =>
+                            onClick={() => {
+                              const envToRemove = _.find(project?.environments, {
+                                api_key:
+                                  match.params.environmentId,
+                              })
+                              if (!envToRemove) return
                               confirmRemove(
-                                _.find(project.environments, {
-                                  api_key:
-                                    match.params.environmentId,
-                                }),
+                                envToRemove,
                                 () => {
-                                  deleteEnv(
-                                    _.find(project.environments, {
-                                      api_key:
-                                        match.params.environmentId,
-                                    }),
-                                  )
+                                  deleteEnv(envToRemove)
                                 },
                               )
+                            }
                             }
                             className='btn btn-with-icon btn-remove'
                           >
@@ -688,7 +625,7 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                         className='mb-4'
                       />
                       <div className='col-md-8'>
-                        <form onSubmit={saveEnv}>
+                        <form onSubmit={() => saveEnv()}>
                           <div>
                             <h5 className='mb-2'>
                               Hide disabled flags from SDKs
@@ -696,20 +633,13 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                             <Select
                               value={
                                 showDisabledFlagOptions.find(
-                                  (v) =>
-                                    v.value ===
+                                  (option) =>
+                                    option.value ===
                                     currentEnv?.hide_disabled_flags,
                                 ) || showDisabledFlagOptions[0]
                               }
-                              onChange={(v) => {
-                                setCurrentEnv((currentEnvState) => {
-                                  const newEnv = {
-                                    ...currentEnvState,
-                                    hide_disabled_flags: v.value,
-                                  }
-                                  saveEnv(newEnv)
-                                  return newEnv
-                                })
+                              onChange={(option: { label: string, value: boolean | null }) => {
+                                updateCurrentEnv({ hide_disabled_flags: option.value }, true)
                               }}
                               options={showDisabledFlagOptions}
                               data-test='js-hide-disabled-flags'
@@ -735,31 +665,17 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                               title='Allow client SDKs to set user traits'
                               description={`Disabling this option will prevent client SDKs from using the client key from setting traits.`}
                               checked={currentEnv?.allow_client_traits}
-                              onChange={(v) => {
-                                setCurrentEnv((currentEnvState) => {
-                                  const newEnv = {
-                                    ...currentEnvState,
-                                    allow_client_traits: v,
-                                  }
-                                  saveEnv(newEnv)
-                                  return newEnv
-                                })
+                              onChange={(value) => {
+                                updateCurrentEnv({ allow_client_traits: value }, true)
                               }}
                             />
                           </div>
                           <div className='mt-4'>
                             <Setting
                               checked={currentEnv?.use_identity_composite_key_for_hashing}
-                              onChange={(v) => {
-                                setCurrentEnv((currentEnvState) => {
-                                  const newEnv = {
-                                    ...currentEnvState,
-                                    use_identity_composite_key_for_hashing: v,
-                                  }
-                                  saveEnv(newEnv)
-                                  return newEnv
-                                })
-                              }}
+                              onChange={(value) =>
+                                updateCurrentEnv({ use_identity_composite_key_for_hashing: value }, true)
+                              }
                               title={`Use consistent hashing`}
                               description={
                                 <div>
@@ -789,17 +705,8 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                                   title='Use identity overrides in local evaluation'
                                   description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
                                   checked={!!currentEnv?.use_identity_overrides_in_local_eval}
-                                  onChange={(v) => {
-                                    console.log('identity', v)
-                                    setCurrentEnv((currentEnvState) => {
-                                      const newEnv = {
-                                        ...currentEnvState,
-                                        use_identity_overrides_in_local_eval: v,
-                                      }
-                                      console.log(newEnv)
-                                      saveEnv(newEnv)
-                                      return newEnv
-                                    })
+                                  onChange={(value) => {
+                                    updateCurrentEnv({ use_identity_overrides_in_local_eval: value }, true)
                                   }}
                                 />
                               </div>
@@ -815,8 +722,8 @@ const inputRef = useRef<HTMLInputElement | null>(null)
                         parentId={match.params.projectId}
                         parentLevel='project'
                         parentSettingsLink={`/project/${match.params.projectId}/settings`}
-                        id={match.params.environmentId}
-                        envId={env.id}
+                        id={parseInt(match.params.environmentId)}
+                        envId={env?.id}
                         router={router}
                         level='environment'
                         roleTabTitle='Environment Permissions'

@@ -23,7 +23,7 @@ const ConfirmRemoveEnvironment: FC<ConfirmRemoveEnvironmentType> = ({
       cb()
     }
   }
-  console.log("plop")
+
   return (
     <ProjectProvider>
       {() => (
