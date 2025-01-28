@@ -26,6 +26,7 @@ from features.feature_health.services import (
 )
 from projects.models import Project
 from projects.permissions import NestedProjectPermissions
+from users.models import FFAdminUser
 
 
 class FeatureHealthEventViewSet(
@@ -76,10 +77,14 @@ class FeatureHealthProviderViewSet(
 
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
 
+        created_by = None
+        if isinstance(self.request.user, FFAdminUser):
+            created_by = self.request.user
+
         instance = self.model_class.objects.create(
             project=project,
             name=request_serializer.validated_data["name"],
-            created_by=self.request.user,
+            created_by=created_by,
         )
 
         serializer = FeatureHealthProviderSerializer(

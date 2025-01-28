@@ -10,19 +10,19 @@ from rest_framework.test import APIClient
 
 def test_feature_health_providers__get__expected_response(
     project: int,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
     admin_user_email: str,
     mocker: MockerFixture,
 ) -> None:
     # Given
     url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
-    expected_feature_health_provider_data = admin_client.post(
+    expected_feature_health_provider_data = admin_client_new.post(
         url,
         data={"name": "Sample"},
     ).json()
 
     # When
-    response = admin_client.get(url)
+    response = admin_client_new.get(url)
 
     # Then
     assert expected_feature_health_provider_data == {
@@ -58,7 +58,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
     feature_name: str,
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -80,7 +80,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
 
     # Then
     assert response.status_code == 200
-    response = admin_client.get(feature_health_events_url)
+    response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
             "created_at": "2023-01-19T09:09:47.325132Z",
@@ -91,7 +91,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
             "type": "UNHEALTHY",
         }
     ]
-    response = admin_client.get(tags_url)
+    response = admin_client_new.get(tags_url)
     assert (
         tag_data := next(
             tag_data
@@ -99,7 +99,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
             if tag_data.get("label") == "Unhealthy"
         )
     )
-    response = admin_client.get(features_url)
+    response = admin_client_new.get(features_url)
     feature_data = next(
         feature_data
         for feature_data in response.json()["results"]
@@ -117,7 +117,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     environment_name: str,
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -138,7 +138,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
 
     # Then
     assert response.status_code == 200
-    response = admin_client.get(feature_health_events_url)
+    response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
             "created_at": "2023-01-19T09:09:47.325132Z",
@@ -158,7 +158,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     feature_name: str,
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
-    admin_client: APIClient,
+    admin_client_new: APIClient,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -181,7 +181,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
 
     # Then
     assert response.status_code == 200
-    response = admin_client.get(feature_health_events_url)
+    response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
             "created_at": "2023-01-19T09:09:48.325132Z",
@@ -192,7 +192,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
             "type": "HEALTHY",
         }
     ]
-    response = admin_client.get(tags_url)
+    response = admin_client_new.get(tags_url)
     assert (
         tag_data := next(
             tag_data
@@ -200,7 +200,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
             if tag_data.get("label") == "Unhealthy"
         )
     )
-    response = admin_client.get(features_url)
+    response = admin_client_new.get(features_url)
     feature_data = next(
         feature_data
         for feature_data in response.json()["results"]
