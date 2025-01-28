@@ -1095,9 +1095,13 @@ class FeatureStateValue(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
+            if self.feature_state.deleted_at:
+                return True
+
             return self.feature_state.get_skip_create_audit_log()
-        except ObjectDoesNotExist:
-            return False
+
+        except FeatureState.DoesNotExist:
+            return True
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state
