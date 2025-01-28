@@ -440,7 +440,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
       'p-0',
     )
   }
-  console.log(props.integrations)
+
   return (
     <div>
       <div
