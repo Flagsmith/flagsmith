@@ -760,7 +760,7 @@ def test_delete_user_social_auth_with_no_password(password):
 @pytest.mark.django_db
 def test_change_email_address_api(mocker):
     # Given
-    mocked_task = mocker.patch("users.signals.send_email_changed_notification_email")
+    mocked_task = mocker.patch("users.tasks.send_email_changed_notification_email")
     # create an user
     old_email = "test_user@test.com"
     first_name = "firstname"

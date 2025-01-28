@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.160.2](https://github.com/Flagsmith/flagsmith/compare/v2.160.1...v2.160.2) (2025-01-28)
+
+
+### Bug Fixes
+
+* **5044:** handle deleted feature state ([#5045](https://github.com/Flagsmith/flagsmith/issues/5045)) ([ecd409b](https://github.com/Flagsmith/flagsmith/commit/ecd409bdc5806fdcbda0df834ec06214e58126e7))
+* cast boolean on length environment ([#5017](https://github.com/Flagsmith/flagsmith/issues/5017)) ([c0e8b81](https://github.com/Flagsmith/flagsmith/commit/c0e8b8106471748f557187d006602bae01b9ca58))
+* Disable invite button when email config is not set ([#5022](https://github.com/Flagsmith/flagsmith/issues/5022)) ([2faca89](https://github.com/Flagsmith/flagsmith/commit/2faca89f180c36cb687b5af8ce1e21fa944e376d))
+* ensure project names are unique ([#5039](https://github.com/Flagsmith/flagsmith/issues/5039)) ([aa665c0](https://github.com/Flagsmith/flagsmith/commit/aa665c0e7347cada2a234921fae1b87990a5a84a))
+* Raise if `environment_feature_version` is `None` ([#5028](https://github.com/Flagsmith/flagsmith/issues/5028)) ([edd7141](https://github.com/Flagsmith/flagsmith/commit/edd71412200333ed2f0bb268a14f9045b2372f28))
+* Set Hubspot id to newest value ([#5040](https://github.com/Flagsmith/flagsmith/issues/5040)) ([2bcb0bd](https://github.com/Flagsmith/flagsmith/commit/2bcb0bd9c7d6def29df610b49b307f40c81304a3))
+* **webhook/signal:** Optimise historical record writes  ([#5041](https://github.com/Flagsmith/flagsmith/issues/5041)) ([fe69d55](https://github.com/Flagsmith/flagsmith/commit/fe69d55b37e1d4fdcdcca41aa1d508c89cafae66))
+
 ## [2.160.1](https://github.com/Flagsmith/flagsmith/compare/v2.160.0...v2.160.1) (2025-01-22)
 
 

@@ -94,6 +94,60 @@ def test_condition_get_delete_log_message_for_valid_segment(
     assert msg == f"Condition removed from segment '{segment.name}'."
 
 
+def test__condition_get_skip_create_audit_log_on_rule_delete(
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+    # When
+    segment_rule.delete()
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+def test__condition_get_skip_create_audit_log_on_segment_delete(
+    segment_rule: SegmentRule, segment: Segment
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+    # When
+    segment.delete()
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+def test__condition_get_skip_create_audit_log_on_segment_hard_delete(
+    segment_rule: SegmentRule, segment: Segment
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+    # When
+    segment.delete()
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
 def test_condition_get_delete_log_message_for_deleted_segment(
     segment, segment_rule, mocker
 ):
@@ -406,6 +460,36 @@ def test_deep_clone_of_segment_with_grandchild_rule(
     assert (
         "AssertionError: Expected two layers of rules, not more" == exception.exconly()
     )
+
+
+def test_segment_rule_get_skip_create_on_segment_hard_delete(
+    segment: Segment,
+) -> None:
+    # Given
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+
+    # When
+    segment.hard_delete()
+
+    # Then
+    assert segment_rule.get_skip_create_audit_log() is True
+
+
+def test_segment_rule_get_skip_create_on_segment_delete(
+    segment: Segment,
+) -> None:
+    # Given
+    segment_rule = SegmentRule.objects.create(
+        segment=segment, type=SegmentRule.ALL_RULE
+    )
+
+    # When
+    segment.delete()
+
+    # Then
+    assert segment_rule.get_skip_create_audit_log() is True
 
 
 def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(
@@ -893,3 +977,28 @@ def test_update_segment_with_matches_from_current_segment_with_exact_condition_m
     assert condition2.version_of is None
     assert condition3.version_of is None
     assert condition4.version_of is None
+
+
+def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
+    mocker: MockerFixture, segment: Segment
+) -> None:
+    # Given
+    for _ in range(5):
+        segment_rule = SegmentRule.objects.create(
+            segment=segment, type=SegmentRule.ALL_RULE
+        )
+        for _ in range(5):
+            Condition.objects.create(
+                rule=segment_rule,
+                property="foo",
+                operator=EQUAL,
+                value="bar",
+                created_with_segment=False,
+            )
+
+    # When
+    mocked_tasks = mocker.patch("core.signals.tasks")
+    segment.delete()
+
+    # Then
+    assert len(mocked_tasks.mock_calls) == 1
