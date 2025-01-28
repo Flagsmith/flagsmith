@@ -111,7 +111,7 @@ class TheComponent extends Component {
             <WarningMessage
               warningMessage={
                 <div>
-                  Feature is unhealthy{' '}
+                  Unhealthy{' '}
                   <Tooltip title={<Icon name='info-outlined' />} place='bottom'>
                     {this.props?.latestUnhealthyEvent?.reason}
                   </Tooltip>
