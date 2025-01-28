@@ -179,9 +179,7 @@ const EnvironmentSettingsPageTS: React.FC<EnvironmentSettingsPageProps> = ({ cre
   }
 
   const updateCurrentEnv = (newEnv: Partial<Environment> = {}, shouldSaveUpdate?: boolean, isDirtyDisabled?: boolean) => {
-    console.log(newEnv)
     if (!isDirtyDisabled) {
-      console.log("dirtying")
       setIsDirty(true)
     }
     setCurrentEnv((currentEnvState) => {
