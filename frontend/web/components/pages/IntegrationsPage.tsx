@@ -1,29 +1,34 @@
 import React, { FC, useEffect } from 'react'
 import IntegrationList from 'components/IntegrationList'
-import Permission from 'common/providers/Permission'
+import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
 import { Link } from 'react-router-dom'
 import Utils from 'common/utils/utils'
-import { Project } from 'common/types/responses'
 import AccountStore from 'common/stores/account-store'
-import ProjectProvider from 'common/providers/ProjectProvider'
 import API from 'project/api'
-type ProjectSettingsPageType = {
+import { useGetProjectQuery } from 'common/services/useProject'
+
+type IntegrationsPageType = {
   match: {
     params: {
       projectId: string
     }
   }
 }
-const ProjectSettingsPage: FC<ProjectSettingsPageType> = ({ match }) => {
+const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)
   }, [])
 
   const integrations = Object.keys(Utils.getIntegrationData())
-
+  const { isLoading: permissionsLoading, permission } = useHasPermission({
+    id: match.params.projectId,
+    level: 'project',
+    permission: 'ADMIN',
+  })
+  const { data: project } = useGetProjectQuery({ id: match.params.projectId })
   return (
     <div className='app-container container'>
       <PageTitle title={'Integrations'}>
@@ -45,40 +50,28 @@ const ProjectSettingsPage: FC<ProjectSettingsPageType> = ({ match }) => {
         </InfoMessage>
       )}
 
-      <Permission
-        level='project'
-        permission='CREATE_ENVIRONMENT'
-        id={match.params.projectId}
-      >
-        {({ isLoading, permission }) =>
-          isLoading ? (
-            <Loader />
-          ) : (
-            <div>
-              <ProjectProvider id={match.params.projectId}>
-                {({ project }: { project: Project }) => (
-                  <div>
-                    {permission ? (
-                      <div>
-                        {project && project.environments && (
-                          <IntegrationList
-                            projectId={match.params.projectId}
-                            integrations={integrations}
-                          />
-                        )}
-                      </div>
-                    ) : (
-                      <div>{Constants.projectPermissions('Admin')}</div>
-                    )}
-                  </div>
+      {permissionsLoading ? (
+        <Loader />
+      ) : (
+        <div>
+          <div>
+            {permission ? (
+              <div>
+                {project && (
+                  <IntegrationList
+                    projectId={match.params.projectId}
+                    integrations={integrations}
+                  />
                 )}
-              </ProjectProvider>
-            </div>
-          )
-        }
-      </Permission>
+              </div>
+            ) : (
+              <div>{Constants.projectPermissions('Admin')}</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export default ProjectSettingsPage
+export default IntegrationsPage

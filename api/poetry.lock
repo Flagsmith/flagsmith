@@ -918,19 +918,18 @@ files = [
 
 [[package]]
 name = "django-lifecycle"
-version = "1.0.0"
+version = "1.2.4"
 description = "Declarative model lifecycle hooks."
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "django-lifecycle-1.0.0.tar.gz", hash = "sha256:136c48e65d439cc34a6cb9a10d6d17611a9a5223f8249ee9c190ca5c7a67e9c1"},
+    {file = "django_lifecycle-1.2.4-py3-none-any.whl", hash = "sha256:b54aea17b50de45adb5c90a06eea0171afa0d547682f51990dffb578b82fc658"},
+    {file = "django_lifecycle-1.2.4.tar.gz", hash = "sha256:b37add8a95d0e85f9f97e652fac989cd5914cddb2380d933b6568f80238ab61e"},
 ]
 
 [package.dependencies]
-Django = ">=2.0"
-packaging = ">=21.0"
-urlman = ">=1.2.0"
+Django = ">=3.2"
 
 [[package]]
 name = "django-multiselectfield"
@@ -3552,6 +3551,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -4217,18 +4217,6 @@ secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "p
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
-name = "urlman"
-version = "2.0.1"
-description = "Django URL pattern helpers"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "urlman-2.0.1-py2.py3-none-any.whl", hash = "sha256:909177485ddbbeada15a21f80155762faf70fc53be31890ff7288e21803f06c7"},
-    {file = "urlman-2.0.1.tar.gz", hash = "sha256:3b9c5ac4e447b1e29fa259dc76953d46d711c84b296a0c66c34870e248eb1205"},
-]
-
-[[package]]
 name = "virtualenv"
 version = "20.28.0"
 description = "Virtual Python Environment builder"
@@ -4457,4 +4445,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11, <3.13"
-content-hash = "1d3c289404e691bbe2c044d0794e81a46fc982104960f1edcfd8a07c2100c49e"
+content-hash = "3709b760a58385704708366fb1ce9ee65309c01ff4939e8e2ddeca66dcd43e3b"

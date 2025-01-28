@@ -386,7 +386,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           theme='secondary'
                                           size='small'
                                           onClick={() => {
-                                            navigator.clipboard.writeText(
+                                            Utils.copyToClipboard(
                                               `${
                                                 document.location.origin
                                               }/invite/${
@@ -394,8 +394,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                                   (f) => f.role === role,
                                                 )?.hash
                                               }`,
+                                              'Link copied',
                                             )
-                                            toast('Link copied')
                                           }}
                                         >
                                           Copy Invite Link

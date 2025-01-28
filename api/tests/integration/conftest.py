@@ -61,7 +61,7 @@ def dynamo_enabled_project(
 ):
     settings.EDGE_ENABLED = True
     project_data = {
-        "name": "Test Project",
+        "name": "Dynamo Enabled Project",
         "organisation": organisation,
     }
     url = reverse("api-v1:projects:project-list")
