@@ -665,7 +665,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={<SettingsIcon />}
                                   id='org-settings-link'
-                                data-test='org-settings-link'
+                                  data-test='org-settings-link'
                                   to={`/organisation/${
                                     AccountStore.getOrganisation().id
                                   }/settings`}

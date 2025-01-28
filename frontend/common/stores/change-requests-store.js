@@ -36,19 +36,6 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  deleteChangeRequest: (id, cb) => {
-    store.loading()
-    data
-      .delete(`${Project.api}features/workflows/change-requests/${id}/`)
-      .then(() => {
-        store.loaded()
-        getStore().dispatch(
-          changeRequestService.util.invalidateTags(['ChangeRequest']),
-        )
-        cb()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
   getChangeRequest: (id, projectId, environmentId) => {
     store.loading()
     data
@@ -128,9 +115,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.UPDATE_CHANGE_REQUEST:
       controller.updateChangeRequest(action.changeRequest)
-      break
-    case Actions.DELETE_CHANGE_REQUEST:
-      controller.deleteChangeRequest(action.id, action.cb)
       break
     case Actions.ACTION_CHANGE_REQUEST:
       controller.actionChangeRequest(action.id, action.action, action.cb)

@@ -562,5 +562,6 @@ export type Req = {
     id: string
   }
   deleteProjectChangeRequest: { project_id: string; id: string }
+  deleteChangeRequest: { id: string }
   // END OF TYPES
 }

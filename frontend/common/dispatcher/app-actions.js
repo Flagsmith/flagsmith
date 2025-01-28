@@ -57,13 +57,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     })
   },
 
-  deleteChangeRequest(id, cb) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_CHANGE_REQUEST,
-      cb,
-      id,
-    })
-  },
   deleteEnv(env) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_ENVIRONMENT,

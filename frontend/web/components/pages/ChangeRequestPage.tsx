@@ -39,6 +39,8 @@ import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
 import v from 'refractor/lang/v'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { getStore } from 'common/store'
+import { deleteChangeRequest } from 'common/services/useChangeRequest'
 
 type ChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -132,7 +134,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
     })
   }
 
-  const deleteChangeRequest = () => {
+  const onDeleteChangeRequest = () => {
     openConfirm({
       body: (
         <div>
@@ -142,7 +144,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
       ),
       destructive: true,
       onYes: () => {
-        AppActions.deleteChangeRequest(id, () => {
+        deleteChangeRequest(getStore(), { id }).then(() => {
           router.history.replace(
             `/project/${projectId}/environment/${environmentId}/change-requests`,
           )
@@ -320,7 +322,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
           'Update Feature States',
         )}
         scheduledDate={getScheduledDate()}
-        deleteChangeRequest={deleteChangeRequest}
+        deleteChangeRequest={onDeleteChangeRequest}
         editChangeRequest={
           !isVersioned && !changeRequest?.committed_at
             ? () => editChangeRequest(projectFlag, environmentFlag)

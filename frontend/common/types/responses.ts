@@ -781,5 +781,6 @@ export type Res = {
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}
+  changeRequest: { id: string }
   // END OF TYPES
 }

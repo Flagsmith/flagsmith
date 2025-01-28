@@ -20,7 +20,7 @@ import { ChangeRequestPageInner } from './ChangeRequestPage'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useGetProjectQuery } from 'common/services/useProject'
 import DiffSegment from 'components/diff/DiffSegment'
-import ConfigProvider from "common/providers/ConfigProvider";
+import ConfigProvider from 'common/providers/ConfigProvider'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']

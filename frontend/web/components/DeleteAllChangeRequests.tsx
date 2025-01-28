@@ -1,8 +1,16 @@
 import { FC, useCallback, useState } from 'react'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
+import {
+  deleteChangeRequest,
+  useGetChangeRequestsQuery,
+} from 'common/services/useChangeRequest'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import Button from './base/forms/Button'
+import { getStore } from 'common/store'
+import {
+  useGetProjectChangeRequestQuery,
+  useGetProjectChangeRequestsQuery,
+} from 'common/services/useProjectChangeRequest'
 
 type DeleteAllChangeRequestsType = {
   environmentId: string
@@ -14,26 +22,28 @@ const DeleteAllChangeRequests: FC<DeleteAllChangeRequestsType> = ({
   projectId,
 }) => {
   const hasFeature = Utils.getFlagsmithHasFeature('delete_all_change_requests')
-  const { data } = useGetChangeRequestsQuery(
+  const { data, refetch } = useGetChangeRequestsQuery(
     {
       committed: false,
       environmentId,
       page: 1,
       page_size: 100,
     },
-    { refetchOnMountOrArgChange: true, skip: !hasFeature },
+    { refetchOnMountOrArgChange: true },
   )
   const [isSaving, setIsSaving] = useState(false)
 
   const deleteAllChangeRequests = useCallback(() => {
     setIsSaving(true)
-    Promise.all(data!.results.map((changeRequest)=>{
-        return delete
-    }))
+    Promise.all(
+      data!.results.map((changeRequest) => {
+        return deleteChangeRequest(getStore(), { id: changeRequest.id }, {c})
+      }),
+    ).then(() => {
+      setIsSaving(false)
+    })
   }, [data])
-  if (!hasFeature) {
-    return null
-  }
+  console.log(data)
   return (
     <Button
       disabled={isSaving || !data?.results}

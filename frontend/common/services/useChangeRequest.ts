@@ -15,6 +15,17 @@ export const changeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ChangeRequest'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      deleteChangeRequest: builder.mutation<
+        Res['changeRequest'],
+        Req['deleteChangeRequest']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ChangeRequest' }],
+        query: (query: Req['deleteChangeRequest']) => ({
+          body: {},
+          method: 'DELETE',
+          url: `features/workflows/change-requests/${query.id}/`,
+        }),
+      }),
       getChangeRequests: builder.query<
         Res['changeRequests'],
         Req['getChangeRequests']
@@ -42,9 +53,21 @@ export async function getChangeRequests(
     changeRequestService.endpoints.getChangeRequests.initiate(data, options),
   )
 }
+export async function deleteChangeRequest(
+  store: any,
+  data: Req['deleteChangeRequest'],
+  options?: Parameters<
+    typeof changeRequestService.endpoints.deleteChangeRequest.initiate
+  >[1],
+) {
+  return store.dispatch(
+    changeRequestService.endpoints.deleteChangeRequest.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useDeleteChangeRequestMutation,
   useGetChangeRequestsQuery,
   // END OF EXPORTS
 } = changeRequestService
