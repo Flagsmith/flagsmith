@@ -3,7 +3,10 @@ import typing
 import structlog
 
 from environments.models import Environment
-from features.feature_health.constants import UNHEALTHY_TAG_COLOUR
+from features.feature_health.constants import (
+    UNHEALTHY_TAG_COLOUR,
+    UNHEALTHY_TAG_LABEL,
+)
 from features.feature_health.models import (
     FeatureHealthEvent,
     FeatureHealthEventType,
@@ -72,7 +75,7 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
         *FeatureHealthEvent.objects.get_latest_by_feature(feature)
     ]:
         unhealthy_tag, _ = Tag.objects.get_or_create(
-            label="Unhealthy",
+            label=UNHEALTHY_TAG_LABEL,
             project=feature.project,
             defaults={"color": UNHEALTHY_TAG_COLOUR},
             is_system_tag=True,
