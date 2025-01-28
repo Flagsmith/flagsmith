@@ -45,7 +45,11 @@ class FeatureHealthProvider(
 
     name = models.CharField(max_length=50, choices=FeatureHealthProviderName.choices)
     project = models.ForeignKey("projects.Project", on_delete=models.CASCADE)
-    created_by = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
+    created_by = models.ForeignKey(
+        "users.FFAdminUser",
+        on_delete=models.SET_NULL,
+        null=True,
+    )
 
     class Meta:
         unique_together = ("name", "project")
