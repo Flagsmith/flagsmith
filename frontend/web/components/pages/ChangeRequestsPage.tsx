@@ -29,6 +29,7 @@ import moment from 'moment'
 import Icon from 'components/Icon'
 import v from 'refractor/lang/v'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import DeleteAllChangeRequests from 'components/DeleteAllChangeRequests'
 
 type ChangeRequestsPageType = {
   router: RouterChildContext['router']
@@ -77,35 +78,41 @@ const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
   }, [organisationId])
 
   return (
-    <ChangeRequestsInner
-      feature={'4_EYES'}
-      committedChangeRequests={committed}
-      pageCommitted={pageCommitted}
-      isLoading={isLoading}
-      setPageCommitted={setPageCommitted}
-      page={page}
-      getLink={(id) =>
-        `/project/${projectId}/environment/${environmentId}/change-requests/${id}`
-      }
-      setPage={setPage}
-      changeRequests={changeRequests}
-      changeRequestsDisabled={
-        environment &&
-        !Utils.changeRequestsEnabled(
-          environment.minimum_change_request_approvals,
-        )
-      }
-      ChangeRequestsDisabledMessage={
-        <InfoMessage>
-          To enable this feature set a minimum number of approvals in{' '}
-          <Link
-            to={`/project/${projectId}/environment/${environmentId}/settings`}
-          >
-            Environment Settings
-          </Link>
-        </InfoMessage>
-      }
-    />
+    <>
+      <DeleteAllChangeRequests
+        environmentId={environmentId}
+        projectId={projectId}
+      />
+      <ChangeRequestsInner
+        feature={'4_EYES'}
+        committedChangeRequests={committed}
+        pageCommitted={pageCommitted}
+        isLoading={isLoading}
+        setPageCommitted={setPageCommitted}
+        page={page}
+        getLink={(id) =>
+          `/project/${projectId}/environment/${environmentId}/change-requests/${id}`
+        }
+        setPage={setPage}
+        changeRequests={changeRequests}
+        changeRequestsDisabled={
+          environment &&
+          !Utils.changeRequestsEnabled(
+            environment.minimum_change_request_approvals,
+          )
+        }
+        ChangeRequestsDisabledMessage={
+          <InfoMessage>
+            To enable this feature set a minimum number of approvals in{' '}
+            <Link
+              to={`/project/${projectId}/environment/${environmentId}/settings`}
+            >
+              Environment Settings
+            </Link>
+          </InfoMessage>
+        }
+      />
+    </>
   )
 }
 
