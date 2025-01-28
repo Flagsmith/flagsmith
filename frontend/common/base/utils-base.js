@@ -1,6 +1,5 @@
 export default {
   safeParseEventValue(e) {
-    console.log("yo")
     // safe attempt to parse form value
     if (!e) {
       return e
