@@ -1185,6 +1185,7 @@ def admin_client_auth_type(
     return request.param
 
 
+@pytest.fixture
 def admin_client_new(
     admin_client_auth_type: AdminClientAuthType,
     admin_client_original: APIClient,
