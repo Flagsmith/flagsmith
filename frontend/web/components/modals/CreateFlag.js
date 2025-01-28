@@ -200,16 +200,14 @@ const CreateFlag = class extends Component {
       })
     }
 
-    if (Utils.getFlagsmithHasFeature('github_integration')) {
-      getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubId: res?.data?.results[0]?.id,
-          hasIntegrationWithGithub: !!res?.data?.results?.length,
-        })
+    getGithubIntegration(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
       })
-    }
+    })
   }
 
   componentWillUnmount() {
@@ -1846,10 +1844,7 @@ const CreateFlag = class extends Component {
                                     </InfoMessage>
                                   </TabItem>
                                 )}
-                                {Utils.getFlagsmithHasFeature(
-                                  'github_integration',
-                                ) &&
-                                  hasIntegrationWithGithub &&
+                                {hasIntegrationWithGithub &&
                                   projectFlag?.id && (
                                     <TabItem
                                       data-test='external-resources-links'

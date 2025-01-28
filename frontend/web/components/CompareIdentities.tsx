@@ -230,31 +230,29 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
             className='mt-3'
             cta={
               <>
-                {Utils.getFlagsmithHasFeature('clone_identities') && (
-                  <>
-                    <Tooltip
-                      title={
-                        <Button
-                          disabled={!leftId || !rightId || !environmentId}
-                          onClick={() => {
-                            cloneIdentityValues(
-                              leftId?.label,
-                              rightId?.label,
-                              leftId?.value,
-                              rightId?.value,
-                              environmentId,
-                            )
-                          }}
-                          className='ms-2 me-2'
-                        >
-                          {'Clone Features states'}
-                        </Button>
-                      }
-                    >
-                      {`Clone the Features states from ${leftId?.label} to ${rightId?.label}`}
-                    </Tooltip>
-                  </>
-                )}
+                <>
+                  <Tooltip
+                    title={
+                      <Button
+                        disabled={!leftId || !rightId || !environmentId}
+                        onClick={() => {
+                          cloneIdentityValues(
+                            leftId?.label,
+                            rightId?.label,
+                            leftId?.value,
+                            rightId?.value,
+                            environmentId,
+                          )
+                        }}
+                        className='ms-2 me-2'
+                      >
+                        {'Clone Features states'}
+                      </Button>
+                    }
+                  >
+                    {`Clone the Features states from ${leftId?.label} to ${rightId?.label}`}
+                  </Tooltip>
+                </>
               </>
             }
           ></PageTitle>
