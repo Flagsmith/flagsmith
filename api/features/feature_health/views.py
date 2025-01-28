@@ -49,6 +49,7 @@ class FeatureHealthEventViewSet(
 
 
 class FeatureHealthProviderViewSet(
+    mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
