@@ -105,15 +105,15 @@ const DiffRule: FC<DiffRuleType> = ({ diff, index }) => {
     <>
       <SegmentRuleDivider rule={rule} index={index} className='mt-0 mb-1' />
       {diff?.rules?.map((v, i) => (
-        <>
+        <div className="mb-2 p-2">
           <DiffRule key={i} diff={v} index={i} />
-        </>
+        </div>
       ))}
       {diff?.conditions?.map((v, i) => (
         <>
           <DiffCondition key={i} diff={v} index={i} />
           {i + 1 !== diff?.conditions?.length && (
-            <Row className='or-divider my-1'>
+            <Row className='or-divider my-2'>
               <Row>
                 <div className='or-divider__up' />
                 Or

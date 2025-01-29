@@ -297,7 +297,7 @@ function getRulesDiff(
         rule.id === newRule.id ||
         (!!newRule.version_of && rule.id === newRule.version_of?.id),
     )
-    debugger
+
     if (oldRule) {
       matchedIds.add(oldRule.id)
     }
