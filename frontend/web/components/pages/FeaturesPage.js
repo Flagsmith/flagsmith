@@ -50,7 +50,7 @@ const FeaturesPage = class extends Component {
         typeof params.owners === 'string'
           ? params.owners.split(',').map((v) => parseInt(v))
           : [],
-      page: params.page ? parseInt(params.page) - 1 : 0,
+      page: params.page ? parseInt(params.page) - 1 : 1,
       search: params.search || null,
       showArchived: params.is_archived === 'true',
       sort: {
