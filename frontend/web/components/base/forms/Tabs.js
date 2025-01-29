@@ -1,5 +1,6 @@
 import ModalHR from 'components/modals/ModalHR'
 import { oneOf } from 'prop-types'
+import classNames from 'classnames'
 /**
  * Created by kylejohnson on 30/07/2016.
  */
@@ -89,7 +90,9 @@ const Tabs = class extends React.Component {
         {this.props.theme === 'tab' && !hideNav && (
           <ModalHR className='tab-nav-hr' />
         )}
-        <div className='tabs-content'>
+        <div
+          className={classNames('tabs-content', this.props.containerClassName)}
+        >
           {children.map((child, i) => {
             const isSelected = value === i
             return (
@@ -117,6 +120,7 @@ Tabs.defaultProps = {
 
 Tabs.propTypes = {
   children: RequiredElement,
+  containerClassName: OptionalString,
   onChange: OptionalFunc,
   theme: oneOf(['tab', 'pill']),
   uncontrolled: OptionalBool,

@@ -343,6 +343,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlanName: (plan: string) => {
+    return planNames.enterprise
+
     if (plan && plan.includes('free')) {
       return planNames.free
     }
