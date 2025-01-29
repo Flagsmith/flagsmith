@@ -359,46 +359,29 @@ class SegmentRule(
         return rule.segment
 
     def assign_conditions_if_matching_rule(  # noqa: C901
-        self, target_sub_rule: "SegmentRule"
+        self, target_rule: "SegmentRule"
     ) -> bool:
         """
-        Determines whether the current object matches the given rule
-        and assigns conditions with the `version_of` field.
-
-        These assignments are done in order to allow the frontend to
-        provide a diff capability during change requests for segments.
-        By knowing which version a condition is for the frontend can
-        show a more accurate diff between the segment and the change request.
-
-        This method compares the type and conditions of the current object with
-        the specified `SegmentRule` to determine if they are compatible.
+        This method handles the matching of two rules for the purpose of
+        diffing them, for example in the context of a change request for a
+        given segment. We take the rule provided as an argument (`target_rule`),
+        and compare its conditions to this instance's conditions.
 
         Returns:
             bool:
-                - `True` if the calling object's (i.e., self) type matches the rule's type
+                - `True` if this instance's (i.e. self) type matches the rule's type
                   and the conditions are compatible.
                 - `False` if the types do not match or no conditions are compatible.
 
-        Process:
-            1. If the types do not match, return `False`.
-            2. If both the rule and calling object (i.e., self) have no conditions, return `True`.
-            3. Compare each condition in the rule against the calling object's (i.e., self) conditions:
-               - First match conditions that are an exact match of property, operator,
-                 and value.
-               - A condition matches if the `property` attributes are equal or if there
-                 is no property but has a matching operator.
-               - Mark matched conditions and update the versioning.
-            4. Return `True` if at least one condition matches; otherwise, return `False`.
-
         Side Effects:
             Updates the `version_of` field for matched conditions using a bulk update for the
-            conditions of the calling object (i.e., self).
+            conditions of this instance (i.e. self).
         """
 
-        if target_sub_rule.type != self.type:
+        if target_rule.type != self.type:
             return False
 
-        target_conditions = target_sub_rule.conditions.all()
+        target_conditions = target_rule.conditions.all()
         conditions = self.conditions.all()
 
         if not target_conditions and not conditions:
@@ -408,7 +391,7 @@ class SegmentRule(
         matched_conditions = set()
 
         # In order to provide accurate diffs we first go through the conditions
-        # and collect conditions that have matching values (property, operator, value).
+        # and collect conditions that are exact matches (i.e. have not been modified)
         for target_condition in target_conditions:
             for condition in conditions:
                 if (condition not in matched_conditions) and condition.is_exact_match(
@@ -418,9 +401,8 @@ class SegmentRule(
                     condition.version_of = target_condition
                     break
 
-        # Next we go through the collection again and collect matching conditions
-        # with special logic to collect conditions that have no properties based
-        # on their operator equivalence.
+        # Next we go through the collection again and collect conditions that have
+        # been modified from the target condition.
         for target_condition in target_conditions:
             for condition in conditions:
                 if (condition not in matched_conditions) and condition.is_partial_match(
@@ -430,17 +412,11 @@ class SegmentRule(
                     condition.version_of = target_condition
                     break
 
-        # If the subrule has no matching conditions we consider the response to
-        # be False, as the subrule could be a better match for some other candidate
-        # subrule, so the calling method can try the next subrule available.
-        if not matched_conditions:
-            return False
+        if matched_conditions:
+            Condition.objects.bulk_update(matched_conditions, fields=["version_of"])
+            return True
 
-        Condition.objects.bulk_update(matched_conditions, fields=["version_of"])
-
-        # Since the subrule has at least partial condition overlap, we return True
-        # for the match indicator.
-        return True
+        return False
 
     def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
         if self.rule:
@@ -581,6 +557,11 @@ class Condition(
         return self._get_segment().id
 
     def is_exact_match(self, other: "Condition") -> bool:
+        """
+        A condition is considered an exact match for another condition
+        with regard to the diffing logic, if all of `property`, `operator`,
+        and `value` exactly match.
+        """
         return (
             self.property == other.property
             and self.operator == other.operator
@@ -588,6 +569,12 @@ class Condition(
         )
 
     def is_partial_match(self, other: "Condition") -> bool:
+        """
+        A condition is considered a partial match for another condition
+        if both `property` values are none, and the operator matches
+        (for example, percentage split operator conditions), or
+        if the property exactly matches.
+        """
         if self.property is None and other.property is None:
             return self.operator == other.operator
 
