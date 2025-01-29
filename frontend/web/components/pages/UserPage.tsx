@@ -52,6 +52,8 @@ import _data from 'common/data/base/_data'
 import classNames from 'classnames'
 import moment from 'moment'
 import { removeIdentity } from './UsersPage'
+import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
+import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
 
 const width = [200, 48, 78]
 
@@ -634,6 +636,11 @@ const UserPage: FC<UserPageType> = (props) => {
                                         flagEnabledDifferent ||
                                         flagValueDifferent
 
+                                      const hasSegmentOverride =
+                                        flagValueDifferent &&
+                                        !hasUserOverride &&
+                                        !isMultiVariateOverride
+
                                       const onClick = () => {
                                         if (permission) {
                                           editFeature(
@@ -710,6 +717,20 @@ const UserPage: FC<UserPageType> = (props) => {
                                                     >
                                                       <Icon name='copy' />
                                                     </Button>
+                                                    {hasUserOverride && (
+                                                      <div>
+                                                        <IdentityOverridesIcon
+                                                          count={1}
+                                                        />
+                                                      </div>
+                                                    )}
+                                                    {hasSegmentOverride && (
+                                                      <div>
+                                                        <SegmentOverridesIcon
+                                                          count={1}
+                                                        />
+                                                      </div>
+                                                    )}
                                                   </Row>
                                                   <TagValues
                                                     projectId={`${projectId}`}
