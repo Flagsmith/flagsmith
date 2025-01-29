@@ -132,8 +132,8 @@ const UserPage: FC<UserPageType> = (props) => {
   const [preselect, setPreselect] = useState(Utils.fromParam().flag)
 
   const hasFilters = !isEqual(
-    { ...filter, page: 1 },
-    getFiltersFromParams({ page: '1' }),
+    { ...filter, search: filter.search || null },
+    getFiltersFromParams({}),
   )
 
   useEffect(() => {
