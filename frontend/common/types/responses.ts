@@ -760,6 +760,6 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
-  onboarding: { id: string }
+  onboarding: { token: string }
   // END OF TYPES
 }

@@ -536,6 +536,13 @@ export type Req = {
     environmentId: string
     data: Identity
   }
-  createOnboarding: {}
+  createOnboarding: {
+    first_name: string
+    last_name: string
+    email: string
+    password: string
+    contact_consent_given: boolean
+    organisation_name: string
+  }
   // END OF TYPES
 }
