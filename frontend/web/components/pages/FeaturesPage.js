@@ -24,6 +24,8 @@ import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
+import ClearFilters from 'components/ClearFilters'
+import { isEqual } from 'lodash'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -31,11 +33,8 @@ const FeaturesPage = class extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
   }
-
-  constructor(props, context) {
-    super(props, context)
-    const params = Utils.fromParam()
-    this.state = {
+  getFiltersFromParams = (params) => {
+    return {
       group_owners:
         typeof params.group_owners === 'string'
           ? params.group_owners.split(',').map((v) => parseInt(v))
@@ -67,6 +66,10 @@ const FeaturesPage = class extends Component {
       value_search:
         typeof params.value_search === 'string' ? params.value_search : '',
     }
+  }
+  constructor(props, context) {
+    super(props, context)
+    this.state = this.getFiltersFromParams(Utils.fromParam())
     ES6Component(this)
     getTags(getStore(), {
       projectId: `${this.props.match.params.projectId}`,
@@ -221,6 +224,26 @@ const FeaturesPage = class extends Component {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
+    const params = Utils.fromParam()
+    const hasFilters = !isEqual(
+      this.getFiltersFromParams({ ...params, page: '1' }),
+      this.getFiltersFromParams({ page: '1' }),
+    )
+    const clearFilters = () => {
+      this.props.router.history.replace(`${document.location.pathname}`)
+      const newState = this.getFiltersFromParams({})
+      this.setState(newState, () => {
+        AppActions.getFeatures(
+          this.props.match.params.projectId,
+          this.props.match.params.environmentId,
+          true,
+          this.state.search,
+          this.state.sort,
+          1,
+          this.getFilter(),
+        )
+      })
+    }
     return (
       <div
         data-test='features-page'
@@ -506,6 +529,9 @@ const FeaturesPage = class extends Component {
                                         this.setState({ sort }, this.filter)
                                       }}
                                     />
+                                    {hasFilters && (
+                                      <ClearFilters onClick={clearFilters} />
+                                    )}
                                   </Row>
                                 </div>
                               </Row>

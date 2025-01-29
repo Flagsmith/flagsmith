@@ -21,9 +21,14 @@ const TableSearchFilter: FC<TableFilterType> = ({ exact, onChange, value }) => {
     }, []),
     100,
   )
+
   useEffect(() => {
     searchItems(localValue)
   }, [localValue])
+
+  useEffect(() => {
+    setLocalValue(value || '')
+  }, [value])
   return (
     <>
       <Input
