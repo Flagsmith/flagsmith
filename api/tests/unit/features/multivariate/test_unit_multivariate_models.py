@@ -1,6 +1,5 @@
 from unittest.mock import MagicMock
 
-from segments.models import Segment
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD
@@ -9,6 +8,7 @@ from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from segments.models import Segment
 
 
 def test_multivariate_feature_option_get_create_log_message(feature):

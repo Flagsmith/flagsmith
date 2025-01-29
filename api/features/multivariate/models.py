@@ -5,7 +5,6 @@ from core.models import (
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory,
 )
-
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
