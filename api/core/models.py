@@ -42,6 +42,16 @@ class AbstractBaseExportableModel(models.Model):
         return (str(self.uuid),)
 
 
+class SoftDeleteAwareHistoricalRecords(HistoricalRecords):
+    def create_historical_record(
+        self, instance: models.Model, history_type: str, using: str = None
+    ) -> None:
+        if getattr(instance, "deleted_at", None) is not None and history_type == "~":
+            # Don't create `update` historical record for soft-deleted objects
+            return
+        super().create_historical_record(instance, history_type, using)
+
+
 class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
     pass
 
@@ -198,7 +208,7 @@ def abstract_base_auditable_model_factory(
     show_change_details_for_create: bool = False,
 ) -> typing.Type[AbstractBaseAuditableModel]:
     class Base(AbstractBaseAuditableModel):
-        history = HistoricalRecords(
+        history = SoftDeleteAwareHistoricalRecords(
             bases=[
                 base_historical_model_factory(
                     change_details_excluded_fields or [],

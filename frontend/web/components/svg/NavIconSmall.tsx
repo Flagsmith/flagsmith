@@ -1,6 +1,10 @@
-import React from 'react'
+import React, { FC } from 'react'
 
-function NavIconSmall({ className }) {
+interface NavIconSmallProps {
+  className?: string
+}
+
+const NavIconSmall: FC<NavIconSmallProps> = ({ className }) => {
   return (
     <svg className={className} viewBox='0 0 320 320'>
       <g>

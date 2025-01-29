@@ -436,6 +436,7 @@ export type ProjectFlag = {
   id: number
   initial_value: FlagsmithValue
   is_archived: boolean
+  is_num_identity_overrides_complete: boolean
   is_server_key_only: boolean
   multivariate_options: MultivariateOption[]
   name: string
@@ -640,6 +641,7 @@ export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
   auditLogs: PagedResponse<AuditLogItem>
+  organisationLicence: {}
   organisations: PagedResponse<Organisation>
   projects: ProjectSummary[]
   project: Project

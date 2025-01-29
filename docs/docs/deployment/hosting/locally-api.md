@@ -237,7 +237,7 @@ the below variables will be ignored.
 - `AXES_FAILURE_LIMIT`: The integer number of login attempts allowed before a record is created for the failed logins.
   Defaults to `10`.
 
-#### Email Environment Variables
+#### Email Environment Variables {#email}
 
 :::note
 

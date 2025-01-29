@@ -25,33 +25,28 @@ import {
   useGetSegmentQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
-import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
-import EnvironmentSelect from 'components/EnvironmentSelect'
 import InfoMessage from 'components/InfoMessage'
-import Input from 'components/base/forms/Input'
 import InputGroup from 'components/base/forms/InputGroup'
-import PanelSearch from 'components/PanelSearch'
 import Rule from './Rule'
-import Switch from 'components/Switch'
 import TabItem from 'components/base/forms/TabItem'
 import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import JSONReference from 'components/JSONReference'
 import { cloneDeep } from 'lodash'
-import ErrorMessage from 'components/ErrorMessage'
 import ProjectStore from 'common/stores/project-store'
-import Icon from 'components/Icon'
 import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
+import AppActions from 'common/dispatcher/app-actions'
+import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
+import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 
 type PageType = {
   number: number
@@ -80,7 +75,14 @@ type CreateSegmentType = {
   segment?: Segment
 }
 
+enum UserTabs {
+  RULES = 0,
+  FEATURES = 1,
+  USERS = 2,
+}
+
 let _operators: Operator[] | null = null
+
 const CreateSegment: FC<CreateSegmentType> = ({
   className,
   condensed,
@@ -100,8 +102,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
   setPage,
   setSearchInput,
 }) => {
-  const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID
-
   const defaultSegment: Omit<Segment, 'id' | 'uuid' | 'project'> & {
     id?: number
     uuid?: string
@@ -156,7 +156,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
-  const [tab, setTab] = useState(0)
+  const [tab, setTab] = useState(UserTabs.RULES)
   const [metadata, setMetadata] = useState<CustomMetadataField[]>(
     segment.metadata,
   )
@@ -240,6 +240,13 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }
 
+  const fetchUserIdentityList = () => {
+    if (!environmentId) return
+    identities?.results.forEach((identity) =>
+      AppActions.getIdentitySegments(projectId, identity.id),
+    )
+  }
+
   const [valueChanged, setValueChanged] = useState(false)
   const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
@@ -257,7 +264,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
         resolve(true)
       }
     })
-    return Promise.resolve(true)
   }, [valueChanged, isEdit])
   useEffect(() => {
     setInterceptClose(onClosing)
@@ -282,6 +288,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (createSuccess && createSegmentData) {
       setSegment(createSegmentData)
       onComplete?.(createSegmentData)
+      fetchUserIdentityList()
     }
     //eslint-disable-next-line
   }, [createSuccess])
@@ -289,9 +296,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (updateSuccess && updateSegmentData) {
       setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
+      fetchUserIdentityList()
     }
     //eslint-disable-next-line
   }, [updateSuccess])
+
   const operators: Operator[] | null = _operators || Utils.getSegmentOperators()
   if (operators) {
     _operators = operators
@@ -399,154 +408,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </div>
   )
 
-  const Tab1 = (
-    <form id='create-segment-modal' onSubmit={save}>
-      {!condensed && (
-        <div className='mt-3'>
-          <InfoMessage collapseId={'value-type-conversions'}>
-            Learn more about rule and trait value type conversions{' '}
-            <a href='https://docs.flagsmith.com/basic-features/segments#rule-typing'>
-              here
-            </a>
-            .
-          </InfoMessage>
-          {segmentsLimitAlert.percentage &&
-            Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
-        </div>
-      )}
-
-      <div className='mb-3'>
-        <label htmlFor='segmentID'>Name*</label>
-        <Flex>
-          <Input
-            data-test='segmentID'
-            name='id'
-            id='segmentID'
-            maxLength={SEGMENT_ID_MAXLENGTH}
-            value={name}
-            onChange={(e: InputEvent) => {
-              setValueChanged(true)
-              setName(
-                Format.enumeration
-                  .set(Utils.safeParseEventValue(e))
-                  .toLowerCase(),
-              )
-            }}
-            isValid={name && name.length}
-            type='text'
-            placeholder='E.g. power_users'
-          />
-        </Flex>
-      </div>
-      {!condensed && (
-        <InputGroup
-          className='mb-3'
-          value={description}
-          inputProps={{
-            className: 'full-width',
-            name: 'featureDesc',
-            readOnly: !!identity || readOnly,
-          }}
-          onChange={(e: InputEvent) => {
-            setValueChanged(true)
-            setDescription(Utils.safeParseEventValue(e))
-          }}
-          isValid={name && name.length}
-          type='text'
-          title='Description'
-          placeholder="e.g. 'People who have spent over $100' "
-        />
-      )}
-
-      <div className='form-group '>
-        <Row className='mb-3'>
-          <Switch
-            checked={showDescriptions}
-            onChange={() => {
-              setShowDescriptions(!showDescriptions)
-            }}
-            className={'ml-0'}
-          />
-          <span
-            style={{ fontWeight: 'normal', marginLeft: '12px' }}
-            className='mb-0 fs-small text-dark'
-          >
-            Show condition descriptions
-          </span>
-        </Row>
-        <Flex className='mb-3'>
-          <label className='cols-sm-2 control-label mb-1'>
-            Include users when all of the following rules apply:
-          </label>
-          <span className='fs-caption text-faint'>
-            Note: Trait names are case sensitive
-          </span>
-        </Flex>
-        {allWarnings?.map((warning, i) => (
-          <InfoMessage key={i}>
-            <div dangerouslySetInnerHTML={{ __html: warning }} />
-          </InfoMessage>
-        ))}
-        {rulesEl}
-      </div>
-
-      <ErrorMessage error={error} />
-      {isEdit && <JSONReference title={'Segment'} json={segment} />}
-      {readOnly ? (
-        <div className='text-right'>
-          <Tooltip
-            title={
-              <Button
-                disabled
-                data-test='show-create-feature-btn'
-                id='show-create-feature-btn'
-              >
-                Update Segment
-              </Button>
-            }
-            place='left'
-          >
-            {Constants.projectPermissions('Admin')}
-          </Tooltip>
-        </div>
-      ) : (
-        <div className='text-right' style={{ marginTop: '32px' }}>
-          <Row className='justify-content-end'>
-            {condensed && (
-              <Button
-                theme='secondary'
-                type='button'
-                onClick={onCancel}
-                className='mr-2'
-              >
-                Cancel
-              </Button>
-            )}
-            {isEdit ? (
-              <Button
-                type='submit'
-                data-test='update-segment'
-                id='update-feature-btn'
-                disabled={isSaving || !name || !isValid}
-              >
-                {isSaving ? 'Creating' : 'Update Segment'}
-              </Button>
-            ) : (
-              <Button
-                disabled={isSaving || !name || !isValid || isLimitReached}
-                type='submit'
-                data-test='create-segment'
-                id='create-feature-btn'
-              >
-                {isSaving ? 'Creating' : 'Create Segment'}
-              </Button>
-            )}
-          </Row>
-        </div>
-      )}
-    </form>
-  )
-
   const MetadataTab = (
     <FormGroup className='mt-5 setting'>
       <InputGroup
@@ -572,7 +433,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   return (
     <>
       {isEdit && !condensed ? (
-        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Rules'
             tabLabel={
@@ -582,7 +443,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
               </Row>
             }
           >
-            <div className='my-4'>{Tab1}</div>
+            <div className='my-4'>
+              <CreateSegmentRulesTabForm
+                save={save}
+                condensed={condensed}
+                segmentsLimitAlert={segmentsLimitAlert}
+                name={name}
+                setName={setName}
+                setValueChanged={setValueChanged}
+                description={description}
+                setDescription={setDescription}
+                identity={identity}
+                readOnly={readOnly}
+                showDescriptions={showDescriptions}
+                setShowDescriptions={setShowDescriptions}
+                allWarnings={allWarnings}
+                rulesEl={rulesEl}
+                error={error}
+                isEdit={isEdit}
+                segment={segment}
+                isSaving={isSaving}
+                isValid={isValid}
+                isLimitReached={isLimitReached}
+                onCancel={onCancel}
+              />
+            </div>
           </TabItem>
           <TabItem tabLabel='Features'>
             <div className='my-4'>
@@ -598,136 +483,18 @@ const CreateSegment: FC<CreateSegmentType> = ({
             </div>
           </TabItem>
           <TabItem tabLabel='Users'>
-            <div className='my-4'>
-              <InfoMessage collapseId={'random-identity-sample'}>
-                This is a random sample of Identities who are either in or out
-                of this Segment based on the current Segment rules.
-              </InfoMessage>
-              <div className='mt-2'>
-                <FormGroup>
-                  <InputGroup
-                    title='Environment'
-                    component={
-                      <EnvironmentSelect
-                        projectId={`${projectId}`}
-                        value={environmentId}
-                        onChange={(environmentId: string) => {
-                          setEnvironmentId(environmentId)
-                        }}
-                      />
-                    }
-                  />
-                  <PanelSearch
-                    renderSearchWithNoResults
-                    id='users-list'
-                    title='Segment Users'
-                    className='no-pad'
-                    isLoading={identitiesLoading}
-                    items={identities?.results}
-                    paging={identities}
-                    showExactFilter
-                    nextPage={() => {
-                      setPage({
-                        number: page.number + 1,
-                        pageType: 'NEXT',
-                        pages: identities?.last_evaluated_key
-                          ? (page.pages || []).concat([
-                              identities?.last_evaluated_key,
-                            ])
-                          : undefined,
-                      })
-                    }}
-                    prevPage={() => {
-                      setPage({
-                        number: page.number - 1,
-                        pageType: 'PREVIOUS',
-                        pages: page.pages
-                          ? Utils.removeElementFromArray(
-                              page.pages,
-                              page.pages.length - 1,
-                            )
-                          : undefined,
-                      })
-                    }}
-                    goToPage={(newPage: number) => {
-                      setPage({
-                        number: newPage,
-                        pageType: undefined,
-                        pages: undefined,
-                      })
-                    }}
-                    renderRow={(
-                      { id, identifier }: { id: string; identifier: string },
-                      index: number,
-                    ) => (
-                      <Row
-                        key={id}
-                        className='list-item list-item-sm clickable'
-                      >
-                        <IdentitySegmentsProvider
-                          fetch
-                          id={id}
-                          projectId={projectId}
-                        >
-                          {({ segments }: { segments?: Segment[] }) => {
-                            let inSegment = false
-                            if (segments?.find((v) => v.name === name)) {
-                              inSegment = true
-                            }
-                            return (
-                              <Row
-                                space
-                                className='px-3'
-                                key={id}
-                                data-test={`user-item-${index}`}
-                              >
-                                <div className='font-weight-medium'>
-                                  {identifier}
-                                </div>
-                                <Row
-                                  className={`font-weight-medium fs-small lh-sm ${
-                                    inSegment ? 'text-primary' : 'faint'
-                                  }`}
-                                >
-                                  {inSegment ? (
-                                    <>
-                                      <Icon
-                                        name='checkmark-circle'
-                                        width={20}
-                                        fill='#6837FC'
-                                      />
-                                      <span className='ml-1'>
-                                        User in segment
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Icon
-                                        name='minus-circle'
-                                        width={20}
-                                        fill='#9DA4AE'
-                                      />
-                                      <span className='ml-1'>
-                                        Not in segment
-                                      </span>
-                                    </>
-                                  )}
-                                </Row>
-                              </Row>
-                            )
-                          }}
-                        </IdentitySegmentsProvider>
-                      </Row>
-                    )}
-                    filterRow={() => true}
-                    search={searchInput}
-                    onChange={(e: InputEvent) => {
-                      setSearchInput(Utils.safeParseEventValue(e))
-                    }}
-                  />
-                </FormGroup>
-              </div>
-            </div>
+            <CreateSegmentUsersTabContent
+              projectId={projectId}
+              environmentId={environmentId}
+              setEnvironmentId={setEnvironmentId}
+              identitiesLoading={identitiesLoading}
+              identities={identities}
+              page={page}
+              setPage={setPage}
+              name={name}
+              searchInput={searchInput}
+              setSearchInput={setSearchInput}
+            />
           </TabItem>
           {metadataEnable && segmentContentType?.id && (
             <TabItem
@@ -746,12 +513,36 @@ const CreateSegment: FC<CreateSegmentType> = ({
           )}
         </Tabs>
       ) : metadataEnable && segmentContentType?.id ? (
-        <Tabs value={tab} onChange={(tab: number) => setTab(tab)}>
+        <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
             tabLabelString='Basic configuration'
             tabLabel={'Basic configuration'}
           >
-            <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+            <div className={className || 'my-3 mx-4'}>
+              <CreateSegmentRulesTabForm
+                save={save}
+                condensed={condensed}
+                segmentsLimitAlert={segmentsLimitAlert}
+                name={name}
+                setName={setName}
+                setValueChanged={setValueChanged}
+                description={description}
+                setDescription={setDescription}
+                identity={identity}
+                readOnly={readOnly}
+                showDescriptions={showDescriptions}
+                setShowDescriptions={setShowDescriptions}
+                allWarnings={allWarnings}
+                rulesEl={rulesEl}
+                error={error}
+                isEdit={isEdit}
+                segment={segment}
+                isSaving={isSaving}
+                isValid={isValid}
+                isLimitReached={isLimitReached}
+                onCancel={onCancel}
+              />
+            </div>
           </TabItem>
           <TabItem
             tabLabelString='Custom Fields'
@@ -763,7 +554,31 @@ const CreateSegment: FC<CreateSegmentType> = ({
           </TabItem>
         </Tabs>
       ) : (
-        <div className={className || 'my-3 mx-4'}>{Tab1}</div>
+        <div className={className || 'my-3 mx-4'}>
+          <CreateSegmentRulesTabForm
+            save={save}
+            condensed={condensed}
+            segmentsLimitAlert={segmentsLimitAlert}
+            name={name}
+            setName={setName}
+            setValueChanged={setValueChanged}
+            description={description}
+            setDescription={setDescription}
+            identity={identity}
+            readOnly={readOnly}
+            showDescriptions={showDescriptions}
+            setShowDescriptions={setShowDescriptions}
+            allWarnings={allWarnings}
+            rulesEl={rulesEl}
+            error={error}
+            isEdit={isEdit}
+            segment={segment}
+            isSaving={isSaving}
+            isValid={isValid}
+            isLimitReached={isLimitReached}
+            onCancel={onCancel}
+          />
+        </div>
       )}
     </>
   )
@@ -815,15 +630,20 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =
-    useGetIdentitiesQuery({
-      environmentId,
-      isEdge,
-      page: page.number,
-      pageType: page.pageType,
-      page_size: 10,
-      pages: page.pages,
-      search,
-    })
+    useGetIdentitiesQuery(
+      {
+        environmentId,
+        isEdge,
+        page: page.number,
+        pageType: page.pageType,
+        page_size: 10,
+        pages: page.pages,
+        search,
+      },
+      {
+        skip: !environmentId,
+      },
+    )
 
   return isLoading ? (
     <div className='text-center'>
