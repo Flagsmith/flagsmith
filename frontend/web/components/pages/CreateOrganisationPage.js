@@ -38,10 +38,6 @@ class CreateOrganisationPage extends Component {
   }
 
   render() {
-    if (Utils.showOnboarding()) {
-      return <OnboardingPage />
-    }
-
     if (Project.superUserCreateOnly && !AccountStore.model.is_superuser) {
       return (
         <div className='text-center alert'>

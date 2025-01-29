@@ -16,6 +16,7 @@ import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
 import freeEmailDomains from 'free-email-domains'
 import InfoMessage from 'components/InfoMessage'
+import OnboardingPage from './OnboardingPage'
 const freeEmail = (value) => {
   const domain = value?.split('@')?.[1]
   return freeEmailDomains.includes(domain)
@@ -189,6 +190,10 @@ const HomePage = class extends React.Component {
       'disable_oauth_registration',
     )
     const oauthClasses = 'col-12 col-xl-4'
+
+    if (Utils.showOnboarding()) {
+      return <OnboardingPage />
+    }
 
     if ((!isSignup || !disableOauthRegister) && !disableSignup) {
       if (Utils.getFlagsmithValue('oauth_github')) {
