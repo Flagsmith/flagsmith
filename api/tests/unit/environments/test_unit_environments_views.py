@@ -588,6 +588,31 @@ def test_should_create_environments(
         ).exists()
 
 
+def test_environment_matches_existing_environment_name(
+    project: Project,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    name = "Test environment"
+    data = {
+        "name": name,
+        "project": project.id,
+        "description": description,
+    }
+    Environment.objects.create(name=name, description=description, project=project)
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == ["Existing environment for given name."]
+
+
 def test_create_environment_without_required_metadata_returns_400(
     project,
     admin_client_new,
