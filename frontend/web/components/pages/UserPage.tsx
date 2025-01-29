@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useCallback, useEffect, useState } from 'react'
 import { RouterChildContext } from 'react-router'
 import keyBy from 'lodash/keyBy'
 
@@ -131,13 +131,27 @@ const UserPage: FC<UserPageType> = (props) => {
     useState<Record<string, IdentityFeatureState>>()
   const [preselect, setPreselect] = useState(Utils.fromParam().flag)
 
-  const hasFilters = !isEqual(
-    { ...filter, search: filter.search || null },
-    getFiltersFromParams({}),
+  const getFilter = useCallback(
+    (filter) => ({
+      ...filter,
+      group_owners: filter.group_owners.length
+        ? filter.group_owners
+        : undefined,
+      owners: filter.owners.length ? filter.owners : undefined,
+      tags: filter.tags.length ? filter.tags.join(',') : undefined,
+    }),
+    [],
   )
 
+  const hasFilters = !isEqual(
+    getFilter({ ...filter }),
+    getFilter(getFiltersFromParams({})),
+  )
+
+  console.log(getFilter({ ...filter }), getFilter(getFiltersFromParams({})))
+
   useEffect(() => {
-    const { search, sort, ...rest } = filter
+    const { search, sort, ...rest } = getFilter(filter)
     AppActions.searchFeatures(
       projectId,
       environmentId,
@@ -146,7 +160,7 @@ const UserPage: FC<UserPageType> = (props) => {
       sort,
       rest,
     )
-  }, [filter, environmentId, projectId])
+  }, [filter, getFilter, environmentId, projectId])
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
@@ -929,7 +943,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                   filter.search,
                                   filter.sort,
                                   FeatureListStore.paging.next,
-                                  filter,
+                                  getFilter(filter),
                                 )
                               }
                               prevPage={() =>
@@ -940,7 +954,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                   filter.search,
                                   filter.sort,
                                   FeatureListStore.paging.previous,
-                                  filter,
+                                  getFilter(filter),
                                 )
                               }
                               goToPage={(pageNumber: number) =>
@@ -951,7 +965,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                   filter.search,
                                   filter.sort,
                                   pageNumber,
-                                  filter,
+                                  getFilter(filter),
                                 )
                               }
                             />
