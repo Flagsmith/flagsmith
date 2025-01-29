@@ -131,7 +131,10 @@ const UserPage: FC<UserPageType> = (props) => {
     useState<Record<string, IdentityFeatureState>>()
   const [preselect, setPreselect] = useState(Utils.fromParam().flag)
 
-  const hasFilters = !isEqual(filter, getFiltersFromParams({}))
+  const hasFilters = !isEqual(
+    { ...filter, page: 1 },
+    getFiltersFromParams({ page: '1' }),
+  )
 
   useEffect(() => {
     const { search, sort, ...rest } = filter

@@ -226,8 +226,8 @@ const FeaturesPage = class extends Component {
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
     const hasFilters = !isEqual(
-      this.getFiltersFromParams(params),
-      this.getFiltersFromParams({}),
+      this.getFiltersFromParams({ ...params, page: '1' }),
+      this.getFiltersFromParams({ page: '1' }),
     )
     const clearFilters = () => {
       this.props.router.history.replace(`${document.location.pathname}`)
