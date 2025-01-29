@@ -239,22 +239,19 @@ class Segment(
                 target_sub_rule_matched = False
 
                 for rule in rules:
-                    if target_sub_rule_matched:
-                        # We only allow a single match for each target sub-rule,
-                        # so break out of this loop to continue to the next.
-                        break
-
-                    # Because a segment's rules can only have subrules that match
-                    # if the segment-level rules also match, we need to ensure that
-                    # the currently matched rules correspond to the current rule.
-                    # Consider a scenario where a subrule's version_of attribute
-                    # points to a different subrule, whose owning rule differs
-                    # from the subrule's version_of's parent rule. Such a mismatch
-                    # would lead to inconsistencies and unintended behavior.
-                    if rule in matched_rules and rule.version_of != target_rule:
+                    if target_rule.type != rule.type:
                         continue
 
-                    if target_rule.type != rule.type:
+                    if target_sub_rule_matched:
+                        # We are trying to match 1:1, so we only allow a single
+                        # match for each target sub-rule.
+                        break
+
+                    # If we've already matched at least one of the rule's sub-rules
+                    # (and hence, the rule has been added to matched_rules), then we
+                    # need to ensure that any subsequent matches belong to the same
+                    # parent rule.
+                    if rule in matched_rules and rule.version_of != target_rule:
                         continue
 
                     for sub_rule in rule.rules.exclude(
