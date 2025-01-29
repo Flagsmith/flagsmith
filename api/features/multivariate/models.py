@@ -5,6 +5,8 @@ from core.models import (
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory,
 )
+
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django_lifecycle import (
@@ -142,6 +144,14 @@ class MultivariateFeatureStateValue(
             clone.save()
 
         return clone
+
+    def get_skip_create_audit_log(self) -> bool:
+        try:
+            if self.feature_state.deleted_at:
+                return True
+            return self.feature_state.get_skip_create_audit_log()
+        except ObjectDoesNotExist:
+            return True
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         feature_state = self.feature_state

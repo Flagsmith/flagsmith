@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock
 
+from segments.models import Segment
+from environments.identities.models import Identity
+from environments.models import Environment
 from features.feature_types import MULTIVARIATE, STANDARD
 from features.models import FeatureSegment, FeatureState
 from features.multivariate.models import (
@@ -160,3 +163,79 @@ def test_adding_mv_option_to_standard_feature_converts_it_into_multivariate(feat
     # Then
     feature.refresh_from_db()
     assert feature.type == MULTIVARIATE
+
+
+def test_multivariate_feature_state_value__get_skip_create_audit_log_for_identity_delete(
+    multivariate_feature: MultivariateFeatureOption,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Given
+    identity_override = FeatureState.objects.create(
+        feature=multivariate_feature, identity=identity, environment=environment
+    )
+    mvfsv = identity_override.multivariate_feature_state_values.create(
+        multivariate_feature_option=multivariate_feature.multivariate_options.first(),
+        percentage_allocation=100,
+    )
+
+    # When
+    identity.delete()
+
+    # Then
+    mvfsv_history_instance = MultivariateFeatureStateValue.history.filter(
+        id=mvfsv.id, history_type="-"
+    ).first()
+
+    assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_multivariate_feature_state_value__get_skip_create_audit_log_for_segment_delete(
+    multivariate_feature: MultivariateFeatureOption,
+    environment: Environment,
+    segment: Segment,
+) -> None:
+    # Given
+    feature_segment = FeatureSegment.objects.create(
+        segment=segment, feature=multivariate_feature, environment=environment
+    )
+    segment_override = FeatureState.objects.create(
+        feature=multivariate_feature,
+        feature_segment=feature_segment,
+        environment=environment,
+    )
+    mvfsv = segment_override.multivariate_feature_state_values.create(
+        multivariate_feature_option=multivariate_feature.multivariate_options.first(),
+        percentage_allocation=100,
+    )
+
+    # When
+    segment.delete()
+
+    # Then
+    mvfsv_history_instance = MultivariateFeatureStateValue.history.filter(
+        id=mvfsv.id, history_type="-"
+    ).first()
+
+    assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_multivariate_feature_state_value__get_skip_create_audit_log_for_feature_delete(
+    multivariate_feature: MultivariateFeatureOption,
+    environment: Environment,
+) -> None:
+
+    # Given
+    mvfsv = MultivariateFeatureStateValue.objects.filter(
+        feature_state__environment=environment
+    ).first()
+
+    # When
+    multivariate_feature.delete()
+
+    # Then
+    mvfsv_history_instance = MultivariateFeatureStateValue.history.filter(
+        id=mvfsv.id, history_type="-"
+    ).first()
+
+    assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True
