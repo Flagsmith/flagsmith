@@ -359,7 +359,7 @@ class SegmentRule(
         return rule.segment
 
     def assign_conditions_if_matching_rule(  # noqa: C901
-        self, current_sub_rule: "SegmentRule"
+        self, target_sub_rule: "SegmentRule"
     ) -> bool:
         """
         Determines whether the current object matches the given rule
@@ -395,13 +395,13 @@ class SegmentRule(
             conditions of the calling object (i.e., self).
         """
 
-        if current_sub_rule.type != self.type:
+        if target_sub_rule.type != self.type:
             return False
 
-        current_conditions = current_sub_rule.conditions.all()
-        modified_conditions = self.conditions.all()
+        target_conditions = target_sub_rule.conditions.all()
+        conditions = self.conditions.all()
 
-        if not current_conditions and not modified_conditions:
+        if not target_conditions and not conditions:
             # Empty rule with the same type matches.
             return True
 
@@ -409,35 +409,25 @@ class SegmentRule(
 
         # In order to provide accurate diffs we first go through the conditions
         # and collect conditions that have matching values (property, operator, value).
-        for current_condition in current_conditions:
-            for modified_condition in modified_conditions:
-                if modified_condition in matched_conditions:
-                    continue
-                if (
-                    current_condition.property == modified_condition.property
-                    and current_condition.operator == modified_condition.operator
-                    and current_condition.value == modified_condition.value
+        for target_condition in target_conditions:
+            for condition in conditions:
+                if (condition not in matched_conditions) and condition.is_exact_match(
+                    target_condition
                 ):
-                    matched_conditions.add(modified_condition)
-                    modified_condition.version_of = current_condition
+                    matched_conditions.add(condition)
+                    condition.version_of = target_condition
                     break
 
         # Next we go through the collection again and collect matching conditions
         # with special logic to collect conditions that have no properties based
         # on their operator equivalence.
-        for current_condition in current_conditions:
-            for modified_condition in modified_conditions:
-                if modified_condition in matched_conditions:
-                    continue
-                if not current_condition.property and not modified_condition.property:
-                    if current_condition.operator == modified_condition.operator:
-                        matched_conditions.add(modified_condition)
-                        modified_condition.version_of = current_condition
-                        break
-
-                elif current_condition.property == modified_condition.property:
-                    matched_conditions.add(modified_condition)
-                    modified_condition.version_of = current_condition
+        for target_condition in target_conditions:
+            for condition in conditions:
+                if (condition not in matched_conditions) and condition.is_partial_match(
+                    target_condition
+                ):
+                    matched_conditions.add(condition)
+                    condition.version_of = target_condition
                     break
 
         # If the subrule has no matching conditions we consider the response to
@@ -589,6 +579,19 @@ class Condition(
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self._get_segment().id
+
+    def is_exact_match(self, other: "Condition") -> bool:
+        return (
+            self.property == other.property
+            and self.operator == other.operator
+            and self.value == other.value
+        )
+
+    def is_partial_match(self, other: "Condition") -> bool:
+        if self.property is None and other.property is None:
+            return self.operator == other.operator
+
+        return self.property == other.property
 
     def _get_segment(self) -> Segment:
         """
