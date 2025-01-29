@@ -189,69 +189,59 @@ class Segment(
 
         return cloned_segment
 
-    def update_segment_with_matches_from_current_segment(
-        self, current_segment: "Segment"
+    def update_segment_with_matches_from_target_segment(
+        self, target_segment: "Segment"
     ) -> bool:
         """
-        Assign matching rules of the calling object (i.e., self) to the rules
-        of the given segment (i.e., current_segment) in order to update the
-        rules, subrules, and conditions of the calling object. This is done
-        from the context of a change request related to the calling object.
-
-        This method iterates through the rules of the provided `Segment` and
-        attempts to match them to the calling object's (i.e., self) rules and
-        sub-rules, updating versioning where matches are found.
-
-        This is done in order to set the `version_of` field for matched rules
-        and conditions so that the frontend can more reliably diff rules and
-        conditions between a change request for a the current segment and the
-        calling object (i.e., self) itself.
+        This method handles the matching of two segments for the purpose of
+        diffing them, for example in the context of a change request. We take
+        the segment provided as an argument (`target_segment`), compare its
+        rules to this segment instance (`self`) and update any rules (and,
+        indirectly, conditions) on this segment instance to have a pointer to
+        the target segment's rules (and conditions).
 
         Args:
-            current_segment (Segment): The segment whose rules are being matched
-                                       against the current object's rules which
-                                       will have its rules and conditions updated.
+            target_segment (Segment): The target segment we are matching against.
 
         Returns:
             bool:
-                - `True` if any rules or sub-rules match between the calling
-                  object (i.e., self) and the current segment.
+                - `True` if any rules or sub-rules match between this instance
+                   (i.e. self) and the target segment.
                 - `False` if no matches are found.
 
         Process:
-            1. Retrieve all rules associated with the calling object and the segment.
-            2. For each rule in the current segment:
-               - Check its sub-rules against the calling object's rules and sub-rules.
+            1. Retrieve all rules for both segments.
+            2. For each rule in the target segment:
+               - Check its sub-rules against this instance's rules and sub-rules.
                - A match is determined if the sub-rule's type and properties align
-                 with those of the calling object's sub-rules.
+                 with those of this instance's sub-rules.
                - If a match is found:
-                 - Update the `version_of` field for the matched sub-rule and rule.
+                 - Update the `version_of` field for this instance's matched sub-rule
+                   and rule. Do not modify the target segment rules.
                  - Track the matched rules and sub-rules to avoid duplicate processing.
             3. Perform a bulk update on matched rules and sub-rules to persist
                versioning changes.
 
         Side Effects:
-            - Updates the `version_of` field for matched rules and sub-rules for the
-              calling object (i.e., self).
+            - Updates the `version_of` field for matched rules and sub-rules belonging
+              to this instance (i.e., self).
             - Indirectly updates the `version_of` field on sub-rules' conditions.
         """
 
-        modified_rules = self.rules.all()
+        rules = self.rules.all()
+
         matched_rules = set()
         matched_sub_rules = set()
 
-        for current_rule in current_segment.rules.all():
-            for current_sub_rule in current_rule.rules.all():
+        for target_rule in target_segment.rules.all():
+            for target_sub_rule in target_rule.rules.all():
 
-                sub_rule_matched = False
-                for modified_rule in modified_rules:
-                    # Because we must proceed to the next current_sub_rule
-                    # to get the next available match since it has now been
-                    # matched to a candidate modified_sub_rule we set the
-                    # sub_rule_matched bool to track the state between
-                    # iterations. Otherwise different rules would have the
-                    # same value for their version_of field.
-                    if sub_rule_matched:
+                target_sub_rule_matched = False
+
+                for rule in rules:
+                    if target_sub_rule_matched:
+                        # We only allow a single match for each target sub-rule,
+                        # so break out of this loop to continue to the next.
                         break
 
                     # Because a segment's rules can only have subrules that match
@@ -261,34 +251,25 @@ class Segment(
                     # points to a different subrule, whose owning rule differs
                     # from the subrule's version_of's parent rule. Such a mismatch
                     # would lead to inconsistencies and unintended behavior.
-                    if (
-                        modified_rule in matched_rules
-                        and modified_rule.version_of != current_rule
+                    if rule in matched_rules and rule.version_of != target_rule:
+                        continue
+
+                    if target_rule.type != rule.type:
+                        continue
+
+                    for sub_rule in rule.rules.exclude(
+                        id__in=[r.id for r in matched_sub_rules]
                     ):
-                        continue
+                        if sub_rule.assign_conditions_if_matching_rule(target_sub_rule):
+                            target_sub_rule_matched = True
 
-                    # To eliminate false matches we force the types
-                    # to be the same for the rules.
-                    if current_rule.type != modified_rule.type:
-                        continue
+                            # If a subrule matches, we assign the parent
+                            # rule and the subrule together.
+                            sub_rule.version_of = target_sub_rule
+                            rule.version_of = target_rule
 
-                    for modified_sub_rule in modified_rule.rules.all():
-                        # If a subrule has already been matched,
-                        # we avoid assigning conditions since it
-                        # has already been handled.
-                        if modified_sub_rule in matched_sub_rules:
-                            continue
-
-                        # If a subrule matches, we assign the parent
-                        # rule and the subrule together.
-                        if modified_sub_rule.assign_conditions_if_matching_rule(
-                            current_sub_rule
-                        ):
-                            modified_sub_rule.version_of = current_sub_rule
-                            sub_rule_matched = True
-                            matched_sub_rules.add(modified_sub_rule)
-                            modified_rule.version_of = current_rule
-                            matched_rules.add(modified_rule)
+                            matched_sub_rules.add(sub_rule)
+                            matched_rules.add(rule)
                             break
 
         SegmentRule.objects.bulk_update(
