@@ -20,7 +20,6 @@ from importlib import reload
 
 import dj_database_url
 import pytz
-import requests
 from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
@@ -67,15 +66,6 @@ CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-# In order to run a load balanced solution, we need to whitelist the internal ip
-try:
-    internal_ip = requests.get("http://instance-data/latest/meta-data/local-ipv4").text
-except requests.exceptions.ConnectionError:
-    pass
-else:
-    ALLOWED_HOSTS.append(internal_ip)
-del requests
-
 if sys.version[0] == "2":
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -114,6 +104,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.feature_health",
     "features.import_export",
     "features.multivariate",
     "features.versioning",
@@ -777,7 +768,7 @@ TRENCH_AUTH = {
     ),
     "DEFAULT_VALIDITY_PERIOD": 30,
     "CONFIRM_BACKUP_CODES_REGENERATION_WITH_CODE": True,
-    "APPLICATION_ISSUER_NAME": "app.bullet-train.io",
+    "APPLICATION_ISSUER_NAME": "Flagsmith",
     "ENCRYPT_BACKUP_CODES": True,
     "MFA_METHODS": {
         "app": {

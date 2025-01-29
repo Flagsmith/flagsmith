@@ -1,42 +1,21 @@
 import json
-import pathlib
-from typing import Generator
-from unittest import mock
 
 import pytest
-from pytest_mock import MockerFixture
+from pyfakefs.fake_filesystem import FakeFilesystem
+from pytest_django.fixtures import SettingsWrapper
 
 from app.utils import get_version_info
 
 
-@pytest.fixture(autouse=True)
-def clear_get_version_info_cache() -> Generator[None, None, None]:
-    yield
-    get_version_info.cache_clear()
-
-
-def test_get_version_info(mocker: MockerFixture, db: None) -> None:
+def test_get_version_info(fs: FakeFilesystem, db: None) -> None:
     # Given
-    mocked_pathlib = mocker.patch("app.utils.pathlib")
-
-    def path_side_effect(file_path: str) -> mocker.MagicMock:
-        mocked_path_object = mocker.MagicMock(spec=pathlib.Path)
-
-        if file_path == "./ENTERPRISE_VERSION":
-            mocked_path_object.exists.return_value = True
-
-        if file_path == "./SAAS_DEPLOYMENT":
-            mocked_path_object.exists.return_value = False
-
-        return mocked_path_object
-
-    mocked_pathlib.Path.side_effect = path_side_effect
-
-    manifest_mocked_file = {
+    expected_manifest_contents = {
         ".": "2.66.2",
     }
-    mock_get_file_contents = mocker.patch("app.utils._get_file_contents")
-    mock_get_file_contents.side_effect = (json.dumps(manifest_mocked_file), "some_sha")
+
+    fs.create_file("./ENTERPRISE_VERSION")
+    fs.create_file(".versions.json", contents=json.dumps(expected_manifest_contents))
+    fs.create_file("./CI_COMMIT_SHA", contents="some_sha")
 
     # When
     result = get_version_info()
@@ -45,6 +24,7 @@ def test_get_version_info(mocker: MockerFixture, db: None) -> None:
     assert result == {
         "ci_commit_sha": "some_sha",
         "image_tag": "2.66.2",
+        "has_email_provider": False,
         "is_enterprise": True,
         "is_saas": False,
         "package_versions": {".": "2.66.2"},
@@ -56,23 +36,9 @@ def test_get_version_info(mocker: MockerFixture, db: None) -> None:
     }
 
 
-def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
+def test_get_version_info_with_missing_files(fs: FakeFilesystem) -> None:
     # Given
-    mocked_pathlib = mocker.patch("app.utils.pathlib")
-
-    def path_side_effect(file_path: str) -> mocker.MagicMock:
-        mocked_path_object = mocker.MagicMock(spec=pathlib.Path)
-
-        if file_path == "./ENTERPRISE_VERSION":
-            mocked_path_object.exists.return_value = True
-
-        if file_path == "./SAAS_DEPLOYMENT":
-            mocked_path_object.exists.return_value = False
-
-        return mocked_path_object
-
-    mocked_pathlib.Path.side_effect = path_side_effect
-    mock.mock_open.side_effect = IOError
+    fs.create_file("./ENTERPRISE_VERSION")
 
     # When
     result = get_version_info()
@@ -81,6 +47,58 @@ def test_get_version_info_with_missing_files(mocker: MockerFixture) -> None:
     assert result == {
         "ci_commit_sha": "unknown",
         "image_tag": "unknown",
+        "has_email_provider": False,
         "is_enterprise": True,
         "is_saas": False,
     }
+
+
+EMAIL_BACKENDS_AND_SETTINGS = [
+    ("django.core.mail.backends.smtp.EmailBackend", "EMAIL_HOST_USER"),
+    ("django_ses.SESBackend", "AWS_SES_REGION_ENDPOINT"),
+    ("sgbackend.SendGridBackend", "SENDGRID_API_KEY"),
+]
+
+
+@pytest.mark.parametrize(
+    "email_backend,expected_setting_name",
+    EMAIL_BACKENDS_AND_SETTINGS,
+)
+def test_get_version_info__email_config_enabled__return_expected(
+    settings: SettingsWrapper,
+    email_backend: str,
+    expected_setting_name: str,
+) -> None:
+    # Given
+    settings.EMAIL_BACKEND = email_backend
+    setattr(settings, expected_setting_name, "value")
+
+    # When
+    result = get_version_info()
+
+    # Then
+    assert result["has_email_provider"] is True
+
+
+@pytest.mark.parametrize(
+    "email_backend,expected_setting_name",
+    [
+        (None, None),
+        *EMAIL_BACKENDS_AND_SETTINGS,
+    ],
+)
+def test_get_version_info__email_config_disabled__return_expected(
+    settings: SettingsWrapper,
+    email_backend: str | None,
+    expected_setting_name: str | None,
+) -> None:
+    # Given
+    settings.EMAIL_BACKEND = email_backend
+    if expected_setting_name:
+        setattr(settings, expected_setting_name, None)
+
+    # When
+    result = get_version_info()
+
+    # Then
+    assert result["has_email_provider"] is False

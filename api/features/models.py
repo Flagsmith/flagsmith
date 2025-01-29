@@ -533,6 +533,14 @@ class FeatureState(
 
         if self.type == other.type:
             if self.environment.use_v2_feature_versioning:
+                if (
+                    self.environment_feature_version is None
+                    or other.environment_feature_version is None
+                ):
+                    raise ValueError(
+                        "Cannot compare feature states as they are missing environment_feature_version."
+                    )
+
                 return (
                     self.environment_feature_version > other.environment_feature_version
                 )
@@ -1087,9 +1095,13 @@ class FeatureStateValue(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
+            if self.feature_state.deleted_at:
+                return True
+
             return self.feature_state.get_skip_create_audit_log()
-        except ObjectDoesNotExist:
-            return False
+
+        except FeatureState.DoesNotExist:
+            return True
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state

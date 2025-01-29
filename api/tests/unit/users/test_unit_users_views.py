@@ -760,7 +760,7 @@ def test_delete_user_social_auth_with_no_password(password):
 @pytest.mark.django_db
 def test_change_email_address_api(mocker):
     # Given
-    mocked_task = mocker.patch("users.signals.send_email_changed_notification_email")
+    mocked_task = mocker.patch("users.tasks.send_email_changed_notification_email")
     # create an user
     old_email = "test_user@test.com"
     first_name = "firstname"
@@ -926,7 +926,7 @@ def test_list_user_groups(
     group_2 = response_json["results"][1]
     group_2_users = group_2["users"]
     assert len(group_2_users) == 2
-    assert tuple((user["id"], user["group_admin"]) for user in group_2_users) == (
+    assert set((user["id"], user["group_admin"]) for user in group_2_users) == {
         (user1.pk, False),
         (user2.pk, True),
-    )
+    }

@@ -134,6 +134,9 @@ def handle_api_usage_notifications() -> None:
             },
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
+            logger.info(
+                f"Skipping processing API usage for organisation {organisation.id}"
+            )
             continue
 
         try:

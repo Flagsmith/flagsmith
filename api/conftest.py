@@ -77,6 +77,7 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
+    AdminClientAuthType,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -471,14 +472,14 @@ def with_project_permissions(
 
 
 @pytest.fixture()
-def environment_v2_versioning(environment):
+def environment_v2_versioning(environment: Environment) -> Environment:
     enable_v2_versioning(environment.id)
     environment.refresh_from_db()
     return environment
 
 
 @pytest.fixture()
-def identity(environment):
+def identity(environment: Environment) -> Identity:
     return Identity.objects.create(identifier="test_identity", environment=environment)
 
 
@@ -1177,23 +1178,22 @@ def github_repository(
     )
 
 
-@pytest.fixture(
-    params=[
-        "admin_client_original",
-        "admin_master_api_key_client",
-    ]
-)
-def admin_client_new(
+@pytest.fixture(params=AdminClientAuthType.__args__)
+def admin_client_auth_type(
     request: pytest.FixtureRequest,
+) -> AdminClientAuthType:
+    return request.param
+
+
+@pytest.fixture
+def admin_client_new(
+    admin_client_auth_type: AdminClientAuthType,
     admin_client_original: APIClient,
     admin_master_api_key_client: APIClient,
 ) -> APIClient:
-    if request.param == "admin_client_original":
-        yield admin_client_original
-    elif request.param == "admin_master_api_key_client":
-        yield admin_master_api_key_client
-    else:
-        assert False, "Request param mismatch"
+    if admin_client_auth_type == "master_api_key":
+        return admin_master_api_key_client
+    return admin_client_original
 
 
 @pytest.fixture()

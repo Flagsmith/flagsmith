@@ -66,7 +66,7 @@ class TheComponent extends Component {
     const { projectFlag } = this.props
     e?.stopPropagation()?.()
     e?.currentTarget?.blur?.()
-    Utils.copyFeatureName(projectFlag.name)
+    Utils.copyToClipboard(projectFlag.name)
   }
   confirmRemove = (projectFlag, cb) => {
     openModal2(
@@ -98,7 +98,7 @@ class TheComponent extends Component {
         {this.props.permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
         <Button
           onClick={() => {
-            Utils.copyFeatureName(projectFlag.name)
+            Utils.copyToClipboard(projectFlag.name)
           }}
           theme='icon'
           className='ms-2'
@@ -141,6 +141,9 @@ class TheComponent extends Component {
     const changeRequestsEnabled = Utils.changeRequestsEnabled(
       environment && environment.minimum_change_request_approvals,
     )
+    const showPlusIndicator =
+      projectFlag?.is_num_identity_overrides_complete === false
+
     const onChange = () => {
       if (disableControls) {
         return
@@ -230,6 +233,7 @@ class TheComponent extends Component {
                   )
                 }}
                 count={projectFlag.num_identity_overrides}
+                showPlusIndicator={showPlusIndicator}
               />
             </Row>
           </Flex>
@@ -292,6 +296,7 @@ class TheComponent extends Component {
                     this.editFeature(projectFlag, environmentFlags[id], 1)
                   }}
                   count={projectFlag.num_identity_overrides}
+                  showPlusIndicator={showPlusIndicator}
                 />
                 {projectFlag.is_server_key_only && (
                   <Tooltip
