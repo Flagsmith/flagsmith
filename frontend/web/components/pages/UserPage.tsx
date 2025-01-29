@@ -106,7 +106,7 @@ const getFiltersFromParams = (params: Record<string, string | undefined>) =>
       typeof params.owners === 'string'
         ? params.owners.split(',').map((v: string) => parseInt(v))
         : [],
-    search: params.search || '',
+    search: params.search || null,
     sort: {
       label: Format.camelCase(params.sortBy || 'Name'),
       sortBy: params.sortBy || 'name',
@@ -138,17 +138,16 @@ const UserPage: FC<UserPageType> = (props) => {
         ? filter.group_owners
         : undefined,
       owners: filter.owners.length ? filter.owners : undefined,
+      search: (filter.search || '').trim(),
       tags: filter.tags.length ? filter.tags.join(',') : undefined,
     }),
     [],
   )
 
   const hasFilters = !isEqual(
-    getFilter({ ...filter }),
+    getFilter({ ...filter, search: filter.search || null }),
     getFilter(getFiltersFromParams({})),
   )
-
-  console.log(getFilter({ ...filter }), getFilter(getFiltersFromParams({})))
 
   useEffect(() => {
     const { search, sort, ...rest } = getFilter(filter)
