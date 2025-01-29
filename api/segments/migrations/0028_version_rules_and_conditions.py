@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("segments", "0026_add_change_request_to_segments"),
+        ("segments", "0027_historicalsegmentrule"),
     ]
 
     operations = [
@@ -42,6 +42,18 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="versioned_rules",
+                to="segments.segmentrule",
+            ),
+        ),
+        migrations.AddField(
+            model_name="historicalsegmentrule",
+            name="version_of",
+            field=models.ForeignKey(
+                blank=True,
+                db_constraint=False,
+                null=True,
+                on_delete=django.db.models.deletion.DO_NOTHING,
+                related_name="+",
                 to="segments.segmentrule",
             ),
         ),
