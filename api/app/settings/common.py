@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.feature_health",
     "features.import_export",
     "features.multivariate",
     "features.versioning",
