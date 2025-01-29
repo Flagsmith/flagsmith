@@ -619,12 +619,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
   },
 
-  showOnboarding() {return true},
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
     }
     return `${value}`
+  },
+  showOnboarding() {
+    return true
   },
 
   tagDisabled: (tag: Tag | undefined) => {
