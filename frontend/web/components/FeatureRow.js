@@ -16,7 +16,9 @@ import Button from './base/forms/Button'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import StaleFlagWarning from './StaleFlagWarning'
-import WarningMessage from './WarningMessage'
+import UnhealthyFlagWarning from './UnhealthyFlagWarning'
+import { getTags } from 'common/services/useTag'
+import { getStore } from 'common/store'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -24,7 +26,21 @@ class TheComponent extends Component {
     router: propTypes.object.isRequired,
   }
 
-  state = {}
+  constructor(props, context) {
+    super(props, context)
+
+    this.state = {
+      unhealthyTagId: undefined,
+    }
+
+    getTags(getStore(), {
+      projectId: `${this.props.projectId}`,
+    }).then((res) => {
+      this.setState({
+        unhealthyTagId: res.data?.find((tag) => tag?.type === 'UNHEALTHY')?.id,
+      })
+    })
+  }
 
   confirmToggle = () => {
     const {
@@ -86,7 +102,9 @@ class TheComponent extends Component {
       return
     }
     API.trackEvent(Constants.events.VIEW_FEATURE)
-
+    const hideTags = this.state.unhealthyTagId
+      ? [this.state.unhealthyTagId]
+      : []
     history.replaceState(
       {},
       null,
@@ -106,29 +124,16 @@ class TheComponent extends Component {
         >
           <Icon name='copy' />
         </Button>
-        {this.props?.latestUnhealthyEvent && (
-          <div style={{ marginBottom: -16, marginLeft: '11rem' }}>
-            <WarningMessage
-              warningMessage={
-                <div>
-                  Unhealthy{' '}
-                  <Tooltip title={<Icon name='info-outlined' />} place='bottom'>
-                    {this.props?.latestUnhealthyEvent?.reason}
-                  </Tooltip>
-                </div>
-              }
-            />
-          </div>
-        )}
+        {/* TODO ADD TAG HERE */}
       </Row>,
       <CreateFlagModal
+        hideTags={hideTags}
         history={this.context.router.history}
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
         projectFlag={projectFlag}
         noPermissions={!this.props.permission}
         environmentFlag={environmentFlag}
-        latestUnhealthyEvent={this.props.latestUnhealthyEvent}
         tab={tab}
         flagId={environmentFlag.id}
       />,
@@ -337,8 +342,12 @@ class TheComponent extends Component {
                   )}
                 </TagValues>
                 {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+                {!!isCompact && (
+                  <UnhealthyFlagWarning projectFlag={projectFlag} />
+                )}
               </Row>
               {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+              {!isCompact && <UnhealthyFlagWarning projectFlag={projectFlag} />}
               {description && !isCompact && (
                 <div
                   className='list-item-subtitle'

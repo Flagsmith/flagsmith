@@ -72,6 +72,7 @@ const CreateFlag = class extends Component {
           multivariate_options: [],
         }
     const { allowEditDescription } = this.props
+    const hideTags = this.props.hideTags || []
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -106,7 +107,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tags: tags || [],
+      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
     }
   }
 
@@ -575,7 +576,6 @@ const CreateFlag = class extends Component {
     const invalid =
       !!multivariate_options && multivariate_options.length && controlValue < 0
     const existingChangeRequest = this.props.changeRequest
-    const latestUnhealthyEvent = this.props.latestUnhealthyEvent
     const hideIdentityOverridesTab = Utils.getShouldHideIdentityOverridesTab()
     const noPermissions = this.props.noPermissions
     let regexValid = true

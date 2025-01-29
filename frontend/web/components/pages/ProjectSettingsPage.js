@@ -21,11 +21,10 @@ import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
 import Tooltip from 'components/Tooltip'
-import { Link } from 'react-router-dom'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
-import { getRoleProjectPermissions } from 'common/services/useRolePermission'
+import EditHealthProvider from 'components/EditHealthProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -579,6 +578,23 @@ const ProjectSettingsPage = class extends Component {
                     <TabItem tabLabel='Usage'>
                       <ProjectUsage
                         projectId={this.props.match.params.projectId}
+                      />
+                    </TabItem>
+                    <TabItem
+                      data-test='feature-health-settings'
+                      tabLabel='Feature Health'
+                    >
+                      <EditHealthProvider
+                        onSaveUser={() => {
+                          this.getPermissions()
+                        }}
+                        permissions={this.state.permissions}
+                        tabClassName='flat-panel'
+                        projectId={this.props.match.params.projectId}
+                        level='project'
+                        roleTabTitle='Project Permissions'
+                        role
+                        roles={this.state.roles}
                       />
                     </TabItem>
                     <TabItem tabLabel='Permissions'>

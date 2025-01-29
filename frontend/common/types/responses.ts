@@ -352,7 +352,7 @@ export type Tag = {
   label: string
   is_system_tag: boolean
   is_permanent: boolean
-  type: 'STALE' | 'NONE'
+  type: 'STALE' | 'UNHEALTHY' | 'NONE'
 }
 
 export type MultivariateFeatureStateValue = {
@@ -646,6 +646,13 @@ export type HealthEvent = {
   type: 'HEALTHY' | 'UNHEALTHY'
 }
 
+export type HealthProvider = {
+  created_by: string
+  name: string
+  project: number
+  webhook_url: number
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -681,6 +688,8 @@ export type Res = {
   tag: Tag
   tags: Tag[]
   healthEvents: HealthEvent[]
+  healthProvider: HealthProvider
+  healthProviders: HealthProvider[]
   account: Account
   userEmail: {}
   groupAdmin: { id: string }

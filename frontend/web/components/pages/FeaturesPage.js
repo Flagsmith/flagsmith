@@ -5,8 +5,6 @@ import FeatureRow from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
-import { getTags } from 'common/services/useTag'
-import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -25,11 +23,6 @@ import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
 import Button from 'components/base/forms/Button'
-import WarningMessage from 'components/WarningMessage'
-import { getHealthEvents } from 'common/services/useHealthEvents'
-import { uniq } from 'lodash'
-
-const UNHEALTHY_TYPE = 'UNHEALTHY'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -46,7 +39,6 @@ const FeaturesPage = class extends Component {
         typeof params.group_owners === 'string'
           ? params.group_owners.split(',').map((v) => parseInt(v))
           : [],
-      healthEvents: [],
       is_enabled:
         params.is_enabled === 'true'
           ? true
@@ -71,26 +63,10 @@ const FeaturesPage = class extends Component {
         typeof params.tags === 'string'
           ? params.tags.split(',').map((v) => parseInt(v))
           : [],
-      unhealthyTags: [],
       value_search:
         typeof params.value_search === 'string' ? params.value_search : '',
     }
     ES6Component(this)
-    getTags(getStore(), {
-      projectId: `${this.props.match.params.projectId}`,
-    }).then((res) => {
-      this.setState({
-        unhealthyTags: res.data?.filter((tag) => tag?.type === UNHEALTHY_TYPE),
-      })
-    })
-
-    getHealthEvents(getStore(), {
-      projectId: `${this.props.match.params.projectId}`,
-    }).then((res) => {
-      this.setState({
-        healthEvents: res.data?.filter((tag) => tag),
-      })
-    })
 
     AppActions.getFeatures(
       this.props.match.params.projectId,
@@ -238,49 +214,10 @@ const FeaturesPage = class extends Component {
     )
   }
 
-  getEnvUnhealthyTags = (tags, environmentId) => {
-    return tags?.find(
-      (tag) =>
-        tag?.type === UNHEALTHY_TYPE && tag?.environment === environmentId,
-    )
-  }
-
-  getEnvNamesFromEvents = (events) =>
-    uniq(
-      events
-        ?.map(
-          (event) => ProjectStore.getEnvironmentById(event?.environment)?.name,
-        )
-        ?.filter((name) => name),
-    )?.join(', ')
-
-  getCurrEnvUnhealthyEvents = (envId) => {
-    return this.state.healthEvents?.filter(
-      (event) => event?.environment === envId,
-    )
-  }
-
-  getOtherEnvUnhealthyEvents = (envId) => {
-    return this.state.healthEvents?.filter(
-      (event) => event?.environment !== envId,
-    )
-  }
-
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
-
-    const envUnhealthyTags = this.state.unhealthyTags
-    const isShowingUnhealthyTags = this.state.tags?.includes(
-      envUnhealthyTags?.[0]?.id,
-    )
-    const currEnvUnhealthyEvents = this.getCurrEnvUnhealthyEvents(
-      environment?.id,
-    )
-    const otherEnvUnhealthyEvents = this.getOtherEnvUnhealthyEvents(
-      environment?.id,
-    )
 
     return (
       <div
@@ -389,56 +326,6 @@ const FeaturesPage = class extends Component {
                           </Tooltip>{' '}
                           for your selected environment.
                         </PageTitle>
-                        {!!currEnvUnhealthyEvents?.length && (
-                          <div>
-                            <WarningMessage
-                              warningMessage={
-                                <div className='flex-row flex-1 justify-content-between'>
-                                  <div>
-                                    Certain features in this environment are
-                                    currently tagged as{' '}
-                                    <strong>"unhealthy"</strong>.
-                                  </div>
-                                  {!isShowingUnhealthyTags && (
-                                    <div className='mr-1'>
-                                      <Button
-                                        theme='text'
-                                        onClick={() => {
-                                          this.setState(
-                                            {
-                                              showArchived: false,
-                                              tags: [envUnhealthyTags[0].id],
-                                            },
-                                            this.filter,
-                                          )
-                                        }}
-                                      >
-                                        Show unhealthy features
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                              }
-                            />
-                          </div>
-                        )}
-                        {!!otherEnvUnhealthyEvents?.length && (
-                          <div>
-                            <WarningMessage
-                              warningMessage={
-                                <div>
-                                  "Unhealthy" events have been detected in the
-                                  following environments:{' '}
-                                  <strong>
-                                    {this.getEnvNamesFromEvents(
-                                      otherEnvUnhealthyEvents,
-                                    )}
-                                  </strong>
-                                </div>
-                              }
-                            />
-                          </div>
-                        )}
                         <FormGroup
                           className={classNames('mb-4', {
                             'opacity-50': isSaving,
@@ -668,10 +555,6 @@ const FeaturesPage = class extends Component {
                                     projectId={projectId}
                                     index={i}
                                     canDelete={permission}
-                                    latestUnhealthyEvent={currEnvUnhealthyEvents?.find(
-                                      (event) =>
-                                        event.feature === projectFlag.id,
-                                    )}
                                     toggleFlag={toggleFlag}
                                     removeFlag={removeFlag}
                                     projectFlag={projectFlag}
