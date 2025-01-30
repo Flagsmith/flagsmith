@@ -21,11 +21,10 @@ import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
 import Tooltip from 'components/Tooltip'
-import { Link } from 'react-router-dom'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
-import { getRoleProjectPermissions } from 'common/services/useRolePermission'
+import EditHealthProvider from 'components/EditHealthProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -581,6 +580,17 @@ const ProjectSettingsPage = class extends Component {
                         projectId={this.props.match.params.projectId}
                       />
                     </TabItem>
+                    {Utils.getFlagsmithHasFeature('feature_health') && (
+                      <TabItem
+                        data-test='feature-health-settings'
+                        tabLabel='Feature Health'
+                      >
+                        <EditHealthProvider
+                          projectId={this.props.match.params.projectId}
+                          tabClassName='flat-panel'
+                        />
+                      </TabItem>
+                    )}
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {

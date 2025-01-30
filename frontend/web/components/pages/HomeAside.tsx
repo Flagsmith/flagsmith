@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { ComponentProps, FC, useEffect, useMemo, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
@@ -7,7 +7,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
-import { code, createOutline } from 'ionicons/icons'
+import { checkmarkCircle, code, createOutline, warning } from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -22,6 +22,7 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
+import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 
 type HomeAsideType = {
   environmentId: string
@@ -29,11 +30,49 @@ type HomeAsideType = {
   history: RouterChildContext['router']['history']
 }
 
+type OptionProps = ComponentProps<typeof components.Option>
+type EnvSelectOptionProps = OptionProps & {
+  hasWarning?: boolean
+}
+
+const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
+  return (
+    <components.Option {...rest}>
+      <div className='d-flex align-items-center'>
+        {rest.children}
+        <div className='d-flex flex-1 align-items-center justify-content-between '>
+          {Utils.getFlagsmithHasFeature('feature_health') && hasWarning && (
+            <Tooltip
+              title={
+                <div className='flex ml-1'>
+                  <IonIcon className='text-warning' icon={warning} />
+                </div>
+              }
+            >
+              This environment has unhealthy features
+            </Tooltip>
+          )}
+          <div className='flex ml-auto'>
+            {rest.isSelected && (
+              <IonIcon icon={checkmarkCircle} className='text-primary' />
+            )}
+          </div>
+        </div>
+      </div>
+    </components.Option>
+  )
+}
+
 const HomeAside: FC<HomeAsideType> = ({
   environmentId,
   history,
   projectId,
 }) => {
+  const { data: healthEvents } = useGetHealthEventsQuery(
+    { projectId: projectId },
+    { refetchOnFocus: false, skip: !projectId },
+  )
+
   useEffect(() => {
     if (environmentId) {
       AppActions.getChangeRequests(environmentId, {})
@@ -49,6 +88,19 @@ const HomeAside: FC<HomeAsideType> = ({
     }
     //eslint-disable-next-line
   }, [])
+
+  const unhealthyEnvironments = useMemo(() => {
+    return healthEvents
+      ?.filter((event) => event.type === 'UNHEALTHY')
+      .map(
+        (event) =>
+          (
+            ProjectStore.getEnvironmentById(
+              event.environment,
+            ) as Environment | null
+          )?.api_key,
+      )
+  }, [healthEvents])
 
   const environment: Environment | null =
     environmentId === 'create'
@@ -122,6 +174,14 @@ const HomeAside: FC<HomeAsideType> = ({
                                   </components.Menu>
                                 )
                               },
+                              Option: (props: OptionProps) => (
+                                <EnvSelectOption
+                                  {...props}
+                                  hasWarning={unhealthyEnvironments?.includes(
+                                    props.data.value,
+                                  )}
+                                />
+                              ),
                             }}
                             onChange={(newEnvironmentId) => {
                               if (newEnvironmentId !== environmentId) {

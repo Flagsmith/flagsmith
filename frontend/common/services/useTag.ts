@@ -68,8 +68,7 @@ export async function getTags(
   data: Req['getTags'],
   options?: Parameters<typeof tagService.endpoints.getTags.initiate>[1],
 ) {
-  store.dispatch(tagService.endpoints.getTags.initiate(data, options))
-  return Promise.all(store.dispatch(tagService.util.getRunningQueriesThunk()))
+  return store.dispatch(tagService.endpoints.getTags.initiate(data, options))
 }
 export async function createTag(
   store: any,
