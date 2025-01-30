@@ -10,15 +10,21 @@ const GithubStar: FC<GithubStarType> = ({}) => {
   const organisation = AccountStore.getOrganisation()
   const plan = organisation?.subscription?.plan || ''
   const planName = Utils.getPlanName(plan)
-  const [stars, setStars] = useState()
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const [stars, setStars] = useState<number | null>(null)
+
+  const formatStars = (count: number): string => {
+    if (count >= 1000) {
+      const formattedCount = Math.ceil(count / 100) * 100 // Round up to nearest 100
+      return `${(formattedCount / 1000).toFixed(1)}k` // Format as 'x.xk'
+    }
+    return count.toString()
+  }
+
   useEffect(() => {
     if (planName !== planNames.enterprise) {
-      fetch(`https://api.github.com/repos/flagsmith/flagsmith`)
-        .then(function (res) {
-          return res.json()
-        })
-        .then(function (res) {
+      fetch('https://api.github.com/repos/flagsmith/flagsmith')
+        .then((res) => res.json())
+        .then((res) => {
           setStars(res.stargazers_count)
         })
         .catch(() => {})
@@ -39,13 +45,13 @@ const GithubStar: FC<GithubStarType> = ({}) => {
     >
       <div
         className={
-          stars
+          stars !== null
             ? 'd-flex flex-row justify-content-center align-items-center'
             : ''
         }
       >
         <IonIcon style={{ fontSize: 16 }} icon={logoGithub} />
-        {stars && <div className='ms-1'>{stars}</div>}
+        {stars !== null && <div className='ms-1'>{formatStars(stars)}</div>}
       </div>
     </a>
   )
