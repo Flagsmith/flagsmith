@@ -35,7 +35,7 @@ const UnhealthyFlagWarning: FC<UnhealthyFlagWarningType> = ({
 
   return (
     <div className='fs-caption' style={{ color: Constants.tagColors[16] }}>
-      {/* Provider info and link to issue will be provided by reason */}
+      {/* TODO: Provider info and link to issue will be provided by reason via the API */}
       {latestHealthEvent.reason}
       {latestHealthEvent.reason && (
         <IonIcon style={{ marginBottom: -2 }} className='ms-1' icon={warning} />

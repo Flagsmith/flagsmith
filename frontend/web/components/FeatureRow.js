@@ -261,6 +261,10 @@ class TheComponent extends Component {
         </Flex>
       )
     }
+
+    const isFeatureHealthEnabled =
+      Utils.getFlagsmithHasFeature('feature_health')
+
     return (
       <Row
         className={classNames(
@@ -342,12 +346,14 @@ class TheComponent extends Component {
                   )}
                 </TagValues>
                 {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
-                {!!isCompact && (
+                {isFeatureHealthEnabled && !!isCompact && (
                   <UnhealthyFlagWarning projectFlag={projectFlag} />
                 )}
               </Row>
               {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
-              {!isCompact && <UnhealthyFlagWarning projectFlag={projectFlag} />}
+              {isFeatureHealthEnabled && !isCompact && (
+                <UnhealthyFlagWarning projectFlag={projectFlag} />
+              )}
               {description && !isCompact && (
                 <div
                   className='list-item-subtitle'

@@ -32,7 +32,7 @@ type HomeAsideType = {
 
 type OptionProps = ComponentProps<typeof components.Option>
 type EnvSelectOptionProps = OptionProps & {
-  hasWarning?: string[]
+  hasWarning?: boolean
 }
 
 const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
@@ -41,7 +41,7 @@ const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
       <div className='d-flex align-items-center'>
         {rest.children}
         <div className='d-flex flex-1 align-items-center justify-content-between '>
-          {hasWarning && (
+          {Utils.getFlagsmithHasFeature('feature_health') && hasWarning && (
             <Tooltip
               title={
                 <div className='flex ml-1'>
@@ -167,7 +167,6 @@ const HomeAside: FC<HomeAsideType> = ({
                             projectId={projectId}
                             components={{
                               Menu: ({ ...props }: any) => {
-                                console.log({ props })
                                 return (
                                   <components.Menu {...props}>
                                     {props.children}

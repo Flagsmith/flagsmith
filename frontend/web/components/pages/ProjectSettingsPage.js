@@ -580,23 +580,17 @@ const ProjectSettingsPage = class extends Component {
                         projectId={this.props.match.params.projectId}
                       />
                     </TabItem>
-                    <TabItem
-                      data-test='feature-health-settings'
-                      tabLabel='Feature Health'
-                    >
-                      <EditHealthProvider
-                        onSaveUser={() => {
-                          this.getPermissions()
-                        }}
-                        permissions={this.state.permissions}
-                        tabClassName='flat-panel'
-                        projectId={this.props.match.params.projectId}
-                        level='project'
-                        roleTabTitle='Project Permissions'
-                        role
-                        roles={this.state.roles}
-                      />
-                    </TabItem>
+                    {Utils.getFlagsmithHasFeature('feature_health') && (
+                      <TabItem
+                        data-test='feature-health-settings'
+                        tabLabel='Feature Health'
+                      >
+                        <EditHealthProvider
+                          projectId={this.props.match.params.projectId}
+                          tabClassName='flat-panel'
+                        />
+                      </TabItem>
+                    )}
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {

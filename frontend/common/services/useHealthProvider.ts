@@ -17,6 +17,15 @@ export const healthProviderService = service
           url: `projects/${query.projectId}/feature-health/providers/`,
         }),
       }),
+      deleteHealthProvider: builder.mutation<void, Req['deleteHealthProvider']>(
+        {
+          invalidatesTags: [{ id: 'LIST', type: 'HealthProviders' }],
+          query: (query: Req['deleteHealthProvider']) => ({
+            method: 'DELETE',
+            url: `projects/${query.projectId}/feature-health/providers/${query.providerId}/`,
+          }),
+        },
+      ),
       getHealthProviders: builder.query<
         Res['healthProviders'],
         Req['getHealthProviders']
@@ -56,10 +65,26 @@ export async function createHealthProvider(
     ),
   )
 }
+
+export async function deleteHealthProvider(
+  store: any,
+  data: Req['deleteHealthProvider'],
+  options?: Parameters<
+    typeof healthProviderService.endpoints.deleteHealthProvider.initiate
+  >[1],
+) {
+  return store.dispatch(
+    healthProviderService.endpoints.deleteHealthProvider.initiate(
+      data,
+      options,
+    ),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
   useCreateHealthProviderMutation,
+  useDeleteHealthProviderMutation,
   useGetHealthProvidersQuery,
   // END OF EXPORTS
 } = healthProviderService

@@ -64,6 +64,7 @@ const getTooltip = (tag: TTag | undefined) => {
   const disabled = Utils.tagDisabled(tag)
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
   let tooltip = null
   switch (tag.type) {
     case 'STALE': {
@@ -75,8 +76,9 @@ const getTooltip = (tag: TTag | undefined) => {
       break
     }
     case 'UNHEALTHY': {
-      tooltip =
-        'This feature is tagged as unhealthy in one or more environments.'
+      tooltip = isFeatureHealthEnabled
+        ? 'This feature is tagged as unhealthy in one or more environments.'
+        : ''
       break
     }
     default:

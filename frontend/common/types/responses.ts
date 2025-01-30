@@ -647,6 +647,7 @@ export type HealthEvent = {
 }
 
 export type HealthProvider = {
+  id: number
   created_by: string
   name: string
   project: number
