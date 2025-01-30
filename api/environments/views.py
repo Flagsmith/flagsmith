@@ -141,7 +141,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         existing_environment = Environment.objects.filter(
-            name=serializer.validated_data["name"]
+            name=serializer.validated_data["name"],
+            project=serializer.validated_data["project"],
         )
         if existing_environment:
             raise ValidationError("Existing environment for given name.")
