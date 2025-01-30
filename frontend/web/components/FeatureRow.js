@@ -124,7 +124,6 @@ class TheComponent extends Component {
         >
           <Icon name='copy' />
         </Button>
-        {/* TODO ADD TAG HERE */}
       </Row>,
       <CreateFlagModal
         hideTags={hideTags}
