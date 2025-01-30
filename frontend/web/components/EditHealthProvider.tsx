@@ -32,6 +32,7 @@ const CreateHealthProviderForm = ({ projectId }: { projectId: number }) => {
   const [createProvider, { error, isError, isLoading, isSuccess }] =
     useCreateHealthProviderMutation()
 
+  // TODO: Replace from list of provider options from API
   const providers = [{ name: 'Sample' }, { name: 'Grafana' }]
 
   const providerOptions = providers.map((provider) => ({
