@@ -211,7 +211,7 @@ def charge_for_api_call_count_overages():
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(7201)
+        api_usage = get_current_api_usage(organisation.id)
 
         # Grace period for organisations < 200% of usage.
         if (
