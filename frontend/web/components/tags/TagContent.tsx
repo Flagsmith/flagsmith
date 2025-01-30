@@ -48,7 +48,9 @@ const renderIcon = (
           return
       }
     default:
-      return isPermanent ? <IonIcon className='ms-1' icon={lockClosed} color={darkened} /> : null
+      return isPermanent ? (
+        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
+      ) : null
   }
 }
 
@@ -62,6 +64,7 @@ const getTooltip = (tag: TTag | undefined) => {
   const disabled = Utils.tagDisabled(tag)
   const truncated = Format.truncateText(tag.label, 12)
   const isTruncated = truncated !== tag.label ? tag.label : null
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
   let tooltip = null
   switch (tag.type) {
     case 'STALE': {
@@ -70,6 +73,12 @@ const getTooltip = (tag: TTag | undefined) => {
           ? 'This feature is available with our <strong>Enterprise</strong> plan. '
           : ''
       }A feature is marked as stale if no changes have been made to it in any environment within ${stale_flags_limit_days} days. This is automatically applied and will be re-evaluated if you remove this tag unless you apply a permanent tag to the feature.`
+      break
+    }
+    case 'UNHEALTHY': {
+      tooltip = isFeatureHealthEnabled
+        ? 'This feature is tagged as unhealthy in one or more environments.'
+        : ''
       break
     }
     default:
