@@ -610,7 +610,9 @@ def test_environment_matches_existing_environment_name(
 
     # Then
     assert response.status_code == 400
-    assert response.json() == ["Existing environment for given name."]
+    assert response.json() == {
+        "non_field_errors": ["An environment with this name already exists."]
+    }
 
 
 def test_create_environment_without_required_metadata_returns_400(
