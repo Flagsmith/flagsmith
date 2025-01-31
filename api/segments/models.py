@@ -389,6 +389,7 @@ class SegmentRule(
             return True
 
         matched_conditions = set()
+        matched_target_conditions = set()
 
         # In order to provide accurate diffs we first go through the conditions
         # and collect conditions that are exact matches (i.e. have not been modified)
@@ -398,6 +399,7 @@ class SegmentRule(
                     target_condition
                 ):
                     matched_conditions.add(condition)
+                    matched_target_conditions.add(target_condition)
                     condition.version_of = target_condition
                     break
 
@@ -405,10 +407,13 @@ class SegmentRule(
         # been modified from the target condition.
         for target_condition in target_conditions:
             for condition in conditions:
-                if (condition not in matched_conditions) and condition.is_partial_match(
-                    target_condition
+                if (
+                    (condition not in matched_conditions)
+                    and (target_condition not in matched_target_conditions)
+                    and condition.is_partial_match(target_condition)
                 ):
                     matched_conditions.add(condition)
+                    matched_target_conditions.add(target_condition)
                     condition.version_of = target_condition
                     break
 
