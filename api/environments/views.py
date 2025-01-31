@@ -140,12 +140,6 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        existing_environment = Environment.objects.filter(
-            name=serializer.validated_data["name"],
-            project=serializer.validated_data["project"],
-        )
-        if existing_environment:
-            raise ValidationError("Existing environment for given name.")
         environment = serializer.save()
         if getattr(self.request.user, "is_master_api_key_user", False) is False:
             UserEnvironmentPermission.objects.create(
