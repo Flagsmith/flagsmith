@@ -27,7 +27,6 @@ const FeatureListProvider = class extends React.Component {
         maxFeaturesAllowed: ProjectStore.getMaxFeaturesAllowed(),
         projectFlags: FeatureListStore.getProjectFlags(),
         totalFeatures: ProjectStore.getTotalFeatures(),
-        usageData: FeatureListStore.getFeatureUsage(),
       })
     })
     this.listenTo(FeatureListStore, 'removed', (data) => {
@@ -44,7 +43,6 @@ const FeatureListProvider = class extends React.Component {
         isLoading: FeatureListStore.isLoading,
         isSaving: FeatureListStore.isSaving,
         lastSaved: FeatureListStore.getLastSaved(),
-        usageData: FeatureListStore.getFeatureUsage(),
       })
       this.props.onError && this.props.onError(FeatureListStore.error)
     })
