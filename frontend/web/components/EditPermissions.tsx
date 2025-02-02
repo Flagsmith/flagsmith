@@ -323,8 +323,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       },
     ] = useCreateRolePermissionsMutation()
 
-    const tagBasedPermissions =
-      Utils.getFlagsmithHasFeature('tag_based_permissions') && !!role
+    const tagBasedPermissions = !!role
     useEffect(() => {
       const isSaving = isRolePermCreating || isRolePermUpdating
       if (isSaving) {

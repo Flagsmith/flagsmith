@@ -269,9 +269,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
 
   useEffect(() => {
     fetch()
-    if (Utils.getFlagsmithHasFeature('github_integration')) {
-      fetchGithubIntegration()
-    }
+    fetchGithubIntegration()
   }, [])
 
   const fetchGithubIntegration = () => {
