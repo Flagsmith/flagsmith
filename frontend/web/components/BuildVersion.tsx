@@ -4,7 +4,7 @@ import { IonIcon } from '@ionic/react'
 import { pricetag } from 'ionicons/icons'
 
 type BuildVersionType = {}
-type Version = {
+export type Version = {
   tag: string
   backend_sha: string
   frontend_sha: string
