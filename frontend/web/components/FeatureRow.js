@@ -310,14 +310,22 @@ class TheComponent extends Component {
                 <SegmentOverridesIcon
                   onClick={(e) => {
                     e.stopPropagation()
-                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                    this.editFeature(
+                      projectFlag,
+                      environmentFlags[id],
+                      'segment-overrides',
+                    )
                   }}
                   count={projectFlag.num_segment_overrides}
                 />
                 <IdentityOverridesIcon
                   onClick={(e) => {
                     e.stopPropagation()
-                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                    this.editFeature(
+                      projectFlag,
+                      environmentFlags[id],
+                      'identity-overrides',
+                    )
                   }}
                   count={projectFlag.num_identity_overrides}
                   showPlusIndicator={showPlusIndicator}
