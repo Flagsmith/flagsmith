@@ -24,13 +24,13 @@ def insert_default_project_permissions(apps, schema_model):
 
     PermissionModel.objects.get_or_create(
         key=MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS,
-        description=manage_description,
         type=PROJECT_PERMISSION_TYPE,
+        defaults={"description": manage_description},
     )
     PermissionModel.objects.get_or_create(
         key=APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS,
-        description=approve_description,
         type=PROJECT_PERMISSION_TYPE,
+        defaults={"description": approve_description},
     )
 
 
