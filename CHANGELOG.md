@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.161.0](https://github.com/Flagsmith/flagsmith/compare/v2.160.2...v2.161.0) (2025-02-03)
+
+
+### Features
+
+* Backend support for feature health ([#5023](https://github.com/Flagsmith/flagsmith/issues/5023)) ([b0d0a80](https://github.com/Flagsmith/flagsmith/commit/b0d0a80da04b15e29be9c89fa87dc915713530bc))
+* Implements feature healthcare UI ([#5043](https://github.com/Flagsmith/flagsmith/issues/5043)) ([9ea58fa](https://github.com/Flagsmith/flagsmith/commit/9ea58fad618e95e1cf01abba4e1274d504c1fffc))
+
+
+### Bug Fixes
+
+* **5044/mvfsv:** handle deleted feature states ([#5050](https://github.com/Flagsmith/flagsmith/issues/5050)) ([b325998](https://github.com/Flagsmith/flagsmith/commit/b3259986511be93bfb9718f2312f978eae34ab3e))
+* Feature health event task not working ([#5072](https://github.com/Flagsmith/flagsmith/issues/5072)) ([d4c4aaa](https://github.com/Flagsmith/flagsmith/commit/d4c4aaaf0b45f5c78ab2af08709ee568d9a7d4b4))
+* Force environments to be different names ([#5058](https://github.com/Flagsmith/flagsmith/issues/5058)) ([22223da](https://github.com/Flagsmith/flagsmith/commit/22223da910b7365ff061855af62b2f24a5b6eccf))
+* integrations page permission ([#5042](https://github.com/Flagsmith/flagsmith/issues/5042)) ([5431585](https://github.com/Flagsmith/flagsmith/commit/54315850fe5d73af1c374b788c2eabaf5b3d1fa6))
+
 ## [2.160.2](https://github.com/Flagsmith/flagsmith/compare/v2.160.1...v2.160.2) (2025-01-28)
 
 
