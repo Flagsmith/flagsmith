@@ -7,7 +7,7 @@ class FeatureHealthConfig(BaseAppConfig):
 
     def ready(self):
         from features.feature_health.tasks import (  # noqa
-            send_feature_health_event,
+            update_feature_unhealthy_tag,
         )
 
         return super().ready()
