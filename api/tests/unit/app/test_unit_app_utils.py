@@ -7,7 +7,7 @@ from pytest_django.fixtures import SettingsWrapper
 from app.utils import get_version_info
 
 
-def test_get_version_info(fs: FakeFilesystem) -> None:
+def test_get_version_info(fs: FakeFilesystem, db: None) -> None:
     # Given
     expected_manifest_contents = {
         ".": "2.66.2",
@@ -28,6 +28,11 @@ def test_get_version_info(fs: FakeFilesystem) -> None:
         "is_enterprise": True,
         "is_saas": False,
         "package_versions": {".": "2.66.2"},
+        "self_hosted_data": {
+            "has_users": False,
+            "has_logins": False,
+            "is_bootstrapped": False,
+        },
     }
 
 
