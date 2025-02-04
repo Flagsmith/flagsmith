@@ -57,6 +57,7 @@ class FeatureHealthProviderViewSet(
     serializer_class = FeatureHealthProviderSerializer
     pagination_class = None  # set here to ensure documentation is correct
     model_class = FeatureHealthProvider
+    lookup_field = "name"
 
     def get_permissions(self) -> list[BasePermission]:
         return [NestedProjectPermissions()]
@@ -67,6 +68,13 @@ class FeatureHealthProviderViewSet(
 
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
         return self.model_class.objects.filter(project=project)
+
+    def get_object(self) -> FeatureHealthProvider:
+        return get_object_or_404(
+            self.model_class.objects,
+            project_id=self.kwargs["project_pk"],
+            name__iexact=self.kwargs["provider_name"],
+        )
 
     @swagger_auto_schema(
         request_body=CreateFeatureHealthProviderSerializer,
