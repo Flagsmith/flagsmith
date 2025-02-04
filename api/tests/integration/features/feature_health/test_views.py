@@ -50,6 +50,32 @@ def test_feature_health_providers__get__expected_response(
     assert response.json() == [expected_feature_health_provider_data]
 
 
+def test_feature_health_providers__delete__expected_response(
+    project: int,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
+    admin_client_new.post(
+        url,
+        data={"name": "Sample"},
+    ).json()
+
+    # When
+
+    response = admin_client_new.delete(
+        reverse(
+            "api-v1:projects:feature-health-providers-detail",
+            args=[project, "sample"],
+        )
+    )
+
+    # Then
+    assert response.status_code == 204
+    response = admin_client_new.get(url)
+    assert response.json() == []
+
+
 def test_webhook__invalid_path__expected_response(
     api_client: APIClient,
 ) -> None:
