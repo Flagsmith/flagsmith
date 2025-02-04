@@ -73,7 +73,7 @@ class FeatureHealthProviderViewSet(
         return get_object_or_404(
             self.model_class.objects,
             project_id=self.kwargs["project_pk"],
-            name__iexact=self.kwargs["provider_name"],
+            name__iexact=self.kwargs["name"],
         )
 
     @swagger_auto_schema(
