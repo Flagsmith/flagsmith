@@ -189,6 +189,91 @@ class Segment(
 
         return cloned_segment
 
+    def update_segment_with_matches_from_target_segment(
+        self, target_segment: "Segment"
+    ) -> bool:
+        """
+        This method handles the matching of two segments for the purpose of
+        diffing them, for example in the context of a change request. We take
+        the segment provided as an argument (`target_segment`), compare its
+        rules to this segment instance (`self`) and update any rules (and,
+        indirectly, conditions) on this segment instance to have a pointer to
+        the target segment's rules (and conditions).
+
+        Args:
+            target_segment (Segment): The target segment we are matching against.
+
+        Returns:
+            bool:
+                - `True` if any rules or sub-rules match between this instance
+                   (i.e. self) and the target segment.
+                - `False` if no matches are found.
+
+        Process:
+            1. Retrieve all rules for both segments.
+            2. For each rule in the target segment:
+               - Check its sub-rules against this instance's rules and sub-rules.
+               - A match is determined if the sub-rule's type and properties align
+                 with those of this instance's sub-rules.
+               - If a match is found:
+                 - Update the `version_of` field for this instance's matched sub-rule
+                   and rule. Do not modify the target segment rules.
+                 - Track the matched rules and sub-rules to avoid duplicate processing.
+            3. Perform a bulk update on matched rules and sub-rules to persist
+               versioning changes.
+
+        Side Effects:
+            - Updates the `version_of` field for matched rules and sub-rules belonging
+              to this instance (i.e., self).
+            - Indirectly updates the `version_of` field on sub-rules' conditions.
+        """
+
+        rules = self.rules.all()
+
+        matched_rules = set()
+        matched_sub_rules = set()
+
+        for target_rule in target_segment.rules.all():
+            for target_sub_rule in target_rule.rules.all():
+
+                target_sub_rule_matched = False
+
+                for rule in rules:
+                    if target_rule.type != rule.type:
+                        continue
+
+                    if target_sub_rule_matched:
+                        # We are trying to match 1:1, so we only allow a single
+                        # match for each target sub-rule.
+                        break
+
+                    # If we've already matched at least one of the rule's sub-rules
+                    # (and hence, the rule has been added to matched_rules), then we
+                    # need to ensure that any subsequent matches belong to the same
+                    # parent rule.
+                    if rule in matched_rules and rule.version_of != target_rule:
+                        continue
+
+                    for sub_rule in rule.rules.exclude(
+                        id__in=[r.id for r in matched_sub_rules]
+                    ):
+                        if sub_rule.assign_conditions_if_matching_rule(target_sub_rule):
+                            target_sub_rule_matched = True
+
+                            # If a subrule matches, we assign the parent
+                            # rule and the subrule together.
+                            sub_rule.version_of = target_sub_rule
+                            rule.version_of = target_rule
+
+                            matched_sub_rules.add(sub_rule)
+                            matched_rules.add(rule)
+                            break
+
+        SegmentRule.objects.bulk_update(
+            matched_rules | matched_sub_rules, fields=["version_of"]
+        )
+        return bool(matched_rules | matched_sub_rules)
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:
         return SEGMENT_CREATED_MESSAGE % self.name
 
@@ -217,6 +302,13 @@ class SegmentRule(
     )
     rule = models.ForeignKey(
         "self", on_delete=models.CASCADE, related_name="rules", null=True, blank=True
+    )
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="versioned_rules",
+        null=True,
+        blank=True,
     )
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
@@ -266,6 +358,71 @@ class SegmentRule(
             rule = rule.rule
         return rule.segment
 
+    def assign_conditions_if_matching_rule(  # noqa: C901
+        self, target_rule: "SegmentRule"
+    ) -> bool:
+        """
+        This method handles the matching of two rules for the purpose of
+        diffing them, for example in the context of a change request for a
+        given segment. We take the rule provided as an argument (`target_rule`),
+        and compare its conditions to this instance's conditions.
+
+        Returns:
+            bool:
+                - `True` if this instance's (i.e. self) type matches the rule's type
+                  and the conditions are compatible.
+                - `False` if the types do not match or no conditions are compatible.
+
+        Side Effects:
+            Updates the `version_of` field for matched conditions using a bulk update for the
+            conditions of this instance (i.e. self).
+        """
+
+        if target_rule.type != self.type:
+            return False
+
+        target_conditions = target_rule.conditions.all()
+        conditions = self.conditions.all()
+
+        if not target_conditions and not conditions:
+            # Empty rule with the same type matches.
+            return True
+
+        matched_conditions = set()
+        matched_target_conditions = set()
+
+        # In order to provide accurate diffs we first go through the conditions
+        # and collect conditions that are exact matches (i.e. have not been modified)
+        for target_condition in target_conditions:
+            for condition in conditions:
+                if (condition not in matched_conditions) and condition.is_exact_match(
+                    target_condition
+                ):
+                    matched_conditions.add(condition)
+                    matched_target_conditions.add(target_condition)
+                    condition.version_of = target_condition
+                    break
+
+        # Next we go through the collection again and collect conditions that have
+        # been modified from the target condition.
+        for target_condition in target_conditions:
+            for condition in conditions:
+                if (
+                    (condition not in matched_conditions)
+                    and (target_condition not in matched_target_conditions)
+                    and condition.is_partial_match(target_condition)
+                ):
+                    matched_conditions.add(condition)
+                    matched_target_conditions.add(target_condition)
+                    condition.version_of = target_condition
+                    break
+
+        if matched_conditions:
+            Condition.objects.bulk_update(matched_conditions, fields=["version_of"])
+            return True
+
+        return False
+
     def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
         if self.rule:
             # Since we're expecting a rule that is only belonging to a
@@ -273,6 +430,7 @@ class SegmentRule(
             # to a rule, we don't expect there also to be a rule associated.
             assert False, "Unexpected rule, expecting segment set not rule"
         cloned_rule = deepcopy(self)
+        cloned_rule.version_of = self
         cloned_rule.segment = cloned_segment
         cloned_rule.uuid = uuid.uuid4()
         cloned_rule.id = None
@@ -289,6 +447,7 @@ class SegmentRule(
                 assert False, "Expected two layers of rules, not more"
 
             cloned_sub_rule = deepcopy(sub_rule)
+            cloned_sub_rule.version_of = sub_rule
             cloned_sub_rule.rule = cloned_rule
             cloned_sub_rule.uuid = uuid.uuid4()
             cloned_sub_rule.id = None
@@ -301,6 +460,7 @@ class SegmentRule(
             cloned_conditions = []
             for condition in sub_rule.conditions.all():
                 cloned_condition = deepcopy(condition)
+                cloned_condition.version_of = condition
                 cloned_condition.rule = cloned_sub_rule
                 cloned_condition.uuid = uuid.uuid4()
                 cloned_condition.id = None
@@ -353,6 +513,13 @@ class Condition(
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
     )
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        related_name="versioned_conditions",
+        null=True,
+        blank=True,
+    )
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
@@ -393,6 +560,30 @@ class Condition(
 
     def get_audit_log_related_object_id(self, history_instance) -> int:
         return self._get_segment().id
+
+    def is_exact_match(self, other: "Condition") -> bool:
+        """
+        A condition is considered an exact match for another condition
+        with regard to the diffing logic, if all of `property`, `operator`,
+        and `value` exactly match.
+        """
+        return (
+            self.property == other.property
+            and self.operator == other.operator
+            and self.value == other.value
+        )
+
+    def is_partial_match(self, other: "Condition") -> bool:
+        """
+        A condition is considered a partial match for another condition
+        if both `property` values are none, and the operator matches
+        (for example, percentage split operator conditions), or
+        if the property exactly matches.
+        """
+        if self.property is None and other.property is None:
+            return self.operator == other.operator
+
+        return self.property == other.property
 
     def _get_segment(self) -> Segment:
         """
