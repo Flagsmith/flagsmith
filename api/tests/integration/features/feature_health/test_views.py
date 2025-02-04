@@ -56,16 +56,17 @@ def test_feature_health_providers__delete__expected_response(
 ) -> None:
     # Given
     url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
-    feature_health_provider_data = admin_client_new.post(
+    admin_client_new.post(
         url,
         data={"name": "Sample"},
     ).json()
 
     # When
+
     response = admin_client_new.delete(
         reverse(
             "api-v1:projects:feature-health-providers-detail",
-            args=[project, feature_health_provider_data["name"]],
+            args=[project, "sample"],
         )
     )
 
