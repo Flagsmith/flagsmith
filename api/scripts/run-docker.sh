@@ -8,7 +8,10 @@ waitfordb() {
 }
 
 migrate () {
-    waitfordb && python manage.py migrate && python manage.py createcachetable
+    waitfordb \
+      && python manage.py showmigrations --verbosity 2 \
+      && python manage.py migrate --verbosity 2 \
+      && python manage.py createcachetable
 }
 serve() {
     # configuration parameters for statsd. Docs can be found here:
