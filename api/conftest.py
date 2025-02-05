@@ -709,7 +709,7 @@ def admin_user_email(admin_user: FFAdminUser) -> str:
 
 @pytest.fixture
 def master_api_key_object(
-    master_api_key: typing.Tuple[MasterAPIKey, str]
+    master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> MasterAPIKey:
     return master_api_key[0]
 
@@ -726,7 +726,7 @@ def admin_user_id(admin_user: FFAdminUser) -> str:
 
 @pytest.fixture
 def admin_master_api_key_object(
-    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> MasterAPIKey:
     return admin_master_api_key[0]
 
@@ -738,7 +738,7 @@ def api_key_user(master_api_key_object: MasterAPIKey) -> APIKeyUser:
 
 @pytest.fixture()
 def admin_master_api_key_client(
-    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> APIClient:
     key = admin_master_api_key[1]
     # Can not use `api_client` fixture here because:
