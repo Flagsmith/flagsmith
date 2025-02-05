@@ -35,7 +35,7 @@ const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
         Enhance Flagsmith with your favourite tools. Have any products you want
         to see us integrate with? Message us and we will be right with you.
       </PageTitle>
-      {Utils.getFlagsmithHasFeature('organisation_integrations') && (
+      {
         <InfoMessage collapseId='project-integrations'>
           You can also set{' '}
           <Link
@@ -48,7 +48,7 @@ const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
           . If you add any of the same integrations here, they will override the
           ones set at the organization level.
         </InfoMessage>
-      )}
+      }
 
       {permissionsLoading ? (
         <Loader />

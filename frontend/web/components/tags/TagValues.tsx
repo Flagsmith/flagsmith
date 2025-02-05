@@ -25,9 +25,7 @@ const TagValues: FC<TagValuesType> = ({
 }) => {
   const { data: tags } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
-  const permissionType = Utils.getFlagsmithHasFeature('manage_tags_permission')
-    ? 'MANAGE_TAGS'
-    : 'ADMIN'
+  const permissionType = 'MANAGE_TAGS'
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,

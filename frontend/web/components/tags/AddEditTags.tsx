@@ -40,9 +40,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
   const [tab, setTab] = useState<'SELECT' | 'CREATE' | 'EDIT'>('SELECT')
   const [deleteTag] = useDeleteTagMutation()
   const [createTag] = useCreateTagMutation()
-  const permissionType = Utils.getFlagsmithHasFeature('manage_tags_permission')
-    ? 'MANAGE_TAGS'
-    : 'ADMIN'
+  const permissionType = 'MANAGE_TAGS'
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,

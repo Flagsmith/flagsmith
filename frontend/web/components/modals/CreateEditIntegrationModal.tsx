@@ -250,20 +250,17 @@ const CreateEditIntegration: FC<CreateEditIntegrationProps> = (props) => {
             />
           </div>
         )}
-        {Utils.getFlagsmithHasFeature('github_integration') &&
-          integration.isExternalInstallation &&
-          githubMeta &&
-          projectId && (
-            <div className='mb-3'>
-              <MyGitHubRepositoriesComponent
-                githubId={githubMeta.githubId}
-                installationId={githubMeta.installationId}
-                organisationId={AccountStore.getOrganisation().id}
-                projectId={projectId}
-                openGitHubWinInstallations={openGitHubWinInstallations}
-              />
-            </div>
-          )}
+        {integration.isExternalInstallation && githubMeta && projectId && (
+          <div className='mb-3'>
+            <MyGitHubRepositoriesComponent
+              githubId={githubMeta.githubId}
+              installationId={githubMeta.installationId}
+              organisationId={AccountStore.getOrganisation().id}
+              projectId={projectId}
+              openGitHubWinInstallations={openGitHubWinInstallations}
+            />
+          </div>
+        )}
         {fields.map((field) => (
           <div key={field.key}>
             <div>

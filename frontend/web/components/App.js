@@ -217,8 +217,7 @@ const App = class extends Component {
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
           if (
-            this.props.location.search.includes('github-redirect') &&
-            Utils.getFlagsmithHasFeature('github_integration')
+            this.props.location.search.includes('github-redirect')
           ) {
             this.context.router.history.replace(
               `/github-setup${this.props.location.search}`,
