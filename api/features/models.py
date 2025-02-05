@@ -372,7 +372,7 @@ class FeatureSegment(
     def to_id_priority_tuple_pairs(
         feature_segments: typing.Union[
             typing.Iterable["FeatureSegment"], typing.Iterable[dict]
-        ]
+        ],
     ) -> typing.List[typing.Tuple[int, int]]:
         """
         Helper method to convert a collection of FeatureSegment objects or dictionaries to a list of 2-tuples
