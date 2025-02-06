@@ -162,7 +162,7 @@ def update_flagsmith_environments_v2_identity_overrides(
 
 
 @register_task_handler()
-def delete_environments_v2_identity_overrides_from_for_feature(feature_id: int) -> None:
+def delete_environments_v2_identity_overrides_by_feature(feature_id: int) -> None:
     dynamodb_wrapper_v2 = DynamoEnvironmentV2Wrapper()
 
     feature = Feature.objects.all_with_deleted().get(id=feature_id)
