@@ -190,10 +190,11 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             "ProjectionExpression": "document_key",
         }
 
-        for item in self.query_iter_all_items(**query_kwargs):
-            self.table.delete_item(
-                Key={
-                    ENVIRONMENTS_V2_PARTITION_KEY: str(environment_id),
-                    ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
-                }
-            )
+        with self.table.batch_writer() as writer:
+            for item in self.query_iter_all_items(**query_kwargs):
+                writer.delete_item(
+                    Key={
+                        ENVIRONMENTS_V2_PARTITION_KEY: str(environment_id),
+                        ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
+                    }
+                )
