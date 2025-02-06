@@ -159,3 +159,14 @@ def update_flagsmith_environments_v2_identity_overrides(
         identifier=identifier,
     )
     dynamodb_wrapper_v2.update_identity_overrides(identity_override_changeset)
+
+
+@register_task_handler()
+def delete_environments_v2_identity_overrides_from_for_feature(feature_id: int) -> None:
+    dynamodb_wrapper_v2 = DynamoEnvironmentV2Wrapper()
+
+    feature = Feature.objects.all_with_deleted().get(id=feature_id)
+    for environment in feature.project.environments.all():
+        dynamodb_wrapper_v2.delete_identity_overrides(
+            environment_id=environment.id, feature_id=feature_id
+        )

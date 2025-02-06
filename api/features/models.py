@@ -162,6 +162,17 @@ class Feature(
     def create_feature_states(self):
         FeatureState.create_initial_feature_states_for_feature(feature=self)
 
+    @hook(AFTER_SAVE, when="deleted_at", was=None, is_not=None)
+    def delete_identity_overrides(self) -> None:
+        if self.deleted_at and self.project.enable_dynamo_db:
+            from edge_api.identities.tasks import (
+                delete_environments_v2_identity_overrides_from_for_feature,
+            )
+
+            delete_environments_v2_identity_overrides_from_for_feature.delay(
+                kwargs={"feature_id": self.id}
+            )
+
     def validate_unique(self, *args, **kwargs):
         """
         Checks unique constraints on the model and raises ``ValidationError``

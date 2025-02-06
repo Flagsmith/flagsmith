@@ -180,3 +180,20 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                         ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
                     },
                 )
+
+    def delete_identity_overrides(self, environment_id: int, feature_id: int) -> None:
+        filter_expression = self.get_identity_overrides_key_condition_expression(
+            environment_id, feature_id
+        )
+        query_kwargs: "QueryInputRequestTypeDef" = {
+            "KeyConditionExpression": filter_expression,
+            "ProjectionExpression": "document_key",
+        }
+
+        for item in self.query_iter_all_items(**query_kwargs):
+            self.table.delete_item(
+                Key={
+                    ENVIRONMENTS_V2_PARTITION_KEY: environment_id,
+                    ENVIRONMENTS_V2_SORT_KEY: item["document_key"],
+                }
+            )
