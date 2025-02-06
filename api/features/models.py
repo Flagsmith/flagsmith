@@ -170,10 +170,10 @@ class Feature(
         # we already define as a field on the model class.
         if self.deleted_at and self.project.enable_dynamo_db:
             from edge_api.identities.tasks import (
-                delete_environments_v2_identity_overrides_from_for_feature,
+                delete_environments_v2_identity_overrides_by_feature,
             )
 
-            delete_environments_v2_identity_overrides_from_for_feature.delay(
+            delete_environments_v2_identity_overrides_by_feature.delay(
                 kwargs={"feature_id": self.id}
             )
 
