@@ -3564,11 +3564,10 @@ def test_delete_feature_deletes_any_related_identity_overrides(
     # Then
     assert delete_feature_response.status_code == status.HTTP_204_NO_CONTENT
 
+    kce = dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(
+        environment_id=environment.id, feature_id=feature.id
+    )
+
     assert (
-        flagsmith_environments_v2_table.query(
-            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(
-                environment_id=environment.id, feature_id=feature.id
-            )
-        )["Count"]
-        == 0
+        flagsmith_environments_v2_table.query(KeyConditionExpression=kce)["Count"] == 0
     )
