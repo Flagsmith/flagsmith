@@ -17,6 +17,7 @@ import {
   Operator,
   Segment,
   SegmentRule,
+  SegmentConditionsError,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { useGetIdentitiesQuery } from 'common/services/useIdentity'
@@ -73,6 +74,16 @@ type CreateSegmentType = {
   onComplete?: (segment: Segment) => void
   readOnly?: boolean
   segment?: Segment
+}
+type CreateSegmentError = {
+  status: number,
+  data: {
+    rules: [{
+      rules: Array<{
+        conditions: SegmentConditionsError[]
+      }>
+    }]
+  }
 }
 
 enum UserTabs {
@@ -161,7 +172,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     segment.metadata,
   )
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const error = createError || updateError
+  const error: CreateSegmentError = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
   const isLimitReached = totalSegments >= maxSegmentsAllowed
@@ -430,6 +441,26 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </FormGroup>
   )
 
+  const formatError = (error: CreateSegmentError): string | string[] | undefined => {
+    if (!error) {
+      return ""
+    }
+    const mainRule = error.data.rules[0]
+    const errorMessages: string[] = []
+  
+    mainRule.rules.forEach((rule) => {
+      rule.conditions.forEach((condition) => {
+        if (condition.property) {
+          errorMessages.push(`Property - ${condition.property.join(', ')}`)
+        }
+      if (condition.value) {
+        errorMessages.push(`Value - ${condition.value.join(', ')}`)
+        }
+      })
+    })
+    return errorMessages?.length > 1 ? errorMessages : errorMessages?.[0]
+  }
+
   return (
     <>
       {isEdit && !condensed ? (
@@ -459,7 +490,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={error}
+                error={formatError(error)}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -534,7 +565,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={error}
+                error={formatError(error)}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -570,7 +601,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             setShowDescriptions={setShowDescriptions}
             allWarnings={allWarnings}
             rulesEl={rulesEl}
-            error={error}
+            error={formatError(error)}
             isEdit={isEdit}
             segment={segment}
             isSaving={isSaving}
