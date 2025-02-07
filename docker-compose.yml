@@ -21,9 +21,7 @@ services:
       start_period: 20s
 
   flagsmith:
-    build:
-      context: '.'
-      target: 'oss-api'
+    image: flagsmith.docker.scarf.sh/flagsmith/flagsmith:latest
     environment:
       # All environments variables are available here:
       # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
@@ -35,7 +33,7 @@ services:
       ENVIRONMENT: production # set to 'production' in production.
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
       ALLOW_ADMIN_INITIATION_VIA_CLI: 'true' # Change this in production
-      FLAGSMITH_DOMAIN: localhost:8080 # Change this in production
+      FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
       DJANGO_SECRET_KEY: secret # Change this in production
       ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
       # PREVENT_SIGNUP: 'true' # Uncomment to prevent additional signups
