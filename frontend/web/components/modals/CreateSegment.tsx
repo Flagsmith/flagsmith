@@ -441,7 +441,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </FormGroup>
   )
 
-  const formatError = (error: CreateSegmentError): string | string[] | undefined => {
+  const formatError = (error: CreateSegmentError): string | string[] => {
     if (!error) {
       return ""
     }
