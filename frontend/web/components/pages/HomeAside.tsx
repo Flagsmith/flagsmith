@@ -17,7 +17,6 @@ import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext } from 'react-router'
-import Constants from 'common/constants'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
@@ -31,7 +30,11 @@ type HomeAsideType = {
 }
 
 type OptionProps = ComponentProps<typeof components.Option>
+type SingleValueProps = ComponentProps<typeof components.SingleValue>
 type EnvSelectOptionProps = OptionProps & {
+  hasWarning?: boolean
+}
+type EnvSingleValueProps = SingleValueProps & {
   hasWarning?: boolean
 }
 
@@ -63,6 +66,44 @@ const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
   )
 }
 
+const Wrapper = ({
+  children,
+  showWarning,
+}: {
+  children: React.ReactElement
+  showWarning: boolean
+}) => {
+  console.log({ showWarning })
+  return showWarning ? (
+    <Tooltip place='right' title={children}>
+      This environment has unhealthy features
+    </Tooltip>
+  ) : (
+    children
+  )
+}
+
+const EnvSelectSingleValue = ({ hasWarning, ...rest }: EnvSingleValueProps) => {
+  const showWarning =
+    Utils.getFlagsmithHasFeature('feature_health') && hasWarning
+  return (
+    <Wrapper showWarning={showWarning}>
+      <components.SingleValue {...rest}>
+        <div className='d-flex align-items-center'>
+          <div>{rest.children}</div>
+          <div>
+            {showWarning && (
+              <div className='flex ml-1'>
+                <IonIcon className='text-warning' icon={warning} />
+              </div>
+            )}
+          </div>
+        </div>
+      </components.SingleValue>
+    </Wrapper>
+  )
+}
+
 const HomeAside: FC<HomeAsideType> = ({
   environmentId,
   history,
@@ -89,18 +130,16 @@ const HomeAside: FC<HomeAsideType> = ({
     //eslint-disable-next-line
   }, [])
 
-  const unhealthyEnvironments = useMemo(() => {
-    return healthEvents
-      ?.filter((event) => event.type === 'UNHEALTHY')
-      .map(
-        (event) =>
-          (
-            ProjectStore.getEnvironmentById(
-              event.environment,
-            ) as Environment | null
-          )?.api_key,
-      )
-  }, [healthEvents])
+  const unhealthyEnvironments = healthEvents
+    ?.filter((event) => event?.type === 'UNHEALTHY' && !!event?.environment)
+    .map(
+      (event) =>
+        (
+          ProjectStore.getEnvironmentById(
+            event.environment,
+          ) as Environment | null
+        )?.api_key,
+    )
 
   const environment: Environment | null =
     environmentId === 'create'
@@ -176,6 +215,14 @@ const HomeAside: FC<HomeAsideType> = ({
                               },
                               Option: (props: OptionProps) => (
                                 <EnvSelectOption
+                                  {...props}
+                                  hasWarning={unhealthyEnvironments?.includes(
+                                    props.data.value,
+                                  )}
+                                />
+                              ),
+                              SingleValue: (props: EnvSingleValueProps) => (
+                                <EnvSelectSingleValue
                                   {...props}
                                   hasWarning={unhealthyEnvironments?.includes(
                                     props.data.value,
