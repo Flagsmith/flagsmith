@@ -29,38 +29,39 @@ type HomeAsideType = {
   history: RouterChildContext['router']['history']
 }
 
-type OptionProps = ComponentProps<typeof components.Option>
-type SingleValueProps = ComponentProps<typeof components.SingleValue>
-type EnvSelectOptionProps = OptionProps & {
+type CustomOptionProps = ComponentProps<typeof components.Option> & {
   hasWarning?: boolean
 }
-type EnvSingleValueProps = SingleValueProps & {
+
+type CustomSingleValueProps = ComponentProps<typeof components.SingleValue> & {
   hasWarning?: boolean
 }
 
 const TooltipWrapper = ({
-  children,
   showWarning,
+  title,
 }: {
-  children: React.ReactElement
+  title: React.ReactElement
   showWarning: boolean
 }) => {
   return showWarning ? (
-    <Tooltip place='bottom' title={children}>
-      This environment has unhealthy features
+    <Tooltip place='bottom' title={title} effect='solid'>
+      One or more environments have unhealthy features
     </Tooltip>
   ) : (
-    children
+    title
   )
 }
 
-const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
+const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
+  const showWarning =
+    Utils.getFlagsmithHasFeature('feature_health') && hasWarning
   return (
     <components.Option {...rest}>
       <div className='d-flex align-items-center'>
         {rest.children}
         <div className='d-flex flex-1 align-items-center justify-content-between '>
-          {Utils.getFlagsmithHasFeature('feature_health') && hasWarning && (
+          {showWarning && (
             <Tooltip
               title={
                 <div className='flex ml-1'>
@@ -82,24 +83,22 @@ const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
   )
 }
 
-const EnvSelectSingleValue = ({ hasWarning, ...rest }: EnvSingleValueProps) => {
+const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
   const showWarning =
     Utils.getFlagsmithHasFeature('feature_health') && hasWarning
   return (
-    <TooltipWrapper showWarning={showWarning}>
-      <components.SingleValue {...rest}>
-        <div className='d-flex align-items-center'>
-          <div>{rest.children}</div>
-          <div>
-            {showWarning && (
-              <div className='flex ml-1'>
-                <IonIcon className='text-warning' icon={warning} />
-              </div>
-            )}
-          </div>
+    <components.SingleValue {...rest}>
+      <div className='d-flex align-items-center'>
+        <div>{rest.children}</div>
+        <div>
+          {showWarning && (
+            <div className='flex ml-1'>
+              <IonIcon className='text-warning' icon={warning} />
+            </div>
+          )}
         </div>
-      </components.SingleValue>
-    </TooltipWrapper>
+      </div>
+    </components.SingleValue>
   )
 }
 
@@ -140,6 +139,9 @@ const HomeAside: FC<HomeAsideType> = ({
         )?.api_key,
     )
 
+  const hasUnhealthyEnvironments =
+    Utils.getFlagsmithHasFeature('feature_health') &&
+    !!unhealthyEnvironments?.length
   const environment: Environment | null =
     environmentId === 'create'
       ? null
@@ -196,7 +198,10 @@ const HomeAside: FC<HomeAsideType> = ({
                             styles={{
                               container: (base: any) => ({
                                 ...base,
-                                border: 'none',
+                                border: hasUnhealthyEnvironments
+                                  ? '1px solid #D35400'
+                                  : 'none',
+                                borderRadius: 6,
                                 padding: 0,
                               }),
                             }}
@@ -204,24 +209,28 @@ const HomeAside: FC<HomeAsideType> = ({
                             value={environmentId}
                             projectId={projectId}
                             components={{
-                              Menu: ({ ...props }: any) => {
-                                return (
-                                  <components.Menu {...props}>
-                                    {props.children}
-                                    {createEnvironmentButton}
-                                  </components.Menu>
-                                )
-                              },
-                              Option: (props: OptionProps) => (
-                                <EnvSelectOption
+                              Control: (props) => (
+                                <TooltipWrapper
+                                  showWarning={hasUnhealthyEnvironments}
+                                  title={<components.Control {...props} />}
+                                />
+                              ),
+                              Menu: ({ ...props }: any) => (
+                                <components.Menu {...props}>
+                                  {props.children}
+                                  {createEnvironmentButton}
+                                </components.Menu>
+                              ),
+                              Option: (props) => (
+                                <CustomOption
                                   {...props}
                                   hasWarning={unhealthyEnvironments?.includes(
                                     props.data.value,
                                   )}
                                 />
                               ),
-                              SingleValue: (props: EnvSingleValueProps) => (
-                                <EnvSelectSingleValue
+                              SingleValue: (props) => (
+                                <CustomSingleValue
                                   {...props}
                                   hasWarning={unhealthyEnvironments?.includes(
                                     props.data.value,
