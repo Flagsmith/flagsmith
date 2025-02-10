@@ -14,6 +14,7 @@ from features.import_export.constants import (
     FAILED,
     OVERWRITE_DESTRUCTIVE,
     PROCESSING,
+    SUCCESS,
 )
 from features.import_export.models import (
     FeatureExport,
@@ -140,6 +141,7 @@ def test_download_feature_export(
     feature_export = FeatureExport.objects.create(
         environment=environment,
         data='[{"feature": "data"}]',
+        status=SUCCESS,
     )
     url = reverse("api-v1:features:download-feature-export", args=[feature_export.id])
     # When
