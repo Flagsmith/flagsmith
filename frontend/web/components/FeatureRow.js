@@ -21,6 +21,17 @@ import { getTags } from 'common/services/useTag'
 import { getStore } from 'common/store'
 
 export const width = [200, 70, 55, 70, 450]
+
+export const TABS = {
+  ANALYTICS: 'analytics',
+  HISTORY: 'history',
+  IDENTITY_OVERRIDES: 'identity-overrides',
+  LINKS: 'links',
+  SEGMENT_OVERRIDES: 'segment-overrides',
+  SETTINGS: 'settings',
+  VALUE: 'value',
+}
+
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -238,7 +249,7 @@ class TheComponent extends Component {
                   this.editFeature(
                     projectFlag,
                     environmentFlags[id],
-                    'segment-overrides',
+                    TABS.SEGMENT_OVERRIDES,
                   )
                 }}
                 count={projectFlag.num_segment_overrides}
@@ -249,7 +260,7 @@ class TheComponent extends Component {
                   this.editFeature(
                     projectFlag,
                     environmentFlags[id],
-                    'identity-overrides',
+                    TABS.IDENTITY_OVERRIDES,
                   )
                 }}
                 count={projectFlag.num_identity_overrides}
@@ -310,14 +321,22 @@ class TheComponent extends Component {
                 <SegmentOverridesIcon
                   onClick={(e) => {
                     e.stopPropagation()
-                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                    this.editFeature(
+                      projectFlag,
+                      environmentFlags[id],
+                      TABS.SEGMENT_OVERRIDES,
+                    )
                   }}
                   count={projectFlag.num_segment_overrides}
                 />
                 <IdentityOverridesIcon
                   onClick={(e) => {
                     e.stopPropagation()
-                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                    this.editFeature(
+                      projectFlag,
+                      environmentFlags[id],
+                      TABS.IDENTITY_OVERRIDES,
+                    )
                   }}
                   count={projectFlag.num_identity_overrides}
                   showPlusIndicator={showPlusIndicator}
@@ -416,7 +435,7 @@ class TheComponent extends Component {
             hideHistory={!environment?.use_v2_feature_versioning}
             onShowHistory={() => {
               if (disableControls) return
-              this.editFeature(projectFlag, environmentFlags[id], 'history')
+              this.editFeature(projectFlag, environmentFlags[id], TABS.HISTORY)
             }}
             onShowAudit={() => {
               if (disableControls) return
