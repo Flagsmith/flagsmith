@@ -2,7 +2,7 @@ import React, { ComponentProps, FC, useEffect, useMemo, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
-import { Environment, Project } from 'common/types/responses'
+import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
@@ -38,6 +38,22 @@ type EnvSingleValueProps = SingleValueProps & {
   hasWarning?: boolean
 }
 
+const TooltipWrapper = ({
+  children,
+  showWarning,
+}: {
+  children: React.ReactElement
+  showWarning: boolean
+}) => {
+  return showWarning ? (
+    <Tooltip place='bottom' title={children}>
+      This environment has unhealthy features
+    </Tooltip>
+  ) : (
+    children
+  )
+}
+
 const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
   return (
     <components.Option {...rest}>
@@ -66,28 +82,11 @@ const EnvSelectOption = ({ hasWarning, ...rest }: EnvSelectOptionProps) => {
   )
 }
 
-const Wrapper = ({
-  children,
-  showWarning,
-}: {
-  children: React.ReactElement
-  showWarning: boolean
-}) => {
-  console.log({ showWarning })
-  return showWarning ? (
-    <Tooltip place='right' title={children}>
-      This environment has unhealthy features
-    </Tooltip>
-  ) : (
-    children
-  )
-}
-
 const EnvSelectSingleValue = ({ hasWarning, ...rest }: EnvSingleValueProps) => {
   const showWarning =
     Utils.getFlagsmithHasFeature('feature_health') && hasWarning
   return (
-    <Wrapper showWarning={showWarning}>
+    <TooltipWrapper showWarning={showWarning}>
       <components.SingleValue {...rest}>
         <div className='d-flex align-items-center'>
           <div>{rest.children}</div>
@@ -100,7 +99,7 @@ const EnvSelectSingleValue = ({ hasWarning, ...rest }: EnvSingleValueProps) => {
           </div>
         </div>
       </components.SingleValue>
-    </Wrapper>
+    </TooltipWrapper>
   )
 }
 
