@@ -5,7 +5,7 @@ sidebar_position: 10
 hide_title: true
 ---
 
-<img src="/img/integrations/github/github-logo.svg" alt="GitHub Logo" width="30%" height="30%"/>
+<img src="/img/integrations/github/github-logo.svg" alt="GitHub Logo" width="30%" />
 
 View your Flagsmith Flags inside GitHub Issues and Pull Requests.
 
