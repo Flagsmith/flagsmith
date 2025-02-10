@@ -20,20 +20,28 @@ import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
+  hideTagsByType?: string[]
   readOnly?: boolean
   onChange: (value: number[]) => void
   projectId: string
 }
 
 const AddEditTags: FC<AddEditTagsType> = ({
+  hideTagsByType = [],
   onChange,
   projectId,
   readOnly,
   value,
 }) => {
-  const { data: projectTags, isLoading: tagsLoading } = useGetTagsQuery({
+  const { data, isLoading: tagsLoading } = useGetTagsQuery({
     projectId,
   })
+  const projectTags = useMemo(() => {
+    return data?.filter(
+      (projectTag) => !hideTagsByType.includes(projectTag.type),
+    )
+  }, [data, hideTagsByType])
+
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [tag, setTag] = useState<TTag>()
@@ -103,6 +111,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         tag.label.toLowerCase().includes(filter),
       )
     }
+
     return projectTags || []
   }, [filter, projectTags])
 
