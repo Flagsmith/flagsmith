@@ -10,7 +10,7 @@ import {
   useDeleteTagMutation,
   useGetTagsQuery,
 } from 'common/services/useTag'
-import { Tag as TTag } from 'common/types/responses'
+import { TagType, Tag as TTag } from 'common/types/responses'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
@@ -20,7 +20,7 @@ import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
-  hideTagsByType?: string[]
+  hideTagsByType?: TagType[]
   readOnly?: boolean
   onChange: (value: number[]) => void
   projectId: string
