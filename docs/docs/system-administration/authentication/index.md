@@ -5,13 +5,6 @@ sidebar_label: Overview
 sidebar_position: 1
 ---
 
-:::tip
-
-Flagsmith organisations can force their users to always use a single authentication method. Please get in touch to
-enable this.
-
-:::
-
 Flagsmith supports a variety of authentication methods for logging into the dashboard:
 
 ## Supported in all versions
