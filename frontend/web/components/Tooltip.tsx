@@ -3,6 +3,7 @@ import ReactTooltip, { TooltipProps as _TooltipProps } from 'react-tooltip'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import { sanitize } from 'dompurify'
+import { createPortal } from 'react-dom'
 
 export type TooltipProps = {
   title: ReactNode
@@ -13,6 +14,11 @@ export type TooltipProps = {
   tooltipClassName?: string
   effect?: _TooltipProps['effect']
   afterShow?: _TooltipProps['afterShow']
+}
+
+const TooltipPortal: FC<{ children: ReactNode }> = ({ children }) => {
+  const portalRoot = document.body
+  return portalRoot ? createPortal(children, portalRoot) : null
 }
 
 const Tooltip: FC<TooltipProps> = ({
@@ -39,22 +45,24 @@ const Tooltip: FC<TooltipProps> = ({
         </span>
       )}
       {!!children && (
-        <ReactTooltip
-          className={classNames('rounded', tooltipClassName)}
-          id={id}
-          place={place || 'top'}
-          effect={effect}
-          afterShow={afterShow}
-        >
-          {plainText ? (
-            `${children}`
-          ) : (
-            <div
-              style={{ wordBreak: 'break-word' }}
-              dangerouslySetInnerHTML={{ __html: sanitize(children) }}
-            />
-          )}
-        </ReactTooltip>
+        <TooltipPortal>
+          <ReactTooltip
+            className={classNames('rounded', tooltipClassName)}
+            id={id}
+            place={place || 'top'}
+            effect={effect}
+            afterShow={afterShow}
+          >
+            {plainText ? (
+              `${children}`
+            ) : (
+              <div
+                style={{ wordBreak: 'break-word' }}
+                dangerouslySetInnerHTML={{ __html: sanitize(children) }}
+              />
+            )}
+          </ReactTooltip>
+        </TooltipPortal>
       )}
     </>
   )
