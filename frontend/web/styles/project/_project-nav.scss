@@ -1,4 +1,12 @@
-
+.onboarding {
+  background-color: $bg-light200;
+  nav {
+    display: none;
+  }
+  .butter-bar {
+    display: none;
+  }
+}
 nav a {
   font-weight: 500;
   &.active {
