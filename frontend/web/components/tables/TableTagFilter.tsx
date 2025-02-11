@@ -34,11 +34,20 @@ const TableTagFilter: FC<TableFilterType> = ({
 }) => {
   const [filter, setFilter] = useState('')
   const { data } = useGetTagsQuery({ projectId })
+
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+  const flagGatedTags = useMemo(() => {
+    if (!isFeatureHealthEnabled)
+      return data?.filter((tag) => tag.type !== 'UNHEALTHY')
+
+    return data
+  }, [data, isFeatureHealthEnabled])
+
   const filteredTags = useMemo(() => {
     return filter
-      ? data?.filter((v) => v.label.toLowerCase().includes(filter))
-      : data
-  }, [data, filter])
+      ? flagGatedTags?.filter((v) => v.label.toLowerCase().includes(filter))
+      : flagGatedTags?.filter((tag) => tag)
+  }, [flagGatedTags, filter])
   const length = (value?.length || 0) + (showArchived ? 1 : 0)
   return (
     <div className={isLoading ? 'disabled' : ''}>

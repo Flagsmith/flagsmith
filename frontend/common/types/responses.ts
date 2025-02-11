@@ -344,6 +344,8 @@ export type APIKey = {
   name: string
 }
 
+export type TagType = 'STALE' | 'UNHEALTHY' | 'NONE'
+
 export type Tag = {
   id: number
   color: string
@@ -352,7 +354,7 @@ export type Tag = {
   label: string
   is_system_tag: boolean
   is_permanent: boolean
-  type: 'STALE' | 'UNHEALTHY' | 'NONE'
+  type: TagType
 }
 
 export type MultivariateFeatureStateValue = {
@@ -637,13 +639,15 @@ export type SAMLAttributeMapping = {
   idp_attribute_name: string
 }
 
+export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
+
 export type HealthEvent = {
   created_at: string
   environment: number
   feature: number
   provider_name: string
   reason: string
-  type: 'HEALTHY' | 'UNHEALTHY'
+  type: HealthEventType
 }
 
 export type HealthProvider = {

@@ -22,7 +22,7 @@ export const healthProviderService = service
           invalidatesTags: [{ id: 'LIST', type: 'HealthProviders' }],
           query: (query: Req['deleteHealthProvider']) => ({
             method: 'DELETE',
-            url: `projects/${query.projectId}/feature-health/providers/${query.providerId}/`,
+            url: `projects/${query.projectId}/feature-health/providers/${query.name}/`,
           }),
         },
       ),

@@ -72,7 +72,7 @@ const CreateFlag = class extends Component {
           multivariate_options: [],
         }
     const { allowEditDescription } = this.props
-    const hideTags = this.props.hideTags || []
+    const hideTagsByType = this.props.hideTagsByType || []
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -107,7 +107,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
+      tags: tags?.filter((tag) => hideTagsByType.includes(tag.type)) || [],
     }
   }
 
@@ -604,6 +604,7 @@ const CreateFlag = class extends Component {
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
+                    hideTagsByType={['UNHEALTHY']}
                     readOnly={!!identity || !createFeature}
                     projectId={`${this.props.projectId}`}
                     value={this.state.tags}

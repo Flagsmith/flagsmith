@@ -17,8 +17,6 @@ import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import StaleFlagWarning from './StaleFlagWarning'
 import UnhealthyFlagWarning from './UnhealthyFlagWarning'
-import { getTags } from 'common/services/useTag'
-import { getStore } from 'common/store'
 
 export const width = [200, 70, 55, 70, 450]
 
@@ -43,14 +41,6 @@ class TheComponent extends Component {
     this.state = {
       unhealthyTagId: undefined,
     }
-
-    getTags(getStore(), {
-      projectId: `${this.props.projectId}`,
-    }).then((res) => {
-      this.setState({
-        unhealthyTagId: res.data?.find((tag) => tag?.type === 'UNHEALTHY')?.id,
-      })
-    })
   }
 
   confirmToggle = () => {
@@ -83,7 +73,7 @@ class TheComponent extends Component {
 
   componentDidMount() {
     const { environmentFlags, projectFlag } = this.props
-    const { feature, tab } = Utils.fromParam()
+    const { feature } = Utils.fromParam()
     const { id } = projectFlag
     if (`${id}` === feature) {
       this.editFeature(projectFlag, environmentFlags[id])
@@ -113,9 +103,6 @@ class TheComponent extends Component {
       return
     }
     API.trackEvent(Constants.events.VIEW_FEATURE)
-    const hideTags = this.state.unhealthyTagId
-      ? [this.state.unhealthyTagId]
-      : []
     history.replaceState(
       {},
       null,
@@ -137,7 +124,7 @@ class TheComponent extends Component {
         </Button>
       </Row>,
       <CreateFlagModal
-        hideTags={hideTags}
+        hideTagsByType={['UNHEALTHY']}
         history={this.context.router.history}
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}

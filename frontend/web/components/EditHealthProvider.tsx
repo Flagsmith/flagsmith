@@ -218,8 +218,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                         onClick={(e) => {
                           e.stopPropagation()
                           e.preventDefault()
-                          // TODO: API Needs to expose provider id
-                          // deleteProvider({ projectId, providerId: provider.id })
+                          deleteProvider({ name, projectId })
                         }}
                         className='btn btn-with-icon'
                       >

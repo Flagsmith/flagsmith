@@ -66,6 +66,14 @@ const Tag: FC<TagType> = ({
     )
   }
 
+  // Hide unhealthy tags if feature is disabled
+  if (
+    !Utils.getFlagsmithHasFeature('feature_health') &&
+    tag.type === 'UNHEALTHY'
+  ) {
+    return null
+  }
+
   return (
     <div
       onClick={() => {
