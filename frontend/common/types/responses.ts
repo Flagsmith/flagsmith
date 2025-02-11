@@ -654,6 +654,15 @@ export type HealthProvider = {
   webhook_url: number
 }
 
+export type Webhook = {
+  id: number
+  url: string
+  secret: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -663,6 +672,8 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  webhook: Webhook
+  webhooks: Webhook[]
   organisationUsage: {
     totals: {
       flags: number
