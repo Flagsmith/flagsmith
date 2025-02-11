@@ -162,6 +162,21 @@ class Feature(
     def create_feature_states(self):
         FeatureState.create_initial_feature_states_for_feature(feature=self)
 
+    @hook(AFTER_SAVE)
+    def delete_identity_overrides(self) -> None:
+        # Note that we have to use conditional logic on self.deleted_at inside
+        # the hook method because the django-lifecycle logic for when / was / is_not
+        # doesn't work due to it relying on a method called initial_value, which
+        # we already define as a field on the model class.
+        if self.deleted_at and self.project.enable_dynamo_db:
+            from edge_api.identities.tasks import (
+                delete_environments_v2_identity_overrides_by_feature,
+            )
+
+            delete_environments_v2_identity_overrides_by_feature.delay(
+                kwargs={"feature_id": self.id}
+            )
+
     def validate_unique(self, *args, **kwargs):
         """
         Checks unique constraints on the model and raises ``ValidationError``
@@ -372,7 +387,7 @@ class FeatureSegment(
     def to_id_priority_tuple_pairs(
         feature_segments: typing.Union[
             typing.Iterable["FeatureSegment"], typing.Iterable[dict]
-        ]
+        ],
     ) -> typing.List[typing.Tuple[int, int]]:
         """
         Helper method to convert a collection of FeatureSegment objects or dictionaries to a list of 2-tuples

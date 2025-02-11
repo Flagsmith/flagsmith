@@ -19,6 +19,9 @@ export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
   if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
     return '#9DA4AE'
   }
+  if (tag.type === 'UNHEALTHY') {
+    return '#D35400'
+  }
   if (selected) {
     return tag.color
   }

@@ -5,8 +5,6 @@ import FeatureRow from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
-import { getTags } from 'common/services/useTag'
-import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -24,6 +22,7 @@ import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
+import Button from 'components/base/forms/Button'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -68,9 +67,7 @@ const FeaturesPage = class extends Component {
         typeof params.value_search === 'string' ? params.value_search : '',
     }
     ES6Component(this)
-    getTags(getStore(), {
-      projectId: `${this.props.match.params.projectId}`,
-    })
+
     AppActions.getFeatures(
       this.props.match.params.projectId,
       this.props.match.params.environmentId,
@@ -221,6 +218,7 @@ const FeaturesPage = class extends Component {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
+
     return (
       <div
         data-test='features-page'
@@ -394,7 +392,7 @@ const FeaturesPage = class extends Component {
                                           this.filter,
                                         )
                                       }}
-                                      onChange={(tags, isAutomated) => {
+                                      onChange={(tags) => {
                                         FeatureListStore.isLoading = true
                                         if (
                                           tags.includes('') &&
