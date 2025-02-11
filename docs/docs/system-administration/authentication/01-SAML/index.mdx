@@ -142,30 +142,16 @@ attribute mapping](#attribute-mapping).
 
 ## Force users to log in with SSO
 
-You can force users with specific email domains to always use certain authentication methods when they log in to any
-Flagsmith organisation.
+Once you have confirmed your SAML configuration is working, you can prevent users logging in using other authentication
+methods with any of these options:
 
-If you are using Flagsmith SaaS or private cloud, contact Flagsmith support. Make sure to mention which email domain(s)
-and authentication methods you want to allow for your users, and when would be a convenient time to enforce these
-restrictions.
-
-If you are self-hosting Flagsmith, you can restrict authentication methods per email domain from
-[Django Admin](/deployment/configuration/django-admin):
-
-1. On the Django Admin sidebar, click on "Domain auth methods".
-2. Click "Add domain auth methods".
-3. Enter the email domain that these restrictions should apply to, such as `example.com`.
-4. Select the authentication methods to allow for this email domain.
-5. Click "Save".
-
-Email and password authentication is enabled by default. You can disable password logins by setting the
-`PREVENT_EMAIL_PASSWORD` environment variable on the Flagsmith API. This will hide the username and password fields
-from the login screen. Note that this not disable password authentication for
-[Django Admin](/deployment/configuration/django-admin#email-and-password).
+* [Restrict authentication methods per email domain](/system-administration/authentication#domain-auth).
+* If you have a private Flagsmith instance,
+[disable password authentication](/system-administration/authentication#disable-password).
 
 ## Always use a specific SAML configuration
 
-When users click on "Single Sign-On" at the Flagsmith login screen, they will be prompted to enter the name of a
+When a user clicks on "Single Sign-On" at the Flagsmith login screen, they will be prompted to enter the name of a
 SAML configuration. If you are self-hosting Flagsmith, you can skip this step and always use a specific SAML
 configuration by setting up the `sso_idp`
 [Flagsmith-on-Flagsmith](https://docs.flagsmith.com/deployment#running-flagsmith-on-flagsmith) flag. The text value of
