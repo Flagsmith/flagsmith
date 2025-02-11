@@ -45,7 +45,7 @@ const TooltipWrapper = ({
   showWarning: boolean
 }) => {
   return showWarning ? (
-    <Tooltip place='bottom' title={title} effect='solid'>
+    <Tooltip place='bottom' title={title} effect='solid' renderInPortal>
       One or more environments have unhealthy features
     </Tooltip>
   ) : (
