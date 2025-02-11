@@ -14,11 +14,18 @@ export type TooltipProps = {
   tooltipClassName?: string
   effect?: _TooltipProps['effect']
   afterShow?: _TooltipProps['afterShow']
+  renderInPortal?: boolean // Controls backwards compatibility for rendering in portal
 }
 
-const TooltipPortal: FC<{ children: ReactNode }> = ({ children }) => {
-  const portalRoot = document.body
-  return portalRoot ? createPortal(children, portalRoot) : null
+const TooltipPortal: FC<{ children: ReactNode; renderInPortal?: boolean }> = ({
+  children,
+  renderInPortal = false,
+}) => {
+  const domNode = document.createElement('div')
+  document.body.appendChild(domNode)
+
+  if (!renderInPortal) return <>{children}</>
+  return domNode ? createPortal(children, domNode) : null
 }
 
 const Tooltip: FC<TooltipProps> = ({
@@ -27,6 +34,7 @@ const Tooltip: FC<TooltipProps> = ({
   effect,
   place,
   plainText,
+  renderInPortal,
   title,
   titleClassName,
   tooltipClassName,
@@ -45,7 +53,7 @@ const Tooltip: FC<TooltipProps> = ({
         </span>
       )}
       {!!children && (
-        <TooltipPortal>
+        <TooltipPortal renderInPortal={renderInPortal}>
           <ReactTooltip
             className={classNames('rounded', tooltipClassName)}
             id={id}
