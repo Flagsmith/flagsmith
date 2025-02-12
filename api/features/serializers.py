@@ -9,19 +9,21 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
+from common.metadata.serializers import (
+    MetadataSerializer,
+    SerializerWithMetadata,
+)
 from drf_writable_nested import WritableNestedModelSerializer
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from environments.identities.models import Identity
-from environments.models import Environment
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -33,6 +35,10 @@ from util.drf_writable_nested.serializers import (
 )
 
 from .constants import INTERSECTION, UNION
+from .feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
+    exceeds_segment_override_limit,
+)
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -142,6 +148,12 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         "in the environment provided by the `environment` query parameter. "
         "Note: will return null for Edge enabled projects."
     )
+    is_num_identity_overrides_complete = serializers.SerializerMethodField(
+        help_text="A boolean that indicates whether there are more"
+        " identity overrides than are being listed, if `False`. This field is "
+        "`True` when querying overrides data for a features list page and "
+        "exact data has been returned."
+    )
 
     last_modified_in_any_environment = serializers.SerializerMethodField(
         help_text="Datetime representing the last time that the feature was modified "
@@ -175,6 +187,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
             "environment_feature_state",
             "num_segment_overrides",
             "num_identity_overrides",
+            "is_num_identity_overrides_complete",
             "is_server_key_only",
             "last_modified_in_any_environment",
             "last_modified_in_current_environment",
@@ -289,6 +302,14 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     def get_num_identity_overrides(self, instance) -> typing.Optional[int]:
         try:
             return self.context["overrides_data"][instance.id].num_identity_overrides
+        except (KeyError, AttributeError):
+            return None
+
+    def get_is_num_identity_overrides_complete(self, instance) -> typing.Optional[int]:
+        try:
+            return self.context["overrides_data"][
+                instance.id
+            ].is_num_identity_overrides_complete
         except (KeyError, AttributeError):
             return None
 
@@ -590,6 +611,10 @@ class SegmentAssociatedFeatureStateSerializer(serializers.ModelSerializer):
         fields = ("id", "feature", "environment")
 
 
+class AssociatedFeaturesQuerySerializer(serializers.Serializer):
+    environment = serializers.IntegerField(required=False)
+
+
 class SDKFeatureStatesQuerySerializer(serializers.Serializer):
     feature = serializers.CharField(
         required=False, help_text="Name of the feature to get the state of"
@@ -599,6 +624,8 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):
 class CustomCreateSegmentOverrideFeatureStateSerializer(
     CreateSegmentOverrideFeatureStateSerializer
 ):
+    validate_override_limit = True
+
     feature_segment = CustomCreateSegmentOverrideFeatureSegmentSerializer(
         required=False, allow_null=True
     )
@@ -615,18 +642,8 @@ class CustomCreateSegmentOverrideFeatureStateSerializer(
 
     def create(self, validated_data: dict) -> FeatureState:
         environment = validated_data["environment"]
-        self.validate_environment_segment_override_limit(environment)
-        return super().create(validated_data)
-
-    def validate_environment_segment_override_limit(
-        self, environment: Environment
-    ) -> None:
-        if (
-            environment.feature_segments.count()
-            >= environment.project.max_segment_overrides_allowed
-        ):
+        if self.validate_override_limit and exceeds_segment_override_limit(environment):
             raise serializers.ValidationError(
-                {
-                    "environment": "The environment has reached the maximum allowed segments overrides limit."
-                }
+                {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
             )
+        return super().create(validated_data)

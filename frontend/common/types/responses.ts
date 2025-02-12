@@ -76,6 +76,7 @@ export type Segment = {
 export type Environment = {
   id: number
   name: string
+  is_creating: boolean
   api_key: string
   description?: string
   banner_text?: string
@@ -183,6 +184,35 @@ export type Repository = {
   owner: { login: string }
 }
 
+export type IntegrationFieldOption = { label: string; value: string }
+export type IntegrationField = {
+  key: string
+  label: string
+  default?: string
+  hidden?: boolean
+  inputType?: 'text' | 'checkbox'
+  options?: IntegrationFieldOption[]
+}
+
+export type IntegrationData = {
+  description: string
+  docs?: string
+  external: boolean
+  image: string
+  fields: IntegrationField[] | undefined
+  isExternalInstallation: boolean
+  perEnvironment: boolean
+  title?: string
+  organisation?: string
+  project?: string
+  isOauth?: boolean
+}
+
+export type ActiveIntegration = {
+  id: string
+  flagsmithEnvironment?: string
+}
+
 export type GithubRepository = {
   id: number
   github_configuration: number
@@ -231,8 +261,12 @@ export type UserPermission = {
   id: number
   role?: number
 }
+
+export type RolePermission = Omit<UserPermission, 'permissions'> & {
+  permissions: { permission_key: string; tags: number[] }[]
+}
 export type GroupPermission = Omit<UserPermission, 'user'> & {
-  group: UserGroup
+  group: UserGroupSummary
 }
 
 export type AuditLogItem = {
@@ -298,6 +332,7 @@ export type Identity = {
 export type AvailablePermission = {
   key: string
   description: string
+  supports_tag: boolean
 }
 
 export type APIKey = {
@@ -309,6 +344,8 @@ export type APIKey = {
   name: string
 }
 
+export type TagType = 'STALE' | 'UNHEALTHY' | 'NONE'
+
 export type Tag = {
   id: number
   color: string
@@ -317,7 +354,7 @@ export type Tag = {
   label: string
   is_system_tag: boolean
   is_permanent: boolean
-  type: 'STALE' | 'NONE'
+  type: TagType
 }
 
 export type MultivariateFeatureStateValue = {
@@ -390,6 +427,10 @@ export type FeatureState = {
   toRemove?: boolean
 }
 
+export type TypedFeatureState = Omit<FeatureState, 'feature_state_value'> & {
+  feature_state_value: FeatureStateValue
+}
+
 export type ProjectFlag = {
   created_date: string
   default_enabled: boolean
@@ -397,6 +438,7 @@ export type ProjectFlag = {
   id: number
   initial_value: FlagsmithValue
   is_archived: boolean
+  is_num_identity_overrides_complete: boolean
   is_server_key_only: boolean
   multivariate_options: MultivariateOption[]
   name: string
@@ -454,6 +496,8 @@ export type InviteLink = {
 
 export type SubscriptionMeta = {
   max_seats: number | null
+  audit_log_visibility_days: number | null
+  feature_history_visibility_days: number | null
   max_api_calls: number | null
   max_projects: number | null
   payment_source: string | null
@@ -502,7 +546,7 @@ export type FeatureConflict = {
   published_at: string
   is_environment_default: boolean
 }
-export type FeatureStateWithConflict = FeatureState & {
+export type FeatureStateWithConflict = TypedFeatureState & {
   conflict?: FeatureConflict
 }
 export type ChangeRequest = {
@@ -610,6 +654,25 @@ export type ServersideSplitTestResult = {
   value_data: FeatureStateValue
 }
 
+export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
+
+export type HealthEvent = {
+  created_at: string
+  environment: number
+  feature: number
+  provider_name: string
+  reason: string
+  type: HealthEventType
+}
+
+export type HealthProvider = {
+  id: number
+  created_by: string
+  name: string
+  project: number
+  webhook_url: number
+}
+
 export type PConfidence =
   | 'VERY_LOW'
   | 'LOW'
@@ -650,6 +713,7 @@ export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
   auditLogs: PagedResponse<AuditLogItem>
+  organisationLicence: {}
   organisations: PagedResponse<Organisation>
   projects: ProjectSummary[]
   project: Project
@@ -672,10 +736,16 @@ export type Res = {
   }
   identity: { id: string } //todo: we don't consider this until we migrate identity-store
   identities: EdgePagedResponse<Identity>
-  permission: Record<string, boolean>
+  permission: Record<string, boolean> & {
+    ADMIN: boolean
+    tag_based_permissions?: { permissions: string[]; tags: number[] }[]
+  }
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  healthEvents: HealthEvent[]
+  healthProvider: HealthProvider
+  healthProviders: HealthProvider[]
   account: Account
   userEmail: {}
   groupAdmin: { id: string }
@@ -710,7 +780,7 @@ export type Res = {
   versionFeatureState: FeatureState[]
   role: Role
   roles: PagedResponse<Role>
-  rolePermission: PagedResponse<UserPermission>
+  rolePermission: PagedResponse<RolePermission>
   projectFlags: PagedResponse<ProjectFlag>
   projectFlag: ProjectFlag
   identityFeatureStatesAll: IdentityFeatureState[]
@@ -718,7 +788,7 @@ export type Res = {
   rolesPermissionUsers: PagedResponse<RolePermissionUser>
   createRolePermissionGroup: RolePermissionGroup
   rolePermissionGroup: PagedResponse<RolePermissionGroup>
-  getSubscriptionMetadata: { id: string; max_api_calls: number }
+  subscriptionMetadata: SubscriptionMeta
   environment: Environment
   metadataModelFieldList: PagedResponse<MetadataModelField>
   metadataModelField: MetadataModelField

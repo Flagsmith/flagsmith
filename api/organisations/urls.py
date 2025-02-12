@@ -154,6 +154,20 @@ urlpatterns = [
     ),
 ]
 
+if settings.LICENSING_INSTALLED:  # pragma: no cover
+    from licensing.views import create_or_update_licence
+
+    urlpatterns.extend(
+        [
+            path(
+                "<int:organisation_id>/licence",
+                create_or_update_licence,
+                name="create-or-update-licence",
+            ),
+        ]
+    )
+
+
 if settings.IS_RBAC_INSTALLED:
     from rbac.views import (
         GroupRoleViewSet,

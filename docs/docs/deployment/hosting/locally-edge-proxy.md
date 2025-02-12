@@ -4,102 +4,140 @@ title: Edge Proxy
 sidebar_position: 25
 ---
 
+The [Edge Proxy](/advanced-use/edge-proxy) runs as a
+[Docker container](https://hub.docker.com/repository/docker/flagsmith/edge-proxy) with no external dependencies.
+It connects to the Flagsmith API to download environment documents, and your Flagsmith client applications connect to it
+using [remote flag evaluation](/clients/#remote-evaluation).
+
+The examples below assume you have a configuration file located at `./config.json`. Your Flagsmith client applications
+can then consume the Edge Proxy by setting their API URL to `http://localhost:8000/api/v1/`.
+
+<details>
+<summary>Docker CLI</summary>
+```
+docker run \
+    -v ./config.json:/app/config.json \
+    -p 8000:8000 \
+    flagsmith/edge-proxy:latest
+```
+</details>
+
+<details>
+<summary>Docker Compose</summary>
+```yaml title="compose.yaml"
+services:
+ edge_proxy:
+  image: flagsmith/edge-proxy:latest
+  volumes:
+   - type: bind
+     source: ./config.json
+     target: /app/config.json
+  ports:
+   - '8000:8000'
+```
+</details>
+
 ## Configuration
 
-The Edge Proxy can be configured using a json configuration file (named `config.json` here).
+The Edge Proxy can be configured with any combination of:
 
-You can set the following configuration in `config.json` to control the behaviour of the Edge Proxy:
+- Environment variables.
+- A JSON configuration file, by default located at `/app/config.json` in the Edge Proxy container.
 
-### Basic Settings
+Environment variables take priority over their corresponding options defined in the configuration file.
+
+Environment variable names are case-insensitive, and are processed using
+[Pydantic](https://docs.pydantic.dev/2.7/concepts/pydantic_settings/#environment-variable-names).
+
+### Example configuration
+
+<details>
+
+<summary>Configuration file</summary>
+
+```json title="/app/config.json"
+{
+ "environment_key_pairs": [
+  {
+   "server_side_key": "ser.your_server_side_key_1",
+   "client_side_key": "your_client_side_key_1"
+  }
+ ],
+ "api_poll_frequency_seconds": 5,
+ "logging": {
+  "log_level": "DEBUG",
+  "log_format": "json"
+ }
+}
+```
+
+</details>
+
+<details>
+
+<summary>Environment variables</summary>
+
+```ruby
+ENVIRONMENT_KEY_PAIRS='[{"server_side_key":"ser.your_server_side_key_1","client_side_key":"your_client_side_key_1"}]'
+API_POLL_FREQUENCY_SECONDS=5
+LOGGING='{"log_level":"DEBUG","log_format":"json"}'
+```
+
+</details>
+
+### Basic settings
 
 #### `environment_key_pairs`
 
-An array of environment key pair objects:
+Specifies which environments to poll environment documents for. Each environment requires a server-side key and its
+corresponding client-side key.
 
 ```json
 "environment_key_pairs": [{
-  "server_side_key": "your_server_side_key",
+  "server_side_key": "ser.your_server_side_key",
   "client_side_key": "your_client_side_environment_key"
 }]
 ```
 
-#### `api_poll_frequency`
-
-:::note
-
-This setting is optional.
-
-:::
-
-Control how often the Edge Proxy is going to ping the server for changes, in seconds:
-
-```json
-"api_poll_frequency": 30
-```
-
-Defaults to `10`.
-
-#### `api_poll_timeout`
-
-:::note
-
-This setting is optional.
-
-:::
-
-Specify the request timeout when trying to retrieve new changes, in seconds:
-
-```json
-"api_poll_timeout": 1
-```
-
-Defaults to `5`.
-
 #### `api_url`
 
-:::note
-
-This setting is optional.
-
-:::
-
-Set if you are running a self hosted version of Flagsmith:
+If you are self-hosting Flagsmith, set this to your API URL:
 
 ```json
-"api_url": "https://my-flagsmith.domain.com/api/v1"
+"api_url": "https://flagsmith.example.com/api/v1"
 ```
 
-If not set, defaults to Flagsmith's Edge API.
+#### `api_poll_frequency_seconds`
+
+How often to poll the Flagsmith API for changes, in seconds. Defaults to 10.
+
+```json
+"api_poll_frequency_seconds": 30
+```
+
+#### `api_poll_timeout_seconds`
+
+The request timeout when trying to retrieve new changes, in seconds. Defaults to 5.
+
+```json
+"api_poll_timeout_seconds": 1
+```
 
 #### `allow_origins`
 
-:::note
-
-This setting is optional.
-
-:::
-
-Set a value for the `Access-Control-Allow-Origin` header.
+Set a value for the `Access-Control-Allow-Origin` header. Defaults to `*`.
 
 ```json
 "allow_origins": "https://my-flagsmith.domain.com"
 ```
 
-If not set, defaults to `*`.
-
-### Endpoint Caches
+### Endpoint caches
 
 #### `endpoint_caches`
 
-:::note
+Enables a LRU cache per endpoint.
 
-This setting is optional.
-
-:::
-
-Enable a LRU cache per endpoint.
-
-Optionally, specify the LRU cache size with `cache_max_size` (defaults to 128):
+Optionally, specify the LRU cache size with `cache_max_size`. Defaults to 128.
 
 ```json
 "endpoint_caches": {
@@ -117,12 +155,6 @@ Optionally, specify the LRU cache size with `cache_max_size` (defaults to 128):
 
 #### `logging.log_level`
 
-:::note
-
-This setting is optional.
-
-:::
-
 Choose a logging level from `"CRITICAL"`, `"ERROR"`, `"WARNING"`, `"INFO"`, `"DEBUG"`. Defaults to `"INFO"`.
 
 ```json
@@ -131,25 +163,13 @@ Choose a logging level from `"CRITICAL"`, `"ERROR"`, `"WARNING"`, `"INFO"`, `"DE
 
 #### `logging.log_format`
 
-:::note
-
-This setting is optional.
-
-:::
-
-Choose a logging forman between `"generic"` and `"json"`. Defaults to `"generic"`.
+Choose a logging format between `"generic"` and `"json"`. Defaults to `"generic"`.
 
 ```json
 "logging": {"log_format": "json"}
 ```
 
 #### `logging.log_event_field_name`
-
-:::note
-
-This setting is optional.
-
-:::
 
 Set a name used for human-readable log entry field when logging events in JSON. Defaults to `"message"`.
 
@@ -159,23 +179,13 @@ Set a name used for human-readable log entry field when logging events in JSON. 
 
 #### `logging.colour`
 
-:::note
-
-- Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
-- This setting is optional.
-
-:::
+Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
 
 Set to `false` to disable coloured output. Useful when outputting the log to a file.
 
 #### `logging.override`
 
-:::note
-
-- Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
-- This setting is optional.
-
-:::
+Added in [2.13.0](https://github.com/Flagsmith/edge-proxy/releases/tag/v2.13.0).
 
 Accepts
 [Python-compatible logging settings](https://docs.python.org/3/library/logging.config.html#configuration-dictionary-schema)
@@ -204,7 +214,7 @@ everything a file, one can set up own file handler and assign it to the root log
 }
 ```
 
-Or, log access logs to file in generic format while logging everything else to stdout in json:
+Or, log access logs to file in generic format while logging everything else to stdout in JSON:
 
 ```json
 "logging": {
@@ -235,12 +245,14 @@ Or, log access logs to file in generic format while logging everything else to s
 When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
 specified by the [`"logging.log_format"`](#logginglog_format) setting.
 
-### Health Check
+### Health check
 
 The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
 fetch all its configured environment documents. If any environment document could not be fetched during a configurable
 grace period, the health check will fail with a 500 status code. This allows the Edge Proxy to continue reporting as
 healthy even if the Flagsmith API is temporarily unavailable.
+
+You can point your orchestration health checks to this endpoint.
 
 #### `health_check.environment_update_grace_period_seconds`
 
@@ -264,116 +276,13 @@ if last_updated_all_environments_at < datetime.now() - timedelta(seconds=total_g
 return 200
 ```
 
-### Example
+### Environment variables
 
-Here's an example of a minimal working Edge Proxy configuration:
+Some Edge Proxy settings can only be set using environment variables:
 
-```json
-{
- "environment_key_pairs": [
-  {
-   "server_side_key": "your_server_side_environment_key",
-   "client_side_key": "your_client_side_environment_key"
-  }
- ],
- "api_poll_frequency": 10,
- "api_url": "https://api.flagsmith.com/api/v1"
-}
-```
-
-### Environment Variables
-
-You can configure the Edge Proxy with the following Environment Variables:
-
-- `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`. Set to the number of
-  available CPU cores.
-
-## Running the Edge Proxy
-
-The Edge Proxy runs as a docker container. It is currently available at the
-[Docker Hub](https://hub.docker.com/repository/docker/flagsmith/edge-proxy).
-
-### With docker run
-
-```bash
-# Download the Docker Image
-docker pull flagsmith/edge-proxy
-
-# Run it
-docker run \
-    -v /<path-to-local>/config.json:/app/config.json \
-    -p 8000:8000 \
-    flagsmith/edge-proxy:latest
-```
-
-### With docker compose
-
-```yml
-services:
- edge_proxy:
-  image: flagsmith/edge-proxy:latest
-  volumes:
-   - type: bind
-     source: ./config.json
-     target: /app/config.json
-  ports:
-   - '8000:8000'
-```
-
-The Proxy is now running and available on port 8000.
-
-## Consuming the Edge Proxy
-
-The Edge Proxy provides an identical set of API methods as our Core API. You need to point your SDK to the Edge Proxy
-domain name and you're good to go. For example, lets say you had your proxy running locally as per the instructions
-above:
-
-```bash
-curl "http://localhost:8000/api/v1/flags/" -H "x-environment-key: 95DybY5oJoRNhxPZYLrxk4" | jq
-
-[
-    {
-        "enabled": true,
-        "feature_state_value": 5454,
-        "feature": {
-            "name": "feature_1",
-            "id": 2,
-            "type": "MULTIVARIATE"
-        }
-    },
-    {
-        "enabled": true,
-        "feature_state_value": "some_value",
-        "feature": {
-            "name": "feature_2",
-            "id": 9,
-            "type": "STANDARD"
-        }
-    },
-]
-```
-
-## Monitoring
-
-There are 2 health check endpoints for the Edge Proxy.
-
-### SDK Proxy Health Check
-
-When making a request to `/proxy/health` the proxy will respond with a HTTP `200` and `{"status": "ok"}`. You can point
-your orchestration health checks to this endpoint. This endpoint checks that the
-[Environment Document](/clients#the-environment-document) is not stale, and that the proxy is serving SDK requests.
-
-### Realtime Flags/Server Sent Events Health Check
-
-If you are using the Proxy to power Server Sent Events for realtime flag updates. When making a request to `/sse/health`
-the proxy will respond with a HTTP `200` and `{"status": "ok"}`.
-
-## Architecture
-
-The standard Flagsmith architecture:
-
-![Image](/img/edge-proxy-existing.svg)
-
-With the proxy added to the mix:
-
-![Image](/img/edge-proxy-proxy.svg)
+- `WEB_CONCURRENCY` The number of [Uvicorn](https://www.uvicorn.org/) workers. Defaults to `1`, which is 
+  [recommended when running multiple Edge Proxy containers behind a load balancer](https://fastapi.tiangolo.com/deployment/docker/#one-load-balancer-multiple-worker-containers).
+  If running on a single node, set this [based on your number of CPU cores and threads](https://docs.gunicorn.org/en/latest/design.html#how-many-workers).
+- `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, `NO_PROXY`: These variables let you configure an HTTP proxy that the
+  Edge Proxy should use for all its outgoing HTTP requests.
+  [Learn more](https://www.python-httpx.org/environment_variables)

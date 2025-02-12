@@ -2,6 +2,7 @@ import json
 import random
 
 import pytest
+from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -18,10 +19,10 @@ from audit.constants import SEGMENT_DELETED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from features.models import Feature
+from features.models import Feature, FeatureSegment, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
-from projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
@@ -153,6 +154,44 @@ def test_create_segments_reaching_max_limit(project, client, settings):
         == "The project has reached the maximum allowed segments limit."
     )
     assert project.segments.count() == 1
+
+
+def test_segments_limit_ignores_old_segment_versions(
+    project: Project,
+    segment: Segment,
+    staff_client: APIClient,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_project_permissions([MANAGE_SEGMENTS])
+
+    # let's reduce the max segments allowed to 2
+    project.max_segments_allowed = 2
+    project.save()
+
+    # and create some older versions for the segment fixture
+    segment.deep_clone()
+    assert Segment.objects.filter(version_of_id=segment.id).count() == 3
+    assert Segment.live_objects.count() == 1
+
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    data = {
+        "name": "New segment name",
+        "project": project.id,
+        "rules": [
+            {
+                "type": "ALL",
+                "rules": [],
+                "conditions": [{"operator": EQUAL, "property": "test-property"}],
+            }
+        ],
+    }
+
+    # When
+    res = staff_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert res.status_code == status.HTTP_201_CREATED
 
 
 @pytest.mark.parametrize(
@@ -321,6 +360,75 @@ def test_associated_features_returns_all_the_associated_features(
     assert response.json()["results"][0]["id"] == segment_featurestate.id
     assert response.json()["results"][0]["feature"] == feature.id
     assert response.json()["results"][0]["environment"] == environment.id
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_associated_features_returns_only_latest_versions_of_associated_features(
+    project: Project,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+    client: APIClient,
+) -> None:
+    # Given
+    # 2 features
+    feature_one = Feature.objects.create(project=project, name="feature_1")
+    feature_two = Feature.objects.create(project=project, name="feature_2")
+
+    # Now let's create a version for each feature with a segment override
+    for feature in (feature_one, feature_two):
+        version = EnvironmentFeatureVersion.objects.create(
+            feature=feature, environment=environment_v2_versioning
+        )
+        FeatureState.objects.create(
+            feature=feature,
+            environment=environment_v2_versioning,
+            environment_feature_version=version,
+            feature_segment=FeatureSegment.objects.create(
+                segment=segment,
+                environment=environment_v2_versioning,
+                feature=feature,
+                environment_feature_version=version,
+            ),
+        )
+        version.publish()
+
+    # And then let's create a third version for feature_one where we update the segment override
+    feature_1_version_3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature_one, environment=environment_v2_versioning
+    )
+    f1v3_segment_override_feature_state = feature_1_version_3.feature_states.get(
+        feature_segment__segment=segment
+    )
+    f1v3_segment_override_feature_state.enabled = True
+    f1v3_segment_override_feature_state.save()
+    feature_1_version_3.publish()
+
+    # And finally, let's create a third version for feature_two where we remove the segment override
+    feature_2_version_3 = EnvironmentFeatureVersion.objects.create(
+        feature=feature_two, environment=environment_v2_versioning
+    )
+    feature_2_version_3.feature_states.filter(feature_segment__segment=segment).delete()
+    feature_2_version_3.publish()
+
+    url = "%s?environment=%s" % (
+        reverse(
+            "api-v1:projects:project-segments-associated-features",
+            args=[project.id, segment.id],
+        ),
+        environment_v2_versioning.id,
+    )
+
+    # When
+    response = client.get(url)
+
+    # Then
+    assert response.json().get("count") == 1
+    assert response.json()["results"][0]["id"] == f1v3_segment_override_feature_state.id
+    assert response.json()["results"][0]["feature"] == feature_one.id
+    assert response.json()["results"][0]["environment"] == environment_v2_versioning.id
 
 
 @pytest.mark.parametrize(
@@ -600,6 +708,148 @@ def test_update_segment_add_new_condition(
     assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
 
 
+def test_update_mismatched_rule_and_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    false_segment = Segment.objects.create(name="False segment", project=project)
+    segment_rule.segment = false_segment
+    segment_rule.save()
+
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+    existing_condition = Condition.objects.create(
+        rule=nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"segment": "Mismatched segment is not allowed"}
+    segment_rule.refresh_from_db()
+    assert segment_rule.segment == false_segment
+
+
+def test_update_mismatched_condition_and_segment(
+    project: Project,
+    admin_client_new: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
+    )
+    false_segment = Segment.objects.create(name="False segment", project=project)
+    false_segment_rule = SegmentRule.objects.create(
+        segment=false_segment, type=SegmentRule.ALL_RULE
+    )
+    false_nested_rule = SegmentRule.objects.create(
+        rule=false_segment_rule, type=SegmentRule.ANY_RULE
+    )
+    nested_rule = SegmentRule.objects.create(
+        rule=segment_rule, type=SegmentRule.ANY_RULE
+    )
+
+    existing_condition = Condition.objects.create(
+        rule=false_nested_rule, property="foo", operator=EQUAL, value="bar"
+    )
+
+    new_condition_property = "foo2"
+    new_condition_value = "bar"
+    data = {
+        "name": segment.name,
+        "project": project.id,
+        "rules": [
+            {
+                "id": segment_rule.id,
+                "type": segment_rule.type,
+                "rules": [
+                    {
+                        "id": nested_rule.id,
+                        "type": nested_rule.type,
+                        "rules": [],
+                        "conditions": [
+                            # existing condition
+                            {
+                                "id": existing_condition.id,
+                                "property": existing_condition.property,
+                                "operator": existing_condition.operator,
+                                "value": existing_condition.value,
+                            },
+                            # new condition
+                            {
+                                "property": new_condition_property,
+                                "operator": EQUAL,
+                                "value": new_condition_value,
+                            },
+                        ],
+                    }
+                ],
+                "conditions": [],
+            }
+        ],
+    }
+
+    # When
+    response = admin_client_new.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"segment": "Mismatched segment is not allowed"}
+    existing_condition.refresh_from_db()
+    assert existing_condition._get_segment() != segment
+
+
 def test_update_segment_versioned_segment(
     project: Project,
     admin_client_new: APIClient,
@@ -619,7 +869,7 @@ def test_update_segment_versioned_segment(
 
     # Before updating the segment confirm pre-existing version count which is
     # automatically set by the fixture.
-    assert Segment.all_objects.filter(version_of=segment).count() == 2
+    assert Segment.objects.filter(version_of=segment).count() == 2
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -666,13 +916,11 @@ def test_update_segment_versioned_segment(
     assert response.status_code == status.HTTP_200_OK
 
     # Now verify that a new versioned segment has been set.
-    assert Segment.all_objects.filter(version_of=segment).count() == 3
+    assert Segment.objects.filter(version_of=segment).count() == 3
 
     # Now check the previously versioned segment to match former count of conditions.
 
-    versioned_segment = Segment.all_objects.filter(
-        version_of=segment, version=2
-    ).first()
+    versioned_segment = Segment.objects.filter(version_of=segment, version=2).first()
     assert versioned_segment != segment
     assert versioned_segment.rules.count() == 1
     versioned_rule = versioned_segment.rules.first()
@@ -703,9 +951,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
         rule=nested_rule, property="foo", operator=EQUAL, value="bar"
     )
 
-    assert (
-        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
-    )
+    assert segment.version == 2 == Segment.objects.filter(version_of=segment).count()
 
     new_condition_property = "foo2"
     new_condition_value = "bar"
@@ -756,9 +1002,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
     segment.refresh_from_db()
 
     # Now verify that the version of the segment has not been changed.
-    assert (
-        segment.version == 2 == Segment.all_objects.filter(version_of=segment).count()
-    )
+    assert segment.version == 2 == Segment.objects.filter(version_of=segment).count()
 
 
 @pytest.mark.parametrize(

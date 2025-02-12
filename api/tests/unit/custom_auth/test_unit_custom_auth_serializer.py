@@ -1,7 +1,9 @@
-from copy import deepcopy
+import typing
 
 import pytest
+from django.contrib.auth.models import AbstractUser
 from django.test import RequestFactory
+from djoser.serializers import TokenCreateSerializer
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import PermissionDenied
@@ -9,10 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from custom_auth.constants import (
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
-from custom_auth.serializers import (
-    CustomTokenCreateSerializer,
-    CustomUserCreateSerializer,
-)
+from custom_auth.serializers import CustomUserCreateSerializer
 from organisations.invites.models import InviteLink
 from users.models import FFAdminUser, SignUpType
 
@@ -153,23 +152,44 @@ def test_invite_link_validation_mixin_validate_fails_if_invite_link_hash_not_val
     assert exc_info.value.detail == USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE
 
 
-def test_CustomTokenCreateSerializer_validate_uses_login_field_to_authenticate(
-    settings: SettingsWrapper, mocker: MockerFixture
+@pytest.fixture
+def django_ldap_username_field(
+    django_user_model: type[AbstractUser],
+) -> typing.Generator[str, None, None]:
+    ldap_username_field = "username"
+    username_field = django_user_model.USERNAME_FIELD
+    django_user_model.USERNAME_FIELD = ldap_username_field
+    yield ldap_username_field
+    django_user_model.USERNAME_FIELD = username_field
+
+
+# Previously, Djoser's default `TokenCreateSerializer` only respected the
+# Djoser `LOGIN_FIELD` setting so it was impossible to grab the email from
+# serializer and send it as a username to the login backend — which is required for LDAP to work.
+# After Djoser 2.3.0, it's possible to alter `TokenCreateSerializer` behaviour
+# to support this by setting the Django user model's `USERNAME_FIELD` constant
+# to `"username"`, and Djoser's `LOGIN_FIELD` to `"email"`.
+# This test is here to make sure Djoser behaves as expected.
+def test_djoser_token_create_serializer__user_model_username_field__call_expected(
+    mocker: MockerFixture,
+    django_ldap_username_field: str,
 ) -> None:
     # Given
-    djoser_settings = deepcopy(settings.DJOSER)
-    djoser_settings["LOGIN_FIELD"] = "username"
-    settings.DJOSER = djoser_settings
+    expected_username = "some_username"
+    expected_password = "some_password"
 
     mocked_authenticate = mocker.patch("djoser.serializers.authenticate")
-    serializer = CustomTokenCreateSerializer(
-        data={"email": "some_username", "password": "some_password"}
+    serializer = TokenCreateSerializer(
+        data={"email": expected_username, "password": expected_password}
     )
+    expected_authenticate_kwargs = {
+        "request": None,
+        django_ldap_username_field: expected_username,
+        "password": expected_password,
+    }
 
     # When
     serializer.is_valid(raise_exception=True)
 
     # Then
-    mocked_authenticate.assert_called_with(
-        request=None, username="some_username", password="some_password"
-    )
+    mocked_authenticate.assert_called_with(**expected_authenticate_kwargs)

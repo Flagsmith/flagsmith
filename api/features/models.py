@@ -11,6 +11,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
     NON_FIELD_ERRORS,
@@ -109,7 +110,7 @@ class Feature(
         on_delete=models.DO_NOTHING,
     )
     initial_value = models.CharField(
-        max_length=20000, null=True, default=None, blank=True
+        max_length=settings.FEATURE_VALUE_LIMIT, null=True, default=None, blank=True
     )
     description = models.TextField(null=True, blank=True)
     default_enabled = models.BooleanField(default=False)
@@ -160,6 +161,21 @@ class Feature(
     @hook(AFTER_CREATE)
     def create_feature_states(self):
         FeatureState.create_initial_feature_states_for_feature(feature=self)
+
+    @hook(AFTER_SAVE)
+    def delete_identity_overrides(self) -> None:
+        # Note that we have to use conditional logic on self.deleted_at inside
+        # the hook method because the django-lifecycle logic for when / was / is_not
+        # doesn't work due to it relying on a method called initial_value, which
+        # we already define as a field on the model class.
+        if self.deleted_at and self.project.enable_dynamo_db:
+            from edge_api.identities.tasks import (
+                delete_environments_v2_identity_overrides_by_feature,
+            )
+
+            delete_environments_v2_identity_overrides_by_feature.delay(
+                kwargs={"feature_id": self.id}
+            )
 
     def validate_unique(self, *args, **kwargs):
         """
@@ -371,7 +387,7 @@ class FeatureSegment(
     def to_id_priority_tuple_pairs(
         feature_segments: typing.Union[
             typing.Iterable["FeatureSegment"], typing.Iterable[dict]
-        ]
+        ],
     ) -> typing.List[typing.Tuple[int, int]]:
         """
         Helper method to convert a collection of FeatureSegment objects or dictionaries to a list of 2-tuples
@@ -532,6 +548,14 @@ class FeatureState(
 
         if self.type == other.type:
             if self.environment.use_v2_feature_versioning:
+                if (
+                    self.environment_feature_version is None
+                    or other.environment_feature_version is None
+                ):
+                    raise ValueError(
+                        "Cannot compare feature states as they are missing environment_feature_version."
+                    )
+
                 return (
                     self.environment_feature_version > other.environment_feature_version
                 )
@@ -1086,9 +1110,13 @@ class FeatureStateValue(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
+            if self.feature_state.deleted_at:
+                return True
+
             return self.feature_state.get_skip_create_audit_log()
-        except ObjectDoesNotExist:
-            return False
+
+        except FeatureState.DoesNotExist:
+            return True
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:
         fs = self.feature_state

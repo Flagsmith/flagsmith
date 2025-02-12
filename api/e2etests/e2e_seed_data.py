@@ -1,14 +1,20 @@
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
+from common.projects.permissions import (
+    CREATE_ENVIRONMENT,
+    CREATE_FEATURE,
+    VIEW_AUDIT_LOG,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 from flag_engine.identities.models import IdentityModel as EngineIdentity
 
 from edge_api.identities.models import EdgeIdentity
 from environments.identities.models import Identity
 from environments.models import Environment
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import Organisation, OrganisationRole, Subscription
 from organisations.permissions.models import UserOrganisationPermission
@@ -16,14 +22,8 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
-from organisations.subscriptions.constants import SCALE_UP
+from organisations.subscriptions.constants import ENTERPRISE
 from projects.models import Project, UserProjectPermission
-from projects.permissions import (
-    CREATE_ENVIRONMENT,
-    CREATE_FEATURE,
-    VIEW_AUDIT_LOG,
-    VIEW_PROJECT,
-)
 from users.models import FFAdminUser, UserPermissionGroup
 
 # Password used by all the test users
@@ -129,7 +129,7 @@ def seed_data() -> None:
     ]
     # Upgrade organisation seats
     Subscription.objects.filter(organisation__in=org_admin.organisations.all()).update(
-        max_seats=8, plan=SCALE_UP, subscription_id="test_subscription_id"
+        max_seats=8, plan=ENTERPRISE, subscription_id="test_subscription_id"
     )
 
     # Create projects and environments
@@ -196,10 +196,10 @@ def seed_data() -> None:
 
     for identity_info in identities_test_data:
         if settings.IDENTITIES_TABLE_NAME_DYNAMO:
-            engine_identity = EngineIdentity(
+            engine_identity = EngineIdentity(  # pragma: no cover
                 identifier=identity_info["identifier"],
                 environment_api_key=identity_info["environment"].api_key,
             )
-            EdgeIdentity(engine_identity).save()
+            EdgeIdentity(engine_identity).save()  # pragma: no cover
         else:
             Identity.objects.create(**identity_info)

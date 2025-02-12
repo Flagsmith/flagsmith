@@ -76,7 +76,11 @@ class Identity(models.Model):
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
-        overridden_for_identity_query = Q(identity=self)
+        if self.id:
+            overridden_for_identity_query = Q(identity=self)
+        else:
+            # skip identity overrides for transient identities
+            overridden_for_identity_query = Q()
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
             feature_segment__environment=self.environment,

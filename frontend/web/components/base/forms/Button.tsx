@@ -33,6 +33,7 @@ export type ButtonType = ButtonHTMLAttributes<HTMLButtonElement> & {
   target?: HTMLAttributeAnchorTarget
   theme?: keyof typeof themeClassNames
   size?: keyof typeof sizeClassNames
+  iconSize?: number
 }
 
 export const Button: FC<ButtonType> = ({
@@ -44,6 +45,7 @@ export const Button: FC<ButtonType> = ({
   iconLeftColour,
   iconRight,
   iconRightColour,
+  iconSize = 24,
   onMouseUp,
   size = 'default',
   target,
@@ -54,20 +56,25 @@ export const Button: FC<ButtonType> = ({
   const hasPlan = feature ? Utils.getPlansPermission(feature) : true
   return href || !hasPlan ? (
     <a
-      onClick={rest.onClick}
+      onClick={!hasPlan ? undefined : (rest.onClick as React.MouseEventHandler)}
       className={cn(className, themeClassNames[theme], sizeClassNames[size])}
-      target={target}
+      target={!hasPlan ? '_blank' : target}
       href={hasPlan ? href : Constants.getUpgradeUrl()}
       rel='noreferrer'
     >
-      {!!iconLeft && (
-        <Icon
-          fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
-          className='me-2'
-          name={iconLeft}
-        />
-      )}
-      {children}
+      <div className='d-flex h-100 align-items-center justify-content-center gap-2'>
+        {!!iconLeft && !!hasPlan && (
+          <Icon
+            fill={
+              iconLeftColour ? Constants.colours[iconLeftColour] : undefined
+            }
+            name={iconLeft}
+            width={iconSize}
+          />
+        )}
+        {children}
+        {!hasPlan && <PlanBasedBanner feature={feature} theme={'badge'} />}
+      </div>
       {!!iconRight && (
         <Icon
           fill={
@@ -75,6 +82,7 @@ export const Button: FC<ButtonType> = ({
           }
           className='ml-2'
           name={iconRight}
+          width={iconSize}
         />
       )}
     </a>
@@ -95,6 +103,7 @@ export const Button: FC<ButtonType> = ({
           fill={iconLeftColour ? Constants.colours[iconLeftColour] : undefined}
           className='mr-2'
           name={iconLeft}
+          width={iconSize}
         />
       )}
       {children}
@@ -105,6 +114,7 @@ export const Button: FC<ButtonType> = ({
           }
           className='ml-2'
           name={iconRight}
+          width={iconSize}
         />
       )}
     </button>

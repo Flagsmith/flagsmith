@@ -27,7 +27,7 @@ import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
 import { withRouter } from 'react-router-dom'
 
-const CodeHelp = require('../../components/CodeHelp')
+import CodeHelp from 'components/CodeHelp'
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -40,8 +40,7 @@ type SegmentsPageType = {
 
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { projectId } = props.match.params
-  const environmentId =
-    ProjectStore.getEnvironment()?.api_key || 'ENVIRONMENT_API_KEY'
+  const environmentId = ProjectStore.getEnvironment()?.api_key
   const params = Utils.fromParam()
   const id = params.id
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
@@ -50,7 +49,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     params.featureSpecific === 'true',
   )
 
-  console.log('id is', id)
   useEffect(() => {
     if (id) {
       editSegment(id, !manageSegmentsPermission)
@@ -327,7 +325,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                 />
               </FormGroup>
 
-              <InfoMessage>
+              <InfoMessage collapseId={'segment-identify'}>
                 Segments require you to identitfy users, setting traits will add
                 users to segments.
               </InfoMessage>

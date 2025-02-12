@@ -3,6 +3,7 @@ import math
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import F, Max, Q
@@ -27,9 +28,6 @@ from organisations.models import (
     Subscription,
 )
 from organisations.subscriptions.constants import FREE_PLAN_ID
-from organisations.subscriptions.subscription_service import (
-    get_subscription_metadata,
-)
 from users.models import FFAdminUser
 
 from .constants import (
@@ -56,7 +54,7 @@ logger = logging.getLogger(__name__)
 def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
-    subscription_metadata = get_subscription_metadata(organisation)
+    subscription_metadata = organisation.subscription.get_subscription_metadata()
     FFAdminUser.send_alert_to_admin_users(
         subject=ALERT_EMAIL_SUBJECT,
         message=ALERT_EMAIL_MESSAGE
@@ -137,6 +135,9 @@ def handle_api_usage_notifications() -> None:
             },
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
+            logger.info(
+                f"Skipping processing API usage for organisation {organisation.id}"
+            )
             continue
 
         try:
@@ -154,7 +155,7 @@ def charge_for_api_call_count_overages():
 
     # Get the period where we're interested in any new API usage
     # notifications for the relevant billing period (ie, this month).
-    api_usage_notified_at = now - timedelta(days=30)
+    api_usage_notified_at = now - relativedelta(months=1)
 
     # Since we're only interested in monthly billed accounts, set a wide
     # threshold to catch as many billing periods that could be roughly
@@ -191,7 +192,8 @@ def charge_for_api_call_count_overages():
             - month_window_end,
         )
         .exclude(
-            subscription__plan=FREE_PLAN_ID,
+            Q(subscription__plan=FREE_PLAN_ID)
+            | Q(subscription__cancellation_date__isnull=False),
         )
         .select_related(
             "subscription_information_cache",

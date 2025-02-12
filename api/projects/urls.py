@@ -1,9 +1,16 @@
+import importlib
+
+from django.conf import settings
 from django.urls import include, path, re_path
 from rest_framework_nested import routers
 
 from audit.views import ProjectAuditLogViewSet
 from features.feature_external_resources.views import (
     FeatureExternalResourceViewSet,
+)
+from features.feature_health.views import (
+    FeatureHealthEventViewSet,
+    FeatureHealthProviderViewSet,
 )
 from features.import_export.views import (
     FeatureExportListView,
@@ -67,6 +74,26 @@ projects_router.register(
     ProjectAuditLogViewSet,
     basename="project-audit",
 )
+projects_router.register(
+    "feature-health/providers",
+    FeatureHealthProviderViewSet,
+    basename="feature-health-providers",
+)
+projects_router.register(
+    "feature-health/events",
+    FeatureHealthEventViewSet,
+    basename="feature-health-events",
+)
+
+if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
+    workflow_views = importlib.import_module("workflows_logic.views")
+    projects_router.register(
+        r"change-requests",
+        workflow_views.ProjectChangeRequestViewSet,
+        basename="project-change-requests",
+    )
+
+
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )

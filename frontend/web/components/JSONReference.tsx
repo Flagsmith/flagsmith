@@ -6,6 +6,7 @@ import Button from './base/forms/Button'
 import Switch from './Switch'
 import flagsmith from 'flagsmith'
 import Icon from './Icon'
+import Utils from 'common/utils/utils'
 
 type JSONReferenceType = {
   title: string
@@ -142,8 +143,7 @@ const JSONReference: FC<JSONReferenceType> = ({
               </div>
               <Button
                 onClick={() => {
-                  navigator.clipboard.writeText(condensed ? idsOnly : value)
-                  toast('Copied')
+                  Utils.copyToClipboard(condensed ? idsOnly : value)
                 }}
                 size='xSmall'
                 iconLeft='copy'
@@ -153,7 +153,7 @@ const JSONReference: FC<JSONReferenceType> = ({
               </Button>
             </Row>
             <div className='hljs-container'>
-              <Highlight forceExpanded preventEscape className={'json p-0'}>
+              <Highlight forceExpanded className={'json p-0'}>
                 {condensed ? idsOnly : value}
               </Highlight>
             </div>

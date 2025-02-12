@@ -19,7 +19,12 @@ from rest_framework.test import APIClient
 from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
-from users.models import FFAdminUser, HubspotTracker, UserPermissionGroup
+from users.models import (
+    FFAdminUser,
+    HubspotTracker,
+    UserPermissionGroup,
+    UserPermissionGroupMembership,
+)
 
 
 def test_join_organisation(
@@ -30,11 +35,11 @@ def test_join_organisation(
     organisation = Organisation.objects.create(name="test org")
     invite = Invite.objects.create(email=staff_user.email, organisation=organisation)
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
-    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+    data = {HUBSPOT_COOKIE_NAME: "test_cookie_tracker"}
     assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
-    response = staff_client.post(url)
+    response = staff_client.post(url, data)
     staff_user.refresh_from_db()
 
     # Then
@@ -51,11 +56,11 @@ def test_join_organisation_via_link(
     organisation = Organisation.objects.create(name="test org")
     invite = InviteLink.objects.create(organisation=organisation)
     url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
-    staff_client.cookies[HUBSPOT_COOKIE_NAME] = "test_cookie_tracker"
+    data = {HUBSPOT_COOKIE_NAME: "test_cookie_tracker"}
     assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
-    response = staff_client.post(url)
+    response = staff_client.post(url, data)
     staff_user.refresh_from_db()
 
     # Then
@@ -755,7 +760,7 @@ def test_delete_user_social_auth_with_no_password(password):
 @pytest.mark.django_db
 def test_change_email_address_api(mocker):
     # Given
-    mocked_task = mocker.patch("users.signals.send_email_changed_notification_email")
+    mocked_task = mocker.patch("users.tasks.send_email_changed_notification_email")
     # create an user
     old_email = "test_user@test.com"
     first_name = "firstname"
@@ -867,3 +872,61 @@ def test_send_reset_password_emails_rate_limit_resets_after_password_reset(
 
     # Then - we should receive another email
     assert len(mail.outbox) == 1
+
+
+def test_list_user_groups(
+    organisation: Organisation,
+    admin_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    user1 = FFAdminUser.objects.create(email="user1@example.com")
+    user2 = FFAdminUser.objects.create(email="user2@example.com")
+
+    user1.add_organisation(organisation)
+    user2.add_organisation(organisation)
+
+    user_permission_group_1 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group1"
+    )
+    user_permission_group_2 = UserPermissionGroup.objects.create(
+        organisation=organisation, name="group2"
+    )
+
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_1, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user2, userpermissiongroup=user_permission_group_2, group_admin=True
+    )
+    UserPermissionGroupMembership.objects.create(
+        ffadminuser=user1, userpermissiongroup=user_permission_group_2
+    )
+
+    url = reverse(
+        "api-v1:organisations:organisation-groups-list", args=[organisation.id]
+    )
+
+    # When
+    with django_assert_num_queries(7):
+        response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 2
+
+    group_1 = response_json["results"][0]
+    group_1_users = group_1["users"]
+    assert len(group_1_users) == 1
+    assert group_1_users[0]["id"] == user1.pk
+    assert group_1_users[0]["group_admin"] is True
+
+    group_2 = response_json["results"][1]
+    group_2_users = group_2["users"]
+    assert len(group_2_users) == 2
+    assert set((user["id"], user["group_admin"]) for user in group_2_users) == {
+        (user1.pk, False),
+        (user2.pk, True),
+    }

@@ -10,7 +10,7 @@ import {
   useDeleteTagMutation,
   useGetTagsQuery,
 } from 'common/services/useTag'
-import { Tag as TTag } from 'common/types/responses'
+import { TagType, Tag as TTag } from 'common/types/responses'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
@@ -20,30 +20,40 @@ import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
+  hideTagsByType?: TagType[]
   readOnly?: boolean
   onChange: (value: number[]) => void
   projectId: string
 }
 
 const AddEditTags: FC<AddEditTagsType> = ({
+  hideTagsByType = [],
   onChange,
   projectId,
   readOnly,
   value,
 }) => {
-  const { data: projectTags, isLoading: tagsLoading } = useGetTagsQuery({
+  const { data, isLoading: tagsLoading } = useGetTagsQuery({
     projectId,
   })
+  const projectTags = useMemo(() => {
+    return data?.filter(
+      (projectTag) => !hideTagsByType.includes(projectTag.type),
+    )
+  }, [data, hideTagsByType])
+
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [tag, setTag] = useState<TTag>()
   const [tab, setTab] = useState<'SELECT' | 'CREATE' | 'EDIT'>('SELECT')
   const [deleteTag] = useDeleteTagMutation()
   const [createTag] = useCreateTagMutation()
-  const { permission: projectAdminPermission } = useHasPermission({
+  const permissionType = 'MANAGE_TAGS'
+
+  const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
     level: 'project',
-    permission: 'ADMIN',
+    permission: permissionType,
   })
 
   useEffect(() => {
@@ -101,6 +111,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         tag.label.toLowerCase().includes(filter),
       )
     }
+
     return projectTags || []
   }, [filter, projectTags])
 
@@ -166,12 +177,14 @@ const AddEditTags: FC<AddEditTagsType> = ({
             !readOnly && (
               <div className='text-right'>
                 {Utils.renderWithPermission(
-                  projectAdminPermission,
-                  Constants.projectPermissions('Admin'),
+                  createEditTagPermission,
+                  Constants.projectPermissions(
+                    permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
+                  ),
                   <div className='text-center'>
                     <Button
                       className=''
-                      disabled={!projectAdminPermission}
+                      disabled={!createEditTagPermission}
                       onClick={() => {
                         setTab('CREATE')
                         setFilter('')
@@ -206,12 +219,16 @@ const AddEditTags: FC<AddEditTagsType> = ({
                         />
                       </Flex>
                       {!readOnly &&
-                        !!projectAdminPermission &&
+                        !!createEditTagPermission &&
                         !tag.is_system_tag && (
                           <>
                             <div
                               onClick={() => editTag(tag)}
-                              className='clickable'
+                              className={
+                                !readOnly
+                                  ? 'clickable'
+                                  : 'opacity-0 pointer-events-none'
+                              }
                             >
                               <Icon name='setting' fill='#9DA4AE' />
                             </div>

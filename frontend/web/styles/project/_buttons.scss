@@ -98,7 +98,7 @@ button.btn {
     }
   }
   &-tertiary {
-    color: $primary900;
+    color: $primary900 !important;
     background-color: $btn-tertiary-bg;
     box-shadow: 0 10px 20px rgba(247, 213, 110, .2);
     &:hover,
@@ -171,6 +171,14 @@ button.btn {
     }
   }
   &-with-icon {
+    &.btn-xs{
+      padding: 0;
+      height: 28px;
+      width: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     padding: 0 14px;
     background-color: $basic-alpha-8;
     border-radius: $border-radius;
@@ -306,20 +314,24 @@ button.btn {
   }
   &-lg {
     line-height: $btn-line-height-lg;
+    height: $btn-line-height-lg;
   }
 
   &-sm {
     line-height: $btn-line-height-sm;
+    height: $btn-line-height-sm;
   }
   &-xsm {
     padding: 0 12px;
     line-height: $btn-line-height-xsm;
+    height: $btn-line-height-xsm;
     font-size: $font-caption-sm;
     border-radius: $border-radius-sm;
   }
 }
 
 .btn-link {
+  display: inline-block;
   text-decoration: none !important;
   vertical-align: baseline;
   font-family: $font-family;

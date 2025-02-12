@@ -15,17 +15,16 @@ import PageTitle from 'components/PageTitle'
 import Icon from 'components/Icon'
 import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
-import { getRolesProjectPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
 import ImportPage from 'components/import-export/ImportPage'
 import FeatureExport from 'components/import-export/FeatureExport'
 import ProjectUsage from 'components/ProjectUsage'
 import ProjectStore from 'common/stores/project-store'
 import Tooltip from 'components/Tooltip'
-import { Link } from 'react-router-dom'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
+import EditHealthProvider from 'components/EditHealthProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -60,19 +59,11 @@ const ProjectSettingsPage = class extends Component {
       { organisation_id: AccountStore.getOrganisation().id },
       { forceRefetch: true },
     ).then((roles) => {
-      getRolesProjectPermissions(
-        getStore(),
-        {
-          organisation_id: AccountStore.getOrganisation().id,
-          project_id: this.props.match.params.projectId,
-          role_id: roles.data.results[0].id,
-        },
-        { forceRefetch: true },
-      ).then((res) => {
-        const matchingItems = roles.data.results.filter((item1) =>
-          res.data.results.some((item2) => item2.role === item1.id),
-        )
-        this.setState({ roles: matchingItems })
+      if (!roles?.data?.results?.length) return
+      getRoles(getStore(), {
+        organisation_id: AccountStore.getOrganisation().id,
+      }).then((res) => {
+        this.setState({ roles: res.data.results })
       })
     })
   }
@@ -169,8 +160,6 @@ const ProjectSettingsPage = class extends Component {
   render() {
     const { name, stale_flags_limit_days } = this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
-
-    const metadataEnable = Utils.getFlagsmithHasFeature('enable_metadata')
 
     return (
       <div className='app-container container'>
@@ -543,20 +532,18 @@ const ProjectSettingsPage = class extends Component {
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
                     >
-                      {Utils.isSaas() &&
-                        Utils.getFlagsmithHasFeature('realtime_setting') &&
-                        Utils.isSaas() && (
-                          <FormGroup className='mt-4 col-md-8'>
-                            <Setting
-                              feature='REALTIME'
-                              disabled={isSaving}
-                              onChange={() =>
-                                this.toggleRealtimeUpdates(project, editProject)
-                              }
-                              checked={project.enable_realtime_updates}
-                            />
-                          </FormGroup>
-                        )}
+                      {Utils.isSaas() && (
+                        <FormGroup className='mt-4 col-md-8'>
+                          <Setting
+                            feature='REALTIME'
+                            disabled={isSaving}
+                            onChange={() =>
+                              this.toggleRealtimeUpdates(project, editProject)
+                            }
+                            checked={project.enable_realtime_updates}
+                          />
+                        </FormGroup>
+                      )}
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
                           <FormGroup className='mt-4 col-md-8'>
@@ -591,6 +578,17 @@ const ProjectSettingsPage = class extends Component {
                         projectId={this.props.match.params.projectId}
                       />
                     </TabItem>
+                    {Utils.getFlagsmithHasFeature('feature_health') && (
+                      <TabItem
+                        data-test='feature-health-settings'
+                        tabLabel='Feature Health'
+                      >
+                        <EditHealthProvider
+                          projectId={this.props.match.params.projectId}
+                          tabClassName='flat-panel'
+                        />
+                      </TabItem>
+                    )}
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {
@@ -605,14 +603,12 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    {metadataEnable && (
-                      <TabItem tabLabel='Custom Fields'>
-                        <MetadataPage
-                          organisationId={AccountStore.getOrganisation().id}
-                          projectId={this.props.match.params.projectId}
-                        />
-                      </TabItem>
-                    )}
+                    <TabItem tabLabel='Custom Fields'>
+                      <MetadataPage
+                        organisationId={AccountStore.getOrganisation().id}
+                        projectId={this.props.match.params.projectId}
+                      />
+                    </TabItem>
                     {!!ProjectStore.getEnvs()?.length && (
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage

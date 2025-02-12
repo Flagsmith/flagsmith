@@ -2,6 +2,7 @@ import Constants from 'common/constants'
 import { projectService } from 'common/services/useProject'
 import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
+import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -38,7 +39,11 @@ const controller = {
         )
       : ['Development', 'Production']
     data
-      .post(`${Project.api}projects/`, { name, organisation: store.id })
+      .post(
+        `${Project.api}projects/`,
+        { name, organisation: store.id },
+        E2E ? { 'X-E2E-Test-Auth-Token': Project.e2eToken } : {},
+      )
       .then((project) => {
         Promise.all(
           defaultEnvironmentNames.map((envName) => {
@@ -139,11 +144,9 @@ const controller = {
           AccountStore.getOrganisationRole(id) === 'ADMIN'
             ? [
                 data.get(`${Project.api}organisations/${id}/invites/`),
-                data
-                  .get(
-                    `${Project.api}organisations/${id}/get-subscription-metadata/`,
-                  )
-                  .catch(() => null),
+                getSubscriptionMetadata(getStore(), { id }).then(
+                  (res) => res.data,
+                ),
               ]
             : [],
         ),
@@ -374,6 +377,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.invalidateInviteLink(action.link)
       break
     case Actions.LOGOUT:
+      store.model = null
       store.id = null
       break
     default:

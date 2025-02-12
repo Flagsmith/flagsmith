@@ -20,7 +20,6 @@ from importlib import reload
 
 import dj_database_url
 import pytz
-import requests
 from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
@@ -67,15 +66,6 @@ CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-# In order to run a load balanced solution, we need to whitelist the internal ip
-try:
-    internal_ip = requests.get("http://instance-data/latest/meta-data/local-ipv4").text
-except requests.exceptions.ConnectionError:
-    pass
-else:
-    ALLOWED_HOSTS.append(internal_ip)
-del requests
-
 if sys.version[0] == "2":
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -94,6 +84,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     # Used for managing api keys
     "rest_framework_api_key",
+    "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "django.contrib.sites",
     "custom_auth",
@@ -113,6 +104,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.feature_health",
     "features.import_export",
     "features.multivariate",
     "features.versioning",
@@ -254,6 +246,7 @@ DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
+        "custom_auth.jwt_cookie.authentication.JWTCookieAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "api_keys.authentication.MasterAPIKeyAuthentication",
     ),
@@ -416,19 +409,6 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 
 MEDIA_URL = "/media/"  # unused but needs to be different from STATIC_URL in django 3
 
-# CORS settings
-
-CORS_ORIGIN_ALLOW_ALL = True
-FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
-    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
-)
-CORS_ALLOW_HEADERS = [
-    *default_headers,
-    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
-    "X-Environment-Key",
-    "X-E2E-Test-Auth-Token",
-]
-
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
     # Invitations with name is anticipated to take two arguments. The persons name and the
@@ -554,6 +534,9 @@ SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER
 
 SECURE_REDIRECT_EXEMPT = env.list("DJANGO_SECURE_REDIRECT_EXEMPT", default=[])
 SECURE_REFERRER_POLICY = env.str("DJANGO_SECURE_REFERRER_POLICY", default="same-origin")
+SECURE_CROSS_ORIGIN_OPENER_POLICY = env.str(
+    "DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", default="same-origin"
+)
 SECURE_SSL_HOST = env.str("DJANGO_SECURE_SSL_HOST", default=None)
 SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=False)
 
@@ -627,7 +610,11 @@ if APPLICATION_INSIGHTS_CONNECTION_STRING:
     LOGGING["loggers"][""]["handlers"].append("azure")
 
 ENABLE_DB_LOGGING = env.bool("DJANGO_ENABLE_DB_LOGGING", default=False)
-if ENABLE_DB_LOGGING:
+if ENABLE_DB_LOGGING:  # pragma: no cover
+    if not DEBUG:
+        warnings.warn("Setting DEBUG=True to ensure DB logging functions correctly.")
+        DEBUG = True
+
     LOGGING["loggers"]["django.db.backends"] = {
         "level": "DEBUG",
         "handlers": ["console"],
@@ -781,7 +768,7 @@ TRENCH_AUTH = {
     ),
     "DEFAULT_VALIDITY_PERIOD": 30,
     "CONFIRM_BACKUP_CODES_REGENERATION_WITH_CODE": True,
-    "APPLICATION_ISSUER_NAME": "app.bullet-train.io",
+    "APPLICATION_ISSUER_NAME": "Flagsmith",
     "ENCRYPT_BACKUP_CODES": True,
     "MFA_METHODS": {
         "app": {
@@ -795,7 +782,10 @@ TRENCH_AUTH = {
 }
 
 USER_CREATE_PERMISSIONS = env.list(
-    "USER_CREATE_PERMISSIONS", default=["rest_framework.permissions.AllowAny"]
+    "USER_CREATE_PERMISSIONS", default=["custom_auth.permissions.IsSignupAllowed"]
+)
+USER_LOGIN_PERMISSIONS = env.list(
+    "USER_LOGIN_PERMISSIONS", default=["custom_auth.permissions.IsPasswordLoginAllowed"]
 )
 
 DJOSER = {
@@ -805,10 +795,10 @@ DJOSER = {
     # FE uri to redirect user to from activation email
     "ACTIVATION_URL": "activate/{uid}/{token}",
     # register or activation endpoint will send confirmation email to user
+    "LOGIN_FIELD": "email",
     "SEND_CONFIRMATION_EMAIL": False,
     "SERIALIZERS": {
         "token": "custom_auth.serializers.CustomTokenSerializer",
-        "token_create": "custom_auth.serializers.CustomTokenCreateSerializer",
         "user_create": "custom_auth.serializers.CustomUserCreateSerializer",
         "user_delete": "custom_auth.serializers.CustomUserDelete",
         "current_user": "users.serializers.CustomCurrentUserSerializer",
@@ -824,7 +814,18 @@ DJOSER = {
         "user": ["custom_auth.permissions.CurrentUser"],
         "user_list": ["custom_auth.permissions.CurrentUser"],
         "user_create": USER_CREATE_PERMISSIONS,
+        "token_create": USER_LOGIN_PERMISSIONS,
     },
+}
+SIMPLE_JWT = {
+    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"],
+    "SLIDING_TOKEN_LIFETIME": timedelta(
+        minutes=env.int(
+            "COOKIE_AUTH_JWT_ACCESS_TOKEN_LIFETIME_MINUTES",
+            default=10 * 60,
+        )
+    ),
+    "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
 # Github OAuth credentials
@@ -892,8 +893,6 @@ PROJECT_METADATA_TABLE_NAME_DYNAMO = env.str("PROJECT_METADATA_TABLE_NAME_DYNAMO
 API_URL = env("API_URL", default="/api/v1/")
 ASSET_URL = env("ASSET_URL", default="/")
 MAINTENANCE_MODE = env.bool("MAINTENANCE_MODE", default=False)
-PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
-PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
 DISABLE_ANALYTICS_FEATURES = env.bool(
     "DISABLE_INFLUXDB_FEATURES", default=False
 ) or env.bool("DISABLE_ANALYTICS_FEATURES", default=False)
@@ -908,8 +907,6 @@ MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
-USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
-COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
 
 # Set this to enable create organisation for only superusers
 RESTRICT_ORG_CREATE_TO_SUPERUSERS = env.bool("RESTRICT_ORG_CREATE_TO_SUPERUSERS", False)
@@ -920,13 +917,6 @@ SLACK_CLIENT_SECRET = env.str("SLACK_CLIENT_SECRET", default="")
 GITHUB_PEM = env.str("GITHUB_PEM", default="")
 GITHUB_APP_ID: int = env.int("GITHUB_APP_ID", default=0)
 GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
-
-# MailerLite
-MAILERLITE_BASE_URL = env.str(
-    "MAILERLITE_BASE_URL", default="https://api.mailerlite.com/api/v2/"
-)
-MAILERLITE_API_KEY = env.str("MAILERLITE_API_KEY", None)
-MAILERLITE_NEW_USER_GROUP_ID = env.int("MAILERLITE_NEW_USER_GROUP_ID", None)
 
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
@@ -1011,6 +1001,9 @@ ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
     "ENABLE_TASK_PROCESSOR_HEALTH_CHECK", default=False
 )
 
+# Allows us to prevent the postpone decorator from running things async
+ENABLE_POSTPONE_DECORATOR = env.bool("ENABLE_POSTPONE_DECORATOR", default=True)
+
 ENABLE_CLEAN_UP_OLD_TASKS = env.bool("ENABLE_CLEAN_UP_OLD_TASKS", default=True)
 TASK_DELETE_RETENTION_DAYS = env.int("TASK_DELETE_RETENTION_DAYS", default=30)
 TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
@@ -1038,6 +1031,26 @@ BUCKETED_ANALYTICS_DATA_RETENTION_DAYS = env.int(
 )
 
 DISABLE_INVITE_LINKS = env.bool("DISABLE_INVITE_LINKS", False)
+PREVENT_SIGNUP = env.bool("PREVENT_SIGNUP", default=False)
+PREVENT_EMAIL_PASSWORD = env.bool("PREVENT_EMAIL_PASSWORD", default=False)
+COOKIE_AUTH_ENABLED = env.bool("COOKIE_AUTH_ENABLED", default=False)
+USE_SECURE_COOKIES = env.bool("USE_SECURE_COOKIES", default=True)
+COOKIE_SAME_SITE = env.str("COOKIE_SAME_SITE", default="none")
+
+# CORS settings
+
+CORS_ORIGIN_ALLOW_ALL = env.bool("CORS_ORIGIN_ALLOW_ALL", not COOKIE_AUTH_ENABLED)
+CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
+FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
+    "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
+)
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CORS_ALLOW_HEADERS = [
+    *default_headers,
+    *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
+    "X-Environment-Key",
+    "X-E2E-Test-Auth-Token",
+]
 
 # use a separate boolean setting so that we add it to the API containers in environments
 # where we're running the task processor, so we avoid creating unnecessary tasks
@@ -1131,8 +1144,9 @@ GITHUB_APP_URL = env.int(
 LDAP_INSTALLED = importlib.util.find_spec("flagsmith_ldap")
 # The URL of the LDAP server.
 LDAP_AUTH_URL = env.str("LDAP_AUTH_URL", None)
+LDAP_ENABLED = LDAP_INSTALLED and LDAP_AUTH_URL
 
-if LDAP_INSTALLED and LDAP_AUTH_URL:  # pragma: no cover
+if LDAP_ENABLED:  # pragma: no cover
     AUTHENTICATION_BACKENDS.insert(0, "django_python3_ldap.auth.LDAPBackend")
     INSTALLED_APPS.append("flagsmith_ldap")
 
@@ -1205,12 +1219,17 @@ if LDAP_INSTALLED and LDAP_AUTH_URL:  # pragma: no cover
     # The LDAP user username and password used by `sync_ldap_users_and_groups` command
     LDAP_SYNC_USER_USERNAME = env.str("LDAP_SYNC_USER_USERNAME", None)
     LDAP_SYNC_USER_PASSWORD = env.str("LDAP_SYNC_USER_PASSWORD", None)
-    DJOSER["LOGIN_FIELD"] = "username"
 
 SEGMENT_CONDITION_VALUE_LIMIT = env.int("SEGMENT_CONDITION_VALUE_LIMIT", default=1000)
 if not 0 <= SEGMENT_CONDITION_VALUE_LIMIT < 2000000:
     raise ImproperlyConfigured(
         "SEGMENT_CONDITION_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
+    )
+
+FEATURE_VALUE_LIMIT = env.int("FEATURE_VALUE_LIMIT", default=20_000)
+if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
+    raise ImproperlyConfigured(
+        "FEATURE_VALUE_LIMIT must be between 0 and 2,000,000 (2MB)."
     )
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
@@ -1244,3 +1263,32 @@ EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
 ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
     "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
 )
+
+# Date on which versioning is released. This is used to give any scale up
+# subscriptions created before this date full audit log and versioning
+# history.
+VERSIONING_RELEASE_DATE = env.date("VERSIONING_RELEASE_DATE", default=None)
+
+SUBSCRIPTION_LICENCE_PUBLIC_KEY = env.str(
+    "SUBSCRIPTION_LICENCE_PUBLIC_KEY",
+    """
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAs1H23Xv1IlhyTbUP9Z4e
+zN3t6oa97ybLufhqSRCoPxHWAY/pqqjdwiC00AnRbL/guDi1FLPEkLza2gAKfU+f
+04SsNTfYL5MTPnaFtf+B+hlYmlrT1C6n05t+uQW2OQm6mWoqBssmoyR8T5FXfBls
+FrT8dsZg5XG7JaWAyGbbVscHrXHXqVcLbFGO8CcO2BG2whl+7hzm4edNCsxLJqmN
+uASR9KtntdulkRar0A9x+hAQUlrDKv77nMMdljNIqkcCcWrbhiDoTVCDbE99mhMq
+LeC/+C54/ZiCb3r9woq/kpsbRj0Ys2b4czfjWioXooSxA0w3BE6/lV0+hVltjRO6
+5QIDAQAB
+-----END PUBLIC KEY-----
+""",
+)
+
+# For the matching private key to the public key added above
+# search for "Flagsmith licence private key" in Bitwarden.
+SUBSCRIPTION_LICENCE_PRIVATE_KEY = env.str("SUBSCRIPTION_LICENCE_PRIVATE_KEY", None)
+
+LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
+
+if LICENSING_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("licensing")

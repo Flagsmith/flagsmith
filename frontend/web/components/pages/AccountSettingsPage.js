@@ -188,48 +188,52 @@ class TheComponent extends Component {
                     />
                     <div className='col-md-6'>
                       <form className='mb-0' onSubmit={this.save}>
-                        <div>
-                          <InputGroup
-                            className='mt-2'
-                            title='Email Address'
-                            data-test='firstName'
-                            inputProps={{
-                              className: 'full-width',
-                              name: 'groupName',
-                              readOnly: true,
-                            }}
-                            value={email}
-                            onChange={(e) =>
-                              this.setState({
-                                first_name: Utils.safeParseEventValue(e),
-                              })
-                            }
-                            type='text'
-                            name='Email Address'
-                          />
-                          <div className='text-right mt-5'>
-                            <Button
-                              onClick={() =>
-                                openModal(
-                                  'Change Email Address',
-                                  <ChangeEmailAddress
-                                    onComplete={() => {
-                                      closeModal()
-                                      AppActions.logout()
-                                    }}
-                                  />,
-                                  'p-0',
-                                )
+                        {!['LDAP', 'SAML'].includes(
+                          AccountStore.model.auth_type,
+                        ) && (
+                          <div>
+                            <InputGroup
+                              className='mt-2'
+                              title='Email Address'
+                              data-test='firstName'
+                              inputProps={{
+                                className: 'full-width',
+                                name: 'groupName',
+                                readOnly: true,
+                              }}
+                              value={email}
+                              onChange={(e) =>
+                                this.setState({
+                                  first_name: Utils.safeParseEventValue(e),
+                                })
                               }
-                              id='change-email-button'
-                              data-test='change-email-button'
-                              type='button'
-                              class='input-group-addon'
-                            >
-                              Change Email Address
-                            </Button>
+                              type='text'
+                              name='Email Address'
+                            />
+                            <div className='text-right mt-5'>
+                              <Button
+                                onClick={() =>
+                                  openModal(
+                                    'Change Email Address',
+                                    <ChangeEmailAddress
+                                      onComplete={() => {
+                                        closeModal()
+                                        AppActions.logout()
+                                      }}
+                                    />,
+                                    'p-0',
+                                  )
+                                }
+                                id='change-email-button'
+                                data-test='change-email-button'
+                                type='button'
+                                class='input-group-addon'
+                              >
+                                Change Email Address
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                         <InputGroup
                           className='mt-2 mb-4'
                           title='First Name'
@@ -383,6 +387,7 @@ class TheComponent extends Component {
                             }
                             type='password'
                             name='Current Password*'
+                            autocomplete='current-password'
                           />
                           <InputGroup
                             className='mt-4'
@@ -400,6 +405,7 @@ class TheComponent extends Component {
                             }
                             isValid={new_password1 && new_password1.length}
                             type='password'
+                            autocomplete='new-password'
                             name='New Password*'
                           />
                           <InputGroup
@@ -418,6 +424,7 @@ class TheComponent extends Component {
                             }
                             isValid={new_password2 && new_password2.length}
                             type='password'
+                            autocomplete='new-password'
                             name='Confirm New Password*'
                           />
                           {passwordError && (

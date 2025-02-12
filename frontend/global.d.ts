@@ -35,9 +35,9 @@ declare global {
   const Column: typeof Component
   const Loader: typeof Component
   const E2E: boolean
-  const DYNATRACE_URL: string | undefined
   const dtrum: undefined | { identifyUser: (id: string) => void }
   const closeModal: () => void
+  const closeModal2: () => void
   const toast: (message: string) => void
   const Tooltip: FC<TooltipProps>
 }

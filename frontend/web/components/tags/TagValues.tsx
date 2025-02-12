@@ -2,6 +2,9 @@ import React, { FC, Fragment, ReactNode } from 'react'
 import Button from 'components/base/forms/Button'
 import Tag from './Tag'
 import { useGetTagsQuery } from 'common/services/useTag'
+import Utils from 'common/utils/utils'
+import Constants from 'common/constants'
+import { useHasPermission } from 'common/providers/Permission'
 
 type TagValuesType = {
   onAdd?: () => void
@@ -22,6 +25,14 @@ const TagValues: FC<TagValuesType> = ({
 }) => {
   const { data: tags } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
+  const permissionType = 'MANAGE_TAGS'
+
+  const { permission: createEditTagPermission } = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: permissionType,
+  })
+
   return (
     <Wrapper className='tag-values align-content-center'>
       {children}
@@ -29,6 +40,7 @@ const TagValues: FC<TagValuesType> = ({
         (tag) =>
           value?.includes(tag.id) && (
             <Tag
+              key={tag.id}
               className='chip--xs'
               hideNames={hideNames}
               onClick={onAdd}
@@ -36,11 +48,22 @@ const TagValues: FC<TagValuesType> = ({
             />
           ),
       )}
-      {!!onAdd && (
-        <Button size='xSmall' onClick={onAdd} type='button' theme='outline'>
-          Add Tag
-        </Button>
-      )}
+      {!!onAdd &&
+        Utils.renderWithPermission(
+          createEditTagPermission,
+          Constants.projectPermissions(
+            permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
+          ),
+          <Button
+            disabled={!createEditTagPermission}
+            size='xSmall'
+            onClick={onAdd}
+            type='button'
+            theme='outline'
+          >
+            Add Tag
+          </Button>,
+        )}
     </Wrapper>
   )
 }

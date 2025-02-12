@@ -167,6 +167,17 @@ def tag_two(project):
     )
 
 
+@pytest.fixture
+def tagged_feature(
+    feature: Feature,
+    tag_one: Tag,
+    tag_two: Tag,
+) -> Feature:
+    feature.tags.add(tag_one, tag_two)
+    feature.save()
+    return feature
+
+
 @pytest.fixture()
 def project_two(organisation: Organisation) -> Project:
     return Project.objects.create(name="Test Project Two", organisation=organisation)

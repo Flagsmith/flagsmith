@@ -14,7 +14,12 @@ import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
-
+import freeEmailDomains from 'free-email-domains'
+import InfoMessage from 'components/InfoMessage'
+const freeEmail = (value) => {
+  const domain = value?.split('@')?.[1]
+  return freeEmailDomains.includes(domain)
+}
 const HomePage = class extends React.Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -33,16 +38,16 @@ const HomePage = class extends React.Component {
     // can handle always setting the marketing consent.
     API.setCookie('marketing_consent_given', 'true')
     this.state = {
+      allRequirementsMet: false,
       email: '',
       first_name: '',
       last_name: '',
-      password: '',
       marketing_consent_given: true,
-      allRequirementsMet: false,
+      password: '',
     }
 
-    this.handlePasswordChange = this.handlePasswordChange.bind(this);
-    this.handleRequirementsMet = this.handleRequirementsMet.bind(this);
+    this.handlePasswordChange = this.handlePasswordChange.bind(this)
+    this.handleRequirementsMet = this.handleRequirementsMet.bind(this)
   }
 
   addAlbacross() {
@@ -141,11 +146,11 @@ const HomePage = class extends React.Component {
   }
 
   handlePasswordChange(e) {
-    this.setState({ password: e.target.value });
+    this.setState({ password: e.target.value })
   }
 
   handleRequirementsMet(allRequirementsMet) {
-    this.setState({ allRequirementsMet });
+    this.setState({ allRequirementsMet })
   }
 
   showForgotPassword = (e) => {
@@ -363,7 +368,7 @@ const HomePage = class extends React.Component {
                                               />
                                             </span>
                                             <p className='notification__text pl-3'>
-                                              Login to accept your invite
+                                              Log in to accept your invite
                                             </p>
                                           </div>
                                         )}
@@ -539,15 +544,30 @@ const HomePage = class extends React.Component {
                                     </FormGroup>
                                   )}
                                   {isInvite && (
-                                    <div className='notification flex-row'>
-                                      <span className='notification__icon mb-2'>
-                                        <IonIcon
-                                          icon={informationCircleOutline}
-                                        />
-                                      </span>
-                                      <p className='notification__text pl-3'>
-                                        Create an account to accept your invite
-                                      </p>
+                                    <div>
+                                      <div className='notification flex-row'>
+                                        <span className='notification__icon mb-2'>
+                                          <IonIcon
+                                            icon={informationCircleOutline}
+                                          />
+                                        </span>
+                                        <p className='notification__text pl-3'>
+                                          Create an account to accept your
+                                          invite
+                                        </p>
+                                      </div>
+                                      <Row className='justify-content-center'>
+                                        Have an account?{' '}
+                                        <Button
+                                          theme='text'
+                                          className='ml-1 fw-bold'
+                                          onClick={() => {
+                                            window.location.href = `/login${redirect}`
+                                          }}
+                                        >
+                                          Log in
+                                        </Button>
+                                      </Row>
                                     </div>
                                   )}
                                   <fieldset id='details' className=''>
@@ -608,6 +628,13 @@ const HomePage = class extends React.Component {
                                       name='email'
                                       id='email'
                                     />
+                                    {freeEmail(email) && (
+                                      <InfoMessage>
+                                        Signing up with a work email makes it
+                                        easier for co-workers to join your
+                                        Flagsmith organisation.
+                                      </InfoMessage>
+                                    )}
                                     <InputGroup
                                       title='Password'
                                       data-test='password'
@@ -628,14 +655,20 @@ const HomePage = class extends React.Component {
                                       id='password'
                                     />
                                     <PasswordRequirements
-                                      password={this.state.password} 
-                                      onRequirementsMet={this.handleRequirementsMet} 
+                                      password={this.state.password}
+                                      onRequirementsMet={
+                                        this.handleRequirementsMet
+                                      }
                                     />
                                     <div className='form-cta'>
                                       <Button
                                         data-test='signup-btn'
                                         name='signup-btn'
-                                        disabled={isLoading || isSaving || !this.state.allRequirementsMet}
+                                        disabled={
+                                          isLoading ||
+                                          isSaving ||
+                                          !this.state.allRequirementsMet
+                                        }
                                         className='px-4 mt-3 full-width'
                                         type='submit'
                                       >
@@ -646,18 +679,6 @@ const HomePage = class extends React.Component {
                                 </form>
                               )}
                             </Card>
-                            <Row className='justify-content-center'>
-                              Have an account?{' '}
-                              <Button
-                                theme='text'
-                                className='ml-1 fw-bold'
-                                onClick={() => {
-                                  window.location.href = `/login${redirect}`
-                                }}
-                              >
-                                Log in
-                              </Button>
-                            </Row>
                           </React.Fragment>
                         )}
                       </div>

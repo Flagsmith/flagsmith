@@ -1,66 +1,70 @@
 import { FC } from 'react'
 
 export type IconName =
-  | 'plus'
-  | 'eye'
-  | 'eye-off'
-  | 'search'
-  | 'github'
-  | 'google'
-  | 'sun'
-  | 'moon'
-  | 'checkmark-square'
+  | 'arrow-left'
+  | 'arrow-right'
+  | 'bar-chart'
+  | 'bell'
+  | 'calendar'
   | 'checkmark'
-  | 'info'
-  | 'star'
-  | 'info-outlined'
-  | 'close-circle'
-  | 'chevron-right'
+  | 'checkmark-circle'
+  | 'checkmark-square'
   | 'chevron-down'
   | 'chevron-left'
-  | 'arrow-left'
-  | 'file-text'
+  | 'chevron-right'
+  | 'chevron-up'
+  | 'clock'
+  | 'close-circle'
   | 'copy'
   | 'copy-outlined'
-  | 'trash-2'
-  | 'setting'
-  | 'calendar'
-  | 'edit'
-  | 'clock'
+  | 'dash'
   | 'diff'
-  | 'person'
+  | 'edit'
   | 'edit-outlined'
-  | 'refresh'
-  | 'warning'
-  | 'bell'
-  | 'layout'
-  | 'height'
-  | 'chevron-up'
-  | 'nav-logo'
-  | 'options-2'
-  | 'pie-chart'
-  | 'bar-chart'
-  | 'list'
-  | 'layers'
-  | 'flash'
-  | 'checkmark-circle'
-  | 'minus-circle'
   | 'email'
-  | 'arrow-right'
-  | 'settings-2'
-  | 'rocket'
-  | 'timer'
-  | 'request'
-  | 'people'
-  | 'required'
-  | 'more-vertical'
-  | 'open-external-link'
+  | 'eye'
+  | 'eye-off'
+  | 'expand'
+  | 'file-text'
+  | 'flash'
+  | 'github'
+  | 'google'
+  | 'height'
+  | 'info'
+  | 'info-outlined'
   | 'issue-closed'
   | 'issue-linked'
-  | 'pr-merged'
+  | 'layers'
+  | 'layout'
+  | 'list'
+  | 'minus-circle'
+  | 'moon'
+  | 'more-vertical'
+  | 'nav-logo'
+  | 'open-external-link'
+  | 'options-2'
+  | 'paste'
+  | 'people'
+  | 'person'
+  | 'pie-chart'
+  | 'plus'
+  | 'pr-closed'
   | 'pr-draft'
   | 'pr-linked'
-  | 'pr-closed'
+  | 'pr-merged'
+  | 'refresh'
+  | 'request'
+  | 'required'
+  | 'rocket'
+  | 'search'
+  | 'setting'
+  | 'settings-2'
+  | 'shield'
+  | 'star'
+  | 'sun'
+  | 'timer'
+  | 'trash-2'
+  | 'warning'
 
 export type IconType = React.DetailedHTMLProps<
   React.HTMLAttributes<SVGSVGElement>,
@@ -76,6 +80,27 @@ export type IconType = React.DetailedHTMLProps<
 
 const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
   switch (name) {
+    case 'shield': {
+      return (
+        <svg
+          width='24'
+          height='24'
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/shield'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M12 4.14649L5 8.08449V8.22949C5 12.9695 7.566 17.3585 11.698 19.6835L12 19.8535L12.302 19.6835C16.434 17.3585 19 12.9695 19 8.22949V8.08449L12 4.14649ZM12 21.8505C11.661 21.8505 11.322 21.7665 11.021 21.5965L10.718 21.4255C5.957 18.7485 3 13.6915 3 8.22949V8.08449C3 7.36549 3.39 6.69749 4.018 6.34249L11.02 2.40449C11.625 2.06449 12.376 2.06349 12.979 2.40349L19.98 6.34149C20.61 6.69749 21 7.36549 21 8.08449V8.22949C21 13.6915 18.043 18.7485 13.282 21.4255L12.98 21.5955C12.678 21.7655 12.339 21.8505 12 21.8505Z'
+              fill={fill}
+            />
+          </g>
+        </svg>
+      )
+    }
     case 'star': {
       return (
         <svg
@@ -90,6 +115,26 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
             fill={fill}
             className='ionicon-stroke-width'
           ></path>
+        </svg>
+      )
+    }
+    case 'dash': {
+      return (
+        <svg
+          width={width}
+          viewBox='0 0 24 24'
+          fill='none'
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/minus'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M19 13H5C4.448 13 4 12.553 4 12C4 11.447 4.448 11 5 11H19C19.553 11 20 11.447 20 12C20 12.553 19.553 13 19 13Z'
+              fill={fill}
+            />
+          </g>
         </svg>
       )
     }
@@ -1320,6 +1365,26 @@ const Icon: FC<IconType> = ({ fill, fill2, height, name, width, ...rest }) => {
           xmlns='http://www.w3.org/2000/svg'
         >
           <path d='M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z'></path>
+        </svg>
+      )
+    }
+    case 'expand': {
+      return (
+        <svg
+          viewBox='0 0 24 24'
+          height={height ?? '24'}
+          width={width ?? '24'}
+          fill={fill ?? '#000000'}
+          xmlns='http://www.w3.org/2000/svg'
+        >
+          <g id='Outlined/expand'>
+            <path
+              id='Icon'
+              fillRule='evenodd'
+              clipRule='evenodd'
+              d='M19.0016 4.02543C19.5516 4.02843 19.9966 4.47443 19.9966 5.02443L19.9996 9.99943C20.0006 10.5514 19.5526 11.0004 19.0006 11.0004H18.9996C18.4476 11.0004 18.0006 10.5524 17.9996 10.0014L17.9976 7.41643L14.7066 10.7074C14.5116 10.9024 14.2556 11.0004 13.9996 11.0004C13.7446 11.0004 13.4886 10.9024 13.2926 10.7074C12.9026 10.3164 12.9026 9.68343 13.2926 9.29343L16.5726 6.01343L13.9956 6.00043C13.4426 5.99743 12.9966 5.54643 12.9996 4.99543C13.0026 4.44443 13.4506 4.00043 13.9996 4.00043H14.0046L19.0016 4.02543ZM9.29302 13.293C9.68401 12.902 10.316 12.902 10.707 13.293C11.098 13.684 11.098 14.316 10.707 14.707L7.41501 17.999L10 18C10.553 18 11 18.448 11 19.001C10.999 19.553 10.552 20 10 20H9.99901L5.02402 19.997C4.47402 19.997 4.02802 19.552 4.02502 19.002L4.00002 14.005C3.99702 13.453 4.44302 13.003 4.99502 13H5.00002C5.55001 13 5.99701 13.444 6.00002 13.995L6.01302 16.573L9.29302 13.293Z'
+            />
+          </g>
         </svg>
       )
     }

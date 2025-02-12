@@ -3,10 +3,11 @@ from datetime import timedelta
 
 import freezegun
 import pytest
+from core.helpers import get_current_site_url
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from django.utils import timezone
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
+from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from freezegun.api import FrozenDateTimeFactory
 from pytest_mock import MockerFixture
 
@@ -744,6 +745,26 @@ def test_committing_change_request_with_environment_feature_versions_creates_pub
     ).exists()
 
 
+def test_retrieving_segments(
+    change_request: ChangeRequest,
+) -> None:
+    # Given
+    base_segment = Segment.objects.create(
+        name="Base Segment",
+        description="Segment description",
+        project=change_request.environment.project,
+    )
+
+    # When
+    segment = base_segment.shallow_clone(
+        name="New Name", description="New description", change_request=change_request
+    )
+
+    # Then
+    assert change_request.segments.count() == 1
+    assert change_request.segments.first() == segment
+
+
 def test_change_request_live_from_for_change_request_with_change_set(
     feature: Feature,
     environment_v2_versioning: Environment,
@@ -779,6 +800,65 @@ def test_change_request_live_from_for_change_request_with_change_set(
 
     # Then
     assert change_request.live_from == now
+
+
+def test_publishing_segments_as_part_of_commit(
+    segment: Segment,
+    change_request: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    assert segment.version == 2
+    cr_segment = segment.shallow_clone("Test Name", "Test Description", change_request)
+    assert cr_segment.rules.count() == 0
+
+    # Add some rules that the original segment will be cloning from
+    parent_rule = SegmentRule.objects.create(
+        segment=cr_segment, type=SegmentRule.ALL_RULE
+    )
+
+    child_rule1 = SegmentRule.objects.create(
+        rule=parent_rule, type=SegmentRule.ANY_RULE
+    )
+    child_rule2 = SegmentRule.objects.create(
+        rule=parent_rule, type=SegmentRule.NONE_RULE
+    )
+    Condition.objects.create(
+        rule=child_rule1,
+        property="child_rule1",
+        operator=EQUAL,
+        value="condition1",
+        created_with_segment=True,
+    )
+    Condition.objects.create(
+        rule=child_rule2,
+        property="child_rule2",
+        operator=PERCENTAGE_SPLIT,
+        value="0.2",
+        created_with_segment=False,
+    )
+
+    # When
+    change_request.commit(admin_user)
+
+    # Then
+    segment.refresh_from_db()
+    assert segment.version == 3
+    assert segment.name == "Test Name"
+    assert segment.description == "Test Description"
+    assert segment.rules.count() == 1
+    parent_rule2 = segment.rules.first()
+    assert parent_rule2.type == SegmentRule.ALL_RULE
+    assert parent_rule2.rules.count() == 2
+    child_rule3, child_rule4 = list(parent_rule2.rules.all())
+    assert child_rule3.type == SegmentRule.ANY_RULE
+    assert child_rule4.type == SegmentRule.NONE_RULE
+    assert child_rule3.conditions.count() == 1
+    assert child_rule4.conditions.count() == 1
+    condition1 = child_rule3.conditions.first()
+    condition2 = child_rule4.conditions.first()
+    assert condition1.value == "condition1"
+    assert condition2.value == "0.2"
 
 
 def test_ignore_conflicts_for_multiple_scheduled_change_requests(
@@ -897,3 +977,29 @@ def test_ignore_conflicts_for_multiple_scheduled_change_requests(
     )
     assert len(after_cr_1_flags) == 1
     assert after_cr_1_flags[0].feature_segment.segment == twenty_percent_segment
+
+
+def test_approval_via_project(project_change_request: ChangeRequest) -> None:
+    # Given - The project change request fixture
+    assert project_change_request.environment is None
+    assert project_change_request.project.minimum_change_request_approvals is None
+
+    # When
+    is_approved = project_change_request.is_approved()
+
+    # Then
+    assert is_approved is True
+
+
+def test_url_via_project(project_change_request: ChangeRequest) -> None:
+    # Given
+    assert project_change_request.environment is None
+
+    # When
+    url = project_change_request.url
+
+    # Then
+    project_id = project_change_request.project_id
+    expected_url = get_current_site_url()
+    expected_url += f"/project/{project_id}/change-requests/{project_change_request.id}"
+    assert url == expected_url

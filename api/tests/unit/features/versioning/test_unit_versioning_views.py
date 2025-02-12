@@ -3,10 +3,17 @@ import typing
 from datetime import datetime, timedelta
 
 import pytest
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import VIEW_PROJECT
 from core.constants import STRING
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -15,14 +22,19 @@ from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
-from environments.permissions.constants import (
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
+from features.feature_segments.limits import (
+    SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from features.versioning.models import EnvironmentFeatureVersion
-from projects.permissions import VIEW_PROJECT
+from organisations.models import (
+    OrganisationSubscriptionInformationCache,
+    Subscription,
+)
+from organisations.subscriptions.constants import SubscriptionPlanFamily
+from projects.models import Project
 from segments.models import Segment
 from tests.types import (
     WithEnvironmentPermissionsCallable,
@@ -1134,7 +1146,16 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
     admin_client_new: APIClient,
 ) -> None:
     """
-    This test is for a specific case where
+    This test is for a specific case found by a customer where creating
+    multiple segment overrides consecutively ended up with the 2 segment
+    overrides having the same priority.
+
+    This was really caused by slightly odd behaviour from the FE which
+    tried to update the existing segment override at the same time as
+    creating the new one, but this test ensures that the priorities
+    are set correct even in this case.
+
+    See PR here for FE fix: https://github.com/Flagsmith/flagsmith/pull/4609
     """
 
     def generate_segment_override_fs_payload(
@@ -1198,3 +1219,493 @@ def test_creating_multiple_segment_overrides_in_multiple_versions_sets_correct_p
         ).priority
         == 1
     )
+
+
+def test_create_new_version_fails_when_breaching_segment_override_limit(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "feature_segment": {"segment": segment.id},
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+            }
+        ],
+    }
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_400_BAD_REQUEST
+    assert create_version_response.json() == {
+        "environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE
+    }
+    assert (
+        EnvironmentFeatureVersion.objects.filter(
+            environment=environment_v2_versioning, feature=feature
+        ).count()
+        == 2
+    )
+
+
+def test_segment_override_limit_excludes_older_versions__when_not_creating_any_new_overrides(
+    feature: Feature,
+    segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {"publish_immediately": True}
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+
+    version_3_uuid = create_version_response.json()["uuid"]
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version__uuid=version_3_uuid,
+    ).exists()
+
+
+def test_segment_override_limit_excludes_older_versions__when_creating_new_override(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 2
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+                "feature_segment": {
+                    "segment": another_segment.id,
+                },
+            }
+        ],
+    }
+
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+
+    version_3_uuid = create_version_response.json()["uuid"]
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version__uuid=version_3_uuid,
+    ).exists()
+
+
+def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_new_override(
+    feature: Feature,
+    segment: Segment,
+    another_segment: Segment,
+    environment_v2_versioning: Environment,
+    project: Project,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    # We update the limit of segment overrides on the project
+    project.max_segment_overrides_allowed = 1
+    project.save()
+
+    # And we create an existing version with a segment override in it
+    version_2 = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version=version_2,
+        feature_segment=FeatureSegment.objects.create(
+            feature=feature,
+            segment=segment,
+            environment=environment_v2_versioning,
+            environment_feature_version=version_2,
+        ),
+    )
+    version_2.publish()
+
+    data = {
+        "publish_immediately": True,
+        "feature_states_to_create": [
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "some new value",
+                },
+                "feature_segment": {
+                    "segment": another_segment.id,
+                },
+            }
+        ],
+        "segment_ids_to_delete_overrides": [segment.id],
+    }
+
+    create_version_url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    # When
+    create_version_response = staff_client.post(
+        create_version_url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert create_version_response.status_code == status.HTTP_201_CREATED
+
+    version_3_uuid = create_version_response.json()["uuid"]
+    assert FeatureState.objects.filter(
+        feature=feature,
+        environment=environment_v2_versioning,
+        environment_feature_version__uuid=version_3_uuid,
+    ).exists()
+
+
+def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2(
+    environment: Environment,
+    feature: Feature,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment.id, feature.id],
+    )
+
+    # When
+    response = staff_client.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    assert response.json() == {
+        "environment": "Environment must use v2 feature versioning."
+    }
+
+
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
+@pytest.mark.parametrize(
+    "plan_id, is_saas",
+    (("free", True), ("free", False), ("startup", True), ("scale-up", True)),
+)
+def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    freezer: FrozenDateTimeFactory,
+    plan_id: str,
+    is_saas: bool,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    mocker.patch("organisations.models.is_saas", return_value=is_saas)
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    subscription.plan = plan_id
+    subscription.save()
+
+    # First, let's create some versions at the frozen time which is
+    # outside the limit allowed when using a non-enterprise plan
+    outside_limit_versions = []
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        outside_limit_versions.append(version)
+
+    # Now let's jump to the current time and create some versions which
+    # are inside the limit when using a non-enterprise plan
+    freezer.move_to(now)
+
+    inside_limit_versions = []
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        inside_limit_versions.append(version)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 3
+    assert {v["uuid"] for v in response_json["results"]} == {
+        str(v.uuid) for v in inside_limit_versions
+    }
+
+
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
+def test_list_versions_always_returns_current_version_even_if_outside_limit(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    assert subscription.subscription_plan_family == SubscriptionPlanFamily.FREE
+
+    # First, let's create a new version, after the initial version, but
+    # still outside the limit allowed when using a non-enterprise plan
+    freezer.move_to(timezone.now() + timedelta(minutes=5))
+    latest_version = EnvironmentFeatureVersion.objects.create(
+        environment=environment_v2_versioning, feature=feature
+    )
+    latest_version.publish(staff_user)
+
+    # When
+    # we jump to the current time and retrieve the versions
+    freezer.move_to(now)
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 1
+    assert response_json["results"][0]["uuid"] == str(latest_version.uuid)
+
+
+@pytest.mark.freeze_time(now - timedelta(days=DEFAULT_VERSION_LIMIT_DAYS + 1))
+def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
+    feature: Feature,
+    environment_v2_versioning: Environment,
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    with_project_permissions: WithProjectPermissionsCallable,
+    subscription: Subscription,
+    freezer: FrozenDateTimeFactory,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    is_saas = True
+    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])
+
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning.id, feature.id],
+    )
+
+    mocker.patch("organisations.models.is_saas", return_value=is_saas)
+    mocker.patch("organisations.models.is_enterprise", return_value=not is_saas)
+
+    # Let's set the subscription plan as start up
+    subscription.plan = "enterprise"
+    subscription.save()
+
+    OrganisationSubscriptionInformationCache.objects.update_or_create(
+        organisation=subscription.organisation,
+        defaults={"feature_history_visibility_days": None},
+    )
+
+    initial_version = EnvironmentFeatureVersion.objects.get(
+        feature=feature, environment=environment_v2_versioning
+    )
+
+    # First, let's create some versions at the frozen time which is
+    # outside the limit allowed when using the scale up plan (but
+    # shouldn't matter to the enterprise plan.
+    all_versions = []
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        all_versions.append(version)
+
+    # Now let's jump to the current time and create some versions which
+    # are inside the limit when using the startup plan
+    freezer.move_to(now)
+
+    for _ in range(3):
+        version = EnvironmentFeatureVersion.objects.create(
+            environment=environment_v2_versioning, feature=feature
+        )
+        version.publish(staff_user)
+        all_versions.append(version)
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+
+    response_json = response.json()
+    assert response_json["count"] == 7  # we created 6, plus the original version
+    assert {v["uuid"] for v in response_json["results"]} == {
+        str(v.uuid) for v in [initial_version, *all_versions]
+    }

@@ -53,6 +53,8 @@ administrative area.
 
 For SaaS customers, the URL to hit for this API is [`https://edge.api.flagsmith.com/`](/advanced-use/edge-api).
 
+Our Edge API specification is detailed [here](/edge-api/overview).
+
 ### Private Admin API Endpoints
 
 You can also do things like create new flags, environments, toggle flags or indeed anything that is possible from the
@@ -116,7 +118,7 @@ curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
 }'
 ```
 
-## JSON View
+## JSON View {#json}
 
 You can enable the JSON view in your Account Settings page. This will then give you access to relevant object meta data
 in the Flag area of the dashboard.
@@ -258,6 +260,120 @@ feature_state_data = {
 create_feature_state_response = session.post(create_segment_override_url, json=feature_state_data)
 assert create_feature_state_response.status_code == 201
 ```
+
+### Create identity overrides
+
+Creating identity overrides varies depending on if you are using Flagsmith SaaS or a different Flagsmith environment.
+
+<details>
+
+<summary>Flagsmith SaaS</summary>
+
+Creating an identity override requires the following information:
+
+* Client-side API key of the environment to create the override in
+* Identifier to create the override for
+* Name of the feature to create the override for
+* Desired feature state
+
+To create an identity override, use the
+[Update Edge Identity Feature State endpoint](https://api.flagsmith.com/api/v1/docs/#/operations-api-api_v1_environments_edge-identities_list).
+For example, the following request would enable the feature named `custom_background_colour` with a value of `blue`
+for the identity `my_user_id`:
+
+```
+curl --request PUT \
+  --url https://api.flagsmith.com/api/v1/environments/environments/YOUR_ENVIRONMENT_API_KEY/edge-identities-featurestates \
+  --header 'Accept: application/json' \
+  --header 'Authorization: Token YOUR_ADMIN_API_KEY' \
+  --header 'content-type: application/json' \
+  --data '{"enabled":true,"feature":"custom_background_colour","feature_state_value":"blue", "identifier":"my_user_id"}'
+```
+
+This will create the override if it doesn't exist, or update it if it does (upsert).
+
+</details>
+
+<details>
+
+<summary>Self-hosted and private cloud</summary>
+
+Creating an identity override in non-SaaS environments requires additional information compared to Flagsmith SaaS:
+
+* Internal ID of the feature to override
+* Internal ID of the target identity
+* ID of the identity feature state to update, if an override already exists
+
+Make sure you have [JSON View](#json) enabled.
+
+To obtain the feature's internal ID, open the feature in the Flagsmith dashboard, and expand the "JSON Data: Feature"
+section. The feature's internal ID is the `id` field of this JSON object.
+
+To obtain the internal IDs of the target identity, browse to the target identity from the Identities section in the
+Flagsmith dashboard. The identity's internal ID is displayed in the URL, which is `1234` in this example:
+
+```
+https://flagsmith.example.com/project/5/environment/AbCxYz/users/my_identifier/1234
+```
+
+To obtain the ID of the identity feature state, from the same page on the Flagsmith dashboard, expand the "JSON 
+Data: Identity Feature States" section. If you don't see this section, you can create an identity override for this 
+feature and identity combination by calling the
+[Create Identity Feature State](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_create)
+endpoint. For example, this request would set the feature with ID `10` to enabled, with a value of `"blue"`:
+
+```
+curl --request POST 'https://flagsmith.example.com/api/v1/environments/AbCXyZ/identities/1234/featurestates/' \
+     --header 'Accept: application/json' \
+     --header 'Authorization: Token YOUR_ADMIN_API_KEY'
+     --data '{"enabled":true,"feature":10,"feature_state_value":"blue"}'
+```
+
+If you do have an identity feature state already, its ID is the `id` field of the object having the 
+same internal feature ID you had previously found. In this example, if your internal feature ID was `10`, the 
+identity feature state ID would be `200`:
+
+```json
+[
+  {
+     // highlight-next-line
+    "id": 200,
+    "feature_state_value": null,
+    "multivariate_feature_state_values": [],
+    "identity": {
+      "id": 1234,
+      "identifier": "my_user_id"
+    },
+    "enabled": true,
+    "feature": 10
+  },
+  {
+    "id": 300,
+    "feature_state_value": null,
+    "multivariate_feature_state_values": [],
+    "identity": {
+      "id": 1234,
+      "identifier": "my_user_id"
+    },
+    "enabled": false,
+    "feature": 20
+  }
+]
+```
+
+To update this identity override, call the
+[Update Identity Feature State](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_featurestates_update)
+endpoint. For example, this request would enable the feature with internal ID `10` for the identity with internal ID 
+`1234`, assuming there was previously an override with an ID of `200`:
+
+```
+curl --request PUT 'https://flagsmith.example.com/api/v1/environments/AbCXyZ/identities/1234/featurestates/200' \
+     --header 'Accept: application/json' \
+     --header 'Authorization: Token YOUR_ADMIN_API_KEY'
+     --data '{"enabled":true,"feature":10}'
+```
+
+</details>
 
 ### Update a segment's rules
 
