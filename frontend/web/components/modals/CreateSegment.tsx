@@ -94,6 +94,35 @@ enum UserTabs {
 
 let _operators: Operator[] | null = null
 
+const formatError = (error: CreateSegmentError): { errorRuleIndexes: Record<number, 'value' | 'property' | 'all'>, messages: string | string[] } => {
+  if (!error) {
+    return { errorRuleIndexes: [], messages: "" }
+  }
+  const mainRule = error.data.rules[0]
+  const errorMessages: string[] = []
+  const errorRuleIndexes: Record<number, 'value' | 'property' | 'all'> = {}
+
+  mainRule.rules?.forEach((rule, index) => {
+    rule.conditions?.forEach((condition) => {
+      if (!condition.property && !condition.value) {
+        return
+      }
+      if (condition.property) {
+        errorRuleIndexes[index] = 'property'
+        errorMessages.push(`Property - ${condition.property.join(', ')}`)
+      }
+      if (condition.value) {
+        errorRuleIndexes[index] = errorRuleIndexes?.[index] === 'property' ? 'all' : 'value'
+        errorMessages.push(`Value - ${condition.value.join(', ')}`)
+      }
+    })
+  })
+  return {
+    errorRuleIndexes: errorRuleIndexes,
+    messages: errorMessages?.length > 1 ? errorMessages : errorMessages?.[0],
+  }
+}
+
 const CreateSegment: FC<CreateSegmentType> = ({
   className,
   condensed,
@@ -364,10 +393,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 >
                   <Flex className='and-divider__line' />
                   {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
+                    `${displayIndex > 0 ? 'And ' : ''}${rule.type === 'ANY'
+                      ? 'Any of the following'
+                      : 'None of the following'
                     }`,
                   )}
                   <Flex className='and-divider__line' />
@@ -377,6 +405,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
+                  errorType={formatError(error)?.errorRuleIndexes?.[i]}
                   operators={operators}
                   onRemove={() => {
                     setValueChanged(true)
@@ -441,26 +470,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </FormGroup>
   )
 
-  const formatError = (error: CreateSegmentError): string | string[] => {
-    if (!error) {
-      return ""
-    }
-    const mainRule = error.data.rules[0]
-    const errorMessages: string[] = []
-  
-    mainRule.rules.forEach((rule) => {
-      rule.conditions.forEach((condition) => {
-        if (condition.property) {
-          errorMessages.push(`Property - ${condition.property.join(', ')}`)
-        }
-      if (condition.value) {
-        errorMessages.push(`Value - ${condition.value.join(', ')}`)
-        }
-      })
-    })
-    return errorMessages?.length > 1 ? errorMessages : errorMessages?.[0]
-  }
-
   return (
     <>
       {isEdit && !condensed ? (
@@ -490,7 +499,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={formatError(error)}
+                error={formatError(error)?.messages}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -565,7 +574,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={formatError(error)}
+                error={formatError(error)?.messages}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -601,7 +610,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             setShowDescriptions={setShowDescriptions}
             allWarnings={allWarnings}
             rulesEl={rulesEl}
-            error={formatError(error)}
+            error={formatError(error)?.messages}
             isEdit={isEdit}
             segment={segment}
             isSaving={isSaving}
