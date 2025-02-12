@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 import responses
 import simplejson as json
+from common.environments.permissions import UPDATE_FEATURE_STATE
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 from django.utils.formats import get_format
@@ -12,7 +13,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from environments.permissions.constants import UPDATE_FEATURE_STATE
 from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature, FeatureSegment, FeatureState
 from features.serializers import (
@@ -23,6 +23,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GITHUB_API_URL, GITHUB_API_VERSION
 from integrations.github.models import GithubConfiguration, GitHubRepository
 from projects.models import Project
+from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
@@ -77,6 +78,7 @@ def test_create_feature_external_resource(
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
+
     # Given
     repository_owner_name = (
         f"{github_repository.repository_owner}/{github_repository.repository_name}"
@@ -179,6 +181,49 @@ def test_create_feature_external_resource(
         response.json()["results"][0]["metadata"]
         == feature_external_resource_data["metadata"]
     )
+
+
+@responses.activate
+def test_create_feature_external_resource_missing_tags(
+    admin_client_new: APIClient,
+    feature_with_value: Feature,
+    segment_override_for_feature_with_value: FeatureState,
+    environment: Environment,
+    project: Project,
+    github_configuration: GithubConfiguration,
+    github_repository: GitHubRepository,
+    post_request_mock: MagicMock,
+    mock_github_client_generate_token: MagicMock,
+) -> None:
+
+    # Given
+    Tag.objects.all().delete()
+    repository_owner_name = (
+        f"{github_repository.repository_owner}/{github_repository.repository_name}"
+    )
+    feature_external_resource_data = {
+        "type": "GITHUB_ISSUE",
+        "url": f"https://github.com/{repository_owner_name}/issues/35",
+        "feature": feature_with_value.id,
+        "metadata": {"state": "open"},
+    }
+
+    url = reverse(
+        "api-v1:projects:feature-external-resources-list",
+        kwargs={"project_pk": project.id, "feature_pk": feature_with_value.id},
+    )
+
+    # When
+    response = admin_client_new.post(
+        url, data=feature_external_resource_data, format="json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert Tag.objects.count() == 1
+    tag = Tag.objects.first()
+    assert tag.project == project
+    assert tag.label == "Issue Open"
 
 
 def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(

@@ -52,7 +52,7 @@ if settings.DEBUG:
 if settings.SAML_INSTALLED:
     urlpatterns.append(path("api/v1/auth/saml/", include("saml.urls")))
 
-if settings.WORKFLOWS_LOGIC_INSTALLED:
+if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
     workflow_views = importlib.import_module("workflows_logic.views")
     urlpatterns.extend(
         [

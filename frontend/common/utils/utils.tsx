@@ -2,7 +2,6 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  ChangeSet,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -21,8 +20,8 @@ import _ from 'lodash'
 import ErrorMessage from 'components/ErrorMessage'
 import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
-import Format from './format'
 import { defaultFlags } from 'common/stores/default-flags'
+import Color from 'color'
 
 const semver = require('semver')
 
@@ -33,7 +32,8 @@ export type PaidFeature =
   | 'FORCE_2FA'
   | '4_EYES'
   | 'STALE_FLAGS'
-  | 'VERSIONING'
+  | 'VERSIONING_DAYS'
+  | 'AUDIT_DAYS'
   | 'AUTO_SEATS'
   | 'METADATA'
   | 'REALTIME'
@@ -109,9 +109,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return typeof value === 'number'
   },
 
-  copyFeatureName: (featureName: string) => {
-    navigator.clipboard.writeText(featureName)
-    toast('Copied to clipboard')
+  colour(
+    c: string,
+    fallback = Constants.defaultTagColor,
+  ): InstanceType<typeof Color> {
+    let res: Color
+    try {
+      res = Color(c)
+    } catch (_) {
+      res = Color(fallback)
+    }
+    return res
   },
 
   displayLimitAlert(type: string, percentage: number | undefined) {
@@ -166,10 +174,20 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return conditions.find((v) => v.value === operator)
   },
+  
+  copyToClipboard: async (value: string, successMessage?: string, errorMessage?: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast(successMessage ?? 'Copied to clipboard')
+    } catch (error) {
+      toast(errorMessage ?? 'Failed to copy to clipboard')
+      throw error
+    }
+  },
   /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
-  flagsmithFeatureExists(flag: string) {
+flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
   getApproveChangeRequestPermission() {
@@ -261,6 +279,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -275,7 +294,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
-
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -304,6 +322,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getNextPlan: (skipFree?: boolean) => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
+      return planNames.enterprise
+    }
     switch (currentPlan) {
       case planNames.free: {
         return skipFree ? planNames.startup : planNames.scaleUp
@@ -316,43 +337,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
+
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
       return `/organisations`
     }
     return `/organisation/${orgId}/projects`
-  },
-
-  getPermissionList(
-    isAdmin: boolean,
-    permissions: string[] | undefined | null,
-    numberToTruncate = 3,
-  ): {
-    items: string[]
-    truncatedItems: string[]
-  } {
-    if (isAdmin) {
-      return {
-        items: ['Administrator'],
-        truncatedItems: [],
-      }
-    }
-    if (!permissions) return { items: [], truncatedItems: [] }
-
-    const items =
-      permissions && permissions.length
-        ? permissions
-            .slice(0, numberToTruncate)
-            .map((item) => `${Format.enumeration.get(item)}`)
-        : []
-
-    return {
-      items,
-      truncatedItems: (permissions || [])
-        .slice(numberToTruncate)
-        .map((item) => `${Format.enumeration.get(item)}`),
-    }
   },
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
@@ -367,10 +358,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (plan && plan.includes('start-up')) {
       return planNames.startup
     }
-    if (
-      global.flagsmithVersion?.backend.is_enterprise ||
-      (plan && plan.includes('enterprise'))
-    ) {
+    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
       return planNames.enterprise
     }
     return planNames.free
@@ -421,7 +409,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'FLAG_OWNERS':
       case 'RBAC':
       case 'AUDIT':
-      case 'FORCE_2FA':
       case '4_EYES': {
         plan = 'scale-up'
         break
@@ -436,7 +423,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
       case 'SCHEDULE_FLAGS':
       case 'CREATE_ADDITIONAL_PROJECT':
-      case '2FA': {
+      case '2FA':
+      case 'FORCE_2FA': {
         plan = 'start-up' // startup or greater
         break
       }
@@ -564,10 +552,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       id ? `${id}/` : ''
     }`
   },
-
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+  hasEmailProvider: () =>
+    global.flagsmithVersion?.backend?.has_email_provider ?? false,
+  isEnterpriseImage: () => global.flagsmithVersion?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -579,7 +569,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   isSaas: () => global.flagsmithVersion?.backend?.is_saas,
-
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
@@ -606,6 +595,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
+
   openChat() {
     // @ts-ignore
     if (typeof $crisp !== 'undefined') {
@@ -622,7 +612,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
-
   renderWithPermission(permission: boolean, name: string, el: ReactNode) {
     return permission ? (
       el
@@ -643,7 +632,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
-
   validateMetadataType(type: string, value: any) {
     switch (type) {
       case 'int': {

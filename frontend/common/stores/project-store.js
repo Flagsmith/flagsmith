@@ -13,11 +13,19 @@ const BaseStore = require('./base/_store')
 const data = require('../data/base/_data')
 
 const controller = {
-  createEnv: (name, projectId, cloneId, description, metadata) => {
+  createEnv: ({
+    cloneFeatureStatesAsync,
+    cloneId,
+    description,
+    metadata,
+    name,
+    projectId,
+  }) => {
     API.trackEvent(Constants.events.CREATE_ENVIRONMENT)
     store.saving()
     const req = cloneId
       ? data.post(`${Project.api}environments/${cloneId}/clone/`, {
+          clone_feature_states_async: cloneFeatureStatesAsync,
           description,
           name,
         })
@@ -257,13 +265,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.getProject(action.projectId)
       break
     case Actions.CREATE_ENV:
-      controller.createEnv(
-        action.name,
-        action.projectId,
-        action.cloneId,
-        action.description,
-        action.metadata,
-      )
+      controller.createEnv(action)
       break
     case Actions.EDIT_ENVIRONMENT:
       controller.editEnv(action.env)
@@ -273,6 +275,9 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_PROJECT:
       controller.editProject(action.id, action.project)
+      break
+    case Actions.LOGOUT:
+      store.model = null
       break
     default:
   }

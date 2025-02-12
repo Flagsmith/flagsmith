@@ -9,7 +9,7 @@ import CreateEnvironmentPage from './components/pages/CreateEnvironmentPage'
 import UsersPage from './components/pages/UsersPage'
 import UserPage from './components/pages/UserPage'
 import UserIdPage from './components/pages/UserIdPage'
-import IntegrationsPage from 'components/pages/IntegrationsPage'
+import IntegrationsPage from './components/pages/IntegrationsPage'
 import FlagsPage from './components/pages/FeaturesPage'
 import SegmentsPage from './components/pages/SegmentsPage'
 import OrganisationSettingsPage from './components/pages/OrganisationSettingsPage'
@@ -42,59 +42,59 @@ import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPag
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 
 export const routes = {
+  'account': '/account',
+  'account-settings': '/project/:projectId/environment/:environmentId/account',
+  'audit-log': '/project/:projectId/audit-log',
+  'audit-log-item': '/project/:projectId/audit-log/:id',
   'broken': '/broken',
   'change-request':
     '/project/:projectId/environment/:environmentId/change-requests/:id',
   'change-requests':
     '/project/:projectId/environment/:environmentId/change-requests',
+  'compare': '/project/:projectId/compare',
+  'create-environment': '/project/:projectId/environment/create',
+  'create-organisation': '/create',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
+  'feature-history': '/project/:projectId/environment/:environmentId/history',
+  'feature-history-detail':
+    '/project/:projectId/environment/:environmentId/history/:id/',
   'features': '/project/:projectId/environment/:environmentId/features',
   'github-setup': '/github-setup',
   'home': '/home',
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
-  'create-environment': '/project/:projectId/environment/create',
   'invite-link': '/invite-link/:id',
-  'compare': '/project/:projectId/compare',
   'login': '/login',
-  'feature-history': '/project/:projectId/environment/:environmentId/history',
   'maintenance': '/maintenance',
-  'feature-history-detail':
-    '/project/:projectId/environment/:environmentId/history/:id/',
   'not-found': '/404',
   'oauth': '/oauth/:type',
   'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
-  'root': '/',
-  'organisation-settings': '/organisation/:organisationId/settings',
-  'account-settings': '/project/:projectId/environment/:environmentId/account',
-  'signup': '/signup',
-  'audit-log': '/project/:projectId/audit-log',
-  'audit-log-item': '/project/:projectId/audit-log/:id',
-  'password-reset': '/password-reset/confirm/:uid/:token/',
-  'create-organisation': '/create',
-  'scheduled-change':
-    '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
-  'account': '/account',
-  'scheduled-changes':
-    '/project/:projectId/environment/:environmentId/scheduled-changes',
   'organisation-projects': '/organisation/:organisationId/projects',
+  'organisation-settings': '/organisation/:organisationId/settings',
   'organisation-settings-redirect': '/organisation-settings',
-  'widget': '/widget',
   'organisation-usage': '/organisation/:organisationId/usage',
   'organisations': '/organisations',
+  'password-reset': '/password-reset/confirm/:uid/:token/',
   'permissions': '/project/:projectId/permissions',
-  'saml': '/saml',
   'project-redirect': '/project/:projectId',
-  'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
   'project-settings': '/project/:projectId/settings',
-  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
-  'users': '/project/:projectId/environment/:environmentId/users',
+  'root': '/',
+  'saml': '/saml',
+  'scheduled-change':
+    '/project/:projectId/environment/:environmentId/scheduled-changes/:id',
+  'scheduled-changes':
+    '/project/:projectId/environment/:environmentId/scheduled-changes',
+  'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
   'segments': '/project/:projectId/segments',
+  'signup': '/signup',
   'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
+  'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
+  'users': '/project/:projectId/environment/:environmentId/users',
+  'widget': '/widget',
 }
 export default (
   <App>
@@ -104,13 +104,7 @@ export default (
       <Route path={routes['not-found']} exact component={NotFoundErrorPage} />
       <Route path={routes.signup} exact component={HomePage} />
       <Route path={routes.home} exact component={HomePage} />
-      {Utils.getFlagsmithHasFeature('github_integration') && (
-        <Route
-          path={routes['github-setup']}
-          exact
-          component={GitHubSetupPage}
-        />
-      )}
+      <Route path={routes['github-setup']} exact component={GitHubSetupPage} />
       <Route path={routes.maintenance} exact component={Maintenance} />
       <Route
         path={routes['password-reset']}

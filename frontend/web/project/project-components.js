@@ -134,7 +134,7 @@ global.Select = class extends PureComponent {
                   : `${props['data-test']}-option-${index}`
               }
             >
-              .
+              {option.label}
             </a>
           ))}
       </div>
@@ -149,7 +149,7 @@ global.Select = class extends PureComponent {
           className={`react-select ${props.size ? props.size : ''}`}
           classNamePrefix='react-select'
           {...props}
-          components={{ ...(props.components || {}), Option }}
+          components={{ Option, ...(props.components || {}) }}
         />
       </div>
     )

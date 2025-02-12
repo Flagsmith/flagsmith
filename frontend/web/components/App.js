@@ -217,8 +217,7 @@ const App = class extends Component {
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
           if (
-            this.props.location.search.includes('github-redirect') &&
-            Utils.getFlagsmithHasFeature('github_integration')
+            this.props.location.search.includes('github-redirect')
           ) {
             this.context.router.history.replace(
               `/github-setup${this.props.location.search}`,
@@ -439,6 +438,7 @@ const App = class extends Component {
                                       >
                                         <NavLink
                                           id='org-settings-link'
+                                          data-test='org-settings-link'
                                           activeClassName='active'
                                           className={classNames(
                                             'breadcrumb-link',
@@ -571,6 +571,7 @@ const App = class extends Component {
                                   icon={<AuditLogIcon />}
                                   id='audit-log-link'
                                   to={`/project/${projectId}/audit-log`}
+                                  data-test='audit-log-link'
                                 >
                                   Audit Log
                                 </NavSubLink>
@@ -661,6 +662,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={<SettingsIcon />}
                                   id='org-settings-link'
+                                data-test='org-settings-link'
                                   to={`/organisation/${
                                     AccountStore.getOrganisation().id
                                   }/settings`}

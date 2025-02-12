@@ -18,6 +18,7 @@ module.exports = Object.assign({}, EventEmitter.prototype, {
     // console.log('change', this.id)
     this.trigger(DEFAULT_CHANGE_EVENT)
   },
+  error: null,
   goneABitWest() {
     this.hasLoaded = true
     this.isLoading = false

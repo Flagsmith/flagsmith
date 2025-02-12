@@ -1,5 +1,6 @@
 import logging
 import typing
+import uuid
 from copy import deepcopy
 
 from core.models import abstract_base_auditable_model_factory
@@ -63,7 +64,8 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 class Environment(
     LifecycleModel,
     abstract_base_auditable_model_factory(
-        change_details_excluded_fields=["updated_at"]
+        change_details_excluded_fields=["updated_at"],
+        historical_records_excluded_fields=["uuid"],
     ),
     SoftDeleteObject,
 ):
@@ -71,6 +73,7 @@ class Environment(
     related_object_type = RelatedObjectType.ENVIRONMENT
 
     name = models.CharField(max_length=2000)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     description = models.TextField(null=True, blank=True, max_length=20000)
     project = models.ForeignKey(
@@ -178,6 +181,7 @@ class Environment(
         """
         clone = deepcopy(self)
         clone.id = None
+        clone.uuid = uuid.uuid4()
         clone.name = name
         clone.api_key = api_key if api_key else create_hash()
         clone.is_creating = True
@@ -335,7 +339,7 @@ class Environment(
         segments = environment_segments_cache.get(self.id)
         if not segments:
             segments = list(
-                Segment.objects.filter(
+                Segment.live_objects.filter(
                     feature_segments__feature_states__environment=self
                 ).prefetch_related(
                     "rules",

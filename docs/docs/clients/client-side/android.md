@@ -14,19 +14,16 @@ This SDK can be used for Android applications written in Kotlin. The source code
 
 ### Gradle
 
-Make sure your `settings.gradle` includes JitPack as a repository:
-
 ```groovy
 repositories {
     google()
     mavenCentral()
-    maven("https://jitpack.io")
 }
 ```
 
 In your project path `app/build.gradle` add a new dependency:
 
-<CodeBlock>{`implementation("com.flagsmith:flagsmith-kotlin-android-client:v`}<AndroidVersion />"{`)`}</CodeBlock>
+<CodeBlock>{`implementation("com.flagsmith:flagsmith-kotlin-android-client:`}<AndroidVersion />"{`)`}</CodeBlock>
 
 ## Basic Usage
 

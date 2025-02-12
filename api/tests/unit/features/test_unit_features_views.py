@@ -1,4 +1,5 @@
 import json
+import typing
 import uuid
 from datetime import date, datetime, timedelta
 from unittest import mock
@@ -6,6 +7,12 @@ from unittest import mock
 import pytest
 import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+    UPDATE_FEATURE_STATE,
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
@@ -25,14 +32,14 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
+from environments.dynamodb import (
+    DynamoEnvironmentV2Wrapper,
+    DynamoIdentityWrapper,
+)
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_SEGMENT_OVERRIDES,
-    UPDATE_FEATURE_STATE,
-    VIEW_ENVIRONMENT,
-)
 from environments.permissions.models import UserEnvironmentPermission
+from features.dataclasses import EnvironmentFeatureOverridesData
 from features.feature_types import MULTIVARIATE
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
@@ -41,7 +48,6 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project, UserProjectPermission
-from projects.permissions import CREATE_FEATURE, VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Segment
 from tests.types import (
@@ -49,7 +55,16 @@ from tests.types import (
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+from util.mappers import (
+    map_engine_feature_state_to_identity_override,
+    map_engine_identity_to_identity_document,
+    map_identity_override_to_identity_override_document,
+    map_identity_to_engine,
+)
 from webhooks.webhooks import WebhookEventType
+
+if typing.TYPE_CHECKING:
+    from mypy_boto3_dynamodb.service_resource import Table
 
 # patch this function as it's triggering extra threads and causing errors
 mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
@@ -2062,6 +2077,38 @@ def test_list_features_provides_segment_overrides_for_dynamo_enabled_project(
     assert response_json["results"][0]["num_identity_overrides"] is None
 
 
+def test_list_features_calls_get_overrides_data_with_feature_ids(
+    dynamo_enabled_project: Project,
+    dynamo_enabled_project_environment_one: Environment,
+    admin_client_new: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature = Feature.objects.create(
+        name="test_feature", project=dynamo_enabled_project
+    )
+    url = "%s?environment=%d" % (
+        reverse(
+            "api-v1:projects:project-features-list", args=[dynamo_enabled_project.id]
+        ),
+        dynamo_enabled_project_environment_one.id,
+    )
+    mock_get_overrides_data = mocker.patch("features.views.get_overrides_data")
+    mock_get_overrides_data.return_value = {
+        feature.id: EnvironmentFeatureOverridesData()
+    }
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    mock_get_overrides_data.assert_called_once_with(
+        dynamo_enabled_project_environment_one,
+        [feature.id],
+    )
+
+
 def test_create_segment_override_reaching_max_limit(
     admin_client_new: APIClient,
     feature: Feature,
@@ -2686,6 +2733,12 @@ def test_list_features_n_plus_1_without_rbac(
     django_assert_num_queries: DjangoAssertNumQueries,
     environment: Environment,
 ) -> None:
+    """
+    TODO: When running locally, this test can come up with an extra query.
+          It should be tested against CI to ensure it passes, but it would
+          be even better to solve the underlying issue while runnig locally.
+          See: https://github.com/Flagsmith/flagsmith/issues/4898
+    """
     _assert_list_feature_n_plus_1(
         staff_client,
         project,
@@ -3467,3 +3520,55 @@ def test_filter_features_with_owners_and_group_owners_together(
     assert len(response.data["results"]) == 2
     assert response.data["results"][0]["id"] == feature.id
     assert response.data["results"][1]["id"] == feature2.id
+
+
+def test_delete_feature_deletes_any_related_identity_overrides(
+    flagsmith_environments_v2_table: "Table",
+    flagsmith_identities_table: "Table",
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    environment: Environment,
+    feature: Feature,
+    identity_featurestate: FeatureState,
+    identity: Identity,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    engine_identity = map_identity_to_engine(identity, with_overrides=True)
+    dynamodb_identity_wrapper.put_item(
+        map_engine_identity_to_identity_document(engine_identity)
+    )
+    dynamodb_wrapper_v2.write_environments(environments=[environment])
+    flagsmith_environments_v2_table.put_item(
+        Item=map_identity_override_to_identity_override_document(
+            map_engine_feature_state_to_identity_override(
+                feature_state=engine_identity.identity_features[0],
+                identity_uuid=str(engine_identity.identity_uuid),
+                identifier=engine_identity.identifier,
+                environment_api_key=environment.api_key,
+                environment_id=environment.id,
+            ),
+        )
+    )
+
+    feature.project.enable_dynamo_db = True
+    feature.project.save()
+
+    delete_feature_url = reverse(
+        "api-v1:projects:project-features-detail", args=[feature.project_id, feature.id]
+    )
+
+    # When
+    delete_feature_response = admin_client_new.delete(delete_feature_url)
+
+    # Then
+    assert delete_feature_response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert (
+        flagsmith_environments_v2_table.query(
+            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(
+                environment_id=environment.id, feature_id=feature.id
+            )
+        )["Count"]
+        == 0
+    )

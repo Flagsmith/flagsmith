@@ -5,6 +5,12 @@ from unittest.mock import MagicMock
 
 import boto3
 import pytest
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -27,11 +33,6 @@ from api_keys.user import APIKeyUser
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
@@ -59,18 +60,24 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
-from organisations.subscriptions.constants import CHARGEBEE, XERO
+from organisations.subscriptions.constants import (
+    CHARGEBEE,
+    FREE_PLAN_ID,
+    SCALE_UP,
+    STARTUP,
+    XERO,
+)
 from permissions.models import PermissionModel
 from projects.models import (
     Project,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from projects.permissions import VIEW_PROJECT
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
+    AdminClientAuthType,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -325,6 +332,33 @@ def enterprise_subscription(organisation: Organisation) -> Subscription:
 
 
 @pytest.fixture()
+def startup_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=STARTUP, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def scale_up_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=SCALE_UP, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
+def free_subscription(organisation: Organisation) -> Subscription:
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=FREE_PLAN_ID, subscription_id="subscription-id"
+    )
+    organisation.refresh_from_db()
+    return organisation.subscription
+
+
+@pytest.fixture()
 def project(organisation):
     return Project.objects.create(name="Test Project", organisation=organisation)
 
@@ -438,14 +472,14 @@ def with_project_permissions(
 
 
 @pytest.fixture()
-def environment_v2_versioning(environment):
+def environment_v2_versioning(environment: Environment) -> Environment:
     enable_v2_versioning(environment.id)
     environment.refresh_from_db()
     return environment
 
 
 @pytest.fixture()
-def identity(environment):
+def identity(environment: Environment) -> Identity:
     return Identity.objects.create(identifier="test_identity", environment=environment)
 
 
@@ -514,9 +548,16 @@ def feature(project: Project, environment: Environment) -> Feature:
 
 
 @pytest.fixture()
-def change_request(environment, admin_user):
+def change_request(environment: Environment, admin_user: FFAdminUser) -> ChangeRequest:
     return ChangeRequest.objects.create(
         environment=environment, title="Test CR", user_id=admin_user.id
+    )
+
+
+@pytest.fixture()
+def project_change_request(project: Project, admin_user: FFAdminUser) -> ChangeRequest:
+    return ChangeRequest.objects.create(
+        project=project, title="Test Project CR", user_id=admin_user.id
     )
 
 
@@ -668,7 +709,7 @@ def admin_user_email(admin_user: FFAdminUser) -> str:
 
 @pytest.fixture
 def master_api_key_object(
-    master_api_key: typing.Tuple[MasterAPIKey, str]
+    master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> MasterAPIKey:
     return master_api_key[0]
 
@@ -685,7 +726,7 @@ def admin_user_id(admin_user: FFAdminUser) -> str:
 
 @pytest.fixture
 def admin_master_api_key_object(
-    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> MasterAPIKey:
     return admin_master_api_key[0]
 
@@ -697,7 +738,7 @@ def api_key_user(master_api_key_object: MasterAPIKey) -> APIKeyUser:
 
 @pytest.fixture()
 def admin_master_api_key_client(
-    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> APIClient:
     key = admin_master_api_key[1]
     # Can not use `api_client` fixture here because:
@@ -1137,23 +1178,22 @@ def github_repository(
     )
 
 
-@pytest.fixture(
-    params=[
-        "admin_client_original",
-        "admin_master_api_key_client",
-    ]
-)
-def admin_client_new(
+@pytest.fixture(params=AdminClientAuthType.__args__)
+def admin_client_auth_type(
     request: pytest.FixtureRequest,
+) -> AdminClientAuthType:
+    return request.param
+
+
+@pytest.fixture
+def admin_client_new(
+    admin_client_auth_type: AdminClientAuthType,
     admin_client_original: APIClient,
     admin_master_api_key_client: APIClient,
 ) -> APIClient:
-    if request.param == "admin_client_original":
-        yield admin_client_original
-    elif request.param == "admin_master_api_key_client":
-        yield admin_master_api_key_client
-    else:
-        assert False, "Request param mismatch"
+    if admin_client_auth_type == "master_api_key":
+        return admin_master_api_key_client
+    return admin_client_original
 
 
 @pytest.fixture()

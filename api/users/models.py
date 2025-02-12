@@ -10,7 +10,8 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, LifecycleModel, hook
+from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook
+from django_lifecycle.conditions import WhenFieldHasChanged
 
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_without_organisation,
@@ -99,7 +100,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
     email = models.EmailField(unique=True, null=False)
     objects = UserManager()
     username = models.CharField(unique=True, max_length=150, null=True, blank=True)
-    first_name = models.CharField("first name", max_length=30)
+    first_name = models.CharField("first name", max_length=150)
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
@@ -113,7 +114,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "username" if settings.LDAP_ENABLED else "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "sign_up_type"]
 
     class Meta:
@@ -133,6 +134,18 @@ class FFAdminUser(LifecycleModel, AbstractUser):
                     minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
                 ),
             )
+
+    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
+    def send_warning_email(self):
+        from users.tasks import send_email_changed_notification_email
+
+        send_email_changed_notification_email.delay(
+            args=(
+                self.first_name,
+                settings.DEFAULT_FROM_EMAIL,
+                self.initial_value("email"),
+            )
+        )
 
     def delete_orphan_organisations(self):
         Organisation.objects.filter(

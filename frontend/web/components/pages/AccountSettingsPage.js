@@ -188,7 +188,9 @@ class TheComponent extends Component {
                     />
                     <div className='col-md-6'>
                       <form className='mb-0' onSubmit={this.save}>
-                        {AccountStore.model.auth_type === 'EMAIL' && (
+                        {!['LDAP', 'SAML'].includes(
+                          AccountStore.model.auth_type,
+                        ) && (
                           <div>
                             <InputGroup
                               className='mt-2'
@@ -385,6 +387,7 @@ class TheComponent extends Component {
                             }
                             type='password'
                             name='Current Password*'
+                            autocomplete='current-password'
                           />
                           <InputGroup
                             className='mt-4'
@@ -402,6 +405,7 @@ class TheComponent extends Component {
                             }
                             isValid={new_password1 && new_password1.length}
                             type='password'
+                            autocomplete='new-password'
                             name='New Password*'
                           />
                           <InputGroup
@@ -420,6 +424,7 @@ class TheComponent extends Component {
                             }
                             isValid={new_password2 && new_password2.length}
                             type='password'
+                            autocomplete='new-password'
                             name='Confirm New Password*'
                           />
                           {passwordError && (

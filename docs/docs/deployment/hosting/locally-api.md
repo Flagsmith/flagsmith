@@ -187,23 +187,23 @@ the below variables will be ignored.
 - `ENABLE_ADMIN_ACCESS_USER_PASS`: Boolean. Set this flag to enable login to admin panel using username and password.
 - `USE_X_FORWARDED_HOST`: Boolean. Default `False`. Specifies whether to use the X-Forwarded-Host header in preference
   to the Host header. This should only be enabled if a proxy which sets this header is in use.
-  [More Info](https://docs.djangoproject.com/en/4.0/ref/settings/#std:setting-USE_X_FORWARDED_HOST).
+  [More Info](https://docs.djangoproject.com/en/4.2/ref/settings/#std:setting-USE_X_FORWARDED_HOST).
 - `SECURE_PROXY_SSL_HEADER_NAME`: String. The name of the header looked for by Django's
-  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-proxy-ssl-header). Defaults to
+  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-proxy-ssl-header). Defaults to
   `HTTP_X_FORWARDED_PROTO`.
 - `SECURE_PROXY_SSL_HEADER_VALUE`: String. The value of the header looked for by Django's
-  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-proxy-ssl-header). Defaults to
+  [`SECURE_PROXY_SSL_HEADER`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-proxy-ssl-header). Defaults to
   `https`.
 - `DJANGO_SECURE_REDIRECT_EXEMPT`: List. Passthrough of Django's
-  [`SECURE_REDIRECT_EXEMPT`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-redirect-exempt). Defaults to an
+  [`SECURE_REDIRECT_EXEMPT`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-redirect-exempt). Defaults to an
   empty list `[]`.
 - `DJANGO_SECURE_REFERRER_POLICY`: String. Passthrough of Django's
-  [`SECURE_REFERRER_POLICY`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-referrer-policy). Defaults to
+  [`SECURE_REFERRER_POLICY`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-referrer-policy). Defaults to
   `same-origin`.
 - `DJANGO_SECURE_SSL_HOST`: String. Passthrough of Django's
-  [`SECURE_SSL_HOST`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-ssl-host). Defaults to `None`.
+  [`SECURE_SSL_HOST`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-ssl-host). Defaults to `None`.
 - `DJANGO_SECURE_SSL_REDIRECT`: Boolean. Passthrough of Django's
-  [`SECURE_SSL_REDIRECT`](https://docs.djangoproject.com/en/4.0/ref/settings/#secure-ssl-redirect). Defaults to `False`.
+  [`SECURE_SSL_REDIRECT`](https://docs.djangoproject.com/en/4.2/ref/settings/#secure-ssl-redirect). Defaults to `False`.
 - [`APPLICATION_INSIGHTS_CONNECTION_STRING`](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview).
   String. Connection string to set up Flagsmith to send telemetry to Azure Application Insights.
 - [`OPENCENSUS_SAMPLING_RATE`](https://opencensus.io/tracing/sampling/probabilistic/): Float. The tracer sample rate.
@@ -237,7 +237,7 @@ the below variables will be ignored.
 - `AXES_FAILURE_LIMIT`: The integer number of login attempts allowed before a record is created for the failed logins.
   Defaults to `10`.
 
-#### Email Environment Variables
+#### Email Environment Variables {#email}
 
 :::note
 
@@ -392,8 +392,8 @@ variables:
 | Environment Variable                                               | Description                                                                                                                    | Example value                                          | Default                                       |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
 | <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_SECONDS</code>  | Number of seconds to cache the response to `GET /api/v1/flags`                                                                 | `60`                                                   | `0`                                           |
-| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_BACKEND</code>  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
-| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_LOCATION</code> | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `get_flags_endpoint_cache`                    |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_BACKEND</code>  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
+| <code>GET\_[FLAGS&#124;IDENTITIES]\_ENDPOINT_CACHE_LOCATION</code> | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `get_flags_endpoint_cache`                    |
 
 An example configuration to cache both flags and identities requests for 30 seconds in a memcached instance hosted at
 `memcached-container`:
@@ -416,8 +416,8 @@ cache will be cleared automatically by certain actions in the platform when the 
 | Environment Variable         | Description                                                                                                                    | Example value                                          | Default                                       |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
 | `ENVIRONMENT_CACHE_SECONDS`  | Number of seconds to cache the environment for                                                                                 | `60`                                                   | `86400` ( = 24h)                              |
-| `ENVIRONMENT_CACHE_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
-| `ENVIRONMENT_CACHE_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/3.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-objects`                         |
+| `ENVIRONMENT_CACHE_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
+| `ENVIRONMENT_CACHE_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-objects`                         |
 
 ## Unified Front End and Back End Build
 

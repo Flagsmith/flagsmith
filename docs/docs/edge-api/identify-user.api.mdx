@@ -1,0 +1,71 @@
+---
+id: identify-user
+title: "Identify user"
+description: "Identify a user and retrieve their flags and traits in response."
+sidebar_label: "Identify user"
+hide_title: true
+hide_table_of_contents: true
+api: eJztVm1P2zAQ/iuRPzd9G2Oj38pgEkKiiDJpEkLVJbk2Zomd2U6hqvrfd2e3IStbx6bt2/qBmvNzr8+dr2vhYGHF6E6cZwuMxtcX4r4jMrSpkZWTWomRuMhQOTlfRRDVFk0EKosMOiNxiZHLUZpoXpAVf+EMSGcjqQhiK60sdkVHGPxao3WnOluJ0VqkWjmyyUeoqkKmwK56D5b9rYVNcyyBT/gEZVUgHTcd4VYVnYROHjB1ZLQyukLjJFqGBsf+FHBgDKwIJh2Wbfkh/dkXXLWglpJUC4I2cYgrKFFwMB6+hKLm6IRWOJlTGQ+pnnbH3egUDKS1JRMNVNVlgqYNPRq2rhOtCwTVvnemxg3xpOqigKSRcFjSeV+3HJ5giQzsSfLwIrG2RmCZq3ETyDoDB4RgzI5KX6hhv89f3/fI5JLiezWtr6TkUOjtwg7fwdH7N8kghuRkGB+lw+P45H2/H2dv55AN+4MUjoE581365x2CimudtYA7atg2gqsNzqwDh7/XFxAbLLXDmOo3l4s4KP+LBmnC9Dlsid+JfjVgsp25JKYXPiaDkE1UsQou9mIUisflIHk214+zHI2eJaAUmWwm/ZDW9HZ8dTa+Ods26C6XjyGXKZMQuvv/q/CDV+EnYx+G/Fpbj/GwEl2uiXhRsZSqAy6n/3qyUSMhLYUlGusTrU1B97lzlR31ekhLpQuV7PrRK6XLu6kueyTpLQdif9E0K4izsJjWRrqVt3qultJoVZLTS+bi7r4NmfLDEvjaBz7zXkkWEPHsKaem9cUN/Sk+xy3FmIGcPD9cN8+b67y9jKSa6/YUNbF3BNciJDTgnuDKleBfwK23ZqHyOt2vQms7/o3Nu03f4ZPrVQVI/1h5ktZbMu9Ei0yqas5Mk3S9TsDiJ1NsNiymMhhfeUoQjAwNRjx0dsVknvygiA8hgfiWfTPcj8PLncDtHDTGaYqVO4i9bzXj9WR6S+Bk+3Oi1BnrGHjk94j+jgQdtC+o7wovW4sC1KKGBWODTf58A68dFwc=
+sidebar_class_name: "post api-method"
+info_path: edge-api/edge-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Identify user"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/identities"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Identify a user and retrieve their flags and traits in response.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={{"content":{"application/json":{"schema":{"example":{},"type":"object","properties":{"traits":{"type":"array","items":{"type":"object","properties":{"trait_key":{"type":"string","example":"Name"},"trait_value":{"oneOf":[{"type":"string","example":"B.A. Baracus"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true}},"title":"Trait"}},"identifier":{"type":"string"}},"title":"IdentitiesRequestData"}}}}}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"200":{"description":"OK","content":{"application/json":{"schema":{"items":{"type":"object","properties":{"identifier":{"type":"string","example":"27a483b1-ab92-4c26-9800-d5fad201ca6a"},"flags":{"type":"array","items":{"type":"object","properties":{"enabled":{"type":"boolean"},"feature_state_value":{"oneOf":[{"type":"string","example":"a-remote-config-value"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true},"feature":{"title":"feature","type":"object","properties":{"id":{"type":"integer","readOnly":true,"example":42},"name":{"type":"string","example":"show_hero_banner"},"type":{"type":"string","example":"STANDARD"}}}},"title":"FeatureState"}},"traits":{"type":"array","items":{"type":"object","properties":{"trait_key":{"type":"string","example":"Name"},"trait_value":{"oneOf":[{"type":"string","example":"B.A. Baracus"},{"type":"number","example":42},{"type":"boolean","example":true}],"nullable":true}},"title":"Trait"}}},"title":"IdentitiesResponsePost"}}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

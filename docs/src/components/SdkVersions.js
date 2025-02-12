@@ -4,7 +4,9 @@ import { maxSatisfying } from 'semver';
 
 const Version = ({ sdk, spec = '*', options = {} }) => {
     const {
-        siteConfig: { CI },
+        siteConfig: {
+            customFields: { CI },
+        },
     } = useDocusaurusContext();
     const versions = usePluginData('flagsmith-versions')[sdk];
     if (!versions) throw new Error('unknown sdk: ' + sdk);
@@ -19,8 +21,11 @@ const Version = ({ sdk, spec = '*', options = {} }) => {
 
 export const JavaVersion = ({ spec = '~7' }) => Version({ sdk: 'java', spec });
 export const AndroidVersion = ({ spec = '~1' }) => Version({ sdk: 'android', spec });
-export const IOSVersion = ({ spec = '~3' }) => Version({ sdk: 'ios', spec });
-export const DotnetVersion = ({ spec = '~5' }) => Version({ sdk: 'dotnet', spec });
+export const CocoapodsVersion = ({ spec = '~3' }) => Version({ sdk: 'cocoapods', spec });
+export const SwiftPMVersion = ({ spec = '~3' }) => Version({ sdk: 'swiftpm', spec });
+export const DotnetVersion = ({ spec = '~7' }) => Version({ sdk: 'dotnet', spec });
 export const ElixirVersion = ({ spec = '~2' }) => Version({ sdk: 'elixir', spec });
 export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
-export const JsVersion = ({ spec = '~7' }) => Version({ sdk: 'js', spec });
+export const JsVersion = ({ spec = '~8' }) => Version({ sdk: 'js', spec });
+export const NodejsVersion = ({ spec } = { spec: '~5' }) => Version({ sdk: 'nodejs', spec });
+export const FlutterVersion = ({ spec = '~6' }) => Version({ sdk: 'flutter', spec });

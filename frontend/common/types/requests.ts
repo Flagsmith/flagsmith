@@ -14,6 +14,8 @@ import {
   UserGroup,
   AttributeName,
   Identity,
+  Role,
+  RolePermission,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -67,6 +69,13 @@ export type Req = {
     environments?: string
   }>
   getOrganisations: {}
+  uploadOrganisationLicence: {
+    id: number
+    body: {
+      licence_signature: File
+      licence: File
+    }
+  }
   getProjects: {
     organisationId: string
   }
@@ -105,6 +114,10 @@ export type Req = {
   getPermission: { id: string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: string }
+  getHealthEvents: { projectId: number | string }
+  getHealthProviders: { projectId: number }
+  createHealthProvider: { projectId: number; name: string }
+  deleteHealthProvider: { projectId: number; name: string }
   updateTag: { projectId: string; tag: Tag }
   deleteTag: {
     id: number
@@ -158,7 +171,7 @@ export type Req = {
   updateRole: {
     organisation_id: number
     role_id: number
-    body: { description: string | null; name: string }
+    body: Role
   }
   deleteRole: { organisation_id: number; role_id: number }
   getRolePermissionEnvironment: {
@@ -179,7 +192,7 @@ export type Req = {
     level: PermissionLevel
     body: {
       admin?: boolean
-      permissions: string[]
+      permissions: RolePermission['permissions']
       project: number
       environment: number
     }

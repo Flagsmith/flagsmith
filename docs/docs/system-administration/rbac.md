@@ -134,6 +134,11 @@ Assigning roles to groups has several benefits over assigning permissions direct
 
 Permissions can be assigned at four levels: user group, organisation, project, and environment.
 
+## Tagged Permissions
+
+When creating a role, some permissions allow you to grant access when features have specific tags. For example, you can
+configure a role to create change requests only for features tagged with "marketing".
+
 ### User group
 
 | Permission  | Ability                                          |
@@ -149,25 +154,27 @@ Permissions can be assigned at four levels: user group, organisation, project, a
 
 ### Project
 
-| Permission         | Ability                                                                                                                                      |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Administrator      | Grants full read and write access to all environments, features and segments.                                                                |
-| View Project       | Allows viewing this project. The project is hidden from users without this permission.                                                       |
-| Create Environment | Allows creating new environments in this project. Users are automatically granted Administrator permissions on any environments they create. |
-| Create Feature     | Allows creating new features in all environments.                                                                                            |
-| Delete Feature     | Allows deleting features from all environments.                                                                                              |
-| Manage Segments    | Grants write access to segments in this project.                                                                                             |
-| View audit log     | Allows viewing all audit log entries for this project.                                                                                       |
+### Project
+
+| Permission         | Ability                                                                                                                                      | Supports Tags |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Administrator      | Grants full read and write access to all environments, features, and segments.                                                               |               |
+| View Project       | Allows viewing this project. The project is hidden from users without this permission.                                                       |               |
+| Create Environment | Allows creating new environments in this project. Users are automatically granted Administrator permissions on any environments they create. |               |
+| Create Feature     | Allows creating new features in all environments.                                                                                            |               |
+| Delete Feature     | Allows deleting features from all environments.                                                                                              | Yes           |
+| Manage Segments    | Grants write access to segments in this project.                                                                                             |               |
+| View audit log     | Allows viewing all audit log entries for this project.                                                                                       |               |
 
 ### Environment
 
-| Permission               | Ability                                                                                                                 |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Administrator            | Grants full read and write access to all feature states, overrides, identities and change requests in this environment. |
-| View Environment         | Allows viewing this environment. The environment is hidden from users without this permission.                          |
-| Update Feature State     | Allows updating updating any feature state or values in this environment.                                               |
-| Manage Identities        | Grants read and write access to identities in this environment.                                                         |
-| Manage Segment Overrides | Grants write access to segment overrides in this environment.                                                           |
-| Create Change Request    | Allows creating change requests for features in this environment.                                                       |
-| Approve Change Request   | Allows approving or denying change requests in this environment.                                                        |
-| View Identities          | Grants read-only access to identities in this environment.                                                              |
+| Permission               | Ability                                                                                                                  | Supports Tags |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| Administrator            | Grants full read and write access to all feature states, overrides, identities, and change requests in this environment. |               |
+| View Environment         | Allows viewing this environment. The environment is hidden from users without this permission.                           |               |
+| Update Feature State     | Allows updating any feature state or values in this environment.                                                         | Yes           |
+| Manage Identities        | Grants read and write access to identities in this environment.                                                          |               |
+| Manage Segment Overrides | Grants write access to segment overrides in this environment.                                                            |               |
+| Create Change Request    | Allows creating change requests for features in this environment.                                                        | Yes           |
+| Approve Change Request   | Allows approving or denying change requests in this environment.                                                         | Yes           |
+| View Identities          | Grants read-only access to identities in this environment.                                                               |               |

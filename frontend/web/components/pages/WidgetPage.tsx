@@ -1,4 +1,10 @@
-import React, { Component, ReactNode, useEffect, useState } from 'react'
+import React, {
+  Component,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
 import FeatureRow from 'components/FeatureRow'
@@ -27,7 +33,7 @@ import {
   TagStrategy,
 } from 'common/types/responses'
 import { useCustomWidgetOptionString } from '@datadog/ui-extensions-react'
-import client from 'components/datadog-client'
+import ddClient from 'components/datadog-client'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import AuditLog from 'components/AuditLog'
 import OrgEnvironmentSelect from 'components/OrgEnvironmentSelect'
@@ -228,201 +234,194 @@ const FeatureList = class extends Component<FeatureListType> {
                         !!this.state.tags.length) &&
                         !isLoading) ? (
                         <div>
-                          <Permission
-                            level='environment'
-                            permission={Utils.getManageFeaturePermission(
-                              Utils.changeRequestsEnabled(
-                                environment &&
-                                  environment.minimum_change_request_approvals,
-                              ),
-                            )}
-                            id={this.props.environmentId}
-                          >
-                            {({ permission }) => (
-                              <div>
-                                <PanelSearch
-                                  className='no-pad'
-                                  id='features-list'
-                                  icon='ion-ios-rocket'
-                                  title='Features'
-                                  renderSearchWithNoResults
-                                  itemHeight={65}
-                                  isLoading={FeatureListStore.isLoading}
-                                  paging={FeatureListStore.paging}
-                                  search={this.state.search}
-                                  onChange={(e: InputEvent) => {
-                                    this.setState(
-                                      { search: Utils.safeParseEventValue(e) },
-                                      () => {
-                                        AppActions.searchFeatures(
-                                          this.props.projectId,
-                                          this.props.environmentId,
-                                          true,
-                                          this.state.search,
-                                          this.state.sort,
-                                          this.getFilter(),
-                                          this.props.pageSize,
+                          <div>
+                            <PanelSearch
+                              className='no-pad'
+                              id='features-list'
+                              icon='ion-ios-rocket'
+                              title='Features'
+                              renderSearchWithNoResults
+                              itemHeight={65}
+                              isLoading={FeatureListStore.isLoading}
+                              paging={FeatureListStore.paging}
+                              search={this.state.search}
+                              onChange={(e: InputEvent) => {
+                                this.setState(
+                                  { search: Utils.safeParseEventValue(e) },
+                                  () => {
+                                    AppActions.searchFeatures(
+                                      this.props.projectId,
+                                      this.props.environmentId,
+                                      true,
+                                      this.state.search,
+                                      this.state.sort,
+                                      this.getFilter(),
+                                      this.props.pageSize,
+                                    )
+                                  },
+                                )
+                              }}
+                              nextPage={() =>
+                                AppActions.getFeatures(
+                                  this.props.projectId,
+                                  this.props.environmentId,
+                                  true,
+                                  this.state.search,
+                                  this.state.sort,
+                                  (
+                                    FeatureListStore.paging as PagedResponse<ProjectFlag>
+                                  ).next || 1,
+                                  this.getFilter(),
+                                  this.props.pageSize,
+                                )
+                              }
+                              prevPage={() =>
+                                AppActions.getFeatures(
+                                  this.props.projectId,
+                                  this.props.environmentId,
+                                  true,
+                                  this.state.search,
+                                  this.state.sort,
+                                  (
+                                    FeatureListStore.paging as PagedResponse<ProjectFlag>
+                                  ).previous,
+                                  this.getFilter(),
+                                  this.props.pageSize,
+                                )
+                              }
+                              goToPage={(page: number) =>
+                                AppActions.getFeatures(
+                                  this.props.projectId,
+                                  this.props.environmentId,
+                                  true,
+                                  this.state.search,
+                                  this.state.sort,
+                                  page,
+                                  this.getFilter(),
+                                  this.props.pageSize,
+                                )
+                              }
+                              onSortChange={(sort: string) => {
+                                this.setState({ sort }, () => {
+                                  AppActions.getFeatures(
+                                    this.props.projectId,
+                                    this.props.environmentId,
+                                    true,
+                                    this.state.search,
+                                    this.state.sort,
+                                    0,
+                                    this.getFilter(),
+                                    this.props.pageSize,
+                                  )
+                                })
+                              }}
+                              sorting={[
+                                {
+                                  default: true,
+                                  label: 'Name',
+                                  order: 'asc',
+                                  value: 'name',
+                                },
+                                {
+                                  label: 'Created Date',
+                                  order: 'asc',
+                                  value: 'created_date',
+                                },
+                              ]}
+                              items={projectFlags}
+                              header={
+                                this.props.hideTags ? null : (
+                                  <Row className='px-0 pt-0'>
+                                    <TagFilter
+                                      showUntagged
+                                      showClearAll={
+                                        (this.state.tags &&
+                                          !!this.state.tags.length) ||
+                                        this.state.showArchived
+                                      }
+                                      onClearAll={() =>
+                                        this.setState(
+                                          { showArchived: false, tags: [] },
+                                          this.filter,
                                         )
-                                      },
-                                    )
-                                  }}
-                                  nextPage={() =>
-                                    AppActions.getFeatures(
-                                      this.props.projectId,
-                                      this.props.environmentId,
-                                      true,
-                                      this.state.search,
-                                      this.state.sort,
-                                      (
-                                        FeatureListStore.paging as PagedResponse<ProjectFlag>
-                                      ).next || 1,
-                                      this.getFilter(),
-                                      this.props.pageSize,
-                                    )
-                                  }
-                                  prevPage={() =>
-                                    AppActions.getFeatures(
-                                      this.props.projectId,
-                                      this.props.environmentId,
-                                      true,
-                                      this.state.search,
-                                      this.state.sort,
-                                      (
-                                        FeatureListStore.paging as PagedResponse<ProjectFlag>
-                                      ).previous,
-                                      this.getFilter(),
-                                      this.props.pageSize,
-                                    )
-                                  }
-                                  goToPage={(page: number) =>
-                                    AppActions.getFeatures(
-                                      this.props.projectId,
-                                      this.props.environmentId,
-                                      true,
-                                      this.state.search,
-                                      this.state.sort,
-                                      page,
-                                      this.getFilter(),
-                                      this.props.pageSize,
-                                    )
-                                  }
-                                  onSortChange={(sort: string) => {
-                                    this.setState({ sort }, () => {
-                                      AppActions.getFeatures(
-                                        this.props.projectId,
-                                        this.props.environmentId,
-                                        true,
-                                        this.state.search,
-                                        this.state.sort,
-                                        0,
-                                        this.getFilter(),
-                                        this.props.pageSize,
-                                      )
-                                    })
-                                  }}
-                                  sorting={[
-                                    {
-                                      default: true,
-                                      label: 'Name',
-                                      order: 'asc',
-                                      value: 'name',
-                                    },
-                                    {
-                                      label: 'Created Date',
-                                      order: 'asc',
-                                      value: 'created_date',
-                                    },
-                                  ]}
-                                  items={projectFlags}
-                                  header={
-                                    this.props.hideTags ? null : (
-                                      <Row className='px-0 pt-0'>
-                                        <TagFilter
-                                          showUntagged
-                                          showClearAll={
-                                            (this.state.tags &&
-                                              !!this.state.tags.length) ||
-                                            this.state.showArchived
-                                          }
-                                          onClearAll={() =>
+                                      }
+                                      projectId={projectId}
+                                      value={this.state.tags}
+                                      tagStrategy={this.state.tag_strategy}
+                                      onChangeStrategy={(tag_strategy) => {
+                                        this.setState(
+                                          { tag_strategy },
+                                          this.filter,
+                                        )
+                                      }}
+                                      onChange={(tags) => {
+                                        FeatureListStore.isLoading = true
+                                        if (
+                                          tags.includes('') &&
+                                          tags.length > 1
+                                        ) {
+                                          if (!this.state.tags.includes('')) {
                                             this.setState(
-                                              { showArchived: false, tags: [] },
+                                              { tags: [''] },
+                                              this.filter,
+                                            )
+                                          } else {
+                                            this.setState(
+                                              {
+                                                tags: tags.filter((v) => !!v),
+                                              },
                                               this.filter,
                                             )
                                           }
-                                          projectId={projectId}
-                                          value={this.state.tags}
-                                          tagStrategy={this.state.tag_strategy}
-                                          onChangeStrategy={(tag_strategy) => {
-                                            this.setState(
-                                              { tag_strategy },
-                                              this.filter,
-                                            )
-                                          }}
-                                          onChange={(tags) => {
+                                        } else {
+                                          this.setState({ tags }, this.filter)
+                                        }
+                                        AsyncStorage.setItem(
+                                          `${projectId}tags`,
+                                          JSON.stringify(tags),
+                                        )
+                                      }}
+                                    >
+                                      <div className='mr-2'>
+                                        <Tag
+                                          selected={this.state.showArchived}
+                                          onClick={() => {
                                             FeatureListStore.isLoading = true
-                                            if (
-                                              tags.includes('') &&
-                                              tags.length > 1
-                                            ) {
-                                              if (
-                                                !this.state.tags.includes('')
-                                              ) {
-                                                this.setState(
-                                                  { tags: [''] },
-                                                  this.filter,
-                                                )
-                                              } else {
-                                                this.setState(
-                                                  {
-                                                    tags: tags.filter(
-                                                      (v) => !!v,
-                                                    ),
-                                                  },
-                                                  this.filter,
-                                                )
-                                              }
-                                            } else {
-                                              this.setState(
-                                                { tags },
-                                                this.filter,
-                                              )
-                                            }
-                                            AsyncStorage.setItem(
-                                              `${projectId}tags`,
-                                              JSON.stringify(tags),
+                                            this.setState(
+                                              {
+                                                showArchived:
+                                                  !this.state.showArchived,
+                                              },
+                                              this.filter,
                                             )
                                           }}
-                                        >
-                                          <div className='mr-2'>
-                                            <Tag
-                                              selected={this.state.showArchived}
-                                              onClick={() => {
-                                                FeatureListStore.isLoading =
-                                                  true
-                                                this.setState(
-                                                  {
-                                                    showArchived:
-                                                      !this.state.showArchived,
-                                                  },
-                                                  this.filter,
-                                                )
-                                              }}
-                                              className='px-2 py-2 ml-2 mr-2'
-                                              tag={{
-                                                color: '#0AADDF',
-                                                label: 'Archived',
-                                              }}
-                                            />
-                                          </div>
-                                        </TagFilter>
-                                      </Row>
-                                    )
-                                  }
-                                  renderRow={(
-                                    projectFlag: ProjectFlag,
-                                    i: number,
-                                  ) => (
+                                          className='px-2 py-2 ml-2 mr-2'
+                                          tag={{
+                                            color: '#0AADDF',
+                                            label: 'Archived',
+                                          }}
+                                        />
+                                      </div>
+                                    </TagFilter>
+                                  </Row>
+                                )
+                              }
+                              renderRow={(
+                                projectFlag: ProjectFlag,
+                                i: number,
+                              ) => (
+                                <Permission
+                                  level='environment'
+                                  tags={projectFlag.tags}
+                                  permission={Utils.getManageFeaturePermission(
+                                    Utils.changeRequestsEnabled(
+                                      environment &&
+                                        environment.minimum_change_request_approvals,
+                                    ),
+                                  )}
+                                  id={this.props.environmentId}
+                                >
+                                  {({ permission }) => (
                                     <FeatureRow
                                       hideRemove
                                       hideAudit
@@ -440,11 +439,11 @@ const FeatureList = class extends Component<FeatureListType> {
                                       projectFlag={projectFlag}
                                     />
                                   )}
-                                  filterRow={() => true}
-                                />
-                              </div>
-                            )}
-                          </Permission>
+                                </Permission>
+                              )}
+                              filterRow={() => true}
+                            />
+                          </div>
                         </div>
                       ) : null}
                     </div>
@@ -462,6 +461,9 @@ const FeatureList = class extends Component<FeatureListType> {
 export default function Widget() {
   useEffect(() => {
     document.body.classList.add('widget-mode')
+  }, [])
+  const client = useMemo(() => {
+    return ddClient()
   }, [])
   const projectId = useCustomWidgetOptionString(client, 'Project')
   const environmentId = useCustomWidgetOptionString(client, 'Environment')
