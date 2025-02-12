@@ -54,6 +54,8 @@ import moment from 'moment'
 import { removeIdentity } from './UsersPage'
 import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
 import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
+import SegmentsIcon from 'components/svg/SegmentsIcon'
+import UsersIcon from 'components/svg/UsersIcon'
 
 const width = [200, 48, 78]
 
@@ -664,9 +666,12 @@ const UserPage: FC<UserPageType> = (props) => {
                                       return (
                                         <div
                                           className={classNames(
-                                            `flex-row space list-item clickable py-2 ${
-                                              flagDifferent && 'flag-different'
-                                            }`,
+                                            `flex-row space list-item clickable py-2`,
+                                            {
+                                              'bg-primary-opacity-5':
+                                                hasUserOverride ||
+                                                hasSegmentOverride,
+                                            },
                                             {
                                               'list-item-xs':
                                                 isCompact &&
@@ -678,7 +683,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                           data-test={`user-feature-${i}`}
                                           onClick={onClick}
                                         >
-                                          <Flex className='table-column'>
+                                          <Flex className='table-column pt-0'>
                                             <Row>
                                               <Flex>
                                                 <Row
@@ -717,20 +722,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                                     >
                                                       <Icon name='copy' />
                                                     </Button>
-                                                    {hasUserOverride && (
-                                                      <div>
-                                                        <IdentityOverridesIcon
-                                                          count={1}
-                                                        />
-                                                      </div>
-                                                    )}
-                                                    {hasSegmentOverride && (
-                                                      <div>
-                                                        <SegmentOverridesIcon
-                                                          count={1}
-                                                        />
-                                                      </div>
-                                                    )}
                                                   </Row>
                                                   <TagValues
                                                     projectId={`${projectId}`}
@@ -738,13 +729,19 @@ const UserPage: FC<UserPageType> = (props) => {
                                                   />
                                                 </Row>
                                                 {hasUserOverride ? (
-                                                  <div className='list-item-subtitle mt-1'>
-                                                    Overriding defaults
+                                                  <div className='list-item-subtitle text-primary d-flex align-items-center'>
+                                                    <UsersIcon
+                                                      fill='#6837fc'
+                                                      width={16}
+                                                      className='me-1'
+                                                    />
+                                                    This feature is being
+                                                    overridden for this identity
                                                   </div>
                                                 ) : flagEnabledDifferent ? (
                                                   <div
                                                     data-test={`feature-override-${i}`}
-                                                    className='list-item-subtitle mt-1'
+                                                    className='list-item-subtitle'
                                                   >
                                                     <Row>
                                                       <Flex>
@@ -763,16 +760,18 @@ const UserPage: FC<UserPageType> = (props) => {
                                                             for this user
                                                           </span>
                                                         ) : (
-                                                          <span>
-                                                            This flag is being
-                                                            overridden by
-                                                            segments and would
-                                                            normally be{' '}
-                                                            <strong>
+                                                          <span className='list-item-subtitle d-flex text-primary align-items-center'>
+                                                            <SegmentsIcon
+                                                              className='me-1'
+                                                              width={16}
+                                                              fill='#6837fc'
+                                                            />
+                                                            {`This flag is being overridden by a segment and would normally be`}
+                                                            <div className='ph-1 ml-1 mr-1 fw-semibold'>
                                                               {flagEnabled
                                                                 ? 'on'
                                                                 : 'off'}
-                                                            </strong>{' '}
+                                                            </div>{' '}
                                                             for this user
                                                           </span>
                                                         )}
@@ -783,7 +782,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                                   isMultiVariateOverride ? (
                                                     <div
                                                       data-test={`feature-override-${i}`}
-                                                      className='list-item-subtitle mt-1'
+                                                      className='list-item-subtitle'
                                                     >
                                                       <span className='flex-row'>
                                                         This feature is being
@@ -800,28 +799,28 @@ const UserPage: FC<UserPageType> = (props) => {
                                                       </span>
                                                     </div>
                                                   ) : (
-                                                    <div
-                                                      data-test={`feature-override-${i}`}
-                                                      className='list-item-subtitle mt-1'
-                                                    >
-                                                      <span className='flex-row'>
-                                                        This feature is being
-                                                        overridden by segments
-                                                        and would normally be{' '}
-                                                        <FeatureValue
-                                                          className='ml-1 chip--xs'
-                                                          includeEmpty
-                                                          data-test={`user-feature-original-value-${i}`}
-                                                          value={`${flagValue}`}
-                                                        />{' '}
-                                                        for this user
-                                                      </span>
-                                                    </div>
+                                                    <span className='d-flex list-item-subtitle text-primary align-items-center'>
+                                                      <SegmentsIcon
+                                                        className='me-1'
+                                                        width={16}
+                                                        fill='#6837fc'
+                                                      />
+                                                      {`This feature is being
+                                                        overridden by a segment
+                                                        and would normally be`}
+                                                      <FeatureValue
+                                                        className='ml-1 chip--xs'
+                                                        includeEmpty
+                                                        data-test={`user-feature-original-value-${i}`}
+                                                        value={`${flagValue}`}
+                                                      />{' '}
+                                                      for this user
+                                                    </span>
                                                   )
                                                 ) : (
                                                   getViewMode() ===
                                                     'default' && (
-                                                    <div className='list-item-subtitle mt-1'>
+                                                    <div className='list-item-subtitle'>
                                                       Using environment defaults
                                                     </div>
                                                   )
