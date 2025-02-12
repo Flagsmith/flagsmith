@@ -40,7 +40,7 @@ app.get('/config/project-overrides', (req, res) => {
             `
     }
 
-    return `    ${name}: '${value}',
+    return `    ${name}: '${value.trim()}',
         `
   }
   const envToBool = (name, defaultVal) => {
@@ -119,9 +119,14 @@ app.get('/config/project-overrides', (req, res) => {
     { name: 'albacross', value: process.env.ALBACROSS_CLIENT_ID },
     { name: 'useSecureCookies', value: envToBool('USE_SECURE_COOKIES', true) },
     { name: 'cookieSameSite', value: process.env.USE_SECURE_COOKIES },
+    { name: 'cookieAuthEnabled', value: process.env.COOKIE_AUTH_ENABLED },
     {
       name: 'githubAppURL',
       value: process.env.GITHUB_APP_URL,
+    },
+    {
+      name: 'e2eToken',
+      value: process.env.E2E_TEST_TOKEN || '',
     },
   ]
   let output = values.map(getVariable).join('')

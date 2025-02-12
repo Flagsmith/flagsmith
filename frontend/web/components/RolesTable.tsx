@@ -85,6 +85,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
             disabled={!isAdmin}
             className='mr-2'
             id='btn-invite'
+            data-test='create-role'
             onClick={() => createRole()}
             type='button'
           >
@@ -122,8 +123,12 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
             </div>
           </Row>
         }
-        renderRow={(role: Role) => (
-          <Row className='list-item clickable cursor-pointer' key={role.id}>
+        renderRow={(role: Role, index: number) => (
+          <Row
+            className='list-item clickable cursor-pointer'
+            key={role.id}
+            data-test={`role-${index}`}
+          >
             <Row
               onClick={() => {
                 editRole(role)

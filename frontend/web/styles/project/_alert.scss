@@ -25,6 +25,7 @@
   .icon-alert {
     margin-right: 0.75rem;
   }
+  text-transform: none;
 }
 
 .alert-danger {
@@ -36,7 +37,12 @@
   background-color: $alert-warning-bg;
   border-color: $alert-warning-border-color;
 }
-
+.alert {
+  padding-top: $spacer / 2;
+  padding-bottom: $spacer / 2;
+  padding-left: $spacer / 2;
+  padding-right: $spacer / 2;
+}
 .alert-info {
   background-color: $alert-info-bg;
   border-color: $alert-info-border-color;
@@ -48,7 +54,6 @@
   }
   .title {
     font-weight: 500;
-    margin-bottom: 2px;
     color: $body-color;
   }
   a {

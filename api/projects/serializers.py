@@ -43,6 +43,11 @@ class ProjectListSerializer(serializers.ModelSerializer):
             "show_edge_identity_overrides_for_feature",
             "stale_flags_limit_days",
             "edge_v2_migration_status",
+            "minimum_change_request_approvals",
+        )
+        read_only_fields = (
+            "enable_dynamo_db",
+            "edge_v2_migration_status",
         )
 
     def get_migration_status(self, obj: Project) -> str:
@@ -65,11 +70,18 @@ class ProjectListSerializer(serializers.ModelSerializer):
         )
 
 
-class ProjectUpdateOrCreateSerializer(
-    ReadOnlyIfNotValidPlanMixin, ProjectListSerializer
-):
+class ProjectCreateSerializer(ReadOnlyIfNotValidPlanMixin, ProjectListSerializer):
     invalid_plans_regex = r"^(free|startup.*|scale-up.*)$"
-    field_names = ("stale_flags_limit_days",)
+    field_names = ("stale_flags_limit_days", "enable_realtime_updates")
+
+    class Meta(ProjectListSerializer.Meta):
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=ProjectListSerializer.Meta.model.objects.all(),
+                fields=("name", "organisation"),
+                message="A project with this name already exists.",
+            )
+        ]
 
     def get_subscription(self) -> typing.Optional[Subscription]:
         view = self.context["view"]
@@ -84,9 +96,19 @@ class ProjectUpdateOrCreateSerializer(
             # Organisation should only have a single subscription
             return Subscription.objects.filter(organisation_id=organisation_id).first()
         elif view.action in ("update", "partial_update"):
+            # handle instance not being set
+            # When request comes from yasg2 (as part of schema generation)
+            if not self.instance:
+                return None
             return getattr(self.instance.organisation, "subscription", None)
-
         return None
+
+
+class ProjectUpdateSerializer(ProjectCreateSerializer):
+    class Meta(ProjectCreateSerializer.Meta):
+        read_only_fields = ProjectCreateSerializer.Meta.read_only_fields + (
+            "organisation",
+        )
 
 
 class ProjectRetrieveSerializer(ProjectListSerializer):
@@ -118,7 +140,7 @@ class ProjectRetrieveSerializer(ProjectListSerializer):
     def get_total_segments(self, instance: Project) -> int:
         # added here to prevent need for annotate(Count("segments", distinct=True))
         # which causes performance issues.
-        return instance.segments.count()
+        return instance.live_segment_count()
 
 
 class CreateUpdateUserProjectPermissionSerializer(

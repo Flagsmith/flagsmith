@@ -35,6 +35,24 @@ export const waitForElementVisible = async (selector: string) => {
     .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
 }
 
+export const waitForElementNotClickable = async (selector: string) => {
+  logUsingLastSection(`Waiting element visible ${selector}`)
+  await t
+    .expect(Selector(selector).visible)
+    .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
+  await t
+      .expect(Selector(selector).hasAttribute('disabled')).ok()
+}
+
+export const waitForElementClickable = async (selector: string) => {
+  logUsingLastSection(`Waiting element visible ${selector}`)
+  await t
+    .expect(Selector(selector).visible)
+    .ok(`waitForElementVisible(${selector})`, { timeout: LONG_TIMEOUT })
+  await t
+      .expect(Selector(selector).hasAttribute('disabled')).notOk()
+}
+
 export const logResults = async (requests: LoggedRequest[], t) => {
   if (!t.testRun?.errs?.length) {
     log('Finished without errors')
@@ -88,6 +106,17 @@ export const click = async (selector: string) => {
     .click(selector)
 }
 
+export const clickByText = async (text:string, element = 'button') => {
+  logUsingLastSection(`Click by text ${text} ${element}`)
+  const selector = Selector(element).withText(text);
+  await t
+      .scrollIntoView(selector)
+      .expect(Selector(selector).hasAttribute('disabled'))
+      .notOk('ready for testing', { timeout: 5000 })
+      .hover(selector)
+      .click(selector)
+}
+
 export const gotoSegments = async () => {
   await click('#segments-link')
 }
@@ -101,6 +130,28 @@ export const getLogger = () =>
     stringifyRequestBody: true,
     stringifyResponseBody: true,
   })
+
+export const createRole = async (roleName: string, index: number, users: number[]) => {
+  await click(byId('tab-item-roles'))
+  await click(byId('create-role'))
+  await setText(byId('role-name'), roleName)
+  await click(byId('save-role'))
+  await click(byId(`role-${index}`))
+  await click(byId('members-tab'))
+  await click(byId('assigned-users'))
+  for (const userId of users) {
+    await click(byId(`assignees-list-item-${userId}`))
+  }
+  await closeModal()
+}
+
+
+export const editRoleMembers = async (index:number)=>{
+  await click(byId('tab-item-roles'))
+  await click(byId('create-role'))
+  await setText(byId('role-name'), roleName)
+  await click(byId('save-role'))
+}
 
 export const gotoTraits = async () => {
   await click('#features-link')
@@ -219,6 +270,12 @@ export const saveFeatureSegments = async () => {
   await waitForElementNotExist('#create-feature-modal')
 }
 
+export const createEnvironment = async (name:string) => {
+  await setText('[name="envName"]', name)
+  await click('#create-env-btn')
+  await waitForElementVisible(byId(`switch-environment-${name.toLowerCase()}-active`))
+}
+
 export const goToUser = async (index: number) => {
   await click('#features-link')
   await click('#users-link')
@@ -257,7 +314,7 @@ export const login = async (email: string, password: string) => {
   await click('#login-btn')
   await waitForElementVisible('#project-manage-widget')
 }
-export const logout = async (t) => {
+export const logout = async () => {
   await click('#account-settings-link')
   await click('#logout-link')
   await waitForElementVisible('#login-page')
@@ -362,7 +419,6 @@ export const editRemoteConfig = async (
   }
   await Promise.all(
       mvs.map(async (v, i) => {
-        await setText(byId(`featureVariationValue${i}`), v.value)
         await setText(byId(`featureVariationWeight${v.value}`), `${v.weight}`)
       }),
   )
@@ -407,6 +463,14 @@ export const deleteFeature = async (index: number, name: string) => {
 }
 
 export const toggleFeature = async (index: number, toValue: boolean) => {
+  await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
+  await click('#confirm-toggle-feature-btn')
+  await waitForElementVisible(
+    byId(`feature-switch-${index}${toValue ? '-on' : 'off'}`),
+  )
+}
+
+export const setUserPermissions = async (index: number, toValue: boolean) => {
   await click(byId(`feature-switch-${index}${toValue ? '-off' : 'on'}`))
   await click('#confirm-toggle-feature-btn')
   await waitForElementVisible(
@@ -477,6 +541,46 @@ export const refreshUntilElementVisible = async (selector: string, maxRetries=20
     retries++;
   }
   return t.scrollIntoView(element)
+}
+
+const permissionsMap = {
+  'CREATE_PROJECT': 'organisation',
+  'MANAGE_USERS': 'organisation',
+  'MANAGE_USER_GROUPS': 'organisation',
+  'VIEW_PROJECT': 'project',
+  'CREATE_ENVIRONMENT': 'project',
+  'DELETE_FEATURE': 'project',
+  'CREATE_FEATURE': 'project',
+  'MANAGE_SEGMENTS': 'project',
+  'VIEW_AUDIT_LOG': 'project',
+  'VIEW_ENVIRONMENT': 'environment',
+  'UPDATE_FEATURE_STATE': 'environment',
+  'MANAGE_IDENTITIES': 'environment',
+  'CREATE_CHANGE_REQUEST': 'environment',
+  'APPROVE_CHANGE_REQUEST': 'environment',
+  'VIEW_IDENTITIES': 'environment',
+  'MANAGE_SEGMENT_OVERRIDES': 'environment',
+  'MANAGE_TAGS': 'project',
+} as const;
+
+
+export const setUserPermission = async (email: string, permission: keyof typeof permissionsMap | 'ADMIN', entityName:string|null, entityLevel?: 'project'|'environment'|'organisation', parentName?: string) => {
+  await click(byId('users-and-permissions'))
+  await click(byId(`user-${email}`))
+  const level = permissionsMap[permission] || entityLevel
+  await click(byId(`${level}-permissions-tab`))
+  if(parentName) {
+    await clickByText(parentName, 'a')
+  }
+  if(entityName) {
+    await click(byId(`permissions-${entityName.toLowerCase()}`))
+  }
+  if(permission==='ADMIN') {
+    await click(byId(`admin-switch-${level}`))
+  } else {
+    await click(byId(`permission-switch-${permission}`))
+  }
+  await closeModal()
 }
 
 export default {}

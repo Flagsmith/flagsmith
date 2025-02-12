@@ -1,5 +1,4 @@
 import React, { FC } from 'react'
-import color from 'color'
 import cx from 'classnames'
 
 import { Tag as TTag } from 'common/types/responses'
@@ -20,6 +19,9 @@ export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
   if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
     return '#9DA4AE'
   }
+  if (tag.type === 'UNHEALTHY') {
+    return '#D35400'
+  }
   if (selected) {
     return tag.color
   }
@@ -34,13 +36,13 @@ const Tag: FC<TagType> = ({
   selected,
   tag,
 }) => {
-  const tagColor = getTagColor(tag, selected)
+  const tagColor = Utils.colour(getTagColor(tag, selected))
   if (isDot) {
     return (
       <div
         className={'tag--dot'}
         style={{
-          backgroundColor: `${color(tagColor).darken(0.1)}`,
+          backgroundColor: `${tagColor.darken(0.1)}`,
         }}
       />
     )
@@ -64,6 +66,14 @@ const Tag: FC<TagType> = ({
     )
   }
 
+  // Hide unhealthy tags if feature is disabled
+  if (
+    !Utils.getFlagsmithHasFeature('feature_health') &&
+    tag.type === 'UNHEALTHY'
+  ) {
+    return null
+  }
+
   return (
     <div
       onClick={() => {
@@ -72,9 +82,9 @@ const Tag: FC<TagType> = ({
         }
       }}
       style={{
-        backgroundColor: `${color(tagColor).fade(0.92)}`,
-        border: `1px solid ${color(tagColor).fade(0.76)}`,
-        color: `${color(tagColor).darken(0.1)}`,
+        backgroundColor: `${tagColor.fade(0.92)}`,
+        border: `1px solid ${tagColor.fade(0.76)}`,
+        color: `${tagColor.darken(0.1)}`,
       }}
       className={cx('chip', className)}
     >

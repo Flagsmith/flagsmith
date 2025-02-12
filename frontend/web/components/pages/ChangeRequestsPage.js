@@ -13,7 +13,9 @@ import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
-import PlanBasedAccess, { featureDescriptions } from 'components/PlanBasedAccess';
+import PlanBasedAccess, {
+  featureDescriptions,
+} from 'components/PlanBasedAccess'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'

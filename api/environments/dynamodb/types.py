@@ -97,6 +97,12 @@ class IdentityOverridesV2Changeset:
 
 
 @dataclass
+class IdentityOverridesV2List:
+    identity_overrides: list[IdentityOverrideV2]
+    is_num_identity_overrides_complete: bool
+
+
+@dataclass
 class EdgeV2MigrationResult:
     identity_overrides_changeset: IdentityOverridesV2Changeset
     status: "EdgeV2MigrationStatus"

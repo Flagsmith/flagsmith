@@ -1,6 +1,5 @@
 import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
-import color from 'color'
 import Format from 'common/utils/format'
 import { IonIcon } from '@ionic/react'
 import { alarmOutline, lockClosed } from 'ionicons/icons'
@@ -10,6 +9,7 @@ import OrganisationStore from 'common/stores/organisation-store'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import Icon from 'components/Icon'
+import Color from 'color'
 type TagContent = {
   tag: Partial<TTag>
 }
@@ -20,16 +20,16 @@ function escapeHTML(unsafe: string) {
   )
 }
 
-const renderIcon = (tagType: string, tagColor: string, tagLabel: string) => {
+const renderIcon = (
+  tagType: string,
+  tagColor: string,
+  tagLabel: string,
+  isPermanent: boolean,
+) => {
+  const darkened = tagColor.darken(0.1).string()
   switch (tagType) {
     case 'STALE':
-      return (
-        <IonIcon
-          className='ms-1'
-          icon={alarmOutline}
-          color={color(tagColor).darken(0.1).string()}
-        />
-      )
+      return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
     case 'GITHUB':
       switch (tagLabel) {
         case 'PR Open':
@@ -48,13 +48,9 @@ const renderIcon = (tagType: string, tagColor: string, tagLabel: string) => {
           return
       }
     default:
-      return (
-        <IonIcon
-          className='ms-1'
-          icon={lockClosed}
-          color={color(tagColor).darken(0.1).string()}
-        />
-      )
+      return isPermanent ? (
+        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
+      ) : null
   }
 }
 
@@ -85,16 +81,14 @@ const getTooltip = (tag: TTag | undefined) => {
     tooltip =
       'Features marked with this tag are not monitored for staleness and have deletion protection.'
   }
-  const tagColor = getTagColor(tag, false)
+  const tagColor = Utils.colour(getTagColor(tag, false))
 
   if (isTruncated) {
     return `<div>
         <span
-          style='background-color: ${color(tagColor).fade(
-            0.92,
-          )}; border: 1px solid ${color(tagColor).fade(0.76)}; color: ${color(
-      tagColor,
-    ).darken(0.1)};'
+          style='background-color: ${tagColor.fade(0.92)};
+          border: 1px solid ${tagColor.fade(0.76)};
+          color: ${tagColor.darken(0.1)};'
           class="chip d-inline-block chip--xs me-1${
             disabled ? ' disabled' : ''
           }"
@@ -125,7 +119,7 @@ const TagContent: FC<TagContent> = ({ tag }) => {
           })}
         >
           {tagLabel}
-          {renderIcon(tag.type!, tag.color!, tag.label!)}
+          {renderIcon(tag.type!, Utils.colour(tag.color), tag.label!)}
         </span>
       }
     >

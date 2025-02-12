@@ -38,6 +38,9 @@ WEBHOOK_PAYLOAD_MERGED = json.dumps(
             "html_url": "https://github.com/repositoryownertest/repositorynametest/issues/11",
             "merged": True,
         },
+        "repository": {
+            "full_name": "repositoryownertest/repositorynametest",
+        },
         "action": "closed",
     }
 )
@@ -49,7 +52,7 @@ WEBHOOK_SIGNATURE_WITH_AN_INVALID_INSTALLATION_ID = (
 WEBHOOK_SIGNATURE_WITHOUT_INSTALLATION_ID = (
     "sha1=f99796bd3cebb902864e87ed960c5cca8772ff67"
 )
-WEBHOOK_MERGED_ACTION_SIGNATURE = "sha1=712ec7a5db14aad99d900da40738ebb9508ecad2"
+WEBHOOK_MERGED_ACTION_SIGNATURE = "sha1=f3f7e1e9b43448d570451317447d3b4f8f8142de"
 WEBHOOK_SECRET = "secret-key"
 
 
@@ -189,7 +192,7 @@ def test_delete_github_configuration(
 
 
 @responses.activate
-def test_cannot_delete_github_configuration_when_delete_github_installation_response_was_404(
+def test_can_delete_github_configuration_when_delete_github_installation_response_was_404(
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -213,18 +216,14 @@ def test_cannot_delete_github_configuration_when_delete_github_installation_resp
         method="DELETE",
         url=f"{GITHUB_API_URL}app/installations/{github_configuration.installation_id}",
         status=404,
-        json={"message": "not found"},
+        json={"message": "Not Found", "status": "404"},
     )
 
     # When
     response = admin_client_new.delete(url)
     # Then
-    assert response.status_code == status.HTTP_502_BAD_GATEWAY
-    assert (
-        response.json()["detail"]
-        == "Failed to delete GitHub Installation. Error: 404 Client Error: Not Found for url: https://api.github.com/app/installations/1234567"  # noqa: E501
-    )
-    assert GithubConfiguration.objects.filter(id=github_configuration.id).exists()
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
 
 def test_get_github_repository(

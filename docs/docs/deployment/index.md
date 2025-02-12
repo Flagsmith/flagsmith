@@ -78,8 +78,7 @@ Front End Web App.
 
 Running the API has the following hard dependencies:
 
-- Postgres database - the main data store. We have tested and run against Postgres v11.12 but it can work for other
-  versions too.
+- Postgres database - the main data store. Postgres 12 or later is required.
 
 The API can also optionally make use of the following 3rd party services:
 
@@ -87,8 +86,8 @@ The API can also optionally make use of the following 3rd party services:
 - InfluxDB - for API analytics
 - SendGrid - for transactional email
 - AWS S3 - to store Django Static Assets
-- GitHub - oAuth provider
-- Google - oAuth provider
+- GitHub - OAuth provider
+- Google - OAuth provider
 
 ## Flag Analytics
 
@@ -190,7 +189,6 @@ The list of the flags and remote config we're currently using in production is b
 | `default_environment_names_for_new_project` | Names of default environments to create when creating a new project (e.g. `["Development", "Production"]`)                                     | None                                              |
 | `disable_create_org`                        | Turning this on will prevent users from creating any additional organisations                                                                  | None                                              |
 | `disable_users_as_reviewers`                | If enabled, this flag will hide the Assigned users section in the Change Requests and in the Create Change Request modal in the Features page. | None                                              |
-| `enable_metadata`                           | If enabled, metadata can be handled                                                                                                            | None                                              |
 | `feature_versioning`                        | Opt into feature versioning for your environment                                                                                               | None                                              |
 | `integration_data`                          | Integration config for different providers                                                                                                     | [See Below](#integration_data)                    |
 | `mailing_list`                              | Determines if mailing list consent is shown on signup                                                                                          | None                                              |
@@ -231,7 +229,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["logging"],
   "title": "Datadog",
-  "description": "Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
+  "description": "Sends events to Datadog for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.",
+  "project": true
  },
  "dynatrace": {
   "perEnvironment": true,
@@ -254,27 +253,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["logging"],
   "title": "Dynatrace",
-  "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
- },
- "grafana": {
-  "perEnvironment": false,
-  "image": "/static/images/integrations/grafana.svg",
-  "docs": "https://docs.flagsmith.com/integrations/apm/grafana",
-  "fields": [
-   {
-    "key": "base_url",
-    "label": "Base URL",
-    "default": "https://grafana.com"
-   },
-   {
-    "key": "api_key",
-    "label": "Service account token",
-    "hidden": true
-   }
-  ],
-  "tags": ["logging"],
-  "title": "Grafana",
-  "description": "Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes."
+  "description": "Sends events to Dynatrace for when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.",
+  "project": true
  },
  "jira": {
   "perEnvironment": false,
@@ -282,9 +262,20 @@ The list of the flags and remote config we're currently using in production is b
   "docs": "https://docs.flagsmith.com/integrations/project-management/jira",
   "external": true,
   "title": "Jira",
-  "description": "View your Flagsmith Flags inside Jira."
+  "description": "View your Flagsmith Flags inside Jira.",
+  "project": true,
+  "organisation": true
  },
-
+ "github": {
+  "perEnvironment": false,
+  "image": "https://docs.flagsmith.com/img/integrations/github/github-logo.svg",
+  "docs": "https://docs.flagsmith.com/integrations/project-management/github",
+  "external": true,
+  "title": "GitHub",
+  "isExternalInstallation": true,
+  "description": "View your Flagsmith Flags inside your GitHub Issues and Pull Request.",
+  "project": true
+ },
  "slack": {
   "perEnvironment": true,
   "isOauth": true,
@@ -292,7 +283,8 @@ The list of the flags and remote config we're currently using in production is b
   "docs": "https://docs.flagsmith.com/integrations/slack",
   "tags": ["messaging"],
   "title": "Slack",
-  "description": "Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production."
+  "description": "Sends messages to Slack when flags are created, updated and removed. Logs are tagged with the environment they came from e.g. production.",
+  "project": true
  },
  "amplitude": {
   "perEnvironment": true,
@@ -311,7 +303,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Amplitude",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "new-relic": {
   "perEnvironment": false,
@@ -334,7 +327,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "New Relic",
-  "description": "Sends events to New Relic for when flags are created, updated and removed."
+  "description": "Sends events to New Relic for when flags are created, updated and removed.",
+  "project": true
  },
  "segment": {
   "perEnvironment": true,
@@ -349,7 +343,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Segment",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "rudderstack": {
   "perEnvironment": true,
@@ -368,7 +363,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Rudderstack",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "webhook": {
   "perEnvironment": true,
@@ -387,7 +383,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Webhook",
-  "description": "Sends data on what flags served to each identity to a Webhook Endpoint you provide."
+  "description": "Sends data on what flags served to each identity to a Webhook Endpoint you provide.",
+  "project": true
  },
  "heap": {
   "perEnvironment": true,
@@ -402,7 +399,8 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Heap Analytics",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
  },
  "mixpanel": {
   "perEnvironment": true,
@@ -417,7 +415,30 @@ The list of the flags and remote config we're currently using in production is b
   ],
   "tags": ["analytics"],
   "title": "Mixpanel",
-  "description": "Sends data on what flags served to each identity."
+  "description": "Sends data on what flags served to each identity.",
+  "project": true
+ },
+ "grafana": {
+  "perEnvironment": false,
+  "image": "/static/images/integrations/grafana.svg",
+  "docs": "https://docs.flagsmith.com/integrations/apm/grafana",
+  "fields": [
+   {
+    "key": "base_url",
+    "label": "Base URL",
+    "default": "https://grafana.com"
+   },
+   {
+    "key": "api_key",
+    "label": "Service account token",
+    "hidden": true
+   }
+  ],
+  "tags": ["logging"],
+  "title": "Grafana",
+  "description": "Receive Flagsmith annotations to your Grafana instance on feature flag and segment changes.",
+  "project": true,
+  "organisation": true
  }
 }
 ```
@@ -544,6 +565,17 @@ Create an OAuth application in the Google Developer Console and then provide the
  "clientId": "<Your Google oAuth Client ID>"
 }
 ```
+
+If you are using the [unified Docker image](https://hub.docker.com/repository/docker/flagsmith/flagsmith), which serves
+both the API and the frontend through Django, ensure you configure the following environment variable in your
+deployment:
+
+```
+DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY=same-origin-allow-popups
+```
+
+For those hosting the frontend independently, make sure you set the `Cross-Origin-Opener-Policy` to
+`same-origin-allow-popups` for Google OAuth flow to work.
 
 ### Dark Mode
 

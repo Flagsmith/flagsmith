@@ -18,11 +18,14 @@ import PageTitle from 'components/PageTitle'
 import SamlTab from 'components/SamlTab'
 import Setting from 'components/Setting'
 import AccountProvider from 'common/providers/AccountProvider'
+import LicensingTabContent from 'components/LicensingTabContent'
+import Utils from 'common/utils/utils'
 
 const SettingsTab = {
   'Billing': 'billing',
   'General': 'general',
   'Keys': 'keys',
+  'Licensing': 'licensing',
   'SAML': 'saml',
   'Usage': 'usage',
   'Webhooks': 'webhooks',
@@ -228,7 +231,7 @@ const OrganisationSettingsPage = class extends Component {
                   const { chargebee_email } = subscriptionMeta || {}
 
                   const displayedTabs = []
-
+                  const isEnterprise = Utils.isEnterpriseImage()
                   if (
                     AccountStore.getUser() &&
                     AccountStore.getOrganisationRole() === 'ADMIN'
@@ -237,6 +240,7 @@ const OrganisationSettingsPage = class extends Component {
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
+                        isEnterprise ? SettingsTab.Licensing : null,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
                         SettingsTab.SAML,
@@ -452,7 +456,7 @@ const OrganisationSettingsPage = class extends Component {
                                       target='_blank'
                                       className='btn'
                                     >
-                                      Manage Invoices
+                                      Manage subscription
                                     </Button>
                                   )}
                                 </div>
@@ -460,6 +464,14 @@ const OrganisationSettingsPage = class extends Component {
                               <h5>Manage Payment Plan</h5>
                               <Payment viewOnly={false} />
                             </div>
+                          </TabItem>
+                        )}
+
+                        {displayedTabs.includes(SettingsTab.Licensing) && (
+                          <TabItem tabLabel='Licensing'>
+                            <LicensingTabContent
+                              organisationId={organisation.id}
+                            />
                           </TabItem>
                         )}
 

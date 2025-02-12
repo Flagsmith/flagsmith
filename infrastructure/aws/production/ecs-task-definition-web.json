@@ -20,6 +20,10 @@
             "essential": true,
             "environment": [
                 {
+                    "name": "LOG_LEVEL",
+                    "value": "INFO"
+                },
+                {
                     "name": "AWS_REGION",
                     "value": "eu-west-2"
                 },
@@ -110,10 +114,6 @@
                 {
                     "name": "INFLUXDB_URL",
                     "value": "https://eu-central-1-1.aws.cloud2.influxdata.com"
-                },
-                {
-                    "name": "MAILERLITE_NEW_USER_GROUP_ID",
-                    "value": "110227625"
                 },
                 {
                     "name": "OAUTH_CLIENT_ID",

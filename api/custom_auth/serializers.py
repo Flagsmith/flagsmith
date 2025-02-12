@@ -1,6 +1,7 @@
+from typing import Any
+
 from django.conf import settings
-from djoser.conf import settings as djoser_settings
-from djoser.serializers import TokenCreateSerializer, UserCreateSerializer
+from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
@@ -16,33 +17,6 @@ from .constants import (
     INVALID_PASSWORD_ERROR,
     USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE,
 )
-
-
-class CustomTokenCreateSerializer(TokenCreateSerializer):
-    """
-    NOTE: Some authentication backends (e.g., LDAP) support only
-    username and password authentication. However, the front-end
-    currently sends the email as the login key. To accommodate
-    this, we override the serializer to rename the username field
-    to the email (or any other field configurable using djoser settings) field.
-
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if djoser_settings.LOGIN_FIELD != FFAdminUser.USERNAME_FIELD:
-            # Because djoser have created a field named username(djoser_settings.LOGIN_FIELD) in the serializer
-            # We have to remove this and add the email(FFAdminUser.USERNAME_FIELD) field back
-            self.fields.pop(djoser_settings.LOGIN_FIELD)
-            self.fields[FFAdminUser.USERNAME_FIELD] = serializers.CharField(
-                required=False
-            )
-
-    def validate(self, attrs):
-        if djoser_settings.LOGIN_FIELD != FFAdminUser.USERNAME_FIELD:
-            attrs[djoser_settings.LOGIN_FIELD] = attrs.pop(FFAdminUser.USERNAME_FIELD)
-
-        return super().validate(attrs)
 
 
 class CustomTokenSerializer(serializers.ModelSerializer):
@@ -73,13 +47,15 @@ class InviteLinkValidationMixin:
 
 
 class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):
-    key = serializers.SerializerMethodField()
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if not settings.COOKIE_AUTH_ENABLED:
+            self.fields["key"] = serializers.SerializerMethodField()
 
     class Meta(UserCreateSerializer.Meta):
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
             "marketing_consent_given",
-            "key",
             "uuid",
         )
         read_only_fields = ("is_active", "uuid")
@@ -115,8 +91,14 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         attrs["email"] = email.lower()
         return attrs
 
+    def save(self) -> FFAdminUser:
+        instance = super().save()
+        if "view" in self.context:
+            self.context["view"].user = instance
+        return instance
+
     @staticmethod
-    def get_key(instance):
+    def get_key(instance) -> str:
         token, _ = Token.objects.get_or_create(user=instance)
         return token.key
 

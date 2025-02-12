@@ -468,3 +468,115 @@ def test_get_feature_states_for_identity__transient_trait__existing_identity__re
             "transient": True,
         },
     ]
+
+
+def test_get_feature_states_for_identity__transient_identifier__empty_segment__return_expected(
+    admin_client: APIClient,
+    sdk_client: APIClient,
+    default_feature_value: str,
+    identity_identifier: str,
+    feature: int,
+    environment: int,
+    identity: int,
+    project: id,
+) -> None:
+    # Given
+    # a %0 segment that matches no identity
+    response = admin_client.post(
+        reverse("api-v1:projects:project-segments-list", args=[project]),
+        data=json.dumps(
+            {
+                "name": "empty-segment",
+                "project": project,
+                "rules": [
+                    {
+                        "type": "ALL",
+                        "rules": [
+                            {
+                                "type": "ANY",
+                                "rules": [],
+                                "conditions": [
+                                    {
+                                        "operator": "PERCENTAGE_SPLIT",
+                                        "value": 0,
+                                    }
+                                ],
+                            }
+                        ],
+                        "conditions": [],
+                    }
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+    segment_id = response.json()["id"]
+
+    # and a segment override for the %0 segment
+    response = admin_client.post(
+        reverse("api-v1:features:feature-segment-list"),
+        data=json.dumps(
+            {
+                "feature": feature,
+                "segment": segment_id,
+                "environment": environment,
+            }
+        ),
+        content_type="application/json",
+    )
+    feature_segment_id = response.json()["id"]
+
+    admin_client.post(
+        reverse("api-v1:features:featurestates-list"),
+        data=json.dumps(
+            {
+                "enabled": True,
+                "feature_state_value": {
+                    "type": "unicode",
+                    "string_value": "segment override",
+                },
+                "feature": feature,
+                "environment": environment,
+                "feature_segment": feature_segment_id,
+            }
+        ),
+        content_type="application/json",
+    )
+
+    url = reverse("api-v1:sdk-identities")
+
+    # When
+    # flags are requested for a transient identifier
+    response = sdk_client.post(
+        url,
+        data=json.dumps(
+            {
+                "identifier": "",
+                "traits": [
+                    {
+                        "trait_key": "transient",
+                        "trait_value": "trait value",
+                    },
+                ],
+            }
+        ),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    response_json = response.json()
+
+    assert (
+        flag_data := next(
+            (
+                flag
+                for flag in response_json["flags"]
+                if flag["feature"]["id"] == feature
+            ),
+            None,
+        )
+    )
+    # flag is not being overridden by the segment
+    assert flag_data["enabled"] is False
+    assert flag_data["feature_state_value"] == default_feature_value

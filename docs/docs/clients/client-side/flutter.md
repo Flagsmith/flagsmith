@@ -5,6 +5,8 @@ description: Manage your Feature Flags and Remote Config in your Flutter applica
 slug: /clients/flutter
 ---
 
+import CodeBlock from '@theme/CodeBlock'; import { FlutterVersion } from '@site/src/components/SdkVersions.js';
+
 This SDK can be used for Flutter applications. The source code for the client is available on
 [GitHub](https://github.com/flagsmith/flagsmith-flutter-client).
 
@@ -12,12 +14,12 @@ The Flagsmith Flutter SDK supports iOS, Android and Web targets.
 
 ## Getting Started
 
-The client library is available from the [https://pub.dev/packages/flagsmith](https://pub.dev/packages/flagsmith):
+Install the [client library](https://pub.dev/packages/flagsmith) by adding it to your application's pubspec.yaml file:
 
-```dart
-dependencies:
-  flagsmith:
-```
+<CodeBlock>
+{`dependencies:
+    flagsmith: ^`}<FlutterVersion />
+</CodeBlock>
 
 ## Basic Usage
 
@@ -121,7 +123,7 @@ You can use caches instead of async/await:
 
 ```dart
 final config = FlagsmithConfig(
-    baseURI: 'http://yoururl.com/',
+    baseURI: 'https://flagsmith.example.com/api/v1/',
     connectTimeout: 200,
     receiveTimeout: 500,
     sendTimeout: 500,
@@ -228,7 +230,7 @@ By default, the client uses the default configuration. You can override this con
 ```dart
 final flagsmithClient = FlagsmithClient(
       config: FlagsmithConfig(
-          baseURI: 'http://yoururl.com/'
+          baseURI: 'https://flagsmith.example.com/api/v1/'
       ), apiKey: 'YOUR_ENV_API_KEY');
 ```
 
@@ -237,7 +239,7 @@ Override the default configuration with your own:
 ```dart
 final flagsmithClient = FlagsmithClient(
       config: FlagsmithConfig(
-          baseURI: 'http://yoururl.com/',
+          baseURI: 'https://flagsmith.example.com/api/v1/',
           connectTimeout: 200,
           receiveTimeout: 500,
           sendTimeout: 500,

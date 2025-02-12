@@ -6,6 +6,7 @@ import Icon from './Icon'
 import classNames from 'classnames'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronUp } from 'ionicons/icons'
+import Button from './base/forms/Button'
 const PanelSearch = class extends Component {
   static displayName = 'PanelSearch'
 
@@ -19,6 +20,7 @@ const PanelSearch = class extends Component {
     listClassName: OptionalString,
     nextPage: OptionalFunc,
     noResultsText: OptionalString,
+    onRefresh: OptionalFunc,
     paging: OptionalObject,
     renderNoResults: propTypes.any,
     renderRow: RequiredFunc,
@@ -209,6 +211,15 @@ const PanelSearch = class extends Component {
                   </Popover>
                 </Row>
               )}
+              {this.props.onRefresh && (
+                <Button
+                  theme='text'
+                  size='xSmall'
+                  onClick={() => this.props.onRefresh()}
+                >
+                  <Icon name='refresh' fill='#6837FC' width={16} /> Refresh
+                </Button>
+              )}
               {!!this.props.filterRow && (
                 <Row>
                   <Row onClick={() => this.input.focus()}>
@@ -229,6 +240,7 @@ const PanelSearch = class extends Component {
                       placeholder='Search'
                       search
                     />
+                    {this.props.filterRowContent}
                   </Row>
                 </Row>
               )}

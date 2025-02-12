@@ -36,6 +36,7 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
         model = Organisation
         fields = (
             "id",
+            "uuid",
             "name",
             "created_date",
             "webhook_notification_email",
@@ -246,6 +247,9 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
     payment_source = serializers.ChoiceField(choices=[None, CHARGEBEE], allow_null=True)
 
     chargebee_email = serializers.EmailField()
+
+    feature_history_visibility_days = serializers.IntegerField(allow_null=True)
+    audit_log_visibility_days = serializers.IntegerField(allow_null=True)
 
 
 class OrganisationAPIUsageNotificationSerializer(serializers.Serializer):

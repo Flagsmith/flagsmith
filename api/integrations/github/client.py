@@ -116,9 +116,20 @@ def post_comment_to_github(
 def delete_github_installation(installation_id: str) -> requests.Response:
     url = f"{GITHUB_API_URL}app/installations/{installation_id}"
     headers = build_request_headers(installation_id, use_jwt=True)
-    response = requests.delete(url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT)
-    response.raise_for_status()
-    return response
+    try:
+        response = requests.delete(
+            url, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
+        )
+        response.raise_for_status()
+        return response
+    except HTTPError:
+        response_content = response.content.decode("utf-8")
+        error_data = json.loads(response_content)
+        if error_data.get("message") == "Not Found" and response.status_code == 404:
+            logger.info(
+                f"The GitHub application with the installation ID: {installation_id} was not found."
+            )
+            return response
 
 
 def fetch_search_github_resource(

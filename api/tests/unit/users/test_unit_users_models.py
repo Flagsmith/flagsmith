@@ -1,13 +1,11 @@
-from unittest import mock
-
 import pytest
+from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
-from projects.permissions import VIEW_PROJECT
 from tests.types import WithProjectPermissionsCallable
 from users.models import FFAdminUser
 
@@ -154,56 +152,6 @@ def test_has_organisation_permission_is_false_when_user_does_not_have_permission
         )
         for permission_key, _ in ORGANISATION_PERMISSIONS
     )
-
-
-@pytest.mark.django_db
-def test_creating_a_user_calls_mailer_lite_subscribe(mocker):
-    # Given
-    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
-    # When
-    user = FFAdminUser.objects.create(
-        email="test@mail.com",
-    )
-    # Then
-    mailer_lite_mock.subscribe.assert_called_with(user)
-
-
-@pytest.mark.django_db
-def test_user_add_organisation_does_not_call_mailer_lite_subscribe_for_unpaid_organisation(
-    mocker,
-):
-    user = FFAdminUser.objects.create(email="test@example.com")
-    organisation = Organisation.objects.create(name="Test Organisation")
-    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
-    mocker.patch(
-        "organisations.models.Organisation.is_paid",
-        new_callable=mock.PropertyMock,
-        return_value=False,
-    )
-    # When
-    user.add_organisation(organisation, OrganisationRole.USER)
-
-    # Then
-    mailer_lite_mock.subscribe.assert_not_called()
-
-
-@pytest.mark.django_db
-def test_user_add_organisation_calls_mailer_lite_subscribe_for_paid_organisation(
-    mocker,
-):
-    mailer_lite_mock = mocker.patch("users.models.mailer_lite")
-    user = FFAdminUser.objects.create(email="test@example.com")
-    organisation = Organisation.objects.create(name="Test Organisation")
-    mocker.patch(
-        "organisations.models.Organisation.is_paid",
-        new_callable=mock.PropertyMock,
-        return_value=True,
-    )
-    # When
-    user.add_organisation(organisation, OrganisationRole.USER)
-
-    # Then
-    mailer_lite_mock.subscribe.assert_called_with(user)
 
 
 def test_user_add_organisation_adds_user_to_the_default_user_permission_group(

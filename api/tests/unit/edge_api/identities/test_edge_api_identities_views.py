@@ -1,3 +1,8 @@
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_ENVIRONMENT,
+    VIEW_IDENTITIES,
+)
 from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -7,11 +12,6 @@ from rest_framework.test import APIClient
 from edge_api.identities.models import EdgeIdentity
 from edge_api.identities.views import EdgeIdentityViewSet
 from environments.models import Environment
-from environments.permissions.constants import (
-    MANAGE_IDENTITIES,
-    VIEW_ENVIRONMENT,
-    VIEW_IDENTITIES,
-)
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature
 from tests.types import WithEnvironmentPermissionsCallable
@@ -159,7 +159,8 @@ def test_get_edge_identity_overrides_for_a_feature(
     }
 
     mock_dynamodb_wrapper.get_identity_overrides_by_environment_id.assert_called_once_with(
-        environment_id=environment.id, feature_id=feature.id
+        environment_id=environment.id,
+        feature_id=feature.id,
     )
 
 

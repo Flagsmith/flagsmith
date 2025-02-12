@@ -2,7 +2,11 @@ import React, { FC, ReactNode, useState } from 'react'
 const CreateGroup = require('./modals/CreateGroup')
 import Button from './base/forms/Button'
 import AccountStore from 'common/stores/account-store'
-import { UserGroup, GroupPermission } from 'common/types/responses'
+import {
+  UserGroup,
+  GroupPermission,
+  UserGroupSummary,
+} from 'common/types/responses'
 import {
   useDeleteGroupMutation,
   useGetGroupsQuery,
@@ -19,18 +23,18 @@ import { useGetGroupSummariesQuery } from 'common/services/useGroupSummary'
 type UserGroupListType = {
   noTitle?: boolean
   orgId: string
-  projectId?: string | boolean
+  projectId?: number | string
   showRemove?: boolean
   onClick: (group: UserGroup) => void
   onEditPermissions?: (group: UserGroup) => void
 }
 
 type UserGroupsRowType = {
-  id: string | number
+  id: number
   index: number
   name: string
   permissionSummary?: ReactNode
-  group: UserGroup
+  group: UserGroup | GroupPermission
   orgId: string
   showRemove?: boolean
   onClick: (group: UserGroup) => void
@@ -175,6 +179,7 @@ const UserGroupList: FC<UserGroupListType> = ({
         group: group,
         id: group.id,
         permissions: [],
+        tag_based_permissions: [],
       })
     }
   })
@@ -182,7 +187,7 @@ const UserGroupList: FC<UserGroupListType> = ({
   return (
     <FormGroup>
       <div className='col-md-6'>
-        <InfoMessage>
+        <InfoMessage collapseId={'user-groups'}>
           Group admins and users with the organisation permission{' '}
           <strong>Manage Groups</strong> can invite additional members to
           groups.
@@ -236,7 +241,10 @@ const UserGroupList: FC<UserGroupListType> = ({
                 orgId={orgId}
                 permissionSummary={
                   <PermissionsSummaryList
-                    permissions={permissions}
+                    permissions={permissions?.map((v) => ({
+                      permission_key: v,
+                      tags: [],
+                    }))}
                     isAdmin={admin}
                     numberToTruncate={3}
                   />

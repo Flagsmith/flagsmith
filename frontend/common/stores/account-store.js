@@ -6,6 +6,9 @@ const data = require('../data/base/_data')
 import Constants from 'common/constants'
 import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
+import Project from 'common/project'
+import { getStore } from 'common/store'
+import { service } from "common/service";
 
 const controller = {
   acceptInvite: (id) => {
@@ -13,7 +16,9 @@ const controller = {
     API.setInvite('')
     API.setInviteType('')
     return data
-      .post(`${Project.api}users/join/link/${id}/`)
+      .post(`${Project.api}users/join/link/${id}/`, {
+        hubspotutk: API.getCookie('hubspotutk'),
+      })
       .catch((error) => {
         if (
           Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
@@ -22,7 +27,9 @@ const controller = {
           API.ajaxHandler(store, error)
           return
         }
-        return data.post(`${Project.api}users/join/${id}/`)
+        return data.post(`${Project.api}users/join/${id}/`, {
+          hubspotutk: API.getCookie('hubspotutk'),
+        })
       })
       .then((res) => {
         store.savedId = res.id
@@ -84,24 +91,34 @@ const controller = {
       API.postEvent(`${name}`)
     }
 
-    data.post(`${Project.api}organisations/`, { name }).then((res) => {
-      store.model.organisations = store.model.organisations.concat([
-        { ...res, role: 'ADMIN' },
-      ])
-      AsyncStorage.setItem('user', JSON.stringify(store.model))
-      store.savedId = res.id
-      store.saved()
+    data
+      .post(`${Project.api}organisations/`, {
+        hubspotutk: API.getCookie('hubspotutk'),
+        name,
+      })
+      .then((res) => {
+        store.model.organisations = store.model.organisations.concat([
+          { ...res, role: 'ADMIN' },
+        ])
+        AsyncStorage.setItem('user', JSON.stringify(store.model))
+        store.savedId = res.id
+        store.saved()
 
-      const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
-      const sendRelayEvent =
-        Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
-      window.lintrk?.('track', { conversion_id: 16798338 })
-      if (sendRelayEvent) {
-        dataRelay.sendEvent(AccountStore.getUser(), {
-          apiKey: relayEventKey,
-        })
-      }
-    })
+        const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+        const sendRelayEvent =
+          Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+
+        if (Project.linkedinConversionId) {
+          window.lintrk?.('track', {
+            conversion_id: Project.linkedinConversionId,
+          })
+        }
+        if (sendRelayEvent) {
+          dataRelay.sendEvent(AccountStore.getUser(), {
+            apiKey: relayEventKey,
+          })
+        }
+      })
   },
   deleteOrganisation: () => {
     API.trackEvent(Constants.events.DELETE_ORGANISATION)
@@ -186,7 +203,7 @@ const controller = {
           return
         }
 
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -218,14 +235,14 @@ const controller = {
           return
         }
 
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         return controller.onLogin()
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
   onLogin: (skipCaching) => {
     if (!skipCaching) {
-      API.setCookie('t', data.token)
+      API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
     }
     return controller.getOrganisations()
   },
@@ -241,15 +258,15 @@ const controller = {
       .post(`${Project.api}auth/users/`, {
         email,
         first_name,
+        invite_hash: API.getInvite() || undefined,
         last_name,
         marketing_consent_given,
         password,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
-        invite_hash: API.getInvite() || undefined,
       })
       .then((res) => {
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
         if (API.getReferrer()) {
           API.trackEvent(
@@ -291,7 +308,7 @@ const controller = {
     store.loading()
     store.user = {}
 
-    data.setToken(token)
+    data.setToken(Project.cookieAuthEnabled ? 'true' : token)
     return controller.onLogin()
   },
 
@@ -328,12 +345,21 @@ const controller = {
     } else if (!user) {
       store.ephemeral_token = null
       AsyncStorage.clear()
-      API.setCookie('t', '')
-      data.setToken(null)
-      API.reset().finally(() => {
-        store.model = user
-        store.organisation = null
-        store.trigger('logout')
+      if (!data.token) {
+        return
+      }
+      ;(Project.cookieAuthEnabled
+        ? data.post(`${Project.api}auth/logout/`, {})
+        : Promise.resolve()
+      ).finally(() => {
+        API.setCookie('t', '')
+        data.setToken(null)
+        API.reset().finally(() => {
+          store.model = user
+          store.organisation = null
+          getStore().dispatch(service.util.resetApiState())
+          store.trigger('logout')
+        })
       })
     }
   },
@@ -348,7 +374,7 @@ const controller = {
       .then((res) => {
         store.model = null
         API.trackEvent(Constants.events.LOGIN)
-        data.setToken(res.key)
+        data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         store.ephemeral_token = null
         controller.onLogin()
       })
@@ -367,20 +393,15 @@ const controller = {
         { hosted_page_id: hostedPageId },
       )
       .then((res) => {
-        const idx = _.findIndex(store.model.organisations, {
-          id: store.organisation.id,
+        try {
+          if (res && res.subscription && res.subscription.plan) {
+            API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
+            API.postEvent(res.subscription.plan, 'chargebee')
+          }
+        } catch (e) {}
+        controller.getOrganisations().then(() => {
+          store.saved()
         })
-        if (idx !== -1) {
-          store.model.organisations[idx] = res
-          try {
-            if (res && res.subscription && res.subscription.plan) {
-              API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
-              API.postEvent(res.subscription.plan, 'chargebee')
-            }
-          } catch (e) {}
-          store.organisation = res
-        }
-        store.saved()
       })
       .catch((e) => API.ajaxHandler(store, e))
   },

@@ -42,10 +42,21 @@ from .search import (
 from .tasks import call_environment_webhook_for_feature_state_change
 
 
+class LowerCaseCharField(serializers.CharField):
+    def to_representation(self, value: typing.Any) -> str:
+        return super().to_representation(value).lower()
+
+    def to_internal_value(self, data: typing.Any) -> str:
+        return super().to_internal_value(data).lower()
+
+
 class EdgeIdentitySerializer(serializers.Serializer):
     identity_uuid = serializers.CharField(read_only=True)
     identifier = serializers.CharField(required=True, max_length=2000)
-    dashboard_alias = serializers.CharField(required=False, max_length=100)
+    dashboard_alias = LowerCaseCharField(
+        required=False,
+        max_length=100,
+    )
 
     def create(self, *args, **kwargs):
         identifier = self.validated_data.get("identifier")
@@ -278,7 +289,10 @@ class EdgeIdentitySearchField(serializers.CharField):
 
         if search_term.startswith(DASHBOARD_ALIAS_SEARCH_PREFIX):
             kwargs["search_attribute"] = DASHBOARD_ALIAS_ATTRIBUTE
-            search_term = search_term.lstrip(DASHBOARD_ALIAS_SEARCH_PREFIX)
+            # dashboard aliases are always stored in lower case
+            search_term = search_term.removeprefix(
+                DASHBOARD_ALIAS_SEARCH_PREFIX
+            ).lower()
         else:
             kwargs["search_attribute"] = IDENTIFIER_ATTRIBUTE
 

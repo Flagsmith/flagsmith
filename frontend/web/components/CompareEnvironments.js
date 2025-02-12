@@ -227,7 +227,7 @@ class CompareEnvironments extends Component {
                             </div>
                             <Button
                               onClick={() => {
-                                Utils.copyFeatureName(p.projectFlagLeft.name)
+                                Utils.copyToClipboard(p.projectFlagLeft.name)
                               }}
                               theme='icon'
                               className='ms-2 me-2'
@@ -242,6 +242,7 @@ class CompareEnvironments extends Component {
                     </div>
                     <Permission
                       level='environment'
+                      tags={p.projectFlagLeft.tags}
                       permission={Utils.getManageFeaturePermission(
                         Utils.changeRequestsEnabled(
                           environmentLeft.minimum_change_request_approvals,
@@ -270,6 +271,7 @@ class CompareEnvironments extends Component {
                     </Permission>
                     <Permission
                       level='environment'
+                      tags={p.projectFlagLeft.tags}
                       permission={Utils.getManageFeaturePermission(
                         Utils.changeRequestsEnabled(
                           environmentRight.minimum_change_request_approvals,

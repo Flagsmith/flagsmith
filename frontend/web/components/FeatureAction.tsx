@@ -15,6 +15,7 @@ interface FeatureActionProps {
   projectId: string
   featureIndex: number
   readOnly: boolean
+  tags: number[]
   protectedTags: Tag[] | undefined
   hideAudit: boolean
   hideHistory: boolean
@@ -54,6 +55,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   projectId,
   protectedTags,
   readOnly,
+  tags,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
 
@@ -147,6 +149,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
             <Permission
               level='project'
               permission='DELETE_FEATURE'
+              tags={tags}
               id={projectId}
             >
               {({ permission: removeFeaturePermission }) =>
@@ -176,12 +179,12 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                         protectedTags?.length > 1 ? 's' : ''
                       } ${protectedTags
                         ?.map((tag) => {
-                          const tagColor = getTagColor(tag)
+                          const tagColor = Utils.colour(getTagColor(tag))
                           return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
                             tagColor,
-                          ).fade(0.92)};border-color:${color(tagColor).darken(
+                          ).fade(0.92)};border-color:${tagColor.darken(
                             0.1,
-                          )};color:${color(tagColor).darken(0.1)};'>
+                          )};color:${tagColor.darken(0.1)};'>
                         ${tag.label}
                       </strong>`
                         })

@@ -110,6 +110,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     }
   }
 
+  const permissionType = 'MANAGE_TAGS'
   return (
     <InlineModal
       title={title}
@@ -123,11 +124,17 @@ const CreateEditTag: FC<CreateEditTagType> = ({
           <Button onClick={onClose} type='button' theme='secondary'>
             Cancel
           </Button>
-          <Permission level='project' permission='ADMIN' id={projectId}>
+          <Permission
+            level='project'
+            permission={permissionType}
+            id={projectId}
+          >
             {({ permission }) =>
               Utils.renderWithPermission(
                 permission,
-                Constants.projectPermissions('Admin'),
+                Constants.projectPermissions(
+                  permissionType === 'ADMIN' ? 'Admin' : 'Manage Tags',
+                ),
                 <div className='ml-2'>
                   <Button
                     onClick={save}
