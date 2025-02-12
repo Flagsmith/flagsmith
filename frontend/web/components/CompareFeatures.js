@@ -1,6 +1,6 @@
 // import propTypes from 'prop-types';
 import React, { Component } from 'react'
-import FlagSelect from './FlagSelect'
+import FeatureSelect from './FeatureSelect'
 import ProjectStore from 'common/stores/project-store'
 import data from 'common/data/base/_data'
 import FeatureRow from './FeatureRow'
@@ -78,7 +78,7 @@ class CompareEnvironments extends Component {
         <Row>
           <Row>
             <div style={{ width: featureNameWidth }}>
-              <FlagSelect
+              <FeatureSelect
                 placeholder='Select a Feature...'
                 projectId={this.props.projectId}
                 onChange={(flagId, flag) =>

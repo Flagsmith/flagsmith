@@ -38,6 +38,7 @@ import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
 import ProjectChangeRequestsLink from './ProjectChangeRequestsLink'
+import BarChartIcon from './svg/BarChartIcon'
 
 const App = class extends Component {
   static propTypes = {
@@ -217,9 +218,7 @@ const App = class extends Component {
         this.context.router.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
-          if (
-            this.props.location.search.includes('github-redirect')
-          ) {
+          if (this.props.location.search.includes('github-redirect')) {
             this.context.router.history.replace(
               `/github-setup${this.props.location.search}`,
             )
@@ -580,6 +579,7 @@ const App = class extends Component {
                               )
                             }
                           </Permission>
+
                           {!!integrations.length && (
                             <NavSubLink
                               icon={<Icon name='layers' />}
@@ -596,6 +596,15 @@ const App = class extends Component {
                           >
                             Compare
                           </NavSubLink>
+                          {!Project.disableAnalytics && (
+                            <NavSubLink
+                              icon={<BarChartIcon />}
+                              id='feature-analytics-link'
+                              to={`/project/${projectId}/feature-analytics`}
+                            >
+                              Feature Analytics
+                            </NavSubLink>
+                          )}
                           <Permission
                             level='project'
                             permission='ADMIN'
@@ -664,7 +673,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={<SettingsIcon />}
                                   id='org-settings-link'
-                                data-test='org-settings-link'
+                                  data-test='org-settings-link'
                                   to={`/organisation/${
                                     AccountStore.getOrganisation().id
                                   }/settings`}

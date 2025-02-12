@@ -46,7 +46,7 @@ const FlagAnalytics: FC<FlagAnalyticsType> = ({
   return (
     <>
       <FormGroup className='mb-4'>
-        <h5 className='mb-2'>Flag events for last 30 days</h5>
+        <h6 className='mb-2'>Flag events for last 30 days</h6>
         <EnvironmentTagSelect
           projectId={projectId}
           idField='id'

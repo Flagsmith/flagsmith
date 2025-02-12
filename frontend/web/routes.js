@@ -42,6 +42,7 @@ import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPag
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import ProjectChangeRequestsPage from './components/pages/ProjectChangeRequestsPage'
 import ProjectChangeRequestPage from './components/pages/ProjectChangeRequestPage'
+import FeatureAnalyticsPage from 'components/pages/FeatureAnalyticsPage';
 
 export const routes = {
   'account': '/account',
@@ -72,6 +73,7 @@ export const routes = {
   'login': '/login',
   'maintenance': '/maintenance',
   'not-found': '/404',
+  'feature-analytics': '/project/:projectId/feature-analytics',
   'oauth': '/oauth/:type',
   'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
@@ -171,6 +173,11 @@ export default (
         path={routes['organisation-integrations']}
         exact
         component={OrganisationIntegrationsPage}
+      />
+      <ParameterizedRoute
+        path={routes['feature-analytics']}
+        exact
+        component={FeatureAnalyticsPage}
       />
       <ParameterizedRoute path={routes.users} exact component={UsersPage} />
       <ParameterizedRoute

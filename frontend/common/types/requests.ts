@@ -223,6 +223,7 @@ export type Req = {
     environmentId?: string
     tags?: string[]
     is_archived?: boolean
+    search?: string
   }
   getProjectFlag: { project: string | number; id: string }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
