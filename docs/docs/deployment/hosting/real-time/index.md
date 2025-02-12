@@ -19,6 +19,10 @@ Real-time flag updates require an Enterprise subscription.
 
 We assume you already have the [Flagsmith API](/deployment/hosting/locally-api.md) running on your infrastructure.
 
+Real-time flag updates are only delivered for Flagsmith projects that have the "Real-time Updates"
+(`enable_realtime_updates`) setting enabled. This option can be found in **Project Settings** > **SDK Settings**
+only if the `realtime_setting` [Flagsmith-on-Flagsmith](/deployment#running-flagsmith-on-flagsmith) flag is enabled.
+
 ## Infrastructure
 
 The **real-time flag updates system** is supported by additional infrastructure that your existing Flagsmith deployment
