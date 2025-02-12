@@ -1,4 +1,4 @@
-@flagsmith/flagsmith
+/                @flagsmith/flagsmith-maintainers
 
 /api/            @flagsmith/flagsmith-back-end
 /docs/           @flagsmith/flagsmith-docs

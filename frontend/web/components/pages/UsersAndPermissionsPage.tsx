@@ -45,6 +45,7 @@ type UsersAndPermissionsPageType = {
 }
 
 const widths = [300, 200, 80]
+const noEmailProvider = `You must configure an email provider before using email invites. Please read our documentation on how to configure an email provider.`
 
 type UsersAndPermissionsInnerType = {
   organisation: Organisation
@@ -69,11 +70,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   subscriptionMeta,
   users,
 }) => {
-
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
+  const hasEmailProvider = Utils.hasEmailProvider()
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
@@ -84,6 +85,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     level: 'organisation',
     permission: 'MANAGE_USER_GROUPS',
   })
+
+  const hasInvitePermission =
+    hasEmailProvider && manageUsersPermission.permission
+  const tooltTipText = !hasEmailProvider
+    ? noEmailProvider
+    : Constants.organisationPermissions('Admin')
 
   const roleChanged = (id: number, { value: role }: { value: string }) => {
     AppActions.updateUserRole(id, role)
@@ -230,10 +237,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                       <Row space className='mt-4'>
                         <h5 className='mb-0'>Team Members</h5>
                         {Utils.renderWithPermission(
-                          !manageUsersPermission.permission,
-                          Constants.organisationPermissions('Admin'),
+                          hasInvitePermission,
+                          tooltTipText,
                           <Button
                             disabled={
+                              !hasEmailProvider ||
                               needsUpgradeForAdditionalSeats ||
                               !manageUsersPermission.permission
                             }
@@ -378,7 +386,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           theme='secondary'
                                           size='small'
                                           onClick={() => {
-                                            navigator.clipboard.writeText(
+                                            Utils.copyToClipboard(
                                               `${
                                                 document.location.origin
                                               }/invite/${
@@ -386,8 +394,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                                   (f) => f.role === role,
                                                 )?.hash
                                               }`,
+                                              'Link copied',
                                             )
-                                            toast('Link copied')
                                           }}
                                         >
                                           Copy Invite Link
@@ -496,7 +504,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                             }
                             return (
                               <Row
-                                data-test={`user-${i}`}
+                                data-test={`user-${email}`}
                                 space
                                 className={classNames('list-item clickable')}
                                 onClick={onEditClick}

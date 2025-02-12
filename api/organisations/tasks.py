@@ -3,6 +3,7 @@ import math
 from datetime import timedelta
 
 from app_analytics.influxdb_wrapper import get_current_api_usage
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import F, Max, Q
@@ -134,6 +135,9 @@ def handle_api_usage_notifications() -> None:
             },
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
+            logger.info(
+                f"Skipping processing API usage for organisation {organisation.id}"
+            )
             continue
 
         try:
@@ -151,7 +155,7 @@ def charge_for_api_call_count_overages():
 
     # Get the period where we're interested in any new API usage
     # notifications for the relevant billing period (ie, this month).
-    api_usage_notified_at = now - timedelta(days=30)
+    api_usage_notified_at = now - relativedelta(months=1)
 
     # Since we're only interested in monthly billed accounts, set a wide
     # threshold to catch as many billing periods that could be roughly

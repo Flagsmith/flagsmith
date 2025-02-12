@@ -47,6 +47,7 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import FeatureAnalytics from 'components/FeatureAnalytics'
+import { getPermission } from 'common/services/usePermission'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -72,6 +73,7 @@ const CreateFlag = class extends Component {
           multivariate_options: [],
         }
     const { allowEditDescription } = this.props
+    const hideTagsByType = this.props.hideTagsByType || []
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -106,7 +108,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tags: tags || [],
+      tags: tags?.filter((tag) => hideTagsByType.includes(tag.type)) || [],
     }
   }
 
@@ -193,16 +195,14 @@ const CreateFlag = class extends Component {
       })
     }
 
-    if (Utils.getFlagsmithHasFeature('github_integration')) {
-      getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubId: res?.data?.results[0]?.id,
-          hasIntegrationWithGithub: !!res?.data?.results?.length,
-        })
+    getGithubIntegration(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
       })
-    }
+    })
   }
 
   componentWillUnmount() {
@@ -214,26 +214,37 @@ const CreateFlag = class extends Component {
   userOverridesPage = (page) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        data
-          .get(
-            `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
-          )
-          .then((userOverrides) => {
-            this.setState({
-              userOverrides: userOverrides.results.map((v) => ({
-                ...v.feature_state,
-                identity: {
-                  id: v.identity_uuid,
-                  identifier: v.identifier,
-                },
-              })),
-              userOverridesPaging: {
-                count: userOverrides.count,
-                currentPage: page,
-                next: userOverrides.next,
-              },
-            })
-          })
+        getPermission(getStore(), {
+          id: this.props.environmentId,
+          level: 'environment',
+          permissions: 'VIEW_IDENTITIES',
+        }).then((permissions) => {
+          if (permissions?.length) {
+            data
+              .get(
+                `${Project.api}environments/${this.props.environmentId}/edge-identity-overrides?feature=${this.props.projectFlag.id}&page=${page}`,
+              )
+              .then((userOverrides) => {
+                this.setState({
+                  userOverrides: userOverrides.results.map((v) => ({
+                    ...v.feature_state,
+                    identity: {
+                      id: v.identity_uuid,
+                      identifier: v.identifier,
+                    },
+                  })),
+                  userOverridesPaging: {
+                    count: userOverrides.count,
+                    currentPage: page,
+                    next: userOverrides.next,
+                  },
+                })
+              })
+              .catch((e) => {
+                console.log('Cannot retrieve user overrides')
+              })
+          }
+        })
       }
 
       return
@@ -573,10 +584,11 @@ const CreateFlag = class extends Component {
           {!identity && this.state.tags && (
             <FormGroup className='mb-3 setting'>
               <InputGroup
-                title={identity ? 'Tags' : 'Tags'}
+                title={'Tags'}
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
+                    hideTagsByType={['UNHEALTHY']}
                     readOnly={!!identity || !createFeature}
                     projectId={`${this.props.projectId}`}
                     value={this.state.tags}
@@ -1799,10 +1811,7 @@ const CreateFlag = class extends Component {
                                     />
                                   </TabItem>
                                 )}
-                                {Utils.getFlagsmithHasFeature(
-                                  'github_integration',
-                                ) &&
-                                  hasIntegrationWithGithub &&
+                                {hasIntegrationWithGithub &&
                                   projectFlag?.id && (
                                     <TabItem
                                       data-test='external-resources-links'

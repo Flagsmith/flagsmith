@@ -367,6 +367,36 @@ def test_feature_state_gt_operator_order(
     assert segment_2_state > default_env_state
 
 
+def test_feature_state_gt_operator_order_when_environment_feature_version_is_none(
+    identity: Identity,
+    feature: Feature,
+    feature_state: FeatureState,
+    environment: Environment,
+    environment_v2_versioning: Environment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_state2 = FeatureState.objects.create(
+        identity=identity, feature=feature, environment=environment
+    )
+    mocker.patch.object(
+        FeatureState,
+        "type",
+        new_callable=mocker.PropertyMock,
+        return_value="ENVIRONMENT",
+    )
+
+    # When
+    with pytest.raises(ValueError) as exception:
+        assert feature_state > feature_state2
+
+    # Then
+    assert (
+        exception.value.args[0]
+        == "Cannot compare feature states as they are missing environment_feature_version."
+    )
+
+
 def test_feature_state_gt_operator_throws_value_error_if_different_environments(
     project: Project,
     environment: Environment,
@@ -438,6 +468,23 @@ def test_feature_state_save_calls_trigger_webhooks(
 
     # Then
     mock_trigger_webhooks.assert_called_with(feature_state)
+
+
+def test_delete_feature_should_not_trigger_fs_change_webhooks(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given
+    mock_trigger_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    # When
+    feature.delete()
+
+    # Then
+    mock_trigger_webhooks.assert_not_called()
 
 
 def test_feature_state_type_environment(
@@ -697,9 +744,9 @@ def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_ve
     assert feature_state.feature_state_value.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_state(
+def test_feature_state_value__get_skip_create_audit_log_for_feature_segment_delete(
     feature: Feature, feature_segment: FeatureSegment, environment: Environment
-):
+) -> None:
     # Give
     feature_state = FeatureState.objects.create(
         feature=feature, feature_segment=feature_segment, environment=environment
@@ -716,7 +763,51 @@ def test_feature_state_value__get_skip_create_audit_log_for_deleted_feature_stat
         id=feature_state_value.id, history_type="-"
     ).first()
 
-    assert fsv_history_instance.instance.get_skip_create_audit_log() is False
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value__get_skip_create_audit_log_for_identity_delete(
+    feature: Feature,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Give
+    feature_state = FeatureState.objects.create(
+        feature=feature, identity=identity, environment=environment
+    )
+    feature_state_value = feature_state.feature_state_value
+
+    # When
+    # Delete identity to cascade delete feature state
+    # instead of soft delete
+    identity.delete()
+
+    # Then
+    fsv_history_instance = FeatureStateValue.history.filter(
+        id=feature_state_value.id, history_type="-"
+    ).first()
+
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is True
+
+
+def test_feature_state_value__get_skip_create_audit_log_for_feature_delete(
+    feature: Feature,
+    environment: Environment,
+    identity: Identity,
+) -> None:
+    # Give
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    feature_state_value = feature_state.feature_state_value
+
+    # When
+    feature.delete()
+
+    # Then
+    fsv_history_instance = FeatureStateValue.history.filter(
+        id=feature_state_value.id, history_type="-"
+    ).first()
+
+    assert fsv_history_instance.instance.get_skip_create_audit_log() is True
 
 
 @pytest.mark.parametrize(
