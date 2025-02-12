@@ -5,8 +5,6 @@ import FeatureRow from 'components/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'
-import { getTags } from 'common/services/useTag'
-import { getStore } from 'common/store'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
@@ -25,7 +23,7 @@ import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
 import ClearFilters from 'components/ClearFilters'
-import { isEqual } from 'lodash'
+import Button from 'components/base/forms/Button'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -71,9 +69,7 @@ const FeaturesPage = class extends Component {
     super(props, context)
     this.state = this.getFiltersFromParams(Utils.fromParam())
     ES6Component(this)
-    getTags(getStore(), {
-      projectId: `${this.props.match.params.projectId}`,
-    })
+
     AppActions.getFeatures(
       this.props.match.params.projectId,
       this.props.match.params.environmentId,
@@ -417,7 +413,7 @@ const FeaturesPage = class extends Component {
                                           this.filter,
                                         )
                                       }}
-                                      onChange={(tags, isAutomated) => {
+                                      onChange={(tags) => {
                                         FeatureListStore.isLoading = true
                                         if (
                                           tags.includes('') &&

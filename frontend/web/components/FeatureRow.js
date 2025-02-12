@@ -16,6 +16,9 @@ import Button from './base/forms/Button'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import StaleFlagWarning from './StaleFlagWarning'
+import UnhealthyFlagWarning from './UnhealthyFlagWarning'
+import { getTags } from 'common/services/useTag'
+import { getStore } from 'common/store'
 
 export const width = [200, 70, 55, 70, 450]
 class TheComponent extends Component {
@@ -23,7 +26,21 @@ class TheComponent extends Component {
     router: propTypes.object.isRequired,
   }
 
-  state = {}
+  constructor(props, context) {
+    super(props, context)
+
+    this.state = {
+      unhealthyTagId: undefined,
+    }
+
+    getTags(getStore(), {
+      projectId: `${this.props.projectId}`,
+    }).then((res) => {
+      this.setState({
+        unhealthyTagId: res.data?.find((tag) => tag?.type === 'UNHEALTHY')?.id,
+      })
+    })
+  }
 
   confirmToggle = () => {
     const {
@@ -66,7 +83,7 @@ class TheComponent extends Component {
     const { projectFlag } = this.props
     e?.stopPropagation()?.()
     e?.currentTarget?.blur?.()
-    Utils.copyFeatureName(projectFlag.name)
+    Utils.copyToClipboard(projectFlag.name)
   }
   confirmRemove = (projectFlag, cb) => {
     openModal2(
@@ -85,7 +102,9 @@ class TheComponent extends Component {
       return
     }
     API.trackEvent(Constants.events.VIEW_FEATURE)
-
+    const hideTags = this.state.unhealthyTagId
+      ? [this.state.unhealthyTagId]
+      : []
     history.replaceState(
       {},
       null,
@@ -98,7 +117,7 @@ class TheComponent extends Component {
         {this.props.permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
         <Button
           onClick={() => {
-            Utils.copyFeatureName(projectFlag.name)
+            Utils.copyToClipboard(projectFlag.name)
           }}
           theme='icon'
           className='ms-2'
@@ -107,6 +126,7 @@ class TheComponent extends Component {
         </Button>
       </Row>,
       <CreateFlagModal
+        hideTags={hideTags}
         history={this.context.router.history}
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
@@ -240,6 +260,10 @@ class TheComponent extends Component {
         </Flex>
       )
     }
+
+    const isFeatureHealthEnabled =
+      Utils.getFlagsmithHasFeature('feature_health')
+
     return (
       <Row
         className={classNames(
@@ -321,8 +345,14 @@ class TheComponent extends Component {
                   )}
                 </TagValues>
                 {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+                {isFeatureHealthEnabled && !!isCompact && (
+                  <UnhealthyFlagWarning projectFlag={projectFlag} />
+                )}
               </Row>
               {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+              {isFeatureHealthEnabled && !isCompact && (
+                <UnhealthyFlagWarning projectFlag={projectFlag} />
+              )}
               {description && !isCompact && (
                 <div
                   className='list-item-subtitle'
