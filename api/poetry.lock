@@ -1479,7 +1479,7 @@ scipy = "^1.11.4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-split-testing"
-reference = "v0.1.3"
+reference = "v0.1.3-demo1"
 resolved_reference = "56eabebd52467c88fe97bc3cd742acfa92583ba0"
 
 [[package]]
