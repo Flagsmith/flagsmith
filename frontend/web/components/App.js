@@ -38,7 +38,7 @@ import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
 import ProjectChangeRequestsLink from './ProjectChangeRequestsLink'
-import BarChartIcon from './svg/BarChartIcon'
+import AccountProvider from 'common/providers/AccountProvider'
 
 const App = class extends Component {
   static propTypes = {
@@ -598,7 +598,7 @@ const App = class extends Component {
                           </NavSubLink>
                           {!Project.disableAnalytics && (
                             <NavSubLink
-                              icon={<BarChartIcon />}
+                              icon={<Icon name='bar-chart' fill='#9DA4AE' />}
                               id='feature-analytics-link'
                               to={`/project/${projectId}/feature-analytics`}
                             >
