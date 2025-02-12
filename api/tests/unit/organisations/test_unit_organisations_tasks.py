@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 from core.helpers import get_current_site_url
+from dateutil.relativedelta import relativedelta
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -834,10 +835,19 @@ def test_charge_for_api_call_count_overages_scale_up(
     organisation.subscription.subscription_id = "fancy_sub_id23"
     organisation.subscription.plan = "scale-up-v2"
     organisation.subscription.save()
+
+    # In order to cover an edge case found in production use, we make the
+    # notification date just outside the previous 30 days, because we want
+    # to make sure that we cover the case where someone with very high usage
+    # is notified in the first day of their subscription period (in a 31-day
+    # month).
+    notification_date = now - (timedelta(days=30) + timedelta(minutes=30))
+    assert notification_date > now - relativedelta(months=1)
+
     OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=100,
-        notified_at=now,
+        notified_at=notification_date,
     )
 
     mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
