@@ -77,6 +77,7 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
+    AdminClientAuthType,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -708,7 +709,7 @@ def admin_user_email(admin_user: FFAdminUser) -> str:
 
 @pytest.fixture
 def master_api_key_object(
-    master_api_key: typing.Tuple[MasterAPIKey, str]
+    master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> MasterAPIKey:
     return master_api_key[0]
 
@@ -725,7 +726,7 @@ def admin_user_id(admin_user: FFAdminUser) -> str:
 
 @pytest.fixture
 def admin_master_api_key_object(
-    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> MasterAPIKey:
     return admin_master_api_key[0]
 
@@ -737,7 +738,7 @@ def api_key_user(master_api_key_object: MasterAPIKey) -> APIKeyUser:
 
 @pytest.fixture()
 def admin_master_api_key_client(
-    admin_master_api_key: typing.Tuple[MasterAPIKey, str]
+    admin_master_api_key: typing.Tuple[MasterAPIKey, str],
 ) -> APIClient:
     key = admin_master_api_key[1]
     # Can not use `api_client` fixture here because:
@@ -1177,23 +1178,22 @@ def github_repository(
     )
 
 
-@pytest.fixture(
-    params=[
-        "admin_client_original",
-        "admin_master_api_key_client",
-    ]
-)
-def admin_client_new(
+@pytest.fixture(params=AdminClientAuthType.__args__)
+def admin_client_auth_type(
     request: pytest.FixtureRequest,
+) -> AdminClientAuthType:
+    return request.param
+
+
+@pytest.fixture
+def admin_client_new(
+    admin_client_auth_type: AdminClientAuthType,
     admin_client_original: APIClient,
     admin_master_api_key_client: APIClient,
 ) -> APIClient:
-    if request.param == "admin_client_original":
-        yield admin_client_original
-    elif request.param == "admin_master_api_key_client":
-        yield admin_master_api_key_client
-    else:
-        assert False, "Request param mismatch"
+    if admin_client_auth_type == "master_api_key":
+        return admin_master_api_key_client
+    return admin_client_original
 
 
 @pytest.fixture()

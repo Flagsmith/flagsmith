@@ -48,7 +48,9 @@ const renderIcon = (
           return
       }
     default:
-      return isPermanent ? <IonIcon className='ms-1' icon={lockClosed} color={darkened} /> : null
+      return isPermanent ? (
+        <IonIcon className='ms-1' icon={lockClosed} color={darkened} />
+      ) : null
   }
 }
 

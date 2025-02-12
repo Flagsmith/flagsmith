@@ -111,6 +111,15 @@ class CreateUpdateEnvironmentSerializer(
     invalid_plans = ("free",)
     field_names = ("minimum_change_request_approvals",)
 
+    class Meta(EnvironmentSerializerWithMetadata.Meta):
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=EnvironmentSerializerWithMetadata.Meta.model.objects.all(),
+                fields=("name", "project"),
+                message="An environment with this name already exists.",
+            )
+        ]
+
     def get_subscription(self) -> typing.Optional[Subscription]:
         view = self.context["view"]
 

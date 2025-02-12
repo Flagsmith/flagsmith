@@ -1,4 +1,5 @@
 import json
+import typing
 import uuid
 from datetime import date, datetime, timedelta
 from unittest import mock
@@ -31,6 +32,10 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType
+from environments.dynamodb import (
+    DynamoEnvironmentV2Wrapper,
+    DynamoIdentityWrapper,
+)
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from environments.permissions.models import UserEnvironmentPermission
@@ -50,7 +55,16 @@ from tests.types import (
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+from util.mappers import (
+    map_engine_feature_state_to_identity_override,
+    map_engine_identity_to_identity_document,
+    map_identity_override_to_identity_override_document,
+    map_identity_to_engine,
+)
 from webhooks.webhooks import WebhookEventType
+
+if typing.TYPE_CHECKING:
+    from mypy_boto3_dynamodb.service_resource import Table
 
 # patch this function as it's triggering extra threads and causing errors
 mock.patch("features.signals.trigger_feature_state_change_webhooks").start()
@@ -3506,3 +3520,55 @@ def test_filter_features_with_owners_and_group_owners_together(
     assert len(response.data["results"]) == 2
     assert response.data["results"][0]["id"] == feature.id
     assert response.data["results"][1]["id"] == feature2.id
+
+
+def test_delete_feature_deletes_any_related_identity_overrides(
+    flagsmith_environments_v2_table: "Table",
+    flagsmith_identities_table: "Table",
+    dynamodb_identity_wrapper: DynamoIdentityWrapper,
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    environment: Environment,
+    feature: Feature,
+    identity_featurestate: FeatureState,
+    identity: Identity,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    engine_identity = map_identity_to_engine(identity, with_overrides=True)
+    dynamodb_identity_wrapper.put_item(
+        map_engine_identity_to_identity_document(engine_identity)
+    )
+    dynamodb_wrapper_v2.write_environments(environments=[environment])
+    flagsmith_environments_v2_table.put_item(
+        Item=map_identity_override_to_identity_override_document(
+            map_engine_feature_state_to_identity_override(
+                feature_state=engine_identity.identity_features[0],
+                identity_uuid=str(engine_identity.identity_uuid),
+                identifier=engine_identity.identifier,
+                environment_api_key=environment.api_key,
+                environment_id=environment.id,
+            ),
+        )
+    )
+
+    feature.project.enable_dynamo_db = True
+    feature.project.save()
+
+    delete_feature_url = reverse(
+        "api-v1:projects:project-features-detail", args=[feature.project_id, feature.id]
+    )
+
+    # When
+    delete_feature_response = admin_client_new.delete(delete_feature_url)
+
+    # Then
+    assert delete_feature_response.status_code == status.HTTP_204_NO_CONTENT
+
+    assert (
+        flagsmith_environments_v2_table.query(
+            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(
+                environment_id=environment.id, feature_id=feature.id
+            )
+        )["Count"]
+        == 0
+    )

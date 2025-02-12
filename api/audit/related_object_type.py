@@ -10,3 +10,4 @@ class RelatedObjectType(enum.Enum):
     EDGE_IDENTITY = "Edge Identity"
     IMPORT_REQUEST = "Import request"
     EF_VERSION = "Environment feature version"
+    FEATURE_HEALTH = "Feature health status"

@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Literal
 
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
@@ -13,3 +13,5 @@ WithOrganisationPermissionsCallable = Callable[
 WithEnvironmentPermissionsCallable = Callable[
     [list[str] | None, int | None, bool], UserEnvironmentPermission
 ]
+
+AdminClientAuthType = Literal["user", "master_api_key"]

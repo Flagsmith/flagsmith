@@ -694,9 +694,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                               }
                             />
                           </div>
-                          {Utils.getFlagsmithHasFeature(
-                            'use_identity_overrides_in_local_eval',
-                          ) && (
                               <div className='mt-4'>
                                 <Setting
                                   title='Use identity overrides in local evaluation'
@@ -707,7 +704,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                                   }}
                                 />
                               </div>
-                            )}
                         </form>
                       </div>
                     </div>

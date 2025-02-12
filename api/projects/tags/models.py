@@ -8,6 +8,7 @@ class TagType(models.Choices):
     NONE = "NONE"
     STALE = "STALE"
     GITHUB = "GITHUB"
+    UNHEALTHY = "UNHEALTHY"
 
 
 class Tag(AbstractBaseExportableModel):

@@ -110,9 +110,7 @@ const CreateEditTag: FC<CreateEditTagType> = ({
     }
   }
 
-  const permissionType = Utils.getFlagsmithHasFeature('manage_tags_permission')
-    ? 'MANAGE_TAGS'
-    : 'ADMIN'
+  const permissionType = 'MANAGE_TAGS'
   return (
     <InlineModal
       title={title}
