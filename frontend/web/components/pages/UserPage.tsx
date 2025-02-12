@@ -634,12 +634,10 @@ const UserPage: FC<UserPageType> = (props) => {
                                             Utils.featureStateToValue(v) ===
                                             actualValue,
                                         )
-                                      const flagDifferent =
-                                        flagEnabledDifferent ||
-                                        flagValueDifferent
 
                                       const hasSegmentOverride =
-                                        flagValueDifferent &&
+                                        (flagEnabledDifferent ||
+                                          flagValueDifferent) &&
                                         !hasUserOverride &&
                                         !isMultiVariateOverride
 
