@@ -4,6 +4,7 @@ import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 
 const enableCrispLinks = () => {
     document.querySelectorAll('.open-chat').forEach((oc) => {
+        oc.style.cursor = 'pointer';
         oc.onclick = ({ target }) => {
             if (typeof $crisp !== 'undefined') {
                 $crisp.push(['do', 'chat:open']);
