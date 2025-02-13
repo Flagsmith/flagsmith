@@ -226,9 +226,7 @@ export function getSegmentDiff(
 ): TSegmentDiff {
   const oldRules = oldSegment?.rules || []
   const newRules = newSegment?.rules || []
-
   const { changes, totalChanges } = getRulesDiff(oldRules, newRules)
-
   return { changes, totalChanges }
 }
 
@@ -294,8 +292,15 @@ function getRulesDiff(
 
   // Compare rules based on IDs
   newRules.forEach((newRule) => {
-    const oldRule = oldRules.find((rule) => rule.id === newRule.id)
-    matchedIds.add(newRule.id)
+    const oldRule = oldRules.find(
+      (rule) =>
+        rule.id === newRule.id ||
+        (!!newRule.version_of && rule.id === newRule.version_of?.id),
+    )
+
+    if (oldRule) {
+      matchedIds.add(oldRule.id)
+    }
 
     const { diff, totalChanges: ruleTotalChanges } = diffRule(oldRule, newRule)
 
@@ -332,15 +337,28 @@ function getConditionsDiff(
 
   // Match conditions by `id`
   newConditions.forEach((newCondition) => {
-    const oldCondition = oldConditions.find(
-      (cond) => cond.id === newCondition.id,
-    )
+    const oldCondition = oldConditions.find((cond) => {
+      return (
+        cond.id === newCondition.id ||
+        (!!newCondition.version_of && cond.id === newCondition.version_of?.id)
+      )
+    })
     processedIds.add(newCondition.id)
-
+    if (oldCondition) {
+      processedIds.add(oldCondition.id)
+    }
     const hasChanged =
       !oldCondition ||
-      JSON.stringify({ ...oldCondition, id: undefined }) !==
-        JSON.stringify({ ...newCondition, id: undefined })
+      JSON.stringify({
+        ...oldCondition,
+        id: undefined,
+        version_of: undefined,
+      }) !==
+        JSON.stringify({
+          ...newCondition,
+          id: undefined,
+          version_of: undefined,
+        })
 
     conditions.push({
       hasChanged,

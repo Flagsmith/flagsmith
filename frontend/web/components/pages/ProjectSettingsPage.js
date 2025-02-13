@@ -24,9 +24,9 @@ import Tooltip from 'components/Tooltip'
 import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
-import EditHealthProvider from 'components/EditHealthProvider'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
+import EditHealthProvider from 'components/EditHealthProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'

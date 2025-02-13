@@ -3,11 +3,14 @@ import {
   TSegmentConditionDiff,
   TSegmentRuleDiff,
 } from './diff-utils'
-import React, { FC, useMemo } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import { Operator, Segment } from 'common/types/responses'
 import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import DiffString from './DiffString'
 import Utils from 'common/utils/utils'
+import Tabs from 'components/base/forms/Tabs'
+import { Tab } from '@material-ui/core'
+import TabItem from 'components/base/forms/TabItem'
 
 type DiffSegmentType = {
   oldSegment: Segment
@@ -18,25 +21,47 @@ type DiffRuleType = {
   diff: TSegmentRuleDiff
   index: number
 }
-
+const modes = {
+  'Diff': 0,
+  'New Value': 1,
+  'Old Value': 2,
+}
 const DiffSegment: FC<DiffSegmentType> = ({ newSegment, oldSegment }) => {
+  const [a, setA] = useState(oldSegment)
+  const [b, setB] = useState(newSegment)
+  const [mode, setMode] = useState(0)
+
   const diff = useMemo(() => {
-    return getSegmentDiff(oldSegment, newSegment)
-  }, [oldSegment, newSegment])
+    return getSegmentDiff(a, b)
+  }, [a, b])
+  useEffect(() => {
+    if (mode === modes.Diff) {
+      setA(oldSegment)
+      setB(newSegment)
+    } else if (mode === modes['New Value']) {
+      setA(newSegment)
+      setB(newSegment)
+    } else {
+      setA(oldSegment)
+      setB(oldSegment)
+    }
+  }, [mode])
   return (
     <div>
+      <Tabs onChange={setMode} className='mb-2' theme='pill' value={mode}>
+        {Object.keys(modes).map((key, i) => (
+          <TabItem tabLabel={key} />
+        ))}
+      </Tabs>
       <div className='d-flex flex-column ml-0 me-0 gap-3'>
         <div className='d-flex flex-column ml-0 me-0 gap-1'>
           <label>Name</label>
-          <DiffString oldValue={oldSegment.name} newValue={newSegment.name} />
+          <DiffString oldValue={a.name} newValue={b.name} />
         </div>
-        {(!!oldSegment.description || !!newSegment.description) && (
+        {(!!a.description || !!b.description) && (
           <div className='d-flex flex-column ml-0 me-0 gap-1'>
             <label>Description</label>
-            <DiffString
-              oldValue={oldSegment.description}
-              newValue={newSegment.description}
-            />
+            <DiffString oldValue={a.description} newValue={b.description} />
           </div>
         )}
         <div className='d-flex ml-0 me-0 flex-column'>
@@ -80,12 +105,24 @@ const DiffRule: FC<DiffRuleType> = ({ diff, index }) => {
     <>
       <SegmentRuleDivider rule={rule} index={index} className='mt-0 mb-1' />
       {diff?.rules?.map((v, i) => (
-        <>
+        <div className="mb-2 p-2">
           <DiffRule key={i} diff={v} index={i} />
-        </>
+        </div>
       ))}
       {diff?.conditions?.map((v, i) => (
-        <DiffCondition key={i} diff={v} index={i} />
+        <>
+          <DiffCondition key={i} diff={v} index={i} />
+          {i + 1 !== diff?.conditions?.length && (
+            <Row className='or-divider my-2'>
+              <Row>
+                <div className='or-divider__up' />
+                Or
+                <div className='or-divider__down' />
+              </Row>
+              <Flex className='or-divider__line' />
+            </Row>
+          )}
+        </>
       ))}
     </>
   )

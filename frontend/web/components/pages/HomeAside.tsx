@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState, useRef, useMemo } from 'react'
+import React, { ComponentProps, FC, useRef } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'

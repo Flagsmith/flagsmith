@@ -347,6 +347,8 @@ flagsmithFeatureExists(flag: string) {
     return `/organisation/${orgId}/projects`
   },
   getPlanName: (plan: string) => {
+    return planNames.enterprise
+
     if (plan && plan.includes('free')) {
       return planNames.free
     }
