@@ -49,7 +49,7 @@ If you are self-hosting Flagsmith, you can restrict authentication methods per e
 
 If you are self-hosting Flagsmith, you can disable password authentication by setting the `PREVENT_EMAIL_PASSWORD` 
 environment variable on the Flagsmith API. This will also hide the username and password fields from the login screen.
-Note that this not disable password authentication for
+Note that this does not disable password authentication for
 [Django Admin](/deployment/configuration/django-admin#email-and-password).
 
 If you have a private cloud Flagsmith instance, contact Flagsmith support to disable password authentication once 
