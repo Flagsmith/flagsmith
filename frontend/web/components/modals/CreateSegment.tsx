@@ -25,7 +25,6 @@ import {
   useGetSegmentQuery,
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
-import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
@@ -38,12 +37,15 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { cloneDeep } from 'lodash'
 import ProjectStore from 'common/stores/project-store'
-import classNames from 'classnames'
 import AddMetadataToEntity, {
   CustomMetadataField,
 } from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
+import SegmentRuleDivider from 'components/SegmentRuleDivider'
+import { useGetProjectQuery } from 'common/services/useProject'
+import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
+import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
 import AppActions from 'common/dispatcher/app-actions'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
@@ -127,6 +129,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [description, setDescription] = useState(segment.description)
   const [name, setName] = useState<Segment['name']>(segment.name)
   const [rules, setRules] = useState<Segment['rules']>(segment.rules)
+
   useEffect(() => {
     if (segment) {
       setRules(segment.rules)
@@ -135,6 +138,14 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }, [segment])
   const isEdit = !!segment.id
+  const { data: project } = useGetProjectQuery(
+    { id: `${projectId}` },
+    { skip: !projectId },
+  )
+  const is4Eyes =
+    isEdit &&
+    Utils.changeRequestsEnabled(project?.minimum_change_request_approvals)
+
   const [
     createSegment,
     {
@@ -153,7 +164,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
       isSuccess: updateSuccess,
     },
   ] = useUpdateSegmentMutation()
-
+  const [createChangeRequest, { isLoading: isCreatingChangeRequest }] =
+    useCreateProjectChangeRequestMutation({})
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(UserTabs.RULES)
@@ -265,6 +277,43 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged, isEdit])
+  const onCreateChangeRequest = (changeRequestData: {
+    approvals: []
+    description: string
+    title: string
+  }) => {
+    closeModal2()
+    setValueChanged(false)
+    createChangeRequest({
+      data: {
+        approvals: (changeRequestData.approvals || []).filter((v) => !!v.user),
+        committed_by: null,
+        conflicts: [],
+        description: changeRequestData.description,
+        group_assignments: (changeRequestData.approvals || []).filter(
+          (v) => !!v.group,
+        ),
+        is_approved: false,
+        is_committed: false,
+        segments: [
+          {
+            description,
+            feature: feature,
+            metadata: metadata as Metadata[],
+            name,
+            project: projectId,
+            rules,
+            segment_id: segment.id!,
+          },
+        ],
+        title: changeRequestData.title,
+      },
+      project_id: `${projectId}`,
+    }).then(() => {
+      closeModal()
+      toast('Created change request')
+    })
+  }
   useEffect(() => {
     setInterceptClose(onClosing)
     return () => setInterceptClose(null)
@@ -346,21 +395,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             const displayIndex = rulesToShow.indexOf(rule)
             return (
               <div key={i}>
-                <Row
-                  className={classNames('and-divider my-1', {
-                    'text-danger': rule.type !== 'ANY',
-                  })}
-                >
-                  <Flex className='and-divider__line' />
-                  {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
-                    }`,
-                  )}
-                  <Flex className='and-divider__line' />
-                </Row>
+                <SegmentRuleDivider rule={rule} index={displayIndex} />
                 <Rule
                   showDescription={showDescriptions}
                   readOnly={readOnly}
@@ -432,6 +467,11 @@ const CreateSegment: FC<CreateSegmentType> = ({
 
   return (
     <>
+      <ExistingProjectChangeRequestAlert
+        className='m-2'
+        projectId={`${projectId}`}
+        segmentId={`${segment.id}`}
+      />
       {isEdit && !condensed ? (
         <Tabs value={tab} onChange={(tab: UserTabs) => setTab(tab)}>
           <TabItem
@@ -445,6 +485,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
           >
             <div className='my-4'>
               <CreateSegmentRulesTabForm
+                is4Eyes={is4Eyes}
+                onCreateChangeRequest={onCreateChangeRequest}
                 save={save}
                 condensed={condensed}
                 segmentsLimitAlert={segmentsLimitAlert}
@@ -521,6 +563,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             <div className={className || 'my-3 mx-4'}>
               <CreateSegmentRulesTabForm
                 save={save}
+                is4Eyes={is4Eyes}
+                onCreateChangeRequest={onCreateChangeRequest}
                 condensed={condensed}
                 segmentsLimitAlert={segmentsLimitAlert}
                 name={name}
@@ -597,14 +641,18 @@ type LoadingCreateSegmentType = {
 
 const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
   const [environmentId, setEnvironmentId] = useState(props.environmentId)
-  const { data: segmentData, isLoading } = useGetSegmentQuery(
+  const { data: segmentData, isLoading: segmentLoading } = useGetSegmentQuery(
     {
       id: `${props.segment}`,
       projectId: `${props.projectId}`,
     },
     { skip: !props.segment },
   )
-
+  const { isLoading: projectLoading } = useGetProjectQuery(
+    { id: `${props.projectId}` },
+    { skip: !props.projectId },
+  )
+  const isLoading = projectLoading || segmentLoading
   const [page, setPage] = useState<PageType>({
     number: 1,
     pageType: undefined,
