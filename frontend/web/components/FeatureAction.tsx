@@ -21,13 +21,12 @@ interface FeatureActionProps {
   hideHistory: boolean
   hideRemove: boolean
   onShowHistory: () => void
-  isCompact?: boolean
-  onCopyName: () => void
+  onShowAnalytics: () => void
   onShowAudit: () => void
   onRemove: () => void
 }
 
-type ActionType = 'copy' | 'audit' | 'history' | 'remove'
+type ActionType = 'analytics' | 'audit' | 'history' | 'remove'
 
 function calculateListPosition(
   btnEl: HTMLElement,
@@ -47,9 +46,8 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   hideAudit,
   hideHistory,
   hideRemove,
-  isCompact,
-  onCopyName,
   onRemove,
+  onShowAnalytics,
   onShowAudit,
   onShowHistory,
   projectId,
@@ -71,19 +69,19 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
   const handleActionClick = useCallback(
     (action: ActionType) => {
-      if (action === 'copy') {
-        onCopyName()
-      } else if (action === 'history') {
+      if (action === 'history') {
         onShowHistory()
       } else if (action === 'audit') {
         onShowAudit()
       } else if (action === 'remove') {
         onRemove()
+      } else if (action === 'analytics') {
+        onShowAnalytics()
       }
 
       close()
     },
-    [close, onCopyName, onRemove, onShowHistory],
+    [close, onShowAudit, onShowAnalytics, onRemove, onShowHistory],
   )
 
   useOutsideClick(listRef, handleOutsideClick)
@@ -109,13 +107,14 @@ export const FeatureAction: FC<FeatureActionProps> = ({
         <div ref={listRef} className='feature-action__list'>
           <div
             className='feature-action__item'
+            data-test={`feature-audit-${featureIndex}`}
             onClick={(e) => {
               e.stopPropagation()
-              handleActionClick('copy')
+              handleActionClick('analytics')
             }}
           >
-            <Icon name='copy' width={18} fill='#9DA4AE' />
-            <span>Copy Feature Name</span>
+            <Icon name='bar-chart' width={18} fill='#9DA4AE' />
+            <span>Analytics</span>
           </div>
           {!hideAudit && (
             <div
@@ -127,10 +126,9 @@ export const FeatureAction: FC<FeatureActionProps> = ({
               }}
             >
               <Icon name='list' width={18} fill='#9DA4AE' />
-              <span>Show Audit Logs</span>
+              <span>Audit Logs</span>
             </div>
           )}
-
           {!hideHistory && (
             <div
               className='feature-action__item'
@@ -141,7 +139,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
               }}
             >
               <Icon name='clock' width={18} fill='#9DA4AE' />
-              <span>Show History</span>
+              <span>History</span>
             </div>
           )}
 
@@ -156,42 +154,51 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                 Utils.renderWithPermission(
                   removeFeaturePermission,
                   Constants.projectPermissions('Delete Feature'),
-                  <Tooltip
-                    title={
-                      <div
-                        className={classNames('feature-action__item', {
-                          'feature-action__item_disabled':
-                            !removeFeaturePermission || readOnly || isProtected,
-                        })}
-                        data-test={`remove-feature-btn-${featureIndex}`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleActionClick('remove')
-                        }}
-                      >
-                        <Icon name='trash-2' width={18} fill='#9DA4AE' />
-                        <span>Remove feature</span>
-                      </div>
-                    }
-                  >
-                    {isProtected &&
-                      `<span>This feature has been tagged with the permanent tag${
-                        protectedTags?.length > 1 ? 's' : ''
-                      } ${protectedTags
-                        ?.map((tag) => {
-                          const tagColor = Utils.colour(getTagColor(tag))
-                          return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
-                            tagColor,
-                          ).fade(0.92)};border-color:${tagColor.darken(
-                            0.1,
-                          )};color:${tagColor.darken(0.1)};'>
+                  <div className='mb-1'>
+                    <hr className='my-1 mx-2' />
+                    <Tooltip
+                      title={
+                        <div
+                          className={classNames(
+                            'feature-action__item text-danger',
+                            {
+                              'feature-action__item_disabled':
+                                !removeFeaturePermission ||
+                                readOnly ||
+                                isProtected,
+                            },
+                          )}
+                          data-test={`remove-feature-btn-${featureIndex}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleActionClick('remove')
+                          }}
+                        >
+                          <Icon name='trash-2' width={18} fill='#ef4d56' />
+                          <span>Remove feature</span>
+                        </div>
+                      }
+                    >
+                      {isProtected
+                        ? `<span>This feature has been tagged with the permanent tag${
+                            protectedTags?.length > 1 ? 's' : ''
+                          } ${protectedTags
+                            ?.map((tag) => {
+                              const tagColor = Utils.colour(getTagColor(tag))
+                              return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
+                                tagColor,
+                              ).fade(0.92)};border-color:${tagColor.darken(
+                                0.1,
+                              )};color:${tagColor.darken(0.1)};'>
                         ${tag.label}
                       </strong>`
-                        })
-                        .join('')}. Please remove the tag${
-                        protectedTags?.length > 1 ? 's' : ''
-                      } before attempting to delete this flag.</span>`}
-                  </Tooltip>,
+                            })
+                            .join('')}. Please remove the tag${
+                            protectedTags?.length > 1 ? 's' : ''
+                          } before attempting to delete this flag.</span>`
+                        : ''}
+                    </Tooltip>
+                  </div>,
                 )
               }
             </Permission>

@@ -57,7 +57,11 @@ const FeatureAnalyticsPage: FC<FeatureAnalyticsPageType> = ({
         <FeatureAnalytics
           projectId={match.params.projectId}
           featureId={selectedFlag}
-          defaultEnvironmentIds={environments.results.map((v) => `${v.id}`)}
+          defaultEnvironmentIds={
+            params.env
+              ? [params.env]
+              : environments.results.map((v) => `${v.id}`)
+          }
         />
       )}
     </div>
