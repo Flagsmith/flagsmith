@@ -108,13 +108,7 @@ export default (
       <Route path={routes['not-found']} exact component={NotFoundErrorPage} />
       <Route path={routes.signup} exact component={HomePage} />
       <Route path={routes.home} exact component={HomePage} />
-      {Utils.getFlagsmithHasFeature('github_integration') && (
-        <Route
-          path={routes['github-setup']}
-          exact
-          component={GitHubSetupPage}
-        />
-      )}
+      <Route path={routes['github-setup']} exact component={GitHubSetupPage} />
       <Route path={routes.maintenance} exact component={Maintenance} />
       <Route
         path={routes['password-reset']}

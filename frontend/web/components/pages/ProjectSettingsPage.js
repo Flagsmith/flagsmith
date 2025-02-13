@@ -26,7 +26,7 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
-import { getRoleProjectPermissions } from 'common/services/useRolePermission'
+import EditHealthProvider from 'components/EditHealthProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -560,20 +560,18 @@ const ProjectSettingsPage = class extends Component {
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
                     >
-                      {Utils.isSaas() &&
-                        Utils.getFlagsmithHasFeature('realtime_setting') &&
-                        Utils.isSaas() && (
-                          <FormGroup className='mt-4 col-md-8'>
-                            <Setting
-                              feature='REALTIME'
-                              disabled={isSaving}
-                              onChange={() =>
-                                this.toggleRealtimeUpdates(project, editProject)
-                              }
-                              checked={project.enable_realtime_updates}
-                            />
-                          </FormGroup>
-                        )}
+                      {Utils.isSaas() && (
+                        <FormGroup className='mt-4 col-md-8'>
+                          <Setting
+                            feature='REALTIME'
+                            disabled={isSaving}
+                            onChange={() =>
+                              this.toggleRealtimeUpdates(project, editProject)
+                            }
+                            checked={project.enable_realtime_updates}
+                          />
+                        </FormGroup>
+                      )}
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
                           <FormGroup className='mt-4 col-md-8'>
@@ -608,6 +606,17 @@ const ProjectSettingsPage = class extends Component {
                         projectId={this.props.match.params.projectId}
                       />
                     </TabItem>
+                    {Utils.getFlagsmithHasFeature('feature_health') && (
+                      <TabItem
+                        data-test='feature-health-settings'
+                        tabLabel='Feature Health'
+                      >
+                        <EditHealthProvider
+                          projectId={this.props.match.params.projectId}
+                          tabClassName='flat-panel'
+                        />
+                      </TabItem>
+                    )}
                     <TabItem tabLabel='Permissions'>
                       <EditPermissions
                         onSaveUser={() => {

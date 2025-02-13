@@ -1,12 +1,12 @@
 repos:
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 6.0.0
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 24.10.0
+    rev: 25.1.0
     hooks:
       - id: black
         language_version: python3
@@ -39,7 +39,7 @@ repos:
         types: [javascript,jsx,ts,tsx,markdown,mdx,html,css,json,yaml]
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 1.8.0
+    rev: 2.0.1
     hooks:
       - id: poetry-check
         args: ['-C', 'api']
