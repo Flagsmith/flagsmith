@@ -38,6 +38,7 @@ from features.workflows.core.models import (
     ChangeRequestApproval,
     ChangeRequestGroupAssignment,
 )
+from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
@@ -1003,3 +1004,22 @@ def test_url_via_project(project_change_request: ChangeRequest) -> None:
     expected_url = get_current_site_url()
     expected_url += f"/project/{project_id}/change-requests/{project_change_request.id}"
     assert url == expected_url
+
+
+def test_delete_organisation_with_committed_change_request(
+    organisation: Organisation,
+    feature: Feature,
+    change_request_no_required_approvals: ChangeRequest,
+    admin_user: FFAdminUser,
+) -> None:
+    """
+    Specific test to cover https://github.com/Flagsmith/flagsmith/issues/5097
+    """
+    # Given
+    change_request_no_required_approvals.commit(admin_user)
+
+    # When
+    organisation.delete()
+
+    # Then
+    assert organisation.deleted_at is not None

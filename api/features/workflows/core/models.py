@@ -312,7 +312,8 @@ class ChangeRequest(
         # deleted but, since this can have unexpected effects on published
         # feature states, we also want to prevent it at the ORM level.
         if self.committed_at and not (
-            self.environment.deleted_at
+            (self.environment and self.environment.deleted_at)
+            or (self.project and self.project.deleted_at)
             or (self.live_from and self.live_from > timezone.now())
         ):
             raise ChangeRequestDeletionError(
