@@ -47,7 +47,7 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 :::info
 
-Feature Health is an upcoming feature that is not yet available.
+[Feature Health](/advanced-use/feature-health) is an upcoming feature that is not yet available.
 
 :::
 
