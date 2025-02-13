@@ -74,4 +74,6 @@ The Feature Health UI will display the following information:
 - Link to the alert instance in your Alertmanager
 - Alert description (if provided in alert annotations)
 - Alert summary (if provided in alert annotations)
+- Dashboard URL (if Grafana)
+- Panel URL (if Grafana)
 - Runbook URL (if provided in alert annotations)

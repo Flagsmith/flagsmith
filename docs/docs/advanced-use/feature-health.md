@@ -45,9 +45,52 @@ You can use the webhook in your custom integration. Refer to the payload schema 
       "enum": ["healthy", "unhealthy"]
     },
     "reason": {
-      "type": "string"
+      "$ref": "#/definitions/FeatureHealthEventReason"
     }
   },
-  "required": ["feature", "status"]
+  "required": ["feature", "status"],
+  "definitions": {
+    "FeatureHealthEventReason": {
+      "type": "object",
+      "properties": {
+        "text_blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FeatureHealthEventReasonTextBlock"
+          }
+        },
+        "url_blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FeatureHealthEventReasonUrlBlock"
+          }
+        }
+      }
+    },
+    "FeatureHealthEventReasonTextBlock": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": ["text"]
+    },
+    "FeatureHealthEventReasonUrlBlock": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": ["url"]
+    }
+  }
 }
 ```
