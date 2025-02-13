@@ -436,7 +436,12 @@ class TheComponent extends Component {
                 removeFlag(projectId, projectFlag)
               })
             }}
-            onCopyName={this.copyFeature}
+            onShowAnalytics={() => {
+              if (disableControls) return
+              this.context.router.history.push(
+                `/project/${projectId}/feature-analytics?env=${environment.id}&feature=${projectFlag.id}`,
+              )
+            }}
           />
         </div>
       </Row>
