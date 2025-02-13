@@ -7,13 +7,16 @@ from features.feature_health.constants import (
     UNHEALTHY_TAG_COLOUR,
     UNHEALTHY_TAG_LABEL,
 )
+from features.feature_health.mappers import (
+    map_feature_health_event_data_to_feature_health_event,
+)
 from features.feature_health.models import (
     FeatureHealthEvent,
     FeatureHealthEventType,
     FeatureHealthProvider,
     FeatureHealthProviderName,
 )
-from features.feature_health.providers import sample
+from features.feature_health.providers import grafana, sample
 from features.models import Feature
 from projects.tags.models import Tag, TagType
 
@@ -23,26 +26,40 @@ if typing.TYPE_CHECKING:
 logger = structlog.get_logger("feature_health")
 
 
+PROVIDER_RESPONSE_GETTERS: dict[
+    str,
+    typing.Callable[[str], "FeatureHealthProviderResponse"],
+] = {
+    FeatureHealthProviderName.GRAFANA.value: grafana.get_provider_response,
+    FeatureHealthProviderName.SAMPLE.value: sample.get_provider_response,
+}
+
+
 def get_provider_response(
     provider: FeatureHealthProvider, payload: str
 ) -> "FeatureHealthProviderResponse | None":
-    if provider.name == FeatureHealthProviderName.SAMPLE.value:
-        return sample.map_payload_to_provider_response(payload)
-    logger.error(
-        "invalid-feature-health-provider-requested",
-        provider_name=provider.name,
-        provider_id=provider.uuid,
-    )
-    return None
+    response = None
+    try:
+        response = PROVIDER_RESPONSE_GETTERS[provider.name](payload)
+    except Exception as exc:
+        logger.error(
+            "feature-health-provider-error",
+            provider_name=provider.name,
+            provider_id=provider.uuid,
+            exc_info=exc,
+        )
+    return response
 
 
-def create_feature_health_event_from_provider(
+def create_feature_health_events_from_provider(
     provider: FeatureHealthProvider,
     payload: str,
-) -> FeatureHealthEvent | None:
+) -> list[FeatureHealthEvent]:
+    from features.feature_health import tasks
+
     try:
         response = get_provider_response(provider, payload)
-    except (KeyError, ValueError) as exc:
+    except Exception as exc:
         logger.error(
             "invalid-feature-health-event-data",
             provider_name=provider.name,
@@ -51,23 +68,32 @@ def create_feature_health_event_from_provider(
         )
         return None
     project = provider.project
-    if feature := Feature.objects.filter(
-        project=provider.project, name=response.feature_name  # type: ignore[union-attr]
-    ).first():
-        if response.environment_name:  # type: ignore[union-attr]
-            environment = Environment.objects.filter(
-                project=project, name=response.environment_name  # type: ignore[union-attr]
-            ).first()
-        else:
-            environment = None
-        return FeatureHealthEvent.objects.create(  # type: ignore[no-any-return]
-            feature=feature,
-            environment=environment,
-            provider_name=provider.name,
-            type=response.event_type,  # type: ignore[union-attr]
-            reason=response.reason,  # type: ignore[union-attr]
-        )
-    return None
+    events_to_create = []
+    feature_ids_to_update = set()
+    if response:
+        for event_data in response.events:
+            if feature := Feature.objects.filter(
+                project=provider.project, name=event_data.feature_name
+            ).first():
+                feature_ids_to_update.add(feature.id)
+                if environment_name := event_data.environment_name:
+                    environment = Environment.objects.filter(
+                        project=project,
+                        name=environment_name,
+                    ).first()
+                else:
+                    environment = None
+                events_to_create.append(
+                    map_feature_health_event_data_to_feature_health_event(
+                        feature_health_event_data=event_data,
+                        feature=feature,
+                        environment=environment,
+                    )
+                )
+    FeatureHealthEvent.objects.bulk_create(events_to_create)
+    for feature_id in feature_ids_to_update:
+        tasks.update_feature_unhealthy_tag.delay(args=(feature_id,))
+    return events_to_create
 
 
 def update_feature_unhealthy_tag(feature: "Feature") -> None:

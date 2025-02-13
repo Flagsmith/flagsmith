@@ -264,3 +264,236 @@ def test_webhook__sample_provider__post__invalid_payload__expected_response(
 
     # Then
     assert response.status_code == 400
+
+
+def test_webhook__grafana_provider__post__expected_feature_health_event_created(
+    project: int,
+    feature: int,
+    feature_name: str,
+    grafana_feature_health_provider_webhook_url: str,
+    api_client: APIClient,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    feature_health_events_url = reverse(
+        "api-v1:projects:feature-health-events-list", args=[project]
+    )
+    webhook_data = {
+        "alerts": [
+            {
+                "status": "firing",
+                "labels": {
+                    "alertname": "Panel Title",
+                    "flagsmith_feature": feature_name,
+                    "grafana_folder": "Test",
+                },
+                "annotations": {
+                    "description": "This is the description.",
+                    "runbook_url": "https://hit.me",
+                    "summary": "This is a summary.",
+                },
+                "startsAt": "2025-02-12T21:06:50Z",
+                "endsAt": "0001-01-01T00:00:00Z",
+                "generatorURL": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+                "fingerprint": "e8790ab48f71f61e",
+            }
+        ],
+    }
+    expected_reason = json.dumps(
+        {
+            "description": "This is the description.",
+            "runbook_url": "https://hit.me",
+            "summary": "This is a summary.",
+            "alert_name": "Panel Title",
+            "generator_url": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+        }
+    )
+
+    # When
+    response = api_client.post(
+        grafana_feature_health_provider_webhook_url,
+        data=json.dumps(webhook_data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    response = admin_client_new.get(feature_health_events_url)
+    assert response.json() == [
+        {
+            "created_at": "2025-02-12T21:06:50Z",
+            "environment": None,
+            "feature": feature,
+            "provider_name": "Grafana",
+            "reason": expected_reason,
+            "type": "UNHEALTHY",
+        }
+    ]
+
+
+def test_webhook__grafana_provider__post__multiple__expected_feature_health_events(
+    project: int,
+    environment: int,
+    environment_name: str,
+    feature: int,
+    feature_name: str,
+    grafana_feature_health_provider_webhook_url: str,
+    api_client: APIClient,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    feature_health_events_url = reverse(
+        "api-v1:projects:feature-health-events-list", args=[project]
+    )
+    webhook_data = {
+        "alerts": [
+            {
+                "status": "firing",
+                "labels": {
+                    "alertname": "Panel Title",
+                    "flagsmith_feature": feature_name,
+                    "grafana_folder": "Test",
+                },
+                "annotations": {
+                    "description": "This is the description.",
+                    "runbook_url": "https://hit.me",
+                    "summary": "This is a summary.",
+                },
+                "startsAt": "2025-02-12T21:06:50Z",
+                "endsAt": "0001-01-01T00:00:00Z",
+                "generatorURL": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+                "fingerprint": "e8790ab48f71f61e",
+            }
+        ],
+    }
+    expected_reason = json.dumps(
+        {
+            "description": "This is the description.",
+            "runbook_url": "https://hit.me",
+            "summary": "This is a summary.",
+            "alert_name": "Panel Title",
+            "generator_url": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+        }
+    )
+    other_webhook_data = {
+        "alerts": [
+            {
+                "status": "firing",
+                "labels": {
+                    "alertname": "Other Panel Title",
+                    "flagsmith_feature": feature_name,
+                    "flagsmith_environment": environment_name,
+                    "grafana_folder": "Test",
+                },
+                "annotations": {
+                    "description": "This is the description.",
+                    "summary": "This is a summary.",
+                },
+                "startsAt": "2025-02-12T21:07:50Z",
+                "endsAt": "0001-01-01T00:00:00Z",
+                "generatorURL": "https://grafana.example.com/alerting/grafana/xjshhbiigohd/view?orgId=1",
+                "fingerprint": "ba6b7c8d9e0f1",
+            }
+        ],
+    }
+    expected_other_reason = json.dumps(
+        {
+            "description": "This is the description.",
+            "summary": "This is a summary.",
+            "alert_name": "Other Panel Title",
+            "generator_url": "https://grafana.example.com/alerting/grafana/xjshhbiigohd/view?orgId=1",
+        }
+    )
+    unrelated_webhook_data = {
+        "alerts": [
+            {
+                "status": "firing",
+                "labels": {
+                    "alertname": "Different",
+                    "grafana_folder": "Test",
+                },
+                "annotations": {
+                    "description": "This is the description.",
+                    "runbook_url": "https://hit.me",
+                    "summary": "This is a summary.",
+                },
+                "startsAt": "2025-02-12T21:08:50Z",
+                "endsAt": "0001-01-01T00:00:00Z",
+                "generatorURL": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+                "fingerprint": "a6b7c8d9e0f1",
+            }
+        ],
+    }
+    resolved_webhook_data = {
+        "alerts": [
+            {
+                "status": "resolved",
+                "labels": {
+                    "alertname": "Panel Title",
+                    "flagsmith_feature": feature_name,
+                    "grafana_folder": "Test",
+                },
+                "annotations": {
+                    "description": "This is the description.",
+                    "runbook_url": "https://hit.me",
+                    "summary": "This is a summary.",
+                },
+                "startsAt": "2025-02-12T21:10:50Z",
+                "endsAt": "2025-02-12T21:12:50Z",
+                "generatorURL": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+                "fingerprint": "e8790ab48f71f61e",
+            }
+        ],
+    }
+
+    # When
+    # webhook is triggered by a firing alert...
+    api_client.post(
+        grafana_feature_health_provider_webhook_url,
+        data=json.dumps(webhook_data),
+        content_type="application/json",
+    )
+    # ...webhook triggered by a resolved alert that previously fired...
+    api_client.post(
+        grafana_feature_health_provider_webhook_url,
+        data=json.dumps(resolved_webhook_data),
+        content_type="application/json",
+    )
+    # ...webhook triggered by a firing alert that is unrelated to the first and has an environment label...
+    api_client.post(
+        grafana_feature_health_provider_webhook_url,
+        data=json.dumps(other_webhook_data),
+        content_type="application/json",
+    )
+    # ...webhook triggered by a firing alert that is unrelated to the feature.
+    response = api_client.post(
+        grafana_feature_health_provider_webhook_url,
+        data=json.dumps(unrelated_webhook_data),
+        content_type="application/json",
+    )
+
+    # Then
+    # unrelated alert was not accepted by webhook
+    assert response.status_code == 400
+    response = admin_client_new.get(feature_health_events_url)
+    assert response.json() == [
+        # second firing alert has not been resolved
+        # and provided an environment label
+        {
+            "created_at": "2025-02-12T21:07:50Z",
+            "environment": environment,
+            "feature": feature,
+            "provider_name": "Grafana",
+            "reason": expected_other_reason,
+            "type": "UNHEALTHY",
+        },
+        # first firing alert has been resolved
+        {
+            "created_at": "2025-02-12T21:12:50Z",
+            "environment": None,
+            "feature": feature,
+            "provider_name": "Grafana",
+            "reason": expected_reason,
+            "type": "HEALTHY",
+        },
+    ]

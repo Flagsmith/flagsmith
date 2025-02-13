@@ -25,9 +25,11 @@ def test_get_provider_response__invalid_provider__return_none__log_expected(
     assert response is None
     assert log.events == [
         {
-            "event": "invalid-feature-health-provider-requested",
+            "event": "feature-health-provider-error",
             "level": "error",
             "provider_id": expected_provider_uuid,
             "provider_name": expected_provider_name,
+            "exc_info": mocker.ANY,
         },
     ]
+    assert isinstance(log.events[0]["exc_info"], KeyError)
