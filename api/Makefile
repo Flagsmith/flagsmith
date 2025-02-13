@@ -77,6 +77,11 @@ django-make-migrations:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
+.PHONY: django-squash-migrations
+django-squash-migrations:
+	poetry run python manage.py waitfordb
+	poetry run python manage.py squashmigrations $(opts)
+
 .PHONY: django-migrate
 django-migrate:
 	poetry run python manage.py waitfordb
