@@ -41,7 +41,7 @@ def get_provider_response(
     response = None
     try:
         response = PROVIDER_RESPONSE_GETTERS[provider.name](payload)
-    except Exception as exc:
+    except (KeyError, ValueError) as exc:
         logger.error(
             "feature-health-provider-error",
             provider_name=provider.name,
