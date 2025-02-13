@@ -125,7 +125,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
             "environment": None,
             "feature": feature,
             "provider_name": "Sample",
-            "reason": "",
+            "reason": {"text_blocks": [], "url_blocks": []},
             "type": "UNHEALTHY",
         }
     ]
@@ -183,7 +183,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
             "environment": environment,
             "feature": feature,
             "provider_name": "Sample",
-            "reason": "",
+            "reason": {"text_blocks": [], "url_blocks": []},
             "type": "UNHEALTHY",
         }
     ]
@@ -226,7 +226,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
             "environment": None,
             "feature": unhealthy_feature,
             "provider_name": "Sample",
-            "reason": "",
+            "reason": {"text_blocks": [], "url_blocks": []},
             "type": "HEALTHY",
         }
     ]
@@ -295,19 +295,33 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
                 "startsAt": "2025-02-12T21:06:50Z",
                 "endsAt": "0001-01-01T00:00:00Z",
                 "generatorURL": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+                "dashboardURL": "https://grafana.example.com/d/ce99ti2tuu3nka?orgId=1",
+                "panelURL": "https://grafana.example.com/d/ce99ti2tuu3nka?orgId=1&viewPanel=1",
                 "fingerprint": "e8790ab48f71f61e",
             }
         ],
     }
-    expected_reason = json.dumps(
-        {
-            "description": "This is the description.",
-            "runbook_url": "https://hit.me",
-            "summary": "This is a summary.",
-            "alert_name": "Panel Title",
-            "generator_url": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
-        }
-    )
+    expected_reason = {
+        "text_blocks": [
+            {"text": "This is the description.", "title": "Panel Title"},
+            {"text": "This is a summary.", "title": "Summary"},
+        ],
+        "url_blocks": [
+            {
+                "title": "Alert",
+                "url": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+            },
+            {
+                "title": "Dashboard",
+                "url": "https://grafana.example.com/d/ce99ti2tuu3nka?orgId=1",
+            },
+            {
+                "title": "Panel",
+                "url": "https://grafana.example.com/d/ce99ti2tuu3nka?orgId=1&viewPanel=1",
+            },
+            {"title": "Runbook", "url": "https://hit.me"},
+        ],
+    }
 
     # When
     response = api_client.post(
@@ -366,15 +380,19 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
             }
         ],
     }
-    expected_reason = json.dumps(
-        {
-            "description": "This is the description.",
-            "runbook_url": "https://hit.me",
-            "summary": "This is a summary.",
-            "alert_name": "Panel Title",
-            "generator_url": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
-        }
-    )
+    expected_reason = {
+        "text_blocks": [
+            {"text": "This is the description.", "title": "Panel Title"},
+            {"text": "This is a summary.", "title": "Summary"},
+        ],
+        "url_blocks": [
+            {
+                "title": "Alert",
+                "url": "https://grafana.example.com/alerting/grafana/aebbhjnirottsa/view?orgId=1",
+            },
+            {"title": "Runbook", "url": "https://hit.me"},
+        ],
+    }
     other_webhook_data = {
         "alerts": [
             {
@@ -396,14 +414,18 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
             }
         ],
     }
-    expected_other_reason = json.dumps(
-        {
-            "description": "This is the description.",
-            "summary": "This is a summary.",
-            "alert_name": "Other Panel Title",
-            "generator_url": "https://grafana.example.com/alerting/grafana/xjshhbiigohd/view?orgId=1",
-        }
-    )
+    expected_other_reason = {
+        "text_blocks": [
+            {"text": "This is the description.", "title": "Other Panel Title"},
+            {"text": "This is a summary.", "title": "Summary"},
+        ],
+        "url_blocks": [
+            {
+                "title": "Alert",
+                "url": "https://grafana.example.com/alerting/grafana/xjshhbiigohd/view?orgId=1",
+            }
+        ],
+    }
     unrelated_webhook_data = {
         "alerts": [
             {

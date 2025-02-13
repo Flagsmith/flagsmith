@@ -1,18 +1,9 @@
-import typing
 from datetime import datetime
 
 from pydantic import BaseModel
 
 
-class GrafanaFeatureHealthEventReason(typing.TypedDict):
-    alert_name: str
-    generator_url: str
-    description: typing.NotRequired[str]
-    runbook_url: typing.NotRequired[str]
-    summary: typing.NotRequired[str]
-
-
-class GrafanaAlertInstance(BaseModel):
+class AlertmanagerAlertInstance(BaseModel):
     annotations: dict[str, str]
     generatorURL: str
     endsAt: datetime
@@ -20,6 +11,12 @@ class GrafanaAlertInstance(BaseModel):
     labels: dict[str, str]
     startsAt: datetime
     status: str
+
+
+class GrafanaAlertInstance(AlertmanagerAlertInstance):
+    dashboardURL: str = ""
+    panelURL: str = ""
+    silenceURL: str = ""
 
 
 class GrafanaWebhookData(BaseModel):

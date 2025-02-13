@@ -1,4 +1,4 @@
-import json
+from pydantic.type_adapter import TypeAdapter
 
 from features.feature_health.models import (
     FeatureHealthEventType,
@@ -12,6 +12,8 @@ from features.feature_health.types import (
     FeatureHealthEventData,
     FeatureHealthProviderResponse,
 )
+
+_sample_event_type_adapter = TypeAdapter(SampleEvent)
 
 
 def map_sample_event_status_to_feature_health_event_type(
@@ -27,7 +29,7 @@ def map_sample_event_status_to_feature_health_event_type(
 def map_payload_to_provider_response(
     payload: str,
 ) -> FeatureHealthProviderResponse:
-    event_data: SampleEvent = json.loads(payload)
+    event_data: SampleEvent = _sample_event_type_adapter.validate_json(payload)
 
     return FeatureHealthProviderResponse(
         events=[
@@ -37,7 +39,9 @@ def map_payload_to_provider_response(
                 type=map_sample_event_status_to_feature_health_event_type(
                     event_data["status"]
                 ),
-                reason=event_data.get("reason", ""),
+                reason=(
+                    event_data.get("reason") or {"text_blocks": [], "url_blocks": []}
+                ),
                 provider_name=FeatureHealthProviderName.SAMPLE.value,
             ),
         ],

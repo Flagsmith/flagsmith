@@ -1,5 +1,3 @@
-import json
-
 from features.feature_health.models import (
     FeatureHealthEventType,
     FeatureHealthProviderName,
@@ -10,10 +8,12 @@ from features.feature_health.providers.grafana.constants import (
 )
 from features.feature_health.providers.grafana.types import (
     GrafanaAlertInstance,
-    GrafanaFeatureHealthEventReason,
     GrafanaWebhookData,
 )
-from features.feature_health.types import FeatureHealthEventData
+from features.feature_health.types import (
+    FeatureHealthEventData,
+    FeatureHealthEventReason,
+)
 
 
 def map_payload_to_alert_instances(payload: str) -> list[GrafanaAlertInstance]:
@@ -24,23 +24,40 @@ def map_payload_to_alert_instances(payload: str) -> list[GrafanaAlertInstance]:
 
 def map_alert_instance_to_feature_health_event_reason(
     alert_instance: GrafanaAlertInstance,
-) -> str:
-    reason_data: GrafanaFeatureHealthEventReason = {}
+) -> FeatureHealthEventReason:
+    reason_data: FeatureHealthEventReason = {"text_blocks": [], "url_blocks": []}
 
     annotations = alert_instance.annotations
 
-    for key in (
-        "description",
-        "runbook_url",
-        "summary",
-    ):
-        if value := annotations.get(key):
-            reason_data[key] = value
+    # Populate text blocks.
+    alert_name = alert_instance.labels.get("alertname") or "Alertmanager Alert"
+    description = annotations.get("description") or ""
+    reason_data["text_blocks"].append(
+        {
+            "title": alert_name,
+            "text": description,
+        }
+    )
+    if summary := annotations.get("summary"):
+        reason_data["text_blocks"].append(
+            {
+                "title": "Summary",
+                "text": summary,
+            }
+        )
 
-    reason_data["alert_name"] = alert_instance.labels.get("alertname") or ""
-    reason_data["generator_url"] = alert_instance.generatorURL
+    # Populate URL blocks.
+    reason_data["url_blocks"].append(
+        {"title": "Alert", "url": alert_instance.generatorURL}
+    )
+    if dashboard_url := alert_instance.dashboardURL:
+        reason_data["url_blocks"].append({"title": "Dashboard", "url": dashboard_url})
+    if panel_url := alert_instance.panelURL:
+        reason_data["url_blocks"].append({"title": "Panel", "url": panel_url})
+    if runbook_url := annotations.get("runbook_url"):
+        reason_data["url_blocks"].append({"title": "Runbook", "url": runbook_url})
 
-    return json.dumps(reason_data)
+    return reason_data
 
 
 def map_alert_instance_to_feature_health_event_data(

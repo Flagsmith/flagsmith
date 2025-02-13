@@ -10,7 +10,28 @@ from features.feature_health.providers.services import (
 )
 
 
-class FeatureHealthEventSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+class FeatureHealthEventReasonTextBlockSerializer(serializers.Serializer):
+    text = serializers.CharField()
+    title = serializers.CharField(required=False)
+
+
+class FeatureHealthEventReasonUrlBlockSerializer(serializers.Serializer):
+    url = serializers.CharField()
+    title = serializers.CharField(required=False)
+
+
+class FeatureHealthEventReasonSerializer(serializers.Serializer):
+    text_blocks = serializers.ListField(
+        child=FeatureHealthEventReasonTextBlockSerializer(),
+    )
+    url_blocks = serializers.ListField(
+        child=FeatureHealthEventReasonUrlBlockSerializer(),
+    )
+
+
+class FeatureHealthEventSerializer(serializers.ModelSerializer):
+    reason = FeatureHealthEventReasonSerializer()
+
     class Meta:
         model = FeatureHealthEvent
         fields = read_only_fields = (
