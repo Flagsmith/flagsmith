@@ -57,16 +57,7 @@ def create_feature_health_events_from_provider(
 ) -> list[FeatureHealthEvent]:
     from features.feature_health import tasks
 
-    try:
-        response = get_provider_response(provider, payload)
-    except Exception as exc:
-        logger.error(
-            "invalid-feature-health-event-data",
-            provider_name=provider.name,
-            project_id=provider.project.id,
-            exc_info=exc,
-        )
-        return None
+    response = get_provider_response(provider, payload)
     project = provider.project
     events_to_create = []
     feature_ids_to_update = set()
