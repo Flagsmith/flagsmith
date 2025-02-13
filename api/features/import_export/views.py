@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db.models import QuerySet
 from django.http import Http404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.request import Request
@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from environments.models import Environment
 
+from .constants import SUCCESS
 from .models import (
     FeatureExport,
     FeatureImport,
@@ -72,6 +73,13 @@ def feature_import(request: Request, environment_id: int) -> Response:
 @permission_classes([DownloadFeatureExportPermissions])
 def download_feature_export(request: Request, feature_export_id: int) -> Response:
     feature_export = get_object_or_404(FeatureExport, id=feature_export_id)
+
+    if feature_export.status != SUCCESS:
+        raise serializers.ValidationError(
+            {
+                "detail": f"Unable to download export with status '{feature_export.status}'."
+            }
+        )
 
     response = Response(
         json.loads(feature_export.data), content_type="application/json"

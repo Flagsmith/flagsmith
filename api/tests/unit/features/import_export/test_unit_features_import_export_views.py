@@ -10,7 +10,12 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
-from features.import_export.constants import OVERWRITE_DESTRUCTIVE, PROCESSING
+from features.import_export.constants import (
+    FAILED,
+    OVERWRITE_DESTRUCTIVE,
+    PROCESSING,
+    SUCCESS,
+)
 from features.import_export.models import (
     FeatureExport,
     FeatureImport,
@@ -136,6 +141,7 @@ def test_download_feature_export(
     feature_export = FeatureExport.objects.create(
         environment=environment,
         data='[{"feature": "data"}]',
+        status=SUCCESS,
     )
     url = reverse("api-v1:features:download-feature-export", args=[feature_export.id])
     # When
@@ -164,6 +170,29 @@ def test_download_feature_export_unauthorized(
 
     # Then
     assert response.status_code == 403
+
+
+@pytest.mark.parametrize("status", (PROCESSING, FAILED))
+def test_cannot_download_non_success_feature_export(
+    admin_client_new: APIClient,
+    environment: Environment,
+    status: str,
+) -> None:
+    # Given
+    feature_export = FeatureExport.objects.create(
+        environment=environment,
+        status=status,
+    )
+    url = reverse("api-v1:features:download-feature-export", args=[feature_export.id])
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"Unable to download export with status '{status}'."
+    }
 
 
 def test_feature_import(
