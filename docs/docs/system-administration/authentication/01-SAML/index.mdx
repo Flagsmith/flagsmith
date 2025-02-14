@@ -61,9 +61,6 @@ Flagsmith organisations and forms part of the URL that your identity provider wi
 authentication. Users must type this name when clicking "Single Sign-On" at the login screen. It cannot be changed after
 the SAML configuration is created.
 
-**Frontend URL**: (**Required**) The base URL of the Flagsmith dashboard. Users will be redirected here
-after authenticating successfully.
-
 **Allow IdP-initiated**: If enabled, users will be able to log in directly from your identity provider without needing
 to visit the Flagsmith login page.
 
@@ -73,6 +70,17 @@ configuration without it and come back to this step later.
 
 Once your Flagsmith SAML configuration is created, you can download its SAML metadata by clicking "Download Service
 Provider Metadata". Add this file to your identity provider to establish a trust relationship between it and Flagsmith.
+
+<details>
+
+  <summary>Additional options when self-hosting Flagsmith</summary>
+
+  **Frontend URL** should point to the base URL of the Flagsmith dashboard. It is automatically prefilled with the
+  URL of the dashboard you are currently using. You only need to change this if your users will access the Flagsmith
+  dashboard using a different URL than the one they are currently using—for example, if you are connecting to Flagsmith
+  via port forwarding or a VPN that your users do not typically use.
+
+</details>
 
 ### Assertion consumer service URL
 
