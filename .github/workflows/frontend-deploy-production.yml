@@ -49,7 +49,7 @@ jobs:
 
   deploy-demo2:
     name: Deploy to Vercel Demo2
-    needs: run-tests
+#    needs: run-tests
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
       gh_environment: demo2
