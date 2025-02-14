@@ -1,3 +1,4 @@
+import datetime
 import logging
 import typing
 import uuid
@@ -16,6 +17,7 @@ from django_lifecycle import (
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_CREATE,
     LifecycleModel,
     hook,
 )
@@ -42,6 +44,7 @@ from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from integrations.flagsmith.client import get_client
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -164,6 +167,19 @@ class Environment(
             from environments.tasks import delete_environment_from_dynamo
 
             delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
+
+    @hook(BEFORE_CREATE)
+    def enable_v2_versioning(self):
+        flagsmith_client = get_client("local", local_eval=True)
+        organisation = self.project.organisation
+        flag = flagsmith_client.get_identity_flags(
+            organisation.flagsmith_identifier,
+            traits={"organisation_id": organisation.id},
+        ).get_flag("enable_feature_versioning_for_new_projects")
+        if flag.enabled and self.project.created_date >= datetime.date.fromisoformat(
+            flag.value
+        ):
+            self.enable_v2_versioning = True
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
