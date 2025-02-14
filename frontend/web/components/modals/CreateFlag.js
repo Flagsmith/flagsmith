@@ -750,8 +750,10 @@ const CreateFlag = class extends Component {
           {!!isEdit && (
             <ExistingChangeRequestAlert
               className='mb-4'
+              projectId={this.props.projectId}
               featureId={projectFlag.id}
               environmentId={this.props.environmentId}
+              history={this.props.history}
             />
           )}
           {!isEdit && (
