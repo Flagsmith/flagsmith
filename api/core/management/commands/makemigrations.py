@@ -4,7 +4,7 @@ from django.core.management.commands.makemigrations import (
 )
 
 
-class Command(MakeMigrationsCommand):
+class Command(MakeMigrationsCommand):  # pragma: no cover
     """
     Customise the makemigrations command to enforce use of `--name/-n` argument.
     """
