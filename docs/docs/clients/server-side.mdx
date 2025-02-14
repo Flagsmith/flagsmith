@@ -1903,7 +1903,7 @@ const redisClient = redis.createClient({
 const redisFlagsmithCache = {
     async get(key: string): Promise<Flags | undefined> {
         const cachedValue = await redisClient.get(key);
-        if(cachedValue) {
+        if (cachedValue) {
             return new Flags(JSON.parse(cachedValue));
         }
     },
