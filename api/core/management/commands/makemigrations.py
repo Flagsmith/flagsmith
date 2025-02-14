@@ -4,12 +4,12 @@ from django.core.management.commands.makemigrations import (
 )
 
 
-class Command(MakeMigrationsCommand):  # pragma: no cover
+class Command(MakeMigrationsCommand):
     """
     Customise the makemigrations command to enforce use of `--name/-n` argument.
     """
 
-    def handle(self, *app_labels, **options):
+    def handle(self, *app_labels, **options):  # pragma: no cover
         if not options.get("name") and not (
             options.get("check_changes") or options.get("dry_run")
         ):
