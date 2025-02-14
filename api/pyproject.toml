@@ -41,6 +41,11 @@ exclude_also = [
   '@(abc\\.)?abstractmethod',
 ]
 
+[tool.coverage.run]
+omit = [
+  "api/core/management/commands/makemigrations.py"
+]
+
 [tool.isort]
 use_parentheses = true
 multi_line_output = 3
