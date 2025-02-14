@@ -99,7 +99,8 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
             type=TagType.UNHEALTHY,
         )
         if any(
-            feature_health_event.type == FeatureHealthEventType.UNHEALTHY.value
+            FeatureHealthEventType(feature_health_event.type)
+            == FeatureHealthEventType.UNHEALTHY
             for feature_health_event in feature_health_events
         ):
             feature.tags.add(unhealthy_tag)
