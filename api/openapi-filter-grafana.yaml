@@ -1,0 +1,10 @@
+inverseOperationIds:
+  # List operations used by Flagsmith's Grafana integration here.
+  - RoutePostContactpoints
+  - postAnnotation
+unusedComponents:
+  - schemas
+  - parameters
+  - examples
+  - headers
+  - responses
