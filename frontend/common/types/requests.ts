@@ -211,6 +211,7 @@ export type Req = {
     environmentId?: string
     tags?: string[]
     is_archived?: boolean
+    search?: string
   }
   getProjectFlag: { project: string | number; id: string }
   getRolesPermissionUsers: { organisation_id: number; role_id: number }
@@ -539,6 +540,12 @@ export type Req = {
   updateIdentity: {
     environmentId: string
     data: Identity
+  }
+  getFeatureAnalytics: {
+    project_id: string
+    feature_id: string
+    period: number
+    environment_ids: string[]
   }
   // END OF TYPES
 }
