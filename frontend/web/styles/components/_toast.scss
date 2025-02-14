@@ -32,20 +32,41 @@
   transform: translateX(-50%);
   z-index: 1000000000;
 
-  a, button {
+  a,
+  button {
     box-shadow: none;
-    color: black;
+  }
+
+  a {
+    color: $text-icon-grey;
+  }
+
+  button {
+    box-shadow: none;
+    line-height: 16px;
+    color: $primary800;
+    height: 'auto';
+    margin-right: 0.2rem;
   }
 }
 
 .toast-message {
   width: 250px;
+  min-height: 50px;
   background: $success-solid-alert;
   font-weight: 500;
   border: 1px solid $success;
   animation: toast-in 0.3s ease-out;
 
+  &.show {
+    display: flex !important;
+  }
+
   &.removing-out {
     animation: toast-out 0.3s ease-out forwards;
+  }
+
+  @media screen and (min-width: 768px) {
+    width: 320px;
   }
 }

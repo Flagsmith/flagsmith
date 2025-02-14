@@ -2070,7 +2070,13 @@ const FeatureProvider = (WrappedComponent) => {
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({ changeRequest, createdFlag, error, isCreate } = {}) => {
+        ({
+          changeRequest,
+          createdFlag,
+          error,
+          isCreate,
+          updatedChangeRequest,
+        } = {}) => {
           if (error?.data?.metadata) {
             error.data.metadata?.forEach((m) => {
               if (Object.keys(m).length > 0) {
@@ -2081,11 +2087,23 @@ const FeatureProvider = (WrappedComponent) => {
             toast('Error updating the Flag', 'danger')
             return
           } else {
-            toast(
-              `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
-                changeRequest ? 'Change Request' : 'Feature'
-              }`,
-            )
+            const operation = createdFlag || isCreate ? 'Created' : 'Updated'
+            const type = changeRequest ? 'Change Request' : 'Feature'
+
+            const toastText = `${operation} ${type}`
+            const toastAction = changeRequest
+              ? {
+                  buttonText: 'Open',
+                  onClick: () => {
+                    closeModal()
+                    this.props.history.push(
+                      `/project/${this.props.projectId}/environment/${this.props.environmentId}/change-requests/${updatedChangeRequest?.id}`,
+                    )
+                  },
+                }
+              : undefined
+
+            toast(toastText, 'success', undefined, toastAction)
           }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
