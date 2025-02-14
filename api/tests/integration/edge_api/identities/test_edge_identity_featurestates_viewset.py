@@ -896,6 +896,58 @@ def test_edge_identities_with_identifier_update_featurestate(
     )
 
 
+def test_put_identity_override_creates_identity_if_not_found(
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    feature: Feature,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
+):
+    # Given
+    identifier = "some_new_identity"
+    url = reverse(
+        "api-v1:environments:edge-identities-with-identifier-featurestates",
+        args=[environment_api_key],
+    )
+    expected_feature_state_value = "new_feature_state_value"
+    expected_fs_enabled = True
+    data = {
+        "multivariate_feature_state_values": [],
+        "enabled": expected_fs_enabled,
+        "feature": feature,
+        "feature_state_value": expected_feature_state_value,
+        "identifier": identifier,
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature"] == feature
+    assert response.json()["feature_state_value"] == expected_feature_state_value
+    assert response.json()["enabled"] == data["enabled"]
+
+    # Let's verify that the identity was added to the table
+    identity = flagsmith_identities_table.get_item(
+        Key={"composite_key": f"{environment_api_key}_{identifier}"}
+    )["Item"]
+    assert identity["identifier"] == identifier
+
+    # and that they have the relevant override
+    assert len(identity["identity_features"]) == 1
+    assert identity["identity_features"][0]["feature"]["id"] == feature
+    assert identity["identity_features"][0]["enabled"] == expected_fs_enabled
+    assert (
+        identity["identity_features"][0]["feature_state_value"]
+        == expected_feature_state_value
+    )
+
+
 @pytest.mark.parametrize(
     "segment_override_type, segment_override_value",
     (
