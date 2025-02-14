@@ -85,7 +85,7 @@ const CreateTrait = class extends Component {
                       isValid={trait_key && trait_key.length}
                       type='text'
                       title={isEdit ? 'Trait ID' : 'Trait ID*'}
-                      placeholder='E.g. favourite_color'
+                      placeholder='E.g. favourite_colour'
                     />
                   </FormGroup>
                   <FormGroup className='mb-2'>
