@@ -41,6 +41,9 @@ exclude_also = [
   '@(abc\\.)?abstractmethod',
 ]
 
+[tool.coverage.run]
+omit = ["scripts/*"]
+
 [tool.isort]
 use_parentheses = true
 multi_line_output = 3
@@ -108,7 +111,18 @@ skip = ['migrations', '.venv', '.direnv']
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 console_output_style = 'count'
 
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+strict = true
+
+[tool.django-stubs]
+django_settings_module = "app.settings.local"
+
+[tool.drf-stubs]
+enabled = true
+
 [tool.poetry.dependencies]
+python = ">3.11,<3.13"
 django = "~4.2.18"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
