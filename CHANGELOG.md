@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.162.0](https://github.com/Flagsmith/flagsmith/compare/v2.161.0...v2.162.0) (2025-02-14)
+
+
+### Features
+
+* Deletes provider and displays warning in selected env ([#5085](https://github.com/Flagsmith/flagsmith/issues/5085)) ([f2cc990](https://github.com/Flagsmith/flagsmith/commit/f2cc990a0102faf44598b571f5159b202c93f40e))
+* Hide SAML configuration frontend URL in SaaS ([#5102](https://github.com/Flagsmith/flagsmith/issues/5102)) ([82cdf8e](https://github.com/Flagsmith/flagsmith/commit/82cdf8ead39d58cd408a993a5ee5127bec11dfc8))
+* render tooltip in portal ([#5089](https://github.com/Flagsmith/flagsmith/issues/5089)) ([e6d30a4](https://github.com/Flagsmith/flagsmith/commit/e6d30a46df881615f4854ad1314feb8967bcac6b))
+* Update identity override styles ([#5053](https://github.com/Flagsmith/flagsmith/issues/5053)) ([1344a17](https://github.com/Flagsmith/flagsmith/commit/1344a176a2f6d42ee4bb8ca7a5a0f0c795a3c7ed))
+
+
+### Bug Fixes
+
+* adds margin to saml tab ([#5104](https://github.com/Flagsmith/flagsmith/issues/5104)) ([6cffced](https://github.com/Flagsmith/flagsmith/commit/6cffced7cd8a754fa282edbb50f6663c833a16c8))
+* **feature-export:** handle unsuccessful feature export download exception ([#5086](https://github.com/Flagsmith/flagsmith/issues/5086)) ([a116f2c](https://github.com/Flagsmith/flagsmith/commit/a116f2c14148f84593cdd09b98cd40665ffe9955))
+* has override logic to check enabled state differences ([#5094](https://github.com/Flagsmith/flagsmith/issues/5094)) ([328443e](https://github.com/Flagsmith/flagsmith/commit/328443ec92c6d063e0ba18639bb4c5f6f493bfe3))
+* **organisation:** allow Organisation delete when committed change request present ([#5101](https://github.com/Flagsmith/flagsmith/issues/5101)) ([2a13d81](https://github.com/Flagsmith/flagsmith/commit/2a13d81b1dbcf41de19714abb865721ff1df3d51))
+* **overage-billing:** use relative delta and months, instead of days ([#5060](https://github.com/Flagsmith/flagsmith/issues/5060)) ([03261dd](https://github.com/Flagsmith/flagsmith/commit/03261dd6ef35fba65993f41a45d203ea2848d3cc))
+* service to use default credentials mode when cookie auth disabled ([#5079](https://github.com/Flagsmith/flagsmith/issues/5079)) ([b303405](https://github.com/Flagsmith/flagsmith/commit/b30340578e0f34d87fee7172fc7697f1602d6a22))
+
+
+### Dependency Updates
+
+* bump serialize-javascript from 6.0.1 to 6.0.2 in /docs ([#5095](https://github.com/Flagsmith/flagsmith/issues/5095)) ([ecb6b0b](https://github.com/Flagsmith/flagsmith/commit/ecb6b0bab77425aaae7b7c75830cec47ce6b476e))
+
 ## [2.161.0](https://github.com/Flagsmith/flagsmith/compare/v2.160.2...v2.161.0) (2025-02-10)
 
 
