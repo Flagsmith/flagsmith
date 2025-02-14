@@ -540,5 +540,9 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
+  getSplitTest: PagedRequest<{
+    conversion_event_type_id: string
+  }>
   // END OF TYPES
 }
