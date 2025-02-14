@@ -10,7 +10,9 @@ class Command(MakeMigrationsCommand):
     """
 
     def handle(self, *app_labels, **options):
-        if not options.get("name"):
+        if not options.get("name") and not (
+            options.get("check_changes") or options.get("dry_run")
+        ):
             raise CommandError("--name/-n is a required argument")
 
         return super().handle(*app_labels, **options)
