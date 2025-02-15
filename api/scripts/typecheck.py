@@ -35,15 +35,25 @@ class MypyIssue:
     severity: str
     original_line: str
 
-    # We need the following two methods
-    # because apparently "message" and "hint" can differ between runs
+    # We want to ignore the path to the virtual environment
+
+    @property
+    def normalised_file(self) -> str:
+        if "site-packages" in (_file := self.file):
+            return _file.split("site-packages")[-1]
+        return _file
+
+    # Apparently, "message" and "hint" can differ between runs
+    # so ignore them for comparison and hashing
 
     def __hash__(self) -> int:
-        return hash((self.file, self.line, self.column, self.code, self.severity))
+        return hash(
+            (self.normalised_file, self.line, self.column, self.code, self.severity)
+        )
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, MypyIssue) and (
-            self.file == other.file
+            self.normalised_file == other.normalised_file
             and self.line == other.line
             and self.column == other.column
             and self.code == other.code
