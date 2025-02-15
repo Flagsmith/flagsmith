@@ -42,6 +42,7 @@ repos:
         language: system
         entry: poetry -C api run python scripts/typecheck.py
         require_serial: true
+        pass_filenames: false
         types: [python]
 
   - repo: https://github.com/python-poetry/poetry
