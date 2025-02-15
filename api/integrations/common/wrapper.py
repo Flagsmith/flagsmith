@@ -39,5 +39,5 @@ class AbstractBaseIdentityIntegrationWrapper(ABC):
         identity: "Identity",
         feature_states: typing.List["FeatureState"],
         trait_models: typing.List["Trait"],
-    ) -> dict:
+    ) -> object:
         raise NotImplementedError()

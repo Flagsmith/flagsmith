@@ -24,7 +24,9 @@ def test_mixpanel_generate_user_data(project, feature, identity):
 
     # When
     user_data = mixpanel.generate_user_data(
-        identity=identity, feature_states=feature_states
+        identity=identity,
+        feature_states=feature_states,
+        trait_models=[],
     )
 
     # Then

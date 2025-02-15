@@ -1072,7 +1072,9 @@ def process_import_request(
                 error_message=(
                     f"{exc.__class__.__name__} "
                     f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
-                    f"when requesting {exc.request.path_url}"
+                    + f"when requesting {request.path_url}"
+                    if (request := exc.request)
+                    else ""
                 ),
             )
             raise
@@ -1085,7 +1087,7 @@ def process_import_request(
 
         # Create segments using `ld_segment_tags`
         # TODO populate with LD tags when https://github.com/Flagsmith/flagsmith/issues/3241 is done
-        segment_tags_by_ld_tag = {}
+        segment_tags_by_ld_tag: dict[str, Tag] = {}
         segments_by_ld_key = _create_segments_from_ld(
             import_request=import_request,
             ld_segments=ld_segments,

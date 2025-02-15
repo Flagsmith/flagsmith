@@ -31,16 +31,14 @@ class MixpanelWrapper(AbstractBaseIdentityIntegrationWrapper):
         logger.debug(
             "Sent event to Mixpanel. Response code was: %s" % response.status_code
         )
-        logger.debug(
-            "Sent event to Mixpanel. Response content was: %s" % response.content
-        )
+        logger.debug("Sent event to Mixpanel. Response content was: %s" % response.text)
 
     def generate_user_data(
         self,
         identity: Identity,
         feature_states: typing.List[FeatureState],
-        trait_models: typing.List[Trait] = None,
-    ) -> dict:
+        trait_models: typing.List[Trait],
+    ) -> list[dict[str, typing.Any]]:
         feature_properties = {}
 
         for feature_state in feature_states:
