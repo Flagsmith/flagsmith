@@ -87,7 +87,7 @@ def _get_mypy_issues(content: str) -> set[MypyIssue]:
     return mypy_issues
 
 
-def main() -> None:
+def main() -> int:
     config = _get_config()
 
     out, err, code = run_mypy(
@@ -104,26 +104,56 @@ def main() -> None:
         with open(config.baseline_path, "w") as f:
             f.write(out)
         sys.stdout.write(out)
-        sys.exit(code)
+        return 0
+
+    baseline_issues = _get_mypy_issues(open(config.baseline_path).read())
+
+    if code > 1:
+        sys.stdout.write(out)
+        return code
+
+    new_issues = set()
 
     if code == 1:
-        baseline_issues = _get_mypy_issues(open(config.baseline_path).read())
         current_issues = _get_mypy_issues(out)
+
         new_issues = current_issues - baseline_issues
-
         if new_issues:
-            sys.stdout.write(
-                "\n".join(sorted(issue.original_line for issue in new_issues))
+            sys.stdout.writelines(
+                [
+                    "New issues detected:\n\n",
+                    *sorted(issue.original_line + "\n" for issue in new_issues),
+                    "\n",
+                ]
             )
-            print(len(new_issues))
-            sys.exit(1)
 
-        code = 0
-    else:
-        sys.stdout.write(out)
+        else:
+            code = 0
 
-    sys.exit(code)
+    # When checking all files, we want to make sure that the baseline
+    # does not contain issues that are no longer present
+    if config.filenames == ["."]:
+        removed_issues = baseline_issues - current_issues - new_issues
+        if removed_issues:
+            with open(config.baseline_path, "w") as f:
+                f.writelines(
+                    sorted(
+                        issue.original_line + "\n"
+                        for issue in (current_issues - removed_issues)
+                    )
+                )
+
+            sys.stdout.writelines(
+                [
+                    "Stale baseline issues detected. "
+                    f"Removed following lines from {config.baseline_path}:\n\n",
+                    *sorted(issue.original_line + "\n" for issue in removed_issues),
+                ]
+            )
+            code = 1
+
+    return code
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
