@@ -1072,9 +1072,7 @@ def process_import_request(
                 error_message=(
                     f"{exc.__class__.__name__} "
                     f"{str(exc.response.status_code) + ' ' if exc.response else ''}"
-                    + f"when requesting {request.path_url}"
-                    if (request := exc.request)
-                    else ""
+                    + f"when requesting {getattr(exc.request, 'path_url', 'unknown')}"
                 ),
             )
             raise

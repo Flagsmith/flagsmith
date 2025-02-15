@@ -2115,7 +2115,6 @@
 {"file": "integrations/launch_darkly/serializers.py", "line": 25, "column": 17, "message": "Need type annotation for \"created_by\"", "hint": null, "code": "var-annotated", "severity": "error"}
 {"file": "integrations/launch_darkly/serializers.py", "line": 6, "column": 48, "message": "Missing type parameters for generic type \"Serializer\"", "hint": null, "code": "type-arg", "severity": "error"}
 {"file": "integrations/launch_darkly/services.py", "line": 1033, "column": 4, "message": "Returning Any from function declared to return \"LaunchDarklyImportRequest\"", "hint": null, "code": "no-any-return", "severity": "error"}
-{"file": "integrations/launch_darkly/services.py", "line": 1075, "column": 22, "message": "Item \"Request\" of \"Request | PreparedRequest\" has no attribute \"path_url\"", "hint": null, "code": "union-attr", "severity": "error"}
 {"file": "integrations/launch_darkly/services.py", "line": 330, "column": 4, "message": "Returning Any from function declared to return \"SegmentRule\"", "hint": null, "code": "no-any-return", "severity": "error"}
 {"file": "integrations/launch_darkly/services.py", "line": 457, "column": 43, "message": "Incompatible types (expression has type \"str\", TypedDict item \"trait_value\" has type \"SDKTraitValueData | None\")", "hint": null, "code": "typeddict-item", "severity": "error"}
 {"file": "integrations/launch_darkly/services.py", "line": 49, "column": 4, "message": "Returning Any from function declared to return \"str\"", "hint": null, "code": "no-any-return", "severity": "error"}
