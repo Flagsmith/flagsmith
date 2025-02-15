@@ -143,13 +143,13 @@ def main() -> int:
     # When checking all files, we want to make sure that the baseline
     # does not contain issues that are no longer present
     if config.filenames == ["."]:
-        removed_issues = baseline_issues - current_issues - new_issues
+        removed_issues = baseline_issues - current_issues
         if removed_issues:
             with open(config.baseline_path, "w") as f:
                 f.writelines(
                     sorted(
                         issue.original_line + "\n"
-                        for issue in (current_issues - removed_issues)
+                        for issue in (baseline_issues - removed_issues)
                     )
                 )
 
