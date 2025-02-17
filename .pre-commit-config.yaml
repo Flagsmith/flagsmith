@@ -41,7 +41,7 @@ repos:
       - id: python-typecheck
         name: python-typecheck
         language: system
-        entry: poetry --version && poetry -C api run python scripts/typecheck.py
+        entry: poetry -C api run python scripts/typecheck.py
         require_serial: true
         pass_filenames: false
         types: [python]
