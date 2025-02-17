@@ -43,10 +43,10 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    import debug_toolbar
+    import debug_toolbar  # type: ignore[import-untyped,unused-ignore]
 
     urlpatterns = [
-        re_path(r"^__debug__/", include(debug_toolbar.urls)),
+        re_path(r"^__debug__/", include(debug_toolbar.urls)),  # type: ignore[attr-defined,unused-ignore]
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:

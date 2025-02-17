@@ -36,13 +36,21 @@ repos:
           - prettier@3.4.2
         args:
           - --check
-        types: [javascript,jsx,ts,tsx,markdown,mdx,html,css,json,yaml]
+        types: [javascript, jsx, ts, tsx, markdown, mdx, html, css, json, yaml]
+      - id: python-typecheck
+        name: python-typecheck
+        language: system
+        entry: poetry -C api run python scripts/typecheck.py
+        require_serial: true
+        pass_filenames: false
+        types: [python]
 
   - repo: https://github.com/python-poetry/poetry
     rev: 2.0.1
     hooks:
       - id: poetry-check
-        args: ['-C', 'api']
+        args: ["-C", "api"]
 
 ci:
-  autoupdate_commit_msg: 'ci: pre-commit autoupdate'
+  skip: [python-typecheck]
+  autoupdate_commit_msg: "ci: pre-commit autoupdate"
