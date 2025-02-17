@@ -1,50 +1,35 @@
-import { FC, useRef } from 'react'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
-import moment from 'moment'
+import { FC } from 'react'
 import InfoMessage from './InfoMessage'
 import { RouterChildContext } from 'react-router-dom'
 import Button from './base/forms/Button'
+import { ChangeRequestSummary } from 'common/types/responses'
 
 type ExistingChangeRequestAlertType = {
+  changeRequests: ChangeRequestSummary[]
+  editingChangeRequest?: ChangeRequestSummary
+  scheduledChangeRequests: ChangeRequestSummary[]
   projectId: number | string
   environmentId: string
-  featureId: number
   className?: string
   history: RouterChildContext['router']['history']
 }
 
 const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
+  changeRequests,
   className,
+  editingChangeRequest,
   environmentId,
-  featureId,
   history,
   projectId,
+  scheduledChangeRequests,
 }) => {
-  const date = useRef(moment().toISOString())
-
-  const { data: changeRequests } = useGetChangeRequestsQuery(
-    {
-      committed: false,
-      environmentId,
-      feature_id: featureId,
-    },
-    { refetchOnMountOrArgChange: true },
-  )
-
-  const { data: scheduledChangeRequests } = useGetChangeRequestsQuery(
-    {
-      environmentId,
-      feature_id: featureId,
-      live_from_after: date.current,
-    },
-    { refetchOnMountOrArgChange: true },
-  )
-
   const handleNavigate = () => {
-    const changes = scheduledChangeRequests?.results?.length
-      ? scheduledChangeRequests?.results
-      : changeRequests?.results
-    const latestChangeRequest = changes?.at(-1)?.id
+    const changes = scheduledChangeRequests?.length
+      ? scheduledChangeRequests
+      : changeRequests
+    const latestChangeRequest = !editingChangeRequest?.id
+      ? changes?.at(-1)?.id
+      : editingChangeRequest?.id
     closeModal()
     history.push(
       `/project/${projectId}/environment/${environmentId}/change-requests/${latestChangeRequest}`,
@@ -71,9 +56,11 @@ const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
   }
 
   const requestChangeInfoText = getRequestChangeInfoText(
-    !!scheduledChangeRequests?.results?.length,
-    !!changeRequests?.results?.length,
+    !!scheduledChangeRequests?.length,
+    !!changeRequests?.length,
   )
+
+  console.log({ requestChangeInfoText })
 
   if (!requestChangeInfoText?.length) {
     return null

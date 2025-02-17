@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import withSegmentOverrides from 'common/providers/withSegmentOverrides'
+import moment from 'moment'
 import Constants from 'common/constants'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -47,6 +48,7 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import { getPermission } from 'common/services/usePermission'
+import { getChangeRequests } from 'common/services/useChangeRequest'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -78,6 +80,7 @@ const CreateFlag = class extends Component {
     }
     this.state = {
       allowEditDescription,
+      changeRequests: [],
       default_enabled: enabled,
       description,
       enabledIndentity: false,
@@ -106,6 +109,7 @@ const CreateFlag = class extends Component {
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
+      scheduledChangeRequests: [],
       selectedIdentity: null,
       tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
     }
@@ -200,6 +204,9 @@ const CreateFlag = class extends Component {
         this.setState({ featureContentType: featureContentType })
       })
     }
+
+    this.fetchChangeRequests()
+    this.fetchScheduledChangeRequests()
 
     getGithubIntegration(getStore(), {
       organisation_id: AccountStore.getOrganisation().id,
@@ -543,6 +550,43 @@ const CreateFlag = class extends Component {
     this.forceUpdate()
   }
 
+  fetchChangeRequests = (forceRefetch) => {
+    const { environmentId, projectFlag } = this.props
+    if (!projectFlag?.id) return
+
+    getChangeRequests(
+      getStore(),
+      {
+        committed: false,
+        environmentId,
+        feature_id: projectFlag?.id,
+      },
+      { forceRefetch },
+    ).then((res) => {
+      this.setState({ changeRequests: res.data?.results })
+    })
+  }
+
+  fetchScheduledChangeRequests = (forceRefetch) => {
+    const { environmentId, projectFlag } = this.props
+    if (!projectFlag?.id) return
+
+    const date = moment().toISOString()
+
+    console.log('data', date)
+    getChangeRequests(
+      getStore(),
+      {
+        environmentId,
+        feature_id: projectFlag.id,
+        live_from_after: date,
+      },
+      { forceRefetch },
+    ).then((res) => {
+      this.setState({ scheduledChangeRequests: res.data?.results })
+    })
+  }
+
   render() {
     const {
       default_enabled,
@@ -578,6 +622,9 @@ const CreateFlag = class extends Component {
     const noPermissions = this.props.noPermissions
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
+
+    const { changeRequests, scheduledChangeRequests } = this.state
+    console.log({ changeRequests, out: true, scheduledChangeRequests })
 
     try {
       if (!isEdit && name && regex) {
@@ -745,15 +792,18 @@ const CreateFlag = class extends Component {
 
     const Value = (error, projectAdmin, createFeature, hideValue) => {
       const { featureError, featureWarning } = this.parseError(error)
+      const { changeRequests, scheduledChangeRequests } = this.state
       return (
         <>
-          {!!isEdit && (
+          {!!isEdit && !identity && (
             <ExistingChangeRequestAlert
               className='mb-4'
+              editingChangeRequest={this.props.changeRequest}
               projectId={this.props.projectId}
-              featureId={projectFlag.id}
               environmentId={this.props.environmentId}
               history={this.props.history}
+              changeRequests={changeRequests}
+              scheduledChangeRequests={scheduledChangeRequests}
             />
           )}
           {!isEdit && (
@@ -888,6 +938,11 @@ const CreateFlag = class extends Component {
                 this.props.projectId,
                 this.props.environmentId,
               )
+
+              if (is4Eyes && !identity) {
+                this.fetchChangeRequests(true)
+                this.fetchScheduledChangeRequests(true)
+              }
             }}
           >
             {(
