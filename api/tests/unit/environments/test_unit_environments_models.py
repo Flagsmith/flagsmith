@@ -1021,3 +1021,21 @@ def test_environment_clone_async(
             "clone_environment_id": cloned_environment.id,
         }
     )
+
+
+def test_environment_create_with_use_v2_feature_versioning_true(
+    project: Project, environment_v2_versioning: Environment, feature: Feature
+) -> None:
+    # Given
+
+    # When
+    new_environment = Environment.objects.create(
+        name="new-environment",
+        use_v2_feature_versioning=True,
+        project=project,
+    )
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(
+        environment=new_environment, feature=feature
+    ).exists()
