@@ -9,6 +9,9 @@ if typing.TYPE_CHECKING:
     from features.models import FeatureState
 
 
+T = typing.TypeVar("T")
+
+
 class AbstractBaseEventIntegrationWrapper(ABC):
     @abstractmethod
     def _track_event(self, event: dict) -> None:
@@ -24,13 +27,13 @@ class AbstractBaseEventIntegrationWrapper(ABC):
         raise NotImplementedError()
 
 
-class AbstractBaseIdentityIntegrationWrapper(ABC):
+class AbstractBaseIdentityIntegrationWrapper(ABC, typing.Generic[T]):
     @abstractmethod
-    def _identify_user(self, user_data: dict) -> None:
+    def _identify_user(self, user_data: T) -> None:
         raise NotImplementedError()
 
     @postpone
-    def identify_user_async(self, data: dict) -> None:
+    def identify_user_async(self, data: T) -> None:
         self._identify_user(data)
 
     @abstractmethod
@@ -39,5 +42,5 @@ class AbstractBaseIdentityIntegrationWrapper(ABC):
         identity: "Identity",
         feature_states: typing.List["FeatureState"],
         trait_models: typing.List["Trait"],
-    ) -> dict:
+    ) -> T:
         raise NotImplementedError()

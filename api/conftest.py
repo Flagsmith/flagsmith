@@ -24,7 +24,7 @@ from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
-from urllib3 import HTTPResponse
+from urllib3 import BaseHTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id
 
@@ -171,7 +171,7 @@ def restrict_http_requests(monkeypatch: pytest.MonkeyPatch) -> None:
         url: str,
         *args,
         **kwargs,
-    ) -> HTTPResponse:
+    ) -> BaseHTTPResponse:
         if self.host in allowed_hosts:
             return original_urlopen(self, method, url, *args, **kwargs)
 
