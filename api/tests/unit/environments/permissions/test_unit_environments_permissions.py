@@ -1,6 +1,6 @@
 from unittest import mock
 
-from common.projects.permissions import CREATE_ENVIRONMENT
+from common.projects.permissions import CREATE_ENVIRONMENT  # type: ignore[import-untyped]
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -25,7 +25,7 @@ nested_environment_permissions = NestedEnvironmentPermissions()
 environment_admin_permissions = EnvironmentAdminPermission()
 
 
-def test_environment_admin_permissions_has_permissions_returns_false_for_non_admin_user(
+def test_environment_admin_permissions_has_permissions_returns_false_for_non_admin_user(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, django_user_model, mocker
 ) -> None:
     # Given
@@ -37,13 +37,13 @@ def test_environment_admin_permissions_has_permissions_returns_false_for_non_adm
     mocked_view.kwargs = {"environment_api_key": environment.api_key}
 
     # When
-    has_permission = environment_admin_permissions.has_permission(
+    has_permission = environment_admin_permissions.has_permission(  # type: ignore[no-untyped-call]
         mocked_request, mocked_view
     )
     assert has_permission is False
 
 
-def test_environment_admin_permissions_has_permissions_returns_true_for_admin_user(
+def test_environment_admin_permissions_has_permissions_returns_true_for_admin_user(  # type: ignore[no-untyped-def]
     environment, django_user_model, mocker
 ) -> None:
     # Given
@@ -58,7 +58,7 @@ def test_environment_admin_permissions_has_permissions_returns_true_for_admin_us
     mocked_view.kwargs = {"environment_api_key": environment.api_key}
 
     # When
-    has_permission = environment_admin_permissions.has_permission(
+    has_permission = environment_admin_permissions.has_permission(  # type: ignore[no-untyped-call]
         mocked_request, mocked_view
     )
     assert has_permission is True
@@ -75,7 +75,7 @@ def test_org_admin_can_create_environment_for_any_project(
     mock_request.data = {"project": project.id, "name": "Test environment"}
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -92,7 +92,7 @@ def test_project_admin_can_create_environment_in_project(
     mock_request.data = {"project": project.id, "name": "Test environment"}
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -116,7 +116,7 @@ def test_project_user_with_create_environment_permission_can_create_environment(
     mock_request.data = {"project": project.id, "name": "Test environment"}
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -133,7 +133,7 @@ def test_project_user_without_create_environment_permission_cannot_create_enviro
     mock_request.data = {"project": project.id, "name": "Test environment"}
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -148,7 +148,7 @@ def test_all_users_can_list_environments_for_project(
     mock_request.user = staff_user
 
     # When
-    result = environment_permissions.has_permission(mock_request, mock_view)
+    result = environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -164,7 +164,7 @@ def test_organisation_admin_can_delete_environment(
     mock_request.user = admin_user
 
     # When
-    result = environment_permissions.has_object_permission(
+    result = environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, environment
     )
 
@@ -182,7 +182,7 @@ def test_project_admin_can_delete_environment(
     mock_view.detail = True
 
     # When
-    result = environment_permissions.has_object_permission(
+    result = environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, environment
     )
 
@@ -200,7 +200,7 @@ def test_environment_admin_can_delete_environment(
     mock_view.detail = True
 
     # When
-    result = environment_permissions.has_object_permission(
+    result = environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, environment
     )
 
@@ -218,7 +218,7 @@ def test_regular_user_cannot_delete_environment(
     mock_view.detail = True
 
     # When
-    result = environment_permissions.has_object_permission(
+    result = environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, environment
     )
 
@@ -237,7 +237,7 @@ def test_organisation_admin_has_create_permission(
     mock_view.kwargs = {"environment_api_key": environment.api_key}
 
     # When
-    result = nested_environment_permissions.has_permission(mock_request, mock_view)
+    result = nested_environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -257,7 +257,7 @@ def test_environment_admin_has_create_permission(
     mock_request.user = staff_user
 
     # When
-    result = nested_environment_permissions.has_permission(mock_request, mock_view)
+    result = nested_environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -274,7 +274,7 @@ def test_regular_user_does_not_have_create_permission(
     mock_view.kwargs = {"environment_api_key": environment.api_key}
 
     # When
-    result = nested_environment_permissions.has_permission(mock_request, mock_view)
+    result = nested_environment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -290,7 +290,7 @@ def test_organisation_admin_has_destroy_permission(
     mock_request.user = admin_user
 
     # When
-    result = nested_environment_permissions.has_object_permission(
+    result = nested_environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, identity
     )
 
@@ -312,7 +312,7 @@ def test_environment_admin_has_destroy_permission(
     mock_request.user = staff_user
 
     # When
-    result = nested_environment_permissions.has_object_permission(
+    result = nested_environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, identity
     )
 
@@ -330,7 +330,7 @@ def test_regular_user_does_not_have_destroy_permission(
     mock_request.user = staff_user
 
     # When
-    result = nested_environment_permissions.has_object_permission(
+    result = nested_environment_permissions.has_object_permission(  # type: ignore[no-untyped-call]
         mock_request, mock_view, identity
     )
 

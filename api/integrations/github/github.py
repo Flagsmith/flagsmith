@@ -209,13 +209,13 @@ def generate_data(
                 feature_env_data["feature_state_value"] = feature_state_value
 
             if type is not GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
-                feature_env_data["environment_name"] = feature_state.environment.name
+                feature_env_data["environment_name"] = feature_state.environment.name  # type: ignore[union-attr]
                 feature_env_data["enabled"] = feature_state.enabled
                 feature_env_data["last_updated"] = feature_state.updated_at.strftime(
                     get_format("DATETIME_INPUT_FORMATS")[0]
                 )
                 feature_env_data["environment_api_key"] = (
-                    feature_state.environment.api_key
+                    feature_state.environment.api_key  # type: ignore[union-attr]
                 )
             if (
                 hasattr(feature_state, "feature_segment")

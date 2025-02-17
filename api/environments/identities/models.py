@@ -41,11 +41,11 @@ class Identity(models.Model):
         # we can provide them the SQL to add it manually in a small window of downtime.
         index_together = (("environment", "created_date"),)
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key
 
     @property
-    def composite_key(self):
+    def composite_key(self):  # type: ignore[no-untyped-def]
         return f"{self.environment.api_key}_{self.identifier}"
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
@@ -72,7 +72,7 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits, overrides_only=True)
+        segments = self.get_segments(traits=traits, overrides_only=True)  # type: ignore[arg-type]
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
@@ -157,7 +157,7 @@ class Identity(models.Model):
         return {fs.feature_id: fs for fs in self.identity_features.all()}
 
     def get_segments(
-        self, traits: typing.List[Trait] = None, overrides_only: bool = False
+        self, traits: typing.List[Trait] = None, overrides_only: bool = False  # type: ignore[assignment]
     ) -> typing.List[Segment]:
         """
         Get the list of segments this identity is a part of.
@@ -195,11 +195,11 @@ class Identity(models.Model):
 
         return matching_segments
 
-    def get_all_user_traits(self):
+    def get_all_user_traits(self):  # type: ignore[no-untyped-def]
         # this is pointless, we should probably replace all uses with the below code
         return self.identity_traits.all()
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Account %s" % self.identifier
 
     def generate_traits(

@@ -12,7 +12,7 @@ from util.mappers import map_environment_to_environment_document
 
 
 @pytest.fixture()
-def edge_identity_dynamo_wrapper_mock(mocker):
+def edge_identity_dynamo_wrapper_mock(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch(
         "edge_api.identities.models.EdgeIdentity.dynamo_wrapper",
     )
@@ -76,7 +76,7 @@ def dynamodb_wrapper_v2(
 def dynamo_enabled_project_environment_one_document(
     flagsmith_environment_table: Table,
     dynamo_enabled_project_environment_one: Environment,
-) -> dict:
+) -> dict:  # type: ignore[type-arg]
     environment_dict = map_environment_to_environment_document(
         dynamo_enabled_project_environment_one
     )

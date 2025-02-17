@@ -27,7 +27,7 @@ def test_get_segment_returns_parent_segment_for_nested_rule(
     assert new_segment == segment
 
 
-def test_condition_get_create_log_message_for_condition_created_with_segment(
+def test_condition_get_create_log_message_for_condition_created_with_segment(  # type: ignore[no-untyped-def]
     segment, segment_rule, mocker
 ):
     # Given
@@ -48,7 +48,7 @@ def test_condition_get_create_log_message_for_condition_created_with_segment(
     assert msg is None
 
 
-def test_condition_get_create_log_message_for_condition_not_created_with_segment(
+def test_condition_get_create_log_message_for_condition_not_created_with_segment(  # type: ignore[no-untyped-def]
     segment, segment_rule, mocker
 ):
     # Given
@@ -69,7 +69,7 @@ def test_condition_get_create_log_message_for_condition_not_created_with_segment
     assert msg == f"Condition added to segment '{segment.name}'."
 
 
-def test_condition_get_delete_log_message_for_valid_segment(
+def test_condition_get_delete_log_message_for_valid_segment(  # type: ignore[no-untyped-def]
     segment, segment_rule, mocker
 ):
     # Given
@@ -144,7 +144,7 @@ def test__condition_get_skip_create_audit_log_on_segment_hard_delete(
     assert condition.get_skip_create_audit_log() is True
 
 
-def test_condition_get_delete_log_message_for_deleted_segment(
+def test_condition_get_delete_log_message_for_deleted_segment(  # type: ignore[no-untyped-def]
     segment, segment_rule, mocker
 ):
     # Given
@@ -166,7 +166,7 @@ def test_condition_get_delete_log_message_for_deleted_segment(
     assert msg is None
 
 
-def test_condition_get_update_log_message(segment, segment_rule, mocker):
+def test_condition_get_update_log_message(segment, segment_rule, mocker):  # type: ignore[no-untyped-def]
     # Given
     condition = Condition.objects.create(
         rule=segment_rule,
@@ -224,7 +224,7 @@ def test_condition_get_update_log_message(segment, segment_rule, mocker):
         ),
     ),
 )
-def test_segment_id_exists_in_rules_data(rules_data, expected_result):
+def test_segment_id_exists_in_rules_data(rules_data, expected_result):  # type: ignore[no-untyped-def]
     assert Segment.id_exists_in_rules_data(rules_data) == expected_result
 
 

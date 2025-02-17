@@ -1,11 +1,11 @@
-from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT
+from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT  # type: ignore[import-untyped]
 from rest_framework.permissions import BasePermission
 
 from projects.models import Project
 
 
 class TagPermissions(BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         project_pk = view.kwargs.get("project_pk")
         if not project_pk:
             return False
@@ -16,7 +16,7 @@ class TagPermissions(BasePermission):
         )
         return request.user.has_project_permission(permission, project) or view.detail
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         project = obj.project
         if request.user.has_project_permission(MANAGE_TAGS, obj.project):
             return True

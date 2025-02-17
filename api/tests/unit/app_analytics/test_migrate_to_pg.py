@@ -29,7 +29,7 @@ def test_migrate_feature_evaluations(mocker: MockerFixture) -> None:
             values={"feature_id": feature_name, "environment_id": environment_id},
             spec_set=["values", "get_time", "get_value"],
         )
-        mock_record.get_time.return_value = timezone.now() - timezone.timedelta(days=i)
+        mock_record.get_time.return_value = timezone.now() - timezone.timedelta(days=i)  # type: ignore[attr-defined]
         mock_record.get_value.return_value = 100
 
         mock_table = mocker.MagicMock(records=[mock_record], spec_set=["records"])

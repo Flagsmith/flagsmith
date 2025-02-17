@@ -10,7 +10,7 @@ from organisations.permissions.permissions import (
 from permissions.permission_service import user_has_organisation_permission
 
 
-def test_user_has_organisation_permission_returns_false_if_user_does_not_have_permission(
+def test_user_has_organisation_permission_returns_false_if_user_does_not_have_permission(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user, organisation
 ):
     for permission in OrganisationPermissionModel.objects.all().values_list(
@@ -22,7 +22,7 @@ def test_user_has_organisation_permission_returns_false_if_user_does_not_have_pe
         )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_is_admin(
+def test_user_has_organisation_permission_returns_true_if_user_is_admin(  # type: ignore[no-untyped-def]
     admin_user, organisation
 ):
     for permission in OrganisationPermissionModel.objects.all().values_list(
@@ -34,15 +34,15 @@ def test_user_has_organisation_permission_returns_true_if_user_is_admin(
         )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_has_permission_directly(
+def test_user_has_organisation_permission_returns_true_if_user_has_permission_directly(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user, organisation
 ):
     # Given
     user_org_permission = UserOrganisationPermission.objects.create(
         user=test_user, organisation=organisation
     )
-    user_org_permission.permissions.add(CREATE_PROJECT)
-    user_org_permission.permissions.add(MANAGE_USER_GROUPS)
+    user_org_permission.permissions.add(CREATE_PROJECT)  # type: ignore[arg-type]
+    user_org_permission.permissions.add(MANAGE_USER_GROUPS)  # type: ignore[arg-type]
 
     # Then
     assert (
@@ -55,7 +55,7 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_di
     )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group(
+def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user, organisation, user_permission_group
 ):
     # Given
@@ -63,7 +63,7 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_vi
     user_perm_org_group = UserPermissionGroupOrganisationPermission.objects.create(
         group=user_permission_group, organisation=organisation
     )
-    user_perm_org_group.permissions.add(CREATE_PROJECT)
+    user_perm_org_group.permissions.add(CREATE_PROJECT)  # type: ignore[arg-type]
 
     # Then
     assert (
@@ -77,7 +77,7 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_vi
     )
 
 
-def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group_and_directly(
+def test_user_has_organisation_permission_returns_true_if_user_has_permission_via_group_and_directly(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user, organisation, user_permission_group
 ):
     # Given
@@ -85,12 +85,12 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_vi
     user_perm_org_group = UserPermissionGroupOrganisationPermission.objects.create(
         group=user_permission_group, organisation=organisation
     )
-    user_perm_org_group.permissions.add(CREATE_PROJECT)
+    user_perm_org_group.permissions.add(CREATE_PROJECT)  # type: ignore[arg-type]
 
     user_org_permission = UserOrganisationPermission.objects.create(
         user=test_user, organisation=organisation
     )
-    user_org_permission.permissions.add(MANAGE_USER_GROUPS)
+    user_org_permission.permissions.add(MANAGE_USER_GROUPS)  # type: ignore[arg-type]
 
     # Then
     assert (

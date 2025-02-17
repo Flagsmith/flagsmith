@@ -13,7 +13,7 @@ class Teardown(APIView):
     permission_classes = (E2ETestPermission,)
     authentication_classes = (TokenAuthentication,)
 
-    def post(self, request):
+    def post(self, request):  # type: ignore[no-untyped-def]
         if not settings.ENABLE_FE_E2E:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 

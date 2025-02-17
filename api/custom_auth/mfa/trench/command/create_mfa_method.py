@@ -7,7 +7,7 @@ from custom_auth.mfa.trench.utils import get_mfa_model
 
 
 class CreateMFAMethodCommand:
-    def __init__(self, secret_generator: Callable, mfa_model: Type[MFAMethod]) -> None:
+    def __init__(self, secret_generator: Callable, mfa_model: Type[MFAMethod]) -> None:  # type: ignore[type-arg]
         self._mfa_model = mfa_model
         self._create_secret = secret_generator
 
@@ -22,7 +22,7 @@ class CreateMFAMethodCommand:
         )
         if not created and mfa.is_active:
             raise MFAMethodAlreadyActiveError()
-        return mfa
+        return mfa  # type: ignore[no-any-return]
 
 
 create_mfa_method_command = CreateMFAMethodCommand(

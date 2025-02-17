@@ -1,5 +1,5 @@
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
-from common.features.serializers import (
+from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES  # type: ignore[import-untyped]
+from common.features.serializers import (  # type: ignore[import-untyped]
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
 from django.db import transaction
@@ -13,13 +13,13 @@ from features.feature_segments.limits import (
 from features.models import FeatureSegment
 
 
-class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
+class FeatureSegmentCreateSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = FeatureSegment
         fields = ("id", "uuid", "feature", "segment", "environment", "priority")
         read_only_fields = ("id", "uuid", "priority")
 
-    def validate(self, data):
+    def validate(self, data):  # type: ignore[no-untyped-def]
         data = super().validate(data)
         if exceeds_segment_override_limit(data["environment"]):
             raise serializers.ValidationError(
@@ -39,7 +39,7 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):
 
 
 class CustomCreateSegmentOverrideFeatureSegmentSerializer(
-    CreateSegmentOverrideFeatureSegmentSerializer
+    CreateSegmentOverrideFeatureSegmentSerializer  # type: ignore[misc]
 ):
     # Since the `priority` field on the FeatureSegment model is set to editable=False
     # (to adhere to the django-ordered-model functionality), we redefine the priority
@@ -47,7 +47,7 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
     priority = serializers.IntegerField(min_value=0, required=False)
 
     @transaction.atomic()
-    def save(self, **kwargs) -> FeatureSegment:
+    def save(self, **kwargs) -> FeatureSegment:  # type: ignore[no-untyped-def]
         """
         Note that this method is marked as atomic since a lot of additional validation is
         performed in the call to super. If that fails, we want to roll the changes made by
@@ -77,15 +77,15 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
                 # down. This ensures that the incoming priority space is 'free'.
                 collision.to(priority + 1)
 
-        return super().save(**kwargs)
+        return super().save(**kwargs)  # type: ignore[no-any-return]
 
 
-class FeatureSegmentQuerySerializer(serializers.Serializer):
+class FeatureSegmentQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     environment = serializers.IntegerField()
     feature = serializers.IntegerField()
 
 
-class FeatureSegmentListSerializer(serializers.ModelSerializer):
+class FeatureSegmentListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     segment_name = serializers.SerializerMethodField()
     is_feature_specific = serializers.SerializerMethodField()
 
@@ -110,7 +110,7 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):
             "is_feature_specific",
         )
 
-    def get_value(self, instance):
+    def get_value(self, instance):  # type: ignore[no-untyped-def]
         return instance.get_value()
 
     def get_segment_name(self, instance: FeatureSegment) -> str:
@@ -120,8 +120,8 @@ class FeatureSegmentListSerializer(serializers.ModelSerializer):
         return instance.segment.feature is not None
 
 
-class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
-    def validate(self, attrs):
+class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):  # type: ignore[type-arg]
+    def validate(self, attrs):  # type: ignore[no-untyped-def]
         validated_attrs = super().validate(attrs)
         if len(validated_attrs) == 0:
             return validated_attrs
@@ -163,7 +163,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
 
         return validated_attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data):  # type: ignore[no-untyped-def]
         id_priority_pairs = FeatureSegment.to_id_priority_tuple_pairs(validated_data)
         return FeatureSegment.update_priorities(id_priority_pairs)
 
@@ -171,7 +171,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
     def _validate_unique_environment_feature_version(
         feature_segments: list[FeatureSegment],
     ) -> None:
-        feature_states = []
+        feature_states = []  # type: ignore[var-annotated]
         for feature_segment in feature_segments:
             feature_states.extend(feature_segment.feature_states.all())
         unique_versions = {
@@ -184,7 +184,7 @@ class FeatureSegmentChangePrioritiesListSerializer(serializers.ListSerializer):
             )
 
 
-class FeatureSegmentChangePrioritiesSerializer(serializers.ModelSerializer):
+class FeatureSegmentChangePrioritiesSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     priority = serializers.IntegerField(
         min_value=0, help_text="Value to change the feature segment's priority to."
     )

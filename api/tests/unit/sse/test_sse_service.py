@@ -1,8 +1,8 @@
 import boto3
 import pytest
 from django.conf import settings
-from moto import mock_s3
-from pytest_lazyfixture import lazy_fixture
+from moto import mock_s3  # type: ignore[import-untyped]
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
 from sse.dataclasses import SSEAccessLogs
@@ -13,7 +13,7 @@ from sse.sse_service import (
 )
 
 
-def test_send_environment_update_message_for_project_schedules_task_correctly(
+def test_send_environment_update_message_for_project_schedules_task_correctly(  # type: ignore[no-untyped-def]
     mocker,
     sse_enabled_settings,
     realtime_enabled_project,
@@ -43,7 +43,7 @@ def test_send_environment_update_message_for_project_schedules_task_correctly(
         ),
     ],
 )
-def test_send_environment_update_message_for_project_exits_early_without_scheduling_task(
+def test_send_environment_update_message_for_project_exits_early_without_scheduling_task(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
     test_settings,
     test_project,
@@ -71,7 +71,7 @@ def test_send_environment_update_message_for_project_exits_early_without_schedul
         ),
     ],
 )
-def test_send_environment_update_message_for_environment_exits_early_without_scheduling_task(
+def test_send_environment_update_message_for_environment_exits_early_without_scheduling_task(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, test_settings, test_environment
 ):
     # Given
@@ -84,7 +84,7 @@ def test_send_environment_update_message_for_environment_exits_early_without_sch
     mocked_tasks.send_environment_update_message.delay.assert_not_called()
 
 
-def test_send_environment_update_message_for_environment_schedules_task_correctly(
+def test_send_environment_update_message_for_environment_schedules_task_correctly(  # type: ignore[no-untyped-def]
     mocker, sse_enabled_settings, realtime_enabled_project_environment_one
 ):
     # Given
@@ -104,7 +104,7 @@ def test_send_environment_update_message_for_environment_schedules_task_correctl
     )
 
 
-@mock_s3
+@mock_s3  # type: ignore[misc]
 def test_stream_access_logs(mocker: MockerFixture, aws_credentials: None) -> None:
     # Given - Some test data
     first_log = SSEAccessLogs("2023-11-27T06:42:47+0000", "key_one")

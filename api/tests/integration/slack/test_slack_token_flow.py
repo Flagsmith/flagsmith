@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_slack_oauth_flow_returns_401_if_secret_is_invalid(
+def test_slack_oauth_flow_returns_401_if_secret_is_invalid(  # type: ignore[no-untyped-def]
     environment_api_key, api_client
 ):
     # Given
@@ -18,7 +18,7 @@ def test_slack_oauth_flow_returns_401_if_secret_is_invalid(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_slack_oauth_flow(
+def test_slack_oauth_flow(  # type: ignore[no-untyped-def]
     mocker, settings, api_client, admin_client, environment_api_key, environment
 ):
     # Given
@@ -64,7 +64,7 @@ def test_slack_oauth_flow(
     mocked_get_bot_token.assert_called_with(code, callback_url)
 
 
-def test_slack_oauth_callback_returns_400_if_redirect_url_is_not_found_in_session(
+def test_slack_oauth_callback_returns_400_if_redirect_url_is_not_found_in_session(  # type: ignore[no-untyped-def]
     mocker, django_client, environment, environment_api_key, slack_bot_token
 ):
     url = reverse(
@@ -82,7 +82,7 @@ def test_slack_oauth_callback_returns_400_if_redirect_url_is_not_found_in_sessio
     assert response.json()["detail"] == "Redirect URL not found in request session"
 
 
-def test_slack_oauth_init_returns_401_for_user_that_does_not_have_access_to_the_environment(
+def test_slack_oauth_init_returns_401_for_user_that_does_not_have_access_to_the_environment(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, environment_api_key, settings, django_user_model, api_client
 ):
     # Given

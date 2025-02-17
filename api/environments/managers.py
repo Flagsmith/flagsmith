@@ -1,13 +1,13 @@
 from django.db.models import Prefetch
-from softdelete.models import SoftDeleteManager
+from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
 
 from features.models import FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from segments.models import Segment
 
 
-class EnvironmentManager(SoftDeleteManager):
-    def filter_for_document_builder(
+class EnvironmentManager(SoftDeleteManager):  # type: ignore[misc]
+    def filter_for_document_builder(  # type: ignore[no-untyped-def]
         self,
         *args,
         extra_select_related: list[str] | None = None,
@@ -52,8 +52,8 @@ class EnvironmentManager(SoftDeleteManager):
             .filter(*args, **kwargs)
         )
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         return super().get_queryset().select_related("project", "project__organisation")
 
-    def get_by_natural_key(self, api_key):
+    def get_by_natural_key(self, api_key):  # type: ignore[no-untyped-def]
         return self.get(api_key=api_key)

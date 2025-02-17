@@ -13,12 +13,12 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
-from task_processor.task_run_method import TaskRunMethod
+from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from environments.models import Environment, Webhook
 from organisations.models import OrganisationWebhook
-from projects.models import Organisation
+from projects.models import Organisation  # type: ignore[attr-defined]
 from webhooks.sample_webhook_data import (
     environment_webhook_data,
     organisation_webhook_data,
@@ -61,10 +61,10 @@ def get_webhook_model(
         return Webhook
 
 
-@register_task_handler()
-def call_environment_webhooks(
+@register_task_handler()  # type: ignore[misc]
+def call_environment_webhooks(  # type: ignore[no-untyped-def]
     environment_id: int,
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
     event_type: str,
     retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
 ):
@@ -92,10 +92,10 @@ def call_environment_webhooks(
     )
 
 
-@register_task_handler()
-def call_organisation_webhooks(
+@register_task_handler()  # type: ignore[misc]
+def call_organisation_webhooks(  # type: ignore[no-untyped-def]
     organisation_id: int,
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
     event_type: str,
     retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
 ):
@@ -123,7 +123,7 @@ def call_organisation_webhooks(
     )
 
 
-def call_integration_webhook(config: AbstractBaseWebhookModel, data: typing.Mapping):
+def call_integration_webhook(config: AbstractBaseWebhookModel, data: typing.Mapping):  # type: ignore[type-arg,no-untyped-def]  # noqa: E501
     return _call_webhook(config, data)
 
 
@@ -136,7 +136,7 @@ def trigger_sample_webhook(
     """
     :raises requests.exceptions.RequestException: If an error occurs while making the request to the webhook.
     """
-    return _call_webhook(webhook, serializer.data)
+    return _call_webhook(webhook, serializer.data)  # type: ignore[has-type]
 
 
 @backoff.on_exception(
@@ -148,7 +148,7 @@ def trigger_sample_webhook(
 )
 def _call_webhook(
     webhook: AbstractBaseWebhookModel,
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
 ) -> requests.models.Response:
     headers = {"content-type": "application/json"}
     json_data = json.dumps(data, sort_keys=True, cls=DjangoJSONEncoder)
@@ -167,10 +167,10 @@ def _call_webhook(
         raise
 
 
-@register_task_handler()
-def call_webhook_with_failure_mail_after_retries(
+@register_task_handler()  # type: ignore[misc]
+def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def]
     webhook_id: int,
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
     webhook_type: str,
     send_failure_mail: bool = False,
     max_retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
@@ -220,7 +220,7 @@ def call_webhook_with_failure_mail_after_retries(
             call_webhook_with_failure_mail_after_retries.delay(
                 delay_until=(
                     timezone.now()
-                    + timezone.timedelta(
+                    + timezone.timedelta(  # type: ignore[attr-defined]
                         seconds=settings.WEBHOOK_BACKOFF_BASE**try_count
                     )
                     if settings.TASK_RUN_METHOD == TaskRunMethod.TASK_PROCESSOR
@@ -239,9 +239,9 @@ def call_webhook_with_failure_mail_after_retries(
     return res
 
 
-def _call_webhooks(
+def _call_webhooks(  # type: ignore[no-untyped-def]
     webhooks: typing.Iterable[WebhookModels],
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
     event_type: str,
     webhook_type: WebhookType,
     retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
@@ -251,23 +251,23 @@ def _call_webhooks(
     serializer.is_valid(raise_exception=False)
     for webhook in webhooks:
         call_webhook_with_failure_mail_after_retries.delay(
-            args=(webhook.id, serializer.data, webhook_type.value, True, retries)
+            args=(webhook.id, serializer.data, webhook_type.value, True, retries)  # type: ignore[has-type]
         )
 
 
-def send_failure_email(
+def send_failure_email(  # type: ignore[no-untyped-def]
     webhook: WebhookModels,
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
     webhook_type: str,
-    status_code: typing.Union[int, str] = None,
+    status_code: typing.Union[int, str] = None,  # type: ignore[assignment]
 ):
     template_data = _get_failure_email_template_data(
         webhook, data, webhook_type, status_code
     )
     organisation = (
-        webhook.organisation
+        webhook.organisation  # type: ignore[union-attr]
         if webhook_type == WebhookType.ORGANISATION.value
-        else webhook.environment.project.organisation
+        else webhook.environment.project.organisation  # type: ignore[union-attr]
     )
 
     text_template = get_template("features/webhook_failure.txt")
@@ -277,17 +277,17 @@ def send_failure_email(
         subject,
         text_content,
         settings.EMAIL_CONFIGURATION.get("INVITE_FROM_EMAIL"),
-        [organisation.webhook_notification_email],
+        [organisation.webhook_notification_email],  # type: ignore[list-item]
     )
     msg.content_subtype = "plain"
     msg.send()
 
 
-def _get_failure_email_template_data(
+def _get_failure_email_template_data(  # type: ignore[no-untyped-def]
     webhook: WebhookModels,
-    data: typing.Mapping,
+    data: typing.Mapping,  # type: ignore[type-arg]
     webhook_type: str,
-    status_code: typing.Union[int, str] = None,
+    status_code: typing.Union[int, str] = None,  # type: ignore[assignment]
 ):
     data = {
         "status_code": status_code,
@@ -296,7 +296,7 @@ def _get_failure_email_template_data(
     }
 
     if webhook_type == WebhookType.ENVIRONMENT.value:
-        data["project_name"] = webhook.environment.project.name
-        data["environment_name"] = webhook.environment.name
+        data["project_name"] = webhook.environment.project.name  # type: ignore[union-attr]
+        data["environment_name"] = webhook.environment.name  # type: ignore[union-attr]
 
     return data

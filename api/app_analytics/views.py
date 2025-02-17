@@ -8,7 +8,7 @@ from app_analytics.cache import FeatureEvaluationCache
 from app_analytics.tasks import track_feature_evaluation_v2
 from app_analytics.track import track_feature_evaluation_influxdb_v2
 from django.conf import settings
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.fields import IntegerField
@@ -33,16 +33,16 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
-feature_evaluation_cache = FeatureEvaluationCache()
+feature_evaluation_cache = FeatureEvaluationCache()  # type: ignore[no-untyped-call]
 
 
-class SDKAnalyticsFlagsV2(CreateAPIView):
+class SDKAnalyticsFlagsV2(CreateAPIView):  # type: ignore[type-arg]
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
     serializer_class = SDKAnalyticsFlagsSerializer
     throttle_classes = []
 
-    def create(self, request: Request, *args, **kwargs) -> Response:
+    def create(self, request: Request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -91,7 +91,7 @@ class SDKAnalyticsFlagsV2(CreateAPIView):
         return valid
 
 
-class SDKAnalyticsFlags(GenericAPIView):
+class SDKAnalyticsFlags(GenericAPIView):  # type: ignore[type-arg]
     """
     Class to handle flag analytics events
     """
@@ -100,7 +100,7 @@ class SDKAnalyticsFlags(GenericAPIView):
     authentication_classes = (EnvironmentKeyAuthentication,)
     throttle_classes = []
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Serializer
 
@@ -112,8 +112,8 @@ class SDKAnalyticsFlags(GenericAPIView):
             ).values_list("feature__name", flat=True)
         )
 
-        class _AnalyticsSerializer(Serializer):
-            def get_fields(self):
+        class _AnalyticsSerializer(Serializer):  # type: ignore[type-arg]
+            def get_fields(self):  # type: ignore[no-untyped-def]
                 return {
                     feature_name: IntegerField(required=False)
                     for feature_name in environment_feature_names
@@ -121,7 +121,7 @@ class SDKAnalyticsFlags(GenericAPIView):
 
         return _AnalyticsSerializer
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Send flag evaluation events from the SDK back to the API for reporting.
 
@@ -171,7 +171,7 @@ class SDKAnalyticsFlags(GenericAPIView):
         return is_valid
 
 
-class SelfHostedTelemetryAPIView(CreateAPIView):
+class SelfHostedTelemetryAPIView(CreateAPIView):  # type: ignore[type-arg]
     """
     Class to handle telemetry events from self hosted APIs so we can aggregate and track
     self hosted installation data
@@ -189,7 +189,7 @@ class SelfHostedTelemetryAPIView(CreateAPIView):
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
-def get_usage_data_total_count_view(request, organisation_pk=None):
+def get_usage_data_total_count_view(request, organisation_pk=None):  # type: ignore[no-untyped-def]
     organisation = Organisation.objects.get(id=organisation_pk)
     count = get_total_events_count(organisation)
     serializer = UsageTotalCountSerializer(data={"count": count})
@@ -205,7 +205,7 @@ def get_usage_data_total_count_view(request, organisation_pk=None):
 )
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, UsageDataPermission])
-def get_usage_data_view(request, organisation_pk=None):
+def get_usage_data_view(request, organisation_pk=None):  # type: ignore[no-untyped-def]
     filters = UsageDataQuerySerializer(data=request.query_params)
     filters.is_valid(raise_exception=True)
 

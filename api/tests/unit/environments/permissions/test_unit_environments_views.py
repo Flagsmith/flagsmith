@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from common.environments.permissions import VIEW_ENVIRONMENT
+from common.environments.permissions import VIEW_ENVIRONMENT  # type: ignore[import-untyped]
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -28,7 +28,7 @@ def test_user_can_list_all_user_permissions_for_an_environment(
         "api-v1:environments:environment-user-permissions-list",
         args=[environment.api_key],
     )
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # When
     response = admin_client.get(url)
@@ -100,7 +100,7 @@ def test_user_can_update_user_permission_for_a_project(
         environment=environment,
     )
     assert uep.permissions.count() == 1
-    assert uep.permissions.first().key == VIEW_ENVIRONMENT
+    assert uep.permissions.first().key == VIEW_ENVIRONMENT  # type: ignore[union-attr]
 
 
 def test_user_can_delete_user_permission_for_a_project(
@@ -109,7 +109,7 @@ def test_user_can_delete_user_permission_for_a_project(
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
-    uep = with_environment_permissions([VIEW_ENVIRONMENT])
+    uep = with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:environments:environment-user-permissions-detail",
@@ -187,7 +187,7 @@ def test_user_can_create_new_user_group_permission_for_an_environment(
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    assert sorted(response.json()["permissions"]) == sorted(data["permissions"])
+    assert sorted(response.json()["permissions"]) == sorted(data["permissions"])  # type: ignore[call-overload]
 
     assert UserPermissionGroupEnvironmentPermission.objects.filter(
         group=new_group, environment=environment
@@ -207,7 +207,7 @@ def test_user_can_update_user_group_permission_for_an_environment(
     organisation: Organisation,
 ) -> None:
     # Given
-    data = {"permissions": []}
+    data = {"permissions": []}  # type: ignore[var-annotated]
     user_permission_group = UserPermissionGroup.objects.create(
         name="Test group", organisation=organisation
     )

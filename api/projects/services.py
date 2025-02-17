@@ -32,4 +32,4 @@ def get_project_segments_from_cache(project_id: int) -> "QuerySet[Segment]":
             project_id, segments, timeout=settings.CACHE_PROJECT_SEGMENTS_SECONDS
         )
 
-    return segments
+    return segments  # type: ignore[no-any-return]

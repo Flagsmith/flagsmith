@@ -1,7 +1,7 @@
 import uuid
 from unittest import mock
 
-from common.projects.permissions import VIEW_PROJECT
+from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 
 from environments.identities.models import Identity
 from environments.models import Environment
@@ -34,7 +34,7 @@ def test_staff_user_has_permission(staff_user: FFAdminUser, project: Project) ->
     results = []
     for action in ("list", "create"):
         mock_view.action = action
-        results.append(segment_permissions.has_permission(mock_request, mock_view))
+        results.append(segment_permissions.has_permission(mock_request, mock_view))  # type: ignore[no-untyped-call]
 
     # Then
     assert all(results)
@@ -47,7 +47,7 @@ def test_project_admin_has_object_permission(
     segment: Segment,
 ) -> None:
     # Given
-    with_project_permissions(admin=True)
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock()
     mock_request.user = staff_user
     mock_request.query_params = {}
@@ -60,7 +60,7 @@ def test_project_admin_has_object_permission(
     for action in ("update", "destroy", "retrieve"):
         mock_view.action = action
         results.append(
-            segment_permissions.has_object_permission(mock_request, mock_view, segment)
+            segment_permissions.has_object_permission(mock_request, mock_view, segment)  # type: ignore[no-untyped-call]  # noqa: E501
         )
 
     # Then
@@ -79,12 +79,12 @@ def test_project_user_has_list_permission(
     mock_view = mock.MagicMock()
     mock_view.kwargs = {"project_pk": project.id}
     mock_view.detail = False
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     segment_permissions = SegmentPermissions()
 
     # When
     mock_view.action = "list"
-    result = segment_permissions.has_permission(mock_request, mock_view)
+    result = segment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -102,12 +102,12 @@ def test_project_user_has_no_create_permission(
     mock_view = mock.MagicMock()
     mock_view.kwargs = {"project_pk": project.id}
     mock_view.detail = False
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     segment_permissions = SegmentPermissions()
 
     # When
     mock_view.action = "create"
-    result = segment_permissions.has_permission(mock_request, mock_view)
+    result = segment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -125,7 +125,7 @@ def test_project_user_has_object_permission(
     mock_request.query_params = {}
     mock_view = mock.MagicMock()
     mock_view.kwargs = {"project_pk": project.id}
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     segment_permissions = SegmentPermissions()
 
     # When
@@ -139,7 +139,7 @@ def test_project_user_has_object_permission(
 
         # Then
         assert (
-            segment_permissions.has_object_permission(mock_request, mock_view, segment)
+            segment_permissions.has_object_permission(mock_request, mock_view, segment)  # type: ignore[no-untyped-call]  # noqa: E501
             == expected_result
         )
 
@@ -158,19 +158,19 @@ def test_environment_admin_can_get_segments_for_an_identity(
     mock_request.query_params = {}
     mock_view = mock.MagicMock()
     mock_view.kwargs = {"project_pk": project.id}
-    with_environment_permissions(admin=True)
+    with_environment_permissions(admin=True)  # type: ignore[call-arg]
     identity = Identity.objects.create(identifier="test", environment=environment)
     mock_request.query_params["identity"] = identity.id
     segment_permissions = SegmentPermissions()
 
     # When
-    result = segment_permissions.has_permission(mock_request, mock_view)
+    result = segment_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result
 
 
-def test_user_with_view_project_permission_can_list_segments_for_an_identity(
+def test_user_with_view_project_permission_can_list_segments_for_an_identity(  # type: ignore[no-untyped-def]
     segment, django_user_model, mocker
 ):
     # Given
@@ -191,7 +191,7 @@ def test_user_with_view_project_permission_can_list_segments_for_an_identity(
     view = mocker.MagicMock(action="list", kwargs={"project_pk": segment.project_id})
 
     # When
-    result = permissions.has_permission(request, view)
+    result = permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result

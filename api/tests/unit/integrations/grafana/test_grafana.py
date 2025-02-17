@@ -30,9 +30,9 @@ def test_grafana_wrapper__track_event__expected_api_call() -> None:
 
     # Then
     assert len(responses.calls) == 1
-    assert responses.calls[0].request.headers["Authorization"] == "Bearer any"
-    assert responses.calls[0].request.headers["Content-Type"] == "application/json"
-    assert json.loads(responses.calls[0].request.body) == event
+    assert responses.calls[0].request.headers["Authorization"] == "Bearer any"  # type: ignore[union-attr]
+    assert responses.calls[0].request.headers["Content-Type"] == "application/json"  # type: ignore[union-attr]
+    assert json.loads(responses.calls[0].request.body) == event  # type: ignore[union-attr]
 
 
 def test_grafana_wrapper__generate_event_data__return_expected(

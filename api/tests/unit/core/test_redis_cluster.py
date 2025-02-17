@@ -1,11 +1,11 @@
 import pytest
 from core.redis_cluster import ClusterConnectionFactory, SafeRedisClusterClient
-from django_redis.exceptions import ConnectionInterrupted
+from django_redis.exceptions import ConnectionInterrupted  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from redis.exceptions import RedisClusterException
 
 
-def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):
+def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):  # type: ignore[no-untyped-def]
     # Given
     mock_get_connection = mocker.patch.object(
         ClusterConnectionFactory, "get_connection"
@@ -37,7 +37,7 @@ def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):
     make_connection_params.assert_called_once_with(url)
 
 
-def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
+def test_cluster_connection_factory__get_connection_with_non_conflicting_params(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
 ):
     # Given
@@ -60,7 +60,7 @@ def test_cluster_connection_factory__get_connection_with_non_conflicting_params(
     )
 
 
-def test_cluster_connection_factory__get_connection_with_conflicting_params(
+def test_cluster_connection_factory__get_connection_with_conflicting_params(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
 ):
     # Given
@@ -78,7 +78,7 @@ def test_cluster_connection_factory__get_connection_with_conflicting_params(
     mockRedisCluster.assert_not_called()
 
 
-def test_disconnect(mocker: MockerFixture):
+def test_disconnect(mocker: MockerFixture):  # type: ignore[no-untyped-def]
     # Given
     connection_factory = ClusterConnectionFactory({})
     mock_connection = mocker.MagicMock()
@@ -92,14 +92,14 @@ def test_disconnect(mocker: MockerFixture):
     mock_disconnect_connection_pools.assert_called_once()
 
 
-def test_safe_redis_cluster__safe_methods_raise_connection_interrupted(
+def test_safe_redis_cluster__safe_methods_raise_connection_interrupted(  # type: ignore[no-untyped-def]
     mocker: MockerFixture, settings
 ):
     # Given
     # Internal client that will raise RedisClusterException on every call
     mocked_redis_cluster_client = mocker.MagicMock(side_effect=RedisClusterException)
 
-    safe_redis_cluster_client = SafeRedisClusterClient("redis://test", {}, None)
+    safe_redis_cluster_client = SafeRedisClusterClient("redis://test", {}, None)  # type: ignore[no-untyped-call]
 
     # Replace the internal client with the mocked one
     safe_redis_cluster_client.get_client = mocked_redis_cluster_client

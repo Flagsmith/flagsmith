@@ -11,12 +11,12 @@ from metadata.models import (
     MetadataModelField,
     MetadataModelFieldRequirement,
 )
-from metadata.views import SUPPORTED_REQUIREMENTS_MAPPING
+from metadata.views import SUPPORTED_REQUIREMENTS_MAPPING  # type: ignore[attr-defined]
 from organisations.models import Organisation
 from projects.models import Project
 
 
-def test_can_create_metadata_field(admin_client, organisation):
+def test_can_create_metadata_field(admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:metadata:metadata-fields-list")
     field_name = "some_id"
@@ -37,7 +37,7 @@ def test_can_create_metadata_field(admin_client, organisation):
     assert response.json()["organisation"] == organisation.id
 
 
-def test_can_delete_metadata_field(admin_client, a_metadata_field):
+def test_can_delete_metadata_field(admin_client, a_metadata_field):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -48,7 +48,7 @@ def test_can_delete_metadata_field(admin_client, a_metadata_field):
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_can_update_metadata_field(admin_client, a_metadata_field, organisation):
+def test_can_update_metadata_field(admin_client, a_metadata_field, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -72,7 +72,7 @@ def test_can_update_metadata_field(admin_client, a_metadata_field, organisation)
     assert response.json()["type"] == new_field_type
 
 
-def test_list_metadata_fields(admin_client, a_metadata_field):
+def test_list_metadata_fields(admin_client, a_metadata_field):  # type: ignore[no-untyped-def]
     # Given
     base_url = reverse("api-v1:metadata:metadata-fields-list")
 
@@ -87,7 +87,7 @@ def test_list_metadata_fields(admin_client, a_metadata_field):
     assert response.json()["results"][0]["id"] == a_metadata_field.id
 
 
-def test_list_metadata_fields_without_organisation_returns_400(
+def test_list_metadata_fields_without_organisation_returns_400(  # type: ignore[no-untyped-def]
     admin_client, a_metadata_field
 ):
     # Given
@@ -100,7 +100,7 @@ def test_list_metadata_fields_without_organisation_returns_400(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_retrieve_metadata_fields(admin_client, a_metadata_field):
+def test_retrieve_metadata_fields(admin_client, a_metadata_field):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:metadata:metadata-fields-detail", args=[a_metadata_field.id])
 
@@ -112,7 +112,7 @@ def test_retrieve_metadata_fields(admin_client, a_metadata_field):
     assert response.json()["id"] == a_metadata_field.id
 
 
-def test_create_metadata_field_returns_403_for_non_org_admin(
+def test_create_metadata_field_returns_403_for_non_org_admin(  # type: ignore[no-untyped-def]
     test_user_client, organisation
 ):
     url = reverse("api-v1:metadata:metadata-fields-list")
@@ -130,7 +130,7 @@ def test_create_metadata_field_returns_403_for_non_org_admin(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_list_model_metadata_fields(
+def test_list_model_metadata_fields(  # type: ignore[no-untyped-def]
     required_a_environment_metadata_field,
     optional_b_environment_metadata_field,
     admin_client,
@@ -149,7 +149,7 @@ def test_list_model_metadata_fields(
     assert len(response.json()["results"]) == 2
 
 
-def test_list_model_metadata_fields_content_type_filter(
+def test_list_model_metadata_fields_content_type_filter(  # type: ignore[no-untyped-def]
     required_a_environment_metadata_field,
     optional_b_environment_metadata_field,
     admin_client,
@@ -178,7 +178,7 @@ def test_list_model_metadata_fields_content_type_filter(
     assert response.json()["results"][0]["id"] == a_metadata_project_field.id
 
 
-def test_delete_model_metadata_field(
+def test_delete_model_metadata_field(  # type: ignore[no-untyped-def]
     environment,
     admin_client,
     a_metadata_field,
@@ -197,7 +197,7 @@ def test_delete_model_metadata_field(
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_can_not_delete_model_metadata_field_from_other_organisation(
+def test_can_not_delete_model_metadata_field_from_other_organisation(  # type: ignore[no-untyped-def]
     environment,
     admin_client,
     a_metadata_field,
@@ -217,7 +217,7 @@ def test_can_not_delete_model_metadata_field_from_other_organisation(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_update_model_metadata_field(
+def test_update_model_metadata_field(  # type: ignore[no-untyped-def]
     environment,
     admin_client,
     a_metadata_field,
@@ -255,7 +255,7 @@ def test_update_model_metadata_field(
     )
 
 
-def test_can_not_update_model_metadata_field_from_other_organisation(
+def test_can_not_update_model_metadata_field_from_other_organisation(  # type: ignore[no-untyped-def]
     environment, admin_client, environment_metadata_field_different_org, organisation
 ):
     # Given
@@ -374,7 +374,7 @@ def test_create_model_metadata_field_for_segments(
     }
 
 
-def test_can_not_create_model_metadata_field_using_field_from_other_organisation(
+def test_can_not_create_model_metadata_field_using_field_from_other_organisation(  # type: ignore[no-untyped-def]
     admin_client, environment_metadata_field_different_org, organisation, project
 ):
     # Given
@@ -395,7 +395,7 @@ def test_can_not_create_model_metadata_field_using_field_from_other_organisation
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_supported_content_type(
+def test_get_supported_content_type(  # type: ignore[no-untyped-def]
     admin_client: APIClient, organisation: Organisation
 ):
     # Given
@@ -422,7 +422,7 @@ def test_get_supported_content_type(
         assert model in supported_models
 
 
-def test_get_supported_required_for_models(admin_client, organisation):
+def test_get_supported_required_for_models(admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     base_url = reverse(
         "api-v1:organisations:metadata-model-fields-supported-required-for-models",

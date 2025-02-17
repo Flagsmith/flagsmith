@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include
 from django.urls import path
-from rest_framework_nested import routers
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from features.feature_segments.views import FeatureSegmentViewSet
 from features.import_export.views import (

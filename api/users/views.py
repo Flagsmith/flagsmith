@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic.edit import FormView
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
@@ -50,20 +50,20 @@ from users.services import (
 from .forms import InitConfigForm
 
 
-class InitialConfigurationView(PermissionRequiredMixin, FormView):
+class InitialConfigurationView(PermissionRequiredMixin, FormView):  # type: ignore[type-arg]
     template_name = "users/onboard.html"
     form_class = InitConfigForm
     permission_denied_message = (
         "FAILED TO INIT Configuration. USER(S) ALREADY EXIST IN SYSTEM."
     )
 
-    def has_permission(self):
+    def has_permission(self):  # type: ignore[no-untyped-def]
         return not should_skip_create_initial_superuser()
 
-    def handle_no_permission(self):
+    def handle_no_permission(self):  # type: ignore[no-untyped-def]
         raise Http404("CAN NOT INIT CONFIGURATION. USER(S) ALREADY EXIST IN SYSTEM.")
 
-    def form_valid(self, form):
+    def form_valid(self, form):  # type: ignore[no-untyped-def]
         form.update_site()
         password_reset_url = form.create_admin().password_reset_url
         return JsonResponse(
@@ -75,7 +75,7 @@ class InitialConfigurationView(PermissionRequiredMixin, FormView):
 
 
 class AdminInitView(View):
-    def get(self, request):
+    def get(self, request):  # type: ignore[no-untyped-def]
         if should_skip_create_initial_superuser():
             return JsonResponse(
                 {
@@ -98,11 +98,11 @@ class AdminInitView(View):
     decorator=swagger_auto_schema(query_serializer=ListUsersQuerySerializer()),
     name="list",
 )
-class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):  # type: ignore[type-arg]
     permission_classes = (IsAuthenticated, OrganisationUsersPermission)
     pagination_class = None
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if self.kwargs.get("organisation_pk"):
             queryset = FFAdminUser.objects.prefetch_related(
                 Prefetch(
@@ -115,7 +115,7 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         else:
             return FFAdminUser.objects.none()
 
-    def _apply_query_filters(self, queryset: QuerySet):
+    def _apply_query_filters(self, queryset: QuerySet):  # type: ignore[no-untyped-def,type-arg]
         serializer = ListUsersQuerySerializer(data=self.request.query_params)
         serializer.is_valid(raise_exception=True)
         filter_data = serializer.data
@@ -125,13 +125,13 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
         return queryset
 
-    def get_serializer_class(self, *args, **kwargs):
+    def get_serializer_class(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         if self.action == "update_role":
             return UserOrganisationSerializer
 
         return UserListSerializer
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super(FFAdminUserViewSet, self).get_serializer_context()
         if self.kwargs.get("organisation_pk"):
             context["organisation"] = Organisation.objects.get(
@@ -140,7 +140,7 @@ class FFAdminUserViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return context
 
     @action(detail=True, methods=["POST"], url_path="update-role")
-    def update_role(self, request, organisation_pk, pk):
+    def update_role(self, request, organisation_pk, pk):  # type: ignore[no-untyped-def]
         user = self.get_object()
         organisation = Organisation.objects.get(pk=organisation_pk)
         user_organisation = user.get_user_organisation(organisation)
@@ -165,10 +165,10 @@ def password_reset_redirect(
     return redirect(f"{current_site_url}/password-reset/{uidb64}/{token}")
 
 
-class UserPermissionGroupViewSet(viewsets.ModelViewSet):
+class UserPermissionGroupViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [IsAuthenticated, UserPermissionGroupPermission]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return UserPermissionGroup.objects.none()
 
@@ -178,7 +178,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         qs = UserPermissionGroup.objects.filter(organisation=organisation)
         if (
             self.action != "summaries"
-            and not self.request.user.has_organisation_permission(
+            and not self.request.user.has_organisation_permission(  # type: ignore[union-attr]
                 organisation, MANAGE_USER_GROUPS
             )
         ):
@@ -201,19 +201,19 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
 
         return qs
 
-    def paginate_queryset(self, queryset: QuerySet) -> list[UserPermissionGroup] | None:
+    def paginate_queryset(self, queryset: QuerySet) -> list[UserPermissionGroup] | None:  # type: ignore[override,type-arg]  # noqa: E501
         if self.action == "summaries":
             return None
-        return super().paginate_queryset(queryset)
+        return super().paginate_queryset(queryset)  # type: ignore[return-value]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "retrieve":
             return UserPermissionGroupSerializerDetail
         elif self.action in ("my_groups", "summaries"):
             return UserPermissionGroupSummarySerializer
         return ListUserPermissionGroupSerializer
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
         if not getattr(self, "swagger_fake_view", False) and self.detail is True:
             with suppress(ValueError):
@@ -222,10 +222,10 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
                 ).values_list("ffadminuser__id", flat=True)
         return context
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
     @swagger_auto_schema(
@@ -233,7 +233,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         responses={200: UserPermissionGroupSerializerDetail},
     )
     @action(detail=True, methods=["POST"], url_path="add-users")
-    def add_users(self, request, organisation_pk, pk):
+    def add_users(self, request, organisation_pk, pk):  # type: ignore[no-untyped-def]
         group = self.get_object()
         user_ids = request.data["user_ids"]
 
@@ -258,7 +258,7 @@ class UserPermissionGroupViewSet(viewsets.ModelViewSet):
         responses={200: UserPermissionGroupSerializerDetail},
     )
     @action(detail=True, methods=["POST"], url_path="remove-users")
-    def remove_users(self, request, organisation_pk, pk):
+    def remove_users(self, request, organisation_pk, pk):  # type: ignore[no-untyped-def]
         group = self.get_object()
         user_ids = request.data["user_ids"]
 

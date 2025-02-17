@@ -30,8 +30,10 @@ class AbstractBaseFeatureValueModel(models.Model):
 
     @property
     def value(self) -> typing.Union[str, int, bool]:
-        return {
+        return {  # type: ignore[return-value]
             INTEGER: self.integer_value,
             STRING: self.string_value,
             BOOLEAN: self.boolean_value,
-        }.get(self.type, self.string_value)
+        }.get(
+            self.type, self.string_value  # type: ignore[arg-type]
+        )

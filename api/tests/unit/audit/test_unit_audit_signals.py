@@ -43,7 +43,7 @@ def test_call_webhooks_does_not_create_task_if_webhooks_disabled(
     )
 
     # When
-    call_webhooks(sender=AuditLog, instance=audit_log)
+    call_webhooks(sender=AuditLog, instance=audit_log)  # type: ignore[no-untyped-call]
 
     # Then
     mocked_call_organisation_webhooks.delay.assert_not_called()
@@ -66,7 +66,7 @@ def test_call_webhooks_does_not_create_task_if_organisation_has_no_webhooks(
     )
 
     # When
-    call_webhooks(sender=AuditLog, instance=audit_log)
+    call_webhooks(sender=AuditLog, instance=audit_log)  # type: ignore[no-untyped-call]
 
     # Then
     mocked_call_organisation_webhooks.delay.assert_not_called()
@@ -93,7 +93,7 @@ def test_call_webhooks_creates_task_if_organisation_has_webhooks(
     )
 
     # When
-    call_webhooks(sender=AuditLog, instance=audit_log)
+    call_webhooks(sender=AuditLog, instance=audit_log)  # type: ignore[no-untyped-call]
 
     # Then
     mocked_call_organisation_webhooks.delay.assert_called_once()
@@ -207,7 +207,7 @@ def test_send_environment_feature_version_audit_log_event_to_grafana(
     expected_time = int(audit_log_record.created_date.timestamp() * 1000)
 
     assert len(responses.calls) == 1
-    assert responses.calls[0].request.body == json.dumps(
+    assert responses.calls[0].request.body == json.dumps(  # type: ignore[union-attr]
         {
             "tags": [
                 "flagsmith",
@@ -294,7 +294,7 @@ def test_send_environment_feature_version_audit_log_event_to_dynatrace(
 
     # Then
     assert len(responses.calls) == 1
-    assert json.loads(responses.calls[0].request.body) == {
+    assert json.loads(responses.calls[0].request.body) == {  # type: ignore[union-attr]
         "title": "Flagsmith flag change.",
         "eventType": "CUSTOM_DEPLOYMENT",
         "properties": {
@@ -310,7 +310,7 @@ def _create_and_publish_environment_feature_version(
     environment: Environment,
     feature: Feature,
     user: FFAdminUser,
-) -> (EnvironmentFeatureVersion, AuditLog):
+) -> (EnvironmentFeatureVersion, AuditLog):  # type: ignore[syntax]
     version = EnvironmentFeatureVersion(
         environment=environment,
         feature=feature,
