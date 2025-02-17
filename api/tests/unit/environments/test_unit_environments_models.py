@@ -34,6 +34,7 @@ from features.versioning.versioning_service import (
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
+from tests.types import TestFlagData
 from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
@@ -1024,18 +1025,63 @@ def test_environment_clone_async(
 
 
 def test_environment_create_with_use_v2_feature_versioning_true(
-    project: Project, environment_v2_versioning: Environment, feature: Feature
+    project: Project,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
 ) -> None:
     # Given
+    set_flagsmith_client_flags(
+        [TestFlagData("enable_feature_versioning_for_new_projects", True, "2025-02-17")]
+    )
 
     # When
     new_environment = Environment.objects.create(
         name="new-environment",
-        use_v2_feature_versioning=True,
         project=project,
     )
 
     # Then
     assert EnvironmentFeatureVersion.objects.filter(
+        environment=new_environment, feature=feature
+    ).exists()
+
+
+def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(
+    project: Project,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
+) -> None:
+    # Given
+    set_flagsmith_client_flags(
+        [TestFlagData("enable_feature_versioning_for_new_projects", True, "2025-02-17")]
+    )
+
+    # When
+    new_environment = environment_v2_versioning.clone(name="new-environment")
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(
+        environment=new_environment, feature=feature
+    ).exists()
+
+
+def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
+) -> None:
+    # Given
+    set_flagsmith_client_flags(
+        [TestFlagData("enable_feature_versioning_for_new_projects", True, "2025-02-17")]
+    )
+
+    # When
+    new_environment = environment.clone(name="new-environment")
+
+    # Then
+    assert not EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()

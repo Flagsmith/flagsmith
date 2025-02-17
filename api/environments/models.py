@@ -177,10 +177,12 @@ class Environment(
             traits={"organisation_id": organisation.id},
         ).get_flag("enable_feature_versioning_for_new_projects")
 
-        if flag.enabled and self.project.created_date >= datetime.date.fromisoformat(
-            flag.value
+        if (
+            flag.enabled
+            and self.project.created_date.date()
+            >= datetime.date.fromisoformat(flag.value)
         ):
-            self.enable_v2_versioning = True
+            self.use_v2_feature_versioning = True
 
     def __str__(self):
         return "Project %s - Environment %s" % (self.project.name, self.name)
