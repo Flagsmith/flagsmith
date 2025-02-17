@@ -604,6 +604,7 @@ const CreateFlag = class extends Component {
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
+                    hideTagsByType={['UNHEALTHY']}
                     readOnly={!!identity || !createFeature}
                     projectId={`${this.props.projectId}`}
                     value={this.state.tags}

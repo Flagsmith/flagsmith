@@ -34,13 +34,23 @@ const UnhealthyFlagWarning: FC<UnhealthyFlagWarningType> = ({
     return null
 
   return (
-    <div className='fs-caption' style={{ color: Constants.tagColors[16] }}>
-      {/* TODO: Provider info and link to issue will be provided by reason via the API */}
-      {latestHealthEvent.reason}
-      {latestHealthEvent.reason && (
-        <IonIcon style={{ marginBottom: -2 }} className='ms-1' icon={warning} />
-      )}
-    </div>
+    <Tooltip
+      title={
+        <div className='fs-caption' style={{ color: Constants.tagColors[16] }}>
+          {/* TODO: Provider info and link to issue will be provided by reason via the API */}
+          {latestHealthEvent.reason}
+          {latestHealthEvent.reason && (
+            <IonIcon
+              style={{ marginBottom: -2 }}
+              className='ms-1'
+              icon={warning}
+            />
+          )}
+        </div>
+      }
+    >
+      This feature is tagged as unhealthy in one or more environments.
+    </Tooltip>
   )
 }
 
