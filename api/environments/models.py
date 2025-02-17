@@ -176,6 +176,16 @@ class Environment(
             organisation.flagsmith_identifier,
             traits={"organisation_id": organisation.id},
         ).get_flag("enable_feature_versioning_for_new_projects")
+
+        # Scenarios we need to cater for:
+        #  - new environments created in new projects without any features
+        #  - new environments created in projects with features
+        #
+        # I think this logic only caters for the first scenario. The second
+        # scenario would require us to manually trigger the enable_v2_versioning
+        # task to ensure that the initial versions are created in the new environment.
+        # More consideration needed...
+
         if flag.enabled and self.project.created_date >= datetime.date.fromisoformat(
             flag.value
         ):
