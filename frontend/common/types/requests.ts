@@ -91,6 +91,26 @@ export type Req = {
       | 'previous_billing_period'
       | '90_day_period'
   }
+  getWebhooks: {
+    environmentId: string
+  }
+  createWebhook: {
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  updateWebhook: {
+    id: number
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  deleteWebhook: {
+    id: number
+    environmentId: string
+  }
   deleteIdentity: {
     id: string
     environmentId: string
