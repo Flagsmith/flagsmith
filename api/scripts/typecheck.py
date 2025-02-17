@@ -35,23 +35,27 @@ class MypyIssue:
     severity: str
     original_line: str
 
-    # We want to ignore the path to the virtual environment
-
     @property
     def normalised_file(self) -> str:
         if "site-packages" in (_file := self.file):
+            # For issues detected in dependecies' code,
+            # we want to ignore the path to the virtual environment
+            # for an accurate comparison
             return _file.split("site-packages")[-1]
         return _file
 
-    # Apparently, "message" and "hint" can differ between runs
-    # so ignore them for comparison and hashing
-
     def __hash__(self) -> int:
+        # Ignore "message" and "hint" fields for hashing
+        # as they are not relevant for comparison
+        # and shown to be inconsistent across runs
         return hash(
             (self.normalised_file, self.line, self.column, self.code, self.severity)
         )
 
     def __eq__(self, other: object) -> bool:
+        # Ignore "message" and "hint" fields for comparison
+        # as they are not relevant for comparison
+        # and shown to be inconsistent across runs
         return isinstance(other, MypyIssue) and (
             self.normalised_file == other.normalised_file
             and self.line == other.line
