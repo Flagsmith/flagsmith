@@ -76,7 +76,7 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         attrs = super().validate(attrs)
         email = attrs.get("email")
         if settings.AUTH_CONTROLLER_INSTALLED:
-            from auth_controller.controller import (
+            from auth_controller.controller import (  # type: ignore[import-not-found,import-untyped,unused-ignore]
                 is_authentication_method_valid,
             )
 
