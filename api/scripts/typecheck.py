@@ -38,7 +38,7 @@ class MypyIssue:
     @property
     def normalised_file(self) -> str:
         if "site-packages" in (_file := self.file):
-            # For issues detected in dependecies' code,
+            # For issues detected in dependencies' code,
             # we want to ignore the path to the virtual environment
             # for an accurate comparison
             return _file.split("site-packages")[-1]
