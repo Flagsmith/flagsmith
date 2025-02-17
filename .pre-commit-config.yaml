@@ -52,5 +52,5 @@ repos:
         args: ["-C", "api"]
 
 ci:
-  skip: [python-typecheck]
+  skip: [python-typecheck, isort]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"
