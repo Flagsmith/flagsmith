@@ -1,4 +1,5 @@
 import logging
+import typing
 
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -16,6 +17,33 @@ from organisations.models import OrganisationWebhook
 from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
 
 logger = logging.getLogger(__name__)
+
+
+AuditLogIntegrationAttrName = typing.Literal[
+    "data_dog_config",
+    "dynatrace_config",
+    "grafana_config",
+    "new_relic_config",
+    "slack_config",
+]
+
+
+def _get_integration_config(
+    instance: AuditLog,
+    integration_name: AuditLogIntegrationAttrName,
+) -> IntegrationsModel | None:
+    for relation_name in ("project", "environment", "organisation"):
+        if hasattr(
+            related_object := getattr(instance, relation_name),
+            integration_name,
+        ):
+            integration_config: IntegrationsModel = getattr(
+                related_object,
+                integration_name,
+            )
+            if not integration_config.deleted:
+                return integration_config
+    return None
 
 
 @receiver(post_save, sender=AuditLog)
@@ -40,18 +68,6 @@ def call_webhooks(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
         call_organisation_webhooks.delay(
             args=(organisation_id, data, WebhookEventType.AUDIT_LOG_CREATED.value)
         )
-
-
-def _get_integration_config(
-    instance: AuditLog, integration_name: str
-) -> IntegrationsModel | None:
-    if hasattr(project := instance.project, integration_name):
-        return getattr(project, integration_name)  # type: ignore[no-any-return]
-    if hasattr(environment := instance.environment, integration_name):
-        return getattr(environment, integration_name)  # type: ignore[no-any-return]
-    if hasattr(organisation := instance.organisation, integration_name):
-        return getattr(organisation, integration_name)  # type: ignore[no-any-return]
-    return None
 
 
 def track_only_feature_related_events(signal_function):  # type: ignore[no-untyped-def]
