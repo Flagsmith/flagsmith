@@ -1,3 +1,6 @@
 # Initial Mypy '# type: ignore' comments dump
 # https://github.com/Flagsmith/flagsmith/pull/5119
 5de0b425b0ee16b16bfb0fb33b067fa314d040fb
+# Linting fixes for frontend
+# https://github.com/Flagsmith/flagsmith/pull/5123 
+1f7083636d3b163588fe9a8b45af289bd40b1a8d
