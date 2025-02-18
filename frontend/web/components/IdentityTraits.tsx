@@ -14,6 +14,7 @@ import {
   useDeleteIdentityTraitMutation,
   useGetIdentityTraitsQuery,
 } from 'common/services/useIdentityTrait'
+import { IdentityTrait } from 'common/types/responses'
 
 type IdentityTraitsType = {
   projectId: string
@@ -27,17 +28,29 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
   identityId,
   identityName,
   projectId,
-    e
 }) => {
   const use_edge_identities = Utils.getIsEdge()
+
+  const { permission: manageUserPermission } = useHasPermission({
+    id: environmentId,
+    level: 'environment',
+    permission: Utils.getManageUserPermission(),
+  })
+
   const { data: traits } = useGetIdentityTraitsQuery({
     environmentId,
     identity: identityId,
     use_edge_identities,
   })
 
-  const [deleteTrait, { isLoading: deletingTrat }] =
+  const [deleteTrait, { isLoading: deletingTrait }] =
     useDeleteIdentityTraitMutation({})
+
+  //todo : https://github.com/Flagsmith/flagsmith/pull/5121 migrates this
+  const onTraitSaved = () => {
+    closeModal?.()
+    AppActions.getIdentitySegments(projectId, identityId)
+  }
 
   const createTrait = () => {
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
@@ -55,11 +68,7 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
     )
   }
 
-  const editTrait = (trait: {
-    id: string
-    trait_key: string
-    trait_value: string
-  }) => {
+  const editTrait = (trait: IdentityTrait) => {
     openModal(
       'Edit User Trait',
       <CreateTraitModal
@@ -96,22 +105,17 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
           environmentId,
           identity: identityId,
           use_edge_identities,
+        }).then((res) => {
+          // @ts-ignore
+          if (!res?.error) {
+            onTraitSaved()
+          }
         }),
       title: 'Delete Trait',
       yesText: 'Confirm',
     })
   }
 
-  const onTraitSaved = () =>
-    //todo : https://github.com/Flagsmith/flagsmith/pull/5121 migrates this
-    AppActions.getIdentitySegments(projectId, identityId)
-  }
-
-  const { permission: manageUserPermission } = useHasPermission({
-    id: environmentId,
-    level: 'environment',
-    permission: Utils.getManageUserPermission(),
-  })
   return (
     <FormGroup>
       <PanelSearch

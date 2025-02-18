@@ -21,11 +21,12 @@ import {
   useCreateIdentityTraitMutation,
   useUpdateIdentityTraitMutation,
 } from 'common/services/useIdentityTrait'
+import { FlagsmithValue } from 'common/types/responses'
 
 type CreateTraitProps = {
-  id?: string
+  id?: number | string
   trait_key?: string
-  trait_value?: string
+  trait_value?: FlagsmithValue
   identityName: string
   onSave?: () => void
   identity: string

@@ -219,9 +219,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     case Actions.REMOVE_USER_FLAG:
       controller.removeUserFlag(identity, identityFlag, environmentId, cb)
       break
-    case Actions.DELETE_IDENTITY_TRAIT:
-      controller.deleteIdentityTrait(action.envId, action.identity, action.id)
-      break
     case Actions.CHANGE_USER_FLAG:
       controller.changeUserFlag(action.identity)
       break

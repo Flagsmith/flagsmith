@@ -18,7 +18,7 @@ function getUpdateTraitEndpoint(
   use_edge_identities: boolean,
   environmentId: string,
   userId: string,
-  id?: number,
+  id?: number | string,
 ) {
   if (use_edge_identities) {
     return `/environments/${environmentId}/edge-identities/${userId}/update-traits/`
@@ -75,11 +75,10 @@ export const identityTraitService = service
         query: (query: Req['deleteIdentityTrait']) => {
           if (query.use_edge_identities) {
             return {
-              body: getTraitBody(
-                query.use_edge_identities,
-                query.identity,
-                query.data,
-              ),
+              body: getTraitBody(query.use_edge_identities, query.identity, {
+                ...query.data,
+                trait_value: null,
+              }),
               method: 'PUT',
               url: getUpdateTraitEndpoint(
                 query.use_edge_identities,
