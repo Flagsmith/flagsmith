@@ -17,6 +17,7 @@ export type PagedResponse<T> = {
   previous?: string
   results: T[]
 }
+
 export interface GitHubPagedResponse<T> extends PagedResponse<T> {
   incomplete_results: boolean
 }
@@ -801,6 +802,7 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  organisationWebhooks: PagedResponse<Webhook>
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
   // END OF TYPES

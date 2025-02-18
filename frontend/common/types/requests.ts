@@ -16,6 +16,7 @@ import {
   Identity,
   Role,
   RolePermission,
+  Webhook,
   IdentityTrait,
 } from './responses'
 
@@ -561,6 +562,13 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  createAuditLogWebhooks: {
+    organisationId: string
+    data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
+  }
+  getAuditLogWebhooks: { organisationId: string }
+  updateAuditLogWebhooks: { organisationId: string; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: string; id: number }
   createIdentityTrait: {
     use_edge_identities: boolean
     environmentId: string
