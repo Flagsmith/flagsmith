@@ -528,7 +528,7 @@ const App = class extends Component {
                                       </div>
                                     }
                                   >
-                                    Dark Mode
+                                    {Utils.getFlagsmithHasFeature('dark_mode') ? 'Light Mode' : 'Dark Mode'}
                                   </Tooltip>
                                 </Row>
                               </nav>
