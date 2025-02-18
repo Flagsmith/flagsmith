@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.161.0](https://github.com/Flagsmith/flagsmith/compare/v2.160.2...v2.161.0) (2025-02-10)
+
+
+### Features
+
+* Backend support for feature health ([#5023](https://github.com/Flagsmith/flagsmith/issues/5023)) ([b0d0a80](https://github.com/Flagsmith/flagsmith/commit/b0d0a80da04b15e29be9c89fa87dc915713530bc))
+* Implements feature healthcare UI ([#5043](https://github.com/Flagsmith/flagsmith/issues/5043)) ([9ea58fa](https://github.com/Flagsmith/flagsmith/commit/9ea58fad618e95e1cf01abba4e1274d504c1fffc))
+* Make it more visible that user invites can be accepted by logging in, in addition to signing up ([#5077](https://github.com/Flagsmith/flagsmith/issues/5077)) ([d508e34](https://github.com/Flagsmith/flagsmith/commit/d508e34ae30b6fc37a4fe89e2bea08a43dfcd7d2))
+
+
+### Bug Fixes
+
+* **5044/mvfsv:** handle deleted feature states ([#5050](https://github.com/Flagsmith/flagsmith/issues/5050)) ([b325998](https://github.com/Flagsmith/flagsmith/commit/b3259986511be93bfb9718f2312f978eae34ab3e))
+* alert modal on Identity page incorrectly uses title case ([#5076](https://github.com/Flagsmith/flagsmith/issues/5076)) ([88fef8d](https://github.com/Flagsmith/flagsmith/commit/88fef8d70688a783009bfaea3b56b80bdab5bbb3))
+* delete identity overrides from environments_v2 table on feature delete ([#5080](https://github.com/Flagsmith/flagsmith/issues/5080)) ([3f7c9da](https://github.com/Flagsmith/flagsmith/commit/3f7c9daf0ba00ffd93d52b9e8eb5a6af1a7fbf6d))
+* Feature health event task not working ([#5072](https://github.com/Flagsmith/flagsmith/issues/5072)) ([d4c4aaa](https://github.com/Flagsmith/flagsmith/commit/d4c4aaaf0b45f5c78ab2af08709ee568d9a7d4b4))
+* Force environments to be different names ([#5058](https://github.com/Flagsmith/flagsmith/issues/5058)) ([22223da](https://github.com/Flagsmith/flagsmith/commit/22223da910b7365ff061855af62b2f24a5b6eccf))
+* Health provider not accessible by name in API ([#5075](https://github.com/Flagsmith/flagsmith/issues/5075)) ([88e5ab9](https://github.com/Flagsmith/flagsmith/commit/88e5ab9de962483d6c89272b21adb473aef8188e))
+* integrations page permission ([#5042](https://github.com/Flagsmith/flagsmith/issues/5042)) ([5431585](https://github.com/Flagsmith/flagsmith/commit/54315850fe5d73af1c374b788c2eabaf5b3d1fa6))
+* link to segment and identity override ([#5067](https://github.com/Flagsmith/flagsmith/issues/5067)) ([e82c35d](https://github.com/Flagsmith/flagsmith/commit/e82c35d650f59b746948fd487c288c009a35dc2b))
+* **migrations:** project permission migration unique error ([#5061](https://github.com/Flagsmith/flagsmith/issues/5061)) ([ca943b8](https://github.com/Flagsmith/flagsmith/commit/ca943b8304b6e518672f832a7be42bbc50a17c97))
+
 ## [2.160.2](https://github.com/Flagsmith/flagsmith/compare/v2.160.1...v2.160.2) (2025-01-28)
 
 

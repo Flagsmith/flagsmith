@@ -72,6 +72,7 @@ const CreateFlag = class extends Component {
           multivariate_options: [],
         }
     const { allowEditDescription } = this.props
+    const hideTags = this.props.hideTags || []
     if (this.props.projectFlag) {
       this.userOverridesPage(1)
     }
@@ -106,7 +107,7 @@ const CreateFlag = class extends Component {
       name,
       period: 30,
       selectedIdentity: null,
-      tags: tags || [],
+      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
     }
   }
 
@@ -200,16 +201,14 @@ const CreateFlag = class extends Component {
       })
     }
 
-    if (Utils.getFlagsmithHasFeature('github_integration')) {
-      getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubId: res?.data?.results[0]?.id,
-          hasIntegrationWithGithub: !!res?.data?.results?.length,
-        })
+    getGithubIntegration(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
       })
-    }
+    })
   }
 
   componentWillUnmount() {
@@ -605,6 +604,7 @@ const CreateFlag = class extends Component {
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
+                    hideTagsByType={['UNHEALTHY']}
                     readOnly={!!identity || !createFeature}
                     projectId={`${this.props.projectId}`}
                     value={this.state.tags}
@@ -1846,10 +1846,7 @@ const CreateFlag = class extends Component {
                                     </InfoMessage>
                                   </TabItem>
                                 )}
-                                {Utils.getFlagsmithHasFeature(
-                                  'github_integration',
-                                ) &&
-                                  hasIntegrationWithGithub &&
+                                {hasIntegrationWithGithub &&
                                   projectFlag?.id && (
                                     <TabItem
                                       data-test='external-resources-links'

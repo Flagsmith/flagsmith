@@ -344,6 +344,8 @@ export type APIKey = {
   name: string
 }
 
+export type TagType = 'STALE' | 'UNHEALTHY' | 'NONE'
+
 export type Tag = {
   id: number
   color: string
@@ -352,7 +354,7 @@ export type Tag = {
   label: string
   is_system_tag: boolean
   is_permanent: boolean
-  type: 'STALE' | 'NONE'
+  type: TagType
 }
 
 export type MultivariateFeatureStateValue = {
@@ -637,6 +639,34 @@ export type SAMLAttributeMapping = {
   idp_attribute_name: string
 }
 
+export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
+
+export type HealthEvent = {
+  created_at: string
+  environment: number
+  feature: number
+  provider_name: string
+  reason: string
+  type: HealthEventType
+}
+
+export type HealthProvider = {
+  id: number
+  created_by: string
+  name: string
+  project: number
+  webhook_url: number
+}
+
+export type Webhook = {
+  id: number
+  url: string
+  secret: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -646,6 +676,8 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  webhook: Webhook
+  webhooks: Webhook[]
   organisationUsage: {
     totals: {
       flags: number
@@ -671,6 +703,9 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  healthEvents: HealthEvent[]
+  healthProvider: HealthProvider
+  healthProviders: HealthProvider[]
   account: Account
   userEmail: {}
   groupAdmin: { id: string }

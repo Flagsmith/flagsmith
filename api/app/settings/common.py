@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
-import importlib
+import importlib.util
 import json
 import os
 import sys
@@ -104,6 +104,7 @@ INSTALLED_APPS = [
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.feature_health",
     "features.import_export",
     "features.multivariate",
     "features.versioning",

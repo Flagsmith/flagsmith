@@ -43,6 +43,10 @@ install: install-pip install-poetry install-packages
 lint:
 	poetry run pre-commit run -a
 
+.PHONY: typecheck
+typecheck:
+	poetry run python scripts/typecheck.py $(opts)
+
 .PHONY: docker-up
 docker-up:
 	docker compose up --force-recreate --remove-orphans -d

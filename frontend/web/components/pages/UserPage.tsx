@@ -10,6 +10,7 @@ import {
   FeatureState,
   IdentityFeatureState,
   ProjectFlag,
+  TagStrategy,
 } from 'common/types/responses'
 import API from 'project/api'
 import AccountStore from 'common/stores/account-store'
@@ -42,7 +43,7 @@ import TableFilterOptions from 'components/tables/TableFilterOptions'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
-import TableSortFilter from 'components/tables/TableSortFilter'
+import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import TagValues from 'components/tags/TagValues'
@@ -52,6 +53,10 @@ import _data from 'common/data/base/_data'
 import classNames from 'classnames'
 import moment from 'moment'
 import { removeIdentity } from './UsersPage'
+import { isEqual } from 'lodash'
+import ClearFilters from 'components/ClearFilters'
+import SegmentsIcon from 'components/svg/SegmentsIcon'
+import UsersIcon from 'components/svg/UsersIcon'
 
 const width = [200, 48, 78]
 
@@ -75,81 +80,88 @@ type UserPageType = {
     }
   }
 }
+type FeatureFilter = {
+  group_owners: number[]
+  is_archived: boolean
+  is_enabled: boolean | null
+  owners: number[]
+  tag_strategy: TagStrategy
+  tags: (number | string)[]
+  value_search: string | null
+  search: string | null
+  sort: SortValue
+}
+const getFiltersFromParams = (params: Record<string, string | undefined>) =>
+  ({
+    group_owners:
+      typeof params.group_owners === 'string'
+        ? params.group_owners.split(',').map((v: string) => parseInt(v))
+        : [],
+    is_archived: params.is_archived === 'true',
+    is_enabled:
+      params.is_enabled === 'true'
+        ? true
+        : params.is_enabled === 'false'
+        ? false
+        : null,
+    owners:
+      typeof params.owners === 'string'
+        ? params.owners.split(',').map((v: string) => parseInt(v))
+        : [],
+    search: params.search || null,
+    sort: {
+      label: Format.camelCase(params.sortBy || 'Name'),
+      sortBy: params.sortBy || 'name',
+      sortOrder: params.sortOrder || 'asc',
+    },
+    tag_strategy: params.tag_strategy || 'INTERSECTION',
+    tags:
+      typeof params.tags === 'string'
+        ? params.tags.split(',').map((v: string) => parseInt(v))
+        : [],
+    value_search: params.value_search || '',
+  } as FeatureFilter)
+
 const UserPage: FC<UserPageType> = (props) => {
   const params = Utils.fromParam()
+  const defaultState = getFiltersFromParams(params)
   const { router } = props
   const { environmentId, id, identity, projectId } = props.match.params
 
-  // Separate state hooks
-  const [groupOwners, setGroupOwners] = useState(
-    typeof params.group_owners === 'string'
-      ? params.group_owners.split(',').map((v: string) => parseInt(v))
-      : [],
-  )
-  const [isEnabled, setIsEnabled] = useState(
-    params.is_enabled === 'true'
-      ? true
-      : params.is_enabled === 'false'
-      ? false
-      : null,
-  )
-  const [owners, setOwners] = useState(
-    typeof params.owners === 'string'
-      ? params.owners.split(',').map((v: string) => parseInt(v))
-      : [],
-  )
-  const [preselect, setPreselect] = useState(Utils.fromParam().flag)
-  const [search, setSearch] = useState(params.search || null)
-  const [showArchived, setShowArchived] = useState(
-    params.is_archived === 'true',
-  )
-  const [sort, setSort] = useState({
-    label: Format.camelCase(params.sortBy || 'Name'),
-    sortBy: params.sortBy || 'name',
-    sortOrder: params.sortOrder || 'asc',
-  })
-  const [tagStrategy, setTagStrategy] = useState(
-    params.tag_strategy || 'INTERSECTION',
-  )
-  const [tags, setTags] = useState(
-    typeof params.tags === 'string'
-      ? params.tags.split(',').map((v: string) => parseInt(v))
-      : [],
-  )
-  const [valueSearch, setValueSearch] = useState(params.value_search || '')
+  const [filter, setFilter] = useState(defaultState)
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
+  const [preselect, setPreselect] = useState(Utils.fromParam().flag)
 
   const getFilter = useCallback(
-    () => ({
-      group_owners: groupOwners.length ? groupOwners : undefined,
-      is_archived: showArchived,
-      is_enabled: isEnabled === null ? undefined : isEnabled,
-      owners: owners.length ? owners : undefined,
-      tag_strategy: tagStrategy,
-      tags: tags.length ? tags.join(',') : undefined,
-      value_search: valueSearch ? valueSearch : undefined,
+    (filter) => ({
+      ...filter,
+      group_owners: filter.group_owners.length
+        ? filter.group_owners
+        : undefined,
+      owners: filter.owners.length ? filter.owners : undefined,
+      search: (filter.search || '').trim(),
+      tags: filter.tags.length ? filter.tags.join(',') : undefined,
     }),
-    [
-      groupOwners,
-      showArchived,
-      isEnabled,
-      owners,
-      tagStrategy,
-      tags,
-      valueSearch,
-    ],
+    [],
   )
+
+  const hasFilters = !isEqual(
+    getFilter({ ...filter, search: filter.search || null }),
+    getFilter(getFiltersFromParams({})),
+  )
+
   useEffect(() => {
+    const { search, sort, ...rest } = getFilter(filter)
     AppActions.searchFeatures(
       projectId,
       environmentId,
       true,
       search,
       sort,
-      getFilter(),
+      rest,
     )
-  }, [search, sort, getFilter, environmentId, projectId])
+  }, [filter, getFilter, environmentId, projectId])
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
@@ -220,7 +232,7 @@ const UserPage: FC<UserPageType> = (props) => {
           <span className='standard-case'>{projectFlag.name}</span>
           <Button
             onClick={() => {
-              Utils.copyFeatureName(projectFlag.name)
+              Utils.copyToClipboard(projectFlag.name)
             }}
             theme='icon'
             className='ms-2'
@@ -265,22 +277,6 @@ const UserPage: FC<UserPageType> = (props) => {
     )
   }
 
-  const filter = () => {
-    const currentParams = Utils.fromParam()
-    if (!currentParams.flag) {
-      props.router.history.replace(
-        `${document.location.pathname}?${Utils.toParam(getFilter())}`,
-      )
-    }
-    AppActions.searchFeatures(
-      projectId,
-      environmentId,
-      true,
-      search,
-      sort,
-      getFilter(),
-    )
-  }
   const onTraitSaved = () => {
     AppActions.getIdentitySegments(projectId, id)
   }
@@ -328,6 +324,11 @@ const UserPage: FC<UserPageType> = (props) => {
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
+  const clearFilters = () => {
+    router.history.replace(`${document.location.pathname}`)
+    setFilter(getFiltersFromParams({}))
+  }
+
   return (
     <div className='app-container container'>
       <Permission
@@ -350,9 +351,9 @@ const UserPage: FC<UserPageType> = (props) => {
                 { toggleFlag }: any,
               ) =>
                 isLoading &&
-                !tags.length &&
-                !showArchived &&
-                typeof search !== 'string' &&
+                !filter.tags.length &&
+                !filter.is_archived &&
+                typeof filter.search !== 'string' &&
                 (!identityFlags || !actualFlags || !projectFlags) ? (
                   <div className='text-center'>
                     <Loader />
@@ -380,10 +381,12 @@ const UserPage: FC<UserPageType> = (props) => {
                                   Aliases allow you to add searchable names to
                                   an identity
                                 </Tooltip>
-                                <EditIdentity
-                                  data={identity?.identity}
-                                  environmentId={environmentId}
-                                />
+                                {!!identity && (
+                                  <EditIdentity
+                                    data={identity?.identity}
+                                    environmentId={environmentId}
+                                  />
+                                )}
                               </h6>
                             )}
                           </div>
@@ -472,57 +475,74 @@ const UserPage: FC<UserPageType> = (props) => {
                                     <TableSearchFilter
                                       onChange={(e) => {
                                         FeatureListStore.isLoading = true
-                                        setSearch(Utils.safeParseEventValue(e))
+                                        setFilter({
+                                          ...filter,
+                                          search: Utils.safeParseEventValue(e),
+                                        })
                                       }}
-                                      value={search}
+                                      value={filter.search}
                                     />
                                     <Row className='flex-fill justify-content-end'>
                                       <TableTagFilter
                                         projectId={projectId}
                                         className='me-4'
-                                        value={tags}
-                                        tagStrategy={tagStrategy}
-                                        onChangeStrategy={(strategy) => {
-                                          setTagStrategy(strategy)
+                                        value={filter.tags}
+                                        tagStrategy={filter.tag_strategy}
+                                        onChangeStrategy={(tag_strategy) => {
+                                          setFilter({
+                                            ...filter,
+                                            tag_strategy,
+                                          })
                                         }}
                                         isLoading={FeatureListStore.isLoading}
                                         onToggleArchived={(value) => {
-                                          if (value !== showArchived) {
+                                          if (value !== filter.is_archived) {
                                             FeatureListStore.isLoading = true
-                                            setShowArchived(!showArchived)
+                                            setFilter({
+                                              ...filter,
+                                              is_archived: !filter.is_archived,
+                                            })
                                           }
                                         }}
-                                        showArchived={showArchived}
+                                        showArchived={filter.is_archived}
                                         onChange={(newTags) => {
                                           FeatureListStore.isLoading = true
-                                          setTags(
-                                            newTags.includes('') &&
+                                          setFilter({
+                                            ...filter,
+                                            tags:
+                                              newTags.includes('') &&
                                               newTags.length > 1
-                                              ? ['']
-                                              : newTags,
-                                          )
+                                                ? ['']
+                                                : newTags,
+                                          })
                                         }}
                                       />
                                       <TableValueFilter
                                         className='me-4'
                                         value={{
-                                          enabled: isEnabled,
-                                          valueSearch,
+                                          enabled: filter.is_enabled,
+                                          valueSearch: filter.value_search,
                                         }}
                                         onChange={({
                                           enabled,
                                           valueSearch,
                                         }) => {
-                                          setIsEnabled(enabled)
-                                          setValueSearch(valueSearch)
+                                          setFilter({
+                                            ...filter,
+                                            is_enabled: enabled,
+                                            value_search: valueSearch,
+                                          })
                                         }}
                                       />
                                       <TableOwnerFilter
                                         className={'me-4'}
-                                        value={owners}
-                                        onChange={(newOwners) => {
+                                        value={filter.owners}
+                                        onChange={(owners) => {
                                           FeatureListStore.isLoading = true
-                                          setOwners(newOwners)
+                                          setFilter({
+                                            ...filter,
+                                            owners,
+                                          })
                                         }}
                                       />
                                       <TableGroupsFilter
@@ -531,10 +551,13 @@ const UserPage: FC<UserPageType> = (props) => {
                                         orgId={
                                           AccountStore.getOrganisation()?.id
                                         }
-                                        value={groupOwners}
-                                        onChange={(newGroupOwners) => {
+                                        value={filter.group_owners}
+                                        onChange={(group_owners) => {
                                           FeatureListStore.isLoading = true
-                                          setGroupOwners(newGroupOwners)
+                                          setFilter({
+                                            ...filter,
+                                            group_owners,
+                                          })
                                         }}
                                       />
                                       <TableFilterOptions
@@ -554,7 +577,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                         ]}
                                       />
                                       <TableSortFilter
-                                        value={sort}
+                                        value={filter.sort}
                                         isLoading={FeatureListStore.isLoading}
                                         options={[
                                           {
@@ -566,11 +589,17 @@ const UserPage: FC<UserPageType> = (props) => {
                                             value: 'created_date',
                                           },
                                         ]}
-                                        onChange={(newSort) => {
+                                        onChange={(sort) => {
                                           FeatureListStore.isLoading = true
-                                          setSort(newSort)
+                                          setFilter({
+                                            ...filter,
+                                            sort,
+                                          })
                                         }}
                                       />
+                                      {hasFilters && (
+                                        <ClearFilters onClick={clearFilters} />
+                                      )}
                                     </Row>
                                   </div>
                                 </Row>
@@ -630,9 +659,12 @@ const UserPage: FC<UserPageType> = (props) => {
                                             Utils.featureStateToValue(v) ===
                                             actualValue,
                                         )
-                                      const flagDifferent =
-                                        flagEnabledDifferent ||
-                                        flagValueDifferent
+
+                                      const hasSegmentOverride =
+                                        (flagEnabledDifferent ||
+                                          flagValueDifferent) &&
+                                        !hasUserOverride &&
+                                        !isMultiVariateOverride
 
                                       const onClick = () => {
                                         if (permission) {
@@ -657,9 +689,12 @@ const UserPage: FC<UserPageType> = (props) => {
                                       return (
                                         <div
                                           className={classNames(
-                                            `flex-row space list-item clickable py-2 ${
-                                              flagDifferent && 'flag-different'
-                                            }`,
+                                            `flex-row space list-item clickable py-2`,
+                                            {
+                                              'bg-primary-opacity-5':
+                                                hasUserOverride ||
+                                                hasSegmentOverride,
+                                            },
                                             {
                                               'list-item-xs':
                                                 isCompact &&
@@ -671,7 +706,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                           data-test={`user-feature-${i}`}
                                           onClick={onClick}
                                         >
-                                          <Flex className='table-column'>
+                                          <Flex className='table-column pt-0'>
                                             <Row>
                                               <Flex>
                                                 <Row
@@ -701,7 +736,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                                       onClick={(e) => {
                                                         e?.stopPropagation()
                                                         e?.currentTarget?.blur()
-                                                        Utils.copyFeatureName(
+                                                        Utils.copyToClipboard(
                                                           projectFlag.name,
                                                         )
                                                       }}
@@ -717,13 +752,19 @@ const UserPage: FC<UserPageType> = (props) => {
                                                   />
                                                 </Row>
                                                 {hasUserOverride ? (
-                                                  <div className='list-item-subtitle mt-1'>
-                                                    Overriding defaults
+                                                  <div className='list-item-subtitle text-primary d-flex align-items-center'>
+                                                    <UsersIcon
+                                                      fill='#6837fc'
+                                                      width={16}
+                                                      className='me-1'
+                                                    />
+                                                    This feature is being
+                                                    overridden for this identity
                                                   </div>
                                                 ) : flagEnabledDifferent ? (
                                                   <div
                                                     data-test={`feature-override-${i}`}
-                                                    className='list-item-subtitle mt-1'
+                                                    className='list-item-subtitle'
                                                   >
                                                     <Row>
                                                       <Flex>
@@ -742,16 +783,18 @@ const UserPage: FC<UserPageType> = (props) => {
                                                             for this user
                                                           </span>
                                                         ) : (
-                                                          <span>
-                                                            This flag is being
-                                                            overridden by
-                                                            segments and would
-                                                            normally be{' '}
-                                                            <strong>
+                                                          <span className='list-item-subtitle d-flex text-primary align-items-center'>
+                                                            <SegmentsIcon
+                                                              className='me-1'
+                                                              width={16}
+                                                              fill='#6837fc'
+                                                            />
+                                                            {`This flag is being overridden by a segment and would normally be`}
+                                                            <div className='ph-1 ml-1 mr-1 fw-semibold'>
                                                               {flagEnabled
                                                                 ? 'on'
                                                                 : 'off'}
-                                                            </strong>{' '}
+                                                            </div>{' '}
                                                             for this user
                                                           </span>
                                                         )}
@@ -762,7 +805,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                                   isMultiVariateOverride ? (
                                                     <div
                                                       data-test={`feature-override-${i}`}
-                                                      className='list-item-subtitle mt-1'
+                                                      className='list-item-subtitle'
                                                     >
                                                       <span className='flex-row'>
                                                         This feature is being
@@ -779,28 +822,28 @@ const UserPage: FC<UserPageType> = (props) => {
                                                       </span>
                                                     </div>
                                                   ) : (
-                                                    <div
-                                                      data-test={`feature-override-${i}`}
-                                                      className='list-item-subtitle mt-1'
-                                                    >
-                                                      <span className='flex-row'>
-                                                        This feature is being
-                                                        overridden by segments
-                                                        and would normally be{' '}
-                                                        <FeatureValue
-                                                          className='ml-1 chip--xs'
-                                                          includeEmpty
-                                                          data-test={`user-feature-original-value-${i}`}
-                                                          value={`${flagValue}`}
-                                                        />{' '}
-                                                        for this user
-                                                      </span>
-                                                    </div>
+                                                    <span className='d-flex list-item-subtitle text-primary align-items-center'>
+                                                      <SegmentsIcon
+                                                        className='me-1'
+                                                        width={16}
+                                                        fill='#6837fc'
+                                                      />
+                                                      {`This feature is being
+                                                        overridden by a segment
+                                                        and would normally be`}
+                                                      <FeatureValue
+                                                        className='ml-1 chip--xs'
+                                                        includeEmpty
+                                                        data-test={`user-feature-original-value-${i}`}
+                                                        value={`${flagValue}`}
+                                                      />{' '}
+                                                      for this user
+                                                    </span>
                                                   )
                                                 ) : (
                                                   getViewMode() ===
                                                     'default' && (
-                                                    <div className='list-item-subtitle mt-1'>
+                                                    <div className='list-item-subtitle'>
                                                       Using environment defaults
                                                     </div>
                                                   )
@@ -906,16 +949,16 @@ const UserPage: FC<UserPageType> = (props) => {
                               }}
                               renderSearchWithNoResults
                               paging={FeatureListStore.paging}
-                              search={search}
+                              search={filter.search}
                               nextPage={() =>
                                 AppActions.getFeatures(
                                   projectId,
                                   environmentId,
                                   true,
-                                  search,
-                                  sort,
+                                  filter.search,
+                                  filter.sort,
                                   FeatureListStore.paging.next,
-                                  getFilter(),
+                                  getFilter(filter),
                                 )
                               }
                               prevPage={() =>
@@ -923,10 +966,10 @@ const UserPage: FC<UserPageType> = (props) => {
                                   projectId,
                                   environmentId,
                                   true,
-                                  search,
-                                  sort,
+                                  filter.search,
+                                  filter.sort,
                                   FeatureListStore.paging.previous,
-                                  getFilter(),
+                                  getFilter(filter),
                                 )
                               }
                               goToPage={(pageNumber: number) =>
@@ -934,10 +977,10 @@ const UserPage: FC<UserPageType> = (props) => {
                                   projectId,
                                   environmentId,
                                   true,
-                                  search,
-                                  sort,
+                                  filter.search,
+                                  filter.sort,
                                   pageNumber,
-                                  getFilter(),
+                                  getFilter(filter),
                                 )
                               }
                             />

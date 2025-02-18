@@ -1892,8 +1892,8 @@ interface.
 For example, this cache implementation uses Redis as a backing store:
 
 ```typescript
-import { Flagsmith } from 'flagsmith-nodejs';
-import type { BaseOfflineHandler, EnvironmentModel, Flags, FlagsmithCache } from 'flagsmith-nodejs';
+import { Flagsmith, Flags } from 'flagsmith-nodejs';
+import type { BaseOfflineHandler, EnvironmentModel, FlagsmithCache } from 'flagsmith-nodejs';
 import * as redis from 'redis';
 
 const redisClient = redis.createClient({
@@ -1903,11 +1903,12 @@ const redisClient = redis.createClient({
 const redisFlagsmithCache = {
     async get(key: string): Promise<Flags | undefined> {
         const cachedValue = await redisClient.get(key);
-        return Promise.resolve(cachedValue && JSON.parse(cachedValue));
+        if (cachedValue) {
+            return new Flags(JSON.parse(cachedValue));
+        }
     },
     async set(key: string, value: Flags): Promise<void> {
         await redisClient.set(key, JSON.stringify(value), { EX: 60 });
-        return Promise.resolve();
     },
 } satisfies FlagsmithCache;
 

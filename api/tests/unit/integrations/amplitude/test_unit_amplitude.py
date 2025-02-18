@@ -8,7 +8,7 @@ from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_amplitude_initialized_correctly():
+def test_amplitude_initialized_correctly() -> None:
     # Given
     config = AmplitudeConfiguration(api_key="123key")
 
@@ -20,7 +20,7 @@ def test_amplitude_initialized_correctly():
     assert amplitude_wrapper.url == expected_url
 
 
-def test_amplitude_initialized_correctly_with_custom_base_url():
+def test_amplitude_initialized_correctly_with_custom_base_url() -> None:
     # Given
     base_url = "https://api.eu.amplitude.com"
     config = AmplitudeConfiguration(api_key="123key", base_url=base_url)
@@ -47,7 +47,9 @@ def test_amplitude_when_generate_user_data_with_correct_values_then_success(
 
     # When
     user_data = amplitude_wrapper.generate_user_data(
-        identity=identity, feature_states=[feature_state, feature_state_with_value]
+        identity=identity,
+        feature_states=[feature_state, feature_state_with_value],
+        trait_models=[],
     )
 
     # Then

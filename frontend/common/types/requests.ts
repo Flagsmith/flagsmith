@@ -91,6 +91,26 @@ export type Req = {
       | 'previous_billing_period'
       | '90_day_period'
   }
+  getWebhooks: {
+    environmentId: string
+  }
+  createWebhook: {
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  updateWebhook: {
+    id: number
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  deleteWebhook: {
+    id: number
+    environmentId: string
+  }
   deleteIdentity: {
     id: string
     environmentId: string
@@ -114,6 +134,10 @@ export type Req = {
   getPermission: { id: string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: string }
+  getHealthEvents: { projectId: number | string }
+  getHealthProviders: { projectId: number }
+  createHealthProvider: { projectId: number; name: string }
+  deleteHealthProvider: { projectId: number; name: string }
   updateTag: { projectId: string; tag: Tag }
   deleteTag: {
     id: number

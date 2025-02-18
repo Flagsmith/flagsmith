@@ -16,14 +16,32 @@ import Button from './base/forms/Button'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import StaleFlagWarning from './StaleFlagWarning'
+import UnhealthyFlagWarning from './UnhealthyFlagWarning'
 
 export const width = [200, 70, 55, 70, 450]
+
+export const TABS = {
+  ANALYTICS: 'analytics',
+  HISTORY: 'history',
+  IDENTITY_OVERRIDES: 'identity-overrides',
+  LINKS: 'links',
+  SEGMENT_OVERRIDES: 'segment-overrides',
+  SETTINGS: 'settings',
+  VALUE: 'value',
+}
+
 class TheComponent extends Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
   }
 
-  state = {}
+  constructor(props, context) {
+    super(props, context)
+
+    this.state = {
+      unhealthyTagId: undefined,
+    }
+  }
 
   confirmToggle = () => {
     const {
@@ -55,7 +73,7 @@ class TheComponent extends Component {
 
   componentDidMount() {
     const { environmentFlags, projectFlag } = this.props
-    const { feature, tab } = Utils.fromParam()
+    const { feature } = Utils.fromParam()
     const { id } = projectFlag
     if (`${id}` === feature) {
       this.editFeature(projectFlag, environmentFlags[id])
@@ -66,7 +84,7 @@ class TheComponent extends Component {
     const { projectFlag } = this.props
     e?.stopPropagation()?.()
     e?.currentTarget?.blur?.()
-    Utils.copyFeatureName(projectFlag.name)
+    Utils.copyToClipboard(projectFlag.name)
   }
   confirmRemove = (projectFlag, cb) => {
     openModal2(
@@ -85,7 +103,6 @@ class TheComponent extends Component {
       return
     }
     API.trackEvent(Constants.events.VIEW_FEATURE)
-
     history.replaceState(
       {},
       null,
@@ -98,7 +115,7 @@ class TheComponent extends Component {
         {this.props.permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
         <Button
           onClick={() => {
-            Utils.copyFeatureName(projectFlag.name)
+            Utils.copyToClipboard(projectFlag.name)
           }}
           theme='icon'
           className='ms-2'
@@ -107,6 +124,7 @@ class TheComponent extends Component {
         </Button>
       </Row>,
       <CreateFlagModal
+        hideTagsByType={['UNHEALTHY']}
         history={this.context.router.history}
         environmentId={this.props.environmentId}
         projectId={this.props.projectId}
@@ -218,7 +236,7 @@ class TheComponent extends Component {
                   this.editFeature(
                     projectFlag,
                     environmentFlags[id],
-                    'segment-overrides',
+                    TABS.SEGMENT_OVERRIDES,
                   )
                 }}
                 count={projectFlag.num_segment_overrides}
@@ -229,7 +247,7 @@ class TheComponent extends Component {
                   this.editFeature(
                     projectFlag,
                     environmentFlags[id],
-                    'identity-overrides',
+                    TABS.IDENTITY_OVERRIDES,
                   )
                 }}
                 count={projectFlag.num_identity_overrides}
@@ -240,6 +258,10 @@ class TheComponent extends Component {
         </Flex>
       )
     }
+
+    const isFeatureHealthEnabled =
+      Utils.getFlagsmithHasFeature('feature_health')
+
     return (
       <Row
         className={classNames(
@@ -286,14 +308,22 @@ class TheComponent extends Component {
                 <SegmentOverridesIcon
                   onClick={(e) => {
                     e.stopPropagation()
-                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                    this.editFeature(
+                      projectFlag,
+                      environmentFlags[id],
+                      TABS.SEGMENT_OVERRIDES,
+                    )
                   }}
                   count={projectFlag.num_segment_overrides}
                 />
                 <IdentityOverridesIcon
                   onClick={(e) => {
                     e.stopPropagation()
-                    this.editFeature(projectFlag, environmentFlags[id], 1)
+                    this.editFeature(
+                      projectFlag,
+                      environmentFlags[id],
+                      TABS.IDENTITY_OVERRIDES,
+                    )
                   }}
                   count={projectFlag.num_identity_overrides}
                   showPlusIndicator={showPlusIndicator}
@@ -321,8 +351,14 @@ class TheComponent extends Component {
                   )}
                 </TagValues>
                 {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+                {isFeatureHealthEnabled && !!isCompact && (
+                  <UnhealthyFlagWarning projectFlag={projectFlag} />
+                )}
               </Row>
               {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+              {isFeatureHealthEnabled && !isCompact && (
+                <UnhealthyFlagWarning projectFlag={projectFlag} />
+              )}
               {description && !isCompact && (
                 <div
                   className='list-item-subtitle'
@@ -386,7 +422,7 @@ class TheComponent extends Component {
             hideHistory={!environment?.use_v2_feature_versioning}
             onShowHistory={() => {
               if (disableControls) return
-              this.editFeature(projectFlag, environmentFlags[id], 'history')
+              this.editFeature(projectFlag, environmentFlags[id], TABS.HISTORY)
             }}
             onShowAudit={() => {
               if (disableControls) return
