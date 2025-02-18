@@ -41,7 +41,7 @@ def _get_integration_config(
                 related_object,
                 integration_name,
             )
-            if not integration_config.deleted_at:
+            if not integration_config.deleted:
                 return integration_config
     return None
 
