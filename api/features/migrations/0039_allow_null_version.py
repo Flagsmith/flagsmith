@@ -3,7 +3,7 @@
 from django.db import migrations, models
 
 
-def remove_null_version_feature_states(apps, schema_editor):
+def remove_null_version_feature_states(apps, schema_editor):  # type: ignore[no-untyped-def]
     feature_state_model = apps.get_model("features", "FeatureState")
     feature_state_model.objects.filter(version__isnull=True).delete()
 

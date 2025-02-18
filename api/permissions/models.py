@@ -23,11 +23,11 @@ class AbstractBasePermissionModel(models.Model):
 
     permissions = models.ManyToManyField(PermissionModel, blank=True)
 
-    def add_permission(self, permission_key: str):
+    def add_permission(self, permission_key: str):  # type: ignore[no-untyped-def]
         permission = PermissionModel.objects.get(key=permission_key)
         self.permissions.add(permission)
 
-    def set_permissions(self, permission_keys: list):
+    def set_permissions(self, permission_keys: list):  # type: ignore[no-untyped-def,type-arg]
         permissions = []
         for permission_key in permission_keys:
             permissions.append(PermissionModel.objects.get(key=permission_key))

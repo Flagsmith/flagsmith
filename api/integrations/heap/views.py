@@ -4,5 +4,5 @@ from integrations.heap.serializers import HeapConfigurationSerializer
 
 
 class HeapConfigurationViewSet(EnvironmentIntegrationCommonViewSet):
-    serializer_class = HeapConfigurationSerializer
-    model_class = HeapConfiguration
+    serializer_class = HeapConfigurationSerializer  # type: ignore[assignment]
+    model_class = HeapConfiguration  # type: ignore[assignment]

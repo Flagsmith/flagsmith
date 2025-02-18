@@ -16,7 +16,7 @@ from rest_framework.test import APIClient
         ("bool", True),
     ),
 )
-def test_get_all_feature_states_for_an_identity(
+def test_get_all_feature_states_for_an_identity(  # type: ignore[no-untyped-def]
     admin_client,
     environment,
     environment_api_key,
@@ -109,7 +109,7 @@ def test_get_all_feature_states_for_an_identity(
     assert third_response_json[0]["segment"] is None
 
 
-def _create_segment_override(
+def _create_segment_override(  # type: ignore[no-untyped-def]
     client: APIClient,
     environment_id: int,
     environment_api_key: str,

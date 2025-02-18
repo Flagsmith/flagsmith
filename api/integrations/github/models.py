@@ -3,7 +3,7 @@ import re
 
 from core.models import SoftDeleteExportableModel
 from django.db import models
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_UPDATE,
     BEFORE_DELETE,
@@ -25,7 +25,7 @@ class GithubConfiguration(SoftDeleteExportableModel):
 
     @staticmethod
     def has_github_configuration(organisation_id: int) -> bool:
-        return GithubConfiguration.objects.filter(
+        return GithubConfiguration.objects.filter(  # type: ignore[no-any-return]
             organisation_id=organisation_id
         ).exists()
 
@@ -42,7 +42,7 @@ class GithubConfiguration(SoftDeleteExportableModel):
         ordering = ("id",)
 
 
-class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
+class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
     github_configuration = models.ForeignKey(
         GithubConfiguration, related_name="repository_config", on_delete=models.CASCADE
     )
@@ -72,7 +72,7 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
         ]
         ordering = ("id",)
 
-    @hook(BEFORE_DELETE)
+    @hook(BEFORE_DELETE)  # type: ignore[misc]
     def delete_feature_external_resources(
         self,
     ) -> None:
@@ -93,8 +93,8 @@ class GitHubRepository(LifecycleModelMixin, SoftDeleteExportableModel):
             url__regex=pattern,
         ).delete()
 
-    @hook(AFTER_CREATE)
-    @hook(AFTER_UPDATE, when="tagging_enabled", has_changed=True, was=False)
+    @hook(AFTER_CREATE)  # type: ignore[misc]
+    @hook(AFTER_UPDATE, when="tagging_enabled", has_changed=True, was=False)  # type: ignore[misc]
     def create_github_tags(
         self,
     ) -> None:

@@ -1,9 +1,9 @@
 import pytest
 from django.core.management import call_command
 from django.db.models import Model
-from djoser.utils import decode_uid
+from djoser.utils import decode_uid  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
 from organisations.models import (
     Organisation,
@@ -20,7 +20,7 @@ def _assert_bootstrapped(
     expected_user_email: str,
     expected_organisation_name: str,
     expected_project_name: str,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
 ) -> None:
     # Entity counts are in accordance with the bootstrapped state.
     assert FFAdminUser.objects.count() == 1
@@ -29,21 +29,21 @@ def _assert_bootstrapped(
 
     # Superuser created as expected.
     user = FFAdminUser.objects.first()
-    assert user.email == expected_user_email
-    assert user.is_superuser
+    assert user.email == expected_user_email  # type: ignore[union-attr]
+    assert user.is_superuser  # type: ignore[union-attr]
 
     # Organisation created as expected.
     organisation = Organisation.objects.first()
     assert organisation.name == expected_organisation_name
     user_organisation = UserOrganisation.objects.first()
-    assert user_organisation.user == user
-    assert user_organisation.organisation == organisation
-    assert user_organisation.role == OrganisationRole.ADMIN
+    assert user_organisation.user == user  # type: ignore[union-attr]
+    assert user_organisation.organisation == organisation  # type: ignore[union-attr]
+    assert user_organisation.role == OrganisationRole.ADMIN  # type: ignore[union-attr]
 
     # Project created as expected.
     project = Project.objects.first()
-    assert project.name == expected_project_name
-    assert project.organisation == organisation
+    assert project.name == expected_project_name  # type: ignore[union-attr]
+    assert project.organisation == organisation  # type: ignore[union-attr]
 
     # Bootstrap logged as expected.
     capture_result = capsys.readouterr()
@@ -70,7 +70,7 @@ def _assert_bootstrapped(
 
 def test_bootstrap__empty_instance__creates_expected(
     settings: SettingsWrapper,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
 ) -> None:
     # Given
     settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
@@ -99,7 +99,7 @@ def test_bootstrap__empty_instance__creates_expected(
 
 def test_bootstrap__empty_instance__cli_overrides__creates_expected(
     settings: SettingsWrapper,
-    capsys: pytest.CaptureFixture,
+    capsys: pytest.CaptureFixture,  # type: ignore[type-arg]
 ) -> None:
     # Given
     settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True

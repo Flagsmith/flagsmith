@@ -8,8 +8,8 @@ class FeaturesConfig(BaseAppConfig):
     name = "features"
     default = True
 
-    def ready(self):
-        super().ready()
+    def ready(self):  # type: ignore[no-untyped-def]
+        super().ready()  # type: ignore[no-untyped-call]
 
         # noinspection PyUnresolvedReferences
         import features.signals  # noqa

@@ -40,31 +40,31 @@ class MetadataField(AbstractBaseExportableModel):
     def is_field_value_valid(self, field_value: str) -> bool:
         if len(field_value) > FIELD_VALUE_MAX_LENGTH:
             return False
-        return self.__getattribute__(f"validate_{self.type}")(field_value)
+        return self.__getattribute__(f"validate_{self.type}")(field_value)  # type: ignore[no-any-return]
 
-    def validate_int(self, field_value: str):
+    def validate_int(self, field_value: str):  # type: ignore[no-untyped-def]
         try:
             int(field_value)
         except ValueError:
             return False
         return True
 
-    def validate_bool(self, field_value: str):
+    def validate_bool(self, field_value: str):  # type: ignore[no-untyped-def]
         if field_value.lower() in ["true", "false"]:
             return True
         return False
 
-    def validate_url(self, field_value: str):
+    def validate_url(self, field_value: str):  # type: ignore[no-untyped-def]
         try:
             result = urlparse(field_value)
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
 
-    def validate_str(self, field_value: str):
+    def validate_str(self, field_value: str):  # type: ignore[no-untyped-def]
         return True
 
-    def validate_multiline_str(self, field_value: str):
+    def validate_multiline_str(self, field_value: str):  # type: ignore[no-untyped-def]
         return True
 
     class Meta:

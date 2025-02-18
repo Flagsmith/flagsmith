@@ -3,11 +3,11 @@ import typing
 from datetime import datetime, timedelta
 
 import pytest
-from common.environments.permissions import (
+from common.environments.permissions import (  # type: ignore[import-untyped]
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import VIEW_PROJECT
+from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 from core.constants import STRING
 from django.urls import reverse
 from django.utils import timezone
@@ -99,8 +99,8 @@ def test_create_new_feature_version(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -181,8 +181,8 @@ def test_retrieve_feature_version_with_no_previous_version(
         "api-v1:versioning:get-efv-by-uuid", args=[environment_feature_version.uuid]
     )
 
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(url)
@@ -206,8 +206,8 @@ def test_retrieve_feature_version_with_previous_version(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     version_1 = EnvironmentFeatureVersion.objects.filter(
         feature=feature, environment=environment_v2_versioning
@@ -239,8 +239,8 @@ def test_retrieve_feature_version_for_unpublished_version(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     version_1 = EnvironmentFeatureVersion.objects.filter(
         feature=feature, environment=environment_v2_versioning
@@ -719,8 +719,8 @@ def test_filter_versions_by_is_live(
 ) -> None:
     # Given
     # we give the user the correct permissions
-    with_environment_permissions([VIEW_ENVIRONMENT], environment_v2_versioning.id)
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT], environment_v2_versioning.id)  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # an unpublished environment feature version
     unpublished_environment_feature_version = EnvironmentFeatureVersion.objects.create(
@@ -776,7 +776,7 @@ def test_disable_v2_versioning_returns_bad_request_if_not_using_v2_versioning(
         args=[environment.api_key],
     )
 
-    with_environment_permissions(
+    with_environment_permissions(  # type: ignore[call-arg]
         permission_keys=[], environment_id=environment.id, admin=True
     )
 
@@ -1048,10 +1048,10 @@ def test_create_new_version_for_multivariate_feature(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions(
+    with_environment_permissions(  # type: ignore[call-arg]
         [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE], environment_v2_versioning.id
     )
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     create_version_url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -1233,8 +1233,8 @@ def test_create_new_version_fails_when_breaching_segment_override_limit(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
@@ -1304,8 +1304,8 @@ def test_segment_override_limit_excludes_older_versions__when_not_creating_any_n
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
@@ -1362,8 +1362,8 @@ def test_segment_override_limit_excludes_older_versions__when_creating_new_overr
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 2
@@ -1437,8 +1437,8 @@ def test_segment_override_limit_excludes_overrides_being_deleted_when_creating_n
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # We update the limit of segment overrides on the project
     project.max_segment_overrides_allowed = 1
@@ -1509,8 +1509,8 @@ def test_cannot_create_new_version_for_environment_not_enabled_for_versioning_v2
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -1547,8 +1547,8 @@ def test_list_versions_only_returns_allowed_amount_for_non_enterprise_plan(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     mocker.patch("organisations.models.is_saas", return_value=is_saas)
 
@@ -1607,8 +1607,8 @@ def test_list_versions_always_returns_current_version_even_if_outside_limit(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",
@@ -1652,8 +1652,8 @@ def test_list_versions_returns_all_versions_for_enterprise_plan_when_saas(
 ) -> None:
     # Given
     is_saas = True
-    with_environment_permissions([VIEW_ENVIRONMENT])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:versioning:environment-feature-versions-list",

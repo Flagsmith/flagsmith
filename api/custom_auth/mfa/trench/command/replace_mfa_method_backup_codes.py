@@ -13,8 +13,8 @@ class RegenerateBackupCodesForMFAMethodCommand:
     def __init__(
         self,
         mfa_model: Type[MFAMethod],
-        code_hasher: Callable,
-        codes_generator: Callable,
+        code_hasher: Callable,  # type: ignore[type-arg]
+        codes_generator: Callable,  # type: ignore[type-arg]
     ) -> None:
         self._mfa_model = mfa_model
         self._code_hasher = code_hasher
@@ -27,7 +27,7 @@ class RegenerateBackupCodesForMFAMethodCommand:
                 [self._code_hasher(backup_code) for backup_code in backup_codes]
             ),
         )
-        return backup_codes
+        return backup_codes  # type: ignore[no-any-return]
 
 
 regenerate_backup_codes_for_mfa_method_command = (

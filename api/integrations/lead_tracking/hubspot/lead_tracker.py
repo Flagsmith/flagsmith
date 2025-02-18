@@ -15,7 +15,7 @@ from .client import HubspotClient
 logger = logging.getLogger(__name__)
 
 try:
-    import re2 as re
+    import re2 as re  # type: ignore[import-untyped]
 
     logger.info("Using re2 library for regex.")
 except ImportError:
@@ -44,7 +44,7 @@ class HubspotLeadTracker(LeadTracker):
 
         return True
 
-    def create_lead(self, user: FFAdminUser, organisation: Organisation = None) -> None:
+    def create_lead(self, user: FFAdminUser, organisation: Organisation = None) -> None:  # type: ignore[assignment]
         contact_data = self.client.get_contact(user)
 
         if contact_data:
@@ -66,7 +66,7 @@ class HubspotLeadTracker(LeadTracker):
             )
 
     def get_or_create_organisation_hubspot_id(
-        self, user: FFAdminUser, organisation: Organisation = None
+        self, user: FFAdminUser, organisation: Organisation = None  # type: ignore[assignment]
     ) -> str:
         """
         Return the Hubspot API's id for an organisation.
@@ -94,30 +94,30 @@ class HubspotLeadTracker(LeadTracker):
                 hubspot_id=response["id"],
             )
         else:
-            response = self._get_or_create_company_by_domain(domain)
+            response = self._get_or_create_company_by_domain(domain)  # type: ignore[arg-type]
 
-        return response["id"]
+        return response["id"]  # type: ignore[no-any-return]
 
     def update_company_active_subscription(
         self, subscription: Subscription
-    ) -> dict | None:
+    ) -> dict | None:  # type: ignore[type-arg]
         if not subscription.plan:
-            return
+            return  # type: ignore[return-value]
 
         organisation = subscription.organisation
 
         # Check if we're missing the associated hubspot id.
         if not getattr(organisation, "hubspot_organisation", None):
-            return
+            return  # type: ignore[return-value]
 
         response = self.client.update_company(
             active_subscription=subscription.plan,
             hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
         )
 
-        return response
+        return response  # type: ignore[no-any-return]
 
-    def _get_or_create_company_by_domain(self, domain: str) -> dict:
+    def _get_or_create_company_by_domain(self, domain: str) -> dict:  # type: ignore[type-arg]
         company = self.client.get_company_by_domain(domain)
         if not company:
             # Since we don't know the company's name, we pass the domain as
@@ -125,7 +125,7 @@ class HubspotLeadTracker(LeadTracker):
             # updated in Hubspot if needed.
             company = self.client.create_company(name=domain, domain=domain)
 
-        return company
+        return company  # type: ignore[no-any-return]
 
     def _get_client(self) -> HubspotClient:
         return HubspotClient()

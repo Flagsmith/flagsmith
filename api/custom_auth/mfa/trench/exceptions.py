@@ -4,7 +4,7 @@ from rest_framework.serializers import ValidationError
 
 class MFAValidationError(ValidationError):
     def __str__(self) -> str:
-        return ", ".join(detail for detail in self.detail)
+        return ", ".join(detail for detail in self.detail)  # type: ignore[misc]
 
 
 class CodeInvalidOrExpiredError(MFAValidationError):

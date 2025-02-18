@@ -5,7 +5,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import environments.api_keys
-import simple_history.models
+import simple_history.models  # type: ignore[import-untyped]
 
 
 class Migration(migrations.Migration):

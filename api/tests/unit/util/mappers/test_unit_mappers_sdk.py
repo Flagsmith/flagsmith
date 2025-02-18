@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 @pytest.fixture()
-def identity_without_overrides(environment):
+def identity_without_overrides(environment):  # type: ignore[no-untyped-def]
     return Identity.objects.create(
         identifier="test_identity_without_overrides", environment=environment
     )

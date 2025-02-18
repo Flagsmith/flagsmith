@@ -7,11 +7,11 @@ from users.models import FFAdminUser
 
 
 class Helper:
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def]
         pass
 
     @staticmethod
-    def generate_database_models(identifier="user1"):
+    def generate_database_models(identifier="user1"):  # type: ignore[no-untyped-def]
         organisation = Organisation(name="ssg")
         organisation.save()
         project = Project(name="project1", organisation=organisation)
@@ -25,7 +25,7 @@ class Helper:
         return identity, project
 
     @staticmethod
-    def clean_up():
+    def clean_up():  # type: ignore[no-untyped-def]
         Identity.objects.all().delete()
         FeatureState.objects.all().delete()
         Feature.objects.all().delete()
@@ -34,14 +34,14 @@ class Helper:
         Organisation.objects.all().delete()
 
     @staticmethod
-    def create_ffadminuser():
-        Helper.clean_up()
+    def create_ffadminuser():  # type: ignore[no-untyped-def]
+        Helper.clean_up()  # type: ignore[no-untyped-call]
         user = FFAdminUser(
             username="test_user",
             email="test_user@test.com",
             first_name="test",
             last_name="user",
         )
-        user.set_password("testuser123")
+        user.set_password("testuser123")  # type: ignore[no-untyped-call]
         user.save()
         return user

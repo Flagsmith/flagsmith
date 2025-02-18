@@ -25,16 +25,16 @@ import threading
 from copy import deepcopy
 
 from django.core.exceptions import ImproperlyConfigured
-from django_redis.client.default import DefaultClient
-from django_redis.exceptions import ConnectionInterrupted
-from django_redis.pool import ConnectionFactory
+from django_redis.client.default import DefaultClient  # type: ignore[import-untyped]
+from django_redis.exceptions import ConnectionInterrupted  # type: ignore[import-untyped]
+from django_redis.pool import ConnectionFactory  # type: ignore[import-untyped]
 from redis.cluster import RedisCluster
 from redis.exceptions import RedisClusterException
 
 SOCKET_TIMEOUT = 0.2
 
 
-class SafeRedisClusterClient(DefaultClient):
+class SafeRedisClusterClient(DefaultClient):  # type: ignore[misc]
     SAFE_METHODS = [
         "set",
         "get",
@@ -51,8 +51,8 @@ class SafeRedisClusterClient(DefaultClient):
     ]
 
     @staticmethod
-    def _safe_operation(func):
-        def wrapper(*args, **kwargs):
+    def _safe_operation(func):  # type: ignore[no-untyped-def]
+        def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
             try:
                 return func(*args, **kwargs)
             except RedisClusterException as e:
@@ -60,20 +60,20 @@ class SafeRedisClusterClient(DefaultClient):
 
         return wrapper
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
 
         # Dynamically generate safe versions of methods
         for method_name in self.SAFE_METHODS:
             setattr(
-                self, method_name, self._safe_operation(getattr(super(), method_name))
+                self, method_name, self._safe_operation(getattr(super(), method_name))  # type: ignore[no-untyped-call]  # noqa: E501
             )
 
         # Let's use our own connection factory here
         self.connection_factory = ClusterConnectionFactory(options=self._options)
 
 
-class ClusterConnectionFactory(ConnectionFactory):
+class ClusterConnectionFactory(ConnectionFactory):  # type: ignore[misc]
     """A connection factory for redis.cluster.RedisCluster
     The cluster client manages connection pools internally, so we don't want to
     do it at this level like the base ConnectionFactory does.
@@ -81,7 +81,7 @@ class ClusterConnectionFactory(ConnectionFactory):
 
     # A global cache of URL->client so that within a process, we will reuse a
     # single client, and therefore a single set of connection pools.
-    _clients = {}
+    _clients = {}  # type: ignore[var-annotated]
     _clients_lock = threading.Lock()
 
     def connect(self, url: str) -> RedisCluster:
@@ -95,9 +95,9 @@ class ClusterConnectionFactory(ConnectionFactory):
                     params = self.make_connection_params(url)
                     self._clients[url] = self.get_connection(params)
 
-        return self._clients[url]
+        return self._clients[url]  # type: ignore[no-any-return]
 
-    def get_connection(self, connection_params: dict) -> RedisCluster:
+    def get_connection(self, connection_params: dict) -> RedisCluster:  # type: ignore[type-arg]
         """
         Given connection_params, return a new client instance.
         Basic django-redis ConnectionFactory manages a cache of connection
@@ -122,10 +122,10 @@ class ClusterConnectionFactory(ConnectionFactory):
             client_cls_kwargs["socket_timeout"] = SOCKET_TIMEOUT
             client_cls_kwargs["socket_keepalive"] = True
             # ... and then build and return the client
-            return RedisCluster(**client_cls_kwargs)
+            return RedisCluster(**client_cls_kwargs)  # type: ignore[abstract]
         except Exception as e:
             # Let django redis handle the exception
             raise ConnectionInterrupted(connection=None) from e
 
-    def disconnect(self, connection: RedisCluster):
-        connection.disconnect_connection_pools()
+    def disconnect(self, connection: RedisCluster):  # type: ignore[no-untyped-def]
+        connection.disconnect_connection_pools()  # type: ignore[no-untyped-call]

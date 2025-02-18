@@ -5,9 +5,9 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 
 class ChargebeeObjMetadata(BaseSubscriptionMetadata):
-    payment_source = CHARGEBEE
+    payment_source = CHARGEBEE  # type: ignore[assignment]
 
-    def __mul__(self, other):
+    def __mul__(self, other):  # type: ignore[no-untyped-def]
         if not isinstance(other, int):
             raise TypeError("Unable to multiply by anything other than an integer.")
 

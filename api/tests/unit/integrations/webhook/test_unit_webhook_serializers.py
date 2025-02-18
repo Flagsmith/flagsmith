@@ -5,7 +5,7 @@ from integrations.webhook.serializers import (
 )
 
 
-def test_integration_feature_state_serializer_environment_weight_is_correct(
+def test_integration_feature_state_serializer_environment_weight_is_correct(  # type: ignore[no-untyped-def]
     identity, multivariate_feature, mocker
 ):
     # Given
@@ -26,7 +26,7 @@ def test_integration_feature_state_serializer_environment_weight_is_correct(
     assert data["feature_state_value"] == mv_option.value
 
 
-def test_segment_serializer_member_is_correct(
+def test_segment_serializer_member_is_correct(  # type: ignore[no-untyped-def]
     identity, trait, identity_matching_segment
 ):
     # When

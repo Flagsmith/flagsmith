@@ -13,7 +13,7 @@ from features.value_types import STRING
 logger = logging.getLogger(__name__)
 
 
-class TraitValueField(serializers.Field):
+class TraitValueField(serializers.Field):  # type: ignore[type-arg]
     """
     Custom field to extract the type of the field on deserialization.
     """

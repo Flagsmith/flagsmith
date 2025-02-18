@@ -4,7 +4,7 @@ from django.db.models import OuterRef, Subquery
 from django.db import migrations
 
 
-def delete_orphan_migrations(apps, schema_editor):
+def delete_orphan_migrations(apps, schema_editor):  # type: ignore[no-untyped-def]
     UserOrganisation = apps.get_model("organisations", "UserOrganisation")
     UserProjectPermission = apps.get_model("projects", "UserProjectPermission")
     UserEnvironmentPermission = apps.get_model(
@@ -28,7 +28,7 @@ def delete_orphan_migrations(apps, schema_editor):
     ).delete()
 
 
-def reverse(apps, schema_editor):
+def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     pass
 
 

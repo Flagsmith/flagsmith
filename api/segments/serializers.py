@@ -3,13 +3,13 @@ from rest_framework import serializers
 from segments.models import Segment
 
 
-class SegmentSerializerBasic(serializers.ModelSerializer):
+class SegmentSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Segment
         fields = ("id", "name", "description")
 
 
-class SegmentListQuerySerializer(serializers.Serializer):
+class SegmentListQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     q = serializers.CharField(
         required=False,
         help_text="Search term to find segment with given term in their name",

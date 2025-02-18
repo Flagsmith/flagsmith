@@ -7,7 +7,7 @@ from .forms import CustomUserAdminForm
 from .models import FFAdminUser
 
 
-class UserOrganisationInline(admin.TabularInline):
+class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
     model = UserOrganisation
     extra = 0
     show_change_link = False
@@ -16,7 +16,7 @@ class UserOrganisationInline(admin.TabularInline):
 
 
 @admin.register(FFAdminUser)
-class CustomUserAdmin(UserAdmin):
+class CustomUserAdmin(UserAdmin):  # type: ignore[type-arg]
     model = FFAdminUser
     form = CustomUserAdminForm
 

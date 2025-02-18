@@ -5,7 +5,7 @@ from django.db import migrations
 from organisations.models import OrganisationRole
 
 
-def create_default_project_admins(apps, schema_editor):
+def create_default_project_admins(apps, schema_editor):  # type: ignore[no-untyped-def]
     """
     Iterates over all basic users on the platform and makes them admins on all projects in their organisation.
     """

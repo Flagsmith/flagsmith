@@ -3,18 +3,18 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib import admin
-from simple_history.admin import SimpleHistoryAdmin
+from simple_history.admin import SimpleHistoryAdmin  # type: ignore[import-untyped]
 
 from .models import Feature, FeatureSegment, FeatureState, FeatureStateValue
 
 
-class FeatureStateValueInline(admin.StackedInline):
+class FeatureStateValueInline(admin.StackedInline):  # type: ignore[type-arg]
     model = FeatureStateValue
     extra = 0
     show_change_link = True
 
 
-class FeatureAdmin(SimpleHistoryAdmin):
+class FeatureAdmin(SimpleHistoryAdmin):  # type: ignore[misc]
     date_hierarchy = "created_date"
     list_display = (
         "__str__",
@@ -40,19 +40,19 @@ class FeatureAdmin(SimpleHistoryAdmin):
     readonly_fields = ("project",)
 
 
-class FeatureSegmentAdmin(admin.ModelAdmin):
+class FeatureSegmentAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     model = FeatureSegment
 
-    def add_view(self, *args, **kwargs):
+    def add_view(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         self.exclude = ("priority",)
         return super(FeatureSegmentAdmin, self).add_view(*args, **kwargs)
 
-    def change_view(self, *args, **kwargs):
+    def change_view(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         self.exclude = ()
         return super(FeatureSegmentAdmin, self).change_view(*args, **kwargs)
 
 
-class FeatureStateAdmin(SimpleHistoryAdmin):
+class FeatureStateAdmin(SimpleHistoryAdmin):  # type: ignore[misc]
     inlines = [
         FeatureStateValueInline,
     ]
@@ -79,7 +79,7 @@ class FeatureStateAdmin(SimpleHistoryAdmin):
     )
 
 
-class FeatureStateValueAdmin(SimpleHistoryAdmin):
+class FeatureStateValueAdmin(SimpleHistoryAdmin):  # type: ignore[misc]
     list_display = (
         "feature_state",
         "type",

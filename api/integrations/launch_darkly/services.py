@@ -46,7 +46,7 @@ def _sign_ld_value(value: str, user_id: int) -> str:
 
 
 def _unsign_ld_value(value: str, user_id: int) -> str:
-    return signing.loads(
+    return signing.loads(  # type: ignore[no-any-return]
         value,
         salt=f"ld_import_{user_id}",
     )
@@ -59,8 +59,8 @@ def _log_error(
     import_request.status["error_messages"] += [error_message]
 
 
-@contextmanager
-def _complete_import_request(
+@contextmanager  # type: ignore[arg-type]
+def _complete_import_request(  # type: ignore[misc]
     import_request: LaunchDarklyImportRequest,
 ) -> None:
     """
@@ -327,7 +327,7 @@ def _create_segment_rule_for_segment(
                 f" skipping for segment: {segment.name}",
             )
 
-    return parent_rule
+    return parent_rule  # type: ignore[no-any-return]
 
 
 def _create_feature_segment_from_clauses(
@@ -454,7 +454,7 @@ def _import_targets(
                     [
                         {
                             "trait_key": "key",
-                            "trait_value": identifier,
+                            "trait_value": identifier,  # type: ignore[typeddict-item]
                         }
                     ]
                 )
@@ -547,7 +547,7 @@ def _set_imported_mv_feature_state_values(
                 for weighted_variation in rollout["variations"]:
                     # Find the corresponding variation value.
                     weight = weighted_variation["weight"]
-                    cumulative_rollout += weight / 1000
+                    cumulative_rollout += weight / 1000  # type: ignore[assignment]
                     cumulative_rollout_rounded = round(cumulative_rollout)
 
                     # LD has weights between 0-100,000. Flagsmith has weights between 0-100.
@@ -612,7 +612,7 @@ def _import_rules(
             )
 
             _set_imported_mv_feature_state_values(
-                variation_idx=rule.get("variation", None),
+                variation_idx=rule.get("variation", None),  # type: ignore[arg-type]
                 rollout=rule.get("rollout", None),
                 feature_states=feature_states,
                 mv_feature_options_by_variation=mv_feature_options_by_variation,
@@ -784,7 +784,7 @@ def _create_mv_feature_states_with_segments_identities(
                     # It's possible to allocate e.g. 50.999, resulting
                     # in rollout == 50999.
                     # Round the values nicely by keeping the `cumulative_rollout` tally.
-                    cumulative_rollout += rollout / 1000
+                    cumulative_rollout += rollout / 1000  # type: ignore[assignment]
                     cumulative_rollout_rounded = round(cumulative_rollout)
                     percentage_allocation = (
                         cumulative_rollout_rounded - rollout_baseline
@@ -882,7 +882,7 @@ def _create_feature_from_ld(
     )
     feature.tags.set(tags)
 
-    feature_state_factory(
+    feature_state_factory(  # type: ignore[call-arg]
         import_request=import_request,
         ld_flag=ld_flag,
         feature=feature,
@@ -890,7 +890,7 @@ def _create_feature_from_ld(
         segments_by_ld_key=segments_by_ld_key,
     )
 
-    return feature
+    return feature  # type: ignore[no-any-return]
 
 
 def _create_features_from_ld(
@@ -989,7 +989,7 @@ def _create_segments_from_ld(
                 [
                     {
                         "trait_key": "key",
-                        "trait_value": identifier,
+                        "trait_value": identifier,  # type: ignore[typeddict-item]
                     }
                 ]
             )
@@ -1030,7 +1030,7 @@ def create_import_request(
         "error_messages": [],
     }
 
-    return LaunchDarklyImportRequest.objects.create(
+    return LaunchDarklyImportRequest.objects.create(  # type: ignore[no-any-return]
         project=project,
         created_by=user,
         ld_project_key=ld_project_key,

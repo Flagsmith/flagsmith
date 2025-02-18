@@ -1,5 +1,5 @@
-from common.environments.permissions import VIEW_ENVIRONMENT
-from common.projects.permissions import VIEW_PROJECT
+from common.environments.permissions import VIEW_ENVIRONMENT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -16,23 +16,23 @@ from organisations.permissions.permissions import (
 from projects.permissions import NestedProjectPermissions
 
 
-class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):
+class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = None
     pagination_class = None  # set here to ensure documentation is correct
     model_class = None
 
-    def initial(self, request: Request, *args, **kwargs) -> None:
+    def initial(self, request: Request, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().initial(request, *args, **kwargs)
-        request.environment = get_object_or_404(
+        request.environment = get_object_or_404(  # type: ignore[attr-defined]
             Environment,
             api_key=self.kwargs["environment_api_key"],
         )
 
-    def get_queryset(self) -> QuerySet:
+    def get_queryset(self) -> QuerySet:  # type: ignore[type-arg]
         if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()
+            return self.model_class.objects.none()  # type: ignore[no-any-return,attr-defined]
 
-        return self.model_class.objects.filter(environment=self.request.environment)
+        return self.model_class.objects.filter(environment=self.request.environment)  # type: ignore[attr-defined,no-any-return]  # noqa: E501
 
     def get_permissions(self) -> list[BasePermission]:
         return [
@@ -42,27 +42,27 @@ class EnvironmentIntegrationCommonViewSet(viewsets.ModelViewSet):
             ),
         ]
 
-    def perform_create(self, serializer: BaseSerializer) -> None:
+    def perform_create(self, serializer: BaseSerializer) -> None:  # type: ignore[type-arg]
         if self.get_queryset().exists():
             raise ValidationError(
                 "This integration already exists for this environment."
             )
         serializer.save(environment=self.request.environment)
 
-    def perform_update(self, serializer: BaseSerializer) -> None:
+    def perform_update(self, serializer: BaseSerializer) -> None:  # type: ignore[type-arg]
         serializer.save(environment=self.request.environment)
 
 
-class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
+class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = None
     pagination_class = None
     model_class = None
 
-    def get_queryset(self) -> QuerySet:
+    def get_queryset(self) -> QuerySet:  # type: ignore[type-arg]
         if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()
+            return self.model_class.objects.none()  # type: ignore[no-any-return,attr-defined]
 
-        return self.model_class.objects.filter(project_id=self.kwargs["project_pk"])
+        return self.model_class.objects.filter(project_id=self.kwargs["project_pk"])  # type: ignore[attr-defined,no-any-return]  # noqa: E501
 
     def get_permissions(self) -> list[BasePermission]:
         return [
@@ -71,36 +71,36 @@ class ProjectIntegrationBaseViewSet(viewsets.ModelViewSet):
             ),
         ]
 
-    def perform_create(self, serializer: BaseSerializer) -> None:
+    def perform_create(self, serializer: BaseSerializer) -> None:  # type: ignore[type-arg]
         if self.get_queryset().exists():
             raise ValidationError("This integration already exists for this project.")
         serializer.save(project_id=self.kwargs["project_pk"])
 
-    def perform_update(self, serializer: BaseSerializer) -> None:
+    def perform_update(self, serializer: BaseSerializer) -> None:  # type: ignore[type-arg]
         serializer.save(project_id=self.kwargs["project_pk"])
 
 
-class OrganisationIntegrationBaseViewSet(viewsets.ModelViewSet):
+class OrganisationIntegrationBaseViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = None
     pagination_class = None
     model_class = None
 
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
 
-    def get_queryset(self) -> QuerySet:
+    def get_queryset(self) -> QuerySet:  # type: ignore[type-arg]
         if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()
+            return self.model_class.objects.none()  # type: ignore[no-any-return,attr-defined]
 
-        return self.model_class.objects.filter(
+        return self.model_class.objects.filter(  # type: ignore[attr-defined,no-any-return]
             organisation_id=self.kwargs["organisation_pk"]
         )
 
-    def perform_create(self, serializer: BaseSerializer) -> None:
+    def perform_create(self, serializer: BaseSerializer) -> None:  # type: ignore[type-arg]
         if self.get_queryset().exists():
             raise ValidationError(
                 "This integration already exists for this organisation."
             )
         serializer.save(organisation_id=self.kwargs["organisation_pk"])
 
-    def perform_update(self, serializer: BaseSerializer) -> None:
+    def perform_update(self, serializer: BaseSerializer) -> None:  # type: ignore[type-arg]
         serializer.save(organisation_id=self.kwargs["organisation_pk"])

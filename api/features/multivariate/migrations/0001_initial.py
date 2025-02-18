@@ -3,7 +3,7 @@
 import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
-import django_lifecycle.mixins
+import django_lifecycle.mixins  # type: ignore[import-untyped]
 
 
 class Migration(migrations.Migration):

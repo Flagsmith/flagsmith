@@ -24,7 +24,7 @@ from users.models import FFAdminUser
 class MaxSeatsForm(forms.Form):
     max_seats = forms.IntegerField()
 
-    def save(self, organisation, commit=True):
+    def save(self, organisation, commit=True):  # type: ignore[no-untyped-def]
         organisation.subscription.max_seats = self.cleaned_data["max_seats"]
         organisation.subscription.save()
 
@@ -32,7 +32,7 @@ class MaxSeatsForm(forms.Form):
 class MaxAPICallsForm(forms.Form):
     max_api_calls = forms.IntegerField()
 
-    def save(self, organisation, commit=True):
+    def save(self, organisation, commit=True):  # type: ignore[no-untyped-def]
         organisation.subscription.max_api_calls = self.cleaned_data["max_api_calls"]
         organisation.subscription.save()
 
@@ -91,7 +91,7 @@ class EndTrialForm(forms.Form):
 class EmailUsageForm(forms.Form):
     email_address = forms.EmailField()
 
-    def save(self, commit=True):
+    def save(self, commit=True):  # type: ignore[no-untyped-def]
         message = inspect.cleandoc(
             f"""
             Current Flagsmith Stats on {date.today()}:

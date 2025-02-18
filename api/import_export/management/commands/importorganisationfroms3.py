@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super(Command, self).__init__(*args, **kwargs)
-        self.importer = OrganisationImporter()
+        self.importer = OrganisationImporter()  # type: ignore[no-untyped-call]
 
-    def add_arguments(self, parser: CommandParser):
+    def add_arguments(self, parser: CommandParser):  # type: ignore[no-untyped-def]
         parser.add_argument(
             "bucket-name",
             type=str,
@@ -24,7 +24,7 @@ class Command(BaseCommand):
             help="S3 location key to retrieve the organisation data from.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # type: ignore[no-untyped-def]
         bucket_name = options["bucket-name"]
         key = options["key"]
 

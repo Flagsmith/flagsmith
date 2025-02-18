@@ -14,16 +14,16 @@ T = typing.TypeVar("T")
 
 class AbstractBaseEventIntegrationWrapper(ABC):
     @abstractmethod
-    def _track_event(self, event: dict) -> None:
+    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         raise NotImplementedError()
 
-    @postpone
-    def track_event_async(self, event: dict) -> None:
+    @postpone  # type: ignore[misc]
+    def track_event_async(self, event: dict) -> None:  # type: ignore[type-arg]
         self._track_event(event)
 
     @staticmethod
     @abstractmethod
-    def generate_event_data(*args, **kwargs) -> ...:
+    def generate_event_data(*args, **kwargs) -> ...:  # type: ignore[misc,no-untyped-def]
         raise NotImplementedError()
 
 
@@ -32,7 +32,7 @@ class AbstractBaseIdentityIntegrationWrapper(ABC, typing.Generic[T]):
     def _identify_user(self, user_data: T) -> None:
         raise NotImplementedError()
 
-    @postpone
+    @postpone  # type: ignore[misc]
     def identify_user_async(self, data: T) -> None:
         self._identify_user(data)
 

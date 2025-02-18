@@ -82,7 +82,7 @@ def test_environment_clone_does_not_modify_the_original_instance(
     assert clone.api_key != environment.api_key
 
 
-def test_environment_clone_save_creates_feature_states(
+def test_environment_clone_save_creates_feature_states(  # type: ignore[no-untyped-def]
     environment: Environment, feature: Feature
 ):
     # Given
@@ -97,7 +97,7 @@ def test_environment_clone_save_creates_feature_states(
     assert feature_states.count() == 1
 
 
-def test_environment_clone_does_not_modify_source_feature_state(
+def test_environment_clone_does_not_modify_source_feature_state(  # type: ignore[no-untyped-def]
     environment: Environment,
     feature: Feature,
 ):
@@ -114,7 +114,7 @@ def test_environment_clone_does_not_modify_source_feature_state(
     assert source_feature_state_before_clone == source_feature_state_after_clone
 
 
-def test_environment_clone_does_not_create_identities(
+def test_environment_clone_does_not_create_identities(  # type: ignore[no-untyped-def]
     environment: Environment,
 ):
     # Given
@@ -133,11 +133,11 @@ def test_environment_clone_clones_the_feature_states(
 ) -> None:
     # Given
     feature_state = feature.feature_states.first()
-    assert feature_state.enabled is False
+    assert feature_state.enabled is False  # type: ignore[union-attr]
 
     # Enable the feature in the source environment
-    feature_state.enabled = True
-    feature_state.save()
+    feature_state.enabled = True  # type: ignore[union-attr]
+    feature_state.save()  # type: ignore[union-attr]
 
     # When
     clone = environment.clone(name="Cloned env")
@@ -203,7 +203,7 @@ def test_environment_get_from_cache_stores_environment_in_cache_on_success(
     mock_cache.get.return_value = None
 
     # When
-    environment = Environment.get_from_cache(environment.api_key)
+    environment = Environment.get_from_cache(environment.api_key)  # type: ignore[no-untyped-call]
 
     # Then
     assert environment == environment
@@ -217,7 +217,7 @@ def test_environment_get_from_cache_returns_None_if_no_matching_environment(
     api_key = "no-matching-env"
 
     # When
-    env = Environment.get_from_cache(api_key)
+    env = Environment.get_from_cache(api_key)  # type: ignore[no-untyped-call]
 
     # Then
     assert env is None
@@ -230,7 +230,7 @@ def test_environment_get_from_cache_accepts_environment_api_key_model_key(
     api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
 
     # When
-    environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
+    environment_from_cache = Environment.get_from_cache(api_key=api_key.key)  # type: ignore[no-untyped-call]
 
     # Then
     assert environment_from_cache == environment
@@ -240,7 +240,7 @@ def test_environment_get_from_cache_with_null_environment_key_returns_null(
     environment: Environment,
 ) -> None:
     # When
-    environment2 = Environment.get_from_cache(None)
+    environment2 = Environment.get_from_cache(None)  # type: ignore[no-untyped-call]
 
     # Then
     assert environment2 is None
@@ -258,10 +258,10 @@ def test_environment_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_
 
     # When
     with django_assert_num_queries(1):
-        [Environment.get_from_cache(api_key) for _ in range(10)]
+        [Environment.get_from_cache(api_key) for _ in range(10)]  # type: ignore[no-untyped-call]
 
 
-def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(
+def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(  # type: ignore[no-untyped-def]
     environment,
 ):
     assert (
@@ -274,7 +274,7 @@ def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(
     )
 
 
-def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_with_expired_date_in_future(
+def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_with_expired_date_in_future(  # type: ignore[no-untyped-def]  # noqa: E501
     environment,
 ):
     assert (
@@ -288,7 +288,7 @@ def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key_w
     )
 
 
-def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(
+def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(  # type: ignore[no-untyped-def]
     environment,
 ):
     assert (
@@ -302,7 +302,7 @@ def test_environment_api_key_model_is_valid_is_false_for_expired_active_key(
     )
 
 
-def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_key(
+def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_key(  # type: ignore[no-untyped-def]
     environment,
 ):
     assert (
@@ -313,7 +313,7 @@ def test_environment_api_key_model_is_valid_is_false_for_non_expired_inactive_ke
     )
 
 
-def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cache(
+def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cache(  # type: ignore[no-untyped-def]
     environment,
 ):
     # Given
@@ -324,9 +324,9 @@ def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cach
 
     # When
     retrieved_environments = [
-        Environment.get_from_cache(environment.api_key),
+        Environment.get_from_cache(environment.api_key),  # type: ignore[no-untyped-call]
         *[
-            Environment.get_from_cache(environment_api_key.key)
+            Environment.get_from_cache(environment_api_key.key)  # type: ignore[no-untyped-call]
             for environment_api_key in environment_api_keys
         ],
     ]
@@ -338,11 +338,11 @@ def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cach
     )
 
 
-def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
+def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(  # type: ignore[no-untyped-def]
     environment, environment_api_key, mocker
 ):
     # When
-    returned_environment = Environment.get_from_cache(environment_api_key.key)
+    returned_environment = Environment.get_from_cache(environment_api_key.key)  # type: ignore[no-untyped-call]
 
     # Then
     assert returned_environment == environment
@@ -351,7 +351,7 @@ def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
     assert environment == environment_cache.get(environment_api_key.key)
 
 
-def test_updated_at_gets_updated_when_environment_audit_log_created(environment):
+def test_updated_at_gets_updated_when_environment_audit_log_created(environment):  # type: ignore[no-untyped-def]
     # When
     audit_log = AuditLog.objects.create(
         environment=environment, project=environment.project, log="random_audit_log"
@@ -362,7 +362,7 @@ def test_updated_at_gets_updated_when_environment_audit_log_created(environment)
     assert environment.updated_at == audit_log.created_date
 
 
-def test_updated_at_gets_updated_when_project_audit_log_created(environment):
+def test_updated_at_gets_updated_when_project_audit_log_created(environment):  # type: ignore[no-untyped-def]
     # When
     audit_log = AuditLog.objects.create(
         project=environment.project, log="random_audit_log"
@@ -372,7 +372,7 @@ def test_updated_at_gets_updated_when_project_audit_log_created(environment):
     assert environment.updated_at == audit_log.created_date
 
 
-def test_change_request_audit_logs_does_not_update_updated_at(environment):
+def test_change_request_audit_logs_does_not_update_updated_at(environment):  # type: ignore[no-untyped-def]
     # Given
     updated_at_before_audit_log = environment.updated_at
 
@@ -388,7 +388,7 @@ def test_change_request_audit_logs_does_not_update_updated_at(environment):
     assert environment.updated_at != audit_log.created_date
 
 
-def test_save_environment_clears_environment_cache(mocker, project):
+def test_save_environment_clears_environment_cache(mocker, project):  # type: ignore[no-untyped-def]
     # Given
     mock_environment_cache = mocker.patch("environments.models.environment_cache")
     environment = Environment.objects.create(name="test environment", project=project)
@@ -420,7 +420,7 @@ def test_save_environment_clears_environment_cache(mocker, project):
         (False, RequestOrigin.SERVER, True),
     ),
 )
-def test_environment_trait_persistence_allowed(
+def test_environment_trait_persistence_allowed(  # type: ignore[no-untyped-def]
     allow_client_traits, request_origin, expected_result
 ):
     request = MagicMock(originated_from=request_origin)
@@ -432,7 +432,7 @@ def test_environment_trait_persistence_allowed(
     )
 
 
-def test_write_environments_to_dynamodb_with_environment(
+def test_write_environments_to_dynamodb_with_environment(  # type: ignore[no-untyped-def]
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     mock_dynamo_env_wrapper,
@@ -455,7 +455,7 @@ def test_write_environments_to_dynamodb_with_environment(
     )
 
 
-def test_write_environments_to_dynamodb_project(
+def test_write_environments_to_dynamodb_project(  # type: ignore[no-untyped-def]
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     dynamo_enabled_project_environment_two,
@@ -476,7 +476,7 @@ def test_write_environments_to_dynamodb_project(
     )
 
 
-def test_write_environments_to_dynamodb_with_environment_and_project(
+def test_write_environments_to_dynamodb_with_environment_and_project(  # type: ignore[no-untyped-def]
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     mock_dynamo_env_wrapper,
@@ -579,7 +579,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
         ("foo", 1, "identity-identifier"),
     ),
 )
-def test_webhook_generate_webhook_feature_state_data(
+def test_webhook_generate_webhook_feature_state_data(  # type: ignore[no-untyped-def]
     feature, environment, value, identity_id, identifier
 ):
     # Given
@@ -595,7 +595,7 @@ def test_webhook_generate_webhook_feature_state_data(
 
 
 @pytest.mark.parametrize("identity_id, identifier", ((1, None), (None, "identifier")))
-def test_webhook_generate_webhook_feature_state_data_identity_error_conditions(
+def test_webhook_generate_webhook_feature_state_data_identity_error_conditions(  # type: ignore[no-untyped-def]
     mocker, identity_id, identifier
 ):
     # Given
@@ -619,7 +619,7 @@ def test_webhook_generate_webhook_feature_state_data_identity_error_conditions(
     # exception raised
 
 
-def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_identity(
+def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_identity(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
 ):
     # Given
@@ -647,7 +647,7 @@ def test_webhook_generate_webhook_feature_state_data_raises_error_segment_and_id
     # exception raised
 
 
-def test_environment_get_environment_document(environment, django_assert_num_queries):
+def test_environment_get_environment_document(environment, django_assert_num_queries):  # type: ignore[no-untyped-def]
     # Given
 
     # When
@@ -659,7 +659,7 @@ def test_environment_get_environment_document(environment, django_assert_num_que
     assert environment_document["api_key"] == environment.api_key
 
 
-def test_environment_get_environment_document_with_caching_when_document_in_cache(
+def test_environment_get_environment_document_with_caching_when_document_in_cache(  # type: ignore[no-untyped-def]
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
@@ -681,7 +681,7 @@ def test_environment_get_environment_document_with_caching_when_document_in_cach
     assert environment_document["api_key"] == environment.api_key
 
 
-def test_environment_get_environment_document_with_caching_when_document_not_in_cache(
+def test_environment_get_environment_document_with_caching_when_document_not_in_cache(  # type: ignore[no-untyped-def]
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
@@ -705,7 +705,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     )
 
 
-def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(project):
+def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(project):  # type: ignore[no-untyped-def]
     # Given
     project.prevent_flag_defaults = True
     project.save()
@@ -730,11 +730,11 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(proj
     assert not feature_state.get_feature_state_value()
 
 
-def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):
+def test_get_segments_returns_no_segments_if_no_overrides(environment, segment):  # type: ignore[no-untyped-def]
     assert environment.get_segments_from_cache() == []
 
 
-def test_get_segments_returns_only_segments_that_have_an_override(
+def test_get_segments_returns_only_segments_that_have_an_override(  # type: ignore[no-untyped-def]
     environment, segment, segment_featurestate, mocker, monkeypatch
 ):
     # Given
@@ -759,7 +759,7 @@ def test_get_segments_returns_only_segments_that_have_an_override(
     )
 
 
-def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(
+def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(  # type: ignore[no-untyped-def]
     environment,
     segment,
     segment_featurestate,
@@ -797,7 +797,7 @@ def test_get_segments_from_cache_does_not_hit_db_if_cache_hit(
         (None, False, False),
     ),
 )
-def test_get_hide_disabled_flags(
+def test_get_hide_disabled_flags(  # type: ignore[no-untyped-def]
     project, environment, environment_value, project_value, expected_result
 ):
     # Given
@@ -811,7 +811,7 @@ def test_get_hide_disabled_flags(
     assert environment.get_hide_disabled_flags() is expected_result
 
 
-def test_saving_environment_api_key_creates_dynamo_document_if_enabled(
+def test_saving_environment_api_key_creates_dynamo_document_if_enabled(  # type: ignore[no-untyped-def]
     dynamo_enabled_project_environment_one: Environment,
     mocker: MockerFixture,
     flagsmith_environment_api_key_table: "Table",
@@ -832,7 +832,7 @@ def test_saving_environment_api_key_creates_dynamo_document_if_enabled(
     assert response["Item"]["key"] == api_key.key
 
 
-def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(
+def test_deleting_environment_api_key_deletes_dynamo_document_if_enabled(  # type: ignore[no-untyped-def]
     dynamo_enabled_project_environment_one: Environment,
     mocker: MockerFixture,
     flagsmith_environment_api_key_table: "Table",
@@ -893,7 +893,7 @@ def test_delete_api_key_not_called_when_deleting_environment_api_key_for_non_edg
     mocked_environment_api_key_wrapper.delete_api_key.assert_not_called()
 
 
-def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(
+def test_put_item_not_called_when_saving_environment_api_key_for_non_edge_project(  # type: ignore[no-untyped-def]
     environment, mocker
 ):
     # Given
@@ -915,7 +915,7 @@ def test_delete_environment_with_committed_change_request(
     django_user_model: typing.Type["Model"],
 ) -> None:
     # Given
-    user = django_user_model.objects.create(email="test@example.com")
+    user = django_user_model.objects.create(email="test@example.com")  # type: ignore[attr-defined]
     user.add_organisation(organisation, OrganisationRole.ADMIN)
     change_request.approve(user)
     change_request.commit(user)

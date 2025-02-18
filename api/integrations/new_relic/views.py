@@ -4,5 +4,5 @@ from integrations.new_relic.serializers import NewRelicConfigurationSerializer
 
 
 class NewRelicConfigurationViewSet(ProjectIntegrationBaseViewSet):
-    serializer_class = NewRelicConfigurationSerializer
-    model_class = NewRelicConfiguration
+    serializer_class = NewRelicConfigurationSerializer  # type: ignore[assignment]
+    model_class = NewRelicConfiguration  # type: ignore[assignment]

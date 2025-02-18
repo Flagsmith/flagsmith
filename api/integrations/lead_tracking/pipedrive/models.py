@@ -15,11 +15,11 @@ from integrations.lead_tracking.pipedrive.schemas import (
 
 
 class BasePipedriveModel:
-    schema: Schema = None
+    schema: Schema = None  # type: ignore[assignment]
 
     @classmethod
     def from_response_data(
-        cls, data: dict, schema: Schema = None
+        cls, data: dict, schema: Schema = None  # type: ignore[type-arg,assignment]
     ) -> "BasePipedriveModel":
         schema = schema or cls.schema
         return cls(**schema.load(data))
@@ -40,15 +40,15 @@ class PipedriveLead(BasePipedriveModel):
     def __init__(
         self,
         title: str,
-        id: str = None,
-        owner_id: int = None,
-        label_ids: typing.List[str] = None,
-        person_id: int = None,
-        organization_id: int = None,
-        value: PipedriveValue = None,
-        expected_close_date: datetime.date = None,
-        visible_to: int = None,
-        was_seen: bool = None,
+        id: str = None,  # type: ignore[assignment]
+        owner_id: int = None,  # type: ignore[assignment]
+        label_ids: typing.List[str] = None,  # type: ignore[assignment]
+        person_id: int = None,  # type: ignore[assignment]
+        organization_id: int = None,  # type: ignore[assignment]
+        value: PipedriveValue = None,  # type: ignore[assignment]
+        expected_close_date: datetime.date = None,  # type: ignore[assignment]
+        visible_to: int = None,  # type: ignore[assignment]
+        was_seen: bool = None,  # type: ignore[assignment]
     ):
         super().__init__()
         self.title = title
@@ -69,8 +69,8 @@ class PipedriveOrganization(BasePipedriveModel):
     def __init__(
         self,
         name: str,
-        id: int = None,
-        organization_fields: typing.Dict[str, typing.Any] = None,
+        id: int = None,  # type: ignore[assignment]
+        organization_fields: typing.Dict[str, typing.Any] = None,  # type: ignore[assignment]
     ):
         super().__init__()
         self.name = name
@@ -96,9 +96,9 @@ class BasePipedriveCustomField(BasePipedriveModel):
         self,
         name: str,
         field_type: str = "varchar",
-        key: str = None,
+        key: str = None,  # type: ignore[assignment]
         add_visible_flag: bool = True,
-        id: int = None,
+        id: int = None,  # type: ignore[assignment]
     ):
         super().__init__()
         self.name = name
@@ -122,7 +122,7 @@ class PipedrivePerson(BasePipedriveModel):
     def __init__(
         self,
         name: str,
-        id: int = None,
+        id: int = None,  # type: ignore[assignment]
         marketing_status: str = MarketingStatus.NO_CONSENT,
     ):
         self.name = name

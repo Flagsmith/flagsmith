@@ -5,7 +5,7 @@ from importlib import import_module
 from django.db import models
 from django.db.models import Model, Q
 from django.utils import timezone
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     BEFORE_CREATE,
     LifecycleModel,
@@ -23,49 +23,49 @@ if typing.TYPE_CHECKING:
 RELATED_OBJECT_TYPES = ((tag.name, tag.value) for tag in RelatedObjectType)
 
 
-class AuditLog(LifecycleModel):
-    created_date = models.DateTimeField("DateCreated")
+class AuditLog(LifecycleModel):  # type: ignore[misc]
+    created_date = models.DateTimeField("DateCreated")  # type: ignore[var-annotated]
 
-    project = models.ForeignKey(
+    project = models.ForeignKey(  # type: ignore[var-annotated]
         Project, related_name="audit_logs", null=True, on_delete=models.DO_NOTHING
     )
-    environment = models.ForeignKey(
+    environment = models.ForeignKey(  # type: ignore[var-annotated]
         "environments.Environment",
         related_name="audit_logs",
         null=True,
         on_delete=models.DO_NOTHING,
     )
 
-    log = models.TextField()
-    author = models.ForeignKey(
+    log = models.TextField()  # type: ignore[var-annotated]
+    author = models.ForeignKey(  # type: ignore[var-annotated]
         "users.FFAdminUser",
         related_name="audit_logs",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
-    master_api_key = models.ForeignKey(
+    master_api_key = models.ForeignKey(  # type: ignore[var-annotated]
         MasterAPIKey,
         related_name="audit_logs",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
-    related_object_id = models.IntegerField(null=True)
-    related_object_type = models.CharField(max_length=20, null=True)
-    related_object_uuid = models.CharField(max_length=36, null=True)
+    related_object_id = models.IntegerField(null=True)  # type: ignore[var-annotated]
+    related_object_type = models.CharField(max_length=20, null=True)  # type: ignore[var-annotated]
+    related_object_uuid = models.CharField(max_length=36, null=True)  # type: ignore[var-annotated]
 
-    skip_signals_and_hooks = models.CharField(
+    skip_signals_and_hooks = models.CharField(  # type: ignore[var-annotated]
         null=True,
         blank=True,
         help_text="comma separated list of signal/hooks functions/methods to skip",
         max_length=500,
         db_column="skip_signals",
     )
-    is_system_event = models.BooleanField(default=False)
+    is_system_event = models.BooleanField(default=False)  # type: ignore[var-annotated]
 
-    history_record_id = models.IntegerField(blank=True, null=True)
-    history_record_class_path = models.CharField(max_length=200, blank=True, null=True)
+    history_record_id = models.IntegerField(blank=True, null=True)  # type: ignore[var-annotated]
+    history_record_class_path = models.CharField(max_length=200, blank=True, null=True)  # type: ignore[var-annotated]
 
     class Meta:
         verbose_name_plural = "Audit Logs"
@@ -83,7 +83,7 @@ class AuditLog(LifecycleModel):
             "history_record",
         ):
             if hasattr(related_instance := getattr(self, relation), "organisation"):
-                return related_instance.organisation
+                return related_instance.organisation  # type: ignore[no-any-return]
         return None
 
     @property
@@ -103,10 +103,10 @@ class AuditLog(LifecycleModel):
             # There are still AuditLog records that will not have this detail
             # for example, audit log records which are created when segment
             # override priorities are changed.
-            return
+            return  # type: ignore[return-value]
 
         klass = self.get_history_record_model_class(self.history_record_class_path)
-        return klass.objects.filter(history_id=self.history_record_id).first()
+        return klass.objects.filter(history_id=self.history_record_id).first()  # type: ignore[attr-defined,no-any-return]  # noqa: E501
 
     @property
     def project_name(self) -> str:
@@ -126,19 +126,19 @@ class AuditLog(LifecycleModel):
     ) -> typing.Type[Model]:
         module_path, class_name = history_record_class_path.rsplit(".", maxsplit=1)
         module = import_module(module_path)
-        return getattr(module, class_name)
+        return getattr(module, class_name)  # type: ignore[no-any-return]
 
     @hook(BEFORE_CREATE)
-    def add_project(self):
+    def add_project(self):  # type: ignore[no-untyped-def]
         if self.environment and self.project is None:
             self.project = self.environment.project
 
-    @hook(BEFORE_CREATE)
+    @hook(BEFORE_CREATE)  # type: ignore[misc]
     def add_created_date(self) -> None:
         if not self.created_date:
             self.created_date = timezone.now()
 
-    @hook(
+    @hook(  # type: ignore[misc]
         AFTER_CREATE,
         priority=priority.HIGHEST_PRIORITY,
         when="environment_document_updated",

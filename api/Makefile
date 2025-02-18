@@ -45,7 +45,7 @@ lint:
 
 .PHONY: typecheck
 typecheck:
-	poetry run python scripts/typecheck.py $(opts)
+	poetry run mypy .
 
 .PHONY: docker-up
 docker-up:

@@ -25,10 +25,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, exclusive_start_key: str, **options: Any) -> None:
-        total_count = identity_wrapper.table.item_count
+        total_count = identity_wrapper.table.item_count  # type: ignore[union-attr]
         scanned_count = scanned_percentage = fixed_count = 0
 
-        log: structlog.BoundLogger = logger.bind(total_count=total_count)
+        log: structlog.BoundLogger = logger.bind(total_count=total_count)  # type: ignore[assignment]
 
         kwargs = {}
         if exclusive_start_key:
@@ -42,15 +42,15 @@ class Command(BaseCommand):
             if identity_traits_data := identity_document.get("identity_traits"):
                 blank_traits = (
                     trait_data
-                    for trait_data in identity_traits_data
-                    if "trait_value" not in trait_data
+                    for trait_data in identity_traits_data  # type: ignore[union-attr]
+                    if "trait_value" not in trait_data  # type: ignore[operator]
                 )
                 for trait_data in blank_traits:
                     should_write_identity_document = True
-                    trait_data["trait_value"] = ""
+                    trait_data["trait_value"] = ""  # type: ignore[call-overload,index]
 
             scanned_count += 1
-            scanned_percentage = scanned_count / total_count * 100
+            scanned_percentage = scanned_count / total_count * 100  # type: ignore[assignment]
 
             if should_write_identity_document:
                 identity_wrapper.put_item(identity_document)

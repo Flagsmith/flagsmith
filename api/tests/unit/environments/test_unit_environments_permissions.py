@@ -3,7 +3,7 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from permissions.models import ENVIRONMENT_PERMISSION_TYPE, PermissionModel
 
 
-def test_nested_environment_permissions_has_permission_false_if_no_env_key(
+def test_nested_environment_permissions_has_permission_false_if_no_env_key(  # type: ignore[no-untyped-def]
     rf, mocker, db
 ):
     # Given
@@ -13,13 +13,13 @@ def test_nested_environment_permissions_has_permission_false_if_no_env_key(
     view = mocker.MagicMock(action="retrieve", kwargs={})
 
     # When
-    result = permissions.has_permission(request, view)
+    result = permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
 
 
-def test_nested_environment_permissions_has_permission_true_if_action_in_map(
+def test_nested_environment_permissions_has_permission_true_if_action_in_map(  # type: ignore[no-untyped-def]
     rf, mocker, db, environment, django_user_model
 ):
     # Given
@@ -46,13 +46,13 @@ def test_nested_environment_permissions_has_permission_true_if_action_in_map(
     )
 
     # When
-    has_permission = permissions.has_permission(request, view)
+    has_permission = permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
     assert has_permission is True
 
 
-def test_nested_environment_permissions_has_permission_if_create_and_user_is_admin(
+def test_nested_environment_permissions_has_permission_if_create_and_user_is_admin(  # type: ignore[no-untyped-def]
     rf, mocker, db, environment, django_user_model
 ):
     # Given
@@ -70,13 +70,13 @@ def test_nested_environment_permissions_has_permission_if_create_and_user_is_adm
     )
 
     # When
-    has_permission = permissions.has_permission(request, view)
+    has_permission = permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
     assert has_permission is True
 
 
-def test_nested_environment_permissions_has_object_permission_true_if_action_in_map(
+def test_nested_environment_permissions_has_object_permission_true_if_action_in_map(  # type: ignore[no-untyped-def]
     rf, mocker, django_user_model, environment
 ):
     # Given
@@ -105,13 +105,13 @@ def test_nested_environment_permissions_has_object_permission_true_if_action_in_
     obj = mocker.MagicMock(environment=environment)
 
     # When
-    has_object_permission = permissions.has_object_permission(request, view, obj)
+    has_object_permission = permissions.has_object_permission(request, view, obj)  # type: ignore[no-untyped-call]
 
     # Then
     assert has_object_permission is True
 
 
-def test_nested_environment_permissions_has_object_permission_true_if_user_is_admin(
+def test_nested_environment_permissions_has_object_permission_true_if_user_is_admin(  # type: ignore[no-untyped-def]
     rf, mocker, django_user_model, environment
 ):
     # Given
@@ -131,7 +131,7 @@ def test_nested_environment_permissions_has_object_permission_true_if_user_is_ad
     obj = mocker.MagicMock(environment=environment)
 
     # When
-    has_object_permission = permissions.has_object_permission(request, view, obj)
+    has_object_permission = permissions.has_object_permission(request, view, obj)  # type: ignore[no-untyped-call]
 
     # Then
     assert has_object_permission is True

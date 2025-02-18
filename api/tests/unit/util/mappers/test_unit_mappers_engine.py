@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
-import pytz
+import pytz  # type: ignore[import-untyped]
 from django.utils import timezone
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
@@ -17,7 +17,7 @@ from flag_engine.features.models import (
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.models import (
+from flag_engine.identities.models import (  # type: ignore[attr-defined]
     IdentityFeaturesList,
     IdentityModel,
     TraitModel,
@@ -45,7 +45,7 @@ from users.models import FFAdminUser
 from util.mappers import engine
 
 if TYPE_CHECKING:
-    from environments.identities import Identity, Trait
+    from environments.identities import Identity, Trait  # type: ignore[attr-defined]
     from environments.models import EnvironmentAPIKey
     from features.models import Feature
     from projects.models import Project
@@ -76,7 +76,7 @@ def segment_multivariate_feature_state(
         multivariate_feature_option=multivariate_feature.multivariate_options.first(),
         percentage_allocation=100,
     )
-    return feature_state
+    return feature_state  # type: ignore[no-any-return]
 
 
 @pytest.fixture
@@ -90,7 +90,7 @@ def versioned_segment_feature_state(
     later_live_from = datetime.fromisoformat("2023-06-11T15:12:18")
     segment_featurestate.live_from = earlier_live_from
     segment_featurestate.save()
-    return FeatureState.objects.create(
+    return FeatureState.objects.create(  # type: ignore[no-any-return]
         feature_segment=feature_segment,
         feature=feature,
         environment=environment,
@@ -226,7 +226,7 @@ def test_map_feature_state_to_engine__return_expected(
         feature_segment=None,
         featurestate_uuid=feature_state.uuid,
         feature_state_value=None,
-        multivariate_feature_state_values=[],
+        multivariate_feature_state_values=[],  # type: ignore[arg-type]
     )
 
     # When
@@ -256,11 +256,11 @@ def test_map_feature_state_to_engine__feature_segment__return_expected(
         enabled=False,
         django_id=segment_multivariate_feature_state.id,
         feature_segment=FeatureSegmentModel(
-            priority=segment_multivariate_feature_state.feature_segment.priority,
+            priority=segment_multivariate_feature_state.feature_segment.priority,  # type: ignore[union-attr]
         ),
         featurestate_uuid=segment_multivariate_feature_state.uuid,
         feature_state_value="control",
-        multivariate_feature_state_values=[
+        multivariate_feature_state_values=[  # type: ignore[arg-type]
             MultivariateFeatureStateValueModel(
                 multivariate_feature_option=MultivariateFeatureOptionModel(
                     value=mv_fs_value.multivariate_feature_option.value,
@@ -344,7 +344,7 @@ def test_map_environment_to_engine__return_expected(
         ),
         featurestate_uuid=versioned_segment_feature_state.uuid,
         feature_state_value=None,
-        multivariate_feature_state_values=[],
+        multivariate_feature_state_values=[],  # type: ignore[arg-type]
     )
     expected_feature_state_model = FeatureStateModel(
         feature=expected_feature_model,
@@ -352,7 +352,7 @@ def test_map_environment_to_engine__return_expected(
         django_id=feature_state.id,
         featurestate_uuid=feature_state.uuid,
         feature_state_value=None,
-        multivariate_feature_state_values=[],
+        multivariate_feature_state_values=[],  # type: ignore[arg-type]
     )
     expected_project_model = ProjectModel(
         id=environment.project.id,
@@ -392,13 +392,13 @@ def test_map_environment_to_engine__return_expected(
         amplitude_config=None,
         dynatrace_config=None,
         heap_config=None,
-        mixpanel_config={
+        mixpanel_config={  # type: ignore[arg-type]
             "base_url": mixpanel_configuration.base_url,
             "api_key": mixpanel_configuration.api_key,
         },
         rudderstack_config=None,
         segment_config=None,  # note: segment configuration should not appear as it was deleted
-        webhook_config={
+        webhook_config={  # type: ignore[arg-type]
             "url": webhook_configuration.url,
             "secret": webhook_configuration.secret,
         },
@@ -473,7 +473,7 @@ def test_map_identity_to_engine__return_expected(
                     feature_segment=identity_featurestate.feature_segment,
                     featurestate_uuid=identity_featurestate.uuid,
                     feature_state_value=identity_featurestate.get_feature_state_value(),
-                    multivariate_feature_state_values=[],
+                    multivariate_feature_state_values=[],  # type: ignore[arg-type]
                 )
             ]
         ),
@@ -495,7 +495,7 @@ def test_map_identity_to_engine__return_expected(
     assert result == expected_result
 
 
-def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(
+def test_map_environment_to_engine__returns_correct_feature_state_for_different_versions(  # type: ignore[no-untyped-def]  # noqa: E501
     feature, environment
 ):
     # Given

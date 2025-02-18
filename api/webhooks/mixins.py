@@ -19,13 +19,13 @@ class TriggerSampleWebhookMixin:
         url_path="test",
         permission_classes=[IsAuthenticated, TriggerSampleWebhookPermission],
     )
-    def trigger_sample_webhook(self, request, **kwargs):
+    def trigger_sample_webhook(self, request, **kwargs):  # type: ignore[no-untyped-def]
         serializer = WebhookURLSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        webhook_model = get_webhook_model(self.webhook_type)
+        webhook_model = get_webhook_model(self.webhook_type)  # type: ignore[arg-type]
         webhook = webhook_model(url=serializer.validated_data["url"])
 
         with suppress(requests.exceptions.ConnectionError):
-            response = trigger_sample_webhook(webhook, self.webhook_type)
+            response = trigger_sample_webhook(webhook, self.webhook_type)  # type: ignore[arg-type]
             return Response({"message": f"Request returned {response.status_code}"})
         return Response({"message": "Request failed with connection error"})

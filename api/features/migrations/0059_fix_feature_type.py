@@ -4,7 +4,7 @@ from django.db import migrations
 from features.feature_types import MULTIVARIATE, STANDARD
 
 
-def fix_feature_type(apps, schema_editor):
+def fix_feature_type(apps, schema_editor):  # type: ignore[no-untyped-def]
     Feature = apps.get_model("features", "Feature")
     Feature.objects.filter(type=STANDARD, multivariate_options__isnull=False).update(
         type=MULTIVARIATE

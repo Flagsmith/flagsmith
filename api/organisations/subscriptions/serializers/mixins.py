@@ -23,20 +23,20 @@ class ReadOnlyIfNotValidPlanMixin:
                 return subscription
     """
 
-    invalid_plans: typing.Iterable[str] = None
-    field_names: typing.Iterable[str] = None
-    invalid_plans_regex: str = None
+    invalid_plans: typing.Iterable[str] = None  # type: ignore[assignment]
+    field_names: typing.Iterable[str] = None  # type: ignore[assignment]
+    invalid_plans_regex: str = None  # type: ignore[assignment]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
         self.invalid_plans_regex_matcher = (
             re.compile(self.invalid_plans_regex) if self.invalid_plans_regex else None
         )
 
-    def get_fields(self, *args, **kwargs):
-        fields = super().get_fields(*args, **kwargs)
+    def get_fields(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        fields = super().get_fields(*args, **kwargs)  # type: ignore[misc]
 
-        if not (self.context and "view" in self.context):
+        if not (self.context and "view" in self.context):  # type: ignore[attr-defined]
             raise RuntimeError("view must be in the context.")
 
         subscription = self.get_subscription()
@@ -48,7 +48,7 @@ class ReadOnlyIfNotValidPlanMixin:
                 or (self.invalid_plans and subscription.plan in self.invalid_plans)
                 or (
                     self.invalid_plans_regex
-                    and re.match(self.invalid_plans_regex_matcher, subscription.plan)
+                    and re.match(self.invalid_plans_regex_matcher, subscription.plan)  # type: ignore[arg-type]
                 )
             ):
                 fields[field_name].read_only = True

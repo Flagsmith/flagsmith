@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    def handle(self, *args: Any, **options: Any) -> str | None:
+    def handle(self, *args: Any, **options: Any) -> str | None:  # type: ignore[return]
         for project_id in Project.objects.filter(
             edge_v2_migration_status__in=(
                 EdgeV2MigrationStatus.NOT_STARTED,

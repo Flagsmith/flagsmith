@@ -14,7 +14,7 @@ from users.models import SignUpType
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_cannot_register_with_google_without_invite_if_registration_disabled(
+def test_cannot_register_with_google_without_invite_if_registration_disabled(  # type: ignore[no-untyped-def]
     mock_get_user_info, db
 ):
     # Given
@@ -33,7 +33,7 @@ def test_cannot_register_with_google_without_invite_if_registration_disabled(
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_cannot_register_with_github_without_invite_if_registration_disabled(
+def test_cannot_register_with_github_without_invite_if_registration_disabled(  # type: ignore[no-untyped-def]
     MockGithubUser, db
 ):
     # Given
@@ -54,7 +54,7 @@ def test_cannot_register_with_github_without_invite_if_registration_disabled(
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_register_with_google_with_invite_if_registration_disabled(
+def test_can_register_with_google_with_invite_if_registration_disabled(  # type: ignore[no-untyped-def]
     mock_get_user_info, db
 ):
     # Given
@@ -81,7 +81,7 @@ def test_can_register_with_google_with_invite_if_registration_disabled(
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
 @override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_register_with_github_with_invite_if_registration_disabled(
+def test_can_register_with_github_with_invite_if_registration_disabled(  # type: ignore[no-untyped-def]
     MockGithubUser, db
 ):
     # Given
@@ -110,7 +110,7 @@ def test_can_register_with_github_with_invite_if_registration_disabled(
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 @override_settings(ALLOW_OAUTH_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_login_with_google_if_registration_disabled(
+def test_can_login_with_google_if_registration_disabled(  # type: ignore[no-untyped-def]
     mock_get_user_info, db, django_user_model
 ):
     # Given
@@ -136,7 +136,7 @@ def test_can_login_with_google_if_registration_disabled(
 
 @mock.patch("custom_auth.oauth.serializers.GithubUser")
 @override_settings(ALLOW_OAUTH_REGISTRATION_WITHOUT_INVITE=False)
-def test_can_login_with_github_if_registration_disabled(
+def test_can_login_with_github_if_registration_disabled(  # type: ignore[no-untyped-def]
     MockGithubUser, db, django_user_model
 ):
     # Given
@@ -173,7 +173,7 @@ def test_login_with_google_updates_existing_user_case_insensitive(
     email_upper = email_lower.upper()
     google_user_id = "abc123"
 
-    django_user_model.objects.create(email=email_lower)
+    django_user_model.objects.create(email=email_lower)  # type: ignore[attr-defined]
 
     mocker.patch(
         "custom_auth.oauth.serializers.get_user_info",
@@ -193,7 +193,7 @@ def test_login_with_google_updates_existing_user_case_insensitive(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    qs = django_user_model.objects.filter(email__iexact=email_lower)
+    qs = django_user_model.objects.filter(email__iexact=email_lower)  # type: ignore[attr-defined]
     assert qs.count() == 1
 
     user = qs.first()
@@ -212,7 +212,7 @@ def test_login_with_github_updates_existing_user_case_insensitive(
     email_upper = email_lower.upper()
     github_user_id = "abc123"
 
-    django_user_model.objects.create(email=email_lower)
+    django_user_model.objects.create(email=email_lower)  # type: ignore[attr-defined]
 
     mock_github_user = mock.MagicMock()
     mocker.patch(
@@ -233,7 +233,7 @@ def test_login_with_github_updates_existing_user_case_insensitive(
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    qs = django_user_model.objects.filter(email__iexact=email_lower)
+    qs = django_user_model.objects.filter(email__iexact=email_lower)  # type: ignore[attr-defined]
     assert qs.count() == 1
 
     user = qs.first()
@@ -256,10 +256,10 @@ def test_user_with_duplicate_accounts_authenticates_as_the_correct_oauth_user(
     email_lower = "test@example.com"
     email_upper = email_lower.upper()
 
-    github_user = django_user_model.objects.create(
+    github_user = django_user_model.objects.create(  # type: ignore[attr-defined]
         email=email_lower, github_user_id="abc123"
     )
-    google_user = django_user_model.objects.create(
+    google_user = django_user_model.objects.create(  # type: ignore[attr-defined]
         email=email_upper, google_user_id="abc123"
     )
 

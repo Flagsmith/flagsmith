@@ -1,11 +1,11 @@
 from django.conf import settings
 from django.contrib import admin
-from simple_history.admin import SimpleHistoryAdmin
+from simple_history.admin import SimpleHistoryAdmin  # type: ignore[import-untyped]
 
 from .models import Trait
 
 
-class TraitAdmin(SimpleHistoryAdmin):
+class TraitAdmin(SimpleHistoryAdmin):  # type: ignore[misc]
     date_hierarchy = "created_date"
     list_display = (
         "__str__",

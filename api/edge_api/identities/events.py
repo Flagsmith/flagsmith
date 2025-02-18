@@ -8,7 +8,7 @@ if settings.IDENTITY_MIGRATION_EVENT_BUS_NAME:
     events_client = boto3.client("events")
 
 
-def send_migration_event(project_id: int):
+def send_migration_event(project_id: int):  # type: ignore[no-untyped-def]
     event = {
         "EventBusName": settings.IDENTITY_MIGRATION_EVENT_BUS_NAME,
         "Source": "flagsmith.api.migrate",
@@ -16,4 +16,4 @@ def send_migration_event(project_id: int):
         "Detail": json.dumps({"project_id": project_id}),
     }
 
-    events_client.put_events(Entries=[event])
+    events_client.put_events(Entries=[event])  # type: ignore[union-attr]

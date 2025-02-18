@@ -38,7 +38,7 @@ def create_feature_with_api(
         data=json.dumps(create_standard_feature_data),
         content_type="application/json",
     )
-    return create_standard_feature_response.json()["id"]
+    return create_standard_feature_response.json()["id"]  # type: ignore[no-any-return]
 
 
 def create_mv_option_with_api(
@@ -63,10 +63,10 @@ def create_mv_option_with_api(
         data=json.dumps(data),
         content_type="application/json",
     )
-    return response.json()["id"]
+    return response.json()["id"]  # type: ignore[no-any-return]
 
 
-def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) -> dict:
+def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) -> dict:  # type: ignore[type-arg]
     """
     Returns feature states using the provided test client.
 
@@ -79,7 +79,7 @@ def get_env_feature_states_list_with_api(client: APIClient, query_params: dict) 
     return response
 
 
-def get_feature_segement_list_with_api(client: APIClient, query_params: dict) -> dict:
+def get_feature_segement_list_with_api(client: APIClient, query_params: dict) -> dict:  # type: ignore[type-arg]
     """
     Returns feature segments using the provided test client.
 
@@ -92,7 +92,7 @@ def get_feature_segement_list_with_api(client: APIClient, query_params: dict) ->
     return get_json_response(client, url, query_params)
 
 
-def get_json_response(client: APIClient, url: str, query_params: dict) -> dict:
+def get_json_response(client: APIClient, url: str, query_params: dict) -> dict:  # type: ignore[type-arg]
     if query_params:
         url = f"{url}?{urlencode(query_params)}"
-    return client.get(url).json()
+    return client.get(url).json()  # type: ignore[no-any-return]

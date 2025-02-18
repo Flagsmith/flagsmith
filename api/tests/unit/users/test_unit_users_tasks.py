@@ -6,7 +6,7 @@ from users.tasks import (
 )
 
 
-def test_create_pipedrive_lead(mocker, admin_user):
+def test_create_pipedrive_lead(mocker, admin_user):  # type: ignore[no-untyped-def]
     # Given
     mock_lead_tracker = mocker.MagicMock()
     mocker.patch("users.tasks.PipedriveLeadTracker", return_value=mock_lead_tracker)
@@ -18,7 +18,7 @@ def test_create_pipedrive_lead(mocker, admin_user):
     mock_lead_tracker.create_lead.assert_called_once_with(admin_user)
 
 
-def test_send_email_changed_notification():
+def test_send_email_changed_notification():  # type: ignore[no-untyped-def]
     # When
     send_email_changed_notification_email(
         first_name="first_name",

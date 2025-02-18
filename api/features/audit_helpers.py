@@ -22,10 +22,10 @@ def get_identity_override_created_audit_message(feature_state: "FeatureState") -
     )
     args = (
         feature_state.feature.name,
-        feature_state.identity.identifier,
+        feature_state.identity.identifier,  # type: ignore[union-attr]
     )
     if feature_state.is_scheduled:
-        args = (feature_state.live_from.strftime(DATETIME_FORMAT), *args)
+        args = (feature_state.live_from.strftime(DATETIME_FORMAT), *args)  # type: ignore[assignment,union-attr]
     return base_message % args
 
 
@@ -35,9 +35,9 @@ def get_segment_override_created_audit_message(feature_state: "FeatureState") ->
         if feature_state.is_scheduled
         else SEGMENT_FEATURE_STATE_UPDATED_MESSAGE
     )
-    args = (feature_state.feature.name, feature_state.feature_segment.segment.name)
+    args = (feature_state.feature.name, feature_state.feature_segment.segment.name)  # type: ignore[union-attr]
     if feature_state.is_scheduled:
-        args = (feature_state.live_from.strftime(DATETIME_FORMAT), *args)
+        args = (feature_state.live_from.strftime(DATETIME_FORMAT), *args)  # type: ignore[assignment,union-attr]
     return base_message % args
 
 
@@ -51,5 +51,5 @@ def get_environment_feature_state_created_audit_message(
     )
     args = (feature_state.feature.name,)
     if feature_state.is_scheduled:
-        args = (feature_state.live_from.strftime(DATETIME_FORMAT), *args)
+        args = (feature_state.live_from.strftime(DATETIME_FORMAT), *args)  # type: ignore[assignment,union-attr]
     return base_message % args

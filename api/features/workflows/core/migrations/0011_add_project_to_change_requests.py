@@ -4,7 +4,7 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def set_project_for_existing_change_requests(apps, schema_model):
+def set_project_for_existing_change_requests(apps, schema_model):  # type: ignore[no-untyped-def]
     ChangeRequest = apps.get_model("workflows_core", "ChangeRequest")
 
     change_requests = []

@@ -107,7 +107,7 @@ def test_get_user_name_and_id_with_github_oauth(mock_requests: mock.MagicMock) -
         client_id=client_id,
         client_secret=client_secret,
     )
-    user_name_and_id = github_user._get_user_name_and_id()
+    user_name_and_id = github_user._get_user_name_and_id()  # type: ignore[no-untyped-call]
 
     # Then
     assert user_name_and_id == {
@@ -152,7 +152,7 @@ def test_get_primary_email_with_github_oauth(mock_requests: mock.MagicMock) -> N
         client_id=client_id,
         client_secret=client_secret,
     )
-    primary_email = github_user._get_primary_email()
+    primary_email = github_user._get_primary_email()  # type: ignore[no-untyped-call]
 
     # Then
     assert primary_email == verified_emails[3]["email"]

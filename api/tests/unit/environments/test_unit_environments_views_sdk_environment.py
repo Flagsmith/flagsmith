@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from features.feature_types import MULTIVARIATE
-from features.models import (
+from features.models import (  # type: ignore[attr-defined]
     STRING,
     Feature,
     FeatureSegment,

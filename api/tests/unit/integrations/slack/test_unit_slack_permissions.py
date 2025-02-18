@@ -6,7 +6,7 @@ from integrations.slack.permissions import OauthInitPermission
 mock_view = mock.MagicMock()
 
 
-def test_oauth_init_permission_with_non_environment_admin_user(
+def test_oauth_init_permission_with_non_environment_admin_user(  # type: ignore[no-untyped-def]
     environment, django_user_model, rf
 ):
     # Given
@@ -18,10 +18,10 @@ def test_oauth_init_permission_with_non_environment_admin_user(
     # When
     oauth_init_permission = OauthInitPermission()
     # Then
-    assert oauth_init_permission.has_permission(mock_request, mock_view) is False
+    assert oauth_init_permission.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_oauth_init_permission_with_environment_admin_user(
+def test_oauth_init_permission_with_environment_admin_user(  # type: ignore[no-untyped-def]
     environment, django_user_model, rf
 ):
     # Given
@@ -35,4 +35,4 @@ def test_oauth_init_permission_with_environment_admin_user(
     # When
     oauth_init_permission = OauthInitPermission()
     # Then
-    assert oauth_init_permission.has_permission(mock_request, mock_view) is True
+    assert oauth_init_permission.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]

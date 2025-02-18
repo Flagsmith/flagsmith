@@ -5,8 +5,8 @@ import typing
 from core.models import UUIDNaturalKeyManagerMixin
 from django.db.models import Q, QuerySet
 from django.utils import timezone
-from ordered_model.models import OrderedModelManager
-from softdelete.models import SoftDeleteManager
+from ordered_model.models import OrderedModelManager  # type: ignore[import-untyped]
+from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
 
 from features.versioning.models import EnvironmentFeatureVersion
 
@@ -15,17 +15,17 @@ if typing.TYPE_CHECKING:
     from features.models import FeatureState
 
 
-class FeatureSegmentManager(UUIDNaturalKeyManagerMixin, OrderedModelManager):
+class FeatureSegmentManager(UUIDNaturalKeyManagerMixin, OrderedModelManager):  # type: ignore[misc]
     pass
 
 
-class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
     pass
 
 
-class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
-    def get_live_feature_states(
-        self, environment: "Environment", additional_filters: Q = None, **kwargs
+class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
+    def get_live_feature_states(  # type: ignore[no-untyped-def]
+        self, environment: "Environment", additional_filters: Q = None, **kwargs  # type: ignore[assignment]
     ) -> QuerySet["FeatureState"]:
         # TODO: replace additional_filters with just using kwargs in calling locations
 
@@ -57,8 +57,8 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
         if additional_filters:
             qs_filter &= additional_filters
 
-        return self.filter(qs_filter, **kwargs)
+        return self.filter(qs_filter, **kwargs)  # type: ignore[no-any-return]
 
 
-class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class FeatureStateValueManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
     pass

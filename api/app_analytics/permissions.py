@@ -5,7 +5,7 @@ from organisations.models import Organisation
 
 
 class UsageDataPermission(BasePermission):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         organisation_pk = view.kwargs.get("organisation_pk")
         if organisation_pk and request.user.is_organisation_admin(
             Organisation.objects.get(pk=organisation_pk)
@@ -16,6 +16,6 @@ class UsageDataPermission(BasePermission):
             "User does not have sufficient privileges to perform this action"
         )
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         # Object level permissions are not required for the usage data API
         raise NotImplementedError()

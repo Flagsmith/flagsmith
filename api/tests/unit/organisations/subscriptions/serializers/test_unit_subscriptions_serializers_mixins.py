@@ -22,7 +22,7 @@ def test_read_only_if_not_valid_plan_mixin_sets_read_only_if_plan_not_valid(
     # Given
     mock_view = MagicMock()
 
-    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):
+    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):  # type: ignore[type-arg]
         field_names = ("foo",)
 
         invalid_plans = invalid_plans_
@@ -33,7 +33,7 @@ def test_read_only_if_not_valid_plan_mixin_sets_read_only_if_plan_not_valid(
         def get_subscription(self) -> Subscription:
             return MagicMock(plan=plan_id)
 
-    serializer = MySerializer(data={"foo": "bar"}, context={"view": mock_view})
+    serializer = MySerializer(data={"foo": "bar"}, context={"view": mock_view})  # type: ignore[no-untyped-call]
 
     # When
     serializer.is_valid()
@@ -43,7 +43,7 @@ def test_read_only_if_not_valid_plan_mixin_sets_read_only_if_plan_not_valid(
     assert serializer.fields["foo"].read_only is True
 
 
-def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid():
+def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid():  # type: ignore[no-untyped-def]
     # Given
     valid_plan_id = "plan-id"
     invalid_plan_id = "invalid-plan-id"
@@ -51,7 +51,7 @@ def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid(
 
     mock_view = MagicMock()
 
-    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):
+    class MySerializer(ReadOnlyIfNotValidPlanMixin, serializers.Serializer):  # type: ignore[type-arg]
         invalid_plans = (invalid_plan_id,)
         field_names = ("foo",)
         invalid_plans_regex = invalid_plans_regex_
@@ -61,7 +61,7 @@ def test_read_only_if_not_valid_plan_mixin_does_not_set_read_only_if_plan_valid(
         def get_subscription(self) -> Subscription:
             return MagicMock(plan=valid_plan_id)
 
-    serializer = MySerializer(data={"foo": "bar"}, context={"view": mock_view})
+    serializer = MySerializer(data={"foo": "bar"}, context={"view": mock_view})  # type: ignore[no-untyped-call]
 
     # When
     serializer.is_valid()

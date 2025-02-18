@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -16,7 +16,7 @@ from tests.integration.helpers import (
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_clone_environment_clones_feature_states_with_value(
+def test_clone_environment_clones_feature_states_with_value(  # type: ignore[no-untyped-def]
     client: APIClient,
     project: int,
     environment: int,
@@ -86,7 +86,7 @@ def test_clone_environment_clones_feature_states_with_value(
     )
 
 
-def test_clone_environment_creates_admin_permission_with_the_current_user(
+def test_clone_environment_creates_admin_permission_with_the_current_user(  # type: ignore[no-untyped-def]
     admin_user, admin_client, environment, environment_api_key
 ):
     # Firstly, let's create the clone of the environment
@@ -106,7 +106,7 @@ def test_clone_environment_creates_admin_permission_with_the_current_user(
     assert response.json()[0]["admin"] is True
 
 
-def test_env_clone_creates_feature_segment(
+def test_env_clone_creates_feature_segment(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment: int,
     environment_api_key: str,
@@ -134,7 +134,7 @@ def test_env_clone_creates_feature_segment(
     assert json_response["results"][0]["id"] != feature_segment
 
 
-def test_env_clone_clones_segments_overrides(
+def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key, feature, feature_segment, segment
 ):
     # Firstly, let's override the segment in source environment

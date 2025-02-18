@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 
 
@@ -10,7 +10,7 @@ from rest_framework import status
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_create_feature_state_for_identity_override(
+def test_create_feature_state_for_identity_override(  # type: ignore[no-untyped-def]
     client, environment, identity, feature
 ):
     # Given
@@ -36,7 +36,7 @@ def test_create_feature_state_for_identity_override(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_create_feature_state_for_identity_with_identifier(
+def test_create_feature_state_for_identity_with_identifier(  # type: ignore[no-untyped-def]
     client, environment, identity, feature, identity_identifier
 ):
     # Given
@@ -62,7 +62,7 @@ def test_create_feature_state_for_identity_with_identifier(
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_list_feature_states_for_environment(client, environment, feature):
+def test_list_feature_states_for_environment(client, environment, feature):  # type: ignore[no-untyped-def]
     # Given
     base_url = reverse("api-v1:features:featurestates-list")
     url = f"{base_url}?environment={environment}"
@@ -82,7 +82,7 @@ def test_list_feature_states_for_environment(client, environment, feature):
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state(client, environment, feature_state, feature, identity):
+def test_update_feature_state(client, environment, feature_state, feature, identity):  # type: ignore[no-untyped-def]
     # Given
 
     url = reverse("api-v1:features:featurestates-detail", args=[feature_state])
@@ -107,7 +107,7 @@ def test_update_feature_state(client, environment, feature_state, feature, ident
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state_for_identity_with_identifier(
+def test_update_feature_state_for_identity_with_identifier(  # type: ignore[no-untyped-def]
     client, environment, identity_featurestate, feature, identity, identity_identifier
 ):
     # Given

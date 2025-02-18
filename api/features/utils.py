@@ -8,15 +8,15 @@ def get_value_type(value: str) -> str:
 
     e.g. "12" -> "int", "12.34" -> "float", etc.
     """
-    if is_integer(value):
+    if is_integer(value):  # type: ignore[no-untyped-call]
         return INTEGER
-    elif is_boolean(value):
+    elif is_boolean(value):  # type: ignore[no-untyped-call]
         return BOOLEAN
     else:
         return STRING
 
 
-def is_integer(value):
+def is_integer(value):  # type: ignore[no-untyped-def]
     try:
         int(value)
         return True
@@ -24,18 +24,18 @@ def is_integer(value):
         return False
 
 
-def is_boolean(value):
+def is_boolean(value):  # type: ignore[no-untyped-def]
     return value in ("true", "True", "false", "False")
 
 
-def get_integer_from_string(value):
+def get_integer_from_string(value):  # type: ignore[no-untyped-def]
     try:
         return int(value)
     except ValueError:
         return 0
 
 
-def get_boolean_from_string(value):
+def get_boolean_from_string(value):  # type: ignore[no-untyped-def]
     if value in ("false", "False"):
         return False
     else:

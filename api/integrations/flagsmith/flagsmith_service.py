@@ -24,7 +24,7 @@ KEEP_ORGANISATION_FIELDS = (
 )
 
 
-def update_environment_json(environment_key: str = None, api_url: str = None) -> None:
+def update_environment_json(environment_key: str = None, api_url: str = None) -> None:  # type: ignore[assignment]
     environment_key = environment_key or settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY
     api_url = api_url or settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL
 
@@ -42,7 +42,7 @@ def update_environment_json(environment_key: str = None, api_url: str = None) ->
         defaults.write(json.dumps(environment_json, indent=2, sort_keys=True))
 
 
-def _get_masked_environment_data(environment_document: dict) -> dict:
+def _get_masked_environment_data(environment_document: dict) -> dict:  # type: ignore[type-arg]
     """
     Return a cut down / masked version of the environment
     document which can be committed to VCS.

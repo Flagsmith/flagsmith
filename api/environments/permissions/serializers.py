@@ -14,7 +14,7 @@ class CreateUpdateUserEnvironmentPermissionSerializer(
 ):
     class Meta(CreateUpdateUserPermissionSerializerABC.Meta):
         model = UserEnvironmentPermission
-        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ("user",)
+        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ("user",)  # type: ignore[assignment]
 
 
 class ListUserEnvironmentPermissionSerializer(
@@ -28,7 +28,7 @@ class CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer(
 ):
     class Meta(CreateUpdateUserPermissionSerializerABC.Meta):
         model = UserPermissionGroupEnvironmentPermission
-        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ("group",)
+        fields = CreateUpdateUserPermissionSerializerABC.Meta.fields + ("group",)  # type: ignore[assignment]
 
 
 class ListUserPermissionGroupEnvironmentPermissionSerializer(

@@ -28,15 +28,15 @@ class EdgeIdentity:
 
     def __init__(self, engine_identity_model: IdentityModel):
         self._engine_identity_model = engine_identity_model
-        self._reset_initial_state()
+        self._reset_initial_state()  # type: ignore[no-untyped-call]
 
     @classmethod
-    def from_identity_document(cls, identity_document: dict) -> "EdgeIdentity":
+    def from_identity_document(cls, identity_document: dict) -> "EdgeIdentity":  # type: ignore[type-arg]
         return EdgeIdentity(IdentityModel.model_validate(identity_document))
 
     @property
     def django_id(self) -> int:
-        return self._engine_identity_model.django_id
+        return self._engine_identity_model.django_id  # type: ignore[return-value]
 
     @property
     def environment_api_key(self) -> str:
@@ -90,7 +90,7 @@ class EdgeIdentity:
         )
 
         feature_states: dict[str, FeatureState | FeatureStateModel] = (
-            get_environment_flags_dict(
+            get_environment_flags_dict(  # type: ignore[assignment]
                 environment=django_environment,
                 additional_filters=additional_filters,
                 additional_select_related_args=[
@@ -111,7 +111,7 @@ class EdgeIdentity:
                 # we key off the feature name instead of the default
                 # (feature_id, segment_id, identity_id). This will give us only e.g.
                 # the highest priority matching segment override for a given feature.
-                key_function=lambda fs: fs.feature.name,
+                key_function=lambda fs: fs.feature.name,  # type: ignore[arg-type,return-value]
             )
         )
 
@@ -130,7 +130,7 @@ class EdgeIdentity:
     def get_feature_state_by_feature_name_or_id(
         self, feature: typing.Union[str, int]
     ) -> typing.Optional[FeatureStateModel]:
-        def match_feature_state(fs):
+        def match_feature_state(fs):  # type: ignore[no-untyped-def]
             if isinstance(feature, int):
                 return fs.feature.id == feature
             return fs.feature.name == feature
@@ -150,7 +150,7 @@ class EdgeIdentity:
     ) -> typing.Optional[FeatureStateModel]:
         return next(
             filter(
-                lambda fs: str(fs.featurestate_uuid) == featurestate_uuid,
+                lambda fs: str(fs.featurestate_uuid) == featurestate_uuid,  # type: ignore[arg-type,union-attr]
                 self._engine_identity_model.identity_features,
             ),
             None,
@@ -165,16 +165,16 @@ class EdgeIdentity:
         with suppress(ValueError):  # ignore if feature state didn't exist
             self._engine_identity_model.identity_features.remove(feature_state)
 
-    def save(self, user: FFAdminUser | APIKeyUser = None):
+    def save(self, user: FFAdminUser | APIKeyUser = None):  # type: ignore[no-untyped-def,assignment]
         self.dynamo_wrapper.put_item(self.to_document())
         changeset = self._get_changes()
         self._update_feature_overrides(
             changeset=changeset,
             user=user,
         )
-        self._reset_initial_state()
+        self._reset_initial_state()  # type: ignore[no-untyped-call]
 
-    def delete(self, user: FFAdminUser | APIKeyUser = None) -> None:
+    def delete(self, user: FFAdminUser | APIKeyUser = None) -> None:  # type: ignore[assignment]
         self.dynamo_wrapper.delete_item(self._engine_identity_model.composite_key)
         self._engine_identity_model.identity_features.clear()
         changeset = self._get_changes()
@@ -182,7 +182,7 @@ class EdgeIdentity:
             changeset=changeset,
             user=user,
         )
-        self._reset_initial_state()
+        self._reset_initial_state()  # type: ignore[no-untyped-call]
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
         identity_feature_names = {
@@ -192,7 +192,7 @@ class EdgeIdentity:
             self._engine_identity_model.prune_features(list(valid_feature_names))
             sync_identity_document_features.delay(args=(str(self.identity_uuid),))
 
-    def to_document(self) -> dict:
+    def to_document(self) -> dict:  # type: ignore[type-arg]
         return map_engine_identity_to_identity_document(self._engine_identity_model)
 
     def _update_feature_overrides(
@@ -204,7 +204,7 @@ class EdgeIdentity:
                 "environment_api_key": self.environment_api_key,
                 "identifier": self.identifier,
                 "user_id": (
-                    user.id
+                    user.id  # type: ignore[union-attr]
                     if not getattr(user, "is_master_api_key_user", False)
                     else None
                 ),
@@ -226,7 +226,7 @@ class EdgeIdentity:
 
     def _get_changes(self) -> IdentityChangeset:
         previous_instance = self._initial_state
-        changes = {}
+        changes = {}  # type: ignore[var-annotated]
         feature_changes = changes.setdefault("feature_overrides", {})
         previous_feature_overrides = {
             fs.featurestate_uuid: fs for fs in previous_instance.feature_overrides
@@ -263,9 +263,9 @@ class EdgeIdentity:
                     new=previous_fs,
                 )
 
-        return changes
+        return changes  # type: ignore[return-value]
 
-    def _reset_initial_state(self):
+    def _reset_initial_state(self):  # type: ignore[no-untyped-def]
         self._initial_state = copy.deepcopy(self)
 
     def clone_flag_states_from(self, source_identity: "EdgeIdentity") -> None:

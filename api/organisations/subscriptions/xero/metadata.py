@@ -3,4 +3,4 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 
 class XeroSubscriptionMetadata(BaseSubscriptionMetadata):
-    payment_source = XERO
+    payment_source = XERO  # type: ignore[assignment]

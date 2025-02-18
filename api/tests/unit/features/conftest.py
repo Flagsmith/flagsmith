@@ -4,7 +4,7 @@ from features.models import FeatureState
 
 
 @pytest.fixture()
-def feature_state_version_generator(environment, feature, request):
+def feature_state_version_generator(environment, feature, request):  # type: ignore[no-untyped-def]
     version_1 = request.param[0]
     version_1_live_from = request.param[1]
     version_2 = request.param[2]

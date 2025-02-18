@@ -12,7 +12,7 @@ from integrations.webhook.webhook import WebhookWrapper
 
 class IntegrationConfig(TypedDict):
     relation_name: str
-    wrapper: Type[AbstractBaseIdentityIntegrationWrapper]
+    wrapper: Type[AbstractBaseIdentityIntegrationWrapper]  # type: ignore[type-arg]
 
 
 IDENTITY_INTEGRATIONS: list[IntegrationConfig] = [
@@ -36,12 +36,12 @@ assert set(IDENTITY_INTEGRATIONS_RELATION_NAMES) == (
 )
 
 
-def identify_integrations(identity, all_feature_states, trait_models=None):
+def identify_integrations(identity, all_feature_states, trait_models=None):  # type: ignore[no-untyped-def]
     for integration in IDENTITY_INTEGRATIONS:
-        config = getattr(identity.environment, integration.get("relation_name"), None)
+        config = getattr(identity.environment, integration.get("relation_name"), None)  # type: ignore[arg-type]
         if config and not config.deleted:
             wrapper = integration.get("wrapper")
-            wrapper_instance = wrapper(config)
+            wrapper_instance = wrapper(config)  # type: ignore[call-arg,misc]
             user_data = wrapper_instance.generate_user_data(
                 identity=identity,
                 feature_states=all_feature_states,

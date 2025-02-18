@@ -23,7 +23,7 @@ class GrafanaWrapper(AbstractBaseEventIntegrationWrapper):
 
     @staticmethod
     def generate_event_data(audit_log_record: AuditLog) -> dict[str, Any]:
-        return map_audit_log_record_to_grafana_annotation(audit_log_record)
+        return map_audit_log_record_to_grafana_annotation(audit_log_record)  # type: ignore[return-value]
 
     def _headers(self) -> dict[str, str]:
         return {

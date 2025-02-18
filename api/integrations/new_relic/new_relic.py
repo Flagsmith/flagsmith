@@ -18,7 +18,7 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
         self.app_id = app_id
         self.url = f"{self.base_url}{EVENTS_API_URI}{self.app_id}/deployments.json"
 
-    def _track_event(self, event: dict) -> None:
+    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         response = requests.post(
             self.url, headers=self._headers(), data=json.dumps(event)
         )
@@ -26,11 +26,11 @@ class NewRelicWrapper(AbstractBaseEventIntegrationWrapper):
             "Sent event to NewRelic. Response code was %s" % response.status_code
         )
 
-    def _headers(self) -> dict:
+    def _headers(self) -> dict:  # type: ignore[type-arg]
         return {"Content-Type": "application/json", "X-Api-Key": self.api_key}
 
     @staticmethod
-    def generate_event_data(audit_log_record: AuditLog) -> dict:
+    def generate_event_data(audit_log_record: AuditLog) -> dict:  # type: ignore[type-arg]
         log = audit_log_record.log
         environment_name = audit_log_record.environment_name
         email = audit_log_record.author_identifier

@@ -8,7 +8,7 @@ USER_INFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&"
 NON_200_ERROR_MESSAGE = "Google returned {} status code when getting an access token."
 
 
-def get_user_info(access_token):
+def get_user_info(access_token):  # type: ignore[no-untyped-def]
     try:
         headers = {"Authorization": f"Bearer {access_token}"}
         response = requests.get(USER_INFO_URL, headers=headers)

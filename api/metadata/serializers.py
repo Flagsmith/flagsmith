@@ -12,29 +12,29 @@ from .models import (
 )
 
 
-class MetadataFieldQuerySerializer(serializers.Serializer):
+class MetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     organisation = serializers.IntegerField(
         required=True, help_text="Organisation ID to filter by"
     )
 
 
-class SupportedRequiredForModelQuerySerializer(serializers.Serializer):
+class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     model_name = serializers.CharField(required=True)
 
 
-class MetadataFieldSerializer(serializers.ModelSerializer):
+class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = MetadataField
         fields = ("id", "name", "type", "description", "organisation")
 
 
-class MetadataModelFieldQuerySerializer(serializers.Serializer):
+class MetadataModelFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     content_type = serializers.IntegerField(
         required=False, help_text="Content type of the model to filter by."
     )
 
 
-class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):
+class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
@@ -47,7 +47,7 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         model = MetadataModelField
         fields = ("id", "field", "content_type", "is_required_for")
 
-    def validate(self, data):
+    def validate(self, data):  # type: ignore[no-untyped-def]
         data = super().validate(data)
         for requirement in data.get("is_required_for", []):
             org_id = (
@@ -63,7 +63,7 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         return data
 
 
-class ContentTypeSerializer(serializers.ModelSerializer):
+class ContentTypeSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = ContentType
         fields = ("id", "app_label", "model")

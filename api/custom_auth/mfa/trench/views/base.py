@@ -25,7 +25,7 @@ from custom_auth.mfa.trench.serializers import (
 )
 from custom_auth.mfa.trench.utils import get_mfa_handler
 
-User: AbstractUser = get_user_model()
+User: AbstractUser = get_user_model()  # type: ignore[assignment]
 
 
 class MFAMethodActivationView(APIView):
@@ -43,7 +43,7 @@ class MFAMethodActivationView(APIView):
             )
         except MFAValidationError as cause:
             return ErrorResponse(error=cause)
-        return get_mfa_handler(mfa_method=mfa).dispatch_message()
+        return get_mfa_handler(mfa_method=mfa).dispatch_message()  # type: ignore[no-untyped-call,no-any-return]
 
 
 class MFAMethodConfirmActivationView(APIView):
@@ -81,7 +81,7 @@ class MFAMethodDeactivationView(APIView):
 class ListUserActiveMFAMethods(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         active_mfa_methods = MFAMethod.objects.filter(user=request.user, is_active=True)
         serializer = UserMFAMethodSerializer(active_mfa_methods, many=True)
         return Response(serializer.data)

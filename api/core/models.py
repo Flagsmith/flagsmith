@@ -6,8 +6,8 @@ from django.db import models
 from django.db.models import Manager
 from django.forms import model_to_dict
 from django.http import HttpRequest
-from simple_history.models import HistoricalRecords, ModelChange
-from softdelete.models import SoftDeleteManager, SoftDeleteObject
+from simple_history.models import HistoricalRecords, ModelChange  # type: ignore[import-untyped]
+from softdelete.models import SoftDeleteManager, SoftDeleteObject  # type: ignore[import-untyped]
 
 from audit.related_object_type import RelatedObjectType
 
@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 
 
 class UUIDNaturalKeyManagerMixin:
-    def get_by_natural_key(self, uuid_: str):
-        logger.debug("Getting model %s by natural key", self.model.__name__)
-        return self.get(uuid=uuid_)
+    def get_by_natural_key(self, uuid_: str):  # type: ignore[no-untyped-def]
+        logger.debug("Getting model %s by natural key", self.model.__name__)  # type: ignore[attr-defined]
+        return self.get(uuid=uuid_)  # type: ignore[attr-defined]
 
 
-class AbstractBaseExportableModelManager(UUIDNaturalKeyManagerMixin, Manager):
+class AbstractBaseExportableModelManager(UUIDNaturalKeyManagerMixin, Manager):  # type: ignore[type-arg]
     pass
 
 
@@ -38,13 +38,13 @@ class AbstractBaseExportableModel(models.Model):
     class Meta:
         abstract = True
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return (str(self.uuid),)
 
 
-class SoftDeleteAwareHistoricalRecords(HistoricalRecords):
+class SoftDeleteAwareHistoricalRecords(HistoricalRecords):  # type: ignore[misc]
     def create_historical_record(
-        self, instance: models.Model, history_type: str, using: str = None
+        self, instance: models.Model, history_type: str, using: str = None  # type: ignore[assignment]
     ) -> None:
         if getattr(instance, "deleted_at", None) is not None and history_type == "~":
             # Don't create `update` historical record for soft-deleted objects
@@ -52,12 +52,12 @@ class SoftDeleteAwareHistoricalRecords(HistoricalRecords):
         super().create_historical_record(instance, history_type, using)
 
 
-class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):
+class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
     pass
 
 
-class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):
-    objects = SoftDeleteExportableManager()
+class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):  # type: ignore[misc]
+    objects = SoftDeleteExportableManager()  # type: ignore[misc]
 
     class Meta:
         abstract = True
@@ -74,20 +74,20 @@ class _BaseHistoricalModel(models.Model):
     class Meta:
         abstract = True
 
-    def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:
-        if self.history_type == "~":
+    def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:  # type: ignore[return]
+        if self.history_type == "~":  # type: ignore[attr-defined]
             return [
                 change
-                for change in self.diff_against(self.prev_record).changes
-                if change.field not in self._change_details_excluded_fields
+                for change in self.diff_against(self.prev_record).changes  # type: ignore[attr-defined]
+                if change.field not in self._change_details_excluded_fields  # type: ignore[attr-defined]
             ]
-        elif self.history_type == "+" and self._show_change_details_for_create:
+        elif self.history_type == "+" and self._show_change_details_for_create:  # type: ignore[attr-defined]
             return [
                 ModelChange(field_name=key, old_value=None, new_value=value)
-                for key, value in self.instance.to_dict().items()
-                if key not in self._change_details_excluded_fields
+                for key, value in self.instance.to_dict().items()  # type: ignore[attr-defined]
+                if key not in self._change_details_excluded_fields  # type: ignore[attr-defined]
             ]
-        elif self.history_type == "-":
+        elif self.history_type == "-":  # type: ignore[attr-defined]
             # Ignore deletes because they get painful due to cascade deletes
             # Maybe we can resolve this in the future but for now it's not
             # critical.
@@ -124,8 +124,8 @@ class AbstractBaseAuditableModel(models.Model):
     history_record_class_path = None
     related_object_type = None
 
-    to_dict_excluded_fields: typing.Sequence[str] = None
-    to_dict_included_fields: typing.Sequence[str] = None
+    to_dict_excluded_fields: typing.Sequence[str] = None  # type: ignore[assignment]
+    to_dict_included_fields: typing.Sequence[str] = None  # type: ignore[assignment]
 
     class Meta:
         abstract = True
@@ -133,15 +133,15 @@ class AbstractBaseAuditableModel(models.Model):
     def get_skip_create_audit_log(self) -> bool:
         return False
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         """Override if audit log records should be written when model is created"""
         return None
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         """Override if audit log records should be written when model is updated"""
         return None
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         """Override if audit log records should be written when model is deleted"""
         return None
 
@@ -156,24 +156,24 @@ class AbstractBaseAuditableModel(models.Model):
             )
         return environment, project
 
-    def get_extra_audit_log_kwargs(self, history_instance) -> dict:
+    def get_extra_audit_log_kwargs(self, history_instance) -> dict:  # type: ignore[no-untyped-def,type-arg]
         """Add extra kwargs to the creation of the AuditLog record"""
         return {}
 
-    def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:
+    def get_audit_log_author(self, history_instance) -> typing.Optional["FFAdminUser"]:  # type: ignore[no-untyped-def]  # noqa: E501
         """Override the AuditLog author (in cases where history_user isn't populated for example)"""
         return None
 
-    def get_audit_log_related_object_id(self, history_instance) -> int:
+    def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
         """Override the related object ID in cases where it shouldn't be self.id"""
-        return self.id
+        return self.id  # type: ignore[attr-defined,no-any-return]
 
-    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:
+    def get_audit_log_related_object_type(self, history_instance) -> RelatedObjectType:  # type: ignore[no-untyped-def]  # noqa: E501
         """
         Override the related object type to account for writing audit logs for related objects
         when certain events happen on this model.
         """
-        return self.related_object_type
+        return self.related_object_type  # type: ignore[return-value]
 
     def to_dict(self) -> dict[str, typing.Any]:
         # by default, we exclude the id and any foreign key fields from the response
@@ -203,8 +203,8 @@ def get_history_user(
 
 
 def abstract_base_auditable_model_factory(
-    historical_records_excluded_fields: typing.List[str] = None,
-    change_details_excluded_fields: typing.Sequence[str] = None,
+    historical_records_excluded_fields: typing.List[str] = None,  # type: ignore[assignment]
+    change_details_excluded_fields: typing.Sequence[str] = None,  # type: ignore[assignment]
     show_change_details_for_create: bool = False,
 ) -> typing.Type[AbstractBaseAuditableModel]:
     class Base(AbstractBaseAuditableModel):

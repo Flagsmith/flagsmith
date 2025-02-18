@@ -8,7 +8,7 @@ from environments.models import Environment
 from integrations.mixpanel.models import MixpanelConfiguration
 
 
-def test_should_create_mixpanel_config_when_post(
+def test_should_create_mixpanel_config_when_post(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment: Environment,
 ):

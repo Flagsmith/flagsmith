@@ -19,7 +19,7 @@ def mfa_app_method(admin_user: FFAdminUser) -> MFAMethod:
     )
     # Generate backup codes
     regenerate_backup_codes_for_mfa_method_command(admin_user.id, mfa.name)
-    return mfa
+    return mfa  # type: ignore[no-any-return]
 
 
 @pytest.fixture()

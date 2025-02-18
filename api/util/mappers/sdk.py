@@ -48,5 +48,5 @@ def map_environment_to_sdk_document(environment: "Environment") -> SDKDocument:
     ]
 
     return engine_environment.model_dump(
-        exclude=SDK_DOCUMENT_EXCLUDE,
+        exclude=SDK_DOCUMENT_EXCLUDE,  # type: ignore[arg-type]
     )

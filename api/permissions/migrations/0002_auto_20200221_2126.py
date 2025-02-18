@@ -3,7 +3,7 @@
 from django.db import migrations
 
 
-def add_edit_feature_permission(apps, schema_editor):
+def add_edit_feature_permission(apps, schema_editor):  # type: ignore[no-untyped-def]
     PermissionModel = apps.get_model('permissions', 'PermissionModel')
 
     PermissionModel.objects.get_or_create(

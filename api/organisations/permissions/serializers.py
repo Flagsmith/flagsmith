@@ -7,7 +7,7 @@ from organisations.permissions.models import (
 from users.serializers import UserListSerializer, UserPermissionGroupSerializer
 
 
-class UserOrganisationPermissionUpdateCreateSerializer(serializers.ModelSerializer):
+class UserOrganisationPermissionUpdateCreateSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = UserOrganisationPermission
         fields = ("id", "user", "permissions")
@@ -20,7 +20,7 @@ class UserOrganisationPermissionListSerializer(
 
 
 class UserPermissionGroupOrganisationPermissionUpdateCreateSerializer(
-    serializers.ModelSerializer
+    serializers.ModelSerializer  # type: ignore[type-arg]
 ):
     class Meta:
         model = UserPermissionGroupOrganisationPermission

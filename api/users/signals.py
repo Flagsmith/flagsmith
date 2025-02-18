@@ -12,7 +12,7 @@ from users.tasks import create_pipedrive_lead
 
 
 @receiver(post_migrate, sender=FFAdminUser)
-def warn_insecure(sender, **kwargs):
+def warn_insecure(sender, **kwargs):  # type: ignore[no-untyped-def]
     if sender.objects.count() == 0:
         path = reverse("api-v1:users:config-init")
         warnings.warn(
@@ -23,7 +23,7 @@ def warn_insecure(sender, **kwargs):
 
 
 @receiver(post_save, sender=FFAdminUser)
-def create_pipedrive_lead_signal(sender, instance, created, **kwargs):
+def create_pipedrive_lead_signal(sender, instance, created, **kwargs):  # type: ignore[no-untyped-def]
     user: FFAdminUser = instance
 
     if not created:

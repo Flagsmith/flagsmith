@@ -34,7 +34,7 @@ def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
     return f"{scheme}://{domain}"
 
 
-def get_ip_address_from_request(request):
+def get_ip_address_from_request(request):  # type: ignore[no-untyped-def]
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     return (
         x_forwarded_for.split(",")[0]

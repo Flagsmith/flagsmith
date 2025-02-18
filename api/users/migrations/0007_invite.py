@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('hash', models.CharField(default=app.utils.create_hash, max_length=100,
                                           unique=True)),
                 ('date_created', models.DateTimeField(auto_now_add=True,
-                                                      verbose_name=b'DateCreated')),
+                                                      verbose_name=b'DateCreated')),  # type: ignore[arg-type]
                 ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
                                                    to='api.Organisation')),
             ],

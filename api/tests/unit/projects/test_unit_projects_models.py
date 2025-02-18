@@ -16,7 +16,7 @@ yesterday = now - timedelta(days=1)
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache(project, monkeypatch):
+def test_get_segments_from_cache(project, monkeypatch):  # type: ignore[no-untyped-def]
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = None
@@ -36,7 +36,7 @@ def test_get_segments_from_cache(project, monkeypatch):
 
 
 @pytest.mark.django_db()
-def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):
+def test_get_segments_from_cache_set_not_called(project, segments, monkeypatch):  # type: ignore[no-untyped-def]
     # Given
     mock_project_segments_cache = mock.MagicMock()
     mock_project_segments_cache.get.return_value = project.segments.all()
@@ -70,7 +70,7 @@ def test_get_segments_from_cache_set_to_empty_list(
     )
 
     # When
-    segments = project.get_segments_from_cache()
+    segments = project.get_segments_from_cache()  # type: ignore[no-untyped-call]
 
     # Then
     # Since we're calling the live_objects manager in the method,
@@ -88,7 +88,7 @@ def test_get_segments_from_cache_set_to_empty_list(
     "edge_enabled, expected_enable_dynamo_db_value",
     ((True, True), (False, False)),
 )
-def test_create_project_sets_enable_dynamo_db(
+def test_create_project_sets_enable_dynamo_db(  # type: ignore[no-untyped-def]
     db, edge_enabled, expected_enable_dynamo_db_value, settings, organisation
 ):
     # Given
@@ -105,7 +105,7 @@ def test_create_project_sets_enable_dynamo_db(
     "edge_release_datetime, expected",
     ((yesterday, True), (tomorrow, False), (None, False)),
 )
-def test_is_edge_project_by_default(
+def test_is_edge_project_by_default(  # type: ignore[no-untyped-def]
     settings, organisation, edge_release_datetime, expected
 ):
     # Given
@@ -127,7 +127,7 @@ def test_is_edge_project_by_default(
         ("^[a-z]+$", "InvalidFeature", False),
     ),
 )
-def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result):
+def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result):  # type: ignore[no-untyped-def]
     assert (
         Project(
             name="test", feature_name_regex=feature_name_regex
@@ -136,7 +136,7 @@ def test_is_feature_name_valid(feature_name_regex, feature_name, expected_result
     )
 
 
-def test_updating_project_clears_environment_caches(environment, project, mocker):
+def test_updating_project_clears_environment_caches(environment, project, mocker):  # type: ignore[no-untyped-def]
     # Given
     mock_environment_cache = mocker.patch("projects.models.environment_cache")
 
@@ -148,7 +148,7 @@ def test_updating_project_clears_environment_caches(environment, project, mocker
     mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
 
 
-def test_environments_are_updated_in_dynamodb_when_project_id_updated(
+def test_environments_are_updated_in_dynamodb_when_project_id_updated(  # type: ignore[no-untyped-def]
     dynamo_enabled_project,
     dynamo_enabled_project_environment_one,
     dynamo_enabled_project_environment_two,
@@ -176,7 +176,7 @@ def test_environments_are_updated_in_dynamodb_when_project_id_updated(
         (EdgeV2MigrationStatus.INCOMPLETE, False),
     ),
 )
-def test_show_edge_identity_overrides_for_feature(
+def test_show_edge_identity_overrides_for_feature(  # type: ignore[no-untyped-def]
     edge_v2_migration_status: EdgeV2MigrationStatus,
     expected_value: bool,
 ):

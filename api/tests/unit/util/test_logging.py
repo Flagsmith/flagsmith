@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 import pytest
-from gunicorn.config import AccessLogFormat, Config
+from gunicorn.config import AccessLogFormat, Config  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
 
 from util.logging import GunicornAccessLogJsonFormatter, JsonFormatter
@@ -44,7 +44,7 @@ def test_json_formatter__outputs_expected(
     _log_traceback()
 
     # Then
-    assert [json.loads(message) for message in inspecting_handler.messages] == [
+    assert [json.loads(message) for message in inspecting_handler.messages] == [  # type: ignore[attr-defined]
         {
             "levelname": "INFO",
             "message": "hello arg1, 22",

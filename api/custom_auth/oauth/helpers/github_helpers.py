@@ -5,7 +5,7 @@ from custom_auth.oauth.exceptions import GithubError
 logger = logging.getLogger(__name__)
 
 
-def convert_response_data_to_dictionary(text: str) -> dict:
+def convert_response_data_to_dictionary(text: str) -> dict:  # type: ignore[type-arg]
     try:
         response_data = {}
         for key, value in [param.split("=") for param in text.split("&")]:
@@ -16,7 +16,7 @@ def convert_response_data_to_dictionary(text: str) -> dict:
         raise GithubError("Malformed data received from Github")
 
 
-def get_first_and_last_name(full_name: str) -> list:
+def get_first_and_last_name(full_name: str) -> list:  # type: ignore[type-arg]
     if not full_name:
         return ["", ""]
 

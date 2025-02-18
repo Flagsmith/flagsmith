@@ -39,7 +39,7 @@ def ld_client_mock(mocker: MockerFixture) -> MagicMock:
     ld_client_mock.get_flag_count.return_value = 9
     ld_client_mock.get_flag_tags.return_value = ["testtag", "testtag2"]
 
-    return ld_client_mock
+    return ld_client_mock  # type: ignore[no-any-return]
 
 
 @pytest.fixture

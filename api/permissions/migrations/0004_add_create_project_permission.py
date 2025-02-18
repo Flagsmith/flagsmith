@@ -5,7 +5,7 @@ from organisations.permissions.permissions import CREATE_PROJECT
 from permissions.models import ORGANISATION_PERMISSION_TYPE
 
 
-def add_create_project_permission(apps, schema_editor):
+def add_create_project_permission(apps, schema_editor):  # type: ignore[no-untyped-def]
     permission_model = apps.get_model("permissions", "PermissionModel")
 
     permission_model.objects.get_or_create(
@@ -15,7 +15,7 @@ def add_create_project_permission(apps, schema_editor):
     )
 
 
-def remove_create_project_permission(apps, schema_editor):
+def remove_create_project_permission(apps, schema_editor):  # type: ignore[no-untyped-def]
     permission_model = apps.get_model("permissions", "PermissionModel")
     permission_model.objects.filter(key=CREATE_PROJECT).delete()
 

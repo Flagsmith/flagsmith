@@ -11,7 +11,7 @@ class FeatureEvaluationDataSchema(Schema):
         unknown = EXCLUDE
 
     @pre_load
-    def preprocess(self, data, **kwargs):
+    def preprocess(self, data, **kwargs):  # type: ignore[no-untyped-def]
         # the data returned by influx db looks like this:
         # {
         #     "datetime": "2021-01-01",
@@ -24,7 +24,7 @@ class FeatureEvaluationDataSchema(Schema):
         return {"day": day, "count": count}
 
     @post_load
-    def make_usage_data(self, data, **kwargs):
+    def make_usage_data(self, data, **kwargs):  # type: ignore[no-untyped-def]
         return FeatureEvaluationData(**data)
 
 
@@ -41,5 +41,5 @@ class UsageDataSchema(Schema):
         unknown = EXCLUDE
 
     @post_load
-    def make_usage_data(self, data, **kwargs):
+    def make_usage_data(self, data, **kwargs):  # type: ignore[no-untyped-def]
         return UsageData(**data)

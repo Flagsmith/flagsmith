@@ -3,11 +3,11 @@ import typing
 from datetime import timedelta
 
 import pytest
-from chargebee import APIError as ChargebeeAPIError
+from chargebee import APIError as ChargebeeAPIError  # type: ignore[import-untyped]
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock.plugin import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -136,7 +136,7 @@ def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_update_invite_link_returns_405(invite_link, admin_client, organisation):
+def test_update_invite_link_returns_405(invite_link, admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invite-links-detail",
@@ -154,7 +154,7 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_join_organisation_with_permission_groups(
+def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-def]
     test_user, test_user_client, organisation, user_permission_group, subscription
 ):
     # Given
@@ -175,7 +175,7 @@ def test_join_organisation_with_permission_groups(
     # Then
     assert response.status_code == status.HTTP_200_OK
     hubspot_tracker = HubspotTracker.objects.first()
-    assert hubspot_tracker.user == test_user
+    assert hubspot_tracker.user == test_user  # type: ignore[union-attr]
 
     assert organisation in test_user.organisations.all()
     assert user_permission_group in test_user.permission_groups.all()
@@ -184,7 +184,7 @@ def test_join_organisation_with_permission_groups(
         invite.refresh_from_db()
 
 
-def test_create_invite_with_permission_groups(
+def test_create_invite_with_permission_groups(  # type: ignore[no-untyped-def]
     admin_client, organisation, user_permission_group, admin_user, subscription
 ):
     # Given
@@ -211,7 +211,7 @@ def test_create_invite_with_permission_groups(
     assert invite.invited_by == admin_user
 
 
-def test_create_invite_returns_400_if_seats_are_over(
+def test_create_invite_returns_400_if_seats_are_over(  # type: ignore[no-untyped-def]
     admin_client,
     organisation,
     user_permission_group,
@@ -240,7 +240,7 @@ def test_create_invite_returns_400_if_seats_are_over(
     )
 
 
-def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):
+def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -252,7 +252,7 @@ def test_retrieve_invite(admin_client, organisation, user_permission_group, invi
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_invite(admin_client, organisation, user_permission_group, invite):
+def test_delete_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -264,7 +264,7 @@ def test_delete_invite(admin_client, organisation, user_permission_group, invite
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_update_invite_returns_405(
+def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
     admin_client, organisation, user_permission_group, invite
 ):
     # Given
@@ -288,7 +288,7 @@ def test_update_invite_returns_405(
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_exceeds_plan_limit(
+def test_join_organisation_returns_400_if_exceeds_plan_limit(  # type: ignore[no-untyped-def]
     test_user_client,
     organisation,
     admin_user,
@@ -319,7 +319,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_payment_fails(
+def test_join_organisation_returns_400_if_payment_fails(  # type: ignore[no-untyped-def]
     test_user_client: APIClient,
     organisation: Organisation,
     admin_user: FFAdminUser,
@@ -367,7 +367,7 @@ def test_join_organisation_returns_400_if_payment_fails(
     )
 
 
-def test_join_organisation_from_link_returns_403_if_invite_links_disabled(
+def test_join_organisation_from_link_returns_403_if_invite_links_disabled(  # type: ignore[no-untyped-def]
     test_user_client, organisation, invite_link, settings
 ):
     # Given

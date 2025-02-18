@@ -1,7 +1,7 @@
 import typing
 
 import pytest as pytest
-from common.projects.permissions import VIEW_AUDIT_LOG
+from common.projects.permissions import VIEW_AUDIT_LOG  # type: ignore[import-untyped]
 from django.db.models import Model
 
 from organisations.models import OrganisationRole
@@ -10,17 +10,17 @@ from projects.models import Project, UserProjectPermission
 
 
 @pytest.fixture()
-def view_audit_log_permission(db):
+def view_audit_log_permission(db):  # type: ignore[no-untyped-def]
     return PermissionModel.objects.get(key=VIEW_AUDIT_LOG)
 
 
 @pytest.fixture()
-def view_audit_log_user(
+def view_audit_log_user(  # type: ignore[no-untyped-def]
     project: Project,
     django_user_model: typing.Type[Model],
     view_audit_log_permission: PermissionModel,
 ):
-    user = django_user_model.objects.create(email="test@example.com")
+    user = django_user_model.objects.create(email="test@example.com")  # type: ignore[attr-defined]
     user.add_organisation(project.organisation, OrganisationRole.USER)
     user_proj_permission = UserProjectPermission.objects.create(
         user=user, project=project
@@ -30,22 +30,22 @@ def view_audit_log_user(
 
 
 @pytest.fixture()
-def project_admin_user(
+def project_admin_user(  # type: ignore[no-untyped-def]
     project: Project,
     django_user_model: typing.Type[Model],
 ):
-    user = django_user_model.objects.create(email="test@example.com")
+    user = django_user_model.objects.create(email="test@example.com")  # type: ignore[attr-defined]
     user.add_organisation(project.organisation, OrganisationRole.USER)
     UserProjectPermission.objects.create(user=user, project=project, admin=True)
     return user
 
 
 @pytest.fixture()
-def project_user(
+def project_user(  # type: ignore[no-untyped-def]
     project: Project,
     django_user_model: typing.Type[Model],
 ):
-    user = django_user_model.objects.create(email="test@example.com")
+    user = django_user_model.objects.create(email="test@example.com")  # type: ignore[attr-defined]
     user.add_organisation(project.organisation, OrganisationRole.USER)
     UserProjectPermission.objects.create(user=user, project=project)
     return user

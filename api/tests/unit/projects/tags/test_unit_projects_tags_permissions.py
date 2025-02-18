@@ -1,6 +1,6 @@
 from unittest import mock
 
-from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT
+from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT  # type: ignore[import-untyped]
 
 from projects.models import Project
 from projects.tags.models import Tag
@@ -20,7 +20,7 @@ def test_project_admin_has_permission(
     project: Project,
 ) -> None:
     # Given
-    with_project_permissions(admin=True)
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(kwargs={"project_pk": project.id})
     permissions = TagPermissions()
@@ -29,7 +29,7 @@ def test_project_admin_has_permission(
     results = []
     for action in ["list", "create"]:
         mock_view.action = action
-        results.append(permissions.has_permission(mock_request, mock_view))
+        results.append(permissions.has_permission(mock_request, mock_view))  # type: ignore[no-untyped-call]
 
     # Then
     assert all(results)
@@ -41,7 +41,7 @@ def test_project_admin_has_object_permission(
     project: Project,
 ) -> None:
     # Given
-    with_project_permissions(admin=True)
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(kwargs={"project_pk": project.id})
     permissions = TagPermissions()
@@ -50,7 +50,7 @@ def test_project_admin_has_object_permission(
     results = []
     for action in ["update", "delete", "detail"]:
         mock_view.action = action
-        results.append(permissions.has_object_permission(mock_request, mock_view, tag))
+        results.append(permissions.has_object_permission(mock_request, mock_view, tag))  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert all(results)
@@ -62,7 +62,7 @@ def test_project_user_has_list_permission(
     project: Project,
 ) -> None:
     # Given
-    with_project_permissions(admin=True)
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         detail=False,
@@ -72,7 +72,7 @@ def test_project_user_has_list_permission(
     permissions = TagPermissions()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -84,7 +84,7 @@ def test_project_user_has_no_create_permission(
     project: Project,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT], admin=False)
+    with_project_permissions([VIEW_PROJECT], admin=False)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         detail=False,
@@ -94,7 +94,7 @@ def test_project_user_has_no_create_permission(
     permissions = TagPermissions()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -117,7 +117,7 @@ def test_project_user_has_no_update_or_delete_permission(
     results = []
     for action in ["update", "delete"]:
         mock_view.action = action
-        results.append(permissions.has_object_permission(mock_request, mock_view, tag))
+        results.append(permissions.has_object_permission(mock_request, mock_view, tag))  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert all(result is False for result in results)
@@ -129,7 +129,7 @@ def test_project_user_has_detail_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         action="detail",
@@ -139,7 +139,7 @@ def test_project_user_has_detail_permission(
     tag = Tag.objects.create(label="test", project=project)
 
     # When
-    result = permissions.has_object_permission(mock_request, mock_view, tag)
+    result = permissions.has_object_permission(mock_request, mock_view, tag)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -151,7 +151,7 @@ def test_project_user_with_manage_tags_has_permission_to_create(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT, MANAGE_TAGS])
+    with_project_permissions([VIEW_PROJECT, MANAGE_TAGS])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         action="create",
@@ -161,7 +161,7 @@ def test_project_user_with_manage_tags_has_permission_to_create(
     permissions = TagPermissions()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -173,7 +173,7 @@ def test_project_user_with_view_project_does_not_have_permission_to_create(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         action="create",
@@ -183,7 +183,7 @@ def test_project_user_with_view_project_does_not_have_permission_to_create(
     permissions = TagPermissions()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -195,7 +195,7 @@ def test_project_user_with_manage_tags_has_detail_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT, MANAGE_TAGS])
+    with_project_permissions([VIEW_PROJECT, MANAGE_TAGS])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         action="detail",
@@ -205,7 +205,7 @@ def test_project_user_with_manage_tags_has_detail_permission(
     tag = Tag.objects.create(label="test", project=project)
 
     # When
-    result = permissions.has_object_permission(mock_request, mock_view, tag)
+    result = permissions.has_object_permission(mock_request, mock_view, tag)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True

@@ -1,5 +1,5 @@
 import pydantic
-from drf_yasg.openapi import (
+from drf_yasg.openapi import (  # type: ignore[import-untyped]
     SCHEMA_DEFINITIONS,
     ReferenceResolver,
     Response,

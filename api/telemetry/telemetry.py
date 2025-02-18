@@ -15,7 +15,7 @@ class SelfHostedTelemetryWrapper:
         serializer = TelemetrySerializer(instance=telemetry_data)
         self._send(serializer.data)
 
-    def _send(self, data: dict) -> None:
+    def _send(self, data: dict) -> None:  # type: ignore[type-arg]
         try:
             response = requests.post(
                 self.TELEMETRY_API_URI,

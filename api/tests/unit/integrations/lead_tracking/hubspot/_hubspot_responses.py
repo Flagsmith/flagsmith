@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dateutil.tz import tzlocal
+from dateutil.tz import tzlocal  # type: ignore[import-untyped]
 
 
 class FakeHubspotResponse:
@@ -8,10 +8,10 @@ class FakeHubspotResponse:
     Dummy class to replicate the to_dict() method of the Hubspot response classes.
     """
 
-    def __init__(self, data: dict) -> None:
+    def __init__(self, data: dict) -> None:  # type: ignore[type-arg]
         self.data = data
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict:  # type: ignore[type-arg]
         return self.data
 
 
@@ -95,7 +95,7 @@ def generate_create_company_response(
     }
 
     if organisation_id:
-        properties["orgid_unique"] = organisation_id
+        properties["orgid_unique"] = organisation_id  # type: ignore[assignment]
 
     return FakeHubspotResponse(
         data={

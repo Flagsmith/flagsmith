@@ -34,7 +34,7 @@ def generate_segment_data(
     }
 
 
-def fix_issue_3869():
+def fix_issue_3869():  # type: ignore[no-untyped-def]
     """
     Hack to get around Pydantic issue with FreezeGun.
 

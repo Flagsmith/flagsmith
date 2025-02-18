@@ -1,6 +1,6 @@
 import json
 
-from apiclient.discovery import build
+from apiclient.discovery import build  # type: ignore[import-untyped]
 from django.conf import settings
 from google.oauth2 import service_account
 
@@ -9,11 +9,11 @@ GA_API_NAME = "analytics"
 GA_API_VERSION = "v3"
 
 
-def get_service():
+def get_service():  # type: ignore[no-untyped-def]
     """
     Get the google service object to use to query the API
     """
-    credentials = service_account.Credentials.from_service_account_info(
+    credentials = service_account.Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
         json.loads(settings.GOOGLE_SERVICE_ACCOUNT), scopes=GA_SCOPES
     )
 
@@ -21,14 +21,14 @@ def get_service():
     return build(GA_API_NAME, GA_API_VERSION, credentials=credentials)
 
 
-def get_events_for_organisation(organisation):
+def get_events_for_organisation(organisation):  # type: ignore[no-untyped-def]
     """
     Get number of tracked events for last 30 days for an organisation
 
     :return: number of events as integer
     """
     ga_response = (
-        get_service()
+        get_service()  # type: ignore[no-untyped-call]
         .data()
         .ga()
         .get(

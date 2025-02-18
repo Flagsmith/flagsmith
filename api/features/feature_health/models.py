@@ -5,7 +5,7 @@ from core.models import (
     abstract_base_auditable_model_factory,
 )
 from django.db import models
-from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook
+from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook  # type: ignore[import-untyped]
 
 from audit.related_object_type import RelatedObjectType
 from features.feature_health.constants import (
@@ -36,7 +36,7 @@ class FeatureHealthEventType(models.Choices):
 
 class FeatureHealthProvider(
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     history_record_class_path = (
         "features.feature_health.models.HistoricalFeatureHealthProvider"
@@ -76,7 +76,7 @@ class FeatureHealthProvider(
         return self.project
 
 
-class FeatureHealthEventManager(models.Manager):
+class FeatureHealthEventManager(models.Manager):  # type: ignore[type-arg]
     def get_latest_by_feature(
         self,
         feature: "Feature",
@@ -99,9 +99,9 @@ class FeatureHealthEventManager(models.Manager):
 
 
 class FeatureHealthEvent(
-    LifecycleModelMixin,
+    LifecycleModelMixin,  # type: ignore[misc]
     AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     """
     Holds the events that are generated when a feature health is changed.
@@ -112,7 +112,7 @@ class FeatureHealthEvent(
     )
     related_object_type = RelatedObjectType.FEATURE_HEALTH
 
-    objects: FeatureHealthEventManager = FeatureHealthEventManager()
+    objects: FeatureHealthEventManager = FeatureHealthEventManager()  # type: ignore[misc,assignment]
 
     feature = models.ForeignKey(
         "features.Feature",
@@ -132,7 +132,7 @@ class FeatureHealthEvent(
     reason = models.TextField(null=True, blank=True)
 
     @hook(AFTER_CREATE)
-    def set_feature_health_tag(self):
+    def set_feature_health_tag(self):  # type: ignore[no-untyped-def]
         from features.feature_health.tasks import update_feature_unhealthy_tag
 
         update_feature_unhealthy_tag.delay(args=(self.feature.id,))

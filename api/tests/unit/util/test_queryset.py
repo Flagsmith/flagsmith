@@ -3,7 +3,7 @@ from environments.identities.traits.models import Trait
 from util.queryset import iterator_with_prefetch
 
 
-def test_iterator_with_prefetch_adds_order_by_to_queryset_if_not_present(
+def test_iterator_with_prefetch_adds_order_by_to_queryset_if_not_present(  # type: ignore[no-untyped-def]
     mocker, identity
 ):
     # Given
@@ -11,14 +11,14 @@ def test_iterator_with_prefetch_adds_order_by_to_queryset_if_not_present(
     mocked_paginator = mocker.patch("util.queryset.Paginator")
 
     # When
-    list(iterator_with_prefetch(queryset, chunk_size=1))
+    list(iterator_with_prefetch(queryset, chunk_size=1))  # type: ignore[no-untyped-call]
 
     # Then
     args, _ = mocked_paginator.call_args
     assert args[0].query.order_by == ("pk",)
 
 
-def test_iterator_with_prefetch_make_correct_number_of_queries(
+def test_iterator_with_prefetch_make_correct_number_of_queries(  # type: ignore[no-untyped-def]
     mocker, environment, django_assert_num_queries
 ):
     # Given
@@ -35,7 +35,7 @@ def test_iterator_with_prefetch_make_correct_number_of_queries(
         .prefetch_related("identity_traits")
     )
     # When
-    iterator = iterator_with_prefetch(queryset, chunk_size=10)
+    iterator = iterator_with_prefetch(queryset, chunk_size=10)  # type: ignore[no-untyped-call]
 
     # Then, test, that we only make 5 queries
     # first one to fetch the count
@@ -46,4 +46,4 @@ def test_iterator_with_prefetch_make_correct_number_of_queries(
     with django_assert_num_queries(5):
         for identity in iterator:
             assert identity.environment.name
-            assert identity.identity_traits.all().first().trait_key
+            assert identity.identity_traits.all().first().trait_key  # type: ignore[union-attr]

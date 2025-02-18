@@ -8,7 +8,7 @@ from django.core import mail
 from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
-from rest_framework.test import APIClient, override_settings
+from rest_framework.test import APIClient, override_settings  # type: ignore[attr-defined]
 from rest_framework_simplejwt.tokens import SlidingToken
 
 from organisations.invites.models import Invite
@@ -58,7 +58,7 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
     # verify that the user has been emailed with their reset code
     assert len(mail.outbox) == 1
     # get the url and grab the uid and token
-    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
+    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]  # type: ignore[arg-type]
     split_url = url.split("/")
     uid = split_url[-2]
     token = split_url[-1]
@@ -89,7 +89,7 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
     assert new_login_response.json()["key"]
 
 
-@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
+@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
 def test_cannot_register_without_invite_if_disabled(
     db: None, api_client: APIClient
 ) -> None:
@@ -111,7 +111,7 @@ def test_cannot_register_without_invite_if_disabled(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
+@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
 def test_can_register_with_invite_if_registration_disabled_without_invite(
     db: None,
     api_client: APIClient,
@@ -137,7 +137,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@override_settings(
+@override_settings(  # type: ignore[misc]
     DJOSER=ChainMap(
         {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
         settings.DJOSER,
@@ -191,7 +191,7 @@ def test_registration_and_login_with_user_activation_flow(
     # and extract uid and token for account activation
     assert len(mail.outbox) == 1
     # get the url and grab the uid and token
-    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
+    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]  # type: ignore[arg-type]
     split_url = url.split("/")
     uid = split_url[-2]
     token = split_url[-1]
@@ -287,7 +287,7 @@ def test_login_workflow_with_mfa_enabled(
     assert current_user_response.json()["email"] == email
 
 
-@override_settings(COOKIE_AUTH_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
 def test_register_and_login_workflows__jwt_cookie(
     db: None,
     api_client: APIClient,
@@ -357,7 +357,7 @@ def test_register_and_login_workflows__jwt_cookie(
     assert new_jwt_access_cookie != jwt_access_cookie
 
 
-@override_settings(COOKIE_AUTH_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
 def test_login_workflow__jwt_cookie__mfa_enabled(
     db: None,
     api_client: APIClient,
@@ -413,7 +413,7 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
 # changes default CORS setting values.
 # Due to how Django settings are loaded for tests,
 # we have to override CORS settings manually.
-@override_settings(
+@override_settings(  # type: ignore[misc]
     COOKIE_AUTH_ENABLED=True,
     DOMAIN_OVERRIDE="testhost.com",
     CORS_ORIGIN_ALLOW_ALL=False,
@@ -447,7 +447,7 @@ def test_login_workflow__jwt_cookie__cors_headers_expected(
     assert response.headers["Access-Control-Allow-Origin"] == "http://testhost.com"
 
 
-@override_settings(COOKIE_AUTH_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
 def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     db: None,
     api_client: APIClient,
@@ -468,7 +468,7 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     jwt_access_cookie = response.cookies.get("jwt")
 
     # cookie is invalidated server-side but is still attached to the client
-    SlidingToken(jwt_access_cookie.value).blacklist()
+    SlidingToken(jwt_access_cookie.value).blacklist()  # type: ignore[union-attr]
 
     # When
     response = api_client.get(protected_resource_url)
@@ -555,7 +555,7 @@ def test_throttle_signup(
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_get_user_is_not_throttled(
+def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
     admin_client: APIClient, reset_cache: None, mocker: MockerFixture
 ):
     # Given
@@ -570,7 +570,7 @@ def test_get_user_is_not_throttled(
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_token(test_user, auth_token):
+def test_delete_token(test_user, auth_token):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:custom_auth:delete-token")
     client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token.key}")
@@ -586,7 +586,7 @@ def test_delete_token(test_user, auth_token):
     assert client.delete(url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_register_with_sign_up_type(client, db, settings):
+def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"

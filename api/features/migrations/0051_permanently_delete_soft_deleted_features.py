@@ -12,7 +12,7 @@ from django.db import migrations
 # `python manage.py migrate features 0050 && python manage.py migrate features 0049`
 
 
-def permanently_delete_features(apps, schema_editor):
+def permanently_delete_features(apps, schema_editor):  # type: ignore[no-untyped-def]
     Feature = apps.get_model("features", "Feature")
     FeatureState = apps.get_model("features", "FeatureState")
     Feature.objects.filter(deleted_at__isnull=False).delete()

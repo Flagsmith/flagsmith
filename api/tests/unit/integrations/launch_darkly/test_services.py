@@ -93,7 +93,7 @@ def test_process_import_request__api_error__expected_status(
     assert import_request.status["error_messages"] == [expected_error_message]
 
 
-def test_process_import_request__success__expected_status(
+def test_process_import_request__success__expected_status(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
@@ -248,7 +248,7 @@ def test_process_import_request__success__expected_status(
     [tag.label for tag in tagged_feature.tags.all()] == ["testtag", "testtag2"]
 
 
-def test_process_import_request__segments_imported(
+def test_process_import_request__segments_imported(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):
@@ -442,13 +442,13 @@ def test_process_import_request__segments_imported(
 
     # Each identity should have a trait called "key"
     for identity in list(Identity.objects.filter(environment__project=project).all()):
-        trait_value = Trait.objects.get(
+        trait_value = Trait.objects.get(  # type: ignore[no-untyped-call]
             identity=identity, trait_key="key"
         ).get_trait_value()
         assert trait_value == identity.identifier
 
 
-def test_process_import_request__rules_imported(
+def test_process_import_request__rules_imported(  # type: ignore[no-untyped-def]
     project: Project,
     import_request: LaunchDarklyImportRequest,
 ):

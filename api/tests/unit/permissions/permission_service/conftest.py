@@ -2,12 +2,12 @@ import pytest
 
 
 @pytest.fixture
-def project_permission_using_user_permission(user_project_permission):
+def project_permission_using_user_permission(user_project_permission):  # type: ignore[no-untyped-def]
     return user_project_permission
 
 
 @pytest.fixture
-def project_admin_via_user_permission(project_permission_using_user_permission):
+def project_admin_via_user_permission(project_permission_using_user_permission):  # type: ignore[no-untyped-def]
     project_permission_using_user_permission.admin = True
     project_permission_using_user_permission.save()
 
@@ -15,7 +15,7 @@ def project_admin_via_user_permission(project_permission_using_user_permission):
 
 
 @pytest.fixture
-def project_permission_using_user_permission_group(
+def project_permission_using_user_permission_group(  # type: ignore[no-untyped-def]
     user_project_permission_group, user_permission_group, test_user
 ):
     user_permission_group.users.add(test_user)
@@ -23,7 +23,7 @@ def project_permission_using_user_permission_group(
 
 
 @pytest.fixture
-def project_admin_via_user_permission_group(
+def project_admin_via_user_permission_group(  # type: ignore[no-untyped-def]
     project_permission_using_user_permission_group,
 ):
     project_permission_using_user_permission_group.admin = True
@@ -33,7 +33,7 @@ def project_admin_via_user_permission_group(
 
 
 @pytest.fixture
-def environment_admin_via_user_permission(test_user, user_environment_permission):
+def environment_admin_via_user_permission(test_user, user_environment_permission):  # type: ignore[no-untyped-def]
     user_environment_permission.admin = True
     user_environment_permission.save()
 
@@ -41,12 +41,12 @@ def environment_admin_via_user_permission(test_user, user_environment_permission
 
 
 @pytest.fixture
-def environment_permission_using_user_permission(user_environment_permission):
+def environment_permission_using_user_permission(user_environment_permission):  # type: ignore[no-untyped-def]
     return user_environment_permission
 
 
 @pytest.fixture
-def environment_admin_via_user_permission_group(
+def environment_admin_via_user_permission_group(  # type: ignore[no-untyped-def]
     user_environment_permission_group, test_user, user_permission_group
 ):
     user_permission_group.users.add(test_user)
@@ -58,7 +58,7 @@ def environment_admin_via_user_permission_group(
 
 
 @pytest.fixture
-def environment_permission_using_user_permission_group(
+def environment_permission_using_user_permission_group(  # type: ignore[no-untyped-def]
     user_environment_permission_group, user_permission_group, test_user
 ):
     user_permission_group.users.add(test_user)

@@ -3,7 +3,7 @@
 from django.db import migrations
 
 
-def enable_all_remote_config_feature_states(apps, schema_editor):
+def enable_all_remote_config_feature_states(apps, schema_editor):  # type: ignore[no-untyped-def]
     FeatureState = apps.get_model('features', 'FeatureState')
 
     # update all existing remote config feature states to maintain current
@@ -12,7 +12,7 @@ def enable_all_remote_config_feature_states(apps, schema_editor):
     FeatureState.objects.filter(feature__type="CONFIG").update(enabled=True)
 
 
-def reverse(apps, schema_editor):
+def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     pass
 
 

@@ -95,7 +95,7 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__set_f
     # Then
     assert len(results) == 1
     assert results[0].items == [override_document]
-    assert results[0].is_num_identity_overrides_complete is True
+    assert results[0].is_num_identity_overrides_complete is True  # type: ignore[union-attr]
 
 
 def test_environment_v2_wrapper__get_identity_overrides_by_environment_id_with_paging__set_feature_ids__return_expected(
@@ -131,8 +131,8 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id_with_p
 
     # Then
     assert len(results) == 1
-    assert 6000 < len(results[0].items) < 6350
-    assert results[0].is_num_identity_overrides_complete is False
+    assert 6000 < len(results[0].items) < 6350  # type: ignore[arg-type]
+    assert results[0].is_num_identity_overrides_complete is False  # type: ignore[union-attr]
 
 
 def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_evaluated_key__call_expected(
@@ -161,7 +161,7 @@ def test_environment_v2_wrapper__get_identity_overrides_by_environment_id__last_
 
     # Then
     assert results == [override_document, override_document]
-    wrapper.table.query.assert_has_calls(
+    wrapper.table.query.assert_has_calls(  # type: ignore[union-attr]
         [
             mocker.call(
                 KeyConditionExpression=mocker.ANY,
@@ -315,7 +315,7 @@ def test_environment_v2_wrapper__delete_environment__deletes_related_data_from_d
     )
 
     # When
-    dynamodb_wrapper_v2.delete_environment(environment_id=environment_id)
+    dynamodb_wrapper_v2.delete_environment(environment_id=environment_id)  # type: ignore[arg-type]
 
     # Then
     results = flagsmith_environments_v2_table.scan()["Items"]

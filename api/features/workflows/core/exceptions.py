@@ -7,12 +7,12 @@ class FeatureWorkflowError(APIException):
 
 
 class ChangeRequestNotApprovedError(FeatureWorkflowError):
-    status_code = status.HTTP_400_BAD_REQUEST
+    status_code = status.HTTP_400_BAD_REQUEST  # type: ignore[assignment]
 
 
 class CannotApproveOwnChangeRequest(FeatureWorkflowError):
-    status_code = status.HTTP_400_BAD_REQUEST
+    status_code = status.HTTP_400_BAD_REQUEST  # type: ignore[assignment]
 
 
 class ChangeRequestDeletionError(FeatureWorkflowError):
-    status_code = status.HTTP_400_BAD_REQUEST
+    status_code = status.HTTP_400_BAD_REQUEST  # type: ignore[assignment]

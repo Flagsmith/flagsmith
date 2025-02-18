@@ -18,7 +18,7 @@ def test_org_user_can_list_users(
     permissions = OrganisationUsersPermission()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is True
@@ -37,7 +37,7 @@ def test_org_user_cannot_create_user(
     permissions = OrganisationUsersPermission()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False

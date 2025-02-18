@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_search_features(admin_client, feature, project):
+def test_search_features(admin_client, feature, project):  # type: ignore[no-untyped-def]
     # First get the features without searching
     feature_list_url = reverse("api-v1:projects:project-features-list", args=[project])
     response = admin_client.get(feature_list_url)
@@ -27,7 +27,7 @@ def test_search_features(admin_client, feature, project):
     assert invalid_search_response.json()["count"] == 0
 
 
-def test_sort_features(admin_client, project):
+def test_sort_features(admin_client, project):  # type: ignore[no-untyped-def]
     # first, we need to create 2 features
     feature_1_data = {"name": "feature_a"}
     feature_2_data = {"name": "feature_b"}
@@ -74,7 +74,7 @@ def test_sort_features(admin_client, project):
     assert name_desc_response_json["results"][1]["id"] == feature_1_id
 
 
-def test_filter_features_by_tags(admin_client, project):
+def test_filter_features_by_tags(admin_client, project):  # type: ignore[no-untyped-def]
     # first lets create some tags
     tag_labels = ("tag_1", "tag_2")
 
@@ -134,7 +134,7 @@ def test_filter_features_by_tags(admin_client, project):
     assert all_tags_features_response_json["count"] == 0
 
 
-def test_filter_features_by_archived_status(admin_client, project):
+def test_filter_features_by_archived_status(admin_client, project):  # type: ignore[no-untyped-def]
     # First let's create 2 new features, one which is archived and one which isn't
     features_url = reverse("api-v1:projects:project-features-list", args=[project])
     create_archived_feature_response = admin_client.post(

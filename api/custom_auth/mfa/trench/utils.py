@@ -11,7 +11,7 @@ from django.utils.http import base36_to_int, int_to_base36
 from custom_auth.mfa.backends.application import CustomApplicationBackend
 from custom_auth.mfa.trench.models import MFAMethod
 
-User: AbstractUser = get_user_model()
+User: AbstractUser = get_user_model()  # type: ignore[assignment]
 
 
 class UserTokenGenerator(PasswordResetTokenGenerator):
@@ -26,10 +26,10 @@ class UserTokenGenerator(PasswordResetTokenGenerator):
     SECRET = settings.SECRET_KEY
     EXPIRY_TIME = 60 * 15
 
-    def make_token(self, user: User) -> str:
+    def make_token(self, user: User) -> str:  # type: ignore[valid-type]
         return self._make_token_with_timestamp(user, int(datetime.now().timestamp()))
 
-    def check_token(self, user: User, token: str) -> Optional[User]:
+    def check_token(self, user: User, token: str) -> Optional[User]:  # type: ignore[valid-type,override]
         user_model = get_user_model()
         try:
             token = str(token)
@@ -47,7 +47,7 @@ class UserTokenGenerator(PasswordResetTokenGenerator):
 
         return user
 
-    def _make_token_with_timestamp(self, user: User, timestamp: int, **kwargs) -> str:
+    def _make_token_with_timestamp(self, user: User, timestamp: int, **kwargs) -> str:  # type: ignore[no-untyped-def,override,valid-type]  # noqa: E501  # noqa: E501
         ts_b36 = int_to_base36(timestamp)
         token_hash = salted_hmac(
             self.KEY_SALT,
@@ -65,6 +65,6 @@ def get_mfa_model() -> Type[MFAMethod]:
 
 
 def get_mfa_handler(mfa_method: MFAMethod) -> CustomApplicationBackend:
-    conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]
+    conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]  # type: ignore[index]
     mfa_handler = CustomApplicationBackend(mfa_method=mfa_method, config=conf)
     return mfa_handler

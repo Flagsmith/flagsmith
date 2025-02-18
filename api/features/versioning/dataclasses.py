@@ -8,7 +8,7 @@ class Conflict(BaseModel):
     original_cr_id: int | None = None
     published_at: datetime | None = None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def is_environment_default(self) -> bool:
         return self.segment_id is None

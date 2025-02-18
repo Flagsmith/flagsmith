@@ -3,8 +3,8 @@ from datetime import datetime
 
 from django.conf import settings
 from django.core.management import BaseCommand
-from influxdb_client import InfluxDBClient, Point
-from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client import InfluxDBClient, Point  # type: ignore[import-untyped]
+from influxdb_client.client.write_api import SYNCHRONOUS  # type: ignore[import-untyped]
 
 
 class Command(BaseCommand):
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             help="Time to send the data point with. Defaults to current time.",
         )
 
-    def handle(
+    def handle(  # type: ignore[no-untyped-def]
         self,
         *args,
         tags: list[str],

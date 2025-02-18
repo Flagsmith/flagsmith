@@ -55,7 +55,7 @@ def test_migrate_environments_to_v2__environment_with_overrides__writes_expected
     # When
     migrate_environments_to_v2(
         project_id=environment.project_id,
-        capacity_budget=float("Inf"),
+        capacity_budget=float("Inf"),  # type: ignore[arg-type]
     )
 
     # Then
@@ -101,7 +101,7 @@ def test_migrate_environments_to_v2__capacity_budget_exceeded__returns_expected(
     expected_capacity_budget = Decimal(12)
     mocked_dynamodb_identity_wrapper = mocker.MagicMock(spec=DynamoIdentityWrapper)
 
-    def iter_all_items_paginated_gen_mock(**_):
+    def iter_all_items_paginated_gen_mock(**_):  # type: ignore[no-untyped-def]
         yield map_identity_to_identity_document(identity)
         raise CapacityBudgetExceeded(expected_capacity_budget, Decimal(13))
 
@@ -133,5 +133,5 @@ def test_migrate_environments_to_v2__capacity_budget_exceeded__returns_expected(
         overrides_only=True,
     )
 
-    assert result.status == EdgeV2MigrationStatus.INCOMPLETE
-    assert result.identity_overrides_changeset.to_put == []
+    assert result.status == EdgeV2MigrationStatus.INCOMPLETE  # type: ignore[union-attr]
+    assert result.identity_overrides_changeset.to_put == []  # type: ignore[union-attr]

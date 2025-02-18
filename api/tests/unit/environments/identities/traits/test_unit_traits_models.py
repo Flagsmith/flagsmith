@@ -14,7 +14,7 @@ from environments.identities.traits.models import Trait
         (123.4, {"value_type": "float", "float_value": 123.4}),
     ),
 )
-def test_generate_trait_value_data_for_value(value, expected_data):
+def test_generate_trait_value_data_for_value(value, expected_data):  # type: ignore[no-untyped-def]
     assert Trait.generate_trait_value_data(value) == expected_data
 
 
@@ -41,13 +41,13 @@ def test_generate_trait_value_data_for_value(value, expected_data):
         ),
     ),
 )
-def test_generate_trait_value_data_for_deserialized_data(
+def test_generate_trait_value_data_for_deserialized_data(  # type: ignore[no-untyped-def]
     deserialized_data, expected_data
 ):
     assert Trait.generate_trait_value_data(deserialized_data) == expected_data
 
 
-def test_trait_bulk_create_create_objects(identity):
+def test_trait_bulk_create_create_objects(identity):  # type: ignore[no-untyped-def]
     # Given
     traits = [
         Trait(identity=identity, trait_key="key1"),
@@ -61,7 +61,7 @@ def test_trait_bulk_create_create_objects(identity):
     assert Trait.objects.filter(identity=identity).count() == 2
 
 
-def test_trait_bulk_delete_deletes_objects(trait):
+def test_trait_bulk_delete_deletes_objects(trait):  # type: ignore[no-untyped-def]
     # When
     Trait.objects.filter(identity=trait.identity).delete()
 

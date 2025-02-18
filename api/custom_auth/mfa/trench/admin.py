@@ -4,7 +4,7 @@ from custom_auth.mfa.trench.models import MFAMethod
 
 
 @admin.register(MFAMethod)
-class MFAMethodAdmin(admin.ModelAdmin):  # pragma: no cover
+class MFAMethodAdmin(admin.ModelAdmin):  # type: ignore[type-arg]  # pragma: no cover
     list_display = (
         "user_email",
         "name",
@@ -36,4 +36,4 @@ class MFAMethodAdmin(admin.ModelAdmin):  # pragma: no cover
     )
 
     def user_email(self, instance: MFAMethod) -> str:
-        return instance.user.email
+        return instance.user.email  # type: ignore[no-any-return]

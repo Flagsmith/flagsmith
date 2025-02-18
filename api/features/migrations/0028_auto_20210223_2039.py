@@ -10,7 +10,7 @@ from features.value_types import BOOLEAN, INTEGER
 logger = logging.getLogger(__name__)
 
 
-def create_or_update_feature_state_values_for_feature_segments(apps, schema_editor):
+def create_or_update_feature_state_values_for_feature_segments(apps, schema_editor):  # type: ignore[no-untyped-def]
     """
     Create / Update the FeatureStateValue object for all FeatureSegments
     that currently exist.
@@ -69,7 +69,7 @@ def create_or_update_feature_state_values_for_feature_segments(apps, schema_edit
     )
 
 
-def reverse(apps, schema_editor):
+def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     pass
 
 

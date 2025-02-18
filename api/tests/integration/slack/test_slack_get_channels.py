@@ -23,7 +23,7 @@ def test_get_channels_fails_if_user_has_no_permission(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_channels_returns_400_when_slack_project_config_does_not_exist(
+def test_get_channels_returns_400_when_slack_project_config_does_not_exist(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key
 ):
     # Given
@@ -43,7 +43,7 @@ def test_get_channels_returns_400_when_slack_project_config_does_not_exist(
     )
 
 
-def test_get_channels_pagination(
+def test_get_channels_pagination(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment_api_key,
@@ -85,7 +85,7 @@ def test_get_channels_pagination(
     mocked_slack_wrapper.assert_called_with(api_token=slack_bot_token)
 
 
-def test_get_channels_response_structure(
+def test_get_channels_response_structure(  # type: ignore[no-untyped-def]
     mocker,
     admin_client,
     environment_api_key,

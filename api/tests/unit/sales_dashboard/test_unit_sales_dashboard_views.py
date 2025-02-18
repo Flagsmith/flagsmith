@@ -44,7 +44,7 @@ def test_organisation_subscription_get_api_call_overage(
     request = rf.get("/sales-dashboard")
     view = OrganisationList()
     view.request = request
-    result = view.get_queryset().get(pk=organisation.id)
+    result = view.get_queryset().get(pk=organisation.id)  # type: ignore[no-untyped-call]
 
     assert result.overage == expected_overage
 
@@ -96,7 +96,7 @@ def test_list_organisations_search_by_name(
     # Then
     assert response.status_code == 200
 
-    assert list(response.context_data["organisation_list"]) == [organisation]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
 
 
 def test_list_organisations_search_by_subscription_id(
@@ -114,7 +114,7 @@ def test_list_organisations_search_by_subscription_id(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
 
 
 def test_list_organisations_search_by_user_email(
@@ -132,7 +132,7 @@ def test_list_organisations_search_by_user_email(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
 
 
 def test_list_organisations_search_by_user_email_for_non_existent_user(
@@ -152,7 +152,7 @@ def test_list_organisations_search_by_user_email_for_non_existent_user(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == []
+    assert list(response.context_data["organisation_list"]) == []  # type: ignore[attr-defined]
 
 
 def test_list_organisations_search_by_domain(
@@ -171,7 +171,7 @@ def test_list_organisations_search_by_domain(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
 
 
 def test_list_organisations_filter_plan(
@@ -190,7 +190,7 @@ def test_list_organisations_filter_plan(
 
     # Then
     assert response.status_code == 200
-    assert list(response.context_data["organisation_list"]) == [organisation]
+    assert list(response.context_data["organisation_list"]) == [organisation]  # type: ignore[attr-defined]
 
 
 def test_list_organisations_fails_if_not_staff(
@@ -208,7 +208,7 @@ def test_list_organisations_fails_if_not_staff(
 
     # Then
     assert response.status_code == 302
-    assert response.url == "/admin/login/?next=/sales-dashboard/"
+    assert response.url == "/admin/login/?next=/sales-dashboard/"  # type: ignore[attr-defined]
 
 
 def test_get_email_usage_fails_if_not_staff(
@@ -226,7 +226,7 @@ def test_get_email_usage_fails_if_not_staff(
 
     # Then
     assert response.status_code == 302
-    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"
+    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"  # type: ignore[attr-defined]
 
 
 def test_post_email_usage_fails_if_not_staff(
@@ -244,7 +244,7 @@ def test_post_email_usage_fails_if_not_staff(
 
     # Then
     assert response.status_code == 302
-    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"
+    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"  # type: ignore[attr-defined]
 
 
 def test_start_trial(

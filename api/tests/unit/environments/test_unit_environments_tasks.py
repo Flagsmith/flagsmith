@@ -27,7 +27,7 @@ def test_rebuild_environment_document(
     )
 
 
-def test_process_environment_update_with_environment_audit_log(environment, mocker):
+def test_process_environment_update_with_environment_audit_log(environment, mocker):  # type: ignore[no-untyped-def]
     # Given
     audit_log = AuditLog.objects.create(
         project=environment.project, environment=environment
@@ -57,7 +57,7 @@ def test_process_environment_update_with_environment_audit_log(environment, mock
     mock_send_environment_update_message_for_project.assert_not_called()
 
 
-def test_process_environment_update_with_project_audit_log(environment, mocker):
+def test_process_environment_update_with_project_audit_log(environment, mocker):  # type: ignore[no-untyped-def]
     # Given
     audit_log = AuditLog.objects.create(project=environment.project)
     mock_environment_model_class = mocker.patch(

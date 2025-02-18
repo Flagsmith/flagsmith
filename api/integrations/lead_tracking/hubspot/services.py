@@ -16,7 +16,7 @@ def register_hubspot_tracker(request: Request) -> None:
         return
 
     if (
-        HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)
+        HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)  # type: ignore[misc]
         .exclude(user=request.user)
         .exists()
     ):

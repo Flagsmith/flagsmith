@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from django.conf import settings
-from slack_sdk import WebClient
+from slack_sdk import WebClient  # type: ignore[attr-defined]
 from slack_sdk.errors import SlackApiError
 from slack_sdk.http_retry.builtin_handlers import RateLimitErrorRetryHandler
 
@@ -25,7 +25,7 @@ class ChannelsDataResponse:
 
 
 class SlackWrapper(AbstractBaseEventIntegrationWrapper):
-    def __init__(self, api_token: str = None, channel_id: str = None):
+    def __init__(self, api_token: str = None, channel_id: str = None):  # type: ignore[assignment]
         self.api_token = api_token
         self.channel_id = channel_id
 
@@ -36,15 +36,15 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
             code=code,
             redirect_uri=redirect_uri,
         )
-        return oauth_response.get("access_token")
+        return oauth_response.get("access_token")  # type: ignore[no-untyped-call,no-any-return]
 
-    def join_channel(self):
+    def join_channel(self):  # type: ignore[no-untyped-def]
         try:
             self._client.conversations_join(channel=self.channel_id)
         except SlackApiError as e:
             raise SlackChannelJoinError(e.response.get("error")) from e
 
-    def get_channels_data(self, **kwargs) -> ChannelsDataResponse:
+    def get_channels_data(self, **kwargs) -> ChannelsDataResponse:  # type: ignore[no-untyped-def]
         """
         Returns non archived public channels.
         """
@@ -64,7 +64,7 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
         return client
 
     @staticmethod
-    def generate_event_data(audit_log_record: AuditLog) -> dict:
+    def generate_event_data(audit_log_record: AuditLog) -> dict:  # type: ignore[type-arg]
         log = audit_log_record.log
         environment_name = audit_log_record.environment_name
         email = audit_log_record.author_identifier
@@ -85,5 +85,5 @@ class SlackWrapper(AbstractBaseEventIntegrationWrapper):
             ]
         }
 
-    def _track_event(self, event: dict) -> None:
+    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         self._client.chat_postMessage(channel=self.channel_id, blocks=event["blocks"])

@@ -8,7 +8,7 @@ from organisations.models import OrganisationRole
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(
+def test_migration_only_remove_permissions_for_users_that_are_not_part_of_the_organisation(  # type: ignore[no-untyped-def]  # noqa: E501
     migrator,
 ):
     # Given - the migration state is at 0004 (before the migration we want to test)

@@ -30,7 +30,7 @@ def subscription_metadata(mocker: MockerFixture) -> None:
         "organisations.models.Subscription.get_subscription_metadata",
         return_value=metadata,
     )
-    return metadata
+    return metadata  # type: ignore[return-value]
 
 
 def test_audit_log_can_be_filtered_by_environments(
@@ -46,7 +46,7 @@ def test_audit_log_can_be_filtered_by_environments(
     url = reverse("api-v1:audit-list")
     # When
     response = admin_client.get(
-        url, {"project": project.id, "environments": [audit_env.id]}
+        url, {"project": project.id, "environments": [audit_env.id]}  # type: ignore[arg-type]
     )
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -69,7 +69,7 @@ def test_audit_log_can_be_filtered_by_log_text(
     url = reverse("api-v1:audit-list")
 
     # When
-    response = admin_client.get(url, {"project": project.id, "search": "flag state"})
+    response = admin_client.get(url, {"project": project.id, "search": "flag state"})  # type: ignore[arg-type]
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -136,7 +136,7 @@ def test_regular_user_cannot_list_audit_log(
     # Given
     AuditLog.objects.create(environment=environment)
     url = reverse("api-v1:audit-list")
-    user = django_user_model.objects.create(email="test@example.com")
+    user = django_user_model.objects.create(email="test@example.com")  # type: ignore[attr-defined]
     user.add_organisation(organisation)
     api_client.force_authenticate(user)
 
@@ -155,7 +155,7 @@ def test_admin_user_cannot_list_audit_log_of_another_organisation(
 ) -> None:
     # Given
     another_organisation = Organisation.objects.create(name="another organisation")
-    user = django_user_model.objects.create(email="test@example.com")
+    user = django_user_model.objects.create(email="test@example.com")  # type: ignore[attr-defined]
     user.add_organisation(another_organisation, role=OrganisationRole.ADMIN)
 
     AuditLog.objects.create(project=project)

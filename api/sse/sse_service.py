@@ -5,7 +5,7 @@ from io import StringIO
 from typing import Generator
 
 import boto3
-import gnupg
+import gnupg  # type: ignore[import-untyped]
 from django.conf import settings
 
 from sse import tasks
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 GNUPG_HOME = "/app/.gnupg"
 
 
-def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
+def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):  # type: ignore[no-untyped-def]
     """
     Decorator that only call the service function if sse is enabled else return None.
     i.e: settings are configured and the project has sse enabled.
@@ -25,9 +25,9 @@ def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
         of the decorated function and returns the project object.
     """
 
-    def decorator(service_func):
+    def decorator(service_func):  # type: ignore[no-untyped-def]
         @wraps(service_func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
             project = get_project_from_first_arg(args[0])
             if all(
                 [
@@ -44,13 +44,13 @@ def _sse_enabled(get_project_from_first_arg=lambda obj: obj.project):
     return decorator
 
 
-@_sse_enabled(get_project_from_first_arg=lambda obj: obj)
-def send_environment_update_message_for_project(project):
+@_sse_enabled(get_project_from_first_arg=lambda obj: obj)  # type: ignore[no-untyped-call]
+def send_environment_update_message_for_project(project):  # type: ignore[no-untyped-def]
     tasks.send_environment_update_message_for_project.delay(args=(project.id,))
 
 
-@_sse_enabled()
-def send_environment_update_message_for_environment(environment):
+@_sse_enabled()  # type: ignore[no-untyped-call]
+def send_environment_update_message_for_environment(environment):  # type: ignore[no-untyped-def]
     tasks.send_environment_update_message.delay(
         args=(environment.api_key, environment.updated_at.isoformat())
     )

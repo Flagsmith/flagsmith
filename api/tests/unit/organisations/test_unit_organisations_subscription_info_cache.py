@@ -4,7 +4,7 @@ import pytest
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-from task_processor.task_run_method import TaskRunMethod
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (
@@ -17,7 +17,7 @@ from organisations.subscriptions.constants import SubscriptionCacheEntity
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_update_caches(mocker, organisation, chargebee_subscription, settings):
+def test_update_caches(mocker, organisation, chargebee_subscription, settings):  # type: ignore[no-untyped-def]
     # Given
     settings.CHARGEBEE_API_KEY = "api-key"
     settings.INFLUXDB_TOKEN = "token"

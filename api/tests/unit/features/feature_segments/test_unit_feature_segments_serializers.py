@@ -14,7 +14,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_feature_segment_change_priorities_serializer_validate_fails_if_non_unique_version(
+def test_feature_segment_change_priorities_serializer_validate_fails_if_non_unique_version(  # type: ignore[no-untyped-def]  # noqa: E501
     feature: Feature,
     environment_v2_versioning: Environment,
     segment: Segment,

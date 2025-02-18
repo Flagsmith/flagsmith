@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 from audit.serializers import AuditLogListSerializer
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=AuditLog)
-def call_webhooks(sender, instance, **kwargs):
+def call_webhooks(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     if settings.DISABLE_WEBHOOKS:
         return
 
@@ -46,16 +46,16 @@ def _get_integration_config(
     instance: AuditLog, integration_name: str
 ) -> IntegrationsModel | None:
     if hasattr(project := instance.project, integration_name):
-        return getattr(project, integration_name)
+        return getattr(project, integration_name)  # type: ignore[no-any-return]
     if hasattr(environment := instance.environment, integration_name):
-        return getattr(environment, integration_name)
+        return getattr(environment, integration_name)  # type: ignore[no-any-return]
     if hasattr(organisation := instance.organisation, integration_name):
-        return getattr(organisation, integration_name)
+        return getattr(organisation, integration_name)  # type: ignore[no-any-return]
     return None
 
 
-def track_only_feature_related_events(signal_function):
-    def signal_wrapper(sender, instance, **kwargs):
+def track_only_feature_related_events(signal_function):  # type: ignore[no-untyped-def]
+    def signal_wrapper(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
         # Only handle Feature related changes
         if instance.related_object_type not in [
             RelatedObjectType.FEATURE.name,
@@ -69,7 +69,7 @@ def track_only_feature_related_events(signal_function):
     return signal_wrapper
 
 
-def _track_event_async(instance, integration_client):
+def _track_event_async(instance, integration_client):  # type: ignore[no-untyped-def]
     event_data = integration_client.generate_event_data(audit_log_record=instance)
 
     integration_client.track_event_async(event=event_data)
@@ -77,65 +77,65 @@ def _track_event_async(instance, integration_client):
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-def send_audit_log_event_to_datadog(sender, instance, **kwargs):
+def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     data_dog_config = _get_integration_config(instance, "data_dog_config")
 
     if not data_dog_config:
         return
 
     data_dog = DataDogWrapper(
-        base_url=data_dog_config.base_url, api_key=data_dog_config.api_key
+        base_url=data_dog_config.base_url, api_key=data_dog_config.api_key  # type: ignore[arg-type]
     )
-    _track_event_async(instance, data_dog)
+    _track_event_async(instance, data_dog)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-def send_audit_log_event_to_new_relic(sender, instance, **kwargs):
+def send_audit_log_event_to_new_relic(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     new_relic_config = _get_integration_config(instance, "new_relic_config")
     if not new_relic_config:
         return
 
     new_relic = NewRelicWrapper(
-        base_url=new_relic_config.base_url,
+        base_url=new_relic_config.base_url,  # type: ignore[arg-type]
         api_key=new_relic_config.api_key,
         app_id=new_relic_config.app_id,
     )
-    _track_event_async(instance, new_relic)
+    _track_event_async(instance, new_relic)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):
+def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     dynatrace_config = _get_integration_config(instance, "dynatrace_config")
     if not dynatrace_config:
         return
 
     dynatrace = DynatraceWrapper(
-        base_url=dynatrace_config.base_url,
+        base_url=dynatrace_config.base_url,  # type: ignore[arg-type]
         api_key=dynatrace_config.api_key,
         entity_selector=dynatrace_config.entity_selector,
     )
-    _track_event_async(instance, dynatrace)
+    _track_event_async(instance, dynatrace)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-def send_audit_log_event_to_grafana(sender, instance, **kwargs):
+def send_audit_log_event_to_grafana(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     grafana_config = _get_integration_config(instance, "grafana_config")
     if not grafana_config:
         return
 
     grafana = GrafanaWrapper(
-        base_url=grafana_config.base_url,
+        base_url=grafana_config.base_url,  # type: ignore[arg-type]
         api_key=grafana_config.api_key,
     )
-    _track_event_async(instance, grafana)
+    _track_event_async(instance, grafana)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
 @track_only_feature_related_events
-def send_audit_log_event_to_slack(sender, instance, **kwargs):
+def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     slack_project_config = _get_integration_config(instance, "slack_config")
     if not slack_project_config:
         return
@@ -147,4 +147,4 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):
     slack = SlackWrapper(
         api_token=slack_project_config.api_token, channel_id=env_config.channel_id
     )
-    _track_event_async(instance, slack)
+    _track_event_async(instance, slack)  # type: ignore[no-untyped-call]

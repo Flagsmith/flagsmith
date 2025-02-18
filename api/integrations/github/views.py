@@ -41,9 +41,9 @@ from organisations.permissions.permissions import GithubIsAdminOrganisation
 logger = logging.getLogger(__name__)
 
 
-def github_auth_required(func):
+def github_auth_required(func):  # type: ignore[no-untyped-def]
     @wraps(func)
-    def wrapper(request, organisation_pk):
+    def wrapper(request, organisation_pk):  # type: ignore[no-untyped-def]
 
         if not GithubConfiguration.has_github_configuration(
             organisation_id=organisation_pk
@@ -63,12 +63,12 @@ def github_auth_required(func):
 def github_api_call_error_handler(
     error: str | None = None,
 ) -> Callable[..., Callable[..., Any]]:
-    def decorator(func):
+    def decorator(func):  # type: ignore[no-untyped-def]
         @wraps(func)
-        def wrapper(*args, **kwargs) -> Response:
+        def wrapper(*args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
             default_error = "Failed to retrieve requested information from GitHub API."
             try:
-                return func(*args, **kwargs)
+                return func(*args, **kwargs)  # type: ignore[no-any-return]
             except ValueError as e:
                 return Response(
                     data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
@@ -88,7 +88,7 @@ def github_api_call_error_handler(
     return decorator
 
 
-class GithubConfigurationViewSet(viewsets.ModelViewSet):
+class GithubConfigurationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = (
         IsAuthenticated,
         HasPermissionToGithubConfiguration,
@@ -97,16 +97,16 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
     serializer_class = GithubConfigurationSerializer
     model_class = GithubConfiguration
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         organisation_id = self.kwargs["organisation_pk"]
         serializer.save(organisation_id=organisation_id)
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         return GithubConfiguration.objects.filter(
             organisation_id=self.kwargs["organisation_pk"]
         )
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         try:
             return super().create(request, *args, **kwargs)
         except IntegrityError as e:
@@ -114,12 +114,12 @@ class GithubConfigurationViewSet(viewsets.ModelViewSet):
                 raise DuplicateGitHubIntegration
 
     @github_api_call_error_handler(error="Failed to delete GitHub Installation.")
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         delete_github_installation(self.get_object().installation_id)
         return super().destroy(request, *args, **kwargs)
 
 
-class GithubRepositoryViewSet(viewsets.ModelViewSet):
+class GithubRepositoryViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = (
         IsAuthenticated,
         HasPermissionToGithubConfiguration,
@@ -128,11 +128,11 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
     serializer_class = GithubRepositorySerializer
     model_class = GitHubRepository
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         github_configuration_id = self.kwargs["github_pk"]
         serializer.save(github_configuration_id=github_configuration_id)
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         try:
             if github_pk := self.kwargs.get("github_pk"):
                 int(github_pk)
@@ -140,7 +140,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
         except ValueError:
             raise ValidationError({"github_pk": ["Must be an integer"]})
 
-    def create(self, request, *args, **kwargs) -> Response | None:
+    def create(self, request, *args, **kwargs) -> Response | None:  # type: ignore[no-untyped-def,return,override]
 
         try:
             response: Response = super().create(request, *args, **kwargs)
@@ -164,7 +164,7 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
                     detail="Duplication error. The GitHub repository already linked"
                 )
 
-    def update(self, request, *args, **kwargs) -> Response | None:
+    def update(self, request, *args, **kwargs) -> Response | None:  # type: ignore[no-untyped-def,override]
         response: Response = super().update(request, *args, **kwargs)
         github_configuration: GithubConfiguration = GithubConfiguration.objects.get(
             id=self.kwargs["github_pk"]
@@ -180,9 +180,9 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
-@github_auth_required
+@github_auth_required  # type: ignore[misc]
 @github_api_call_error_handler(error="Failed to retrieve GitHub pull requests.")
-def fetch_pull_requests(request, organisation_pk) -> Response:
+def fetch_pull_requests(request, organisation_pk) -> Response:  # type: ignore[no-untyped-def]
     query_serializer = IssueQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
@@ -201,9 +201,9 @@ def fetch_pull_requests(request, organisation_pk) -> Response:
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
-@github_auth_required
+@github_auth_required  # type: ignore[misc]
 @github_api_call_error_handler(error="Failed to retrieve GitHub issues.")
-def fetch_issues(request, organisation_pk) -> Response | None:
+def fetch_issues(request, organisation_pk) -> Response | None:  # type: ignore[no-untyped-def]
     query_serializer = IssueQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
@@ -223,7 +223,7 @@ def fetch_issues(request, organisation_pk) -> Response | None:
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, GithubIsAdminOrganisation])
 @github_api_call_error_handler(error="Failed to retrieve GitHub repositories.")
-def fetch_repositories(request, organisation_pk: int) -> Response | None:
+def fetch_repositories(request, organisation_pk: int) -> Response | None:  # type: ignore[no-untyped-def]
     query_serializer = PaginatedQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
@@ -248,9 +248,9 @@ def fetch_repositories(request, organisation_pk: int) -> Response | None:
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated, HasPermissionToGithubConfiguration])
-@github_auth_required
+@github_auth_required  # type: ignore[misc]
 @github_api_call_error_handler(error="Failed to retrieve GitHub repo contributors.")
-def fetch_repo_contributors(request, organisation_pk) -> Response:
+def fetch_repo_contributors(request, organisation_pk) -> Response:  # type: ignore[no-untyped-def]
     query_serializer = RepoQueryParamsSerializer(data=request.query_params)
     if not query_serializer.is_valid():
         return Response({"error": query_serializer.errors}, status=400)
@@ -268,7 +268,7 @@ def fetch_repo_contributors(request, organisation_pk) -> Response:
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def github_webhook(request) -> Response:
+def github_webhook(request) -> Response:  # type: ignore[no-untyped-def]
     secret = settings.GITHUB_WEBHOOK_SECRET
     signature = request.headers.get("X-Hub-Signature")
     github_event = request.headers.get("x-github-event")

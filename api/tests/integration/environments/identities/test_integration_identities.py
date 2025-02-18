@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -37,7 +37,7 @@ total_variance_percentage = (
     ),
 )
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_feature_states_for_identity(
+def test_get_feature_states_for_identity(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage_value,
     hashed_percentage,
     expected_mv_value,
@@ -71,14 +71,14 @@ def test_get_feature_states_for_identity(
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,
+        multivariate_feature_id,  # type: ignore[arg-type]
         variant_1_percentage_allocation,
         variant_1_value,
     )
     create_mv_option_with_api(
         admin_client,
         project,
-        multivariate_feature_id,
+        multivariate_feature_id,  # type: ignore[arg-type]
         variant_2_percentage_allocation,
         variant_2_value,
     )
@@ -147,7 +147,7 @@ def test_get_feature_states_for_identity(
     assert values_dict[multivariate_feature_id] == variant_2_value
 
 
-def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(
+def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_states(  # type: ignore[no-untyped-def]  # noqa: E501
     sdk_client,
     admin_client,
     project,
@@ -168,14 +168,14 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,
+            feature_id,  # type: ignore[arg-type]
             variant_1_percentage_allocation,
             variant_1_value,
         )
         create_mv_option_with_api(
             admin_client,
             project,
-            feature_id,
+            feature_id,  # type: ignore[arg-type]
             variant_2_percentage_allocation,
             variant_2_value,
         )
@@ -199,14 +199,14 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,
+        feature_id,  # type: ignore[arg-type]
         variant_1_percentage_allocation,
         variant_1_value,
     )
     create_mv_option_with_api(
         admin_client,
         project,
-        feature_id,
+        feature_id,  # type: ignore[arg-type]
         variant_2_percentage_allocation,
         variant_2_value,
     )
@@ -240,7 +240,7 @@ def transient_identifier(
     segment_condition_property: str,
     segment_condition_value: str,
 ) -> Generator[str, None, None]:
-    return hashlib.sha256(
+    return hashlib.sha256(  # type: ignore[return-value]
         f"avalue_a{segment_condition_property}{segment_condition_value}".encode()
     ).hexdigest()
 
@@ -478,7 +478,7 @@ def test_get_feature_states_for_identity__transient_identifier__empty_segment__r
     feature: int,
     environment: int,
     identity: int,
-    project: id,
+    project: id,  # type: ignore[valid-type]
 ) -> None:
     # Given
     # a %0 segment that matches no identity

@@ -20,13 +20,13 @@ def get_audited_instance_from_audit_log_record(
 
     # Try getting the historical record first.
     if history_record := audit_log_record.history_record:
-        return history_record.instance
+        return history_record.instance  # type: ignore[attr-defined,no-any-return]
 
     # Try to infer the model class from `AuditLog.related_object_type`.
     match audit_log_record.related_object_type:
         # Assume segment priorities change.
         case RelatedObjectType.FEATURE.name:
-            return (
+            return (  # type: ignore[no-any-return]
                 Feature.objects.all_with_deleted()
                 .filter(
                     pk=audit_log_record.related_object_id,
@@ -37,7 +37,7 @@ def get_audited_instance_from_audit_log_record(
 
         # Assume change request.
         case RelatedObjectType.FEATURE_STATE.name:
-            return (
+            return (  # type: ignore[no-any-return]
                 FeatureState.objects.all_with_deleted()
                 .filter(
                     pk=audit_log_record.related_object_id,
@@ -48,7 +48,7 @@ def get_audited_instance_from_audit_log_record(
 
         # Assume environment feature version.
         case RelatedObjectType.EF_VERSION.name:
-            return (
+            return (  # type: ignore[no-any-return]
                 EnvironmentFeatureVersion.objects.all_with_deleted()
                 .filter(
                     uuid=audit_log_record.related_object_uuid,

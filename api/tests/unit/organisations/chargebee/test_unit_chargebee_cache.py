@@ -1,11 +1,11 @@
-from chargebee.list_result import ListResult
-from chargebee.models import Addon, Plan
+from chargebee.list_result import ListResult  # type: ignore[import-untyped]
+from chargebee.models import Addon, Plan  # type: ignore[import-untyped]
 
 from organisations.chargebee.cache import ChargebeeCache, get_item_generator
 from organisations.chargebee.metadata import ChargebeeItem
 
 
-def test_get_item_generator_fetches_all_items(mocker):
+def test_get_item_generator_fetches_all_items(mocker):  # type: ignore[no-untyped-def]
     # Given
     mocked_chargebee = mocker.patch(
         "organisations.chargebee.cache.chargebee", autospec=True
@@ -49,7 +49,7 @@ def test_get_item_generator_fetches_all_items(mocker):
     assert kwargs == {}
 
 
-def test_chargebee_cache(mocker, db):
+def test_chargebee_cache(mocker, db):  # type: ignore[no-untyped-def]
     # Given
 
     # a plan
@@ -85,7 +85,7 @@ def test_chargebee_cache(mocker, db):
     )
 
     # When
-    cache = ChargebeeCache()
+    cache = ChargebeeCache()  # type: ignore[no-untyped-call]
 
     # Then
     assert len(cache.plans) == 1

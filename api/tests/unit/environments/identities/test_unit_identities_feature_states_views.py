@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from common.environments.permissions import (
+from common.environments.permissions import (  # type: ignore[import-untyped]
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
@@ -21,7 +21,7 @@ from projects.models import Project
 from tests.unit.environments.helpers import get_environment_user_client
 
 
-def test_user_without_update_feature_state_permission_cannot_create_identity_feature_state(
+def test_user_without_update_feature_state_permission_cannot_create_identity_feature_state(  # type: ignore[no-untyped-def]  # noqa: E501
     client,
     organisation_one,
     organisation_one_project_one,
@@ -59,7 +59,7 @@ def test_user_without_update_feature_state_permission_cannot_create_identity_fea
 @pytest.mark.parametrize(
     "permission_keys, admin", (([], True), ([UPDATE_FEATURE_STATE], False))
 )
-def test_user_with_update_feature_state_permission_can_update_identity_feature_state(
+def test_user_with_update_feature_state_permission_can_update_identity_feature_state(  # type: ignore[no-untyped-def]
     organisation_one_project_one_environment_one,
     organisation_one_project_one_feature_one,
     organisation_one_project_one,
@@ -96,7 +96,7 @@ def test_user_with_update_feature_state_permission_can_update_identity_feature_s
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(
+def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(  # type: ignore[no-untyped-def]  # noqa: E501
     environment,
     identity,
     test_user_client,

@@ -59,7 +59,7 @@ def test_organisation_has_paid_subscription_missing_subscription_id(db: None) ->
 
 
 @mock.patch("organisations.models.cancel_chargebee_subscription")
-def test_organisation_cancel_subscription_cancels_chargebee_subscription(
+def test_organisation_cancel_subscription_cancels_chargebee_subscription(  # type: ignore[no-untyped-def]
     mocked_cancel_chargebee_subscription,
     organisation: Organisation,
 ):
@@ -89,7 +89,7 @@ def test_organisation_cancel_subscription_cancels_chargebee_subscription(
     assert subscription.plan == FREE_PLAN_ID
 
 
-def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(  # type: ignore[no-untyped-def]
     environment: Environment, organisation: Organisation, mocker: MockerFixture
 ):
     # Given
@@ -108,7 +108,7 @@ def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed
     )
 
 
-def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(  # type: ignore[no-untyped-def]
     environment: Environment, organisation: Organisation, mocker: MockerFixture
 ):
     # Given
@@ -124,7 +124,7 @@ def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchang
     mocked_rebuild_environment_document.delay.assert_not_called()
 
 
-def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(
+def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation, chargebee_subscription, mocker
 ):
     # Given
@@ -139,7 +139,7 @@ def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats
     mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
-def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limit(
+def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limit(  # type: ignore[no-untyped-def]
     organisation, chargebee_subscription, mocker, admin_user
 ):
     # Given
@@ -154,7 +154,7 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
     mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
-def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
+def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     organisation.subscription.max_seats = 0
     organisation.subscription.save()
@@ -168,7 +168,7 @@ def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admi
     mocked_get_subscription_metadata.assert_not_called()
 
 
-def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
+def test_organisation_is_auto_seat_upgrade_available(organisation, settings):  # type: ignore[no-untyped-def]
     # Given
     plan = "Scale-Up"
     subscription_id = "subscription-id"
@@ -195,21 +195,21 @@ def test_organisation_default_subscription_have_one_max_seat(
     assert subscription.max_seats == 1
 
 
-def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
+def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):  # type: ignore[no-untyped-def]
     # Given
     organisation = Organisation.objects.create(name="Test org")
     # Then
     assert organisation.is_paid is False
 
 
-def test_organisation_is_paid_returns_true_if_active_subscription_exists(
+def test_organisation_is_paid_returns_true_if_active_subscription_exists(  # type: ignore[no-untyped-def]
     organisation, chargebee_subscription
 ):
     # When/Then
     assert organisation.is_paid is True
 
 
-def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
+def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(  # type: ignore[no-untyped-def]
     organisation, chargebee_subscription
 ):
     # Given
@@ -221,7 +221,7 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
     assert organisation.is_paid is False
 
 
-def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation: Organisation,
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -257,7 +257,7 @@ def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata
     assert subscription_metadata == expected_metadata
 
 
-def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versions_when_released(
+def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versions_when_released(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation: Organisation,
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -306,7 +306,7 @@ def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versio
     assert subscription_metadata == expected_metadata
 
 
-def test_organisation_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(
+def test_organisation_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker: MockerFixture,
 ):
     # Given
@@ -325,7 +325,7 @@ def test_organisation_subscription_get_subscription_metadata_returns_xero_metada
     assert subscription_metadata == expected_metadata
 
 
-def test_organisation_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():
+def test_organisation_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     subscription = Subscription()
 
@@ -413,7 +413,7 @@ def test_organisation_get_subscription_metadata_for_self_hosted_open_source(
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
 
 
-def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
+def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, settings
 ):
     # Given
@@ -426,13 +426,13 @@ def test_organisation_subscription_add_single_seat_calls_correct_chargebee_metho
         "organisations.models.add_single_seat", autospec=True
     )
     # When
-    subscription.add_single_seat()
+    subscription.add_single_seat()  # type: ignore[no-untyped-call]
 
     # Then
     mocked_add_single_seat.assert_called_once_with(subscription_id)
 
 
-def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
+def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, settings
 ):
     # Given
@@ -449,13 +449,13 @@ def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradab
 
     # When
     with pytest.raises(SubscriptionDoesNotSupportSeatUpgrade):
-        subscription.add_single_seat()
+        subscription.add_single_seat()  # type: ignore[no-untyped-call]
 
     # and add_single_seat was not called
     mocked_add_single_seat.assert_not_called()
 
 
-def test_organisation_update_clears_environment_caches(
+def test_organisation_update_clears_environment_caches(  # type: ignore[no-untyped-def]
     mocker, organisation, environment
 ):
     # Given

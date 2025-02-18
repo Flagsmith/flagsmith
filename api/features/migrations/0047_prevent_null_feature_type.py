@@ -5,7 +5,7 @@ from django.db import migrations, models
 from features.feature_types import STANDARD
 
 
-def set_default_feature_type(apps, schema_editor):
+def set_default_feature_type(apps, schema_editor):  # type: ignore[no-untyped-def]
     feature_model_class = apps.get_model("features", "feature")
     feature_model_class.objects.filter(type__isnull=True).update(type=STANDARD)
 

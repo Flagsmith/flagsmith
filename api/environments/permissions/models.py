@@ -9,7 +9,7 @@ class EnvironmentPermissionModel(PermissionModel):
     class Meta:
         proxy = True
 
-    objects = EnvironmentPermissionManager()
+    objects = EnvironmentPermissionManager()  # type: ignore[misc]
 
 
 class UserEnvironmentPermission(AbstractBasePermissionModel):

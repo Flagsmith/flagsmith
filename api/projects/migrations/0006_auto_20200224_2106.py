@@ -3,7 +3,7 @@
 from django.db import migrations
 
 
-def delete_edit_feature_permission(apps, schema_editor):
+def delete_edit_feature_permission(apps, schema_editor):  # type: ignore[no-untyped-def]
     ProjectPermissionModel = apps.get_model('projects', 'ProjectPermissionModel')
 
     ProjectPermissionModel.objects.filter(key='EDIT_FEATURE').delete()

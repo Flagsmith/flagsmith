@@ -7,7 +7,7 @@ from integrations.segment.models import SegmentConfiguration
 from integrations.segment.segment import SegmentWrapper
 
 
-def test_segment_initialized_correctly():
+def test_segment_initialized_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
     base_url = "https://api.segment.io/"

@@ -31,7 +31,7 @@ def _get_instance_tags_from_audit_log_record(
             return [
                 f"feature:{(feature := instance.feature).name}",
                 f'flag:{"enabled" if instance.enabled else "disabled"}',
-                *_get_feature_tags(feature),
+                *_get_feature_tags(feature),  # type: ignore[has-type]
             ]
 
         if isinstance(instance, FeatureStateValue):

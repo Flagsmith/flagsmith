@@ -5,7 +5,7 @@ from organisations.models import OrganisationRole
 from webhooks.permissions import TriggerSampleWebhookPermission
 
 
-def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(
+def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]
     organisation, django_user_model, rf
 ):
     # Given
@@ -19,10 +19,10 @@ def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
-    assert permission_class.has_permission(mock_request, mock_view) is False
+    assert permission_class.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(
+def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(  # type: ignore[no-untyped-def]
     organisation, django_user_model, rf
 ):
     # Given
@@ -37,10 +37,10 @@ def test_has_permission_returns_true_for_org_webhook_if_user_is_an_admin(
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
-    assert permission_class.has_permission(mock_request, mock_view) is True
+    assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(
+def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]
     environment, django_user_model, rf
 ):
     # Given
@@ -54,10 +54,10 @@ def test_has_permission_returns_false_for_env_webhook_if_user_is_not_an_admin(
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
-    assert permission_class.has_permission(mock_request, mock_view) is False
+    assert permission_class.has_permission(mock_request, mock_view) is False  # type: ignore[no-untyped-call]
 
 
-def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(
+def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(  # type: ignore[no-untyped-def]
     environment, django_user_model, rf
 ):
     # Given
@@ -75,4 +75,4 @@ def test_has_permission_returns_true_for_env_webhook_if_user_is_an_admin(
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
-    assert permission_class.has_permission(mock_request, mock_view) is True
+    assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]

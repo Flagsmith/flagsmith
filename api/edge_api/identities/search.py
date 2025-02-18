@@ -21,13 +21,13 @@ class EdgeIdentitySearchData:
     search_attribute: str
 
     @property
-    def dynamo_search_method(self):
+    def dynamo_search_method(self):  # type: ignore[no-untyped-def]
         return (
             "eq" if self.search_type == EdgeIdentitySearchType.EQUAL else "begins_with"
         )
 
     @property
-    def dynamo_index_name(self):
+    def dynamo_index_name(self):  # type: ignore[no-untyped-def]
         if self.search_attribute == DASHBOARD_ALIAS_ATTRIBUTE:
             return DASHBOARD_ALIAS_INDEX_NAME
         return IDENTIFIER_INDEX_NAME

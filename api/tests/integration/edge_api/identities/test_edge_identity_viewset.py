@@ -19,7 +19,7 @@ from environments.dynamodb.wrappers.identity_wrapper import (
 from environments.models import Environment
 
 
-def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
+def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(  # type: ignore[no-untyped-def]
     admin_client, environment, environment_api_key
 ):
     # Given
@@ -35,7 +35,7 @@ def test_get_identities_returns_bad_request_if_dynamo_is_not_enabled(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_get_identity(
+def test_get_identity(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -62,7 +62,7 @@ def test_get_identity(
     )
 
 
-def test_get_identity_returns_404_if_identity_does_not_exists(
+def test_get_identity_returns_404_if_identity_does_not_exists(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -82,7 +82,7 @@ def test_get_identity_returns_404_if_identity_does_not_exists(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_create_identity(
+def test_create_identity(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -116,7 +116,7 @@ def test_create_identity(
     assert response.json()["identity_uuid"] is not None
 
 
-def test_create_identity_returns_400_if_identity_already_exists(
+def test_create_identity_returns_400_if_identity_already_exists(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -171,7 +171,7 @@ def test_delete_identity(
     )
 
 
-def test_identity_list_pagination(
+def test_identity_list_pagination(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -220,7 +220,7 @@ def test_identity_list_pagination(
     assert response.json()["last_evaluated_key"] is None
 
 
-def test_get_identities_list(
+def test_get_identities_list(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -253,7 +253,7 @@ def test_get_identities_list(
     )
 
 
-def test_search_identities_without_exact_match(
+def test_search_identities_without_exact_match(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -281,7 +281,7 @@ def test_search_identities_without_exact_match(
     assert response.json()["results"][0]["identifier"] == identifier
 
 
-def test_search_for_identities_with_exact_match(
+def test_search_for_identities_with_exact_match(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     dynamo_enabled_environment: Environment,
     environment_api_key: str,
@@ -462,7 +462,7 @@ def test_update_edge_identity(
     } == identity_from_db
 
 
-def test_edge_identities_traits_list(
+def test_edge_identities_traits_list(  # type: ignore[no-untyped-def]
     admin_client,
     environment_api_key,
     identity_document,
@@ -492,7 +492,7 @@ def test_edge_identities_traits_list(
     )
 
 
-def test_edge_identities_trait_delete(
+def test_edge_identities_trait_delete(  # type: ignore[no-untyped-def]
     admin_client,
     environment_api_key,
     dynamo_enabled_environment,
@@ -535,7 +535,7 @@ def test_edge_identities_trait_delete(
     )
 
 
-def test_edge_identities_create_trait(
+def test_edge_identities_create_trait(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -577,7 +577,7 @@ def test_edge_identities_create_trait(
     )
 
 
-def test_edge_identities_update_trait(
+def test_edge_identities_update_trait(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -624,7 +624,7 @@ def test_edge_identities_update_trait(
     )
 
 
-def test_edge_identities_update_trait_with_same_value(
+def test_edge_identities_update_trait_with_same_value(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,
@@ -659,7 +659,7 @@ def test_edge_identities_update_trait_with_same_value(
     edge_identity_dynamo_wrapper_mock.put_item.assert_not_called()
 
 
-def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(
+def test_edge_identities_update_traits_returns_400_if_persist_trait_data_is_false(  # type: ignore[no-untyped-def]
     admin_client,
     dynamo_enabled_environment,
     environment_api_key,

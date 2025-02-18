@@ -14,7 +14,7 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
 from django.conf import settings
 from django.db.models import Sum
 from django.utils import timezone
@@ -77,9 +77,9 @@ def get_usage_data(
         if date_start:
             assert date_stop
             kwargs["date_start"] = date_start
-            kwargs["date_stop"] = date_stop
+            kwargs["date_stop"] = date_stop  # type: ignore[assignment]
 
-        return get_usage_data_from_local_db(**kwargs)
+        return get_usage_data_from_local_db(**kwargs)  # type: ignore[arg-type]
 
     kwargs = {
         "organisation_id": organisation.id,
@@ -90,9 +90,9 @@ def get_usage_data(
     if date_start:
         assert date_stop
         kwargs["date_start"] = date_start
-        kwargs["date_stop"] = date_stop
+        kwargs["date_stop"] = date_stop  # type: ignore[assignment]
 
-    return get_usage_data_from_influxdb(**kwargs)
+    return get_usage_data_from_influxdb(**kwargs)  # type: ignore[arg-type]
 
 
 def get_usage_data_from_local_db(
@@ -124,7 +124,7 @@ def get_usage_data_from_local_db(
         qs = qs.filter(environment_id=environment_id)
 
     qs = (
-        qs.filter(
+        qs.filter(  # type: ignore[assignment]
             created_at__date__lte=date_stop,
             created_at__date__gt=date_start,
         )
@@ -143,10 +143,10 @@ def get_usage_data_from_local_db(
             row["count"],
         )
 
-    return data_by_day.values()
+    return data_by_day.values()  # type: ignore[return-value]
 
 
-def get_total_events_count(organisation) -> int:
+def get_total_events_count(organisation) -> int:  # type: ignore[no-untyped-def]
     """
     Return total number of events for an organisation in the last 30 days
     """
@@ -159,7 +159,7 @@ def get_total_events_count(organisation) -> int:
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
         count = get_events_for_organisation(organisation.id)
-    return count
+    return count  # type: ignore[no-any-return]
 
 
 def get_feature_evaluation_data(
@@ -200,7 +200,7 @@ def get_feature_evaluation_data_from_local_db(
     return usage_list
 
 
-def _get_environment_ids_for_org(organisation) -> List[int]:
+def _get_environment_ids_for_org(organisation) -> List[int]:  # type: ignore[no-untyped-def]
     # We need to do this to prevent Django from generating a query that
     # references the environments and projects tables,
     # as they do not exist in the analytics database.

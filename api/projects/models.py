@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Count
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
@@ -42,7 +42,7 @@ class EdgeV2MigrationStatus(models.TextChoices):
     INCOMPLETE = "INCOMPLETE", "Incomplete (identity overrides skipped)"
 
 
-class Project(LifecycleModelMixin, SoftDeleteExportableModel):
+class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[django-manager-missing,misc]
     name = models.CharField(max_length=2000)
     created_date = models.DateTimeField("DateCreated", auto_now_add=True)
     organisation = models.ForeignKey(
@@ -108,12 +108,12 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     )
     minimum_change_request_approvals = models.IntegerField(blank=True, null=True)
 
-    objects = ProjectManager()
+    objects = ProjectManager()  # type: ignore[misc]
 
     class Meta:
         ordering = ["id"]
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s" % self.name
 
     @property
@@ -142,25 +142,25 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     def edge_v2_identity_overrides_migrated(self) -> bool:
         return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
-    def get_segments_from_cache(self):
+    def get_segments_from_cache(self):  # type: ignore[no-untyped-def]
         return get_project_segments_from_cache(self.id)
 
     @hook(BEFORE_CREATE)
-    def set_enable_dynamo_db(self):
+    def set_enable_dynamo_db(self):  # type: ignore[no-untyped-def]
         self.enable_dynamo_db = self.enable_dynamo_db or settings.EDGE_ENABLED
 
     @hook(BEFORE_CREATE)
-    def set_edge_v2_migration_status(self):
+    def set_edge_v2_migration_status(self):  # type: ignore[no-untyped-def]
         if settings.EDGE_ENABLED:
             self.edge_v2_migration_status = EdgeV2MigrationStatus.COMPLETE
 
     @hook(AFTER_SAVE)
-    def clear_environments_cache(self):
+    def clear_environments_cache(self):  # type: ignore[no-untyped-def]
         environment_cache.delete_many(
             list(self.environments.values_list("api_key", flat=True))
         )
 
-    @hook(
+    @hook(  # type: ignore[misc]
         AFTER_SAVE,
         when="edge_v2_migration_status",
         has_changed=True,
@@ -170,14 +170,14 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         migrate_project_environments_to_v2.delay(kwargs={"project_id": self.id})
 
     @hook(AFTER_UPDATE)
-    def write_to_dynamo(self):
+    def write_to_dynamo(self):  # type: ignore[no-untyped-def]
         write_environments_to_dynamodb.delay(kwargs={"project_id": self.id})
 
     @hook(AFTER_DELETE)
-    def clean_up_dynamo(self):
-        DynamoProjectMetadata(self.id).delete()
+    def clean_up_dynamo(self):  # type: ignore[no-untyped-def]
+        DynamoProjectMetadata(self.id).delete()  # type: ignore[no-untyped-call]
 
-    @hook(AFTER_DELETE)
+    @hook(AFTER_DELETE)  # type: ignore[misc]
     def handle_cascade_delete(self) -> None:
         handle_cascade_delete.delay(kwargs={"project_id": self.id})
 
@@ -191,7 +191,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
     def live_segment_count(self) -> int:
         from segments.models import Segment
 
-        return Segment.live_objects.filter(project=self).count()
+        return Segment.live_objects.filter(project=self).count()  # type: ignore[no-any-return]
 
     def is_feature_name_valid(self, feature_name: str) -> bool:
         """
@@ -211,8 +211,8 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):
         return self.edge_v2_migration_status == EdgeV2MigrationStatus.COMPLETE
 
 
-class ProjectPermissionManager(models.Manager):
-    def get_queryset(self):
+class ProjectPermissionManager(models.Manager):  # type: ignore[type-arg]
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         return (
             super(ProjectPermissionManager, self)
             .get_queryset()
@@ -224,7 +224,7 @@ class ProjectPermissionModel(PermissionModel):
     class Meta:
         proxy = True
 
-    objects = ProjectPermissionManager()
+    objects = ProjectPermissionManager()  # type: ignore[misc]
 
 
 class UserPermissionGroupProjectPermission(AbstractBasePermissionModel):

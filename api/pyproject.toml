@@ -45,10 +45,7 @@ exclude_also = [
 omit = ["scripts/*"]
 
 [tool.isort]
-use_parentheses = true
-multi_line_output = 3
-include_trailing_comma = true
-line_length = 79
+profile = "black"
 known_first_party = [
   'analytics',
   'app',
@@ -114,6 +111,10 @@ console_output_style = 'count'
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["admin_sso.models"]
+ignore_missing_imports = true
 
 [tool.django-stubs]
 django_settings_module = "app.settings.local"

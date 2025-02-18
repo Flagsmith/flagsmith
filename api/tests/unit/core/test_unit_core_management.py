@@ -7,7 +7,7 @@ from django.db.migrations.recorder import MigrationRecorder
 from pytest_mock import MockerFixture
 
 
-class MockQuerySet(list):
+class MockQuerySet(list):  # type: ignore[type-arg]
     def exists(self) -> bool:
         return self.__len__() > 0
 
@@ -66,7 +66,7 @@ def test_rollbackmigrationsappliedafter_invalid_date(mocker: MockerFixture) -> N
 
 
 def test_rollbackmigrationsappliedafter_no_migrations(
-    mocker: MockerFixture, capsys: CaptureFixture
+    mocker: MockerFixture, capsys: CaptureFixture  # type: ignore[type-arg]
 ) -> None:
     # Given
     dt_string = "2024-10-01"
