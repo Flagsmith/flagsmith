@@ -16,8 +16,8 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
     | 'extractRehydrationInfo'
   > = {
     baseQuery: fetchBaseQuery({
-      credentials: Project.cookieAuthEnabled ? 'include' : undefined,
       baseUrl: Project.api,
+      credentials: Project.cookieAuthEnabled ? 'include' : undefined,
       prepareHeaders: async (headers, { endpoint, getState }) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const state = getState() as StoreStateType
@@ -33,7 +33,7 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
             if (token && !Project.cookieAuthEnabled) {
               headers.set('Authorization', `Token ${token}`)
             }
-          } catch (e) { }
+          } catch (e) {}
         }
 
         return headers
