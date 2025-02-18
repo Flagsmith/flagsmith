@@ -406,12 +406,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       changeRequest,
     })
   },
-  updateSubscription(hostedPageId) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.UPDATE_SUBSCRIPTION,
-      hostedPageId,
-    })
-  },
   updateUserRole(id, role) {
     Dispatcher.handleViewAction({
       actionType: Actions.UPDATE_USER_ROLE,

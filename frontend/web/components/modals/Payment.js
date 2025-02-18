@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import makeAsyncScriptLoader from 'react-async-script'
-import _data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import InfoMessage from 'components/InfoMessage'
@@ -11,6 +10,11 @@ import AccountProvider from 'common/providers/AccountProvider'
 import classNames from 'classnames'
 import Switch from 'components/Switch'
 import BlockedOrgInfo from 'components/BlockedOrgInfo'
+import {
+  createUpdateSubscription,
+  getSubscription,
+} from 'common/services/useSubscription'
+import { getStore } from 'common/store'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
@@ -23,17 +27,21 @@ const PaymentButton = (props) => {
         onClick={() => {
           Chargebee.getInstance().openCheckout({
             hostedPage() {
-              return _data.post(
-                `${Project.api}organisations/${
-                  AccountStore.getOrganisation().id
-                }/get-hosted-page-url-for-subscription-upgrade/`,
-                {
-                  plan_id: props['data-cb-plan-id'],
-                },
-              )
+              return getSubscription(getStore(), {
+                organisationId: AccountStore.getOrganisation().id,
+              }).then((res) => {
+                if (res.error) {
+                  throw new Error(res.error)
+                } else {
+                  return res.data
+                }
+              })
             },
             success: (res) => {
-              AppActions.updateSubscription(res)
+              createUpdateSubscription(getStore(), {
+                hostedPageId: res.hostedPageId,
+                organisationId: AccountStore.getOrganisation().id,
+              })
               if (this.props.isDisableAccount) {
                 window.location.href = `/organisations`
               }
@@ -270,6 +278,7 @@ const Payment = class extends Component {
                             className='text-primary fw-bold'
                             target='_blank'
                             href='https://www.flagsmith.com/on-premises-and-private-cloud-hosting'
+                            rel='noreferrer'
                           >
                             On Premise
                           </a>{' '}
@@ -278,6 +287,7 @@ const Payment = class extends Component {
                             className='text-primary fw-bold'
                             target='_blank'
                             href='https://www.flagsmith.com/on-premises-and-private-cloud-hosting'
+                            rel='noreferrer'
                           >
                             Private Cloud
                           </a>{' '}

@@ -8,7 +8,7 @@ import dataRelay from 'data-relay'
 import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
-import { service } from "common/service";
+import { service } from 'common/service'
 
 const controller = {
   acceptInvite: (id) => {
@@ -385,26 +385,6 @@ const controller = {
         API.ajaxHandler(store, e)
       })
   },
-
-  updateSubscription: (hostedPageId) => {
-    data
-      .post(
-        `${Project.api}organisations/${store.organisation.id}/update-subscription/`,
-        { hosted_page_id: hostedPageId },
-      )
-      .then((res) => {
-        try {
-          if (res && res.subscription && res.subscription.plan) {
-            API.trackEvent(Constants.events.UPGRADE(res.subscription.plan))
-            API.postEvent(res.subscription.plan, 'chargebee')
-          }
-        } catch (e) {}
-        controller.getOrganisations().then(() => {
-          store.saved()
-        })
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
 }
 
 const store = Object.assign({}, BaseStore, {
@@ -559,9 +539,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.TWO_FACTOR_LOGIN:
       controller.twoFactorLogin(action.pin, action.onError)
-      break
-    case Actions.UPDATE_SUBSCRIPTION:
-      controller.updateSubscription(action.hostedPageId)
       break
     default:
   }

@@ -560,5 +560,11 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  getOrganisation: { id: string }
+  createUpdateSubscription: {
+    organisationId: string
+    hostedPageId: string
+  }
+  getSubscription: { organisationId: string }
   // END OF TYPES
 }

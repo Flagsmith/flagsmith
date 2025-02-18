@@ -673,6 +673,7 @@ export type Res = {
   auditLogs: PagedResponse<AuditLogItem>
   organisationLicence: {}
   organisations: PagedResponse<Organisation>
+  organisation: Organisation
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
@@ -795,5 +796,10 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  updateSubscription: {}
+  subscription: {
+    hostedPageId: string
+  }
+
   // END OF TYPES
 }
