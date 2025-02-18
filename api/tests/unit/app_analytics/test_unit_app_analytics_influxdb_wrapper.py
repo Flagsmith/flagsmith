@@ -21,8 +21,8 @@ from app_analytics.influxdb_wrapper import (
 )
 from django.conf import settings
 from django.utils import timezone
-from influxdb_client.client.exceptions import InfluxDBError  # type: ignore[import-untyped]
-from influxdb_client.rest import ApiException  # type: ignore[import-untyped]
+from influxdb_client.client.exceptions import InfluxDBError
+from influxdb_client.rest import ApiException
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from urllib3.exceptions import HTTPError

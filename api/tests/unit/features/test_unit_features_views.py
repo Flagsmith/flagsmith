@@ -5,14 +5,17 @@ from datetime import date, datetime, timedelta
 from unittest import mock
 
 import pytest
-import pytz  # type: ignore[import-untyped]
+import pytz
 from app_analytics.dataclasses import FeatureEvaluationData
 from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+)
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
