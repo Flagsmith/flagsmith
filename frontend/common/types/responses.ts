@@ -795,5 +795,6 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identitySegments: PagedResponse<Segment>
   // END OF TYPES
 }

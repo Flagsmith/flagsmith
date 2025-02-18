@@ -560,5 +560,10 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: string
+  }>
   // END OF TYPES
 }

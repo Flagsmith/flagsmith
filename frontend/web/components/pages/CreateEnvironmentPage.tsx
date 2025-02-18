@@ -9,7 +9,7 @@ import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import { getStore } from 'common/store'
 import ProjectProvider, {
-  CreateEnvType
+  CreateEnvType,
 } from 'common/providers/ProjectProvider'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
