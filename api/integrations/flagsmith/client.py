@@ -25,13 +25,15 @@ _flagsmith_clients: dict[str, Flagsmith] = {}
 def get_client(name: str = "default", local_eval: bool = False) -> Flagsmith:
     global _flagsmith_clients
 
-    try:
-        _flagsmith_client = _flagsmith_clients[name]
-    except (KeyError, TypeError):
-        kwargs = _get_client_kwargs()
-        kwargs["enable_local_evaluation"] = local_eval
-        _flagsmith_client = Flagsmith(**kwargs)
-        _flagsmith_clients[name] = _flagsmith_client
+    if settings.USE_GLOBAL_FLAGSMITH_CLIENTS and (
+        client := _flagsmith_clients.get(name)
+    ):
+        return client
+
+    kwargs = _get_client_kwargs()
+    kwargs["enable_local_evaluation"] = local_eval
+    _flagsmith_client = Flagsmith(**kwargs)
+    _flagsmith_clients[name] = _flagsmith_client
 
     return _flagsmith_client
 

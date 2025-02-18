@@ -1,10 +1,20 @@
+import typing
+
 import pytest
+from flag_engine.environments.models import EnvironmentModel
+from flag_engine.features.models import FeatureModel, FeatureStateModel
+from flag_engine.organisations.models import OrganisationModel
+from flag_engine.projects.models import ProjectModel
+from flagsmith.offline_handlers import BaseOfflineHandler
+from pytest_mock import MockerFixture
 
 from environments.models import Environment
+from features.feature_types import STANDARD
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
+from tests.types import TestFlagData
 from users.models import FFAdminUser
 
 
@@ -200,3 +210,53 @@ def project_two_feature(project_two: Project) -> Feature:
     return Feature.objects.create(
         name="project_two_feature", project=project_two, initial_value="initial_value"
     )
+
+
+@pytest.fixture()
+def set_flagsmith_client_flags(
+    mocker: MockerFixture,
+) -> typing.Callable[[list[TestFlagData]], None]:
+    class TestOfflineHandler(BaseOfflineHandler):
+        def __init__(self):
+            self.environment = EnvironmentModel(
+                id=1,
+                api_key="flagsmith-environment-key",
+                project=ProjectModel(
+                    id=1,
+                    name="flagsmith-project",
+                    organisation=OrganisationModel(
+                        id=1,
+                        name="flagsmith-organisation",
+                        feature_analytics=False,
+                        stop_serving_flags=False,
+                        persist_trait_data=False,
+                    ),
+                    hide_disabled_flags=False,
+                ),
+                feature_states=[],
+            )
+
+        def set_flags(self, flags: list[TestFlagData]) -> None:
+            self.environment.feature_states = [
+                FeatureStateModel(
+                    feature=FeatureModel(
+                        id=i, name=flag_data.feature_name, type=STANDARD
+                    ),
+                    enabled=flag_data.enabled,
+                    feature_state_value=flag_data.value,
+                )
+                for i, flag_data in enumerate(flags)
+            ]
+
+        def get_environment(self) -> EnvironmentModel:
+            return self.environment
+
+    offline_handler = TestOfflineHandler()
+    mocker.patch(
+        "integrations.flagsmith.client.LocalFileHandler", return_value=offline_handler
+    )
+
+    def _setter(flags: list[TestFlagData]) -> None:
+        offline_handler.set_flags(flags)
+
+    return _setter

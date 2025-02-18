@@ -1,3 +1,4 @@
+import typing
 from typing import Callable, Literal
 
 from environments.permissions.models import UserEnvironmentPermission
@@ -15,3 +16,9 @@ WithEnvironmentPermissionsCallable = Callable[
 ]
 
 AdminClientAuthType = Literal["user", "master_api_key"]
+
+
+class TestFlagData(typing.NamedTuple):
+    feature_name: str
+    enabled: bool
+    value: typing.Any

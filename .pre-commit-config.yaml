@@ -37,6 +37,7 @@ repos:
         args:
           - --check
         types: [javascript, jsx, ts, tsx, markdown, mdx, html, css, json, yaml]
+
       - id: python-typecheck
         name: python-typecheck
         language: system
