@@ -456,18 +456,17 @@ export type ProjectFlag = {
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
+  environmentFlags: Record<number, FeatureState> | undefined
   error: boolean
   isLoading: boolean
 }
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
+    projectId: string,
+    environmentId: string,
+    projectFlag: ProjectFlag,
+    environmentFlags: FeatureState | undefined,
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }

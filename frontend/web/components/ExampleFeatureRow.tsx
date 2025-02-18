@@ -49,6 +49,7 @@ const ExampleFeatureRow: FC<ExampleFeatureRowType> = ({}) => {
     created_at: '',
     enabled: false,
     environment: 1,
+    environment_feature_version: '',
     feature: flag.id,
     feature_state_value: flag.initial_value,
     id: 1,
@@ -56,14 +57,14 @@ const ExampleFeatureRow: FC<ExampleFeatureRowType> = ({}) => {
     updated_at: '',
     uuid: '',
   }
+
   return (
     <div className='panel no-pad'>
       <div className='panel-content'>
         <div className='search-list'>
           <FeatureRow
             environmentFlags={{ 1: featureState }}
-            projectFlags={[flag, flag2]}
-            environmentId={1}
+            environmentId={`${1}`}
             disableControls
             permission={true}
             projectId={'2'}
@@ -74,8 +75,7 @@ const ExampleFeatureRow: FC<ExampleFeatureRowType> = ({}) => {
           />
           <FeatureRow
             environmentFlags={{ 1: featureState }}
-            projectFlags={[flag, flag2]}
-            environmentId={1}
+            environmentId={`${1}`}
             disableControls
             permission={true}
             projectId={'2'}

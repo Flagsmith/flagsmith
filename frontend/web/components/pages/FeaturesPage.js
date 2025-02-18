@@ -576,6 +576,7 @@ const FeaturesPage = class extends Component {
                                     environmentFlags={environmentFlags}
                                     projectFlags={projectFlags}
                                     permission={permission}
+                                    history={this.context.router.history}
                                     environmentId={environmentId}
                                     projectId={projectId}
                                     index={i}
