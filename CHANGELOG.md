@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.162.0](https://github.com/Flagsmith/flagsmith/compare/v2.161.0...v2.162.0) (2025-02-18)
+
+
+### Features
+
+* Clear filters on user and features page ([#5055](https://github.com/Flagsmith/flagsmith/issues/5055)) ([76c2f5f](https://github.com/Flagsmith/flagsmith/commit/76c2f5fa0996bf6f9686aa6dffb6cd797cbb64b8))
+* Deletes provider and displays warning in selected env ([#5085](https://github.com/Flagsmith/flagsmith/issues/5085)) ([f2cc990](https://github.com/Flagsmith/flagsmith/commit/f2cc990a0102faf44598b571f5159b202c93f40e))
+* Hide SAML configuration frontend URL in SaaS ([#5102](https://github.com/Flagsmith/flagsmith/issues/5102)) ([82cdf8e](https://github.com/Flagsmith/flagsmith/commit/82cdf8ead39d58cd408a993a5ee5127bec11dfc8))
+* migrates webhooks to RTK ([#5087](https://github.com/Flagsmith/flagsmith/issues/5087)) ([965ea96](https://github.com/Flagsmith/flagsmith/commit/965ea969f90cbc57c2fdd939fe07fec28d6e4f9b))
+* render tooltip in portal ([#5089](https://github.com/Flagsmith/flagsmith/issues/5089)) ([e6d30a4](https://github.com/Flagsmith/flagsmith/commit/e6d30a46df881615f4854ad1314feb8967bcac6b))
+* Update identity override styles ([#5053](https://github.com/Flagsmith/flagsmith/issues/5053)) ([1344a17](https://github.com/Flagsmith/flagsmith/commit/1344a176a2f6d42ee4bb8ca7a5a0f0c795a3c7ed))
+
+
+### Bug Fixes
+
+* adds margin to saml tab ([#5104](https://github.com/Flagsmith/flagsmith/issues/5104)) ([6cffced](https://github.com/Flagsmith/flagsmith/commit/6cffced7cd8a754fa282edbb50f6663c833a16c8))
+* Dynamically update theme toggle tooltip text based on current mode ([#5117](https://github.com/Flagsmith/flagsmith/issues/5117)) ([e2e2f52](https://github.com/Flagsmith/flagsmith/commit/e2e2f52327acfc55a818c1bda52d0555ad491841))
+* Feature tags not showing up in tag selection UI  ([#5113](https://github.com/Flagsmith/flagsmith/issues/5113)) ([3bfcaa6](https://github.com/Flagsmith/flagsmith/commit/3bfcaa67276e4e8127c3d98571c34a7166e851a3))
+* **feature-export:** handle unsuccessful feature export download exception ([#5086](https://github.com/Flagsmith/flagsmith/issues/5086)) ([a116f2c](https://github.com/Flagsmith/flagsmith/commit/a116f2c14148f84593cdd09b98cd40665ffe9955))
+* has override logic to check enabled state differences ([#5094](https://github.com/Flagsmith/flagsmith/issues/5094)) ([328443e](https://github.com/Flagsmith/flagsmith/commit/328443ec92c6d063e0ba18639bb4c5f6f493bfe3))
+* **organisation:** allow Organisation delete when committed change request present ([#5101](https://github.com/Flagsmith/flagsmith/issues/5101)) ([2a13d81](https://github.com/Flagsmith/flagsmith/commit/2a13d81b1dbcf41de19714abb865721ff1df3d51))
+* **overage-billing:** use relative delta and months, instead of days ([#5060](https://github.com/Flagsmith/flagsmith/issues/5060)) ([03261dd](https://github.com/Flagsmith/flagsmith/commit/03261dd6ef35fba65993f41a45d203ea2848d3cc))
+* service to use default credentials mode when cookie auth disabled ([#5079](https://github.com/Flagsmith/flagsmith/issues/5079)) ([b303405](https://github.com/Flagsmith/flagsmith/commit/b30340578e0f34d87fee7172fc7697f1602d6a22))
+
+
+### Dependency Updates
+
+* bump dompurify and mermaid in /docs ([#5116](https://github.com/Flagsmith/flagsmith/issues/5116)) ([3eb5f8c](https://github.com/Flagsmith/flagsmith/commit/3eb5f8cd87623cef7225cab6c8c7c3e91f086a1a))
+* bump dompurify from 3.1.6 to 3.2.4 in /frontend ([#5115](https://github.com/Flagsmith/flagsmith/issues/5115)) ([fa6aaa0](https://github.com/Flagsmith/flagsmith/commit/fa6aaa06df0d3bf690a7797631cc52bbc54bde8f))
+* bump serialize-javascript from 6.0.1 to 6.0.2 in /docs ([#5095](https://github.com/Flagsmith/flagsmith/issues/5095)) ([ecb6b0b](https://github.com/Flagsmith/flagsmith/commit/ecb6b0bab77425aaae7b7c75830cec47ce6b476e))
+* Bump task processor to v1.2.1, workflows to v2.7.7 ([#5120](https://github.com/Flagsmith/flagsmith/issues/5120)) ([144031d](https://github.com/Flagsmith/flagsmith/commit/144031df2ba61ed675dd31f0952b3b623962d979))
+
 ## [2.161.0](https://github.com/Flagsmith/flagsmith/compare/v2.160.2...v2.161.0) (2025-02-10)
 
 
