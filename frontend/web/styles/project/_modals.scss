@@ -271,6 +271,11 @@ $side-width: 750px;
     opacity: 0;
     pointer-events: none;
   }
+
+  #toast {
+    transform: translate(-50%);
+  }
+
 }
 .table-filter-list {
   overflow-y: auto;

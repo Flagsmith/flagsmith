@@ -670,12 +670,17 @@ const controller = {
                   )
                 }
               })
+              return updatedChangeRequest
             },
           )
         })
 
-      Promise.all([prom]).then(() => {
-        store.saved({ changeRequest: true, isCreate: true })
+      Promise.all([prom]).then(([updatedChangeRequest]) => {
+        store.saved({
+          changeRequest: true,
+          isCreate: true,
+          updatedChangeRequest,
+        })
       })
     } catch (e) {
       API.ajaxHandler(store, e)
