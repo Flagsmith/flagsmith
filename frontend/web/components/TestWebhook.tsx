@@ -6,9 +6,9 @@ import data from 'common/data/base/_data'
 import Button from './base/forms/Button'
 
 type TestWebhookType = {
-  webhook: string
+  webhook: string | undefined
   json: string
-  secret: string
+  secret: string | undefined
 }
 
 // from https://stackoverflow.com/questions/24834812/space-in-between-json-stringify-output
@@ -61,7 +61,7 @@ const TestWebhook: FC<TestWebhookType> = ({ json, secret, webhook }) => {
     setError(null)
     setLoading(true)
     setSuccess(false)
-    signPayload(json, secret).then((sign) => {
+    signPayload(json, secret || '').then((sign) => {
       const headers = {
         'X-Flagsmith-Signature': sign,
       }
@@ -71,7 +71,7 @@ const TestWebhook: FC<TestWebhookType> = ({ json, secret, webhook }) => {
           setLoading(false)
           setSuccess(true)
         })
-        .catch((e) => {
+        .catch((e: any) => {
           if (e.text) {
             e.text().then((error: string) => {
               setError(`The server returned an error: ${error}`)
