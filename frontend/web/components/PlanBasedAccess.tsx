@@ -33,6 +33,10 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Audit Log',
   },
 
+  'AUDIT_DAYS': {
+    description: 'Access all of your audit logs.',
+    title: 'Audit Log History',
+  },
   'AUTO_SEATS': {
     description: 'Invite additional members.',
     title: 'Invite additional members',
@@ -86,10 +90,6 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'VERSIONING_DAYS': {
     description: 'Access all of your feature versions.',
     title: 'Version History',
-  },
-  'AUDIT_DAYS': {
-    description: 'Access all of your audit logs.',
-    title: 'Audit Log History',
   },
 }
 

@@ -58,7 +58,10 @@ class TheComponent extends Component {
                 key={v.id}
                 data-test={`assignees-list-item-${i}`}
               >
-                <Row className="flex-nowrap w-100 overflow-hidden overflow-ellipsis" space>
+                <Row
+                  className='flex-nowrap w-100 overflow-hidden overflow-ellipsis'
+                  space
+                >
                   <div
                     className={classNames(
                       value.includes(v.id) ? 'font-weight-bold' : '',
@@ -66,9 +69,7 @@ class TheComponent extends Component {
                     )}
                   >
                     {v.first_name} {v.last_name}
-                    <div className="text-muted text-small">
-                      {v.email}
-                    </div>
+                    <div className='text-muted text-small'>{v.email}</div>
                   </div>
                   {value.includes(v.id) && (
                     <span className='mr-1'>

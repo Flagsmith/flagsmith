@@ -9,7 +9,9 @@ module.exports = (
 static FlagsmithClient _flagsmithClient;
 
 _flagsmithClient = new("${envId}"${
-  Constants.isCustomFlagsmithUrl() ? `, apiUrl: "${Constants.getFlagsmithSDKUrl()}"` : ''
+  Constants.isCustomFlagsmithUrl()
+    ? `, apiUrl: "${Constants.getFlagsmithSDKUrl()}"`
+    : ''
 });
 
 var flags = await _flagsmithClient.GetEnvironmentFlags();  # This method triggers a network request
