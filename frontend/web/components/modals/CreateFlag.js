@@ -181,13 +181,6 @@ const CreateFlag = class extends Component {
         this.focusTimeout = null
       }, 500)
     }
-    if (
-      !Project.disableAnalytics &&
-      this.props.projectFlag &&
-      this.props.environmentFlag
-    ) {
-      this.getFeatureUsage()
-    }
     if (Utils.getPlansPermission('METADATA')) {
       getSupportedContentType(getStore(), {
         organisation_id: AccountStore.getOrganisation().id,
@@ -275,16 +268,6 @@ const CreateFlag = class extends Component {
       })
   }
 
-  getFeatureUsage = () => {
-    if (this.props.environmentFlag) {
-      AppActions.getFeatureUsage(
-        this.props.projectId,
-        this.props.environmentFlag.environment,
-        this.props.projectFlag.id,
-        this.state.period,
-      )
-    }
-  }
   save = (func, isSaving) => {
     const {
       environmentFlag,
@@ -424,53 +407,6 @@ const CreateFlag = class extends Component {
       featureError = ''
     }
     return { featureError, featureWarning }
-  }
-  drawChart = (data) => {
-    return data?.length ? (
-      <ResponsiveContainer height={400} width='100%' className='mt-4'>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray='3 5' strokeOpacity={0.4} />
-          <XAxis
-            padding='gap'
-            interval={0}
-            height={100}
-            angle={-90}
-            textAnchor='end'
-            allowDataOverflow={false}
-            dataKey='day'
-            tick={{ dx: -4, fill: '#656D7B' }}
-            tickLine={false}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <YAxis
-            allowDataOverflow={false}
-            tick={{ fill: '#656D7B' }}
-            axisLine={{ stroke: '#656D7B' }}
-          />
-          <RechartsTooltip cursor={{ fill: 'transparent' }} />
-          <Bar
-            dataKey={'count'}
-            stackId='a'
-            fill='rgba(149, 108, 255,0.48)'
-            barSize={14}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-    ) : (
-      <div className='modal-caption fs-small lh-sm'>
-        There has been no activity for this flag within the past month. Find out
-        about Flag Analytics{' '}
-        <Button
-          theme='text'
-          target='_blank'
-          href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-          className='fw-normal'
-        >
-          here
-        </Button>
-        .
-      </div>
-    )
   }
 
   addItem = () => {
@@ -1816,36 +1752,6 @@ const CreateFlag = class extends Component {
                                       />
                                     </TabItem>
                                   )}
-                                {!Project.disableAnalytics && (
-                                  <TabItem tabLabel={'Analytics'}>
-                                    <FormGroup className='mb-4'>
-                                      {!!usageData && (
-                                        <h5 className='mb-2'>
-                                          Flag events for last 30 days
-                                        </h5>
-                                      )}
-                                      {!usageData && (
-                                        <div className='text-center'>
-                                          <Loader />
-                                        </div>
-                                      )}
-
-                                      {this.drawChart(usageData)}
-                                    </FormGroup>
-                                    <InfoMessage>
-                                      The Flag Analytics data will be visible in
-                                      the Dashboard between 30 minutes and 1
-                                      hour after it has been collected.{' '}
-                                      <a
-                                        target='_blank'
-                                        href='https://docs.flagsmith.com/advanced-use/flag-analytics'
-                                        rel='noreferrer'
-                                      >
-                                        View docs
-                                      </a>
-                                    </InfoMessage>
-                                  </TabItem>
-                                )}
                                 {hasIntegrationWithGithub &&
                                   projectFlag?.id && (
                                     <TabItem

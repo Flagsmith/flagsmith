@@ -37,6 +37,7 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
+import AccountProvider from 'common/providers/AccountProvider'
 
 const App = class extends Component {
   static propTypes = {
@@ -594,6 +595,15 @@ const App = class extends Component {
                           >
                             Compare
                           </NavSubLink>
+                          {!Project.disableAnalytics && (
+                            <NavSubLink
+                              icon={<Icon name='bar-chart' fill='#9DA4AE' />}
+                              id='feature-analytics-link'
+                              to={`/project/${projectId}/feature-analytics`}
+                            >
+                              Feature Analytics
+                            </NavSubLink>
+                          )}
                           <Permission
                             level='project'
                             permission='ADMIN'

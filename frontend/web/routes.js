@@ -40,6 +40,7 @@ import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
+import FeatureAnalyticsPage from 'components/pages/FeatureAnalyticsPage';
 
 export const routes = {
   'account': '/account',
@@ -68,6 +69,7 @@ export const routes = {
   'login': '/login',
   'maintenance': '/maintenance',
   'not-found': '/404',
+  'feature-analytics': '/project/:projectId/feature-analytics',
   'oauth': '/oauth/:type',
   'organisation-integrations': '/organisation/:organisationId/integrations',
   'organisation-permissions': '/organisation/:organisationId/permissions',
@@ -157,6 +159,11 @@ export default (
         path={routes['organisation-integrations']}
         exact
         component={OrganisationIntegrationsPage}
+      />
+      <ParameterizedRoute
+        path={routes['feature-analytics']}
+        exact
+        component={FeatureAnalyticsPage}
       />
       <ParameterizedRoute path={routes.users} exact component={UsersPage} />
       <ParameterizedRoute

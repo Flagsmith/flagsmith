@@ -6,7 +6,7 @@ import withSegmentOverrides from 'common/providers/withSegmentOverrides'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import SegmentOverrides from 'components/SegmentOverrides'
-import FlagSelect from 'components/FlagSelect'
+import FeatureSelect from 'components/FeatureSelect'
 import InfoMessage from 'components/InfoMessage'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import SegmentOverrideLimit from 'components/SegmentOverrideLimit'
@@ -495,7 +495,7 @@ class SegmentOverridesInnerAdd extends Component {
           return (
             <div className='mt-2'>
               {!readOnly && (
-                <FlagSelect
+                <FeatureSelect
                   disabled={!!segmentOverrideLimitAlert}
                   onlyInclude={this.props.feature}
                   placeholder='Create a Segment Override...'
