@@ -183,6 +183,7 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__deleted__
     grafana_config = GrafanaOrganisationConfiguration(
         base_url="test.com", api_key="test"
     )
+    grafana_config.save()
     organisation.grafana_config = grafana_config
     grafana_config.delete()
 
