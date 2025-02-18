@@ -190,6 +190,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
+
   getApproveChangeRequestPermission() {
     return 'APPROVE_CHANGE_REQUEST'
   },
@@ -287,7 +288,6 @@ flagsmithFeatureExists(flag: string) {
     }
     return 'identities'
   },
-
   getIntegrationData() {
     return Utils.getFlagsmithJSONValue(
       'integration_data',
@@ -302,6 +302,7 @@ flagsmithFeatureExists(flag: string) {
     }
     return false
   },
+
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -363,6 +364,7 @@ flagsmithFeatureExists(flag: string) {
     }
     return planNames.free
   },
+
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -402,7 +404,6 @@ flagsmithFeatureExists(flag: string) {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
-
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -572,6 +573,7 @@ flagsmithFeatureExists(flag: string) {
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
+
   isValidURL(value: any) {
     const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
     return regex.test(value)
@@ -608,7 +610,6 @@ flagsmithFeatureExists(flag: string) {
       zE('messenger', 'open')
     }
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -621,11 +622,15 @@ flagsmithFeatureExists(flag: string) {
       </Tooltip>
     )
   },
+
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
     }
     return `${value}`
+  },
+  showOnboarding() {
+    return true
   },
 
   tagDisabled: (tag: Tag | undefined) => {
