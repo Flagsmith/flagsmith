@@ -1,3 +1,6 @@
+import json
+import typing
+
 from rest_framework import serializers
 
 from features.feature_health.models import (
@@ -8,19 +11,31 @@ from features.feature_health.models import (
 from features.feature_health.providers.services import (
     get_webhook_path_from_provider,
 )
+from features.feature_health.types import (
+    FeatureHealthEventReasonTextBlock,
+    FeatureHealthEventReasonUrlBlock,
+)
+
+FeatureHealthEventReasonStr: typing.TypeAlias = str
 
 
-class FeatureHealthEventReasonTextBlockSerializer(serializers.Serializer):
+class FeatureHealthEventReasonTextBlockSerializer(
+    serializers.Serializer[FeatureHealthEventReasonTextBlock]
+):
     text = serializers.CharField()
     title = serializers.CharField(required=False)
 
 
-class FeatureHealthEventReasonUrlBlockSerializer(serializers.Serializer):
+class FeatureHealthEventReasonUrlBlockSerializer(
+    serializers.Serializer[FeatureHealthEventReasonUrlBlock]
+):
     url = serializers.CharField()
     title = serializers.CharField(required=False)
 
 
-class FeatureHealthEventReasonSerializer(serializers.Serializer):
+class FeatureHealthEventReasonSerializer(
+    serializers.Serializer[FeatureHealthEventReasonStr]
+):
     text_blocks = serializers.ListField(
         child=FeatureHealthEventReasonTextBlockSerializer(),
     )
@@ -28,9 +43,15 @@ class FeatureHealthEventReasonSerializer(serializers.Serializer):
         child=FeatureHealthEventReasonUrlBlockSerializer(),
     )
 
+    def to_representation(
+        self,
+        instance: FeatureHealthEventReasonStr,
+    ) -> dict[str, typing.Any]:
+        return super().to_representation(json.loads(instance))
 
-class FeatureHealthEventSerializer(serializers.ModelSerializer):
-    reason = FeatureHealthEventReasonSerializer()
+
+class FeatureHealthEventSerializer(serializers.ModelSerializer[FeatureHealthEvent]):
+    reason = FeatureHealthEventReasonSerializer(allow_null=True)
 
     class Meta:
         model = FeatureHealthEvent

@@ -148,7 +148,7 @@ class FeatureHealthEvent(
     created_at = models.DateTimeField(default=timezone.now, editable=False, blank=True)
     type = models.CharField(max_length=50, choices=FeatureHealthEventType.choices)
     provider_name = models.CharField(max_length=255, null=True, blank=True)
-    reason = models.JSONField(null=True, blank=True)
+    reason = models.TextField(null=True, blank=True)
     external_id = models.CharField(max_length=255, null=True, blank=True)
 
     def get_create_log_message(

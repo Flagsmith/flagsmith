@@ -39,9 +39,7 @@ def map_payload_to_provider_response(
                 type=map_sample_event_status_to_feature_health_event_type(
                     event_data["status"]
                 ),
-                reason=(
-                    event_data.get("reason") or {"text_blocks": [], "url_blocks": []}
-                ),
+                reason=event_data.get("reason"),
                 provider_name=FeatureHealthProviderName.SAMPLE.value,
             ),
         ],

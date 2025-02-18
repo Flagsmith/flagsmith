@@ -4,7 +4,8 @@ from datetime import datetime
 
 from typing_extensions import TypedDict
 
-from features.feature_health.models import FeatureHealthEventType
+if typing.TYPE_CHECKING:
+    from features.feature_health.models import FeatureHealthEventType
 
 
 class FeatureHealthEventReasonTextBlock(TypedDict):
@@ -25,9 +26,9 @@ class FeatureHealthEventReason(TypedDict):
 @dataclass
 class FeatureHealthEventData:
     feature_name: str
-    type: FeatureHealthEventType
-    reason: FeatureHealthEventReason
+    type: "FeatureHealthEventType"
     provider_name: str
+    reason: FeatureHealthEventReason | None = None
     environment_name: str | None = None
     external_id: str | None = None
     created_at: datetime | None = None

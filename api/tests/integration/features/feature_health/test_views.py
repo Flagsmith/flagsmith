@@ -125,7 +125,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
             "environment": None,
             "feature": feature,
             "provider_name": "Sample",
-            "reason": {"text_blocks": [], "url_blocks": []},
+            "reason": None,
             "type": "UNHEALTHY",
         }
     ]
@@ -183,7 +183,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
             "environment": environment,
             "feature": feature,
             "provider_name": "Sample",
-            "reason": {"text_blocks": [], "url_blocks": []},
+            "reason": None,
             "type": "UNHEALTHY",
         }
     ]
@@ -226,7 +226,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
             "environment": None,
             "feature": unhealthy_feature,
             "provider_name": "Sample",
-            "reason": {"text_blocks": [], "url_blocks": []},
+            "reason": None,
             "type": "HEALTHY",
         }
     ]

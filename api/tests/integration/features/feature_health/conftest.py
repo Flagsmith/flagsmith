@@ -11,7 +11,8 @@ def _get_feature_health_provider_webhook_url(
     feature_health_provider_data = {"name": name}
     url = reverse("api-v1:projects:feature-health-providers-list", args=[project])
     response = api_client.post(url, data=feature_health_provider_data)
-    return response.json()["webhook_url"]
+    webhook_url: str = response.json()["webhook_url"]
+    return webhook_url
 
 
 @pytest.fixture
