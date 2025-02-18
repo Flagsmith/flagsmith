@@ -1,17 +1,16 @@
-import React from 'react'
+import React, { FC } from 'react'
 import EnvironmentSelect from 'components/EnvironmentSelect'
-import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import PanelSearch from 'components/PanelSearch'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { Res, Segment } from 'common/types/responses'
+import { Res } from 'common/types/responses'
 import Icon from 'components/Icon'
-import AppActions from 'common/dispatcher/app-actions'
 import {
   identitySegmentService,
   useGetIdentitySegmentsQuery,
 } from 'common/services/useIdentitySegment'
+import { getStore } from 'common/store'
 
 interface CreateSegmentUsersTabContentProps {
   projectId: string | number
@@ -25,9 +24,6 @@ interface CreateSegmentUsersTabContentProps {
   searchInput: string
   setSearchInput: (input: string) => void
 }
-
-import { FC } from 'react'
-import { getStore } from 'common/store'
 
 type UserRowType = {
   id: string
