@@ -216,9 +216,7 @@ const App = class extends Component {
         this.context.router.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
-          if (
-            this.props.location.search.includes('github-redirect')
-          ) {
+          if (this.props.location.search.includes('github-redirect')) {
             this.context.router.history.replace(
               `/github-setup${this.props.location.search}`,
             )
@@ -528,7 +526,9 @@ const App = class extends Component {
                                       </div>
                                     }
                                   >
-                                    {Utils.getFlagsmithHasFeature('dark_mode') ? 'Light Mode' : 'Dark Mode'}
+                                    {Utils.getFlagsmithHasFeature('dark_mode')
+                                      ? 'Light Mode'
+                                      : 'Dark Mode'}
                                   </Tooltip>
                                 </Row>
                               </nav>
@@ -662,7 +662,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={<SettingsIcon />}
                                   id='org-settings-link'
-                                data-test='org-settings-link'
+                                  data-test='org-settings-link'
                                   to={`/organisation/${
                                     AccountStore.getOrganisation().id
                                   }/settings`}

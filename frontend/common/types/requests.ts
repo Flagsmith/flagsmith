@@ -16,6 +16,7 @@ import {
   Identity,
   Role,
   RolePermission,
+  IdentityTrait,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -559,6 +560,30 @@ export type Req = {
   updateIdentity: {
     environmentId: string
     data: Identity
+  }
+  createIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  getIdentity: { id: string }
+  getIdentityTraits: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+  }
+  updateIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  deleteIdentityTrait: {
+    environmentId: string
+    identity: string
+    use_edge_identities: boolean
+    data: Omit<IdentityTrait, 'trait_value'>
   }
   // END OF TYPES
 }

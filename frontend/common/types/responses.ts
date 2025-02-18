@@ -667,6 +667,12 @@ export type Webhook = {
   updated_at: string
 }
 
+export type IdentityTrait = {
+  id: number | string
+  trait_key: string
+  trait_value: FlagsmithValue
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -795,5 +801,7 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identityTrait: { id: string }
+  identityTraits: IdentityTrait[]
   // END OF TYPES
 }
