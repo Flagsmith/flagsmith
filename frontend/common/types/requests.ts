@@ -16,6 +16,7 @@ import {
   Identity,
   Role,
   RolePermission,
+  Webhook,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -560,5 +561,12 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  createAuditLogWebhooks: {
+    organisationId: string
+    data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
+  }
+  getAuditLogWebhooks: { organisationId: string }
+  updateAuditLogWebhooks: { organisationId: string; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: string; id: number }
   // END OF TYPES
 }
