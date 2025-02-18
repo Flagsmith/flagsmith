@@ -3,7 +3,10 @@ import json
 import typing
 
 import pydantic
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
@@ -24,7 +27,7 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -131,7 +134,7 @@ class EdgeIdentityViewSet(
             start_key=start_key,  # type: ignore[arg-type]
         )
 
-    def get_permissions(self):  # type: ignore[no-untyped-def]
+    def get_permissions(self) -> list[BasePermission]:
         return [
             IsAuthenticated(),
             NestedEnvironmentPermissions(

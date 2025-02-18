@@ -22,7 +22,7 @@ def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-de
     view_set = EdgeIdentityViewSet()
 
     # When
-    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
+    permissions = view_set.get_permissions()
 
     # Then
     assert isinstance(permissions[0], IsAuthenticated)
