@@ -8,12 +8,12 @@ logger = logging.getLogger(__name__)
 
 
 class AdminWhitelistMiddleware:
-    def __init__(self, get_response):
+    def __init__(self, get_response):  # type: ignore[no-untyped-def]
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request):  # type: ignore[no-untyped-def]
         if request.path.startswith("/admin"):
-            ip = get_ip_address_from_request(request)
+            ip = get_ip_address_from_request(request)  # type: ignore[no-untyped-call]
             if (
                 settings.ALLOWED_ADMIN_IP_ADDRESSES
                 and ip not in settings.ALLOWED_ADMIN_IP_ADDRESSES

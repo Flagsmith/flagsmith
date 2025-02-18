@@ -3,7 +3,7 @@ from decimal import Decimal
 import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-from task_processor.task_run_method import TaskRunMethod
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from environments.dynamodb.types import (
     EdgeV2MigrationResult,
@@ -47,7 +47,7 @@ def project_v2_migration_in_progress(
         ),
     ),
 )
-def test_migrate_project_environments_to_v2__calls_expected(
+def test_migrate_project_environments_to_v2__calls_expected(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     project_v2_migration_in_progress: Project,
     migrate_environments_to_v2_return_value: EdgeV2MigrationResult | None,
@@ -75,7 +75,7 @@ def test_migrate_project_environments_to_v2__calls_expected(
     assert project_v2_migration_in_progress.edge_v2_migration_status == expected_status
 
 
-def test_migrate_project_environments_to_v2__expected_status_on_error(
+def test_migrate_project_environments_to_v2__expected_status_on_error(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     project_v2_migration_in_progress: Project,
 ):
@@ -100,7 +100,7 @@ def test_migrate_project_environments_to_v2__expected_status_on_error(
     mocked_migrate_environments_to_v2.assert_called_once_with(
         project_id=project_v2_migration_in_progress.id,
         capacity_budget=Decimal(
-            project_v2_migration_in_progress.edge_v2_migration_read_capacity_budget
+            project_v2_migration_in_progress.edge_v2_migration_read_capacity_budget  # type: ignore[arg-type]
         ),
     )
     assert project_v2_migration_in_progress.edge_v2_migration_status == (

@@ -5,7 +5,7 @@ from environments.dynamodb.migrator import IdentityMigrator
 from organisations.models import Organisation
 
 
-def test_sales_dashboard_index(
+def test_sales_dashboard_index(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, django_assert_num_queries
 ):
     """
@@ -27,7 +27,7 @@ def test_sales_dashboard_index(
     assert response.status_code == 200
 
 
-def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_arguments_if_migration_is_not_done(
+def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_arguments_if_migration_is_not_done(  # type: ignore[no-untyped-def]  # noqa: E501
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -49,7 +49,7 @@ def test_migrate_identities_to_edge_calls_identity_migrator_with_correct_argumen
     mocked_identity_migrator.return_value.trigger_migration.assert_called_once_with()
 
 
-def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_already_done(
+def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_already_done(  # type: ignore[no-untyped-def]  # noqa: E501
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -71,7 +71,7 @@ def test_migrate_identities_to_edge_does_not_call_migrate_if_migration_is_alread
     mocked_identity_migrator.return_value.trigger_migration.assert_not_called()
 
 
-def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(
+def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, mocker, project, settings
 ):
     # Given
@@ -85,7 +85,7 @@ def test_migrate_identities_to_edge_returns_400_if_dynamodb_is_not_enabled(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_migrate_identities_to_edge_calls_send_migration_event_with_correct_arguments(
+def test_migrate_identities_to_edge_calls_send_migration_event_with_correct_arguments(  # type: ignore[no-untyped-def]
     superuser_authenticated_client, mocker, project, settings, identity
 ):
     # Given

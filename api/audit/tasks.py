@@ -4,33 +4,33 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
+from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.models import TaskPriority  # type: ignore[import-untyped]
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
     FEATURE_STATE_WENT_LIVE_MESSAGE,
 )
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)
-def create_feature_state_went_live_audit_log(feature_state_id: int):
+@register_task_handler(priority=TaskPriority.HIGHEST)  # type: ignore[misc]
+def create_feature_state_went_live_audit_log(feature_state_id: int):  # type: ignore[no-untyped-def]
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_WENT_LIVE_MESSAGE
     )
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)
-def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):
+@register_task_handler(priority=TaskPriority.HIGHEST)  # type: ignore[misc]
+def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):  # type: ignore[no-untyped-def]
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE
     )
 
 
-def _create_feature_state_audit_log_for_change_request(
+def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyped-def]
     feature_state_id: int, msg_template: str
 ):
     from features.models import FeatureState
@@ -61,14 +61,14 @@ def _create_feature_state_audit_log_for_change_request(
     )
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)
-def create_audit_log_from_historical_record(
+@register_task_handler(priority=TaskPriority.HIGHEST)  # type: ignore[misc]
+def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
     history_instance_id: int,
     history_user_id: typing.Optional[int],
     history_record_class_path: str,
 ):
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
-    history_instance = model_class.objects.get(history_id=history_instance_id)
+    history_instance = model_class.objects.get(history_id=history_instance_id)  # type: ignore[attr-defined]
 
     if (
         history_instance.history_type == "~"
@@ -121,13 +121,13 @@ def create_audit_log_from_historical_record(
     )
 
 
-@register_task_handler()
-def create_segment_priorities_changed_audit_log(
+@register_task_handler()  # type: ignore[misc]
+def create_segment_priorities_changed_audit_log(  # type: ignore[no-untyped-def]
     previous_id_priority_pairs: typing.List[typing.Tuple[int, int]],
     feature_segment_ids: typing.List[int],
-    user_id: int = None,
-    master_api_key_id: int = None,
-    changed_at: str = None,
+    user_id: int = None,  # type: ignore[assignment]
+    master_api_key_id: int = None,  # type: ignore[assignment]
+    changed_at: str = None,  # type: ignore[assignment]
 ):
     """
     This needs to be a separate task called by the view itself. This is because the OrderedModelBase class

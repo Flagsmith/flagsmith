@@ -202,7 +202,7 @@ class Clause(TypedDict):
     _id: NotRequired[str]
     attribute: str
     op: Operator
-    values: list
+    values: list  # type: ignore[type-arg]
     contextKind: NotRequired[str]
     negate: bool
 

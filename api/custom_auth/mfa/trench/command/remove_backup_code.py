@@ -12,7 +12,7 @@ def remove_backup_code_command(user_id: Any, method_name: str, code: str) -> Non
         .first()
     )
     codes = MFAMethod._BACKUP_CODES_DELIMITER.join(
-        _remove_code_from_set(
+        _remove_code_from_set(  # type: ignore[arg-type]
             backup_codes=set(serialized_codes.split(MFAMethod._BACKUP_CODES_DELIMITER)),
             code=code,
         )
@@ -22,7 +22,7 @@ def remove_backup_code_command(user_id: Any, method_name: str, code: str) -> Non
     )
 
 
-def _remove_code_from_set(backup_codes: Set[str], code: str) -> Optional[Set[str]]:
+def _remove_code_from_set(backup_codes: Set[str], code: str) -> Optional[Set[str]]:  # type: ignore[return]
     for backup_code in backup_codes:
         if check_password(code, backup_code):
             backup_codes.remove(backup_code)

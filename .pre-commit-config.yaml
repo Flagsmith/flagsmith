@@ -40,7 +40,7 @@ repos:
       - id: python-typecheck
         name: python-typecheck
         language: system
-        entry: poetry -C api run python scripts/typecheck.py
+        entry: poetry -C api run mypy .
         require_serial: true
         pass_filenames: false
         types: [python]
@@ -52,5 +52,5 @@ repos:
         args: ["-C", "api"]
 
 ci:
-  skip: [python-typecheck]
+  skip: [python-typecheck, isort]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"

@@ -47,7 +47,7 @@ def test_identify_with_traits_serializer_runs_identity_integrations_on_create(
 
     # When
     assert serializer.is_valid()
-    serializer.save()
+    serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     mock_identify_integrations.assert_called_once()
@@ -81,7 +81,7 @@ def test_identify_with_traits_serializer__additional_filters_in_context__filters
 
     # When
     assert serializer.is_valid()
-    serializer.save()
+    serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     assert "flags" not in serializer.data
@@ -110,7 +110,7 @@ def test_identify_with_traits_serializer__transient__identity_and_traits_not_per
 
     # When
     assert serializer.is_valid()
-    serializer.save()
+    serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     assert not Identity.objects.filter(identifier=identity_identifier).exists()

@@ -5,7 +5,7 @@ from functools import reduce
 
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
-from common.projects.permissions import VIEW_PROJECT
+from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
 from django.conf import settings
@@ -14,8 +14,8 @@ from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import NotFound, ValidationError
@@ -52,7 +52,7 @@ from .permissions import (
     FeatureStatePermissions,
     IdentityFeatureStatePermissions,
 )
-from .serializers import (
+from .serializers import (  # type: ignore[attr-defined]
     CreateFeatureSerializer,
     CustomCreateSegmentOverrideFeatureStateSerializer,
     FeatureEvaluationDataSerializer,
@@ -88,7 +88,7 @@ flags_cache = caches[settings.FLAGS_CACHE_LOCATION]
 
 @swagger_auto_schema(responses={200: CreateFeatureSerializer()}, method="get")
 @api_view(["GET"])
-def get_feature_by_uuid(request, uuid):
+def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = Feature.objects.filter(project__in=accessible_projects).prefetch_related(
         "multivariate_options", "owners", "tags"
@@ -102,11 +102,11 @@ def get_feature_by_uuid(request, uuid):
     name="list",
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
 )
-class FeatureViewSet(viewsets.ModelViewSet):
+class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
     pagination_class = CustomPagination
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         return {
             "list": ListFeatureSerializer,
             "retrieve": ListFeatureSerializer,
@@ -115,11 +115,11 @@ class FeatureViewSet(viewsets.ModelViewSet):
             "partial_update": UpdateFeatureSerializer,
         }.get(self.action, ProjectFeatureSerializer)
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Feature.objects.none()
 
-        accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)
+        accessible_projects = self.request.user.get_permitted_projects(VIEW_PROJECT)  # type: ignore[union-attr]
 
         project = get_object_or_404(accessible_projects, pk=self.kwargs["project_pk"])
 
@@ -181,29 +181,29 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:
+    def paginate_queryset(self, queryset: QuerySet[Feature]) -> list[Feature]:  # type: ignore[override]
         if getattr(self, "_page", None):
-            return self._page
+            return self._page  # type: ignore[no-any-return,has-type]
 
         self._page = super().paginate_queryset(queryset)
-        return self._page
+        return self._page  # type: ignore[return-value]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(
-            project_id=int(self.kwargs.get("project_pk")), user=self.request.user
+            project_id=int(self.kwargs.get("project_pk")), user=self.request.user  # type: ignore[arg-type]
         )
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(project_id=self.kwargs.get("project_pk"))
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
         feature_states = list(
             instance.feature_states.filter(identity=None, feature_segment=None)
         )
         self._trigger_feature_state_change_webhooks(feature_states)
         instance.delete()
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
         feature_states = getattr(self, "_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
@@ -280,7 +280,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="add-group-owners")
-    def add_group_owners(self, request, *args, **kwargs):
+    def add_group_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         feature = self.get_object()
         data = request.data
 
@@ -302,7 +302,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="remove-group-owners")
-    def remove_group_owners(self, request, *args, **kwargs):
+    def remove_group_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         feature = self.get_object()
         serializer = FeatureGroupOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -315,7 +315,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="add-owners")
-    def add_owners(self, request, *args, **kwargs):
+    def add_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = FeatureOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         feature = self.get_object()
@@ -334,7 +334,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: ProjectFeatureSerializer},
     )
     @action(detail=True, methods=["POST"], url_path="remove-owners")
-    def remove_owners(self, request, *args, **kwargs):
+    def remove_owners(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = FeatureOwnerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -350,7 +350,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         operation_description="Please use ​/api​/v1​/projects​/{project_pk}​/features​/{id}​/evaluation-data/",
     )
     @action(detail=True, methods=["GET"], url_path="influx-data")
-    def get_influx_data(self, request, pk, project_pk):
+    def get_influx_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
         feature = get_object_or_404(Feature, pk=pk)
 
         query_serializer = GetInfluxDataQuerySerializer(data=request.query_params)
@@ -378,7 +378,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         responses={200: FeatureEvaluationDataSerializer()},
     )
     @action(detail=True, methods=["GET"], url_path="evaluation-data")
-    def get_evaluation_data(self, request, pk, project_pk):
+    def get_evaluation_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
         feature = get_object_or_404(Feature, pk=pk)
 
         query_serializer = GetUsageDataQuerySerializer(data=request.query_params)
@@ -391,7 +391,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    def _trigger_feature_state_change_webhooks(
+    def _trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
         self, feature_states: typing.List[FeatureState]
     ):
         for feature_state in feature_states:
@@ -476,7 +476,7 @@ class FeatureViewSet(viewsets.ModelViewSet):
         ]
     ),
 )
-class BaseFeatureStateViewSet(viewsets.ModelViewSet):
+class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     """
     View set to manage feature states. Nested beneath environments and environments + identities
     to allow for filtering on both.
@@ -485,7 +485,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
     # Override serializer class to show correct information in docs
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "list":
             return FeatureStateSerializerWithIdentity
         elif self.action in ["retrieve", "update", "create"]:
@@ -493,13 +493,13 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         else:
             return FeatureStateSerializerCreate
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
         if self.action in ["update", "create"]:
-            context["environment"] = self.get_environment_from_request()
+            context["environment"] = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         return context
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         """
         Override queryset to filter based on provided URL parameters.
         """
@@ -512,7 +512,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             environment = Environment.objects.get(api_key=environment_api_key)
             queryset = get_environment_flags_queryset(
                 environment=environment,
-                feature_name=self.request.query_params.get("feature_name"),
+                feature_name=self.request.query_params.get("feature_name"),  # type: ignore[arg-type]
             )
             queryset = self._apply_query_param_filters(queryset)
 
@@ -525,14 +525,14 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         except Environment.DoesNotExist:
             raise NotFound("Environment not found.")
 
-    def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:
+    def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:  # type: ignore[type-arg]
         if self.request.query_params.get("feature"):
             queryset = queryset.filter(
                 feature__id=int(self.request.query_params["feature"])
             )
         return queryset
 
-    def get_environment_from_request(self):
+    def get_environment_from_request(self):  # type: ignore[no-untyped-def]
         """
         Get environment object from URL parameters in request.
         """
@@ -541,7 +541,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         )
         return environment
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         DEPRECATED: please use `/features/featurestates/` instead.
         Override create method to add environment and identity (if present) from URL parameters.
@@ -551,7 +551,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             error = {"detail": "Feature not provided"}
             return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-        environment = self.get_environment_from_request()
+        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         data["environment"] = environment.id
 
         identity_pk = self.kwargs.get("identity_pk")
@@ -565,7 +565,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.data)
 
             if "feature_state_value" in data:
-                self.update_feature_state_value(
+                self.update_feature_state_value(  # type: ignore[no-untyped-call]
                     data["feature_state_value"], feature_state
                 )
 
@@ -575,7 +575,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
                 headers=headers,
             )
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Override update method to always assume update request is partial and create / update
         feature state value.
@@ -586,7 +586,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         # Check if feature state value was provided with request data. If so, create / update
         # feature state value object and associate with feature state.
         if "feature_state_value" in feature_state_data:
-            feature_state_value = self.update_feature_state_value(
+            feature_state_value = self.update_feature_state_value(  # type: ignore[no-untyped-call]
                 feature_state_data["feature_state_value"], feature_state_to_update
             )
 
@@ -609,13 +609,13 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    def partial_update(self, request, *args, **kwargs):
+    def partial_update(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Override partial_update as overridden update method assumes partial True for all requests.
         """
-        return self.update(request, *args, **kwargs)
+        return self.update(request, *args, **kwargs)  # type: ignore[no-untyped-call]
 
-    def update_feature_state_value(self, value, feature_state):
+    def update_feature_state_value(self, value, feature_state):  # type: ignore[no-untyped-def]
         feature_state_value_dict = feature_state.generate_feature_state_value_data(
             value
         )
@@ -643,30 +643,30 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [EnvironmentFeatureStatePermissions]
 
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(feature_segment=None)
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        queryset = super().get_queryset().filter(feature_segment=None)  # type: ignore[no-untyped-call]
         if "anyIdentity" in self.request.query_params:
             # TODO: deprecate anyIdentity query parameter
             return queryset.exclude(identity=None)
         return queryset.filter(identity=None)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "create_new_version":
             return FeatureStateSerializerBasic
-        return super().get_serializer_class()
+        return super().get_serializer_class()  # type: ignore[no-untyped-call]
 
 
 class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return FeatureState.objects.none()
 
-        return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])
+        return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])  # type: ignore[no-untyped-call]
 
     @action(methods=["GET"], detail=False)
-    def all(self, request, *args, **kwargs):
+    def all(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         identity = get_object_or_404(Identity, pk=self.kwargs["identity_pk"])
         feature_states = identity.get_all_feature_states()
 
@@ -682,12 +682,12 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
 
         return Response(serializer.data)
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=IdentitySourceIdentityRequestSerializer(),
         responses={200: IdentityAllFeatureStatesSerializer(many=True)},
     )
     @action(methods=["POST"], detail=False, url_path="clone-from-given-identity")
-    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:
+    def clone_from_given_identity(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         """
         Clone feature states from a given source identity.
         """
@@ -708,7 +708,7 @@ class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
             target_identity=target_identity, source_identity=source_identity
         )
 
-        return self.all(request, *args, **kwargs)
+        return self.all(request, *args, **kwargs)  # type: ignore[no-any-return]
 
 
 @method_decorator(
@@ -729,13 +729,13 @@ class SimpleFeatureStateViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     serializer_class = WritableNestedFeatureStateSerializer
     permission_classes = [FeatureStatePermissions]
     filterset_fields = ["environment", "feature", "feature_segment"]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if not self.action == "list":
             return FeatureState.objects.all()
 
@@ -756,7 +756,7 @@ class SimpleFeatureStateViewSet(
     responses={200: WritableNestedFeatureStateSerializer()}, method="get"
 )
 @api_view(["GET"])
-def get_feature_state_by_uuid(request, uuid):
+def get_feature_state_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     accessible_projects = request.user.get_permitted_projects(VIEW_PROJECT)
     qs = FeatureState.objects.filter(
         feature__project__in=accessible_projects
@@ -766,7 +766,7 @@ def get_feature_state_by_uuid(request, uuid):
     return Response(serializer.data)
 
 
-class SDKFeatureStates(GenericAPIView):
+class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
     serializer_class = SDKFeatureStateSerializer
     permission_classes = (EnvironmentKeyPermissions,)
     authentication_classes = (EnvironmentKeyAuthentication,)
@@ -784,7 +784,7 @@ class SDKFeatureStates(GenericAPIView):
             cache=settings.GET_FLAGS_ENDPOINT_CACHE_NAME,
         )
     )
-    def get(self, request, identifier=None, *args, **kwargs):
+    def get(self, request, identifier=None, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         USING THIS ENDPOINT WITH AN IDENTIFIER IS DEPRECATED.
         Please use `/identities/?identifier=<identifier>` instead.
@@ -794,7 +794,7 @@ class SDKFeatureStates(GenericAPIView):
         than a list.
         """
         if identifier:
-            return self._get_flags_response_with_identifier(request, identifier)
+            return self._get_flags_response_with_identifier(request, identifier)  # type: ignore[no-untyped-call]
 
         if "feature" in request.GET:
             feature_states = get_environment_flags_list(
@@ -812,7 +812,7 @@ class SDKFeatureStates(GenericAPIView):
             return Response(self.get_serializer(feature_states[0]).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(request.environment)
+            data = self._get_flags_from_cache(request.environment)  # type: ignore[no-untyped-call]
         else:
             data = self.get_serializer(
                 get_environment_flags_list(
@@ -840,7 +840,7 @@ class SDKFeatureStates(GenericAPIView):
 
         return filters
 
-    def _get_flags_from_cache(self, environment):
+    def _get_flags_from_cache(self, environment):  # type: ignore[no-untyped-def]
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
@@ -854,7 +854,7 @@ class SDKFeatureStates(GenericAPIView):
 
         return data
 
-    def _get_flags_response_with_identifier(self, request, identifier):
+    def _get_flags_response_with_identifier(self, request, identifier):  # type: ignore[no-untyped-def]
         identity, _ = Identity.objects.get_or_create(
             identifier=identifier, environment=request.environment
         )
@@ -868,7 +868,7 @@ class SDKFeatureStates(GenericAPIView):
         if "feature" in request.GET:
             kwargs["feature__name__iexact"] = request.GET["feature"]
             try:
-                feature_state = identity.get_all_feature_states().get(
+                feature_state = identity.get_all_feature_states().get(  # type: ignore[attr-defined]
                     feature__name__iexact=kwargs["feature__name__iexact"],
                 )
             except FeatureState.DoesNotExist:
@@ -885,7 +885,7 @@ class SDKFeatureStates(GenericAPIView):
         return Response(flags.data, status=status.HTTP_200_OK)
 
 
-def organisation_has_got_feature(request, organisation):
+def organisation_has_got_feature(request, organisation):  # type: ignore[no-untyped-def]
     """
     Helper method to set flag against organisation to confirm that they've requested their
     feature states for analytics purposes
@@ -905,14 +905,14 @@ def organisation_has_got_feature(request, organisation):
         return True
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     method="POST",
     request_body=CustomCreateSegmentOverrideFeatureStateSerializer(),
     responses={201: CustomCreateSegmentOverrideFeatureStateSerializer()},
 )
 @api_view(["POST"])
 @permission_classes([CreateSegmentOverridePermissions])
-def create_segment_override(
+def create_segment_override(  # type: ignore[no-untyped-def]
     request: Request, environment_api_key: str, feature_pk: int
 ):
     environment = get_object_or_404(Environment, api_key=environment_api_key)

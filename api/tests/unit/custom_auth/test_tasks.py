@@ -8,7 +8,7 @@ from custom_auth.tasks import clean_up_user_password_reset_request
 from users.models import FFAdminUser
 
 
-def test_clean_up_user_password_reset_request(
+def test_clean_up_user_password_reset_request(  # type: ignore[no-untyped-def]
     settings: SettingsWrapper, test_user: FFAdminUser, freezer
 ):
     # Given
@@ -30,6 +30,6 @@ def test_clean_up_user_password_reset_request(
     # Then
     assert UserPasswordResetRequest.objects.count() == 1
     assert (
-        UserPasswordResetRequest.objects.first().id
+        UserPasswordResetRequest.objects.first().id  # type: ignore[union-attr]
         == new_user_password_reset_request.id
     )

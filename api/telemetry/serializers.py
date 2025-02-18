@@ -4,7 +4,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 
-class TelemetrySerializer(serializers.Serializer):
+class TelemetrySerializer(serializers.Serializer):  # type: ignore[type-arg]
     organisations = serializers.IntegerField()
     projects = serializers.IntegerField()
     environments = serializers.IntegerField()
@@ -14,12 +14,12 @@ class TelemetrySerializer(serializers.Serializer):
     debug_enabled = serializers.BooleanField()
     env = serializers.CharField()
 
-    def save(self, instance=None):
+    def save(self, instance=None):  # type: ignore[no-untyped-def,override]
         if settings.INFLUXDB_TOKEN:
-            influxdb = InfluxDBWrapper("self_hosted_telemetry")
+            influxdb = InfluxDBWrapper("self_hosted_telemetry")  # type: ignore[no-untyped-call]
             tags = {
                 **self.validated_data,
-                "ip_address": get_ip_address_from_request(self.context["request"]),
+                "ip_address": get_ip_address_from_request(self.context["request"]),  # type: ignore[no-untyped-call]
             }
-            influxdb.add_data_point("heartbeat", 1, tags=tags)
-            influxdb.write()
+            influxdb.add_data_point("heartbeat", 1, tags=tags)  # type: ignore[no-untyped-call]
+            influxdb.write()  # type: ignore[no-untyped-call]

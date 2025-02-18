@@ -1,6 +1,6 @@
 from contextlib import suppress
 
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
+from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES  # type: ignore[import-untyped]
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
 )
@@ -8,7 +8,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_FEATURE, DELETE_FEATURE
+from common.projects.permissions import CREATE_FEATURE, DELETE_FEATURE  # type: ignore[import-untyped]
 from common.projects.permissions import (
     TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_PROJECT_PERMISSIONS,
 )
@@ -37,7 +37,7 @@ ACTION_PERMISSIONS_MAP = {
 
 
 class FeaturePermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -64,7 +64,7 @@ class FeaturePermissions(IsAuthenticated):
         except Project.DoesNotExist:
             return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         # map of actions and their required permission
         if view.action in ACTION_PERMISSIONS_MAP:
             tag_ids = None
@@ -83,7 +83,7 @@ class FeaturePermissions(IsAuthenticated):
 
 
 class FeatureStatePermissions(IsAuthenticated):
-    def has_permission(self, request: Request, view: GenericViewSet) -> bool:
+    def has_permission(self, request: Request, view: GenericViewSet) -> bool:  # type: ignore[override,type-arg]
         if not super().has_permission(request, view):
             return False
 
@@ -117,8 +117,8 @@ class FeatureStatePermissions(IsAuthenticated):
 
                     tag_ids = list(feature.tags.values_list("id", flat=True))
 
-                return request.user.has_environment_permission(
-                    required_permission, environment, tag_ids=tag_ids
+                return request.user.has_environment_permission(  # type: ignore[union-attr]
+                    required_permission, environment, tag_ids=tag_ids  # type: ignore[arg-type]
                 )
             return False
 
@@ -126,7 +126,7 @@ class FeatureStatePermissions(IsAuthenticated):
             return False
 
     def has_object_permission(
-        self, request: Request, view: GenericViewSet, obj: FeatureState
+        self, request: Request, view: GenericViewSet, obj: FeatureState  # type: ignore[override,type-arg]
     ) -> bool:
         permission = (
             MANAGE_SEGMENT_OVERRIDES if obj.feature_segment_id else UPDATE_FEATURE_STATE
@@ -136,13 +136,13 @@ class FeatureStatePermissions(IsAuthenticated):
         if permission in TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS:
             tag_ids = list(obj.feature.tags.values_list("id", flat=True))
 
-        return request.user.has_environment_permission(
-            permission, environment=obj.environment, tag_ids=tag_ids
+        return request.user.has_environment_permission(  # type: ignore[union-attr]
+            permission, environment=obj.environment, tag_ids=tag_ids  # type: ignore[arg-type]
         )
 
 
 class EnvironmentFeatureStatePermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         action_permission_map = {
             "list": VIEW_ENVIRONMENT,
             "create": UPDATE_FEATURE_STATE,
@@ -174,7 +174,7 @@ class EnvironmentFeatureStatePermissions(IsAuthenticated):
             )
         return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         action_permission_map = {"retrieve": VIEW_ENVIRONMENT}
 
         permission = action_permission_map.get(view.action, UPDATE_FEATURE_STATE)
@@ -193,7 +193,7 @@ class IdentityFeatureStatePermissions(EnvironmentFeatureStatePermissions):
 
 
 class CreateSegmentOverridePermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -208,7 +208,7 @@ class CreateSegmentOverridePermissions(IsAuthenticated):
 
 
 class FeatureExternalResourcePermissions(FeaturePermissions):
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         if view.action == "destroy":
             return request.user.has_project_permission(
                 CREATE_FEATURE, obj.feature.project

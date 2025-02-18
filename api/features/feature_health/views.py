@@ -2,7 +2,7 @@ import typing
 
 from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, BasePermission
@@ -31,7 +31,7 @@ from users.models import FFAdminUser
 
 class FeatureHealthEventViewSet(
     mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     serializer_class = FeatureHealthEventSerializer
     pagination_class = None  # set here to ensure documentation is correct
@@ -52,7 +52,7 @@ class FeatureHealthProviderViewSet(
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     serializer_class = FeatureHealthProviderSerializer
     pagination_class = None  # set here to ensure documentation is correct
@@ -70,17 +70,17 @@ class FeatureHealthProviderViewSet(
         return self.model_class.objects.filter(project=project)
 
     def get_object(self) -> FeatureHealthProvider:
-        return get_object_or_404(
+        return get_object_or_404(  # type: ignore[no-any-return]
             self.model_class.objects,
             project_id=self.kwargs["project_pk"],
             name__iexact=self.kwargs["name"],
         )
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=CreateFeatureHealthProviderSerializer,
         responses={status.HTTP_201_CREATED: FeatureHealthProviderSerializer()},
     )
-    def create(self, request: Request, *args, **kwargs) -> Response:
+    def create(self, request: Request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         request_serializer = CreateFeatureHealthProviderSerializer(data=request.data)
         request_serializer.is_valid(raise_exception=True)
 
@@ -108,7 +108,7 @@ class FeatureHealthProviderViewSet(
         )
 
 
-@api_view(["POST"])
+@api_view(["POST"])  # type: ignore[arg-type]
 @permission_classes([AllowAny])
 def feature_health_webhook(request: Request, **kwargs: typing.Any) -> Response:
     path = kwargs["path"]

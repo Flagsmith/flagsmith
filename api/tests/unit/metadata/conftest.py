@@ -6,7 +6,7 @@ from organisations.models import Organisation
 
 
 @pytest.fixture
-def environment_metadata_field_different_org(environment):
+def environment_metadata_field_different_org(environment):  # type: ignore[no-untyped-def]
     another_organisation = Organisation.objects.create(name="Another organisation")
     another_field = MetadataField.objects.create(
         name="Another field",

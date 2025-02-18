@@ -13,7 +13,7 @@ from organisations.models import Organisation
 def grafana_organisation_configuration(
     organisation: Organisation,
 ) -> GrafanaOrganisationConfiguration:
-    return GrafanaOrganisationConfiguration.objects.create(
+    return GrafanaOrganisationConfiguration.objects.create(  # type: ignore[no-any-return]
         organisation=organisation,
         base_url="http://test.com",
         api_key="abc-123",

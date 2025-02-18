@@ -5,14 +5,14 @@ from datetime import date, datetime, timedelta
 from unittest import mock
 
 import pytest
-import pytz
+import pytz  # type: ignore[import-untyped]
 from app_analytics.dataclasses import FeatureEvaluationData
-from common.environments.permissions import (
+from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
+from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT  # type: ignore[import-untyped]
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.conf import settings
 from django.forms import model_to_dict
@@ -21,7 +21,7 @@ from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -31,7 +31,7 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
@@ -135,8 +135,8 @@ def test_remove_owners_only_remove_specified_owners(
     admin_client_new: APIClient,
 ) -> None:
     # Given
-    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
-    user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")
+    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")  # type: ignore[no-untyped-call]
+    user_3 = FFAdminUser.objects.create_user(email="user3@mail.com")  # type: ignore[no-untyped-call]
     feature.owners.add(user_2, user_3)
 
     url = reverse(
@@ -544,7 +544,7 @@ def test_regular_user_cannot_create_mv_options_when_creating_feature(
     project: Project,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])
+    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])  # type: ignore[call-arg]
     data = {
         "name": "test_feature",
         "default_enabled": True,
@@ -570,7 +570,7 @@ def test_regular_user_cannot_create_mv_options_when_updating_feature(
     feature: Feature,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])
+    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])  # type: ignore[call-arg]
 
     feature.default_enabled = True
     feature.save()
@@ -600,7 +600,7 @@ def test_regular_user_can_update_feature_description(
     feature: Feature,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])
+    with_project_permissions([VIEW_PROJECT, CREATE_FEATURE])  # type: ignore[call-arg]
     feature.default_enabled = True
     feature.save()
     new_description = "a new description"
@@ -994,7 +994,7 @@ def test_create_segment_override(
     assert created_override.get_feature_state_value() == string_value
 
 
-def test_get_flags_is_not_throttled_by_user_throttle(
+def test_get_flags_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
@@ -1039,7 +1039,7 @@ def test_list_feature_states_from_simple_view_set(
     # add another organisation with a project, environment and feature (which should be
     # excluded)
     another_organisation = Organisation.objects.create(name="another_organisation")
-    admin_user.add_organisation(another_organisation)
+    admin_user.add_organisation(another_organisation)  # type: ignore[no-untyped-call]
     another_project = Project.objects.create(
         name="another_project", organisation=another_organisation
     )
@@ -1532,8 +1532,8 @@ def test_add_owners_fails_if_user_not_found(
     feature = Feature.objects.create(name="Test Feature", project=project)
 
     # Users have no association to the project or organisation.
-    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
-    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")  # type: ignore[no-untyped-call]
+    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")  # type: ignore[no-untyped-call]
     url = reverse(
         "api-v1:projects:project-features-add-owners",
         args=[project.id, feature.id],
@@ -1600,7 +1600,7 @@ def test_add_group_owners_adds_group_owner(
 ) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
-    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")  # type: ignore[no-untyped-call]
     organisation = project.organisation
     group_1 = UserPermissionGroup.objects.create(
         name="Test Group", organisation=organisation
@@ -1642,7 +1642,7 @@ def test_remove_group_owners_removes_group_owner(
 ) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
-    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")  # type: ignore[no-untyped-call]
     organisation = project.organisation
     group_1 = UserPermissionGroup.objects.create(
         name="To be removed group", organisation=organisation
@@ -1683,7 +1683,7 @@ def test_remove_group_owners_when_nonexistent(
 ) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
-    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")  # type: ignore[no-untyped-call]
     organisation = project.organisation
     group_1 = UserPermissionGroup.objects.create(
         name="To be removed group", organisation=organisation
@@ -1718,8 +1718,8 @@ def test_add_group_owners_with_wrong_org_group(
 ) -> None:
     # Given
     feature = Feature.objects.create(name="Test Feature", project=project)
-    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")
-    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")
+    user_1 = FFAdminUser.objects.create_user(email="user1@mail.com")  # type: ignore[no-untyped-call]
+    user_2 = FFAdminUser.objects.create_user(email="user2@mail.com")  # type: ignore[no-untyped-call]
     organisation = project.organisation
     other_organisation = Organisation.objects.create(name="Orgy")
 
@@ -1779,7 +1779,7 @@ def test_list_features_group_owners(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     feature = Feature.objects.create(name="test_feature", project=project)
     organisation = project.organisation
     group_1 = UserPermissionGroup.objects.create(
@@ -1983,7 +1983,7 @@ def test_list_features_provides_information_on_number_of_overrides(
     assert response_json["results"][0]["num_identity_overrides"] == 1
 
 
-def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(
+def test_list_features_provides_correct_information_on_number_of_overrides_based_on_version(  # type: ignore[no-untyped-def]  # noqa: E501
     feature: Feature,
     segment: Segment,
     project: Project,
@@ -2580,7 +2580,7 @@ def test_create_segment_override__using_simple_feature_state_viewset__allows_man
     feature_segment: FeatureSegment,
 ) -> None:
     # Given
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
 
     url = reverse("api-v1:features:featurestates-list")
 
@@ -2617,7 +2617,7 @@ def test_create_segment_override__using_simple_feature_state_viewset__denies_upd
     feature_segment: FeatureSegment,
 ) -> None:
     # Given
-    with_environment_permissions([UPDATE_FEATURE_STATE])
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
 
     url = reverse("api-v1:features:featurestates-list")
 
@@ -2651,7 +2651,7 @@ def test_update_segment_override__using_simple_feature_state_viewset__allows_man
     segment_featurestate: FeatureState,
 ) -> None:
     # Given
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
@@ -2695,7 +2695,7 @@ def test_update_segment_override__using_simple_feature_state_viewset__denies_upd
     segment_featurestate: FeatureState,
 ) -> None:
     # Given
-    with_environment_permissions([UPDATE_FEATURE_STATE])
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:features:featurestates-detail", args=[segment_featurestate.id]
@@ -2782,7 +2782,7 @@ def _assert_list_feature_n_plus_1(
     environment: Environment,
     num_queries: int,
 ) -> None:
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     base_url = reverse("api-v1:projects:project-features-list", args=[project.id])
     url = f"{base_url}?environment={environment.id}"
@@ -2808,7 +2808,7 @@ def test_list_features_from_different_project_returns_404(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:projects:project-features-list", args=[organisation_two_project_two.id]
@@ -2830,7 +2830,7 @@ def test_list_features_with_union_tag(
     environment: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     tag1 = Tag.objects.create(
         label="Test Tag",
@@ -2882,7 +2882,7 @@ def test_list_features_with_intersection_tag(
     environment: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     tag1 = Tag.objects.create(
         label="Test Tag",
@@ -2934,7 +2934,7 @@ def test_list_features_with_feature_state(
     feature_segment: FeatureSegment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -2949,9 +2949,9 @@ def test_list_features_with_feature_state(
 
     # This should be ignored due to versioning.
     feature_state1 = feature.feature_states.filter(environment=environment).first()
-    feature_state1.enabled = True
-    feature_state1.version = 1
-    feature_state1.save()
+    feature_state1.enabled = True  # type: ignore[union-attr]
+    feature_state1.version = 1  # type: ignore[union-attr]
+    feature_state1.save()  # type: ignore[union-attr]
 
     # This should be ignored due to less recent live_from compared to the next feature state
     # event though it has a higher version.
@@ -3053,7 +3053,7 @@ def test_list_features_with_filter_by_value_search_string_and_int(
     environment_v2_versioning: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     environment = environment_v2_versioning
 
     feature2 = Feature.objects.create(
@@ -3156,7 +3156,7 @@ def test_list_features_with_filter_by_search_value_boolean(
     environment: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     feature2 = Feature.objects.create(
         name="another_feature", project=project, initial_value="initial_value"
     )
@@ -3173,10 +3173,10 @@ def test_list_features_with_filter_by_search_value_boolean(
     )
 
     feature_state1 = feature.feature_states.filter(environment=environment).first()
-    feature_state1.enabled = True
-    feature_state1.save()
+    feature_state1.enabled = True  # type: ignore[union-attr]
+    feature_state1.save()  # type: ignore[union-attr]
 
-    feature_state_value1 = feature_state1.feature_state_value
+    feature_state_value1 = feature_state1.feature_state_value  # type: ignore[union-attr]
     feature_state_value1.string_value = None
     feature_state_value1.integer_value = 1945
     feature_state_value1.type = INTEGER
@@ -3237,7 +3237,7 @@ def test_simple_feature_state_returns_only_latest_versions(
         environment_v2_versioning.id,
     )
 
-    with_environment_permissions(
+    with_environment_permissions(  # type: ignore[call-arg]
         [VIEW_ENVIRONMENT], environment_id=environment_v2_versioning.id
     )
 
@@ -3326,7 +3326,7 @@ def test_feature_list_last_modified_values_with_rbac(
     )
 
 
-def _assert_feature_list_last_modified_values(
+def _assert_feature_list_last_modified_values(  # type: ignore[no-untyped-def]
     staff_client: APIClient,
     staff_user: FFAdminUser,
     environment_v2_versioning: Environment,
@@ -3347,7 +3347,7 @@ def _assert_feature_list_last_modified_values(
         environment_id=environment_v2_versioning.id,
     )
 
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     with freeze_time(one_hour_ago):
         # create a new published version in another environment, simulated to be one hour ago
@@ -3399,7 +3399,7 @@ def test_filter_features_with_owners(
     environment: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     feature2 = Feature.objects.create(
         name="included_feature", project=project, initial_value="initial_value"
@@ -3441,7 +3441,7 @@ def test_filter_features_with_group_owners(
     environment: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     feature2 = Feature.objects.create(
         name="included_feature", project=project, initial_value="initial_value"
@@ -3488,7 +3488,7 @@ def test_filter_features_with_owners_and_group_owners_together(
     environment: Environment,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     feature2 = Feature.objects.create(
         name="included_feature", project=project, initial_value="initial_value"
@@ -3566,7 +3566,7 @@ def test_delete_feature_deletes_any_related_identity_overrides(
 
     assert (
         flagsmith_environments_v2_table.query(
-            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(
+            KeyConditionExpression=dynamodb_wrapper_v2.get_identity_overrides_key_condition_expression(  # type: ignore[arg-type]  # noqa: E501
                 environment_id=environment.id, feature_id=feature.id
             )
         )["Count"]

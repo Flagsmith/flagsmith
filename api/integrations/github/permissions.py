@@ -7,7 +7,7 @@ class HasPermissionToGithubConfiguration(BasePermission):
     GithubConfiguration related to their organisations.
     """
 
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
 
         organisation_id = view.kwargs.get("organisation_pk")
 

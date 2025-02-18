@@ -17,11 +17,11 @@ from .models import FeatureExternalResource
 from .serializers import FeatureExternalResourceSerializer
 
 
-class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
+class FeatureExternalResourceViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = FeatureExternalResourceSerializer
     permission_classes = [FeatureExternalResourcePermissions]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if "pk" in self.kwargs:
             return FeatureExternalResource.objects.filter(id=self.kwargs["pk"])
         else:
@@ -29,8 +29,8 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
             return FeatureExternalResource.objects.filter(feature=features_pk)
 
     # Override get list view to add github issue/pr name to each linked external resource
-    def list(self, request, *args, **kwargs) -> Response:
-        queryset = self.get_queryset()
+    def list(self, request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
+        queryset = self.get_queryset()  # type: ignore[no-untyped-call]
         serializer = self.get_serializer(queryset, many=True)
         data = serializer.data
 
@@ -47,7 +47,7 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
 
         return Response(data={"results": data})
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         feature = get_object_or_404(
             Feature.objects.filter(
                 id=self.kwargs["feature_pk"],
@@ -105,6 +105,6 @@ class FeatureExternalResourceViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         external_resource_id = int(self.kwargs["pk"])
         serializer.save(id=external_resource_id)

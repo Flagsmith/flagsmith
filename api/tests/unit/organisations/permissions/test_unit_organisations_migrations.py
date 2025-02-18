@@ -14,7 +14,7 @@ from permissions.models import ORGANISATION_PERMISSION_TYPE
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_migration_creates_create_project_permissions_for_org_users(migrator):
+def test_migration_creates_create_project_permissions_for_org_users(migrator):  # type: ignore[no-untyped-def]
     # Given
     # we use one of the dependencies of the migration we want to test to set the
     # initial state of the database correctly
@@ -75,7 +75,7 @@ def test_migration_creates_create_project_permissions_for_org_users(migrator):
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_merge_duplicate_permissions_migration(migrator):
+def test_merge_duplicate_permissions_migration(migrator):  # type: ignore[no-untyped-def]
     # Given - the migration state is at 0002 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("organisation_permissions", "0002_add_related_query_name")
@@ -207,7 +207,9 @@ def test_update_audit_and_history_limits(migrator: Migrator) -> None:
     )
 
     # Enterprise organisation
-    enterprise_organisation = Organisation.objects.create(name="Enterprise Organisation")
+    enterprise_organisation = Organisation.objects.create(
+        name="Enterprise Organisation"
+    )
     Subscription.objects.create(organisation=enterprise_organisation, plan="enterprise")
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=enterprise_organisation,
@@ -216,8 +218,12 @@ def test_update_audit_and_history_limits(migrator: Migrator) -> None:
     )
 
     # Enterprise organisation without OrganisationSubscriptionInformationCache
-    enterprise_organisation_no_osic = Organisation.objects.create(name="Enterprise Organisation No OSIC")
-    Subscription.objects.create(organisation=enterprise_organisation_no_osic, plan="enterprise")
+    enterprise_organisation_no_osic = Organisation.objects.create(
+        name="Enterprise Organisation No OSIC"
+    )
+    Subscription.objects.create(
+        organisation=enterprise_organisation_no_osic, plan="enterprise"
+    )
 
     # When
     new_state = migrator.apply_tested_migration(

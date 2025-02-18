@@ -110,10 +110,10 @@ def post_comment_to_github(
     )
     response.raise_for_status()
 
-    return response.json()
+    return response.json()  # type: ignore[no-any-return]
 
 
-def delete_github_installation(installation_id: str) -> requests.Response:
+def delete_github_installation(installation_id: str) -> requests.Response:  # type: ignore[return]
     url = f"{GITHUB_API_URL}app/installations/{installation_id}"
     headers = build_request_headers(installation_id, use_jwt=True)
     try:
@@ -279,7 +279,7 @@ def fetch_github_repo_contributors(
     return build_paginated_response(results, response)
 
 
-def create_flagsmith_flag_label(
+def create_flagsmith_flag_label(  # type: ignore[return]
     installation_id: str, owner: str, repo: str
 ) -> dict[str, Any]:
     # Create "Flagsmith Flag" label in linked repo
@@ -295,7 +295,7 @@ def create_flagsmith_flag_label(
             url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
         )
         response.raise_for_status()
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     except HTTPError:
         response_content = response.content.decode("utf-8")
@@ -304,7 +304,7 @@ def create_flagsmith_flag_label(
             error["code"] == "already_exists" for error in error_data.get("errors", [])
         ):
             logger.warning("Label already exists")
-            return {"message": "Label already exists"}, 200
+            return {"message": "Label already exists"}, 200  # type: ignore[return-value]
 
 
 def label_github_issue_pr(
@@ -318,4 +318,4 @@ def label_github_issue_pr(
         url, json=payload, headers=headers, timeout=GITHUB_API_CALLS_TIMEOUT
     )
     response.raise_for_status()
-    return response.json()
+    return response.json()  # type: ignore[no-any-return]

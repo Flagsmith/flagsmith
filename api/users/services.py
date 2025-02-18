@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from core.helpers import get_current_site_url
 from django.conf import settings
-from djoser.email import PasswordResetEmail
+from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
 
 from users.models import FFAdminUser
 
@@ -20,7 +20,7 @@ def should_skip_create_initial_superuser() -> bool:
 def create_initial_superuser(
     admin_email: str | None = None,
 ) -> CreateInitialSuperuserResponse:
-    superuser = FFAdminUser.objects.create_superuser(
+    superuser = FFAdminUser.objects.create_superuser(  # type: ignore[no-untyped-call]
         email=admin_email or settings.ADMIN_EMAIL,
         is_active=True,
         password=None,

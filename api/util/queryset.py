@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 
 
-def iterator_with_prefetch(queryset, chunk_size=2000):
+def iterator_with_prefetch(queryset, chunk_size=2000):  # type: ignore[no-untyped-def]
     """
     Since queryset.iterator() does not support prefetch_related.
     Using Paginator() we can mimic the (somewhat)same behavior

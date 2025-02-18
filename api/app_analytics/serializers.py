@@ -5,7 +5,7 @@ from rest_framework import serializers
 from .types import PERIOD_TYPE
 
 
-class UsageDataSerializer(serializers.Serializer):
+class UsageDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
     flags = serializers.IntegerField()
     identities = serializers.IntegerField()
     traits = serializers.IntegerField()
@@ -13,7 +13,7 @@ class UsageDataSerializer(serializers.Serializer):
     day = serializers.CharField()
 
 
-class UsageDataQuerySerializer(serializers.Serializer):
+class UsageDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
     period = serializers.ChoiceField(
@@ -24,16 +24,16 @@ class UsageDataQuerySerializer(serializers.Serializer):
     )
 
 
-class UsageTotalCountSerializer(serializers.Serializer):
+class UsageTotalCountSerializer(serializers.Serializer):  # type: ignore[type-arg]
     count = serializers.IntegerField()
 
 
-class SDKAnalyticsFlagsSerializerDetail(serializers.Serializer):
+class SDKAnalyticsFlagsSerializerDetail(serializers.Serializer):  # type: ignore[type-arg]
     feature_name = serializers.CharField()
     identity_identifier = serializers.CharField(required=False, default=None)
     enabled_when_evaluated = serializers.BooleanField()
     count = serializers.IntegerField()
 
 
-class SDKAnalyticsFlagsSerializer(serializers.Serializer):
+class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-arg]
     evaluations = SDKAnalyticsFlagsSerializerDetail(many=True)

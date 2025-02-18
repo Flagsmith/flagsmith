@@ -8,7 +8,7 @@ from integrations.lead_tracking.pipedrive.models import (
 )
 
 
-def test_base_pipedrive_model_from_api_response():
+def test_base_pipedrive_model_from_api_response():  # type: ignore[no-untyped-def]
     # Given
     class MySchema(Schema):
         foo = fields.Str()
@@ -23,17 +23,17 @@ def test_base_pipedrive_model_from_api_response():
     o = MyClass.from_response_data(data={"foo": "bar"})
 
     # Then
-    assert o.foo == "bar"
+    assert o.foo == "bar"  # type: ignore[attr-defined]
 
 
 @pytest.mark.parametrize(
     "domain, expected_org_name",
     (("example.com", "example"), ("foo.example.com", "example")),
 )
-def test_pipedrive_organisation_get_org_name_from_domain(domain, expected_org_name):
+def test_pipedrive_organisation_get_org_name_from_domain(domain, expected_org_name):  # type: ignore[no-untyped-def]
     assert PipedriveOrganization.get_org_name_from_domain(domain) == expected_org_name
 
 
-def test_pipedrive_organisation_get_org_name_from_domain_raises_value_error_if_domain_invalid():
+def test_pipedrive_organisation_get_org_name_from_domain_raises_value_error_if_domain_invalid():  # type: ignore[no-untyped-def]  # noqa: E501
     with pytest.raises(ValueError):
         PipedriveOrganization.get_org_name_from_domain("not_a_domain")
