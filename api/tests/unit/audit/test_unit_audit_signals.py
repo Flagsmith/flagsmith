@@ -168,6 +168,31 @@ def test_send_audit_log_event_to_grafana__organisation_grafana_config__calls_exp
     )
 
 
+def test_send_audit_log_event_to_grafana__organisation_grafana_config__deleted__doesnt_call(
+    mocker: MockerFixture,
+    organisation: Organisation,
+    project: Project,
+) -> None:
+    # Given
+    audit_log_record = AuditLog.objects.create(
+        project=project,
+        related_object_type=RelatedObjectType.FEATURE.name,
+    )
+    grafana_wrapper_mock = mocker.patch("audit.signals.GrafanaWrapper", autospec=True)
+
+    grafana_config = GrafanaOrganisationConfiguration(
+        base_url="test.com", api_key="test"
+    )
+    organisation.grafana_config = grafana_config
+    grafana_config.delete()
+
+    # When
+    send_audit_log_event_to_grafana(AuditLog, audit_log_record)
+
+    # Then
+    grafana_wrapper_mock.assert_not_called()
+
+
 @responses.activate
 def test_send_environment_feature_version_audit_log_event_to_grafana(
     tagged_feature: Feature,
