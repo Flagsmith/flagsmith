@@ -525,8 +525,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     const typedValue = testWithTrim ? str.trim() : str
-    // Check if the value is sensible number, returns false if it has leading 0s
-    const isNum = /^-?(0|[1-9]\d*)$/.test(typedValue)
+    const isNum = /^-?\d+$/.test(typedValue)
 
     if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
