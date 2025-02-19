@@ -86,9 +86,8 @@ class EdgeIdentityUpdateSerializer(EdgeIdentitySerializer):
     def update(
         self, instance: EdgeIdentity, validated_data: dict[str, typing.Any]
     ) -> EdgeIdentity:
-        instance.engine_identity_model.dashboard_alias = (
-            self.validated_data.get("dashboard_alias")
-            or instance.engine_identity_model.dashboard_alias
+        instance.dashboard_alias = (
+            self.validated_data.get("dashboard_alias") or instance.dashboard_alias
         )
         instance.save()
         return instance

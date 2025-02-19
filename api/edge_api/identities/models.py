@@ -67,6 +67,14 @@ class EdgeIdentity:
         )
         return environment
 
+    @property
+    def dashboard_alias(self) -> str | None:
+        return self.engine_identity_model.dashboard_alias
+
+    @dashboard_alias.setter
+    def dashboard_alias(self, dashboard_alias: str) -> None:
+        self.engine_identity_model.dashboard_alias = dashboard_alias
+
     def add_feature_override(self, feature_state: FeatureStateModel) -> None:
         self.engine_identity_model.identity_features.append(feature_state)
 
