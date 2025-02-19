@@ -336,14 +336,21 @@ class EdgeIdentityWithIdentifierFeatureStateView(APIView):
         serializer = EdgeIdentityIdentifierSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        identifier = serializer.data["identifier"]
+        environment_api_key = self.kwargs["environment_api_key"]
+
         identity_document = EdgeIdentity.dynamo_wrapper.get_item(
-            f"{self.kwargs['environment_api_key']}_{serializer.data['identifier']}"
+            f"{environment_api_key}_{identifier}"
         )
 
-        if not identity_document:
-            raise NotFound()
-
-        self.identity = EdgeIdentity.from_identity_document(identity_document)
+        if identity_document:
+            self.identity = EdgeIdentity.from_identity_document(identity_document)
+        else:
+            self.identity = EdgeIdentity(
+                engine_identity_model=IdentityModel(
+                    identifier=identifier, environment_api_key=environment_api_key
+                )
+            )
 
     @swagger_auto_schema(
         request_body=EdgeIdentityWithIdentifierFeatureStateRequestBody,
