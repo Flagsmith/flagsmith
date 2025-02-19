@@ -88,6 +88,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         },
         organisation_id: JSON.parse(localStorage.lastEnv).orgId,
       }).then(async (res) => {
+        // @ts-ignore
         if (res?.data && githubIntegrationSetupFromFlagsmithValue) {
           const dataToSend = {
             'installationId': installationId,
@@ -96,6 +97,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
         }
       })
     }
+    //eslint-disable-next-line
   }, [])
 
   return (
@@ -211,7 +213,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                 </div>
               </Row>
             }
-            renderRow={(v: ProjectType) => (
+            renderRow={(v) => (
               <Row className='list-item' key={v.id}>
                 <Flex className='table-column px-3'>
                   <div className='font-weight-medium mb-1'>{v.name}</div>
@@ -257,6 +259,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
                             repository_name: project.repo,
                             repository_owner: repositoryOwner,
                           },
+                          // @ts-ignore
                           github_id: res?.data?.id,
                           organisation_id: organisation,
                         })
