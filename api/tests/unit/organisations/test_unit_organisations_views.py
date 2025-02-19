@@ -16,9 +16,12 @@ from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
-from pytz import UTC  # type: ignore[import-untyped]
+from pytz import UTC
 from rest_framework import status
-from rest_framework.test import APIClient, override_settings  # type: ignore[attr-defined]
+from rest_framework.test import (  # type: ignore[attr-defined]
+    APIClient,
+    override_settings,
+)
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission

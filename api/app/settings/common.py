@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
-import pytz  # type: ignore[import-untyped]
+import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key

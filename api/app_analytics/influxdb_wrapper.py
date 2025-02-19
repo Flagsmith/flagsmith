@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.utils import timezone
-from influxdb_client import InfluxDBClient, Point  # type: ignore[import-untyped]
-from influxdb_client.client.exceptions import InfluxDBError  # type: ignore[import-untyped]
-from influxdb_client.client.write_api import SYNCHRONOUS  # type: ignore[import-untyped]
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.exceptions import InfluxDBError
+from influxdb_client.client.write_api import SYNCHRONOUS
 from sentry_sdk import capture_exception
 from urllib3 import Retry
 from urllib3.exceptions import HTTPError

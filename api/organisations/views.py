@@ -9,7 +9,7 @@ from app_analytics.influxdb_wrapper import (
     get_multiple_event_list_for_organisation,
 )
 from core.helpers import get_current_site_url
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
