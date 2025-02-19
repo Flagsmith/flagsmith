@@ -69,7 +69,8 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
           <h5 className='mb-2'>Audit Webhooks</h5>
           <p className='fs-small lh-sm mb-4'>
             Audit webhooks let you know when audit logs occur. You can configure
-            1 or more audit webhooks per organisation.<br/>
+            1 or more audit webhooks per organisation.
+            <br />
             <Button
               theme='text'
               href='https://docs.flagsmith.com/system-administration/webhooks'
@@ -87,7 +88,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
       ) : (
         <PanelSearch
           id='webhook-list'
-          className="no-pad"
+          className='no-pad'
           items={webhooks?.results}
           renderRow={(webhook: Webhook) => (
             <Row

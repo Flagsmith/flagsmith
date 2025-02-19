@@ -568,5 +568,10 @@ export type Req = {
   getAuditLogWebhooks: { organisationId: string }
   updateAuditLogWebhooks: { organisationId: string; data: Webhook }
   deleteAuditLogWebhook: { organisationId: string; id: number }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: string
+  }>
   // END OF TYPES
 }
