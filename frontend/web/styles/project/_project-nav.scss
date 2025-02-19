@@ -13,8 +13,14 @@ nav a {
     border-radius: $border-radius;
 
     &:hover {
-      color: $body-color;
       background-color: $primary-alfa-8;
+    }
+  }
+  &:hover{
+    svg {
+      path {
+        fill: $link-hover-color;
+      }
     }
   }
   svg {
@@ -122,15 +128,22 @@ nav a {
     font-size: $font-size-base;
   }
 }
-  .collapsible-title {
-    line-height: 32px;
-    cursor: pointer;
-    border-radius: $border-radius;
-    &:hover {
-      color: $primary;
-      background-color: $primary-alfa-8;
+.aside-nav a:hover {
+  svg {
+    path {
+      fill: $primary;
     }
   }
+}
+.collapsible-title {
+  line-height: 32px;
+  cursor: pointer;
+  border-radius: $border-radius;
+  &:hover {
+    color: $primary;
+    background-color: $primary-alfa-8;
+  }
+}
   .collapsible.active {
     .collapsible-title {
       pointer-events: none;
@@ -155,6 +168,19 @@ nav a {
         fill: $body-color-dark;
       }
       opacity: 0.3;
+    }
+  }
+  .aside-nav a {
+    &.active {
+      background-color: $primary-alfa-16;
+    }
+  }
+  .aside-nav a:hover {
+    background-color: $primary-alfa-8;
+    svg {
+      path {
+        fill: $body-color-dark;
+      }
     }
   }
 }
