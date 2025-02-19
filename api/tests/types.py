@@ -5,7 +5,7 @@ from organisations.permissions.models import UserOrganisationPermission
 from projects.models import UserProjectPermission
 
 # TODO: these type aliases aren't strictly correct according to mypy
-#  See here for more details: https://github.com/Flagsmith/flagsmith/issues/5138
+#  See here for more details: https://github.com/Flagsmith/flagsmith/issues/5140
 WithProjectPermissionsCallable = Callable[
     [list[str] | None, int | None, bool], UserProjectPermission
 ]
