@@ -980,7 +980,7 @@ const controller = {
 
 const store = Object.assign({}, BaseStore, {
   getEnvironmentFlags() {
-    return store.model && store.model.keyedEnvironmentFeatures
+    return store?.model?.keyedEnvironmentFeatures
   },
   getFeatureUsage() {
     return store.model && store.model.usageData

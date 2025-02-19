@@ -2,7 +2,7 @@ import { FC } from 'react'
 import Constants from 'common/constants'
 import moment from 'moment'
 import { Project, ProjectFlag } from 'common/types/responses'
-import { getProtectedTags } from 'common/utils/getProtectedTags'
+import { useProtectedTags } from 'common/utils/useProtectedTags'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import Tooltip from './Tooltip'
@@ -14,8 +14,20 @@ type StaleFlagWarningType = {
 }
 
 const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
-  if (!Utils.getFlagsmithHasFeature('feature_versioning')) return null
-  const protectedTags = getProtectedTags(projectFlag, `${projectFlag.project}`)
+  const isFeatureVersioningEnabled =
+    Utils.getFlagsmithHasFeature('feature_versioning')
+  const protectedTags = useProtectedTags(
+    projectFlag,
+    `${projectFlag.project}`,
+    !isFeatureVersioningEnabled,
+  )
+
+  if (!isFeatureVersioningEnabled) return null
+
+  if (protectedTags === undefined) {
+    return null
+  }
+
   if (protectedTags?.length) {
     return null
   }

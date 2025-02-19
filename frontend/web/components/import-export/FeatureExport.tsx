@@ -9,7 +9,12 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureRow from 'components/FeatureRow'
-import { FeatureState, ProjectFlag, TagStrategy } from 'common/types/responses'
+import {
+  FeatureListProviderData,
+  FeatureState,
+  ProjectFlag,
+  TagStrategy,
+} from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
@@ -125,8 +130,8 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           environmentFlags,
           projectFlags,
         }: {
-          environmentFlags?: FeatureState[]
-          projectFlags: ProjectFlag[]
+          environmentFlags?: FeatureListProviderData['environmentFlags']
+          projectFlags: FeatureListProviderData['projectFlags']
         }) => {
           const isLoading = !FeatureListStore.hasLoaded
 
@@ -159,11 +164,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                     readOnly
                     hideRemove
                     hideAudit
-                    descriptionInTooltip
-                    hideActions
-                    size='sm'
                     environmentFlags={environmentFlags}
-                    projectFlags={projectFlags}
                     environmentId={environment}
                     projectId={projectId}
                     index={i}
