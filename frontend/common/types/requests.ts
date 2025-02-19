@@ -575,7 +575,6 @@ export type Req = {
     identity: string
     data: IdentityTrait
   }
-  getIdentity: { id: string }
   getIdentityTraits: {
     use_edge_identities: boolean
     environmentId: string
