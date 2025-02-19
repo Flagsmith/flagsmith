@@ -1,5 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 
+import { WithoutId } from './requests'
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -45,24 +47,28 @@ export type ChangeRequestSummary = {
   updated_at: string
   description: string
   user: number
+  title: string
   committed_at: string | null
   committed_by: number | null
   deleted_at: string | null
   live_from: string | null
 }
 export type SegmentCondition = {
+  id?: number
   delete?: boolean
   description?: string
   operator: string
   property: string
   value: string | number | null
+  version_of?: SegmentCondition
 }
 export type SegmentRule = {
-  type: string
+  id?: number
+  type: 'ALL' | 'ANY' | 'NONE'
   rules: SegmentRule[]
-
   delete?: boolean
   conditions: SegmentCondition[]
+  version_of: SegmentRule | undefined
 }
 export type Segment = {
   id: number
@@ -74,6 +80,19 @@ export type Segment = {
   feature?: number
   metadata: Metadata[] | []
 }
+export type ProjectChangeRequest = Omit<
+  ChangeRequest,
+  | 'environment_feature_versions'
+  | 'feature_states'
+  | 'change_sets'
+  | 'environment'
+> & {
+  segments: (WithoutId<Segment> & {
+    segment_id?: number
+    version_of?: number
+  })[]
+}
+
 export type Environment = {
   id: number
   name: string
@@ -83,7 +102,7 @@ export type Environment = {
   banner_text?: string
   banner_colour?: string
   project: number
-  minimum_change_request_approvals?: number
+  minimum_change_request_approvals: number | null
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
@@ -98,6 +117,7 @@ export type Project = {
   hide_disabled_flags: boolean
   enable_dynamo_db: boolean
   migration_status: string
+  minimum_change_request_approvals: number | null
   use_edge_identities: boolean
   show_edge_identity_overrides_for_feature: boolean
   prevent_flag_defaults: boolean
@@ -562,9 +582,9 @@ export type ChangeRequest = {
   committed_by: number | null
   deleted_at: null
   approvals: {
-    id: number
+    id?: number
     user: number
-    approved_at: null | string
+    approved_at?: null | string
   }[]
   change_sets?: ChangeSet[]
   is_approved: boolean
@@ -572,6 +592,7 @@ export type ChangeRequest = {
   group_assignments: { group: number }[]
   environment_feature_versions: {
     uuid: string
+    live_from: string | null
     feature_states: FeatureState[]
   }[]
 
@@ -797,5 +818,8 @@ export type Res = {
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
+  projectChangeRequests: PagedResponse<ChangeRequestSummary>
+  projectChangeRequest: ProjectChangeRequest
+  actionChangeRequest: {}
   // END OF TYPES
 }
