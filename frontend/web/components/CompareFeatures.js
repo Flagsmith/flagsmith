@@ -141,6 +141,7 @@ class CompareEnvironments extends Component {
                             permission={permission}
                             environmentId={data.api_key}
                             projectId={this.props.projectId}
+                            history={this.context.router.history}
                             index={i}
                             canDelete={permission}
                             toggleFlag={toggleFlag}
