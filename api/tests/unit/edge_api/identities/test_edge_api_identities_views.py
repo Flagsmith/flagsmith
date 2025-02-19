@@ -1,4 +1,4 @@
-from common.environments.permissions import (
+from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
@@ -17,12 +17,12 @@ from features.models import Feature
 from tests.types import WithEnvironmentPermissionsCallable
 
 
-def test_edge_identity_view_set_get_permissions():
+def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
     # Given
     view_set = EdgeIdentityViewSet()
 
     # When
-    permissions = view_set.get_permissions()
+    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
 
     # Then
     assert isinstance(permissions[0], IsAuthenticated)
@@ -38,7 +38,7 @@ def test_edge_identity_view_set_get_permissions():
     }
 
 
-def test_user_with_manage_identity_permission_can_delete_identity(
+def test_user_with_manage_identity_permission_can_delete_identity(  # type: ignore[no-untyped-def]
     dynamo_enabled_project_environment_one,
     identity_document_without_fs,
     edge_identity_dynamo_wrapper_mock,
@@ -80,7 +80,7 @@ def test_user_with_manage_identity_permission_can_delete_identity(
     )
 
 
-def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_client):
+def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_client):  # type: ignore[no-untyped-def]
     # Given
     api_key = "not-valid"
     url = reverse(
@@ -100,8 +100,8 @@ def test_get_edge_identity_overrides_for_a_feature(
     mocker: MockerFixture,
     feature: Feature,
     environment: Environment,
-    edge_identity_override_document: dict,
-    edge_identity_override_document_2: dict,
+    edge_identity_override_document: dict,  # type: ignore[type-arg]
+    edge_identity_override_document_2: dict,  # type: ignore[type-arg]
     edge_identity_model: EdgeIdentity,
     edge_identity_model_2: EdgeIdentity,
 ) -> None:
@@ -110,7 +110,7 @@ def test_get_edge_identity_overrides_for_a_feature(
         "api-v1:environments:edge-identity-overrides", args=[environment.api_key]
     )
     url = f"{base_url}?feature={feature.id}"
-    with_environment_permissions([VIEW_IDENTITIES])
+    with_environment_permissions([VIEW_IDENTITIES])  # type: ignore[call-arg]
 
     mock_dynamodb_wrapper = mocker.MagicMock()
     mocker.patch(
@@ -175,7 +175,7 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
         "api-v1:environments:edge-identity-overrides", args=[environment.api_key]
     )
     url = f"{base_url}?feature={feature.id}"
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(url)

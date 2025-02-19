@@ -4,7 +4,7 @@ import responses
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
-from task_processor.task_run_method import TaskRunMethod
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_FORM_ID,

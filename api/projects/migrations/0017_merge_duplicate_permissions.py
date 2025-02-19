@@ -4,7 +4,7 @@ from django.db import migrations
 from util.migrations import merge_duplicate_permissions
 
 
-def merge_duplicate_project_permissions(apps, schema_editor):
+def merge_duplicate_project_permissions(apps, schema_editor):  # type: ignore[no-untyped-def]
     UserProjectPermission = apps.get_model("projects", "UserProjectPermission")
     UserPermissionGroupProjectPermission = apps.get_model(
         "projects", "UserPermissionGroupProjectPermission"

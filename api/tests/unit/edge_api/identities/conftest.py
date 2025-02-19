@@ -6,7 +6,7 @@ from features.models import Feature
 
 
 @pytest.fixture()
-def forwarder_mocked_migrator(mocker):
+def forwarder_mocked_migrator(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch(
         "edge_api.identities.edge_request_forwarder.IdentityMigrator",
         autospec=True,
@@ -15,7 +15,7 @@ def forwarder_mocked_migrator(mocker):
 
 
 @pytest.fixture()
-def forwarder_mocked_requests(mocker):
+def forwarder_mocked_requests(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch(
         "edge_api.identities.edge_request_forwarder.requests",
         autospec=True,
@@ -24,14 +24,14 @@ def forwarder_mocked_requests(mocker):
 
 
 @pytest.fixture()
-def forward_enable_settings(settings):
+def forward_enable_settings(settings):  # type: ignore[no-untyped-def]
     settings.EDGE_API_URL = "http//localhost"
     settings.EDGE_REQUEST_SIGNING_KEY = "test_key"
     return settings
 
 
 @pytest.fixture()
-def identity_document_without_fs(environment):
+def identity_document_without_fs(environment):  # type: ignore[no-untyped-def]
     return {
         "composite_key": f"{environment.api_key}_user_1_test",
         "identity_traits": [],
@@ -46,7 +46,7 @@ def identity_document_without_fs(environment):
 
 
 @pytest.fixture()
-def edge_identity_model(identity_document_without_fs):
+def edge_identity_model(identity_document_without_fs):  # type: ignore[no-untyped-def]
     return EdgeIdentity.from_identity_document(identity_document_without_fs)
 
 
@@ -55,7 +55,7 @@ def edge_identity_override_document(
     environment: Environment,
     feature: Feature,
     edge_identity_model: EdgeIdentity,
-) -> dict:
+) -> dict:  # type: ignore[type-arg]
     return {
         "environment_id": environment.id,
         "document_key": f"identity_override:{feature.id}:{edge_identity_model.identity_uuid}",
@@ -75,7 +75,7 @@ def edge_identity_override_document(
 
 
 @pytest.fixture()
-def identity_document_2(environment):
+def identity_document_2(environment):  # type: ignore[no-untyped-def]
     return {
         "composite_key": f"{environment.api_key}_user_2_test",
         "identity_traits": [],
@@ -89,7 +89,7 @@ def identity_document_2(environment):
 
 
 @pytest.fixture()
-def edge_identity_model_2(identity_document_2):
+def edge_identity_model_2(identity_document_2):  # type: ignore[no-untyped-def]
     return EdgeIdentity.from_identity_document(identity_document_2)
 
 
@@ -98,7 +98,7 @@ def edge_identity_override_document_2(
     environment: Environment,
     feature: Feature,
     edge_identity_model_2: EdgeIdentity,
-) -> dict:
+) -> dict:  # type: ignore[type-arg]
     return {
         "environment_id": environment.id,
         "document_key": f"identity_override:{feature.id}:{edge_identity_model_2.identity_uuid}",

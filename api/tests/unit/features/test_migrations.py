@@ -11,7 +11,7 @@ from features.feature_types import MULTIVARIATE, STANDARD
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_migrate_feature_segments_forward(migrator):
+def test_migrate_feature_segments_forward(migrator):  # type: ignore[no-untyped-def]
     # Given - the migration state is at 0017 (before the migration we want to test)
     old_state = migrator.apply_initial_migration(
         ("features", "0017_auto_20200607_1005")
@@ -91,7 +91,7 @@ def test_migrate_feature_segments_forward(migrator):
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_migrate_feature_segments_reverse(migrator):
+def test_migrate_feature_segments_reverse(migrator):  # type: ignore[no-untyped-def]
     # Given - migration state is at 0018, after the migration we want to test in reverse
     old_state = migrator.apply_initial_migration(
         ("features", "0018_auto_20200607_1057")
@@ -149,7 +149,7 @@ def test_migrate_feature_segments_reverse(migrator):
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_revert_feature_state_versioning_migrations(migrator):
+def test_revert_feature_state_versioning_migrations(migrator):  # type: ignore[no-untyped-def]
     # Given
     old_state = migrator.apply_initial_migration(
         ("features", "0038_remove_old_versions_and_drafts")
@@ -200,7 +200,7 @@ def test_revert_feature_state_versioning_migrations(migrator):
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_fix_feature_type_migration(migrator):
+def test_fix_feature_type_migration(migrator):  # type: ignore[no-untyped-def]
     # Given
     old_state = migrator.apply_initial_migration(
         ("features", "0058_alter_boolean_values")

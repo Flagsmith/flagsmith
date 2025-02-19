@@ -21,8 +21,8 @@ from app_analytics.influxdb_wrapper import (
 )
 from django.conf import settings
 from django.utils import timezone
-from influxdb_client.client.exceptions import InfluxDBError
-from influxdb_client.rest import ApiException
+from influxdb_client.client.exceptions import InfluxDBError  # type: ignore[import-untyped]
+from influxdb_client.rest import ApiException  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from urllib3.exceptions import HTTPError
@@ -41,7 +41,7 @@ read_bucket = settings.INFLUXDB_BUCKET + "_downsampled_15m"
 @pytest.fixture()
 def mock_influxdb_client(monkeypatch: Generator[MonkeyPatch, None, None]) -> MagicMock:
     mock_influxdb_client = mock.MagicMock()
-    monkeypatch.setattr(
+    monkeypatch.setattr(  # type: ignore[attr-defined]
         app_analytics.influxdb_wrapper, "influxdb_client", mock_influxdb_client
     )
     return mock_influxdb_client
@@ -56,11 +56,11 @@ def mock_write_api(mock_influxdb_client: MagicMock) -> MagicMock:
 
 def test_write(mock_write_api: MagicMock) -> None:
     # Given
-    influxdb = InfluxDBWrapper("name")
-    influxdb.add_data_point("field_name", "field_value")
+    influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
+    influxdb.add_data_point("field_name", "field_value")  # type: ignore[no-untyped-call]
 
     # When
-    influxdb.write()
+    influxdb.write()  # type: ignore[no-untyped-call]
 
     # Then
     mock_write_api.write.assert_called()
@@ -75,11 +75,11 @@ def test_write_handles_errors(
     # Given
     mock_write_api.write.side_effect = exception_class
 
-    influxdb = InfluxDBWrapper("name")
-    influxdb.add_data_point("field_name", "field_value")
+    influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
+    influxdb.add_data_point("field_name", "field_value")  # type: ignore[no-untyped-call]
 
     # When
-    influxdb.write()
+    influxdb.write()  # type: ignore[no-untyped-call]
 
     # Then
     # The write API was called
@@ -88,7 +88,7 @@ def test_write_handles_errors(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
+def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):  # type: ignore[no-untyped-def]
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") |> range(start: 2022-12-20T09:09:47.325132+00:00, '
@@ -123,7 +123,7 @@ def test_influx_db_query_when_get_events_then_query_api_called(monkeypatch):
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch):
+def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch):  # type: ignore[no-untyped-def]
     query = (
         f'from(bucket:"{read_bucket}") '
         f"|> range(start: 2022-12-20T09:09:47.325132+00:00, stop: 2023-01-19T09:09:47.325132+00:00) "
@@ -187,7 +187,7 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
     ),
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_api_called(
+def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_api_called(  # type: ignore[no-untyped-def]  # noqa: E501
     monkeypatch, project_id, environment_id, expected_filters
 ):
 
@@ -225,7 +225,7 @@ def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_ap
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_called(
+def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_called(  # type: ignore[no-untyped-def]
     monkeypatch,
 ):
     query = (
@@ -257,7 +257,7 @@ def test_influx_db_query_when_get_multiple_events_for_feature_then_query_api_cal
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data(mocker):
+def test_get_usage_data(mocker):  # type: ignore[no-untyped-def]
     # Given
     influx_data = [
         {
@@ -311,7 +311,7 @@ def test_get_usage_data(mocker):
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_feature_evaluation_data(mocker):
+def test_get_feature_evaluation_data(mocker):  # type: ignore[no-untyped-def]
     # Given
     influx_data = [
         {"some-feature": 100, "datetime": "2023-01-08"},
@@ -546,7 +546,7 @@ def test_get_current_api_usage(mocker: MockerFixture) -> None:
     influx_mock.return_value = [result]
 
     # When
-    result = get_current_api_usage(organisation_id=1)
+    result = get_current_api_usage(organisation_id=1)  # type: ignore[assignment]
 
     # Then
     assert result == 43

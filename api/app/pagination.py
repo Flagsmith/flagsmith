@@ -2,8 +2,8 @@ import base64
 import json
 from collections import OrderedDict
 
-from drf_yasg import openapi
-from drf_yasg.inspectors import PaginatorInspector
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.inspectors import PaginatorInspector  # type: ignore[import-untyped]
 from flag_engine.identities.models import IdentityModel
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -15,8 +15,8 @@ class CustomPagination(PageNumberPagination):
     max_page_size = 999
 
 
-class EdgeIdentityPaginationInspector(PaginatorInspector):
-    def get_paginator_parameters(self, paginator):
+class EdgeIdentityPaginationInspector(PaginatorInspector):  # type: ignore[misc]
+    def get_paginator_parameters(self, paginator):  # type: ignore[no-untyped-def]
         """
         :param BasePagination paginator: the paginator
         :rtype: list[openapi.Parameter]
@@ -38,7 +38,7 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):
             ),
         ]
 
-    def get_paginated_response(self, paginator, response_schema):
+    def get_paginated_response(self, paginator, response_schema):  # type: ignore[no-untyped-def]
         """
         :param BasePagination paginator: the paginator
         :param openapi.Schema response_schema: the response schema that must be paged.
@@ -67,7 +67,7 @@ class EdgeIdentityPagination(CustomPagination):
     max_page_size = 100
     page_size = 100
 
-    def paginate_queryset(self, dynamo_queryset, request, view=None):
+    def paginate_queryset(self, dynamo_queryset, request, view=None):  # type: ignore[no-untyped-def]
         last_evaluated_key = dynamo_queryset.get("LastEvaluatedKey")
         if last_evaluated_key:
             self.last_evaluated_key = base64.b64encode(
@@ -79,7 +79,7 @@ class EdgeIdentityPagination(CustomPagination):
             for identity_document in dynamo_queryset["Items"]
         ]
 
-    def get_paginated_response(self, data) -> Response:
+    def get_paginated_response(self, data) -> Response:  # type: ignore[no-untyped-def]
         """
         Note: "If the size of the Query result set is larger than 1 MB, ScannedCount
                 and Count represent only a partial count of the total items"

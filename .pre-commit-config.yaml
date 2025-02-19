@@ -13,7 +13,7 @@ repos:
         exclude: migrations
 
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
+    rev: 7.1.2
     hooks:
       - id: flake8
         name: flake8
@@ -40,17 +40,17 @@ repos:
       - id: python-typecheck
         name: python-typecheck
         language: system
-        entry: poetry -C api run python scripts/typecheck.py
+        entry: poetry -C api run mypy .
         require_serial: true
         pass_filenames: false
         types: [python]
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 2.0.1
+    rev: 2.1.1
     hooks:
       - id: poetry-check
         args: ["-C", "api"]
 
 ci:
-  skip: [python-typecheck]
+  skip: [python-typecheck, isort]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"

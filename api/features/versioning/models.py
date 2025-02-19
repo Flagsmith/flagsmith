@@ -12,8 +12,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Index
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
-from softdelete.models import SoftDeleteObject
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook  # type: ignore[import-untyped]
+from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from features.versioning.dataclasses import Conflict
@@ -27,9 +27,9 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
-class EnvironmentFeatureVersion(
+class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(),
+    abstract_base_auditable_model_factory(),  # type: ignore[misc]
 ):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4)
     environment = models.ForeignKey(
@@ -83,18 +83,18 @@ class EnvironmentFeatureVersion(
         blank=True,
     )
 
-    objects = EnvironmentFeatureVersionManager()
+    objects = EnvironmentFeatureVersionManager()  # type: ignore[misc]
 
     class Meta:
         indexes = [Index(fields=("environment", "feature"))]
         ordering = ("-live_from",)
 
-    def __gt__(self, other):
+    def __gt__(self, other):  # type: ignore[no-untyped-def]
         return self.is_live and (not other.is_live or self.live_from > other.live_from)
 
     @property
     def is_live(self) -> bool:
-        return self.published and self.live_from <= timezone.now()
+        return self.published and self.live_from <= timezone.now()  # type: ignore[operator]
 
     @property
     def published(self) -> bool:
@@ -118,12 +118,12 @@ class EnvironmentFeatureVersion(
                 "Version already exists for this feature / environment combination."
             )
 
-        return cls.objects.create(
+        return cls.objects.create(  # type: ignore[no-any-return]
             environment=environment, feature=feature, published_at=timezone.now()
         )
 
     def get_previous_version(self) -> typing.Optional["EnvironmentFeatureVersion"]:
-        return (
+        return (  # type: ignore[no-any-return]
             self.__class__.objects.filter(
                 environment=self.environment,
                 feature=self.feature,
@@ -162,36 +162,36 @@ class EnvironmentFeatureVersion(
     ) -> "EnvironmentFeatureVersion":
         _clone = deepcopy(self)
 
-        _clone.uuid = None
+        _clone.uuid = None  # type: ignore[assignment]
         _clone.environment = environment
 
         _clone.save()
         return _clone
 
 
-class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    published_at = models.DateTimeField(blank=True, null=True)
-    published_by = models.ForeignKey(
+class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):  # type: ignore[misc]
+    created_at = models.DateTimeField(auto_now_add=True)  # type: ignore[var-annotated]
+    updated_at = models.DateTimeField(auto_now=True)  # type: ignore[var-annotated]
+    published_at = models.DateTimeField(blank=True, null=True)  # type: ignore[var-annotated]
+    published_by = models.ForeignKey(  # type: ignore[var-annotated]
         "users.FFAdminUser",
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
     )
 
-    environment = models.ForeignKey(
+    environment = models.ForeignKey(  # type: ignore[var-annotated]
         "environments.Environment", on_delete=models.CASCADE
     )
 
-    change_request = models.ForeignKey(
+    change_request = models.ForeignKey(  # type: ignore[var-annotated]
         "workflows_core.ChangeRequest",
         on_delete=models.CASCADE,
         related_name="change_sets",
         blank=True,
         null=True,
     )
-    environment_feature_version = models.ForeignKey(
+    environment_feature_version = models.ForeignKey(  # type: ignore[var-annotated]
         "feature_versioning.EnvironmentFeatureVersion",
         on_delete=models.CASCADE,
         # Needs to be blank/nullable since change sets
@@ -201,23 +201,23 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
         null=True,
     )
 
-    feature = models.ForeignKey(
+    feature = models.ForeignKey(  # type: ignore[var-annotated]
         "features.Feature",
         on_delete=models.CASCADE,
     )
-    live_from = models.DateTimeField(null=True)
+    live_from = models.DateTimeField(null=True)  # type: ignore[var-annotated]
 
-    feature_states_to_create = models.TextField(
+    feature_states_to_create = models.TextField(  # type: ignore[var-annotated]
         null=True,
         help_text="JSON blob describing the feature states that should be "
         "created when the change request is published",
     )
-    feature_states_to_update = models.TextField(
+    feature_states_to_update = models.TextField(  # type: ignore[var-annotated]
         null=True,
         help_text="JSON blob describing the feature states that should be "
         "updated when the change request is published",
     )
-    segment_ids_to_delete_overrides = models.TextField(
+    segment_ids_to_delete_overrides = models.TextField(  # type: ignore[var-annotated]
         null=True,
         help_text="JSON blob describing the segment overrides for which"
         "the segment overrides should be deleted when the change "
@@ -225,7 +225,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
     )
 
     @hook(BEFORE_CREATE)
-    def add_environment(self):
+    def add_environment(self):  # type: ignore[no-untyped-def]
         if not self.environment_id:
             if self.change_request_id:
                 self.environment = self.change_request.environment
@@ -238,17 +238,17 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):
 
     def get_parsed_feature_states_to_create(self) -> list[dict[str, typing.Any]]:
         if self.feature_states_to_create:
-            return json.loads(self.feature_states_to_create)
+            return json.loads(self.feature_states_to_create)  # type: ignore[no-any-return]
         return []
 
     def get_parsed_feature_states_to_update(self) -> list[dict[str, typing.Any]]:
         if self.feature_states_to_update:
-            return json.loads(self.feature_states_to_update)
+            return json.loads(self.feature_states_to_update)  # type: ignore[no-any-return]
         return []
 
     def get_parsed_segment_ids_to_delete_overrides(self) -> list[int]:
         if self.segment_ids_to_delete_overrides:
-            return json.loads(self.segment_ids_to_delete_overrides)
+            return json.loads(self.segment_ids_to_delete_overrides)  # type: ignore[no-any-return]
         return []
 
     def publish(self, user: "FFAdminUser") -> None:

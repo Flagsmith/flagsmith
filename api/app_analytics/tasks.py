@@ -5,7 +5,7 @@ from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
 from django.db.models import Q, Sum
 from django.utils import timezone
-from task_processor.decorators import (
+from task_processor.decorators import (  # type: ignore[import-untyped]
     register_recurring_task,
     register_task_handler,
 )
@@ -21,15 +21,15 @@ from .models import (
 
 if settings.USE_POSTGRES_FOR_ANALYTICS:
 
-    @register_recurring_task(
+    @register_recurring_task(  # type: ignore[misc]
         run_every=timedelta(minutes=60),
         kwargs={
             "bucket_size": ANALYTICS_READ_BUCKET_SIZE,
             "run_every": 60,
         },
     )
-    def populate_bucket(
-        bucket_size: int, run_every: int, source_bucket_size: int = None
+    def populate_bucket(  # type: ignore[no-untyped-def]
+        bucket_size: int, run_every: int, source_bucket_size: int = None  # type: ignore[assignment]
     ):
         populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
@@ -38,7 +38,7 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:
 @register_recurring_task(
     run_every=timedelta(days=1),
 )
-def clean_up_old_analytics_data():
+def clean_up_old_analytics_data():  # type: ignore[no-untyped-def]
     # delete raw analytics data older than `RAW_ANALYTICS_DATA_RETENTION_DAYS`
     APIUsageRaw.objects.filter(
         created_at__lt=timezone.now()
@@ -61,14 +61,14 @@ def clean_up_old_analytics_data():
     ).delete()
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def track_feature_evaluation_v2(
     environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
 ) -> None:
     feature_evaluation_objects = []
     for feature_evaluation in feature_evaluations:
         feature_evaluation_objects.append(
-            FeatureEvaluationRaw(
+            FeatureEvaluationRaw(  # type: ignore[misc]
                 environment_id=environment_id,
                 feature_name=feature_evaluation["feature_name"],
                 evaluation_count=feature_evaluation["count"],
@@ -79,7 +79,7 @@ def track_feature_evaluation_v2(
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def track_feature_evaluation(
     environment_id: int,
     feature_evaluations: dict[str, int],
@@ -96,9 +96,9 @@ def track_feature_evaluation(
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
 
 
-@register_task_handler()
-def track_request(resource: int, host: str, environment_key: str, count: int = 1):
-    environment = Environment.get_from_cache(environment_key)
+@register_task_handler()  # type: ignore[misc]
+def track_request(resource: int, host: str, environment_key: str, count: int = 1):  # type: ignore[no-untyped-def]
+    environment = Environment.get_from_cache(environment_key)  # type: ignore[no-untyped-call]
     if environment is None:
         return
     APIUsageRaw.objects.create(
@@ -114,10 +114,10 @@ def get_start_of_current_bucket(bucket_size: int) -> datetime:
         raise ValueError("Bucket size cannot be greater than 60 minutes")
 
     current_time = timezone.now().replace(second=0, microsecond=0)
-    start_of_current_bucket = current_time - timezone.timedelta(
+    start_of_current_bucket = current_time - timezone.timedelta(  # type: ignore[attr-defined]
         minutes=current_time.minute % bucket_size
     )
-    return start_of_current_bucket
+    return start_of_current_bucket  # type: ignore[no-any-return]
 
 
 def get_time_buckets(
@@ -131,15 +131,15 @@ def get_time_buckets(
     for i in range(num_of_buckets):
         # NOTE: we start processing from `current - 1` buckets since the current bucket is
         # still open
-        end_time = start_of_first_bucket - timezone.timedelta(minutes=bucket_size * i)
-        start_time = end_time - timezone.timedelta(minutes=bucket_size)
+        end_time = start_of_first_bucket - timezone.timedelta(minutes=bucket_size * i)  # type: ignore[attr-defined]
+        start_time = end_time - timezone.timedelta(minutes=bucket_size)  # type: ignore[attr-defined]
         time_buckets.append((start_time, end_time))
 
     return time_buckets
 
 
-def populate_api_usage_bucket(
-    bucket_size: int, run_every: int, source_bucket_size: int = None
+def populate_api_usage_bucket(  # type: ignore[no-untyped-def]
+    bucket_size: int, run_every: int, source_bucket_size: int = None  # type: ignore[assignment]
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_api_usage_source_data(
@@ -155,8 +155,8 @@ def populate_api_usage_bucket(
             )
 
 
-def populate_feature_evaluation_bucket(
-    bucket_size: int, run_every: int, source_bucket_size: int = None
+def populate_feature_evaluation_bucket(  # type: ignore[no-untyped-def]
+    bucket_size: int, run_every: int, source_bucket_size: int = None  # type: ignore[assignment]
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_feature_evaluation_source_data(
@@ -173,42 +173,42 @@ def populate_feature_evaluation_bucket(
 
 
 def _get_api_usage_source_data(
-    process_from: datetime, process_till: datetime, source_bucket_size: int = None
-) -> dict:
+    process_from: datetime, process_till: datetime, source_bucket_size: int = None  # type: ignore[assignment]
+) -> dict:  # type: ignore[type-arg]
     filters = Q(
         created_at__lte=process_till,
         created_at__gt=process_from,
     )
     if source_bucket_size:
         return (
-            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)
+            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)  # type: ignore[return-value]
             .values("environment_id", "resource")
             .annotate(count=Sum("total_count"))
         )
     return (
-        APIUsageRaw.objects.filter(filters)
+        APIUsageRaw.objects.filter(filters)  # type: ignore[return-value]
         .values("environment_id", "resource")
         .annotate(count=Sum("count"))
     )
 
 
 def _get_feature_evaluation_source_data(
-    process_from: datetime, process_till: datetime, source_bucket_size: int = None
-) -> dict:
+    process_from: datetime, process_till: datetime, source_bucket_size: int = None  # type: ignore[assignment]
+) -> dict:  # type: ignore[type-arg]
     filters = Q(
         created_at__lte=process_till,
         created_at__gt=process_from,
     )
     if source_bucket_size:
         return (
-            FeatureEvaluationBucket.objects.filter(
+            FeatureEvaluationBucket.objects.filter(  # type: ignore[return-value]
                 filters, bucket_size=source_bucket_size
             )
             .values("environment_id", "feature_name")
             .annotate(count=Sum("total_count"))
         )
     return (
-        FeatureEvaluationRaw.objects.filter(filters)
+        FeatureEvaluationRaw.objects.filter(filters)  # type: ignore[return-value]
         .values("environment_id", "feature_name")
         .annotate(count=Sum("evaluation_count"))
     )

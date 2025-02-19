@@ -9,23 +9,23 @@ from features.versioning.models import EnvironmentFeatureVersion
 
 
 def get_environment_flags_queryset(
-    environment: Environment, feature_name: str = None
+    environment: Environment, feature_name: str = None  # type: ignore[assignment]
 ) -> QuerySet[FeatureState]:
     """
     Get a queryset of the latest live versions of an environments' feature states
     """
     feature_states_list = get_environment_flags_list(environment, feature_name)
-    return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])
+    return FeatureState.objects.filter(id__in=[fs.id for fs in feature_states_list])  # type: ignore[no-any-return]
 
 
 def get_environment_flags_list(
     environment: Environment,
-    feature_name: str = None,
-    additional_filters: Q = None,
-    additional_select_related_args: typing.Iterable[str] = None,
+    feature_name: str = None,  # type: ignore[assignment]
+    additional_filters: Q = None,  # type: ignore[assignment]
+    additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
-    ] = None,
+    ] = None,  # type: ignore[assignment]
 ) -> list[FeatureState]:
     """
     Get a list of the latest committed versions of FeatureState objects that are
@@ -49,15 +49,15 @@ def get_environment_flags_list(
 
 def get_environment_flags_dict(
     environment: Environment,
-    feature_name: str = None,
-    additional_filters: Q = None,
-    additional_select_related_args: typing.Iterable[str] = None,
+    feature_name: str = None,  # type: ignore[assignment]
+    additional_filters: Q = None,  # type: ignore[assignment]
+    additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
-    ] = None,
-    key_function: typing.Callable[[FeatureState], tuple] = None,
-) -> dict[tuple | str | int, FeatureState]:
-    key_function = key_function or _get_distinct_key
+    ] = None,  # type: ignore[assignment]
+    key_function: typing.Callable[[FeatureState], tuple] = None,  # type: ignore[type-arg,assignment]
+) -> dict[tuple | str | int, FeatureState]:  # type: ignore[type-arg]
+    key_function = key_function or _get_distinct_key  # type: ignore[truthy-function]
 
     feature_states = _get_feature_states_queryset(
         environment,
@@ -70,20 +70,20 @@ def get_environment_flags_dict(
     # Build up a dictionary keyed off the relevant unique attributes as defined
     # by the provided key function and only keep the highest priority feature state
     # for each feature.
-    feature_states_dict = {}
+    feature_states_dict = {}  # type: ignore[var-annotated]
     for feature_state in feature_states:
         key = key_function(feature_state)
         current_feature_state = feature_states_dict.get(key)
         if not current_feature_state or feature_state > current_feature_state:
             feature_states_dict[key] = feature_state
 
-    return feature_states_dict
+    return feature_states_dict  # type: ignore[return-value]
 
 
 def get_current_live_environment_feature_version(
     environment_id: int, feature_id: int
 ) -> EnvironmentFeatureVersion | None:
-    return (
+    return (  # type: ignore[no-any-return]
         EnvironmentFeatureVersion.objects.filter(
             environment_id=environment_id,
             feature_id=feature_id,
@@ -97,12 +97,12 @@ def get_current_live_environment_feature_version(
 
 def _get_feature_states_queryset(
     environment: "Environment",
-    feature_name: str = None,
-    additional_filters: Q = None,
-    additional_select_related_args: typing.Iterable[str] = None,
+    feature_name: str = None,  # type: ignore[assignment]
+    additional_filters: Q = None,  # type: ignore[assignment]
+    additional_select_related_args: typing.Iterable[str] = None,  # type: ignore[assignment]
     additional_prefetch_related_args: typing.Iterable[
         typing.Union[str, Prefetch]
-    ] = None,
+    ] = None,  # type: ignore[assignment]
 ) -> QuerySet[FeatureState]:
     additional_select_related_args = additional_select_related_args or tuple()
     additional_prefetch_related_args = additional_prefetch_related_args or tuple()

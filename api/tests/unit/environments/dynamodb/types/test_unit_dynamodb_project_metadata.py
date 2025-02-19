@@ -11,7 +11,7 @@ from environments.dynamodb.types import (
 )
 
 
-def test_get_or_new_returns_instance_with_default_values_if_document_does_not_exists(
+def test_get_or_new_returns_instance_with_default_values_if_document_does_not_exists(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -32,7 +32,7 @@ def test_get_or_new_returns_instance_with_default_values_if_document_does_not_ex
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
-def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(mocker):
+def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(mocker):  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     project_id = 1
     migration_start_time = datetime.now().isoformat()
@@ -57,7 +57,7 @@ def test_get_or_new_returns_instance_with_document_data_if_document_does_exists(
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
 
 
-def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
+def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):  # type: ignore[no-untyped-def]
     # Given
     project_id = 1
 
@@ -74,7 +74,7 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
     project_metadata = DynamoProjectMetadata.get_or_new(project_id)
 
     # When
-    project_metadata.start_identity_migration()
+    project_metadata.start_identity_migration()  # type: ignore[no-untyped-call]
     # Then
     mocked_dynamo_table.get_item.assert_called_with(Key={"id": project_id})
     mocked_dynamo_table.put_item.assert_called_with(
@@ -114,11 +114,11 @@ def test_start_identity_migration_calls_put_item_with_correct_arguments(mocker):
         ),
     ),
 )
-def test_identity_migration_status(instance, status):
+def test_identity_migration_status(instance, status):  # type: ignore[no-untyped-def]
     assert instance.identity_migration_status == status
 
 
-def test_finish_identity_migration_calls_put_item_with_correct_arguments(
+def test_finish_identity_migration_calls_put_item_with_correct_arguments(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -137,7 +137,7 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
     )
 
     # When
-    project_metadata.finish_identity_migration()
+    project_metadata.finish_identity_migration()  # type: ignore[no-untyped-call]
 
     # Then
     mocked_dynamo_table.put_item.assert_called_with(
@@ -150,7 +150,7 @@ def test_finish_identity_migration_calls_put_item_with_correct_arguments(
     )
 
 
-def test_delete__removes_project_metadata_document_from_dynamodb(
+def test_delete__removes_project_metadata_document_from_dynamodb(  # type: ignore[no-untyped-def]
     flagsmith_project_metadata_table: Table, mocker: MockerFixture
 ):
     # Given
@@ -167,7 +167,7 @@ def test_delete__removes_project_metadata_document_from_dynamodb(
     project_metadata = DynamoProjectMetadata.get_or_new(first_project_id)
 
     # When
-    project_metadata.delete()
+    project_metadata.delete()  # type: ignore[no-untyped-call]
 
     # Then
     assert flagsmith_project_metadata_table.scan()["Count"] == 1

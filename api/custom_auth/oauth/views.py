@@ -1,6 +1,6 @@
 import logging
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -28,7 +28,7 @@ GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def login_with_google(request):
+def login_with_google(request):  # type: ignore[no-untyped-def]
     try:
         serializer = GoogleLoginSerializer(
             data=request.data, context={"request": request}
@@ -51,7 +51,7 @@ def login_with_google(request):
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def login_with_github(request):
+def login_with_github(request):  # type: ignore[no-untyped-def]
     try:
         serializer = GithubLoginSerializer(
             data=request.data, context={"request": request}

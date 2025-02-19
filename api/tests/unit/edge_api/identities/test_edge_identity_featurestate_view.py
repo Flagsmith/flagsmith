@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(
+def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user_client,
     environment,
     feature,

@@ -4,7 +4,7 @@ from app_analytics.views import (
 )
 from django.conf import settings
 from django.urls import include, path, re_path
-from rest_framework_nested import routers
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from api_keys.views import MasterAPIKeyViewSet
 from audit.views import OrganisationAuditLogViewSet
@@ -155,7 +155,7 @@ urlpatterns = [
 ]
 
 if settings.LICENSING_INSTALLED:  # pragma: no cover
-    from licensing.views import create_or_update_licence
+    from licensing.views import create_or_update_licence  # type: ignore[import-not-found]
 
     urlpatterns.extend(
         [
@@ -169,7 +169,7 @@ if settings.LICENSING_INSTALLED:  # pragma: no cover
 
 
 if settings.IS_RBAC_INSTALLED:
-    from rbac.views import (
+    from rbac.views import (  # type: ignore[import-not-found]
         GroupRoleViewSet,
         MasterAPIKeyRoleViewSet,
         RoleEnvironmentPermissionsViewSet,

@@ -6,40 +6,40 @@ from users.models import FFAdminUser
 
 
 @pytest.fixture()
-def environment_with_0_required_cr_approvals(environment):
+def environment_with_0_required_cr_approvals(environment):  # type: ignore[no-untyped-def]
     environment.minimum_change_request_approvals = 0
     environment.save()
     return environment
 
 
 @pytest.fixture()
-def environment_with_1_required_cr_approval(environment):
+def environment_with_1_required_cr_approval(environment):  # type: ignore[no-untyped-def]
     environment.minimum_change_request_approvals = 1
     environment.save()
     return environment
 
 
 @pytest.fixture()
-def change_request_no_required_approvals(
+def change_request_no_required_approvals(  # type: ignore[no-untyped-def]
     environment_with_0_required_cr_approvals, feature
 ):
     user = FFAdminUser.objects.create(email="CR_creator@example.com")
-    return _create_change_request(
+    return _create_change_request(  # type: ignore[no-untyped-call]
         user, environment_with_0_required_cr_approvals, feature
     )
 
 
 @pytest.fixture()
-def change_request_1_required_approvals(
+def change_request_1_required_approvals(  # type: ignore[no-untyped-def]
     environment_with_1_required_cr_approval, feature
 ):
     user = FFAdminUser.objects.create(email="CR_creator@example.com")
-    return _create_change_request(
+    return _create_change_request(  # type: ignore[no-untyped-call]
         user, environment_with_1_required_cr_approval, feature
     )
 
 
-def _create_change_request(user, environment, feature):
+def _create_change_request(user, environment, feature):  # type: ignore[no-untyped-def]
     user.add_organisation(environment.project.organisation)
     existing_feature_state = FeatureState.objects.get(
         environment=environment, feature=feature
@@ -57,20 +57,20 @@ def _create_change_request(user, environment, feature):
 
 
 @pytest.fixture()
-def mock_plaintext_content():
+def mock_plaintext_content():  # type: ignore[no-untyped-def]
     return "plaintext content"
 
 
 @pytest.fixture()
-def mock_html_content():
+def mock_html_content():  # type: ignore[no-untyped-def]
     return "<p>html content</p>"
 
 
 @pytest.fixture()
-def mock_render_to_string(mocker, mock_plaintext_content, mock_html_content):
+def mock_render_to_string(mocker, mock_plaintext_content, mock_html_content):  # type: ignore[no-untyped-def]
     _mock_render_to_string = mocker.MagicMock()
 
-    def render_to_string_side_effect(template_name: str, context: dict):
+    def render_to_string_side_effect(template_name: str, context: dict):  # type: ignore[no-untyped-def,type-arg]
         if template_name.endswith("html"):
             return mock_html_content
         elif template_name.endswith(".txt"):

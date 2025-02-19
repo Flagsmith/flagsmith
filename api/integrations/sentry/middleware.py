@@ -18,11 +18,11 @@ class ForceSentryTraceMiddleware:
 
     FORCE_SENTRY_TRACE_HEADER = "X-Force-Sentry-Trace-Key"
 
-    def __init__(self, get_response):
+    def __init__(self, get_response):  # type: ignore[no-untyped-def]
         self.get_response = get_response
         self.auth_key = settings.FORCE_SENTRY_TRACE_KEY
 
-    def __call__(self, request):
+    def __call__(self, request):  # type: ignore[no-untyped-def]
         auth = request.headers.get(self.FORCE_SENTRY_TRACE_HEADER)
         if auth == self.auth_key:
             transaction_name = f"{request.method} {request.path}"

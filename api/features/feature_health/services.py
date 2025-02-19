@@ -52,20 +52,20 @@ def create_feature_health_event_from_provider(
         return None
     project = provider.project
     if feature := Feature.objects.filter(
-        project=provider.project, name=response.feature_name
+        project=provider.project, name=response.feature_name  # type: ignore[union-attr]
     ).first():
-        if response.environment_name:
+        if response.environment_name:  # type: ignore[union-attr]
             environment = Environment.objects.filter(
-                project=project, name=response.environment_name
+                project=project, name=response.environment_name  # type: ignore[union-attr]
             ).first()
         else:
             environment = None
-        return FeatureHealthEvent.objects.create(
+        return FeatureHealthEvent.objects.create(  # type: ignore[no-any-return]
             feature=feature,
             environment=environment,
             provider_name=provider.name,
-            type=response.event_type,
-            reason=response.reason,
+            type=response.event_type,  # type: ignore[union-attr]
+            reason=response.reason,  # type: ignore[union-attr]
         )
     return None
 

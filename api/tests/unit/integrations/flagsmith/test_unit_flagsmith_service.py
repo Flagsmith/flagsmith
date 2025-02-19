@@ -9,7 +9,7 @@ from integrations.flagsmith.flagsmith_service import update_environment_json
 
 
 @pytest.fixture()
-def environment_document():
+def environment_document():  # type: ignore[no-untyped-def]
     """
     An example environment document as returned from the API.
     """
@@ -59,7 +59,7 @@ def environment_document():
 
 
 @responses.activate
-def test_update_environment_json(settings, environment_document):
+def test_update_environment_json(settings, environment_document):  # type: ignore[no-untyped-def]
     """
     Test to verify that, when we call update_environment_json, the response is written
     to the correct file and that the sensitive data from the response is masked.
@@ -90,7 +90,7 @@ def test_update_environment_json(settings, environment_document):
 
 
 @responses.activate
-def test_update_environment_json_throws_exception_for_failed_request(settings):
+def test_update_environment_json_throws_exception_for_failed_request(settings):  # type: ignore[no-untyped-def]
     # Given
     api_url = "https://api.flagsmith.com/api/v1"
     settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL = api_url

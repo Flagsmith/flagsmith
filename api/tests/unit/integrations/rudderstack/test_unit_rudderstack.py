@@ -5,7 +5,7 @@ from integrations.rudderstack.models import RudderstackConfiguration
 from integrations.rudderstack.rudderstack import RudderstackWrapper
 
 
-def test_rudderstack_wrapper_generate_user_data(
+def test_rudderstack_wrapper_generate_user_data(  # type: ignore[no-untyped-def]
     environment: Environment,
     feature: Feature,
 ):

@@ -24,7 +24,7 @@ import TableValueFilter from 'components/tables/TableValueFilter'
 import classNames from 'classnames'
 import ClearFilters from 'components/ClearFilters'
 import Button from 'components/base/forms/Button'
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -576,6 +576,7 @@ const FeaturesPage = class extends Component {
                                     environmentFlags={environmentFlags}
                                     projectFlags={projectFlags}
                                     permission={permission}
+                                    history={this.context.router.history}
                                     environmentId={environmentId}
                                     projectId={projectId}
                                     index={i}

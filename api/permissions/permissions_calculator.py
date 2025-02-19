@@ -18,7 +18,7 @@ from projects.models import (
 )
 
 from .permission_service import is_user_project_admin
-from .rbac_wrapper import (
+from .rbac_wrapper import (  # type: ignore[attr-defined]
     RolePermissionData,
     get_roles_permission_data_for_environment,
     get_roles_permission_data_for_organisation,
@@ -78,7 +78,7 @@ class PermissionData:
 
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
-    roles: typing.List[
+    roles: typing.List[  # type: ignore[valid-type]
         "RolePermissionData" if "RolePermissionData" in globals() else typing.Any
     ]
     is_organisation_admin: bool = False
@@ -100,13 +100,13 @@ class PermissionData:
         # group permissions, and role permissions.
         return self.user.permissions.union(
             reduce(
-                lambda a, b: a.union(b),
+                lambda a, b: a.union(b),  # type: ignore[arg-type,return-value]
                 [group.permissions for group in self.groups],
                 set(),
             )
         ).union(
             reduce(
-                lambda a, b: a.union(b),
+                lambda a, b: a.union(b),  # type: ignore[attr-defined]
                 [
                     role_permission.permissions
                     for role_permission in self.roles
@@ -117,7 +117,7 @@ class PermissionData:
         )
 
     @property
-    def tag_based_permissions(self) -> list[dict]:
+    def tag_based_permissions(self) -> list[dict]:  # type: ignore[type-arg]
         return [
             {
                 "permissions": role_permission.permissions,
@@ -132,7 +132,7 @@ def get_project_permission_data(project_id: int, user_id: int) -> PermissionData
     project_permission_svc = _ProjectPermissionService(project_id, user_id)
     return PermissionData(
         groups=get_groups_permission_data(project_permission_svc.group_qs),
-        user=get_user_permission_data(project_permission_svc.user_permission),
+        user=get_user_permission_data(project_permission_svc.user_permission),  # type: ignore[arg-type]
         roles=get_roles_permission_data_for_project(project_id, user_id),
     )
 
@@ -144,7 +144,7 @@ def get_organisation_permission_data(
     return PermissionData(
         is_organisation_admin=user.is_organisation_admin(organisation_id),
         groups=get_groups_permission_data(org_permission_svc.group_qs),
-        user=get_user_permission_data(org_permission_svc.user_permission),
+        user=get_user_permission_data(org_permission_svc.user_permission),  # type: ignore[arg-type]
         roles=get_roles_permission_data_for_organisation(organisation_id, user.id),
     )
 
@@ -155,14 +155,14 @@ def get_environment_permission_data(
     environment_permission_svc = _EnvironmentPermissionService(environment.id, user.id)
     return PermissionData(
         groups=get_groups_permission_data(environment_permission_svc.group_qs),
-        user=get_user_permission_data(environment_permission_svc.user_permission),
+        user=get_user_permission_data(environment_permission_svc.user_permission),  # type: ignore[arg-type]
         roles=get_roles_permission_data_for_environment(environment.id, user.id),
         admin_override=is_user_project_admin(user, project=environment.project),
     )
 
 
 def get_user_permission_data(
-    user_permission: UserPermissionType = None,
+    user_permission: UserPermissionType = None,  # type: ignore[assignment]
 ) -> UserPermissionData:
     user_permission_data = UserPermissionData()
     if not user_permission:

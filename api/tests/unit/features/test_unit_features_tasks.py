@@ -1,5 +1,5 @@
 import pytest
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
 from api_keys.models import MasterAPIKey
@@ -85,7 +85,7 @@ def test_trigger_feature_state_change_webhooks(
 
 
 @pytest.mark.django_db
-def test_trigger_feature_state_change_webhooks_for_deleted_flag(
+def test_trigger_feature_state_change_webhooks_for_deleted_flag(  # type: ignore[no-untyped-def]
     mocker, organisation, project, environment, feature
 ):
     # Given
@@ -125,7 +125,7 @@ def test_trigger_feature_state_change_webhooks_for_deleted_flag(
 
 
 @pytest.mark.django_db
-def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance(
+def test_trigger_feature_state_change_webhooks_for_deleted_flag_uses_fs_instance(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     environment: Environment,
     feature: Feature,

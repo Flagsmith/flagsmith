@@ -23,7 +23,7 @@ from users.models import FFAdminUser
 now = timezone.now()
 
 
-def test_create_new_environment_feature_version_clones_feature_states_from_previous_version(
+def test_create_new_environment_feature_version_clones_feature_states_from_previous_version(  # type: ignore[no-untyped-def]  # noqa: E501
     environment_v2_versioning, feature
 ):
     # Given

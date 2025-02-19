@@ -46,7 +46,7 @@ class Trait(models.Model):
         # issues with production deployment due to multi server configuration.
         db_table = "environments_trait"
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return (
             self.trait_key,
             self.identity.identifier,
@@ -54,8 +54,8 @@ class Trait(models.Model):
         )
 
     @property
-    def trait_value(self):
-        return self.get_trait_value()
+    def trait_value(self):  # type: ignore[no-untyped-def]
+        return self.get_trait_value()  # type: ignore[no-untyped-call]
 
     @property
     def transient(self) -> bool:
@@ -65,7 +65,7 @@ class Trait(models.Model):
     def transient(self, transient: bool) -> None:
         self._transient = transient
 
-    def get_trait_value(self):
+    def get_trait_value(self):  # type: ignore[no-untyped-def]
         try:
             value_type = self.value_type
         except ObjectDoesNotExist:
@@ -78,10 +78,10 @@ class Trait(models.Model):
             FLOAT: self.float_value,
         }
 
-        return type_mapping.get(value_type)
+        return type_mapping.get(value_type)  # type: ignore[arg-type]
 
     @staticmethod
-    def get_trait_value_key_name(tv_type):
+    def get_trait_value_key_name(tv_type):  # type: ignore[no-untyped-def]
         return {
             INTEGER: "integer_value",
             BOOLEAN: "boolean_value",
@@ -92,7 +92,7 @@ class Trait(models.Model):
         )  # The default was chosen for backwards compatibility
 
     @staticmethod
-    def generate_trait_value_data(value: typing.Any):
+    def generate_trait_value_data(value: typing.Any):  # type: ignore[no-untyped-def]
         """
         Takes the value and returns dictionary
         to use for passing into trait value serializer
@@ -115,13 +115,13 @@ class Trait(models.Model):
         return {
             # Default to string if not an anticipate type value to keep backwards compatibility.
             "value_type": tv_type if tv_type in accepted_types else STRING,
-            Trait.get_trait_value_key_name(tv_type): value,
+            Trait.get_trait_value_key_name(tv_type): value,  # type: ignore[no-untyped-call]
         }
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         if not self.identity.environment.project.organisation.persist_trait_data:
             # this is a final line of defense to ensure that traits are never saved
             # for organisations which have the flag set to not persist trait data

@@ -40,7 +40,7 @@ def distinct_segment_featurestate(
     feature_segment = FeatureSegment.objects.create(
         feature=feature, segment=segment, environment=environment
     )
-    return FeatureState.objects.create(
+    return FeatureState.objects.create(  # type: ignore[no-any-return]
         feature=feature,
         environment=environment,
         feature_segment=feature_segment,
@@ -55,7 +55,7 @@ def distinct_identity_featurestate(
     feature = Feature.objects.create(
         project=environment.project, name="distinct_feature_2"
     )
-    return FeatureState.objects.create(
+    return FeatureState.objects.create(  # type: ignore[no-any-return]
         feature=feature, environment=environment, identity=identity
     )
 
@@ -273,7 +273,7 @@ def test_feature_get_edge_overrides_data(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_get_edge_overrides_data_skips_deleted_features(
+def test_get_edge_overrides_data_skips_deleted_features(  # type: ignore[no-untyped-def]
     feature: Feature,
     environment: "Environment",
     identity: Identity,

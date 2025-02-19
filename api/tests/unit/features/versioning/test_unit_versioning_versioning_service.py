@@ -18,7 +18,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_get_environment_flags_queryset_returns_only_latest_versions(
+def test_get_environment_flags_queryset_returns_only_latest_versions(  # type: ignore[no-untyped-def]
     feature: Feature,
     environment: Environment,
     django_assert_num_queries: DjangoAssertNumQueries,
@@ -45,7 +45,7 @@ def test_get_environment_flags_queryset_returns_only_latest_versions(
     assert feature_states.first() == feature_state_v2
 
 
-def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_queryset(
+def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_queryset(  # type: ignore[no-untyped-def]
     environment, project
 ):
     # Given
@@ -62,7 +62,7 @@ def test_project_hide_disabled_flags_have_no_effect_on_get_environment_flags_que
     assert feature_states.count() == 2
 
 
-def test_get_environment_flags_queryset_filter_using_feature_name(environment, project):
+def test_get_environment_flags_queryset_filter_using_feature_name(environment, project):  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     flag_1_name = "flag_1"
     Feature.objects.create(default_enabled=True, name=flag_1_name, project=project)
@@ -75,10 +75,10 @@ def test_get_environment_flags_queryset_filter_using_feature_name(environment, p
 
     # Then
     assert feature_states.count() == 1
-    assert feature_states.first().feature.name == "flag_1"
+    assert feature_states.first().feature.name == "flag_1"  # type: ignore[union-attr]
 
 
-def test_get_environment_flags_returns_latest_live_versions_of_feature_states(
+def test_get_environment_flags_returns_latest_live_versions_of_feature_states(  # type: ignore[no-untyped-def]
     project, environment, feature
 ):
     # Given

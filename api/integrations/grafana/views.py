@@ -13,12 +13,12 @@ from integrations.grafana.serializers import (
 
 
 class GrafanaProjectConfigurationViewSet(ProjectIntegrationBaseViewSet):
-    serializer_class = GrafanaProjectConfigurationSerializer
+    serializer_class = GrafanaProjectConfigurationSerializer  # type: ignore[assignment]
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = GrafanaProjectConfiguration
+    model_class = GrafanaProjectConfiguration  # type: ignore[assignment]
 
 
 class GrafanaOrganisationConfigurationViewSet(OrganisationIntegrationBaseViewSet):
-    serializer_class = GrafanaOrganisationConfigurationSerializer
+    serializer_class = GrafanaOrganisationConfigurationSerializer  # type: ignore[assignment]
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = GrafanaOrganisationConfiguration
+    model_class = GrafanaOrganisationConfiguration  # type: ignore[assignment]

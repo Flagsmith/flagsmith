@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=2000)),
-                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),
+                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),  # type: ignore[arg-type]  # noqa: E501
                 ('api_key', models.UUIDField(default=uuid.uuid4)),
             ],
         ),
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=2000)),
-                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),
+                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),  # type: ignore[arg-type]  # noqa: E501
             ],
         ),
         migrations.CreateModel(
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('identifier', models.CharField(max_length=2000)),
-                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),
+                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),  # type: ignore[arg-type]  # noqa: E501
                 ('version', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='identities', to='api.Environment')),
             ],
             options={
@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=2000)),
-                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),
+                ('created_date', models.DateTimeField(auto_now_add=True, verbose_name=b'DateCreated')),  # type: ignore[arg-type]  # noqa: E501
                 ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='projects', to='api.Organisation')),
             ],
         ),

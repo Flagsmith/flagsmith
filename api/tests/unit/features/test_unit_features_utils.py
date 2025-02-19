@@ -16,5 +16,5 @@ from features.value_types import BOOLEAN, INTEGER, STRING
         ('{"some_other": "data_type"}', STRING),
     ),
 )
-def test_get_value_type(value, expected_type):
+def test_get_value_type(value, expected_type):  # type: ignore[no-untyped-def]
     assert get_value_type(value) == expected_type

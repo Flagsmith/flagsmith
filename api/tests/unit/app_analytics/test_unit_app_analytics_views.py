@@ -27,7 +27,7 @@ from organisations.models import (
 )
 
 
-def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):
+def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):  # type: ignore[no-untyped-def]
     # Given
     settings.INFLUXDB_TOKEN = "some-token"
 
@@ -41,14 +41,14 @@ def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):
     )
 
     # When
-    response = view.post(request)
+    response = view.post(request)  # type: ignore[no-untyped-call]
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     mocked_feature_eval_cache.track_feature_evaluation.assert_not_called()
 
 
-def test_get_usage_data(mocker, admin_client, organisation):
+def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
 
@@ -270,7 +270,7 @@ def test_get_usage_data__ninety_day_period(
     )
 
 
-def test_get_usage_data_for_non_admin_user_returns_403(
+def test_get_usage_data_for_non_admin_user_returns_403(  # type: ignore[no-untyped-def]
     mocker, test_user_client, organisation
 ):
     # Given
@@ -283,7 +283,7 @@ def test_get_usage_data_for_non_admin_user_returns_403(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_get_total_usage_count(mocker, admin_client, organisation):
+def test_get_total_usage_count(mocker, admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:usage-data-total-count",
@@ -304,7 +304,7 @@ def test_get_total_usage_count(mocker, admin_client, organisation):
     mocked_get_total_events_count.assert_called_once_with(organisation)
 
 
-def test_get_total_usage_count_for_non_admin_user_returns_403(
+def test_get_total_usage_count_for_non_admin_user_returns_403(  # type: ignore[no-untyped-def]
     mocker, test_user_client, organisation
 ):
     # Given
@@ -358,10 +358,10 @@ def test_set_sdk_analytics_flags_with_identifier(
 
     assert FeatureEvaluationRaw.objects.count() == 1
     feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
-    assert feature_evaluation_raw.identity_identifier == identity.identifier
-    assert feature_evaluation_raw.feature_name == feature.name
-    assert feature_evaluation_raw.environment_id == environment.id
-    assert feature_evaluation_raw.evaluation_count is feature_request_count
+    assert feature_evaluation_raw.identity_identifier == identity.identifier  # type: ignore[union-attr]
+    assert feature_evaluation_raw.feature_name == feature.name  # type: ignore[union-attr]
+    assert feature_evaluation_raw.environment_id == environment.id  # type: ignore[union-attr]
+    assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
 @pytest.mark.skipif(
@@ -401,10 +401,10 @@ def test_set_sdk_analytics_flags_without_identifier(
 
     assert FeatureEvaluationRaw.objects.count() == 1
     feature_evaluation_raw = FeatureEvaluationRaw.objects.first()
-    assert feature_evaluation_raw.identity_identifier is None
-    assert feature_evaluation_raw.feature_name == feature.name
-    assert feature_evaluation_raw.environment_id == environment.id
-    assert feature_evaluation_raw.evaluation_count is feature_request_count
+    assert feature_evaluation_raw.identity_identifier is None  # type: ignore[union-attr]
+    assert feature_evaluation_raw.feature_name == feature.name  # type: ignore[union-attr]
+    assert feature_evaluation_raw.environment_id == environment.id  # type: ignore[union-attr]
+    assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
 def test_sdk_analytics_flags_v1(

@@ -4,5 +4,5 @@ from integrations.webhook.serializers import WebhookConfigurationSerializer
 
 
 class WebhookConfigurationViewSet(EnvironmentIntegrationCommonViewSet):
-    serializer_class = WebhookConfigurationSerializer
-    model_class = WebhookConfiguration
+    serializer_class = WebhookConfigurationSerializer  # type: ignore[assignment]
+    model_class = WebhookConfiguration  # type: ignore[assignment]

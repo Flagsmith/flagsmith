@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 
 
@@ -10,7 +10,7 @@ from rest_framework import status
     "client",
     [(lazy_fixture("admin_master_api_key_client")), (lazy_fixture("admin_client"))],
 )
-def test_update_feature_state_value_updates_feature_state_value(
+def test_update_feature_state_value_updates_feature_state_value(  # type: ignore[no-untyped-def]
     client, environment, environment_api_key, feature, feature_state
 ):
     # Given

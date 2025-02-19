@@ -11,13 +11,13 @@ class DispatchResponse(Response):
 class ErrorResponse(Response):
     _FIELD_ERROR = "error"
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         error: MFAValidationError,
-        status: str = HTTP_400_BAD_REQUEST,
+        status: str = HTTP_400_BAD_REQUEST,  # type: ignore[assignment]
         *args,
         **kwargs,
     ) -> None:
-        super().__init__(
-            data={self._FIELD_ERROR: str(error)}, status=status, *args, **kwargs
+        super().__init__(  # type: ignore[misc]
+            data={self._FIELD_ERROR: str(error)}, status=status, *args, **kwargs  # type: ignore[arg-type]
         )

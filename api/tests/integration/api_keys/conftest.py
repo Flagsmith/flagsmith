@@ -19,9 +19,9 @@ def _expired_api_key(admin_client: APIClient, organisation: int) -> dict[str, An
         "expiry_date": timezone.now() - timedelta(hours=1),
     }
     response = admin_client.post(url, data=data)
-    return response.json()
+    return response.json()  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
 def expired_api_key_prefix(_expired_api_key: dict[str, Any]) -> str:
-    return _expired_api_key["prefix"]
+    return _expired_api_key["prefix"]  # type: ignore[no-any-return]
