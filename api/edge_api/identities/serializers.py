@@ -3,9 +3,7 @@ import typing
 
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel as EngineFeatureModel
-from flag_engine.features.models import (
-    FeatureStateModel as EngineFeatureStateModel,
-)
+from flag_engine.features.models import FeatureStateModel as EngineFeatureStateModel
 from flag_engine.features.models import (
     MultivariateFeatureOptionModel as EngineMultivariateFeatureOptionModel,
 )
@@ -23,7 +21,9 @@ from environments.dynamodb.types import IdentityOverrideV2
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import MultivariateFeatureOption
-from features.serializers import FeatureStateValueSerializer  # type: ignore[attr-defined]
+from features.serializers import (  # type: ignore[attr-defined]
+    FeatureStateValueSerializer,
+)
 from util.mappers import (
     map_engine_identity_to_identity_document,
     map_feature_to_engine,
@@ -84,19 +84,14 @@ class EdgeIdentityUpdateSerializer(EdgeIdentitySerializer):
         return fields
 
     def update(
-        self, instance: dict[str, typing.Any], validated_data: dict[str, typing.Any]
-    ) -> EngineIdentity:
-        engine_identity = EngineIdentity.model_validate(instance)
-
-        engine_identity.dashboard_alias = (
+        self, instance: EdgeIdentity, validated_data: dict[str, typing.Any]
+    ) -> EdgeIdentity:
+        instance.engine_identity_model.dashboard_alias = (
             self.validated_data.get("dashboard_alias")
-            or engine_identity.dashboard_alias
+            or instance.engine_identity_model.dashboard_alias
         )
-
-        edge_identity = EdgeIdentity(engine_identity)
-        edge_identity.save()
-
-        return engine_identity
+        instance.save()
+        return instance
 
 
 class EdgeMultivariateFeatureOptionField(serializers.IntegerField):

@@ -10,7 +10,7 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
-from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
+from flag_engine.identities.models import IdentityFeaturesList
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
@@ -59,7 +59,6 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
-from util.mappers import map_engine_identity_to_identity_document
 
 from . import edge_identity_service
 from .exceptions import TraitPersistenceError
@@ -168,8 +167,11 @@ class EdgeIdentityViewSet(
     )
     @action(detail=True, methods=["get"], url_path="list-traits")
     def get_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        identity = IdentityModel.model_validate(self.get_object())
-        data = [trait.dict() for trait in identity.identity_traits]
+        edge_identity = self.get_object()
+        data = [
+            trait.dict()
+            for trait in edge_identity.engine_identity_model.identity_traits
+        ]
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -182,18 +184,16 @@ class EdgeIdentityViewSet(
         environment = self.get_environment_from_request()
         if not environment.project.organisation.persist_trait_data:
             raise TraitPersistenceError()
-        identity = IdentityModel.model_validate(self.get_object())
+        edge_identity = self.get_object()
         try:
             trait = TraitModel(**request.data)
         except pydantic.ValidationError as validation_error:
             raise ValidationError(
                 drf_error_details(validation_error)
             ) from validation_error
-        _, traits_updated = identity.update_traits([trait])
+        _, traits_updated = edge_identity.engine_identity_model.update_traits([trait])
         if traits_updated:
-            EdgeIdentity.dynamo_wrapper.put_item(
-                map_engine_identity_to_identity_document(identity)
-            )
+            edge_identity.save()
 
         data = trait.dict()
         return Response(data, status=status.HTTP_200_OK)
