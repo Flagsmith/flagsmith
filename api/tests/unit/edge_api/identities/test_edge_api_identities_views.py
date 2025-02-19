@@ -1,3 +1,6 @@
+import typing
+import uuid
+
 from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
@@ -15,6 +18,10 @@ from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature
 from tests.types import WithEnvironmentPermissionsCallable
+from users.models import FFAdminUser
+
+if typing.TYPE_CHECKING:
+    from mypy_boto3_dynamodb.service_resource import Table
 
 
 def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
@@ -182,3 +189,50 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_user_cannot_delete_identity_from_another_project(
+    flagsmith_environment_table: "Table",
+    flagsmith_identities_table: "Table",
+    flagsmith_environments_v2_table: "Table",
+    dynamo_enabled_project_environment_one: Environment,
+) -> None:
+    # Given
+    # A user that belongs to no organisation
+    user = FFAdminUser.objects.create(email="no-orgs@example.com")
+
+    assert not user.belongs_to(
+        dynamo_enabled_project_environment_one.project.organisation_id
+    )
+
+    api_client = APIClient()
+    api_client.force_authenticate(user)
+
+    identifier = "some-identity"
+    identity_uuid = str(uuid.uuid4())
+    environment_api_key = dynamo_enabled_project_environment_one.api_key
+    composite_key = f"{environment_api_key}_{identifier}"
+    identity_data = {
+        "identifier": identifier,
+        "environment_api_key": environment_api_key,
+        "identity_uuid": identity_uuid,
+        "composite_key": composite_key,
+        "identity_traits": [],
+    }
+
+    flagsmith_identities_table.put_item(
+        Item=identity_data,
+    )
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-detail",
+        args=[environment_api_key, identity_uuid],
+    )
+
+    # When
+    response = api_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    assert flagsmith_identities_table.get_item(Key={"identity_uuid": identity_uuid})
