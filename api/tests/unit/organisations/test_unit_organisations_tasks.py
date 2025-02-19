@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, call
 
 import pytest
 from core.helpers import get_current_site_url
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+from dateutil.relativedelta import relativedelta
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone

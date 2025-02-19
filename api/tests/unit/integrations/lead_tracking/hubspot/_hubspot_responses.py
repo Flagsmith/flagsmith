@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dateutil.tz import tzlocal  # type: ignore[import-untyped]
+from dateutil.tz import tzlocal
 
 
 class FakeHubspotResponse:

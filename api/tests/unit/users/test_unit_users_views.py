@@ -2,7 +2,7 @@ import json
 import typing
 
 import pytest
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import AbstractUser

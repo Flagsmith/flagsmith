@@ -4,9 +4,11 @@ from unittest import mock
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 from chargebee import APIError  # type: ignore[import-untyped]
-from chargebee.api_error import APIError as ChargebeeAPIError  # type: ignore[import-untyped]
+from chargebee.api_error import (  # type: ignore[import-untyped]
+    APIError as ChargebeeAPIError,
+)
 from pytest_mock import MockerFixture
-from pytz import UTC  # type: ignore[import-untyped]
+from pytz import UTC
 
 from organisations.chargebee import (  # type: ignore[attr-defined]
     add_100k_api_calls,

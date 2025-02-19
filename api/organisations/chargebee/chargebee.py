@@ -4,9 +4,11 @@ from contextlib import suppress
 from datetime import datetime
 
 import chargebee  # type: ignore[import-untyped]
-from chargebee.api_error import APIError as ChargebeeAPIError  # type: ignore[import-untyped]
+from chargebee.api_error import (  # type: ignore[import-untyped]
+    APIError as ChargebeeAPIError,
+)
 from django.conf import settings
-from pytz import UTC  # type: ignore[import-untyped]
+from pytz import UTC
 
 from ..subscriptions.constants import CHARGEBEE
 from ..subscriptions.exceptions import (
