@@ -402,8 +402,6 @@ def with_environment_permissions(
     """
     Add environment permissions to the staff_user fixture.
     Defaults to associating to the environment fixture.
-
-    TODO: better typing
     """
 
     def _with_environment_permissions(
