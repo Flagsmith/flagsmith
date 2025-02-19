@@ -6,7 +6,6 @@ import AppActions from 'common/dispatcher/app-actions'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import ProjectStore from 'common/stores/project-store'
 import {
-  ChangeRequest,
   ChangeRequestSummary,
   Environment,
   PagedResponse,

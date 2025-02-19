@@ -188,10 +188,10 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
   const getScheduledDate = () => {
     if (!changeRequest) return null
     return changeRequest.environment_feature_versions.length > 0
-      ? moment(changeRequest.environment_feature_versions[0].live_from)
+      ? moment(changeRequest.environment_feature_versions?.[0]?.live_from)
       : changeRequest?.change_sets?.[0]?.live_from
       ? moment(changeRequest?.change_sets?.[0]?.live_from)
-      : moment(changeRequest.feature_states[0].live_from)
+      : moment(changeRequest.feature_states?.[0]?.live_from)
   }
 
   const publishChangeRequest = () => {
@@ -220,7 +220,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
           />
           {!!changeRequest?.conflicts?.length && (
             <div className='mt-2'>
-              <WarningMessage
+              <ErrorMessage
                 warningMessage={
                   <div>
                     A change request was published since the creation of this
@@ -254,12 +254,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
       </div>
     )
   }
-  if (
-    !changeRequest ||
-    OrganisationStore.isLoading ||
-    !projectFlag ||
-    !environmentFlag
-  ) {
+  if (!changeRequest || OrganisationStore.isLoading) {
     return (
       <div
         data-test='change-requests-page'
@@ -306,13 +301,14 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
         currentPage={changeRequest.title}
       />
       <ChangeRequestPageInner
+        hidePublish={!projectFlag}
         publishChangeRequest={publishChangeRequest}
         approvePermission={approvePermission?.permission}
         approveChangeRequest={approveChangeRequest}
         publishPermission={publishPermission?.permission}
         isScheduled={isScheduled}
         changeRequest={changeRequest}
-        error={error}
+        error={projectFlag ? error : ''}
         addOwner={addOwner}
         removeOwner={removeOwner}
         publishPermissionDescription={Constants.environmentPermissions(
@@ -332,35 +328,45 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
               title={isScheduled ? 'Scheduled Change' : 'Change Request'}
               className='no-pad mb-2'
             >
-              <div className='search-list change-request-list'>
-                <Row className='list-item change-request-item px-4'>
-                  <div className='font-weight-medium mr-3'>Feature:</div>
+              {projectFlag ? (
+                <div className='search-list change-request-list'>
+                  <Row className='list-item change-request-item px-4'>
+                    <div className='font-weight-medium mr-3'>Feature:</div>
 
-                  <a
-                    target='_blank'
-                    className='btn-link font-weight-medium'
-                    href={`/project/${projectId}/environment/${environmentId}/features?feature=${
-                      projectFlag && projectFlag.id
-                    }`}
-                    rel='noreferrer'
-                  >
-                    {projectFlag?.name}
-                  </a>
-                </Row>
-              </div>
+                    <a
+                      target='_blank'
+                      className='btn-link font-weight-medium'
+                      href={`/project/${projectId}/environment/${environmentId}/features?feature=${
+                        projectFlag && projectFlag.id
+                      }`}
+                      rel='noreferrer'
+                    >
+                      {projectFlag?.name}
+                    </a>
+                  </Row>
+                </div>
+              ) : (
+                <ErrorMessage
+                  error={
+                    'This change request contains changes for a feature that has since been deleted'
+                  }
+                />
+              )}
             </Panel>
             <NewVersionWarning
               environmentId={`${environment?.id}`}
               featureId={featureId}
               date={changeRequest.created_at}
             />
-            <DiffChangeRequest
-              environmentId={environmentId}
-              isVersioned={isVersioned}
-              changeRequest={changeRequest}
-              feature={projectFlag.id}
-              projectId={projectId}
-            />
+            {projectFlag ? (
+              <DiffChangeRequest
+                environmentId={environmentId}
+                isVersioned={isVersioned}
+                changeRequest={changeRequest}
+                feature={projectFlag.id}
+                projectId={projectId}
+              />
+            ) : null}
           </div>
         }
       />
@@ -378,6 +384,7 @@ type ChangeRequestPageInnerType = {
   approvePermission: boolean | undefined
   publishPermission: boolean | undefined
   isScheduled: boolean
+  hidePublish?: boolean
   scheduledDate?: moment.Moment | null
   changeRequest: ProjectChangeRequest | ChangeRequest | undefined
   editChangeRequest?: () => void
@@ -395,6 +402,7 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
   deleteChangeRequest,
   editChangeRequest,
   error,
+  hidePublish,
   isScheduled,
   minApprovals,
   publishChangeRequest,
@@ -634,47 +642,56 @@ export const ChangeRequestPageInner: FC<ChangeRequestPageInnerType> = ({
             </>
           )}
           <ErrorMessage error={error} />
-          {changeRequest.committed_at ? (
-            <div className='mr-2 font-weight-medium'>
-              Committed at{' '}
-              {moment(changeRequest.committed_at).format('Do MMM YYYY HH:mma')}{' '}
-              {!!committedBy &&
-                `
+          {!hidePublish && (
+            <>
+              {changeRequest.committed_at ? (
+                <div className='mr-2 font-weight-medium'>
+                  Committed at{' '}
+                  {moment(changeRequest.committed_at).format(
+                    'Do MMM YYYY HH:mma',
+                  )}{' '}
+                  {!!committedBy &&
+                    `
                         by ${committedBy.first_name} ${committedBy.last_name}
                       `}
-            </div>
-          ) : (
-            <Row className='text-right mt-2'>
-              <Flex />
-              {!isYourChangeRequest &&
-                Utils.renderWithPermission(
-                  approvePermission,
-                  Constants.environmentPermissions('Approve Change Requests'),
-                  <Button
-                    disabled={
-                      approved || !approvePermission || isYourChangeRequest
-                    }
-                    onClick={approveChangeRequest}
-                    theme='secondary'
-                  >
-                    {approved ? 'Approved' : 'Approve'}
-                  </Button>,
-                )}
-              {Utils.renderWithPermission(
-                publishPermission,
-                publishPermissionDescription,
-                <Button
-                  disabled={
-                    approvedBy.length < minApprovals || !publishPermission
-                  }
-                  onClick={publishChangeRequest}
-                  className='btn ml-2'
-                >
-                  {isScheduled ? 'Publish Scheduled' : 'Publish'} Change
-                </Button>,
+                </div>
+              ) : (
+                <Row className='text-right mt-2'>
+                  <Flex />
+                  {!isYourChangeRequest &&
+                    Utils.renderWithPermission(
+                      approvePermission,
+                      Constants.environmentPermissions(
+                        'Approve Change Requests',
+                      ),
+                      <Button
+                        disabled={
+                          approved || !approvePermission || isYourChangeRequest
+                        }
+                        onClick={approveChangeRequest}
+                        theme='secondary'
+                      >
+                        {approved ? 'Approved' : 'Approve'}
+                      </Button>,
+                    )}
+                  {Utils.renderWithPermission(
+                    publishPermission,
+                    publishPermissionDescription,
+                    <Button
+                      disabled={
+                        approvedBy.length < minApprovals || !publishPermission
+                      }
+                      onClick={publishChangeRequest}
+                      className='btn ml-2'
+                    >
+                      {isScheduled ? 'Publish Scheduled' : 'Publish'} Change
+                    </Button>,
+                  )}
+                </Row>
               )}
-            </Row>
+            </>
           )}
+          <></>
         </Flex>
       </Row>
     </div>
