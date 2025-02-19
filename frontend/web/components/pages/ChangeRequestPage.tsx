@@ -37,7 +37,6 @@ import Panel from 'components/base/grid/Panel'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import JSONReference from 'components/JSONReference'
 import ErrorMessage from 'components/ErrorMessage'
-import v from 'refractor/lang/v'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
 type ChangeRequestPageType = {
