@@ -5,14 +5,14 @@ from django.utils.crypto import get_random_string
 
 
 class GenerateBackupCodesCommand:
-    def __init__(self, random_string_generator: Callable) -> None:
+    def __init__(self, random_string_generator: Callable) -> None:  # type: ignore[type-arg]
         self._random_string_generator = random_string_generator
 
     def execute(
         self,
-        quantity: int = settings.TRENCH_AUTH["BACKUP_CODES_QUANTITY"],
-        length: int = settings.TRENCH_AUTH["BACKUP_CODES_LENGTH"],
-        allowed_chars: str = settings.TRENCH_AUTH["BACKUP_CODES_CHARACTERS"],
+        quantity: int = settings.TRENCH_AUTH["BACKUP_CODES_QUANTITY"],  # type: ignore[assignment]
+        length: int = settings.TRENCH_AUTH["BACKUP_CODES_LENGTH"],  # type: ignore[assignment]
+        allowed_chars: str = settings.TRENCH_AUTH["BACKUP_CODES_CHARACTERS"],  # type: ignore[assignment]
     ) -> Set[str]:
         """
         Generates random encrypted backup codes.

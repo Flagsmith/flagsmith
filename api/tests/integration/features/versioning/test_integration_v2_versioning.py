@@ -23,25 +23,25 @@ def get_environment_flags_response_json(
 ) -> GetEnvironmentFlagsResponseJSONCallable:
     get_environment_flags_url = reverse("api-v1:flags")
 
-    def _get_environment_flags_response_json(num_expected_flags: int) -> typing.Dict:
+    def _get_environment_flags_response_json(num_expected_flags: int) -> typing.Dict:  # type: ignore[type-arg]
         _response = sdk_client.get(get_environment_flags_url)
         assert _response.status_code == status.HTTP_200_OK
         _response_json = _response.json()
         assert len(_response_json) == num_expected_flags
-        return _response_json
+        return _response_json  # type: ignore[no-any-return]
 
     return _get_environment_flags_response_json
 
 
 @pytest.fixture()
-def get_identity_flags_response_json(
+def get_identity_flags_response_json(  # type: ignore[no-untyped-def]
     sdk_client: "APIClient", identity_identifier
 ) -> GetIdentityFlagsResponseJSONCallable:
     identities_url = reverse("api-v1:sdk-identities")
 
-    def _get_identity_flags_response_json(
+    def _get_identity_flags_response_json(  # type: ignore[no-untyped-def]
         num_expected_flags: int, identifier: str = identity_identifier, **traits
-    ) -> typing.Dict:
+    ) -> typing.Dict:  # type: ignore[type-arg]
         traits = traits or {}
         data = {
             "identifier": identifier,
@@ -54,9 +54,9 @@ def get_identity_flags_response_json(
         assert _response.status_code == status.HTTP_200_OK
         _response_json = _response.json()
         assert len(_response_json["flags"]) == num_expected_flags
-        return _response_json
+        return _response_json  # type: ignore[no-any-return]
 
-    return _get_identity_flags_response_json
+    return _get_identity_flags_response_json  # type: ignore[return-value]
 
 
 @pytest.fixture()
@@ -72,7 +72,7 @@ def environment_v2_versioning(
     return environment
 
 
-def test_v2_versioning(
+def test_v2_versioning(  # type: ignore[no-untyped-def]
     admin_client: "APIClient",
     environment: int,
     environment_api_key: str,
@@ -277,7 +277,7 @@ def test_v2_versioning(
     assert identity_flag_tuples_pre_revert == identity_flag_tuples_post_revert
 
 
-def test_v2_versioning_mv_feature(
+def test_v2_versioning_mv_feature(  # type: ignore[no-untyped-def]
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,
@@ -385,7 +385,7 @@ def test_v2_versioning_mv_feature(
     assert mv_flag["feature_state_value"] == mv_feature_option_value
 
 
-def test_v2_versioning_multiple_segment_overrides(
+def test_v2_versioning_multiple_segment_overrides(  # type: ignore[no-untyped-def]
     admin_client: "APIClient",
     environment_v2_versioning: int,
     environment_api_key: str,

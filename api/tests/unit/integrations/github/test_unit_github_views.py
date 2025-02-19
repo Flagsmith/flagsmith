@@ -6,7 +6,7 @@ import pytest
 import requests
 import responses
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.response import Response
@@ -17,7 +17,7 @@ from features.feature_external_resources.models import FeatureExternalResource
 from features.models import Feature
 from integrations.github.constants import GITHUB_API_URL
 from integrations.github.models import GithubConfiguration, GitHubRepository
-from integrations.github.views import (
+from integrations.github.views import (  # type: ignore[attr-defined]
     github_api_call_error_handler,
     github_webhook_payload_is_valid,
 )
@@ -226,7 +226,7 @@ def test_can_delete_github_configuration_when_delete_github_installation_respons
     assert not GithubConfiguration.objects.filter(id=github_configuration.id).exists()
 
 
-def test_get_github_repository(
+def test_get_github_repository(  # type: ignore[no-untyped-def]
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -242,7 +242,7 @@ def test_get_github_repository(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_cannot_get_github_repository_when_github_pk_in_not_a_number(
+def test_cannot_get_github_repository_when_github_pk_in_not_a_number(  # type: ignore[no-untyped-def]
     admin_client_new: APIClient,
     organisation: Organisation,
     github_configuration: GithubConfiguration,
@@ -425,7 +425,7 @@ def test_github_delete_repository(
 
 
 class MockResponse:
-    def __init__(self, json_data, status_code):
+    def __init__(self, json_data, status_code):  # type: ignore[no-untyped-def]
         self.json_data = json_data
         self.status_code = status_code
         self.links = {
@@ -437,11 +437,11 @@ class MockResponse:
         if 400 <= self.status_code < 600:
             raise requests.exceptions.HTTPError(f"HTTP Error {self.status_code}")
 
-    def json(self):
+    def json(self):  # type: ignore[no-untyped-def]
         return self.json_data
 
 
-def mocked_requests_get_issues_and_pull_requests(*args, **kwargs):
+def mocked_requests_get_issues_and_pull_requests(*args, **kwargs):  # type: ignore[no-untyped-def]
     json_data = {
         "items": [
             {
@@ -458,15 +458,15 @@ def mocked_requests_get_issues_and_pull_requests(*args, **kwargs):
         "incomplete_results": True,
     }
     status_code = 200
-    response = MockResponse(json_data, status_code)
+    response = MockResponse(json_data, status_code)  # type: ignore[no-untyped-call]
 
     return response
 
 
-def mocked_requests_get_error(*args, **kwargs):
+def mocked_requests_get_error(*args, **kwargs):  # type: ignore[no-untyped-def]
     json_data = {"detail": "Not found"}
     status_code = 404
-    response = MockResponse(json_data, status_code)
+    response = MockResponse(json_data, status_code)  # type: ignore[no-untyped-call]
 
     return response
 
@@ -528,7 +528,7 @@ def test_fetch_issues(
         "assignee": "assignee",
     }
     # When
-    response = admin_client_new.get(url, data=data)
+    response = admin_client_new.get(url, data=data)  # type: ignore[arg-type]
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -737,14 +737,14 @@ def test_verify_github_webhook_payload_returns_false_on_no_signature_header() ->
     result = github_webhook_payload_is_valid(
         payload_body=WEBHOOK_PAYLOAD.encode("utf-8"),
         secret_token=WEBHOOK_SECRET,
-        signature_header=None,
+        signature_header=None,  # type: ignore[arg-type]
     )
 
     # Then
     assert result is False
 
 
-def test_github_webhook_delete_installation(
+def test_github_webhook_delete_installation(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
@@ -766,7 +766,7 @@ def test_github_webhook_delete_installation(
     assert not GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
 
-def test_github_webhook_merged_a_pull_request(
+def test_github_webhook_merged_a_pull_request(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     feature: Feature,
     github_configuration: GithubConfiguration,
@@ -789,10 +789,10 @@ def test_github_webhook_merged_a_pull_request(
     # Then
     feature.refresh_from_db()
     assert response.status_code == status.HTTP_200_OK
-    assert feature.tags.first().label == "PR Merged"
+    assert feature.tags.first().label == "PR Merged"  # type: ignore[union-attr]
 
 
-def test_github_webhook_without_installation_id(
+def test_github_webhook_without_installation_id(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     mocker: MockerFixture,
     set_github_webhook_secret,
@@ -817,7 +817,7 @@ def test_github_webhook_without_installation_id(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_github_webhook_with_non_existing_installation(
+def test_github_webhook_with_non_existing_installation(  # type: ignore[no-untyped-def]
     api_client: APIClient,
     github_configuration: GithubConfiguration,
     mocker: MockerFixture,
@@ -843,7 +843,7 @@ def test_github_webhook_with_non_existing_installation(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_github_webhook_fails_on_signature_header_missing(
+def test_github_webhook_fails_on_signature_header_missing(  # type: ignore[no-untyped-def]
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
 ) -> None:
@@ -865,7 +865,7 @@ def test_github_webhook_fails_on_signature_header_missing(
     assert GithubConfiguration.objects.filter(installation_id=1234567).exists()
 
 
-def test_github_webhook_fails_on_bad_signature_header_missing(
+def test_github_webhook_fails_on_bad_signature_header_missing(  # type: ignore[no-untyped-def]
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
 ) -> None:
@@ -888,7 +888,7 @@ def test_github_webhook_fails_on_bad_signature_header_missing(
     assert response.json() == {"error": "Invalid signature"}
 
 
-def test_github_webhook_bypass_event(
+def test_github_webhook_bypass_event(  # type: ignore[no-untyped-def]
     github_configuration: GithubConfiguration,
     set_github_webhook_secret,
 ) -> None:
@@ -1067,7 +1067,7 @@ def test_github_api_call_error_handler_with_value_error(
 ) -> None:
     # Given
     @github_api_call_error_handler()
-    def test_view(request):
+    def test_view(request):  # type: ignore[no-untyped-def]
         raise ValueError("Invalid parameter")
 
     # When

@@ -6,6 +6,6 @@ class SegmentsConfig(BaseAppConfig):
     default = True
 
     def ready(self) -> None:
-        super().ready()
+        super().ready()  # type: ignore[no-untyped-call]
 
         import segments.tasks  # noqa

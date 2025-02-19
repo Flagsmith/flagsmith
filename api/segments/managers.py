@@ -7,7 +7,7 @@ class SegmentManager(SoftDeleteExportableManager):
 
 
 class LiveSegmentManager(SoftDeleteExportableManager):
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         """
         Returns only the canonical segments, which will always be
         the highest version.

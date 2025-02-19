@@ -10,6 +10,7 @@ import {
   FeatureState,
   IdentityFeatureState,
   ProjectFlag,
+  TagStrategy,
 } from 'common/types/responses'
 import API from 'project/api'
 import AccountStore from 'common/stores/account-store'
@@ -29,7 +30,6 @@ import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import IdentifierString from 'components/IdentifierString'
 import IdentityProvider from 'common/providers/IdentityProvider'
-import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import InfoMessage from 'components/InfoMessage'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
@@ -42,7 +42,7 @@ import TableFilterOptions from 'components/tables/TableFilterOptions'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
-import TableSortFilter from 'components/tables/TableSortFilter'
+import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
 import TagValues from 'components/tags/TagValues'
@@ -52,10 +52,12 @@ import _data from 'common/data/base/_data'
 import classNames from 'classnames'
 import moment from 'moment'
 import { removeIdentity } from './UsersPage'
-import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
-import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
+import { isEqual } from 'lodash'
+import ClearFilters from 'components/ClearFilters'
 import SegmentsIcon from 'components/svg/SegmentsIcon'
 import UsersIcon from 'components/svg/UsersIcon'
+import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
+import useSearchThrottle from 'common/useSearchThrottle'
 
 const width = [200, 48, 78]
 
@@ -79,85 +81,107 @@ type UserPageType = {
     }
   }
 }
+type FeatureFilter = {
+  group_owners: number[]
+  is_archived: boolean
+  is_enabled: boolean | null
+  owners: number[]
+  tag_strategy: TagStrategy
+  tags: (number | string)[]
+  value_search: string | null
+  search: string | null
+  sort: SortValue
+}
+const getFiltersFromParams = (params: Record<string, string | undefined>) =>
+  ({
+    group_owners:
+      typeof params.group_owners === 'string'
+        ? params.group_owners.split(',').map((v: string) => parseInt(v))
+        : [],
+    is_archived: params.is_archived === 'true',
+    is_enabled:
+      params.is_enabled === 'true'
+        ? true
+        : params.is_enabled === 'false'
+        ? false
+        : null,
+    owners:
+      typeof params.owners === 'string'
+        ? params.owners.split(',').map((v: string) => parseInt(v))
+        : [],
+    search: params.search || null,
+    sort: {
+      label: Format.camelCase(params.sortBy || 'Name'),
+      sortBy: params.sortBy || 'name',
+      sortOrder: params.sortOrder || 'asc',
+    },
+    tag_strategy: params.tag_strategy || 'INTERSECTION',
+    tags:
+      typeof params.tags === 'string'
+        ? params.tags.split(',').map((v: string) => parseInt(v))
+        : [],
+    value_search: params.value_search || '',
+  } as FeatureFilter)
+
 const UserPage: FC<UserPageType> = (props) => {
   const params = Utils.fromParam()
+  const defaultState = getFiltersFromParams(params)
   const { router } = props
   const { environmentId, id, identity, projectId } = props.match.params
 
-  // Separate state hooks
-  const [groupOwners, setGroupOwners] = useState(
-    typeof params.group_owners === 'string'
-      ? params.group_owners.split(',').map((v: string) => parseInt(v))
-      : [],
-  )
-  const [isEnabled, setIsEnabled] = useState(
-    params.is_enabled === 'true'
-      ? true
-      : params.is_enabled === 'false'
-      ? false
-      : null,
-  )
-  const [owners, setOwners] = useState(
-    typeof params.owners === 'string'
-      ? params.owners.split(',').map((v: string) => parseInt(v))
-      : [],
-  )
-  const [preselect, setPreselect] = useState(Utils.fromParam().flag)
-  const [search, setSearch] = useState(params.search || null)
-  const [showArchived, setShowArchived] = useState(
-    params.is_archived === 'true',
-  )
-  const [sort, setSort] = useState({
-    label: Format.camelCase(params.sortBy || 'Name'),
-    sortBy: params.sortBy || 'name',
-    sortOrder: params.sortOrder || 'asc',
-  })
-  const [tagStrategy, setTagStrategy] = useState(
-    params.tag_strategy || 'INTERSECTION',
-  )
-  const [tags, setTags] = useState(
-    typeof params.tags === 'string'
-      ? params.tags.split(',').map((v: string) => parseInt(v))
-      : [],
-  )
-  const [valueSearch, setValueSearch] = useState(params.value_search || '')
+  const [filter, setFilter] = useState(defaultState)
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
-
+  const [preselect, setPreselect] = useState(Utils.fromParam().flag)
+  const [segmentsPage, setSegmentsPage] = useState(1)
+  const {
+    search,
+    searchInput: segmentSearchInput,
+    setSearchInput: setSegmentSearchInput,
+  } = useSearchThrottle('')
+  const {
+    data: segments,
+    isFetching: isFetchingSegments,
+    refetch: refetchIdentitySegments,
+  } = useGetIdentitySegmentsQuery({
+    identity: id,
+    page: segmentsPage,
+    page_size: 10,
+    projectId,
+    q: search,
+  })
   const getFilter = useCallback(
-    () => ({
-      group_owners: groupOwners.length ? groupOwners : undefined,
-      is_archived: showArchived,
-      is_enabled: isEnabled === null ? undefined : isEnabled,
-      owners: owners.length ? owners : undefined,
-      tag_strategy: tagStrategy,
-      tags: tags.length ? tags.join(',') : undefined,
-      value_search: valueSearch ? valueSearch : undefined,
+    (filter) => ({
+      ...filter,
+      group_owners: filter.group_owners.length
+        ? filter.group_owners
+        : undefined,
+      owners: filter.owners.length ? filter.owners : undefined,
+      search: (filter.search || '').trim(),
+      tags: filter.tags.length ? filter.tags.join(',') : undefined,
     }),
-    [
-      groupOwners,
-      showArchived,
-      isEnabled,
-      owners,
-      tagStrategy,
-      tags,
-      valueSearch,
-    ],
+    [],
   )
+
+  const hasFilters = !isEqual(
+    getFilter({ ...filter, search: filter.search || null }),
+    getFilter(getFiltersFromParams({})),
+  )
+
   useEffect(() => {
+    const { search, sort, ...rest } = getFilter(filter)
     AppActions.searchFeatures(
       projectId,
       environmentId,
       true,
       search,
       sort,
-      getFilter(),
+      rest,
     )
-  }, [search, sort, getFilter, environmentId, projectId])
+  }, [filter, getFilter, environmentId, projectId])
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
-    AppActions.getIdentitySegments(projectId, id)
     getTags(getStore(), { projectId: `${projectId}` })
     getActualFlags()
     API.trackPage(Constants.pages.USER)
@@ -259,7 +283,7 @@ const UserPage: FC<UserPageType> = (props) => {
       'Create User Trait',
       <CreateTraitModal
         isEdit={false}
-        onSave={onTraitSaved}
+        onSave={refetchIdentitySegments}
         identity={id}
         identityName={decodeURIComponent(identity)}
         environmentId={environmentId}
@@ -267,26 +291,6 @@ const UserPage: FC<UserPageType> = (props) => {
       />,
       'p-0',
     )
-  }
-
-  const filter = () => {
-    const currentParams = Utils.fromParam()
-    if (!currentParams.flag) {
-      props.router.history.replace(
-        `${document.location.pathname}?${Utils.toParam(getFilter())}`,
-      )
-    }
-    AppActions.searchFeatures(
-      projectId,
-      environmentId,
-      true,
-      search,
-      sort,
-      getFilter(),
-    )
-  }
-  const onTraitSaved = () => {
-    AppActions.getIdentitySegments(projectId, id)
   }
 
   const editTrait = (trait: {
@@ -299,7 +303,7 @@ const UserPage: FC<UserPageType> = (props) => {
       <CreateTraitModal
         isEdit
         {...trait}
-        onSave={onTraitSaved}
+        onSave={refetchIdentitySegments}
         identity={id}
         identityName={decodeURIComponent(identity)}
         environmentId={environmentId}
@@ -332,6 +336,11 @@ const UserPage: FC<UserPageType> = (props) => {
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
+  const clearFilters = () => {
+    router.history.replace(`${document.location.pathname}`)
+    setFilter(getFiltersFromParams({}))
+  }
+
   return (
     <div className='app-container container'>
       <Permission
@@ -354,9 +363,9 @@ const UserPage: FC<UserPageType> = (props) => {
                 { toggleFlag }: any,
               ) =>
                 isLoading &&
-                !tags.length &&
-                !showArchived &&
-                typeof search !== 'string' &&
+                !filter.tags.length &&
+                !filter.is_archived &&
+                typeof filter.search !== 'string' &&
                 (!identityFlags || !actualFlags || !projectFlags) ? (
                   <div className='text-center'>
                     <Loader />
@@ -384,10 +393,12 @@ const UserPage: FC<UserPageType> = (props) => {
                                   Aliases allow you to add searchable names to
                                   an identity
                                 </Tooltip>
-                                <EditIdentity
-                                  data={identity?.identity}
-                                  environmentId={environmentId}
-                                />
+                                {!!identity && (
+                                  <EditIdentity
+                                    data={identity?.identity}
+                                    environmentId={environmentId}
+                                  />
+                                )}
                               </h6>
                             )}
                           </div>
@@ -476,57 +487,74 @@ const UserPage: FC<UserPageType> = (props) => {
                                     <TableSearchFilter
                                       onChange={(e) => {
                                         FeatureListStore.isLoading = true
-                                        setSearch(Utils.safeParseEventValue(e))
+                                        setFilter({
+                                          ...filter,
+                                          search: Utils.safeParseEventValue(e),
+                                        })
                                       }}
-                                      value={search}
+                                      value={filter.search}
                                     />
                                     <Row className='flex-fill justify-content-end'>
                                       <TableTagFilter
                                         projectId={projectId}
                                         className='me-4'
-                                        value={tags}
-                                        tagStrategy={tagStrategy}
-                                        onChangeStrategy={(strategy) => {
-                                          setTagStrategy(strategy)
+                                        value={filter.tags}
+                                        tagStrategy={filter.tag_strategy}
+                                        onChangeStrategy={(tag_strategy) => {
+                                          setFilter({
+                                            ...filter,
+                                            tag_strategy,
+                                          })
                                         }}
                                         isLoading={FeatureListStore.isLoading}
                                         onToggleArchived={(value) => {
-                                          if (value !== showArchived) {
+                                          if (value !== filter.is_archived) {
                                             FeatureListStore.isLoading = true
-                                            setShowArchived(!showArchived)
+                                            setFilter({
+                                              ...filter,
+                                              is_archived: !filter.is_archived,
+                                            })
                                           }
                                         }}
-                                        showArchived={showArchived}
+                                        showArchived={filter.is_archived}
                                         onChange={(newTags) => {
                                           FeatureListStore.isLoading = true
-                                          setTags(
-                                            newTags.includes('') &&
+                                          setFilter({
+                                            ...filter,
+                                            tags:
+                                              newTags.includes('') &&
                                               newTags.length > 1
-                                              ? ['']
-                                              : newTags,
-                                          )
+                                                ? ['']
+                                                : newTags,
+                                          })
                                         }}
                                       />
                                       <TableValueFilter
                                         className='me-4'
                                         value={{
-                                          enabled: isEnabled,
-                                          valueSearch,
+                                          enabled: filter.is_enabled,
+                                          valueSearch: filter.value_search,
                                         }}
                                         onChange={({
                                           enabled,
                                           valueSearch,
                                         }) => {
-                                          setIsEnabled(enabled)
-                                          setValueSearch(valueSearch)
+                                          setFilter({
+                                            ...filter,
+                                            is_enabled: enabled,
+                                            value_search: valueSearch,
+                                          })
                                         }}
                                       />
                                       <TableOwnerFilter
                                         className={'me-4'}
-                                        value={owners}
-                                        onChange={(newOwners) => {
+                                        value={filter.owners}
+                                        onChange={(owners) => {
                                           FeatureListStore.isLoading = true
-                                          setOwners(newOwners)
+                                          setFilter({
+                                            ...filter,
+                                            owners,
+                                          })
                                         }}
                                       />
                                       <TableGroupsFilter
@@ -535,10 +563,13 @@ const UserPage: FC<UserPageType> = (props) => {
                                         orgId={
                                           AccountStore.getOrganisation()?.id
                                         }
-                                        value={groupOwners}
-                                        onChange={(newGroupOwners) => {
+                                        value={filter.group_owners}
+                                        onChange={(group_owners) => {
                                           FeatureListStore.isLoading = true
-                                          setGroupOwners(newGroupOwners)
+                                          setFilter({
+                                            ...filter,
+                                            group_owners,
+                                          })
                                         }}
                                       />
                                       <TableFilterOptions
@@ -558,7 +589,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                         ]}
                                       />
                                       <TableSortFilter
-                                        value={sort}
+                                        value={filter.sort}
                                         isLoading={FeatureListStore.isLoading}
                                         options={[
                                           {
@@ -570,11 +601,17 @@ const UserPage: FC<UserPageType> = (props) => {
                                             value: 'created_date',
                                           },
                                         ]}
-                                        onChange={(newSort) => {
+                                        onChange={(sort) => {
                                           FeatureListStore.isLoading = true
-                                          setSort(newSort)
+                                          setFilter({
+                                            ...filter,
+                                            sort,
+                                          })
                                         }}
                                       />
+                                      {hasFilters && (
+                                        <ClearFilters onClick={clearFilters} />
+                                      )}
                                     </Row>
                                   </div>
                                 </Row>
@@ -634,12 +671,10 @@ const UserPage: FC<UserPageType> = (props) => {
                                             Utils.featureStateToValue(v) ===
                                             actualValue,
                                         )
-                                      const flagDifferent =
-                                        flagEnabledDifferent ||
-                                        flagValueDifferent
 
                                       const hasSegmentOverride =
-                                        flagValueDifferent &&
+                                        (flagEnabledDifferent ||
+                                          flagValueDifferent) &&
                                         !hasUserOverride &&
                                         !isMultiVariateOverride
 
@@ -926,16 +961,16 @@ const UserPage: FC<UserPageType> = (props) => {
                               }}
                               renderSearchWithNoResults
                               paging={FeatureListStore.paging}
-                              search={search}
+                              search={filter.search}
                               nextPage={() =>
                                 AppActions.getFeatures(
                                   projectId,
                                   environmentId,
                                   true,
-                                  search,
-                                  sort,
+                                  filter.search,
+                                  filter.sort,
                                   FeatureListStore.paging.next,
-                                  getFilter(),
+                                  getFilter(filter),
                                 )
                               }
                               prevPage={() =>
@@ -943,10 +978,10 @@ const UserPage: FC<UserPageType> = (props) => {
                                   projectId,
                                   environmentId,
                                   true,
-                                  search,
-                                  sort,
+                                  filter.search,
+                                  filter.sort,
                                   FeatureListStore.paging.previous,
-                                  getFilter(),
+                                  getFilter(filter),
                                 )
                               }
                               goToPage={(pageNumber: number) =>
@@ -954,10 +989,10 @@ const UserPage: FC<UserPageType> = (props) => {
                                   projectId,
                                   environmentId,
                                   true,
-                                  search,
-                                  sort,
+                                  filter.search,
+                                  filter.sort,
                                   pageNumber,
-                                  getFilter(),
+                                  getFilter(filter),
                                 )
                               }
                             />
@@ -1106,101 +1141,108 @@ const UserPage: FC<UserPageType> = (props) => {
                                 }
                               />
                             </FormGroup>
+                          )}{' '}
+                          {!segments?.results ? (
+                            <div className='text-center'>
+                              <Loader />
+                            </div>
+                          ) : (
+                            <FormGroup>
+                              <PanelSearch
+                                id='user-segments-list'
+                                className='no-pad'
+                                title='Segments'
+                                isLoading={isFetchingSegments}
+                                search={segmentSearchInput}
+                                onChange={(e: InputEvent) => {
+                                  setSegmentSearchInput(
+                                    Utils.safeParseEventValue(e),
+                                  )
+                                }}
+                                itemHeight={70}
+                                paging={segments}
+                                nextPage={() =>
+                                  setSegmentsPage(segmentsPage + 1)
+                                }
+                                prevPage={() =>
+                                  setSegmentsPage(segmentsPage - 1)
+                                }
+                                goToPage={setSegmentsPage}
+                                header={
+                                  <Row className='table-header'>
+                                    <Flex
+                                      className='table-column px-3'
+                                      style={{ maxWidth: '230px' }}
+                                    >
+                                      Name
+                                    </Flex>
+                                    <Flex className='table-column'>
+                                      Description
+                                    </Flex>
+                                  </Row>
+                                }
+                                items={segments.results}
+                                renderRow={(
+                                  { created_date, description, name }: any,
+                                  i: number,
+                                ) => (
+                                  <Row
+                                    className='list-item clickable'
+                                    space
+                                    key={i}
+                                    onClick={() =>
+                                      editSegment(segments.results[i])
+                                    }
+                                  >
+                                    <Flex
+                                      className='table-column px-3'
+                                      style={{ maxWidth: '230px' }}
+                                    >
+                                      <div
+                                        onClick={() =>
+                                          editSegment(segments.results[i])
+                                        }
+                                      >
+                                        <span
+                                          data-test={`segment-${i}-name`}
+                                          className='font-weight-medium'
+                                        >
+                                          {name}
+                                        </span>
+                                      </div>
+                                      <div className='list-item-subtitle mt-1'>
+                                        Created{' '}
+                                        {moment(created_date).format(
+                                          'DD/MMM/YYYY',
+                                        )}
+                                      </div>
+                                    </Flex>
+                                    <Flex className='table-column list-item-subtitle'>
+                                      {description && <div>{description}</div>}
+                                    </Flex>
+                                  </Row>
+                                )}
+                                renderNoResults={
+                                  <Panel title='Segments' className='no-pad'>
+                                    <div className='search-list'>
+                                      <Row className='list-item text-muted px-3'>
+                                        This user is not a member of any
+                                        segments.
+                                      </Row>
+                                    </div>
+                                  </Panel>
+                                }
+                                filterRow={(
+                                  { name }: any,
+                                  searchString: string,
+                                ) =>
+                                  name
+                                    .toLowerCase()
+                                    .indexOf(searchString.toLowerCase()) > -1
+                                }
+                              />
+                            </FormGroup>
                           )}
-                          <IdentitySegmentsProvider id={id}>
-                            {({ segments }: any) =>
-                              !segments ? (
-                                <div className='text-center'>
-                                  <Loader />
-                                </div>
-                              ) : (
-                                <FormGroup>
-                                  <PanelSearch
-                                    id='user-segments-list'
-                                    className='no-pad'
-                                    title='Segments'
-                                    itemHeight={70}
-                                    header={
-                                      <Row className='table-header'>
-                                        <Flex
-                                          className='table-column px-3'
-                                          style={{ maxWidth: '230px' }}
-                                        >
-                                          Name
-                                        </Flex>
-                                        <Flex className='table-column'>
-                                          Description
-                                        </Flex>
-                                      </Row>
-                                    }
-                                    items={segments || []}
-                                    renderRow={(
-                                      { created_date, description, name }: any,
-                                      i: number,
-                                    ) => (
-                                      <Row
-                                        className='list-item clickable'
-                                        space
-                                        key={i}
-                                        onClick={() => editSegment(segments[i])}
-                                      >
-                                        <Flex
-                                          className='table-column px-3'
-                                          style={{ maxWidth: '230px' }}
-                                        >
-                                          <div
-                                            onClick={() =>
-                                              editSegment(segments[i])
-                                            }
-                                          >
-                                            <span
-                                              data-test={`segment-${i}-name`}
-                                              className='font-weight-medium'
-                                            >
-                                              {name}
-                                            </span>
-                                          </div>
-                                          <div className='list-item-subtitle mt-1'>
-                                            Created{' '}
-                                            {moment(created_date).format(
-                                              'DD/MMM/YYYY',
-                                            )}
-                                          </div>
-                                        </Flex>
-                                        <Flex className='table-column list-item-subtitle'>
-                                          {description && (
-                                            <div>{description}</div>
-                                          )}
-                                        </Flex>
-                                      </Row>
-                                    )}
-                                    renderNoResults={
-                                      <Panel
-                                        title='Segments'
-                                        className='no-pad'
-                                      >
-                                        <div className='search-list'>
-                                          <Row className='list-item text-muted px-3'>
-                                            This user is not a member of any
-                                            segments.
-                                          </Row>
-                                        </div>
-                                      </Panel>
-                                    }
-                                    filterRow={(
-                                      { name }: any,
-                                      searchString: string,
-                                    ) =>
-                                      name
-                                        .toLowerCase()
-                                        .indexOf(searchString.toLowerCase()) >
-                                      -1
-                                    }
-                                  />
-                                </FormGroup>
-                              )
-                            }
-                          </IdentitySegmentsProvider>
                         </FormGroup>
                       </div>
                       <div className='col-md-12 mt-2'>

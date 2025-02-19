@@ -32,7 +32,7 @@ from projects.models import Project
 
 
 @pytest.fixture
-def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCache:
+def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCache:  # type: ignore[misc]
     yield OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         current_billing_term_starts_at=timezone.now() - timedelta(days=20),
@@ -50,7 +50,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
     reason="Skip test if analytics database is configured",
 )
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_usage_data_from_local_db(organisation, environment, settings):
+def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
     environment_id = environment.id
     now = timezone.now()
     read_bucket_size = 15
@@ -111,7 +111,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):
     reason="Skip test if analytics database is configured",
 )
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_usage_data_from_local_db_project_id_filter(
+def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
     project_two: Project,
@@ -162,7 +162,7 @@ def test_get_usage_data_from_local_db_project_id_filter(
     reason="Skip test if analytics database is configured",
 )
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_total_events_count(organisation, environment, settings):
+def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
     now = timezone.now()
@@ -217,7 +217,7 @@ def test_get_total_events_count(organisation, environment, settings):
     reason="Skip test if analytics database is configured",
 )
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_feature_evaluation_data_from_local_db(
+def test_get_feature_evaluation_data_from_local_db(  # type: ignore[no-untyped-def]
     feature: Feature, environment: Environment, settings: SettingsWrapper
 ):
     environment_id = environment.id
@@ -282,7 +282,7 @@ def test_get_feature_evaluation_data_from_local_db(
         assert data.day == today - timedelta(days=29 - i)
 
 
-def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
+def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(  # type: ignore[no-untyped-def]
     mocker, settings, organisation
 ):
     # Given
@@ -301,7 +301,7 @@ def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_confi
     )
 
 
-def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(
+def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(  # type: ignore[no-untyped-def]
     mocker, settings, organisation
 ):
     # Given
@@ -320,7 +320,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_config
     )
 
 
-def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(
+def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
     mocker, settings, organisation
 ):
     # Given
@@ -339,7 +339,7 @@ def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(
     )
 
 
-def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(
+def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
     mocker, settings, organisation, feature, environment
 ):
     # Given
@@ -362,7 +362,7 @@ def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configu
     )
 
 
-def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(
+def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, settings, organisation, feature, environment
 ):
     # Given
@@ -407,8 +407,8 @@ def test_get_usage_data_returns_30d_of_60d_when_unset_subscription_information_c
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 11, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),
-        date_stop=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_start=datetime(2022, 11, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_stop=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
     )
 
 
@@ -434,8 +434,8 @@ def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_fo
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_start=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
     )
 
 
@@ -463,8 +463,8 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
     )
 
 
@@ -493,6 +493,6 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
-        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
     )

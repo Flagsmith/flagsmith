@@ -5,7 +5,7 @@ import pytest
 from integrations.opencensus.querylogger import QueryLogger
 
 
-def test_querylogger_when_tracer_not_set_then_query_is_executed(mocker):
+def test_querylogger_when_tracer_not_set_then_query_is_executed(mocker):  # type: ignore[no-untyped-def]
     # Given
     execution_context = mocker.patch(
         "integrations.opencensus.querylogger.execution_context"
@@ -17,7 +17,7 @@ def test_querylogger_when_tracer_not_set_then_query_is_executed(mocker):
     params = [3, 2, 1]
     context = mocker.MagicMock()
 
-    logger = QueryLogger()
+    logger = QueryLogger()  # type: ignore[no-untyped-call]
 
     # When
     logger(execute, sql=sql, params=params, many="", context=context)
@@ -26,7 +26,7 @@ def test_querylogger_when_tracer_not_set_then_query_is_executed(mocker):
     execute.assert_called_once_with(sql, params, "", context)
 
 
-def test_querylogger_when_query_is_executed_then_new_span_is_created(mocker):
+def test_querylogger_when_query_is_executed_then_new_span_is_created(mocker):  # type: ignore[no-untyped-def]
     # Given
     span = mocker.MagicMock()
     tracer = mocker.MagicMock()
@@ -45,7 +45,7 @@ def test_querylogger_when_query_is_executed_then_new_span_is_created(mocker):
     sql = "select * from table"
     params = [3, 2, 1]
 
-    logger = QueryLogger()
+    logger = QueryLogger()  # type: ignore[no-untyped-call]
 
     # When
     logger(execute, sql=sql, params=params, many="", context=context)
@@ -57,7 +57,7 @@ def test_querylogger_when_query_is_executed_then_new_span_is_created(mocker):
     tracer.end_span.assert_called_once()
 
 
-def test_querylogger_when_query_execution_fails_then_span_is_created(mocker):
+def test_querylogger_when_query_execution_fails_then_span_is_created(mocker):  # type: ignore[no-untyped-def]
     # Given
     span = mocker.MagicMock()
     tracer = mocker.MagicMock()
@@ -76,7 +76,7 @@ def test_querylogger_when_query_execution_fails_then_span_is_created(mocker):
     sql = "select * from table"
     params = [3, 2, 1]
 
-    logger = QueryLogger()
+    logger = QueryLogger()  # type: ignore[no-untyped-call]
 
     # When
     with pytest.raises(Exception):

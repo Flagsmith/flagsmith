@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE, EQUAL
-from moto import mock_s3
+from moto import mock_s3  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 
@@ -51,7 +51,7 @@ from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 
 
-def test_export_organisation(db):
+def test_export_organisation(db):  # type: ignore[no-untyped-def]
     # Given
     # an organisation
     organisation_name = "test org"
@@ -74,7 +74,7 @@ def test_export_organisation(db):
     # TODO: test whether the export is importable
 
 
-def test_export_project(organisation):
+def test_export_project(organisation):  # type: ignore[no-untyped-def]
     # Given
     # a project
     project_name = "test project"
@@ -102,7 +102,7 @@ def test_export_project(organisation):
     # TODO: test whether the export is importable
 
 
-def test_export_project__only_live_segments_are_exported(
+def test_export_project__only_live_segments_are_exported(  # type: ignore[no-untyped-def]
     organisation: Organisation, project: Project
 ):
     # Given
@@ -132,7 +132,7 @@ def test_export_project__only_live_segments_are_exported(
     assert export[3]["fields"]["uuid"] == str(segment_condition.uuid)
 
 
-def test_export_environments(project):
+def test_export_environments(project):  # type: ignore[no-untyped-def]
     # Given
     # an environment
     environment_name = "test environment"
@@ -171,7 +171,7 @@ def test_export_environments(project):
     # TODO: test whether the export is importable
 
 
-def test_export_metadata(environment, organisation, settings):
+def test_export_metadata(environment, organisation, settings):  # type: ignore[no-untyped-def]
     # Given
     environment_type = ContentType.objects.get_for_model(environment)
 
@@ -234,7 +234,7 @@ def test_export_metadata(environment, organisation, settings):
     assert metadata.content_object == loaded_environment
 
 
-def test_export_features(project, environment, segment, admin_user):
+def test_export_features(project, environment, segment, admin_user):  # type: ignore[no-untyped-def]
     # Given
     # a standard feature
     standard_feature = Feature.objects.create(project=project, name="standard_feature")
@@ -288,7 +288,7 @@ def test_export_features(project, environment, segment, admin_user):
     # TODO: test whether the export is importable
 
 
-def test_export_features_with_environment_feature_version(
+def test_export_features_with_environment_feature_version(  # type: ignore[no-untyped-def]
     project, environment, segment, admin_user
 ):
     # Given
@@ -515,7 +515,7 @@ def test_export_edge_identities(
     assert Identity.objects.count() == 2
     identity = Identity.objects.get(identifier=identity_identifier)
 
-    traits = identity.get_all_user_traits()
+    traits = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
 
     assert len(traits) == 4
     int_trait = traits[0]
@@ -576,7 +576,7 @@ def test_export_edge_identities(
 
 
 @mock_s3
-def test_organisation_exporter_export_to_s3(organisation):
+def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-untyped-def]
     # Given
     bucket_name = "test-bucket"
     file_key = "organisation-exports/org-1.json"
@@ -589,7 +589,7 @@ def test_organisation_exporter_export_to_s3(organisation):
 
     s3_client = boto3.client("s3")
 
-    exporter = S3OrganisationExporter(s3_client=s3_client)
+    exporter = S3OrganisationExporter(s3_client=s3_client)  # type: ignore[no-untyped-call]
 
     # When
     exporter.export_to_s3(organisation.id, bucket_name, file_key)

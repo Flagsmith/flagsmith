@@ -20,7 +20,7 @@ class WebhookConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
         fields = ("id", "url", "secret")
 
 
-class SegmentSerializer(serializers.ModelSerializer):
+class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     member = serializers.SerializerMethodField()
 
     class Meta:
@@ -29,7 +29,7 @@ class SegmentSerializer(serializers.ModelSerializer):
 
     def get_member(self, obj: Segment) -> bool:
         engine_identity = map_identity_to_engine(
-            self.context.get("identity"),
+            self.context.get("identity"),  # type: ignore[arg-type]
             with_overrides=False,
         )
         engine_segment = map_segment_to_engine(obj)
@@ -40,7 +40,7 @@ class SegmentSerializer(serializers.ModelSerializer):
 
 
 class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # type: ignore[no-untyped-def]
         return_value = super().to_representation(instance)
         value = return_value["feature_state_value"]
         if value:
@@ -49,7 +49,7 @@ class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):
             )
         return return_value
 
-    def get_percentage_allocation(self, value, instance) -> typing.Optional[float]:
+    def get_percentage_allocation(self, value, instance) -> typing.Optional[float]:  # type: ignore[no-untyped-def,return]  # noqa: E501
         value_filter = {
             str: Q(multivariate_feature_option__string_value=value),
             int: Q(multivariate_feature_option__integer_value=value),
@@ -58,4 +58,4 @@ class IntegrationFeatureStateSerializer(FeatureStateSerializerFull):
         mv_fs = instance.multivariate_feature_state_values.filter(value_filter).first()
 
         if mv_fs:
-            return mv_fs.percentage_allocation
+            return mv_fs.percentage_allocation  # type: ignore[no-any-return]

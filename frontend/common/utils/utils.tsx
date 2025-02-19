@@ -123,6 +123,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return res
   },
 
+  copyToClipboard: async (
+    value: string,
+    successMessage?: string,
+    errorMessage?: string,
+  ) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast(successMessage ?? 'Copied to clipboard')
+    } catch (error) {
+      toast(errorMessage ?? 'Failed to copy to clipboard')
+      throw error
+    }
+  },
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -159,6 +172,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return featureState.string_value
     }
   },
+
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -175,20 +189,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return conditions.find((v) => v.value === operator)
   },
-  
-  copyToClipboard: async (value: string, successMessage?: string, errorMessage?: string) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast(successMessage ?? 'Copied to clipboard')
-    } catch (error) {
-      toast(errorMessage ?? 'Failed to copy to clipboard')
-      throw error
-    }
-  },
   /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
-flagsmithFeatureExists(flag: string) {
+  flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
   getApproveChangeRequestPermission() {

@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
 
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
@@ -35,7 +35,7 @@ environment_feature_version_webhook_schema = (
 )
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def enable_v2_versioning(environment_id: int) -> None:
     from environments.models import Environment
 
@@ -47,7 +47,7 @@ def enable_v2_versioning(environment_id: int) -> None:
     environment.save()
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def disable_v2_versioning(environment_id: int) -> None:
     from environments.models import Environment
     from features.models import FeatureSegment, FeatureState
@@ -81,7 +81,7 @@ def disable_v2_versioning(environment_id: int) -> None:
     environment.save()
 
 
-def _create_initial_feature_versions(environment: "Environment"):
+def _create_initial_feature_versions(environment: "Environment"):  # type: ignore[no-untyped-def]
     from features.models import Feature, FeatureSegment
 
     now = timezone.now()
@@ -129,7 +129,7 @@ def _create_initial_feature_versions(environment: "Environment"):
         )
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> None:
     environment_feature_version = EnvironmentFeatureVersion.objects.get(
         uuid=environment_feature_version_uuid
@@ -146,7 +146,7 @@ def trigger_update_version_webhooks(environment_feature_version_uuid: str) -> No
     )
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def create_environment_feature_version_published_audit_log_task(
     environment_feature_version_uuid: str,
 ) -> None:
@@ -165,7 +165,7 @@ def create_environment_feature_version_published_audit_log_task(
     )
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def publish_version_change_set(
     version_change_set_id: int, user_id: int, is_scheduled: bool = False
 ) -> None:

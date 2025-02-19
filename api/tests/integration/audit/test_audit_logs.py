@@ -20,7 +20,7 @@ def _subscription_metadata(mocker: MockerFixture) -> None:
     )
 
 
-def test_get_audit_logs_makes_expected_queries(
+def test_get_audit_logs_makes_expected_queries(  # type: ignore[no-untyped-def]
     admin_client,
     project,
     environment,

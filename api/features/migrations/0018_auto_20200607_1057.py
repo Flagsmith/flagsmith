@@ -7,7 +7,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def migrate_feature_segments_forward(apps, schema_editor):
+def migrate_feature_segments_forward(apps, schema_editor):  # type: ignore[no-untyped-def]
     FeatureSegment = apps.get_model('features', 'FeatureSegment')
     FeatureState = apps.get_model('features', 'FeatureState')
 
@@ -43,7 +43,7 @@ def migrate_feature_segments_forward(apps, schema_editor):
     assert not FeatureSegment.objects.filter(environment__isnull=True).exists()
 
 
-def migrate_feature_segments_reverse(apps, schema_editor):
+def migrate_feature_segments_reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     """
     Reverse the above by making feature segments unique to a feature again.
 

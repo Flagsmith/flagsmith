@@ -19,7 +19,7 @@ from segments.models import Segment
 from users.models import FFAdminUser
 
 
-def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_key(
+def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_key(  # type: ignore[no-untyped-def]
     mocker,
     monkeypatch,
 ):
@@ -57,7 +57,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_user_or_api_
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
-def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
+def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(  # type: ignore[no-untyped-def]
     mocker,
     monkeypatch,
 ):
@@ -104,7 +104,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_no_log_message(
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
-def test_create_audit_log_from_historical_record_does_nothing_if_get_skip_create_audit_log_true(
+def test_create_audit_log_from_historical_record_does_nothing_if_get_skip_create_audit_log_true(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
     monkeypatch,
 ):
@@ -147,7 +147,7 @@ def test_create_audit_log_from_historical_record_does_nothing_if_get_skip_create
     mocked_audit_log_model_class.objects.create.assert_not_called()
 
 
-def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_fields(
+def test_create_audit_log_from_historical_record_creates_audit_log_with_correct_fields(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
     monkeypatch,
 ):
@@ -308,7 +308,7 @@ def test_create_feature_state_went_live_audit_log(
     # Given
     message = FEATURE_STATE_WENT_LIVE_MESSAGE % (
         change_request_feature_state.feature.name,
-        change_request_feature_state.change_request.title,
+        change_request_feature_state.change_request.title,  # type: ignore[union-attr]
     )
     feature_state_id = change_request_feature_state.id
 
@@ -333,7 +333,7 @@ def test_create_feature_state_updated_by_change_request_audit_log(
     # Given
     message = FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE % (
         change_request_feature_state.feature.name,
-        change_request_feature_state.change_request.title,
+        change_request_feature_state.change_request.title,  # type: ignore[union-attr]
     )
     feature_state_id = change_request_feature_state.id
 
@@ -352,7 +352,7 @@ def test_create_feature_state_updated_by_change_request_audit_log(
     )
 
 
-def test_create_feature_state_updated_by_change_request_audit_log_does_nothing_if_feature_state_deleted(
+def test_create_feature_state_updated_by_change_request_audit_log_does_nothing_if_feature_state_deleted(  # type: ignore[no-untyped-def]  # noqa: E501
     change_request_feature_state,
 ):
     # Given
@@ -371,7 +371,7 @@ def test_create_feature_state_updated_by_change_request_audit_log_does_nothing_i
     )
 
 
-def test_create_feature_state_wen_live_audit_log_does_nothing_if_feature_state_deleted(
+def test_create_feature_state_wen_live_audit_log_does_nothing_if_feature_state_deleted(  # type: ignore[no-untyped-def]  # noqa: E501
     change_request_feature_state,
 ):
     # Given

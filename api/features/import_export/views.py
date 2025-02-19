@@ -3,8 +3,8 @@ import json
 from django.conf import settings
 from django.db.models import QuerySet
 from django.http import Http404
-from drf_yasg.utils import swagger_auto_schema
-from rest_framework import permissions
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+from rest_framework import permissions, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.request import Request
@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from environments.models import Environment
 
+from .constants import SUCCESS
 from .models import (
     FeatureExport,
     FeatureImport,
@@ -32,7 +33,7 @@ from .serializers import (
 )
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     method="POST",
     request_body=CreateFeatureExportSerializer(),
     responses={201: FeatureExportSerializer()},
@@ -48,7 +49,7 @@ def create_feature_export(request: Request) -> Response:
     return Response(response_serializer.data, status=201)
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     method="POST",
     request_body=FeatureImportUploadSerializer(),
     responses={201: FeatureImportSerializer()},
@@ -63,7 +64,7 @@ def feature_import(request: Request, environment_id: int) -> Response:
     return Response(serializer.data, status=201)
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     method="GET",
     responses={200: "File downloaded"},
     operation_description="This endpoint is to download a feature export file from a specific environment",
@@ -73,8 +74,15 @@ def feature_import(request: Request, environment_id: int) -> Response:
 def download_feature_export(request: Request, feature_export_id: int) -> Response:
     feature_export = get_object_or_404(FeatureExport, id=feature_export_id)
 
+    if feature_export.status != SUCCESS:
+        raise serializers.ValidationError(
+            {
+                "detail": f"Unable to download export with status '{feature_export.status}'."
+            }
+        )
+
     response = Response(
-        json.loads(feature_export.data), content_type="application/json"
+        json.loads(feature_export.data), content_type="application/json"  # type: ignore[arg-type]
     )
     response.headers["Content-Disposition"] = (
         f"attachment; filename=feature_export.{feature_export_id}.json"
@@ -82,7 +90,7 @@ def download_feature_export(request: Request, feature_export_id: int) -> Respons
     return response
 
 
-@swagger_auto_schema(
+@swagger_auto_schema(  # type: ignore[misc]
     method="GET",
     responses={200: "Flagsmith on Flagsmith File downloaded"},
     operation_description="This endpoint is to download an feature export to enable flagsmith on flagsmith",
@@ -103,7 +111,7 @@ def download_flagsmith_on_flagsmith(request: Request) -> Response:
         raise Http404("There is no present downloadable export.")
 
     response = Response(
-        json.loads(fof.feature_export.data), content_type="application/json"
+        json.loads(fof.feature_export.data), content_type="application/json"  # type: ignore[arg-type]
     )
     response.headers["Content-Disposition"] = (
         f"attachment; filename=flagsmith_on_flagsmith.{fof.id}.json"
@@ -111,7 +119,7 @@ def download_flagsmith_on_flagsmith(request: Request) -> Response:
     return response
 
 
-class FeatureExportListView(ListAPIView):
+class FeatureExportListView(ListAPIView):  # type: ignore[type-arg]
     serializer_class = FeatureExportSerializer
     permission_classes = [FeatureExportListPermissions]
 
@@ -122,7 +130,7 @@ class FeatureExportListView(ListAPIView):
         for environment in Environment.objects.filter(
             project_id=self.kwargs["project_pk"],
         ):
-            if user.is_environment_admin(environment):
+            if user.is_environment_admin(environment):  # type: ignore[union-attr]
                 environment_ids.append(environment.id)
 
         return FeatureExport.objects.filter(environment__in=environment_ids).order_by(
@@ -130,7 +138,7 @@ class FeatureExportListView(ListAPIView):
         )
 
 
-class FeatureImportListView(ListAPIView):
+class FeatureImportListView(ListAPIView):  # type: ignore[type-arg]
     serializer_class = FeatureImportSerializer
     permission_classes = [FeatureImportListPermissions]
 
@@ -141,7 +149,7 @@ class FeatureImportListView(ListAPIView):
         for environment in Environment.objects.filter(
             project_id=self.kwargs["project_pk"],
         ):
-            if user.is_environment_admin(environment):
+            if user.is_environment_admin(environment):  # type: ignore[union-attr]
                 environment_ids.append(environment.id)
 
         return FeatureImport.objects.filter(environment__in=environment_ids).order_by(

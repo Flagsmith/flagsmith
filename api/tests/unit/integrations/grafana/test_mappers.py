@@ -19,7 +19,7 @@ def audit_log_record(
     superuser: FFAdminUser,
     project: Project,
 ) -> AuditLog:
-    return AuditLog.objects.create(
+    return AuditLog.objects.create(  # type: ignore[no-any-return]
         created_date=datetime(2024, 6, 24, 9, 9, 47, 325132, tzinfo=timezone.utc),
         log="Test event",
         author=superuser,

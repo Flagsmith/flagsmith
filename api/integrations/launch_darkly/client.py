@@ -27,11 +27,11 @@ class LaunchDarklyClient:
         self,
         endpoint: str,
         params: Optional[dict[str, Any]] = None,
-    ) -> T:
+    ) -> T:  # type: ignore[type-var]
         full_url = f"{LAUNCH_DARKLY_API_BASE_URL}{endpoint}"
         response = self.client_session.get(full_url, params=params)
         response.raise_for_status()
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     def _iter_paginated_items(
         self,
@@ -53,7 +53,7 @@ class LaunchDarklyClient:
         if additional_params:
             params.update(additional_params)
 
-        response_json = self._get_json_response(
+        response_json = self._get_json_response(  # type: ignore[var-annotated]
             endpoint=collection_endpoint,
             params=params,
         )

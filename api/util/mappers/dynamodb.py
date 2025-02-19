@@ -211,6 +211,6 @@ def _map_value_to_document_value(value: Any) -> DocumentValue:
             encoder = DOCUMENT_VALUE_ENCODERS_BY_TYPE[base]
         except KeyError:
             continue
-        return encoder(value)
+        return encoder(value)  # type: ignore[operator,no-any-return]
     else:
         return str(value)

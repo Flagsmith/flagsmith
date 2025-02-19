@@ -19,6 +19,7 @@ export type PagedResponse<T> = {
   previous?: string
   results: T[]
 }
+
 export interface GitHubPagedResponse<T> extends PagedResponse<T> {
   incomplete_results: boolean
 }
@@ -475,18 +476,17 @@ export type ProjectFlag = {
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
+  environmentFlags: Record<number, FeatureState> | undefined
   error: boolean
   isLoading: boolean
 }
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
+    projectId: string,
+    environmentId: string,
+    projectFlag: ProjectFlag,
+    environmentFlags: FeatureState | undefined,
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }
@@ -679,6 +679,15 @@ export type HealthProvider = {
   webhook_url: number
 }
 
+export type Webhook = {
+  id: number
+  url: string
+  secret: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -688,6 +697,8 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  webhook: Webhook
+  webhooks: Webhook[]
   organisationUsage: {
     totals: {
       flags: number
@@ -805,6 +816,8 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identitySegments: PagedResponse<Segment>
+  organisationWebhooks: PagedResponse<Webhook>
   projectChangeRequests: PagedResponse<ChangeRequestSummary>
   projectChangeRequest: ProjectChangeRequest
   actionChangeRequest: {}

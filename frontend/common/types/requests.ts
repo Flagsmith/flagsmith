@@ -18,6 +18,7 @@ import {
   ProjectChangeRequest,
   Role,
   RolePermission,
+  Webhook,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -102,6 +103,26 @@ export type Req = {
       | 'current_billing_period'
       | 'previous_billing_period'
       | '90_day_period'
+  }
+  getWebhooks: {
+    environmentId: string
+  }
+  createWebhook: {
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  updateWebhook: {
+    id: number
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  deleteWebhook: {
+    id: number
+    environmentId: string
   }
   deleteIdentity: {
     id: string
@@ -573,5 +594,17 @@ export type Req = {
     id: string
   }
   deleteProjectChangeRequest: { project_id: string; id: string }
+  createAuditLogWebhooks: {
+    organisationId: string
+    data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
+  }
+  getAuditLogWebhooks: { organisationId: string }
+  updateAuditLogWebhooks: { organisationId: string; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: string; id: number }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: string
+  }>
   // END OF TYPES
 }

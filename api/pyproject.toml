@@ -41,11 +41,11 @@ exclude_also = [
   '@(abc\\.)?abstractmethod',
 ]
 
+[tool.coverage.run]
+omit = ["scripts/*"]
+
 [tool.isort]
-use_parentheses = true
-multi_line_output = 3
-include_trailing_comma = true
-line_length = 79
+profile = "black"
 known_first_party = [
   'analytics',
   'app',
@@ -108,7 +108,22 @@ skip = ['migrations', '.venv', '.direnv']
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
 console_output_style = 'count'
 
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["admin_sso.models"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "app.settings.local"
+
+[tool.drf-stubs]
+enabled = true
+
 [tool.poetry.dependencies]
+python = ">3.11,<3.13"
 django = "~4.2.18"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
@@ -162,7 +177,7 @@ django-ordered-model = "~3.4.1"
 django-ses = "~3.5.0"
 django-axes = "~5.32.0"
 pydantic = "^2.3.0"
-pyngo = "~2.0.1"
+pyngo = "~2.2.1"
 flagsmith = "^3.6.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
@@ -170,7 +185,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.2.0" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.2.1" }
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
@@ -198,7 +213,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.6" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.7" }
 
 [tool.poetry.group.licensing]
 optional = true
@@ -229,6 +244,11 @@ pdbpp = "^0.10.3"
 mypy-boto3-dynamodb = "^1.33.0"
 pytest-structlog = "^1.1"
 pyfakefs = "^5.7.4"
+mypy = "^1.15.0"
+django-stubs = "^5.1.3"
+djangorestframework-stubs = "^3.15.2"
+boto3-stubs = "^1.36.20"
+types-requests = "^2.32.0.20241016"
 
 [build-system]
 requires = ["poetry>=2.0.0"]

@@ -1,6 +1,6 @@
 import logging
 
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
 
 from environments.models import Webhook
 from features.models import Feature, FeatureState
@@ -11,12 +11,12 @@ from webhooks.webhooks import (
     call_organisation_webhooks,
 )
 
-from .models import HistoricalFeatureState
+from .models import HistoricalFeatureState  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
 
-def trigger_feature_state_change_webhooks(
+def trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
     instance: FeatureState, event_type: WebhookEventType = WebhookEventType.FLAG_UPDATED
 ):
     assert event_type in [WebhookEventType.FLAG_UPDATED, WebhookEventType.FLAG_DELETED]
@@ -39,7 +39,7 @@ def trigger_feature_state_change_webhooks(
     new_state = (
         None
         if event_type == WebhookEventType.FLAG_DELETED
-        else _get_feature_state_webhook_data(instance)
+        else _get_feature_state_webhook_data(instance)  # type: ignore[no-untyped-call]
     )
     data = {"new_state": new_state, "changed_by": changed_by, "timestamp": timestamp}
     previous_state = _get_previous_state(instance, history_instance, event_type)
@@ -48,12 +48,12 @@ def trigger_feature_state_change_webhooks(
         data.update(previous_state=previous_state)
 
     call_environment_webhooks.delay(
-        args=(instance.environment.id, data, event_type.value)
+        args=(instance.environment.id, data, event_type.value)  # type: ignore[union-attr]
     )
 
     call_organisation_webhooks.delay(
         args=(
-            instance.environment.project.organisation.id,
+            instance.environment.project.organisation.id,  # type: ignore[union-attr]
             data,
             event_type.value,
         )
@@ -64,17 +64,17 @@ def _get_previous_state(
     instance: FeatureState,
     history_instance: HistoricalFeatureState,
     event_type: WebhookEventType,
-) -> dict:
+) -> dict:  # type: ignore[type-arg]
     if event_type == WebhookEventType.FLAG_DELETED:
-        return _get_feature_state_webhook_data(instance)
+        return _get_feature_state_webhook_data(instance)  # type: ignore[no-untyped-call,no-any-return]
     if history_instance and history_instance.prev_record:
-        return _get_feature_state_webhook_data(
+        return _get_feature_state_webhook_data(  # type: ignore[no-untyped-call,no-any-return]
             history_instance.prev_record.instance, previous=True
         )
-    return None
+    return None  # type: ignore[return-value]
 
 
-def _get_feature_state_webhook_data(feature_state, previous=False):
+def _get_feature_state_webhook_data(feature_state, previous=False):  # type: ignore[no-untyped-def]
     # TODO: fix circular imports and use serializers instead.
     feature_state_value = (
         feature_state.get_feature_state_value()
@@ -88,11 +88,11 @@ def _get_feature_state_webhook_data(feature_state, previous=False):
         enabled=feature_state.enabled,
         value=feature_state_value,
         identity_id=feature_state.identity_id,
-        identity_identifier=getattr(feature_state.identity, "identifier", None),
+        identity_identifier=getattr(feature_state.identity, "identifier", None),  # type: ignore[arg-type]
         feature_segment=feature_state.feature_segment,
     )
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def delete_feature(feature_id: int) -> None:
     Feature.objects.get(pk=feature_id).delete()

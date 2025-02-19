@@ -16,11 +16,7 @@ type UsersGroupsType = {
 const widths = [120]
 
 const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
-  const {
-    data,
-    error: groupsError,
-    isLoading,
-  } = useGetGroupsQuery({ orgId })
+  const { data, error: groupsError, isLoading } = useGetGroupsQuery({ orgId })
   const [updateGroup, { error: saveError, isLoading: isSaving }] =
     useUpdateGroupMutation({})
   const error = groupsError || saveError

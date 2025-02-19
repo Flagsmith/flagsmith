@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class OrganisationImporter:
-    def __init__(self, s3_client=None):
+    def __init__(self, s3_client=None):  # type: ignore[no-untyped-def]
         self._s3_client = s3_client or boto3.client("s3")
 
     def import_organisation(self, s3_bucket: str, s3_key: str) -> None:

@@ -12,14 +12,14 @@ from projects.tags.models import Tag
 from segments.models import Segment
 
 
-class EnvironmentInline(admin.StackedInline):
+class EnvironmentInline(admin.StackedInline):  # type: ignore[type-arg]
     model = Environment
     extra = 0
     show_change_link = True
     fields = ("name", "api_key", "minimum_change_request_approvals")
 
 
-class FeatureInline(admin.StackedInline):
+class FeatureInline(admin.StackedInline):  # type: ignore[type-arg]
     model = Feature
     extra = 0
     show_change_link = True
@@ -33,14 +33,14 @@ class FeatureInline(admin.StackedInline):
     )
 
 
-class SegmentInline(admin.StackedInline):
+class SegmentInline(admin.StackedInline):  # type: ignore[type-arg]
     model = Segment
     extra = 0
     show_change_link = True
     fields = ("name", "description")
 
 
-class TagInline(admin.StackedInline):
+class TagInline(admin.StackedInline):  # type: ignore[type-arg]
     model = Tag
     extra = 0
     show_change_link = True
@@ -48,7 +48,7 @@ class TagInline(admin.StackedInline):
 
 
 @admin.register(Project)
-class ProjectAdmin(admin.ModelAdmin):
+class ProjectAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     actions = ["delete_all_segments"]
     date_hierarchy = "created_date"
     inlines = [EnvironmentInline, FeatureInline, SegmentInline, TagInline]
@@ -77,10 +77,10 @@ class ProjectAdmin(admin.ModelAdmin):
         description="Delete all segments for project",
         permissions=["delete_all_segments"],
     )
-    def delete_all_segments(self, request: HttpRequest, queryset: QuerySet):
+    def delete_all_segments(self, request: HttpRequest, queryset: QuerySet):  # type: ignore[no-untyped-def,type-arg]
         Segment.objects.filter(project__in=queryset).delete()
 
     def has_delete_all_segments_permission(
-        self, request: HttpRequest, obj: Project = None
+        self, request: HttpRequest, obj: Project = None  # type: ignore[assignment]
     ) -> bool:
         return request.user.is_superuser

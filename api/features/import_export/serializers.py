@@ -15,11 +15,11 @@ from .tasks import (
 )
 
 
-class CreateFeatureExportSerializer(serializers.Serializer):
+class CreateFeatureExportSerializer(serializers.Serializer):  # type: ignore[type-arg]
     environment_id = serializers.IntegerField(required=True)
     tag_ids = serializers.ListField(child=serializers.IntegerField())
 
-    def save(self) -> FeatureExport:
+    def save(self) -> FeatureExport:  # type: ignore[override]
         feature_export = FeatureExport.objects.create(
             environment_id=self.validated_data["environment_id"],
             status=PROCESSING,
@@ -35,7 +35,7 @@ class CreateFeatureExportSerializer(serializers.Serializer):
         return feature_export
 
 
-class FeatureExportSerializer(serializers.ModelSerializer):
+class FeatureExportSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     name = serializers.SerializerMethodField()
 
     class Meta:
@@ -55,17 +55,17 @@ class FeatureExportSerializer(serializers.ModelSerializer):
 
 
 def validate_feature_import_file_size(upload_file: InMemoryUploadedFile) -> None:
-    if upload_file.size > MAX_FEATURE_IMPORT_SIZE:
+    if upload_file.size > MAX_FEATURE_IMPORT_SIZE:  # type: ignore[operator]
         raise ValidationError("File size is too large.")
 
 
-class FeatureImportUploadSerializer(serializers.Serializer):
+class FeatureImportUploadSerializer(serializers.Serializer):  # type: ignore[type-arg]
     file = serializers.FileField(
-        validators=[validate_feature_import_file_size],
+        validators=[validate_feature_import_file_size],  # type: ignore[list-item]
     )
     strategy = serializers.ChoiceField(choices=[SKIP, OVERWRITE_DESTRUCTIVE])
 
-    def save(self, environment_id: int) -> FeatureImport:
+    def save(self, environment_id: int) -> FeatureImport:  # type: ignore[override]
         if FeatureImport.objects.filter(
             environment_id=environment_id,
             status=PROCESSING,
@@ -88,7 +88,7 @@ class FeatureImportUploadSerializer(serializers.Serializer):
         return feature_import
 
 
-class FeatureImportSerializer(serializers.ModelSerializer):
+class FeatureImportSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = FeatureImport
         fields = (

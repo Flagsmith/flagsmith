@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import withWebhooks from 'common/providers/withWebhooks'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
@@ -28,6 +27,12 @@ import Format from 'common/utils/format'
 import Setting from 'components/Setting'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 import Utils from 'common/utils/utils'
+import {
+  createWebhook,
+  deleteWebhook,
+  getWebhooks,
+  updateWebhook,
+} from 'common/services/useWebhooks'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -49,6 +54,8 @@ const EnvironmentSettingsPage = class extends Component {
       environmentContentType: {},
       roles: [],
       showMetadataList: false,
+      webhooks: [],
+      webhooksLoading: true,
     }
     AppActions.getProject(this.props.match.params.projectId)
   }
@@ -56,7 +63,22 @@ const EnvironmentSettingsPage = class extends Component {
   componentDidMount = () => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
     this.getEnvironment()
-    this.props.getWebhooks()
+    this.fetchWebhooks(this.props.match.params.environmentId)
+  }
+
+  fetchWebhooks = (environmentId) => {
+    if (!environmentId) return
+
+    this.setState({ webhooksLoading: true })
+    getWebhooks(getStore(), { environmentId })
+      .then((res) => {
+        this.setState({
+          webhooks: res.data,
+        })
+      })
+      .finally(() => {
+        this.setState({ webhooksLoading: false })
+      })
   }
 
   getEnvironment = () => {
@@ -99,7 +121,7 @@ const EnvironmentSettingsPage = class extends Component {
         this.setState({ environmentContentType: environmentContentType })
       })
     }
-    this.props.getWebhooks()
+    this.fetchWebhooks(this.props.match.params.environmentId)
   }
 
   onSave = () => {
@@ -202,7 +224,16 @@ const EnvironmentSettingsPage = class extends Component {
         router={this.context.router}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
-        save={this.props.createWebhook}
+        save={(webhook) =>
+          createWebhook(getStore(), {
+            environmentId: this.props.match.params.environmentId,
+            ...webhook,
+          }).then((res) => {
+            this.setState({
+              webhooks: this.state.webhooks.concat(res.data),
+            })
+          })
+        }
       />,
       'side-modal',
     )
@@ -217,7 +248,18 @@ const EnvironmentSettingsPage = class extends Component {
         isEdit
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
-        save={this.props.saveWebhook}
+        save={(webhook) =>
+          updateWebhook(getStore(), {
+            environmentId: this.props.match.params.environmentId,
+            ...webhook,
+          }).then(() => {
+            this.setState({
+              webhooks: this.state.webhooks.map((w) =>
+                w.id === webhook.id ? webhook : w,
+              ),
+            })
+          })
+        }
       />,
       'side-modal',
     )
@@ -230,7 +272,16 @@ const EnvironmentSettingsPage = class extends Component {
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         url={webhook.url}
-        cb={() => this.props.deleteWebhook(webhook)}
+        cb={() =>
+          deleteWebhook(getStore(), {
+            environmentId: this.props.match.params.environmentId,
+            id: webhook.id,
+          }).then(() => {
+            this.setState({
+              webhooks: this.state.webhooks.filter((w) => w.id !== webhook.id),
+            })
+          })
+        }
       />,
       'p-0',
     )
@@ -257,7 +308,6 @@ const EnvironmentSettingsPage = class extends Component {
 
   render() {
     const {
-      props: { webhooks, webhooksLoading },
       state: {
         allow_client_traits,
         hide_sensitive_data,
@@ -265,6 +315,8 @@ const EnvironmentSettingsPage = class extends Component {
         use_identity_composite_key_for_hashing,
         use_identity_overrides_in_local_eval,
         use_v2_feature_versioning,
+        webhooks,
+        webhooksLoading,
       },
     } = this
     const has4EyesPermission = Utils.getPlansPermission('4_EYES')
@@ -869,4 +921,4 @@ const EnvironmentSettingsPage = class extends Component {
 
 EnvironmentSettingsPage.propTypes = {}
 
-module.exports = ConfigProvider(withWebhooks(EnvironmentSettingsPage))
+module.exports = ConfigProvider(EnvironmentSettingsPage)

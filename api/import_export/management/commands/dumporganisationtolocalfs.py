@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    def add_arguments(self, parser: CommandParser):
+    def add_arguments(self, parser: CommandParser):  # type: ignore[no-untyped-def]
         parser.add_argument(
             "organisation-id",
             type=int,
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             help="Full path to file in which to write organisation data.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # type: ignore[no-untyped-def]
         organisation_id = options["organisation-id"]
         file_location = options["file-location"]
 

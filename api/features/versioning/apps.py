@@ -5,6 +5,6 @@ class FeatureVersioningAppConfig(AppConfig):
     label = "feature_versioning"
     name = "features.versioning"
 
-    def ready(self):
+    def ready(self):  # type: ignore[no-untyped-def]
         from . import receivers  # noqa
         from . import signals  # noqa

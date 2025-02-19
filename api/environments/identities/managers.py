@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class IdentityManager(Manager["Identity"]):
-    def get_by_natural_key(self, identifier, environment_api_key):
+    def get_by_natural_key(self, identifier, environment_api_key):  # type: ignore[no-untyped-def]
         return self.get(identifier=identifier, environment__api_key=environment_api_key)
 
     def get_or_create_for_sdk(

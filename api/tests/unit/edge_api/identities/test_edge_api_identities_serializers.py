@@ -2,7 +2,7 @@ import pytest
 from django.test import RequestFactory
 from django.utils import timezone
 from flag_engine.features.models import FeatureModel, FeatureStateModel
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
 from api_keys.user import APIKeyUser
@@ -19,7 +19,7 @@ from util.mappers import map_identity_to_identity_document
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
 
 
-def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
+def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(  # type: ignore[no-untyped-def]
     mocker, identity, feature, admin_user
 ):
     # Given
@@ -41,7 +41,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
 
     # When
     serializer.is_valid(raise_exception=True)
-    result = serializer.save()
+    result = serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     assert result
@@ -65,7 +65,7 @@ def test_edge_identity_feature_state_serializer_save_allows_missing_mvfsvs(
         lazy_fixture("admin_user"),
     ],
 )
-def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_override(
+def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_override(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     identity: Identity,
     feature: Feature,
@@ -78,7 +78,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
     )
     view = mocker.MagicMock(identity=identity_model)
     request = rf.post("/")
-    request.user = user
+    request.user = user  # type: ignore[assignment]
 
     new_enabled_state = True
     new_value = "foo"
@@ -103,7 +103,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
 
     # When
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     mock_call_environment_webhook.delay.assert_called_once_with(
@@ -122,7 +122,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_new_overr
     )
 
 
-def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
+def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(  # type: ignore[no-untyped-def]
     mocker, identity, feature, admin_user
 ):
     # Given
@@ -164,7 +164,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
 
     # When
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     mock_call_environment_webhook.delay.assert_called_once_with(
@@ -183,7 +183,7 @@ def test_edge_identity_feature_state_serializer_save_calls_webhook_for_update(
     )
 
 
-def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_for_edge(
+def test_all_feature_states_serializer_get_feature_state_value_uses_mv_values_for_edge(  # type: ignore[no-untyped-def]  # noqa: E501
     identity, multivariate_feature, environment
 ):
     # Given
