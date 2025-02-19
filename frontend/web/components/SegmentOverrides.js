@@ -47,13 +47,13 @@ const SegmentOverrideInner = class Override extends React.Component {
       confirmRemove,
       controlValue,
       disabled,
+      environmentId,
       hideViewSegment,
       index,
       multivariateOptions,
       name,
       onSortEnd,
       projectFlag,
-      projectId,
       readOnly,
       setSegmentEditId,
       setShowCreateSegment,
@@ -176,9 +176,9 @@ const SegmentOverrideInner = class Override extends React.Component {
               )}
               <Row className='gap-2'>
                 <Permission
-                  id={projectId}
-                  permission={'MANAGE_SEGMENTS'}
-                  level={'project'}
+                  id={environmentId}
+                  permission={'MANAGE_SEGMENT_OVERRIDES'}
+                  level={'environment'}
                 >
                   {({ permission }) =>
                     Utils.renderWithPermission(
