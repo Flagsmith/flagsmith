@@ -27,59 +27,7 @@ const controller = {
       store.saved()
     })
   },
-  deleteIdentityTrait(envId, identity, id) {
-    store.saving()
-    if (Utils.getShouldUpdateTraitOnDelete()) {
-      controller.editTrait({
-        environmentId: envId,
-        identity,
-        trait: {
-          trait_key: id,
-          trait_value: null,
-        },
-      })
-      return
-    }
-    data
-      .delete(
-        `${
-          Project.api
-        }environments/${envId}/${Utils.getIdentitiesEndpoint()}/${identity}/traits/${id}/`,
-      )
-      .then(() => {
-        const index = _.findIndex(
-          store.model.traits,
-          (trait) => trait.id === id,
-        )
-        if (index !== -1) {
-          store.model.traits.splice(index, 1)
-        }
-        store.saved()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
-  editTrait({ environmentId, identity, trait }) {
-    const { id, trait_key, trait_value } = trait
-    store.saving()
-    data[Utils.getTraitEndpointMethod(id)](
-      Utils.getUpdateTraitEndpoint(environmentId, identity, id),
-      {
-        identity: Utils.getShouldSendIdentityToTraits()
-          ? { identifier: store.model && store.model.identity.identifier }
-          : undefined,
-        trait_key,
-        ...(Utils.getIsEdge()
-          ? { trait_value }
-          : Utils.valueToTrait(trait_value)),
-      },
-    )
-      .then(() =>
-        controller
-          .getIdentity(environmentId, identity)
-          .then(() => store.saved()),
-      )
-      .catch((e) => API.ajaxHandler(store, e))
-  },
+
   editUserFlag({ environmentId, identity, identityFlag, projectFlag }) {
     store.saving()
     API.trackEvent(Constants.events.EDIT_USER_FEATURE)
@@ -138,7 +86,6 @@ const controller = {
       )
       .then((identity) =>
         Promise.all([
-          data.get(Utils.getTraitEndpoint(envId, id)),
           Promise.resolve(identity),
           data.get(
             `${
@@ -147,20 +94,11 @@ const controller = {
           ),
         ]),
       )
-      .then(([res, identity, flags]) => {
+      .then(([identity, flags]) => {
         const features = (flags && flags.results) || flags
-        const traits = Utils.getIsEdge()
-          ? res
-          : res &&
-            res.results &&
-            res.results.map((v) => ({
-              id: v.id,
-              trait_key: v.trait_key,
-              trait_value: Utils.featureStateToValue(v),
-            }))
+
         store.model = store.model || {}
         store.model.features = features && _.keyBy(features, (f) => f.feature)
-        store.model.traits = traits
         store.model.identity = identity
         store.loaded()
       })
@@ -242,9 +180,6 @@ const store = Object.assign({}, BaseStore, {
   getIdentityForEditing() {
     return store.model && _.cloneDeep(store.model) // immutable
   },
-  getTraits() {
-    return store.model && store.model.traits
-  },
   id: 'identity',
 })
 
@@ -281,14 +216,8 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         projectFlag,
       })
       break
-    case Actions.EDIT_TRAIT:
-      controller.editTrait({ environmentId, identity, trait })
-      break
     case Actions.REMOVE_USER_FLAG:
       controller.removeUserFlag(identity, identityFlag, environmentId, cb)
-      break
-    case Actions.DELETE_IDENTITY_TRAIT:
-      controller.deleteIdentityTrait(action.envId, action.identity, action.id)
       break
     case Actions.CHANGE_USER_FLAG:
       controller.changeUserFlag(action.identity)
