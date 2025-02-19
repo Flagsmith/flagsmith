@@ -35,7 +35,7 @@ class EdgeIdentity:
         return EdgeIdentity(IdentityModel.model_validate(identity_document))
 
     @property
-    def django_id(self) -> int:
+    def django_id(self) -> int:  # pragma: no cover
         return self.engine_identity_model.django_id  # type: ignore[return-value]
 
     @property
