@@ -90,7 +90,7 @@ class EdgeIdentityViewSet(
     lookup_field = "identity_uuid"
 
     def initial(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
+        environment = self.get_environment_from_request()
         if not environment.project.enable_dynamo_db:
             raise DynamoNotEnabledError()
 
@@ -101,11 +101,13 @@ class EdgeIdentityViewSet(
             return EdgeIdentityUpdateSerializer
         return EdgeIdentitySerializer
 
-    def get_object(self):  # type: ignore[no-untyped-def]
-        # TODO: should this return an EdgeIdentity object instead of a dict?
-        return EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
+    def get_object(self) -> EdgeIdentity:
+        identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
             self.kwargs["identity_uuid"]
         )
+        edge_identity = EdgeIdentity.from_identity_document(identity_document)
+        self.check_object_permissions(self.request, edge_identity)
+        return edge_identity
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         page_size = self.pagination_class().get_page_size(self.request)
@@ -142,14 +144,14 @@ class EdgeIdentityViewSet(
                     "retrieve": VIEW_IDENTITIES,
                     "list": VIEW_IDENTITIES,
                     "create": MANAGE_IDENTITIES,
+                    "destroy": MANAGE_IDENTITIES,
                     "get_traits": VIEW_IDENTITIES,
                     "update_traits": MANAGE_IDENTITIES,
-                    "perform_destroy": MANAGE_IDENTITIES,
                 },
             ),
         ]
 
-    def get_environment_from_request(self):  # type: ignore[no-untyped-def]
+    def get_environment_from_request(self) -> Environment:
         """
         Get environment object from URL parameters in request.
         """
@@ -158,7 +160,7 @@ class EdgeIdentityViewSet(
         )
 
     def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
-        edge_identity = EdgeIdentity.from_identity_document(instance)
+        edge_identity = self.get_object()
         edge_identity.delete(user=self.request.user)  # type: ignore[arg-type]
 
     @swagger_auto_schema(
@@ -166,7 +168,7 @@ class EdgeIdentityViewSet(
     )
     @action(detail=True, methods=["get"], url_path="list-traits")
     def get_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        identity = IdentityModel.model_validate(self.get_object())  # type: ignore[no-untyped-call]
+        identity = IdentityModel.model_validate(self.get_object())
         data = [trait.dict() for trait in identity.identity_traits]
         return Response(data=data, status=status.HTTP_200_OK)
 
@@ -177,10 +179,10 @@ class EdgeIdentityViewSet(
     )
     @action(detail=True, methods=["put"], url_path="update-traits")
     def update_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
+        environment = self.get_environment_from_request()
         if not environment.project.organisation.persist_trait_data:
             raise TraitPersistenceError()
-        identity = IdentityModel.model_validate(self.get_object())  # type: ignore[no-untyped-call]
+        identity = IdentityModel.model_validate(self.get_object())
         try:
             trait = TraitModel(**request.data)
         except pydantic.ValidationError as validation_error:

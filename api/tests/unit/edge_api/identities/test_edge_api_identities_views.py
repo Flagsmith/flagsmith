@@ -1,5 +1,4 @@
 import typing
-import uuid
 
 from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_IDENTITIES,
@@ -24,7 +23,7 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_dynamodb.service_resource import Table
 
 
-def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
+def test_edge_identity_view_set_get_permissions() -> None:
     # Given
     view_set = EdgeIdentityViewSet()
 
@@ -39,55 +38,45 @@ def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-de
         "list": VIEW_IDENTITIES,
         "retrieve": VIEW_IDENTITIES,
         "create": MANAGE_IDENTITIES,
-        "perform_destroy": MANAGE_IDENTITIES,
+        "destroy": MANAGE_IDENTITIES,
         "get_traits": VIEW_IDENTITIES,
         "update_traits": MANAGE_IDENTITIES,
     }
 
 
-def test_user_with_manage_identity_permission_can_delete_identity(  # type: ignore[no-untyped-def]
-    dynamo_enabled_project_environment_one,
-    identity_document_without_fs,
-    edge_identity_dynamo_wrapper_mock,
-    test_user_client,
-    view_environment_permission,
-    view_identities_permission,
-    view_project_permission,
-    user_environment_permission,
-    user_project_permission,
-):
+def test_user_with_manage_identity_permission_can_delete_identity(
+    environment: Environment,
+    identity_document_without_fs: dict[str, typing.Any],
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    flagsmith_identities_table: "Table",
+) -> None:
     # Given
-    user_environment_permission.permissions.add(
-        view_environment_permission, view_identities_permission
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_IDENTITIES, VIEW_IDENTITIES],
+        environment.id,
     )
-    user_project_permission.permissions.add(view_project_permission)
 
+    flagsmith_identities_table.put_item(Item=identity_document_without_fs)
     identity_uuid = identity_document_without_fs["identity_uuid"]
+    composite_key = identity_document_without_fs["composite_key"]
 
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
-        args=[dynamo_enabled_project_environment_one.api_key, identity_uuid],
-    )
-
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document_without_fs
+        args=[environment.api_key, identity_uuid],
     )
 
     # When
-    response = test_user_client.delete(url)
+    response = staff_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
-        identity_document_without_fs["composite_key"]
-    )
+    assert flagsmith_identities_table.get_item(Key={"composite_key": composite_key})
 
 
-def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_client):  # type: ignore[no-untyped-def]
+def test_edge_identity_viewset_returns_404_for_invalid_environment_key(
+    admin_client: APIClient,
+) -> None:
     # Given
     api_key = "not-valid"
     url = reverse(
@@ -192,37 +181,25 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
 
 
 def test_user_cannot_delete_identity_from_another_project(
-    flagsmith_environment_table: "Table",
+    identity_document_without_fs: dict[str, typing.Any],
     flagsmith_identities_table: "Table",
-    flagsmith_environments_v2_table: "Table",
-    dynamo_enabled_project_environment_one: Environment,
+    environment: Environment,
 ) -> None:
     # Given
     # A user that belongs to no organisation
     user = FFAdminUser.objects.create(email="no-orgs@example.com")
 
-    assert not user.belongs_to(
-        dynamo_enabled_project_environment_one.project.organisation_id
-    )
+    assert not user.belongs_to(environment.project.organisation_id)
 
     api_client = APIClient()
     api_client.force_authenticate(user)
 
-    identifier = "some-identity"
-    identity_uuid = str(uuid.uuid4())
-    environment_api_key = dynamo_enabled_project_environment_one.api_key
+    identifier = identity_document_without_fs["identifier"]
+    identity_uuid = identity_document_without_fs["identity_uuid"]
+    environment_api_key = environment.api_key
     composite_key = f"{environment_api_key}_{identifier}"
-    identity_data = {
-        "identifier": identifier,
-        "environment_api_key": environment_api_key,
-        "identity_uuid": identity_uuid,
-        "composite_key": composite_key,
-        "identity_traits": [],
-    }
 
-    flagsmith_identities_table.put_item(
-        Item=identity_data,
-    )
+    flagsmith_identities_table.put_item(Item=identity_document_without_fs)
 
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
@@ -235,4 +212,4 @@ def test_user_cannot_delete_identity_from_another_project(
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    assert flagsmith_identities_table.get_item(Key={"identity_uuid": identity_uuid})
+    assert flagsmith_identities_table.get_item(Key={"composite_key": composite_key})

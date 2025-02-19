@@ -60,6 +60,13 @@ class EdgeIdentity:
     def identity_uuid(self) -> str:
         return str(self._engine_identity_model.identity_uuid)
 
+    @property
+    def environment(self) -> Environment:
+        environment: Environment = Environment.objects.get(
+            api_key=self.environment_api_key
+        )
+        return environment
+
     def add_feature_override(self, feature_state: FeatureStateModel) -> None:
         self._engine_identity_model.identity_features.append(feature_state)
 
@@ -79,7 +86,7 @@ class EdgeIdentity:
         segment_ids = self.dynamo_wrapper.get_segment_ids(
             identity_model=self._engine_identity_model
         )
-        django_environment = Environment.objects.get(api_key=self.environment_api_key)
+        django_environment = self.environment
 
         # since identity overrides are included in the document retrieved from dynamo,
         # we only want to retrieve the environment default and (relevant) segment overrides
