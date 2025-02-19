@@ -158,9 +158,8 @@ class EdgeIdentityViewSet(
             Environment, api_key=self.kwargs["environment_api_key"]
         )
 
-    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
-        edge_identity = self.get_object()
-        edge_identity.delete(user=self.request.user)  # type: ignore[arg-type]
+    def perform_destroy(self, instance: EdgeIdentity) -> None:
+        instance.delete(user=self.request.user)  # type: ignore[arg-type]
 
     @swagger_auto_schema(
         responses={200: EdgeIdentityTraitsSerializer(many=True)},
