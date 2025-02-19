@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.163.0](https://github.com/Flagsmith/flagsmith/compare/v2.162.0...v2.163.0) (2025-02-19)
+
+
+### Features
+
+* Adds support for quickly navigating to recently created or existing requested changes ([#5109](https://github.com/Flagsmith/flagsmith/issues/5109)) ([e7b1adc](https://github.com/Flagsmith/flagsmith/commit/e7b1adccd0507d730a5362a8c520e7f2493b5233))
+
+
+### Bug Fixes
+
+* Audit Log integrations are triggered when integration config is soft deleted ([#5128](https://github.com/Flagsmith/flagsmith/issues/5128)) ([a81d22e](https://github.com/Flagsmith/flagsmith/commit/a81d22e4bf5e2c5c2b0b4fac37aeb7944e98bb35))
+* Consistent hover styles for tabs & improved dark mode side menu UX ([#5133](https://github.com/Flagsmith/flagsmith/issues/5133)) ([145bf1f](https://github.com/Flagsmith/flagsmith/commit/145bf1f3e5d598feeba9a69e4cc0288f803bcd76))
+* Fix StaleFlagWarning Display & Migrate FeatureRow to TypeScript ([#5129](https://github.com/Flagsmith/flagsmith/issues/5129)) ([a1dcdb8](https://github.com/Flagsmith/flagsmith/commit/a1dcdb8110935fa06ea9a13c2c5d72c9a67db286))
+* Segment override permissions ([#5134](https://github.com/Flagsmith/flagsmith/issues/5134)) ([66629e4](https://github.com/Flagsmith/flagsmith/commit/66629e4fba95e3dc948d2584ad86e9639e3c4484))
+
 ## [2.162.0](https://github.com/Flagsmith/flagsmith/compare/v2.161.0...v2.162.0) (2025-02-18)
 
 
