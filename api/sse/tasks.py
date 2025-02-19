@@ -4,7 +4,7 @@ from datetime import timedelta
 import requests
 from app_analytics.influxdb_wrapper import influxdb_client
 from django.conf import settings
-from influxdb_client import Point, WriteOptions  # type: ignore[import-untyped]
+from influxdb_client import Point, WriteOptions
 from task_processor.decorators import (  # type: ignore[import-untyped]
     register_recurring_task,
     register_task_handler,
