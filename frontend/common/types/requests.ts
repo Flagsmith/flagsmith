@@ -593,5 +593,10 @@ export type Req = {
     use_edge_identities: boolean
     data: Omit<IdentityTrait, 'trait_value'>
   }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: string
+  }>
   // END OF TYPES
 }

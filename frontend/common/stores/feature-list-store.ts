@@ -670,12 +670,17 @@ const controller = {
                   )
                 }
               })
+              return updatedChangeRequest
             },
           )
         })
 
-      Promise.all([prom]).then(() => {
-        store.saved({ changeRequest: true, isCreate: true })
+      Promise.all([prom]).then(([updatedChangeRequest]) => {
+        store.saved({
+          changeRequest: true,
+          isCreate: true,
+          updatedChangeRequest,
+        })
       })
     } catch (e) {
       API.ajaxHandler(store, e)
@@ -975,7 +980,7 @@ const controller = {
 
 const store = Object.assign({}, BaseStore, {
   getEnvironmentFlags() {
-    return store.model && store.model.keyedEnvironmentFeatures
+    return store?.model?.keyedEnvironmentFeatures
   },
   getFeatureUsage() {
     return store.model && store.model.usageData
