@@ -9,7 +9,6 @@ import Panel from './base/grid/Panel'
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
 import CreateTraitModal from './modals/CreateTrait'
-import AppActions from 'common/dispatcher/app-actions'
 import {
   useDeleteIdentityTraitMutation,
   useGetIdentityTraitsQuery,
@@ -46,10 +45,8 @@ const IdentityTraits: FC<IdentityTraitsType> = ({
   const [deleteTrait, { isLoading: deletingTrait }] =
     useDeleteIdentityTraitMutation({})
 
-  //todo : https://github.com/Flagsmith/flagsmith/pull/5121 migrates this
   const onTraitSaved = () => {
     closeModal?.()
-    AppActions.getIdentitySegments(projectId, identityId)
   }
 
   const createTrait = () => {

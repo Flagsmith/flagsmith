@@ -24,7 +24,7 @@ import {
 import { FlagsmithValue } from 'common/types/responses'
 
 type CreateTraitProps = {
-  id?: number | string
+  id?: number
   trait_key?: string
   trait_value?: FlagsmithValue
   identityName: string
@@ -83,7 +83,7 @@ const CreateTrait: FC<CreateTraitProps> = ({
   const handleSave = () => {
     if (isEdit) {
       updateTrait({
-        data: { id: identity, trait_key: traitKey, trait_value: traitValue },
+        data: { id, trait_key: traitKey, trait_value: traitValue },
         environmentId,
         identity,
         use_edge_identities,

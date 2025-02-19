@@ -2,6 +2,9 @@ import { IdentityTrait, Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
+import { getStore } from 'common/store'
+import { identitySegmentService } from './useIdentitySegment'
+import q from 'refractor/lang/q'
 
 function getTraitEndpoint(
   use_edge_identities: boolean,
@@ -66,6 +69,12 @@ export const identityTraitService = service
             ),
           }
         },
+        transformResponse: (res) => {
+          getStore().dispatch(
+            identitySegmentService.util.invalidateTags(['IdentitySegment']),
+          )
+          return res
+        },
       }),
       deleteIdentityTrait: builder.mutation<
         Res['identityTrait'],
@@ -94,8 +103,15 @@ export const identityTraitService = service
               query.use_edge_identities,
               query.environmentId,
               query.identity,
+              query.data.id,
             ),
           }
+        },
+        transformResponse: (res) => {
+          getStore().dispatch(
+            identitySegmentService.util.invalidateTags(['IdentitySegment']),
+          )
+          return res
         },
       }),
       getIdentityTraits: builder.query<
@@ -110,6 +126,16 @@ export const identityTraitService = service
             query.identity,
           ),
         }),
+        transformResponse: (res) => {
+          // Core API returns paginated were as edge doesn't
+          if (res?.results) {
+            return res?.results.map((v) => ({
+              ...v,
+              trait_value: Utils.featureStateToValue(v),
+            }))
+          }
+          return res
+        },
       }),
       updateIdentityTrait: builder.mutation<
         Res['identityTrait'],
@@ -126,7 +152,7 @@ export const identityTraitService = service
               query.identity,
               query.data,
             ),
-            method: query.use_edge_identities ? 'PUT' : 'POST',
+            method: 'PUT',
             url: getUpdateTraitEndpoint(
               query.use_edge_identities,
               query.environmentId,
@@ -134,6 +160,12 @@ export const identityTraitService = service
               query.data.id,
             ),
           }
+        },
+        transformResponse: (res) => {
+          getStore().dispatch(
+            identitySegmentService.util.invalidateTags(['IdentitySegment']),
+          )
+          return res
         },
       }),
       // END OF ENDPOINTS

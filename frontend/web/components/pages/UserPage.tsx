@@ -928,7 +928,7 @@ const UserPage: FC<UserPageType> = (props) => {
                           environmentId={environmentId}
                           projectId={projectId}
                           identityId={id}
-                          identityName={identity}
+                          identityName={identity?.identity?.identifier || id}
                         />
                       )}{' '}
                       {!segments?.results ? (
@@ -1036,9 +1036,7 @@ const UserPage: FC<UserPageType> = (props) => {
                       <TryIt
                         title='Check to see what features and traits are coming back for this user'
                         environmentId={environmentId}
-                        userId={
-                          (identity && identity.identity.identifier) || id
-                        }
+                        userId={identity?.identity?.identifier || id}
                       />
                     </FormGroup>
                   </div>
