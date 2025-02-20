@@ -1,11 +1,11 @@
-import React, { useState, useEffect, FC } from 'react'
+import React, { useState, useEffect, FC, useMemo } from 'react'
 import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
 import MyGroupsSelect from 'components/MyGroupsSelect'
 import { getMyGroups } from 'common/services/useMyGroup'
 import { getStore } from 'common/store'
-import DateSelect from 'components/DateSelect'
+import DateSelect, { DateSelectProps } from 'components/DateSelect'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import InfoMessage from 'components/InfoMessage'
@@ -27,25 +27,28 @@ interface ChangeRequestModalProps {
     live_from?: string
     title: string
   }) => void
+  isScheduledChange?: boolean
   showAssignees?: boolean
 }
 
 const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   changeRequest,
+  isScheduledChange,
   onSave,
   showAssignees,
 }) => {
   const [approvals, setApprovals] = useState(changeRequest?.approvals || [])
   const [description, setDescription] = useState(
-    changeRequest?.description || '',
+    changeRequest?.description ?? '',
   )
   const [groups, setGroups] = useState([])
   const [liveFrom, setLiveFrom] = useState(
-    changeRequest?.feature_states[0].live_from || undefined,
+    changeRequest?.feature_states[0]?.live_from,
   )
-  const [title, setTitle] = useState(changeRequest?.title || '')
+  const [title, setTitle] = useState(changeRequest?.title ?? '')
   const [showUsers, setShowUsers] = useState(false)
   const [showGroups, setShowGroups] = useState(false)
+  const [currDate, setCurrDate] = useState(new Date())
 
   useEffect(() => {
     getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
@@ -54,6 +57,13 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
       },
     )
   }, [])
+
+  useEffect(() => {
+    const currLiveFromDate = changeRequest?.feature_states[0]?.live_from
+    if (!currLiveFromDate) {
+      return setLiveFrom(showAssignees ? currDate.toISOString() : undefined)
+    }
+  }, [isScheduledChange, showAssignees, changeRequest, currDate])
 
   const addOwner = (id: number, isUser = true) => {
     setApprovals((prev) => [...prev, isUser ? { user: id } : { group: id }])
@@ -79,6 +89,20 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
       title,
     })
   }
+
+  const handleClear = () => {
+    const newCurrDate = new Date()
+    setCurrDate(newCurrDate)
+    setLiveFrom(showAssignees ? newCurrDate.toISOString() : undefined)
+  }
+
+  const handleOnDateChange: DateSelectProps['onChange'] = (date) => {
+    setLiveFrom(date?.toISOString())
+  }
+
+  const isValid = useMemo(() => {
+    return !!title?.length && !!liveFrom
+  }, [title, liveFrom])
 
   return (
     <OrganisationProvider>
@@ -123,13 +147,14 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                 component={
                   <Row>
                     <DateSelect
+                      isValid={!!liveFrom?.length}
                       dateFormat='MMMM d, yyyy h:mm aa'
-                      onChange={(e) => setLiveFrom(e?.toISOString())}
-                      selected={moment(liveFrom).toDate()}
+                      onChange={handleOnDateChange}
+                      selected={liveFrom ? moment(liveFrom).toDate() : null}
                     />
                     <Button
                       className='ml-2'
-                      onClick={() => setLiveFrom(undefined)}
+                      onClick={handleClear}
                       theme='secondary'
                       size='large'
                     >
@@ -139,7 +164,14 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                 }
               />
             </div>
-            {moment(liveFrom).isAfter(moment()) && (
+            {showAssignees && moment(liveFrom).isSame(currDate) && (
+              <InfoMessage>
+                <strong>
+                  Changes will take effect immediately after approval.
+                </strong>
+              </InfoMessage>
+            )}
+            {liveFrom && moment(liveFrom).isAfter(moment()) && (
               <InfoMessage>
                 This change will be scheduled to go live at{' '}
                 <strong>
@@ -251,7 +283,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
               <Button
                 id='confirm-cancel-plan'
                 className='btn btn-primary'
-                disabled={!title}
+                disabled={!isValid}
                 onClick={save}
               >
                 {changeRequest ? 'Update' : 'Create'}

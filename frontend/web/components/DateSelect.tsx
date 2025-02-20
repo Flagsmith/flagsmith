@@ -4,6 +4,8 @@ import { useState, FC } from 'react'
 
 export interface DateSelectProps
   extends Pick<DatePickerProps, 'dateFormat' | 'selected' | 'value'> {
+  className?: string
+  isValid?: boolean
   onChange?: (
     date: Date | null,
     event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
@@ -11,19 +13,26 @@ export interface DateSelectProps
 }
 
 const DateSelect: FC<DateSelectProps> = ({
+  className,
   dateFormat,
+  isValid,
   onChange,
   selected,
   value,
 }) => {
   const [isMonthPicker, setIsMonthPicker] = useState(false)
   const [isYearPicker, setIsYearPicker] = useState(false)
+  const [touched, setTouched] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
   return (
     <Flex style={{ position: 'relative' }}>
       <DatePicker
+        className={`input-lg ${className} ${
+          !isValid && touched ? 'invalid' : ''
+        }`}
         dateFormat={dateFormat}
+        onFocus={() => setTouched(true)}
         renderCustomHeader={({
           date,
           decreaseMonth,
@@ -79,9 +88,15 @@ const DateSelect: FC<DateSelectProps> = ({
         )}
         minDate={new Date()}
         onChange={(date, e): DatePickerProps['onChange'] => {
-          if (!date) return
+          if (date === null) {
+            setIsMonthPicker(false)
+            setIsYearPicker(false)
+            onChange?.(null)
+            return
+          }
 
-          if (date < new Date()) {
+          const today = new Date()
+          if (date < today) {
             setIsMonthPicker(false)
             setIsYearPicker(false)
             onChange?.(new Date())
@@ -99,7 +114,6 @@ const DateSelect: FC<DateSelectProps> = ({
             setIsYearPicker(false)
           }
         }}
-        className='input-lg'
         formatWeekDay={(nameOfDay) => nameOfDay.substr(0, 1)}
         showTimeSelect={!isMonthPicker && !isYearPicker}
         showMonthYearPicker={isMonthPicker}
