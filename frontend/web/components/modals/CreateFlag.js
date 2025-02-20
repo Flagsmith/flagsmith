@@ -179,10 +179,6 @@ const CreateFlag = class extends Component {
   }
 
   componentDidMount = () => {
-    // if (this.props.projectFlag) {
-    //   this.userOverridesPage(1)
-    // }
-
     setInterceptClose(this.onClosing)
     if (!this.state.isEdit && !E2E) {
       this.focusTimeout = setTimeout(() => {
