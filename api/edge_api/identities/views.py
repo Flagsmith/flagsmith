@@ -3,11 +3,14 @@ import json
 import typing
 
 import pydantic
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
-from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
+from flag_engine.identities.models import IdentityFeaturesList
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
@@ -24,7 +27,7 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -56,7 +59,6 @@ from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import FeatureState
 from features.permissions import IdentityFeatureStatePermissions
 from projects.exceptions import DynamoNotEnabledError
-from util.mappers import map_engine_identity_to_identity_document
 
 from . import edge_identity_service
 from .exceptions import TraitPersistenceError
@@ -87,7 +89,7 @@ class EdgeIdentityViewSet(
     lookup_field = "identity_uuid"
 
     def initial(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
+        environment = self.get_environment_from_request()
         if not environment.project.enable_dynamo_db:
             raise DynamoNotEnabledError()
 
@@ -98,11 +100,13 @@ class EdgeIdentityViewSet(
             return EdgeIdentityUpdateSerializer
         return EdgeIdentitySerializer
 
-    def get_object(self):  # type: ignore[no-untyped-def]
-        # TODO: should this return an EdgeIdentity object instead of a dict?
-        return EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
+    def get_object(self) -> EdgeIdentity:
+        identity_document = EdgeIdentity.dynamo_wrapper.get_item_from_uuid_or_404(
             self.kwargs["identity_uuid"]
         )
+        edge_identity = EdgeIdentity.from_identity_document(identity_document)
+        self.check_object_permissions(self.request, edge_identity)
+        return edge_identity
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         page_size = self.pagination_class().get_page_size(self.request)
@@ -131,7 +135,7 @@ class EdgeIdentityViewSet(
             start_key=start_key,  # type: ignore[arg-type]
         )
 
-    def get_permissions(self):  # type: ignore[no-untyped-def]
+    def get_permissions(self) -> list[BasePermission]:
         return [
             IsAuthenticated(),
             NestedEnvironmentPermissions(
@@ -139,14 +143,14 @@ class EdgeIdentityViewSet(
                     "retrieve": VIEW_IDENTITIES,
                     "list": VIEW_IDENTITIES,
                     "create": MANAGE_IDENTITIES,
+                    "destroy": MANAGE_IDENTITIES,
                     "get_traits": VIEW_IDENTITIES,
                     "update_traits": MANAGE_IDENTITIES,
-                    "perform_destroy": MANAGE_IDENTITIES,
                 },
             ),
         ]
 
-    def get_environment_from_request(self):  # type: ignore[no-untyped-def]
+    def get_environment_from_request(self) -> Environment:
         """
         Get environment object from URL parameters in request.
         """
@@ -154,17 +158,19 @@ class EdgeIdentityViewSet(
             Environment, api_key=self.kwargs["environment_api_key"]
         )
 
-    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
-        edge_identity = EdgeIdentity.from_identity_document(instance)
-        edge_identity.delete(user=self.request.user)  # type: ignore[arg-type]
+    def perform_destroy(self, instance: EdgeIdentity) -> None:
+        instance.delete(user=self.request.user)  # type: ignore[arg-type]
 
     @swagger_auto_schema(
         responses={200: EdgeIdentityTraitsSerializer(many=True)},
     )
     @action(detail=True, methods=["get"], url_path="list-traits")
     def get_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        identity = IdentityModel.model_validate(self.get_object())  # type: ignore[no-untyped-call]
-        data = [trait.dict() for trait in identity.identity_traits]
+        edge_identity = self.get_object()
+        data = [
+            trait.dict()
+            for trait in edge_identity.engine_identity_model.identity_traits
+        ]
         return Response(data=data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -174,21 +180,19 @@ class EdgeIdentityViewSet(
     )
     @action(detail=True, methods=["put"], url_path="update-traits")
     def update_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
+        environment = self.get_environment_from_request()
         if not environment.project.organisation.persist_trait_data:
             raise TraitPersistenceError()
-        identity = IdentityModel.model_validate(self.get_object())  # type: ignore[no-untyped-call]
+        edge_identity = self.get_object()
         try:
             trait = TraitModel(**request.data)
         except pydantic.ValidationError as validation_error:
             raise ValidationError(
                 drf_error_details(validation_error)
             ) from validation_error
-        _, traits_updated = identity.update_traits([trait])
+        _, traits_updated = edge_identity.engine_identity_model.update_traits([trait])
         if traits_updated:
-            EdgeIdentity.dynamo_wrapper.put_item(
-                map_engine_identity_to_identity_document(identity)
-            )
+            edge_identity.save()
 
         data = trait.dict()
         return Response(data, status=status.HTTP_200_OK)

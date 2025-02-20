@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
@@ -8,7 +10,10 @@ from environments.dynamodb import (
     DynamoIdentityWrapper,
 )
 from environments.models import Environment
-from util.mappers import map_environment_to_environment_document
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_environment_v2_document,
+)
 
 
 @pytest.fixture()
@@ -75,15 +80,22 @@ def dynamodb_wrapper_v2(
 @pytest.fixture()
 def dynamo_enabled_project_environment_one_document(
     flagsmith_environment_table: Table,
+    flagsmith_environments_v2_table: Table,
     dynamo_enabled_project_environment_one: Environment,
-) -> dict:  # type: ignore[type-arg]
+) -> dict[str, typing.Any]:
     environment_dict = map_environment_to_environment_document(
         dynamo_enabled_project_environment_one
     )
-
     flagsmith_environment_table.put_item(
         Item=environment_dict,
     )
+
+    flagsmith_environments_v2_table.put_item(
+        Item=map_environment_to_environment_v2_document(
+            dynamo_enabled_project_environment_one
+        )
+    )
+
     return environment_dict
 
 
