@@ -12,6 +12,7 @@ import {
   useGetHealthProvidersQuery,
 } from 'common/services/useHealthProvider'
 import { components } from 'react-select'
+import InfoMessage from './InfoMessage'
 
 type EditHealthProviderType = {
   projectId: number
@@ -137,13 +138,38 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
         unhealthy state in different environments.{' '}
         <Button
           theme='text'
-          href='' // TODO: Add docs
+          href='https://docs.flagsmith.com/advanced-use/feature-health'
           target='_blank'
           className='fw-normal'
         >
           Learn about Feature Health.
         </Button>
       </p>
+      <InfoMessage>
+        <div>
+          <strong>
+            Follow the documentation to configure alerting using the supported
+            providers.
+          </strong>
+        </div>
+        <div>
+          <span>
+            Sample provider:{' '}
+            <a href='https://docs.flagsmith.com/advanced-use/feature-health#sample-provider'>
+              https://docs.flagsmith.com/advanced-use/feature-health#sample-provider
+            </a>
+          </span>
+        </div>
+        <div>
+          <span>
+            Grafana provider:{' '}
+            <a href='https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1'>
+              {' '}
+              https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1
+            </a>
+          </span>
+        </div>
+      </InfoMessage>
 
       <label>Provider Name</label>
       <CreateHealthProviderForm projectId={projectId} />
