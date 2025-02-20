@@ -11,19 +11,20 @@ logger = logging.getLogger(__name__)
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('users', '0020_auto_20181128_1012'),
-        ('organisations', '0014_userorganisation')
+        ("users", "0020_auto_20181128_1012"),
+        ("organisations", "0014_userorganisation"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='ffadminuser',
-            name='organisations'
-        ),
+        migrations.RemoveField(model_name="ffadminuser", name="organisations"),
         migrations.AddField(
-            model_name='ffadminuser',
-            name='organisations',
-            field=models.ManyToManyField(blank=True, related_name='users', through='organisations.UserOrganisation',
-                                         to='organisations.Organisation'),
+            model_name="ffadminuser",
+            name="organisations",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="users",
+                through="organisations.UserOrganisation",
+                to="organisations.Organisation",
+            ),
         ),
     ]

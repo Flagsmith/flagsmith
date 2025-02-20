@@ -4,14 +4,13 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('feature_external_resources', '0001_initial'),
+        ("feature_external_resources", "0001_initial"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='featureexternalresource',
-            index=models.Index(fields=['type'], name='feature_ext_type_2b2068_idx'),
+            model_name="featureexternalresource",
+            index=models.Index(fields=["type"], name="feature_ext_type_2b2068_idx"),
         ),
     ]

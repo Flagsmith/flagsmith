@@ -19,5 +19,8 @@ class ErrorResponse(Response):
         **kwargs,
     ) -> None:
         super().__init__(  # type: ignore[misc]
-            data={self._FIELD_ERROR: str(error)}, status=status, *args, **kwargs  # type: ignore[arg-type]
+            data={self._FIELD_ERROR: str(error)},
+            status=status,  # type: ignore[arg-type]
+            *args,
+            **kwargs,
         )

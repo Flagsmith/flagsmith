@@ -6,15 +6,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0013_organisation_alerted_over_plan_limit'),
+        ("organisations", "0013_organisation_alerted_over_plan_limit"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisation',
-            name='stop_serving_flags',
-            field=models.BooleanField(default=False, help_text='Enable this to cease serving flags for this organisation.'),
+            model_name="organisation",
+            name="stop_serving_flags",
+            field=models.BooleanField(
+                default=False,
+                help_text="Enable this to cease serving flags for this organisation.",
+            ),
         ),
     ]

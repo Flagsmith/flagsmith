@@ -4,40 +4,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0048_add_master_api_key_to_historical_records'),
+        ("features", "0048_add_master_api_key_to_historical_records"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feature',
-            name='deleted_at',
+            model_name="feature",
+            name="deleted_at",
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='featurestate',
-            name='deleted_at',
+            model_name="featurestate",
+            name="deleted_at",
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='featurestatevalue',
-            name='deleted_at',
+            model_name="featurestatevalue",
+            name="deleted_at",
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='historicalfeature',
-            name='deleted_at',
+            model_name="historicalfeature",
+            name="deleted_at",
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='historicalfeaturestate',
-            name='deleted_at',
+            model_name="historicalfeaturestate",
+            name="deleted_at",
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name='historicalfeaturestatevalue',
-            name='deleted_at',
+            model_name="historicalfeaturestatevalue",
+            name="deleted_at",
             field=models.DateTimeField(db_index=True, editable=False, null=True),
         ),
     ]

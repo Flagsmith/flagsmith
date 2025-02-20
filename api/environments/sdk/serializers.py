@@ -1,9 +1,9 @@
 import typing
 from collections import defaultdict
 
-from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from rest_framework import serializers
 
+from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentifierOnlyIdentitySerializer,
@@ -128,7 +128,8 @@ class IdentitySerializerWithTraitsAndSegments(serializers.Serializer):  # type: 
 
 
 class IdentifyWithTraitsSerializer(
-    HideSensitiveFieldsSerializerMixin, serializers.Serializer  # type: ignore[type-arg]
+    HideSensitiveFieldsSerializerMixin,
+    serializers.Serializer,  # type: ignore[type-arg]
 ):
     identifier = serializers.CharField(
         required=False,

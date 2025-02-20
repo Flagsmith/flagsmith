@@ -26,7 +26,9 @@ from copy import deepcopy
 
 from django.core.exceptions import ImproperlyConfigured
 from django_redis.client.default import DefaultClient  # type: ignore[import-untyped]
-from django_redis.exceptions import ConnectionInterrupted  # type: ignore[import-untyped]
+from django_redis.exceptions import (  # type: ignore[import-untyped]
+    ConnectionInterrupted,
+)
 from django_redis.pool import ConnectionFactory  # type: ignore[import-untyped]
 from redis.cluster import RedisCluster
 from redis.exceptions import RedisClusterException
@@ -66,7 +68,9 @@ class SafeRedisClusterClient(DefaultClient):  # type: ignore[misc]
         # Dynamically generate safe versions of methods
         for method_name in self.SAFE_METHODS:
             setattr(
-                self, method_name, self._safe_operation(getattr(super(), method_name))  # type: ignore[no-untyped-call]  # noqa: E501
+                self,
+                method_name,
+                self._safe_operation(getattr(super(), method_name)),  # type: ignore[no-untyped-call]  # noqa: E501
             )
 
         # Let's use our own connection factory here

@@ -1,6 +1,8 @@
 from datetime import timedelta
 
-from common.environments.permissions import VIEW_ENVIRONMENT  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    VIEW_ENVIRONMENT,
+)
 from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
@@ -156,7 +158,8 @@ class EnvironmentFeatureVersionViewSet(
         if (
             subscription_metadata
             and (
-                version_limit_days := subscription_metadata.feature_history_visibility_days
+                version_limit_days
+                := subscription_metadata.feature_history_visibility_days
             )
             is not None
         ):
@@ -247,7 +250,8 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         return context
 
     def perform_create(
-        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer  # type: ignore[override]
+        self,
+        serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
         serializer.save(
             feature=self.feature,
@@ -256,7 +260,8 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         )
 
     def perform_update(
-        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer  # type: ignore[override]
+        self,
+        serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
         serializer.save(
             feature=self.feature,

@@ -5,15 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0054_create_api_billing'),
+        ("organisations", "0054_create_api_billing"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='organisationapiusagenotification',
-            name='percent_usage',
-            field=models.IntegerField(validators=[django.core.validators.MinValueValidator(75), django.core.validators.MaxValueValidator(500)]),
+            model_name="organisationapiusagenotification",
+            name="percent_usage",
+            field=models.IntegerField(
+                validators=[
+                    django.core.validators.MinValueValidator(75),
+                    django.core.validators.MaxValueValidator(500),
+                ]
+            ),
         ),
     ]

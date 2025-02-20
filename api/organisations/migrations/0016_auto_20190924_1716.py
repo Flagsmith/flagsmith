@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0015_auto_20190924_1641'),
+        ("organisations", "0015_auto_20190924_1641"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='subscription',
-            name='subscription_date',
+            model_name="subscription",
+            name="subscription_date",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

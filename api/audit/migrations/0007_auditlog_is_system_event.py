@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('audit', '0006_auditlog_master_api_key'),
+        ("audit", "0006_auditlog_master_api_key"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='auditlog',
-            name='is_system_event',
+            model_name="auditlog",
+            name="is_system_event",
             field=models.BooleanField(default=False),
         ),
     ]

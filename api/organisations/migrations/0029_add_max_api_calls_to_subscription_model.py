@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0028_organisationwebhook_secret'),
+        ("organisations", "0028_organisationwebhook_secret"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='subscription',
-            name='max_api_calls',
+            model_name="subscription",
+            name="max_api_calls",
             field=models.BigIntegerField(default=50000),
         ),
     ]

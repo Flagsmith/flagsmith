@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0025_alter_unique_constraints_for_feature_states'),
-        ('features', '0026_auto_20210110_1300'),
+        ("features", "0025_alter_unique_constraints_for_feature_states"),
+        ("features", "0026_auto_20210110_1300"),
     ]
 
-    operations = [
-    ]
+    operations = []

@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0018_merge_20191003_1249'),
+        ("organisations", "0018_merge_20191003_1249"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='subscription',
-            name='customer_id',
+            model_name="subscription",
+            name="customer_id",
             field=models.CharField(max_length=100, null=True),
         ),
     ]

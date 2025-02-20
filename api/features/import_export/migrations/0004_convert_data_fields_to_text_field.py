@@ -9,7 +9,6 @@ from features.import_export.constants import (
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("features_import_export", "0003_flagsmithonflagsmithfeatureexport"),
     ]

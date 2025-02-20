@@ -4,15 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('permissions', '0002_auto_20200221_2126'),
+        ("permissions", "0002_auto_20200221_2126"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='permissionmodel',
-            name='type',
-            field=models.CharField(choices=[('PROJECT', 'Project'), ('ENVIRONMENT', 'Environment'), ('ORGANISATION', 'Organisation')], max_length=100, null=True),
+            model_name="permissionmodel",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("PROJECT", "Project"),
+                    ("ENVIRONMENT", "Environment"),
+                    ("ORGANISATION", "Organisation"),
+                ],
+                max_length=100,
+                null=True,
+            ),
         ),
     ]

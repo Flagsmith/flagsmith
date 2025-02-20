@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from common.projects.permissions import TAG_SUPPORTED_PERMISSIONS, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    TAG_SUPPORTED_PERMISSIONS,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]

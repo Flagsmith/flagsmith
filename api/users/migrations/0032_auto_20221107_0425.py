@@ -4,20 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0034_alter_subscription_payment_method'),
-        ('users', '0031_userpermissiongroup_is_default'),
+        ("organisations", "0034_alter_subscription_payment_method"),
+        ("users", "0031_userpermissiongroup_is_default"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='userpermissiongroup',
-            name='external_id',
-            field=models.CharField(blank=True, help_text='Unique ID of the group in an external system', max_length=255, null=True),
+            model_name="userpermissiongroup",
+            name="external_id",
+            field=models.CharField(
+                blank=True,
+                help_text="Unique ID of the group in an external system",
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='userpermissiongroup',
-            unique_together={('organisation', 'external_id')},
+            name="userpermissiongroup",
+            unique_together={("organisation", "external_id")},
         ),
     ]

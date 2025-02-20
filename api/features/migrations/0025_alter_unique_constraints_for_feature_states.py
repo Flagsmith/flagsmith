@@ -4,26 +4,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0024_auto_20200917_1032'),
+        ("features", "0024_auto_20200917_1032"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='featurestate',
+            name="featurestate",
             unique_together=set(),
         ),
         migrations.AddConstraint(
-            model_name='featurestate',
-            constraint=models.UniqueConstraint(condition=models.Q(identity__isnull=True), fields=('environment', 'feature', 'feature_segment'), name='unique_for_feature_segment'),
+            model_name="featurestate",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(identity__isnull=True),
+                fields=("environment", "feature", "feature_segment"),
+                name="unique_for_feature_segment",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='featurestate',
-            constraint=models.UniqueConstraint(condition=models.Q(feature_segment__isnull=True), fields=('environment', 'feature', 'identity'), name='unique_for_identity'),
+            model_name="featurestate",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(feature_segment__isnull=True),
+                fields=("environment", "feature", "identity"),
+                name="unique_for_identity",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='featurestate',
-            constraint=models.UniqueConstraint(condition=models.Q(('feature_segment__isnull', True), ('identity__isnull', True)), fields=('environment', 'feature'), name='unique_for_environment'),
+            model_name="featurestate",
+            constraint=models.UniqueConstraint(
+                condition=models.Q(
+                    ("feature_segment__isnull", True), ("identity__isnull", True)
+                ),
+                fields=("environment", "feature"),
+                name="unique_for_environment",
+            ),
         ),
     ]

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("workflows_core", "0009_prevent_cascade_delete_from_user_delete"),
     ]

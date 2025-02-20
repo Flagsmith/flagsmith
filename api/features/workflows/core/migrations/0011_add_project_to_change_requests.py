@@ -18,7 +18,6 @@ def set_project_for_existing_change_requests(apps, schema_model):  # type: ignor
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("environments", "0035_add_use_identity_overrides_in_local_eval"),
         ("projects", "0025_add_change_request_project_permissions"),

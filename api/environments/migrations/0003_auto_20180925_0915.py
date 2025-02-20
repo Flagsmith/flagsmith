@@ -6,20 +6,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('environments', '0002_auto_20180809_0014'),
+        ("environments", "0002_auto_20180809_0014"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='environment',
-            name='webhook_url',
+            model_name="environment",
+            name="webhook_url",
             field=models.URLField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='environment',
-            name='webhooks_enabled',
+            model_name="environment",
+            name="webhooks_enabled",
             field=models.BooleanField(default=False),
         ),
     ]

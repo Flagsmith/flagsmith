@@ -6,7 +6,6 @@ from core.migration_helpers import PostgresOnlyRunSQL
 
 
 class Migration(migrations.Migration):
-
     atomic = False
 
     dependencies = [
@@ -26,7 +25,7 @@ class Migration(migrations.Migration):
                 PostgresOnlyRunSQL(
                     'CREATE INDEX CONCURRENTLY IF NOT EXISTS "environments_identity_environment_id_created_date_idx" '
                     'ON "environments_identity" ("environment_id", "created_date");',
-                    reverse_sql='DROP INDEX CONCURRENTLY IF EXISTS "environments_identity_environment_id_created_date_idx"'
+                    reverse_sql='DROP INDEX CONCURRENTLY IF EXISTS "environments_identity_environment_id_created_date_idx"',
                 )
             ],
         )

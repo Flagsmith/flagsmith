@@ -41,7 +41,6 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
             and feature_state.environment.project.github_project.exists()
             and feature_state.environment.project.organisation.github_config.exists()
         ):
-
             call_github_task(
                 organisation_id=feature_state.environment.project.organisation_id,
                 type=GitHubEventType.FLAG_UPDATED.value,
@@ -135,14 +134,11 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     )
 
     class Meta(EnvironmentFeatureVersionSerializer.Meta):
-        fields = (
-            EnvironmentFeatureVersionSerializer.Meta.fields
-            + (  # type: ignore[assignment]
-                "feature_states_to_create",
-                "feature_states_to_update",
-                "segment_ids_to_delete_overrides",
-                "publish_immediately",
-            )
+        fields = EnvironmentFeatureVersionSerializer.Meta.fields + (  # type: ignore[assignment]
+            "feature_states_to_create",
+            "feature_states_to_update",
+            "segment_ids_to_delete_overrides",
+            "publish_immediately",
         )
         non_model_fields = (
             "feature_states_to_create",
@@ -207,7 +203,9 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         return version  # type: ignore[no-any-return]
 
     def _create_feature_state(
-        self, feature_state: dict, version: EnvironmentFeatureVersion  # type: ignore[type-arg]
+        self,
+        feature_state: dict,  # type: ignore[type-arg]
+        version: EnvironmentFeatureVersion,
     ) -> None:
         if not self._is_segment_override(feature_state):
             raise serializers.ValidationError(

@@ -4,16 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0031_userpermissiongroup_is_default'),
-        ('invites', '0005_add_uuid_field'),
+        ("users", "0031_userpermissiongroup_is_default"),
+        ("invites", "0005_add_uuid_field"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invite',
-            name='permission_groups',
-            field=models.ManyToManyField(blank=True, to='users.UserPermissionGroup'),
+            model_name="invite",
+            name="permission_groups",
+            field=models.ManyToManyField(blank=True, to="users.UserPermissionGroup"),
         ),
     ]

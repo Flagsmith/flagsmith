@@ -4,20 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('multivariate', '0007_alter_boolean_values'),
+        ("multivariate", "0007_alter_boolean_values"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='historicalmultivariatefeatureoption',
-            name='string_value',
-            field=models.CharField(blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True),
+            model_name="historicalmultivariatefeatureoption",
+            name="string_value",
+            field=models.CharField(
+                blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True
+            ),
         ),
         migrations.AlterField(
-            model_name='multivariatefeatureoption',
-            name='string_value',
-            field=models.CharField(blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True),
+            model_name="multivariatefeatureoption",
+            name="string_value",
+            field=models.CharField(
+                blank=True, max_length=settings.FEATURE_VALUE_LIMIT, null=True
+            ),
         ),
     ]

@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0025_enable_all_remote_config_feature_states'),
+        ("features", "0025_enable_all_remote_config_feature_states"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='feature',
-            name='type',
+            model_name="feature",
+            name="type",
             field=models.CharField(blank=True, max_length=50, null=True),
         ),
         migrations.AlterField(
-            model_name='historicalfeature',
-            name='type',
+            model_name="historicalfeature",
+            name="type",
             field=models.CharField(blank=True, max_length=50, null=True),
         ),
     ]

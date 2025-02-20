@@ -4,28 +4,37 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('workflows_core', '0004_add_historical_change_request_approvals'),
+        ("workflows_core", "0004_add_historical_change_request_approvals"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='historicalchangerequest',
-            options={'get_latest_by': ('history_date', 'history_id'), 'ordering': ('-history_date', '-history_id'), 'verbose_name': 'historical change request', 'verbose_name_plural': 'historical change requests'},
+            name="historicalchangerequest",
+            options={
+                "get_latest_by": ("history_date", "history_id"),
+                "ordering": ("-history_date", "-history_id"),
+                "verbose_name": "historical change request",
+                "verbose_name_plural": "historical change requests",
+            },
         ),
         migrations.AlterModelOptions(
-            name='historicalchangerequestapproval',
-            options={'get_latest_by': ('history_date', 'history_id'), 'ordering': ('-history_date', '-history_id'), 'verbose_name': 'historical change request approval', 'verbose_name_plural': 'historical change request approvals'},
+            name="historicalchangerequestapproval",
+            options={
+                "get_latest_by": ("history_date", "history_id"),
+                "ordering": ("-history_date", "-history_id"),
+                "verbose_name": "historical change request approval",
+                "verbose_name_plural": "historical change request approvals",
+            },
         ),
         migrations.AlterField(
-            model_name='historicalchangerequest',
-            name='history_date',
+            model_name="historicalchangerequest",
+            name="history_date",
             field=models.DateTimeField(db_index=True),
         ),
         migrations.AlterField(
-            model_name='historicalchangerequestapproval',
-            name='history_date',
+            model_name="historicalchangerequestapproval",
+            name="history_date",
             field=models.DateTimeField(db_index=True),
         ),
     ]

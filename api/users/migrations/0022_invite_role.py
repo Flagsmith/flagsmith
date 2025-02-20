@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0021_auto_20190918_1040'),
+        ("users", "0021_auto_20190918_1040"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invite',
-            name='role',
-            field=models.CharField(default='USER', max_length=50),
+            model_name="invite",
+            name="role",
+            field=models.CharField(default="USER", max_length=50),
         ),
     ]

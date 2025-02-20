@@ -4,20 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features_import_export', '0001_initial'),
+        ("features_import_export", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='featureexport',
-            name='status',
-            field=models.CharField(choices=[('SUCCESS', 'Success'), ('PROCESSING', 'Processing'), ('FAILED', 'Failed')], default='PROCESSING', max_length=50),
+            model_name="featureexport",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("SUCCESS", "Success"),
+                    ("PROCESSING", "Processing"),
+                    ("FAILED", "Failed"),
+                ],
+                default="PROCESSING",
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
-            model_name='featureexport',
-            name='data',
+            model_name="featureexport",
+            name="data",
             field=models.CharField(blank=True, max_length=1000000, null=True),
         ),
     ]

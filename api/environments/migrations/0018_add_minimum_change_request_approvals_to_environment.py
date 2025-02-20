@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('environments', '0017_add_environment_api_key_model'),
+        ("environments", "0017_add_environment_api_key_model"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='environment',
-            name='minimum_change_request_approvals',
+            model_name="environment",
+            name="minimum_change_request_approvals",
             field=models.IntegerField(null=True),
         ),
     ]

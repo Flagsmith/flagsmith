@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('audit', '0007_auditlog_is_system_event'),
+        ("audit", "0007_auditlog_is_system_event"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='auditlog',
-            name='history_record_class_path',
+            model_name="auditlog",
+            name="history_record_class_path",
             field=models.CharField(max_length=200, blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='auditlog',
-            name='history_record_id',
+            model_name="auditlog",
+            name="history_record_id",
             field=models.IntegerField(blank=True, null=True),
         ),
     ]

@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0015_project_feature_name_regex'),
+        ("projects", "0015_project_feature_name_regex"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='project',
-            name='deleted_at',
-            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
+            model_name="project",
+            name="deleted_at",
+            field=models.DateTimeField(
+                blank=True, db_index=True, default=None, editable=False, null=True
+            ),
         ),
     ]

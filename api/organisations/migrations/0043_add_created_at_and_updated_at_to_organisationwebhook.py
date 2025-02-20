@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0042_alter_subscription_payment_method'),
+        ("organisations", "0042_alter_subscription_payment_method"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisationwebhook',
-            name='created_at',
+            model_name="organisationwebhook",
+            name="created_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='organisationwebhook',
-            name='updated_at',
+            model_name="organisationwebhook",
+            name="updated_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='organisationwebhook',
-            name='created_at',
+            model_name="organisationwebhook",
+            name="created_at",
             field=models.DateTimeField(auto_now_add=True, blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='organisationwebhook',
-            name='updated_at',
+            model_name="organisationwebhook",
+            name="updated_at",
             field=models.DateTimeField(auto_now=True, blank=True, null=True),
-        )
+        ),
     ]

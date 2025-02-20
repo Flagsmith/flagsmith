@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('segments', '0007_auto_20190906_1416'),
+        ("segments", "0007_auto_20190906_1416"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='segment',
-            options={'ordering': ('id',)},
+            name="segment",
+            options={"ordering": ("id",)},
         ),
     ]

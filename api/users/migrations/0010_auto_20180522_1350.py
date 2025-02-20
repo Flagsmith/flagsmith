@@ -13,11 +13,8 @@ def migrate_org_to_orgs(apps, schema_editor):  # type: ignore[no-untyped-def]
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0009_auto_20180522_1342'),
+        ("users", "0009_auto_20180522_1342"),
     ]
 
-    operations = [
-        migrations.RunPython(migrate_org_to_orgs)
-    ]
+    operations = [migrations.RunPython(migrate_org_to_orgs)]

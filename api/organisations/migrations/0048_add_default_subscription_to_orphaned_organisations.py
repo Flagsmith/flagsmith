@@ -19,9 +19,8 @@ def create_default_subscription(apps, schema_editor):  # type: ignore[no-untyped
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0047_organisation_force_2fa'),
+        ("organisations", "0047_organisation_force_2fa"),
     ]
 
     operations = [

@@ -2,10 +2,6 @@ import json
 from datetime import timedelta
 
 import re2 as re  # type: ignore[import-untyped]
-from app_analytics.influxdb_wrapper import (
-    get_event_list_for_organisation,
-    get_events_for_organisation,
-)
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
@@ -26,6 +22,10 @@ from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
+from app_analytics.influxdb_wrapper import (
+    get_event_list_for_organisation,
+    get_events_for_organisation,
+)
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export

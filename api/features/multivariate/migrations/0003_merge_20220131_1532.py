@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('multivariate', '0002_auto_20220124_0722'),
-        ('multivariate', '0002_add_unique_constraint_for_mv_feature_states'),
+        ("multivariate", "0002_auto_20220124_0722"),
+        ("multivariate", "0002_add_unique_constraint_for_mv_feature_states"),
     ]
 
-    operations = [
-    ]
+    operations = []

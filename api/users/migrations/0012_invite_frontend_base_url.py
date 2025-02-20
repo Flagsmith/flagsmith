@@ -6,16 +6,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0011_remove_ffadminuser_organisation'),
+        ("users", "0011_remove_ffadminuser_organisation"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invite',
-            name='frontend_base_url',
-            field=models.CharField(default='http://localhost:8000/invite', max_length=500),
+            model_name="invite",
+            name="frontend_base_url",
+            field=models.CharField(
+                default="http://localhost:8000/invite", max_length=500
+            ),
             preserve_default=False,
         ),
     ]

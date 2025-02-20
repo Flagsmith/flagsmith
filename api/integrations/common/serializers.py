@@ -14,7 +14,8 @@ class _BaseIntegrationModelSerializer(ModelSerializer):  # type: ignore[type-arg
         return super().create(validated_data)
 
     def _get_existing_integration_model_obj(
-        self, validated_data: dict  # type: ignore[type-arg]
+        self,
+        validated_data: dict,  # type: ignore[type-arg]
     ) -> typing.Optional[Model]:
         """
         Get the existing integration model (e.g. MixpanelConfig) for the given one-to-one related

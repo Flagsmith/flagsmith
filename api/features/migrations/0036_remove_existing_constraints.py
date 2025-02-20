@@ -36,20 +36,20 @@ class Migration(migrations.Migration):
             database_operations=[
                 PostgresOnlyRunSQL(
                     'DROP INDEX CONCURRENTLY "unique_for_environment";',
-                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_environment" 
-                    ON "features_featurestate" ("environment_id", "feature_id") 
+                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_environment"
+                    ON "features_featurestate" ("environment_id", "feature_id")
                     WHERE ("feature_segment_id" IS NULL AND "identity_id" IS NULL);""",
                 ),
                 PostgresOnlyRunSQL(
                     'DROP INDEX CONCURRENTLY "unique_for_feature_segment";',
-                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_feature_segment" 
-                    ON "features_featurestate" ("environment_id", "feature_id", "feature_segment_id") 
+                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_feature_segment"
+                    ON "features_featurestate" ("environment_id", "feature_id", "feature_segment_id")
                     WHERE "identity_id" IS NULL;""",
                 ),
                 PostgresOnlyRunSQL(
                     'DROP INDEX CONCURRENTLY "unique_for_identity";',
-                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_identity" 
-                    ON "features_featurestate" ("environment_id", "feature_id", "identity_id") 
+                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_identity"
+                    ON "features_featurestate" ("environment_id", "feature_id", "identity_id")
                     WHERE "feature_segment_id" IS NULL;""",
                 ),
             ],

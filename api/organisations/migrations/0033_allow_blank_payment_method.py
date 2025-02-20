@@ -4,15 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0032_add_uuid_fields'),
+        ("organisations", "0032_add_uuid_fields"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='subscription',
-            name='payment_method',
-            field=models.CharField(blank=True, choices=[('CHARGEBEE', 'Chargebee'), ('XERO', 'Xero')], default='CHARGEBEE', max_length=20, null=True),
+            model_name="subscription",
+            name="payment_method",
+            field=models.CharField(
+                blank=True,
+                choices=[("CHARGEBEE", "Chargebee"), ("XERO", "Xero")],
+                default="CHARGEBEE",
+                max_length=20,
+                null=True,
+            ),
         ),
     ]

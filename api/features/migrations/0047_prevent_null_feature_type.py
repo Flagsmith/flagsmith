@@ -11,7 +11,6 @@ def set_default_feature_type(apps, schema_editor):  # type: ignore[no-untyped-de
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("features", "0046_add_uuid_field_to_feature_segment"),
     ]

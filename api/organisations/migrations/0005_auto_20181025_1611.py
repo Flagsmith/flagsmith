@@ -6,25 +6,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0004_organisation_created_date'),
+        ("organisations", "0004_organisation_created_date"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisation',
-            name='free_to_use_subscription',
+            model_name="organisation",
+            name="free_to_use_subscription",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='organisation',
-            name='paid_subscription',
+            model_name="organisation",
+            name="paid_subscription",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='organisation',
-            name='subscription_date',
-            field=models.DateTimeField(auto_now_add=True, null=True, verbose_name='SubscriptionDate'),
+            model_name="organisation",
+            name="subscription_date",
+            field=models.DateTimeField(
+                auto_now_add=True, null=True, verbose_name="SubscriptionDate"
+            ),
         ),
     ]

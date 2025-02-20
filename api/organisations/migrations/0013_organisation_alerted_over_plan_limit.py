@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0012_auto_20190912_1538'),
+        ("organisations", "0012_auto_20190912_1538"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisation',
-            name='alerted_over_plan_limit',
+            model_name="organisation",
+            name="alerted_over_plan_limit",
             field=models.BooleanField(default=False),
         ),
     ]

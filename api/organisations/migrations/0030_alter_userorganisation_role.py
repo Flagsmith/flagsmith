@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0029_add_max_api_calls_to_subscription_model'),
+        ("organisations", "0029_add_max_api_calls_to_subscription_model"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userorganisation',
-            name='role',
-            field=models.CharField(choices=[('ADMIN', 'Admin'), ('USER', 'User')], max_length=50),
+            model_name="userorganisation",
+            name="role",
+            field=models.CharField(
+                choices=[("ADMIN", "Admin"), ("USER", "User")], max_length=50
+            ),
         ),
     ]

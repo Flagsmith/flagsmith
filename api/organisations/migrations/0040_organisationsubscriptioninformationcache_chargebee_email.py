@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0039_subscription_deleted_at'),
+        ("organisations", "0039_subscription_deleted_at"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisationsubscriptioninformationcache',
-            name='chargebee_email',
+            model_name="organisationsubscriptioninformationcache",
+            name="chargebee_email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
     ]

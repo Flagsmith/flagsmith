@@ -9,7 +9,9 @@ from organisations.models import Organisation
 from projects.models import Project
 
 if settings.IS_RBAC_INSTALLED:
-    from rbac.permission_service import get_role_permission_filter  # type: ignore[import-not-found]
+    from rbac.permission_service import (  # type: ignore[import-not-found]
+        get_role_permission_filter,
+    )
     from rbac.permissions_calculator import (  # type: ignore[import-not-found]
         RolePermissionData,
         get_roles_permission_data_for_environment,

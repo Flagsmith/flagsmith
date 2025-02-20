@@ -95,7 +95,7 @@ def get_transient_identifier(sdk_trait_data: list[SDKTraitData]) -> str:
     if sdk_trait_data:
         return hashlib.sha256(
             "".join(
-                f'{trait["trait_key"]}{trait_value["value"]}'
+                f"{trait['trait_key']}{trait_value['value']}"
                 for trait in sorted(sdk_trait_data, key=itemgetter("trait_key"))
                 if (trait_value := trait["trait_value"]) is not None
             ).encode(),

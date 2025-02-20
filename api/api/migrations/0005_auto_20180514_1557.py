@@ -8,19 +8,20 @@ import app
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0004_identity_uuid'),
+        ("api", "0004_identity_uuid"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='identity',
-            name='uuid',
+            model_name="identity",
+            name="uuid",
         ),
         migrations.AddField(
-            model_name='identity',
-            name='hash',
-            field=models.CharField(default=app.utils.create_hash, max_length=100, unique=True),
+            model_name="identity",
+            name="hash",
+            field=models.CharField(
+                default=app.utils.create_hash, max_length=100, unique=True
+            ),
         ),
     ]

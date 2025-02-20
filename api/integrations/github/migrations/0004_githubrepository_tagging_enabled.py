@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('github', '0003_auto_20240528_0640'),
+        ("github", "0003_auto_20240528_0640"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='githubrepository',
-            name='tagging_enabled',
+            model_name="githubrepository",
+            name="tagging_enabled",
             field=models.BooleanField(default=False),
         ),
     ]

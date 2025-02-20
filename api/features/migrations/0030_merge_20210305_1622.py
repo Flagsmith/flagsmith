@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0028_auto_20210216_1600'),
-        ('features', '0029_auto_20210223_2106'),
+        ("features", "0028_auto_20210216_1600"),
+        ("features", "0029_auto_20210223_2106"),
     ]
 
-    operations = [
-    ]
+    operations = []

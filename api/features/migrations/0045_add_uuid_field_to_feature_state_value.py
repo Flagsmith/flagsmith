@@ -7,9 +7,8 @@ from core.migration_helpers import AddDefaultUUIDs
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0044_add_uuid_field_to_feature_state'),
+        ("features", "0044_add_uuid_field_to_feature_state"),
     ]
 
     operations = [

@@ -30,11 +30,11 @@ class Migration(migrations.Migration):
         migrations.RenameField(
             model_name="environment",
             old_name="use_mv_v2_evaluation",
-            new_name="use_identity_composite_key_for_hashing"
+            new_name="use_identity_composite_key_for_hashing",
         ),
         migrations.RenameField(
             model_name="historicalenvironment",
             old_name="use_mv_v2_evaluation",
-            new_name="use_identity_composite_key_for_hashing"
+            new_name="use_identity_composite_key_for_hashing",
         ),
     ]

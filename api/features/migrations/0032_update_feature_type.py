@@ -17,7 +17,6 @@ def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("features", "0031_merge_20210409_1621"),
     ]

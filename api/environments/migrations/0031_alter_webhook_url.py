@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('environments', '0030_auto_20230518_0338'),
+        ("environments", "0030_auto_20230518_0338"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='webhook',
-            name='url',
+            model_name="webhook",
+            name="url",
             field=models.CharField(max_length=200),
         ),
     ]

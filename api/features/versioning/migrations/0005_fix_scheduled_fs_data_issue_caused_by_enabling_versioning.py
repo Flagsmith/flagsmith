@@ -5,7 +5,9 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 from django.db.models import F
 
 
-def fix_corrupted_feature_states(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
+def fix_corrupted_feature_states(
+    apps: Apps, schema_editor: BaseDatabaseSchemaEditor
+) -> None:
     feature_state_model_class = apps.get_model("features", "FeatureState")
     environment_feature_version_model_class = apps.get_model(
         "feature_versioning", "EnvironmentFeatureVersion"
@@ -14,25 +16,29 @@ def fix_corrupted_feature_states(apps: Apps, schema_editor: BaseDatabaseSchemaEd
     feature_states_to_update = []
     environment_feature_versions_to_update = []
 
-    for feature_state in feature_state_model_class.objects.filter(
-        # We're looking for feature states that live in environments
-        # that don't have versioning enabled, but have an environment
-        # feature version associated to them. Moreover, those environment
-        # feature versions should have a change request associated with
-        # them. See this PR for further details of the bug we're looking
-        # to clean up after: https://github.com/Flagsmith/flagsmith/pull/4872
-        environment__use_v2_feature_versioning=False,
-        environment_feature_version__isnull=False,
-        environment_feature_version__change_request__isnull=False,
-    ).exclude(
-        # Just to be safe, we exclude feature states for which the version
-        # belongs to the same feature and environment. This will prevent us
-        # from accidentally modifying any feature states that belong to
-        # legitimate environment feature versions but perhaps versioning
-        # has been switched off for the environment.
-        environment_feature_version__feature=F("feature"),
-        environment_feature_version__environment=F("environment")
-    ).select_related("environment_feature_version"):
+    for feature_state in (
+        feature_state_model_class.objects.filter(
+            # We're looking for feature states that live in environments
+            # that don't have versioning enabled, but have an environment
+            # feature version associated to them. Moreover, those environment
+            # feature versions should have a change request associated with
+            # them. See this PR for further details of the bug we're looking
+            # to clean up after: https://github.com/Flagsmith/flagsmith/pull/4872
+            environment__use_v2_feature_versioning=False,
+            environment_feature_version__isnull=False,
+            environment_feature_version__change_request__isnull=False,
+        )
+        .exclude(
+            # Just to be safe, we exclude feature states for which the version
+            # belongs to the same feature and environment. This will prevent us
+            # from accidentally modifying any feature states that belong to
+            # legitimate environment feature versions but perhaps versioning
+            # has been switched off for the environment.
+            environment_feature_version__feature=F("feature"),
+            environment_feature_version__environment=F("environment"),
+        )
+        .select_related("environment_feature_version")
+    ):
         environment_feature_version = feature_state.environment_feature_version
 
         # 1. move the change request back to the feature state
@@ -58,14 +64,12 @@ def fix_corrupted_feature_states(apps: Apps, schema_editor: BaseDatabaseSchemaEd
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("feature_versioning", "0004_add_version_change_set"),
     ]
 
     operations = [
         migrations.RunPython(
-            fix_corrupted_feature_states,
-            reverse_code=migrations.RunPython.noop
+            fix_corrupted_feature_states, reverse_code=migrations.RunPython.noop
         ),
     ]

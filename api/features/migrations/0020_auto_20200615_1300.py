@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('environments', '0012_auto_20200504_1322'),
-        ('segments', '0007_auto_20190906_1416'),
-        ('features', '0019_auto_20200607_1059'),
+        ("environments", "0012_auto_20200504_1322"),
+        ("segments", "0007_auto_20190906_1416"),
+        ("features", "0019_auto_20200607_1059"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='featuresegment',
-            options={'ordering': ('priority',)},
+            name="featuresegment",
+            options={"ordering": ("priority",)},
         ),
         migrations.AlterField(
-            model_name='featuresegment',
-            name='priority',
+            model_name="featuresegment",
+            name="priority",
             field=models.PositiveIntegerField(db_index=True, editable=False),
         ),
         migrations.AlterUniqueTogether(
-            name='featuresegment',
-            unique_together={('feature', 'environment', 'segment')},
+            name="featuresegment",
+            unique_together={("feature", "environment", "segment")},
         ),
     ]

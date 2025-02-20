@@ -2,7 +2,9 @@ import logging
 from typing import Any, List
 from urllib.parse import urlparse
 
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
 from features.models import Feature
 from integrations.github.client import post_comment_to_github
@@ -25,7 +27,12 @@ def send_post_request(data: CallGithubData) -> None:
     installation_id = data.github_data.installation_id
     segment_name: str | None = data.github_data.segment_name
     body = generate_body_comment(
-        feature_name, event_type, project_id, feature_id, feature_states, segment_name  # type: ignore[arg-type]
+        feature_name,
+        event_type,
+        project_id,  # type: ignore[arg-type]
+        feature_id,
+        feature_states,  # type: ignore[arg-type]
+        segment_name,
     )
 
     if (
@@ -38,7 +45,11 @@ def send_post_request(data: CallGithubData) -> None:
             pathname = urlparse(url).path
             split_url = pathname.split("/")  # type: ignore[arg-type]
             post_comment_to_github(
-                installation_id, split_url[1], split_url[2], split_url[4], body  # type: ignore[arg-type]
+                installation_id,
+                split_url[1],  # type: ignore[arg-type]
+                split_url[2],  # type: ignore[arg-type]
+                split_url[4],  # type: ignore[arg-type]
+                body,
             )
 
     elif event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
@@ -46,7 +57,11 @@ def send_post_request(data: CallGithubData) -> None:
         pathname = urlparse(url).path  # type: ignore[assignment]
         split_url = pathname.split("/")  # type: ignore[arg-type]
         post_comment_to_github(
-            installation_id, split_url[1], split_url[2], split_url[4], body  # type: ignore[arg-type]
+            installation_id,
+            split_url[1],  # type: ignore[arg-type]
+            split_url[2],  # type: ignore[arg-type]
+            split_url[4],  # type: ignore[arg-type]
+            body,
         )
     else:
         url = data.feature_external_resources[
@@ -55,13 +70,16 @@ def send_post_request(data: CallGithubData) -> None:
         pathname = urlparse(url).path
         split_url = pathname.split("/")  # type: ignore[arg-type]
         post_comment_to_github(
-            installation_id, split_url[1], split_url[2], split_url[4], body  # type: ignore[arg-type]
+            installation_id,
+            split_url[1],  # type: ignore[arg-type]
+            split_url[2],  # type: ignore[arg-type]
+            split_url[4],  # type: ignore[arg-type]
+            body,
         )
 
 
 @register_task_handler()  # type: ignore[misc]
 def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> None:
-
     from features.feature_external_resources.models import (
         FeatureExternalResource,
     )

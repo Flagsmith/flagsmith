@@ -23,7 +23,6 @@ def remove_permissions(apps, schema_editor):  # type: ignore[no-untyped-def]
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("permissions", "0006_add_manage_segments_permission"),
     ]

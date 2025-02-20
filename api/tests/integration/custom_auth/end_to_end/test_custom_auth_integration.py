@@ -8,7 +8,10 @@ from django.core import mail
 from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
-from rest_framework.test import APIClient, override_settings  # type: ignore[attr-defined]
+from rest_framework.test import (  # type: ignore[attr-defined]
+    APIClient,
+    override_settings,
+)
 from rest_framework_simplejwt.tokens import SlidingToken
 
 from organisations.invites.models import Invite

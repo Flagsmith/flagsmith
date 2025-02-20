@@ -6,23 +6,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('segments', '0001_initial'),
+        ("segments", "0001_initial"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='segmentcondition',
-            name='segment',
+            model_name="segmentcondition",
+            name="segment",
         ),
         migrations.AddField(
-            model_name='segment',
-            name='rules',
+            model_name="segment",
+            name="rules",
             field=models.TextField(default={}),
             preserve_default=False,
         ),
         migrations.DeleteModel(
-            name='SegmentCondition',
+            name="SegmentCondition",
         ),
     ]

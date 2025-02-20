@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0002_organisation_has_requested_features'),
+        ("organisations", "0002_organisation_has_requested_features"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisation',
-            name='webhook_notification_email',
+            model_name="organisation",
+            name="webhook_notification_email",
             field=models.EmailField(blank=True, max_length=254, null=True),
         ),
     ]

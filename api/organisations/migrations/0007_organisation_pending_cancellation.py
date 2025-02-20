@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0006_auto_20181030_1438'),
+        ("organisations", "0006_auto_20181030_1438"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisation',
-            name='pending_cancellation',
+            model_name="organisation",
+            name="pending_cancellation",
             field=models.BooleanField(default=False),
         ),
     ]

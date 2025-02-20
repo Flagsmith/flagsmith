@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('audit', '0004_auto_20200504_1322'),
+        ("audit", "0004_auto_20200504_1322"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='auditlog',
-            name='skip_signals',
-            field=models.CharField(blank=True, help_text='comma separated list of signal functions to skip', max_length=500, null=True),
+            model_name="auditlog",
+            name="skip_signals",
+            field=models.CharField(
+                blank=True,
+                help_text="comma separated list of signal functions to skip",
+                max_length=500,
+                null=True,
+            ),
         ),
     ]

@@ -14,7 +14,6 @@ _create_index_sql_with_filter = 'CREATE UNIQUE INDEX CONCURRENTLY "lowercase_fea
 
 
 class Migration(migrations.Migration):
-
     atomic = False
 
     dependencies = [
@@ -23,6 +22,8 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterUniqueTogether(name="feature", unique_together=set()),
-        PostgresOnlyRunSQL(_drop_index_sql, reverse_sql=_create_index_sql_without_filter),
+        PostgresOnlyRunSQL(
+            _drop_index_sql, reverse_sql=_create_index_sql_without_filter
+        ),
         PostgresOnlyRunSQL(_create_index_sql_with_filter, reverse_sql=_drop_index_sql),
     ]

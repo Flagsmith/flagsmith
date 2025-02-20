@@ -6,15 +6,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('features', '0005_auto_20180604_1348'),
+        ("features", "0005_auto_20180604_1348"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='featurestate',
-            name='type',
-            field=models.CharField(choices=[('FLAG', 'Feature Flag'), ('CONFIG', 'Remote Config')], default='FLAG', max_length=50),
+            model_name="featurestate",
+            name="type",
+            field=models.CharField(
+                choices=[("FLAG", "Feature Flag"), ("CONFIG", "Remote Config")],
+                default="FLAG",
+                max_length=50,
+            ),
         ),
     ]

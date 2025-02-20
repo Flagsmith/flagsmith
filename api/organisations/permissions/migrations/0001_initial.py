@@ -3,6 +3,7 @@
 import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
+
 from organisations.models import OrganisationRole
 from organisations.permissions.permissions import CREATE_PROJECT
 
@@ -43,7 +44,6 @@ def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("users", "0029_auto_20210223_1603"),
         ("permissions", "0004_add_create_project_permission"),

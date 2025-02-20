@@ -14,7 +14,6 @@ with open(parent_dir / "sql/0023_add_versioning_to_segments_reverse.sql") as f:
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("segments", "0022_add_soft_delete_to_segment_rules_and_conditions"),
     ]

@@ -20,7 +20,6 @@ def permanently_delete_features(apps, schema_editor):  # type: ignore[no-untyped
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("features", "0050_remove_unique_indexes"),
     ]

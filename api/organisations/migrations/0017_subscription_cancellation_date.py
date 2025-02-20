@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0016_auto_20190924_1716'),
+        ("organisations", "0016_auto_20190924_1716"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='subscription',
-            name='cancellation_date',
+            model_name="subscription",
+            name="cancellation_date",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

@@ -3,7 +3,6 @@
 from common.projects.permissions import (  # type: ignore[import-untyped]
     APPROVE_PROJECT_LEVEL_CHANGE_REQUESTS,
     MANAGE_PROJECT_LEVEL_CHANGE_REQUESTS,
-    PROJECT_PERMISSIONS,
 )
 from django.db import migrations
 
@@ -35,7 +34,6 @@ def insert_default_project_permissions(apps, schema_model):  # type: ignore[no-u
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0024_add_project_edge_v2_migration_read_capacity_budget"),
     ]

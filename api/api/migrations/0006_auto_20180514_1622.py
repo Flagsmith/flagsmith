@@ -6,14 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0005_auto_20180514_1557'),
+        ("api", "0005_auto_20180514_1557"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='featurestate',
-            unique_together=set([('feature', 'environment')]),
+            name="featurestate",
+            unique_together=set([("feature", "environment")]),
         ),
     ]

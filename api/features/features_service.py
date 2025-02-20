@@ -104,7 +104,6 @@ def get_edge_overrides_data(
         if feature_state.feature_segment_id:
             env_feature_overrides_data.num_segment_overrides += 1
     for identity_overrides_v2_list in get_overrides_data_future.result():
-
         for identity_override in identity_overrides_v2_list.identity_overrides:
             # Only override features that exists in core
             if identity_override.feature_state.feature.id in all_overrides_data:

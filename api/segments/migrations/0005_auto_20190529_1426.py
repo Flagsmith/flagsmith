@@ -6,15 +6,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('segments', '0004_auto_20190523_1325'),
+        ("segments", "0004_auto_20190523_1325"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='condition',
-            name='operator',
-            field=models.CharField(choices=[('EQUAL', 'Exactly Matches'), ('GREATER_THAN', 'Greater than'), ('LESS_THAN', 'Less than'), ('CONTAINS', 'Contains'), ('GREATER_THAN_INCLUSIVE', 'Greater than or equal to'), ('LESS_THAN_INCLUSIVE', 'Less than or equal to'), ('NOT_CONTAINS', 'Does not contain'), ('NOT_EQUAL', 'Does not match'), ('REGEX', 'Matches regex')], max_length=500),
+            model_name="condition",
+            name="operator",
+            field=models.CharField(
+                choices=[
+                    ("EQUAL", "Exactly Matches"),
+                    ("GREATER_THAN", "Greater than"),
+                    ("LESS_THAN", "Less than"),
+                    ("CONTAINS", "Contains"),
+                    ("GREATER_THAN_INCLUSIVE", "Greater than or equal to"),
+                    ("LESS_THAN_INCLUSIVE", "Less than or equal to"),
+                    ("NOT_CONTAINS", "Does not contain"),
+                    ("NOT_EQUAL", "Does not match"),
+                    ("REGEX", "Matches regex"),
+                ],
+                max_length=500,
+            ),
         ),
     ]

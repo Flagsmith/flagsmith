@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0006_auto_20200224_2106'),
+        ("projects", "0006_auto_20200224_2106"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='userpermissiongroupprojectpermission',
-            name='permissions',
-            field=models.ManyToManyField(blank=True, to='permissions.PermissionModel'),
+            model_name="userpermissiongroupprojectpermission",
+            name="permissions",
+            field=models.ManyToManyField(blank=True, to="permissions.PermissionModel"),
         ),
         migrations.AlterField(
-            model_name='userprojectpermission',
-            name='permissions',
-            field=models.ManyToManyField(blank=True, to='permissions.PermissionModel'),
+            model_name="userprojectpermission",
+            name="permissions",
+            field=models.ManyToManyField(blank=True, to="permissions.PermissionModel"),
         ),
     ]

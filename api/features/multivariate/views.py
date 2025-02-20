@@ -1,4 +1,7 @@
-from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+)
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import viewsets
 from rest_framework.decorators import api_view

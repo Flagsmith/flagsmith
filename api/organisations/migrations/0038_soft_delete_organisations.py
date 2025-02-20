@@ -4,15 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('organisations', '0037_add_default_subscription_to_existing_organisations'),
+        ("organisations", "0037_add_default_subscription_to_existing_organisations"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='organisation',
-            name='deleted_at',
-            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
+            model_name="organisation",
+            name="deleted_at",
+            field=models.DateTimeField(
+                blank=True, db_index=True, default=None, editable=False, null=True
+            ),
         ),
     ]
