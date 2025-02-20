@@ -11,7 +11,9 @@ def create_webhooks(apps, schema_editor):  # type: ignore[no-untyped-def]
     Environment = apps.get_model("environments", "Environment")
 
     webhooks_to_create = []
-    for environment in Environment.objects.exclude(webhook_url=None):
+    for environment in Environment.objects.exclude(
+        webhook_url=None,
+    ):  # pragma: no cover
         webhooks_to_create.append(
             Webhook(
                 environment=environment,

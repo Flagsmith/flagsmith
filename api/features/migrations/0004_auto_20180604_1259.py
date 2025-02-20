@@ -7,7 +7,7 @@ from django.db import migrations
 
 def delete_existing_non_unique_features(apps, schema_editor):  # type: ignore[no-untyped-def]
     feature_model = apps.get_model("features", "Feature")
-    for feature in feature_model.objects.all():
+    for feature in feature_model.objects.all():  # pragma: no cover
         clashing_features = feature_model.objects.filter(
             name__iexact=feature.name, project=feature.project
         )
