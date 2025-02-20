@@ -60,8 +60,6 @@ const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
     !!changeRequests?.length,
   )
 
-  console.log({ requestChangeInfoText })
-
   if (!requestChangeInfoText?.length) {
     return null
   }
