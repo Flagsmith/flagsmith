@@ -26,17 +26,6 @@ def create_webhooks(apps, schema_editor):  # type: ignore[no-untyped-def]
     Environment.objects.exclude(webhook_url=None).update(webhook_url=None)
 
 
-def update_environment_webhooks(apps, schema_editor):  # type: ignore[no-untyped-def]
-    Webhook = apps.get_model("environments", "Webhook")
-
-    for webhook in Webhook.objects.all().order_by("created_at"):
-        # Note this will only set the webhook url for the environment to be the earliest created one
-        if webhook.environment.webhook_url is None:
-            webhook.environment.webhook_url = webhook.url
-            webhook.environment.webhooks_enabled = webhook.enabled
-            webhook.environment.save()
-
-
 class Migration(migrations.Migration):
     dependencies = [
         ("environments", "0007_auto_20190827_1528"),
