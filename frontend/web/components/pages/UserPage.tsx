@@ -495,6 +495,9 @@ const UserPage: FC<UserPageType> = (props) => {
                                       value={filter.search}
                                     />
                                     <Row className='flex-fill justify-content-end'>
+                                      {hasFilters && (
+                                        <ClearFilters onClick={clearFilters} />
+                                      )}
                                       <TableTagFilter
                                         projectId={projectId}
                                         className='me-4'
@@ -609,9 +612,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                           })
                                         }}
                                       />
-                                      {hasFilters && (
-                                        <ClearFilters onClick={clearFilters} />
-                                      )}
                                     </Row>
                                   </div>
                                 </Row>
