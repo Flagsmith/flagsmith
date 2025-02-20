@@ -1,12 +1,13 @@
 import pytest
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 from app_analytics.models import (
     APIUsageBucket,
     FeatureEvaluationBucket,
     Resource,
 )
-from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 if "analytics" not in settings.DATABASES:
     pytest.skip(

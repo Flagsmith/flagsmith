@@ -1,9 +1,10 @@
 import pytest
-from app_analytics.middleware import APIUsageMiddleware
-from app_analytics.models import Resource
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+
+from app_analytics.middleware import APIUsageMiddleware
+from app_analytics.models import Resource
 
 
 @pytest.mark.parametrize(

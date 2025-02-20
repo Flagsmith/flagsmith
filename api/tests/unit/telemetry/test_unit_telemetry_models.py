@@ -1,4 +1,5 @@
 from django.test import override_settings
+
 from telemetry.models import TelemetryData
 
 env = "test"
