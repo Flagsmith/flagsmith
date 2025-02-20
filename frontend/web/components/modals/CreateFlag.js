@@ -75,8 +75,9 @@ const CreateFlag = class extends Component {
         }
     const { allowEditDescription } = this.props
     const hideTags = this.props.hideTags || []
+
     if (this.props.projectFlag) {
-      this.userOverridesPage(1)
+      this.userOverridesPage(1, true)
     }
     this.state = {
       allowEditDescription,
@@ -224,14 +225,18 @@ const CreateFlag = class extends Component {
     }
   }
 
-  userOverridesPage = (page) => {
+  userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(getStore(), {
-          id: this.props.environmentId,
-          level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
-        }).then((permissions) => {
+        getPermission(
+          getStore(),
+          {
+            id: this.props.environmentId,
+            level: 'environment',
+            permissions: 'VIEW_IDENTITIES',
+          },
+          { forceRefetch },
+        ).then((permissions) => {
           if (permissions?.length) {
             data
               .get(
