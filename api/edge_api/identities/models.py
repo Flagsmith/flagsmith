@@ -27,7 +27,7 @@ class EdgeIdentity:
     dynamo_wrapper = DynamoIdentityWrapper()
 
     def __init__(self, engine_identity_model: IdentityModel):
-        self._engine_identity_model = engine_identity_model
+        self.engine_identity_model = engine_identity_model
         self._reset_initial_state()  # type: ignore[no-untyped-call]
 
     @classmethod
@@ -35,33 +35,44 @@ class EdgeIdentity:
         return EdgeIdentity(IdentityModel.model_validate(identity_document))
 
     @property
-    def django_id(self) -> int:
-        return self._engine_identity_model.django_id  # type: ignore[return-value]
-
-    @property
     def environment_api_key(self) -> str:
-        return self._engine_identity_model.environment_api_key
+        return self.engine_identity_model.environment_api_key
 
     @property
     def feature_overrides(self) -> IdentityFeaturesList:
-        return self._engine_identity_model.identity_features
+        return self.engine_identity_model.identity_features
 
     @property
     def id(self) -> typing.Union[int, str]:
-        return self._engine_identity_model.django_id or str(
-            self._engine_identity_model.identity_uuid
+        return self.engine_identity_model.django_id or str(
+            self.engine_identity_model.identity_uuid
         )
 
     @property
     def identifier(self) -> str:
-        return self._engine_identity_model.identifier
+        return self.engine_identity_model.identifier
 
     @property
     def identity_uuid(self) -> str:
-        return str(self._engine_identity_model.identity_uuid)
+        return str(self.engine_identity_model.identity_uuid)
+
+    @property
+    def environment(self) -> Environment:
+        environment: Environment = Environment.objects.get(
+            api_key=self.environment_api_key
+        )
+        return environment
+
+    @property
+    def dashboard_alias(self) -> str | None:
+        return self.engine_identity_model.dashboard_alias
+
+    @dashboard_alias.setter
+    def dashboard_alias(self, dashboard_alias: str) -> None:
+        self.engine_identity_model.dashboard_alias = dashboard_alias
 
     def add_feature_override(self, feature_state: FeatureStateModel) -> None:
-        self._engine_identity_model.identity_features.append(feature_state)
+        self.engine_identity_model.identity_features.append(feature_state)
 
     def get_all_feature_states(
         self,
@@ -77,9 +88,9 @@ class EdgeIdentity:
             for the identity specifically)
         """
         segment_ids = self.dynamo_wrapper.get_segment_ids(
-            identity_model=self._engine_identity_model
+            identity_model=self.engine_identity_model
         )
-        django_environment = Environment.objects.get(api_key=self.environment_api_key)
+        django_environment = self.environment
 
         # since identity overrides are included in the document retrieved from dynamo,
         # we only want to retrieve the environment default and (relevant) segment overrides
@@ -138,7 +149,7 @@ class EdgeIdentity:
         feature_state = next(
             filter(
                 match_feature_state,
-                self._engine_identity_model.identity_features,
+                self.engine_identity_model.identity_features,
             ),
             None,
         )
@@ -151,19 +162,19 @@ class EdgeIdentity:
         return next(
             filter(
                 lambda fs: str(fs.featurestate_uuid) == featurestate_uuid,  # type: ignore[arg-type,union-attr]
-                self._engine_identity_model.identity_features,
+                self.engine_identity_model.identity_features,
             ),
             None,
         )
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool) -> str:
-        return self._engine_identity_model.get_hash_key(
+        return self.engine_identity_model.get_hash_key(
             use_identity_composite_key_for_hashing
         )
 
     def remove_feature_override(self, feature_state: FeatureStateModel) -> None:
         with suppress(ValueError):  # ignore if feature state didn't exist
-            self._engine_identity_model.identity_features.remove(feature_state)
+            self.engine_identity_model.identity_features.remove(feature_state)
 
     def save(self, user: FFAdminUser | APIKeyUser = None):  # type: ignore[no-untyped-def,assignment]
         self.dynamo_wrapper.put_item(self.to_document())
@@ -175,8 +186,8 @@ class EdgeIdentity:
         self._reset_initial_state()  # type: ignore[no-untyped-call]
 
     def delete(self, user: FFAdminUser | APIKeyUser = None) -> None:  # type: ignore[assignment]
-        self.dynamo_wrapper.delete_item(self._engine_identity_model.composite_key)
-        self._engine_identity_model.identity_features.clear()
+        self.dynamo_wrapper.delete_item(self.engine_identity_model.composite_key)
+        self.engine_identity_model.identity_features.clear()
         changeset = self._get_changes()
         self._update_feature_overrides(
             changeset=changeset,
@@ -186,14 +197,14 @@ class EdgeIdentity:
 
     def synchronise_features(self, valid_feature_names: typing.Collection[str]) -> None:
         identity_feature_names = {
-            fs.feature.name for fs in self._engine_identity_model.identity_features
+            fs.feature.name for fs in self.engine_identity_model.identity_features
         }
         if not identity_feature_names.issubset(valid_feature_names):
-            self._engine_identity_model.prune_features(list(valid_feature_names))
+            self.engine_identity_model.prune_features(list(valid_feature_names))
             sync_identity_document_features.delay(args=(str(self.identity_uuid),))
 
     def to_document(self) -> dict:  # type: ignore[type-arg]
-        return map_engine_identity_to_identity_document(self._engine_identity_model)
+        return map_engine_identity_to_identity_document(self.engine_identity_model)
 
     def _update_feature_overrides(
         self, changeset: IdentityChangeset, user: FFAdminUser | APIKeyUser

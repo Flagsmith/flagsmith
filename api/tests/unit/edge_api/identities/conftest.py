@@ -3,6 +3,13 @@ import pytest
 from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
 from features.models import Feature
+from projects.models import Project
+
+
+@pytest.fixture(autouse=True)
+def enable_dynamodb_on_default_project(project: Project) -> None:
+    project.enable_dynamo_db = True
+    project.save()
 
 
 @pytest.fixture()
