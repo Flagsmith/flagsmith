@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.163.0](https://github.com/Flagsmith/flagsmith/compare/v2.162.0...v2.163.0) (2025-02-21)
+
+
+### Features
+
+* Adds support for quickly navigating to recently created or existing requested changes ([#5109](https://github.com/Flagsmith/flagsmith/issues/5109)) ([e7b1adc](https://github.com/Flagsmith/flagsmith/commit/e7b1adccd0507d730a5362a8c520e7f2493b5233))
+* Grafana feature health provider ([#5098](https://github.com/Flagsmith/flagsmith/issues/5098)) ([210519e](https://github.com/Flagsmith/flagsmith/commit/210519e44364b4eece64465f0c9e6c1741aaf36c))
+
+
+### Bug Fixes
+
+* Audit Log integrations are triggered when integration config is soft deleted ([#5128](https://github.com/Flagsmith/flagsmith/issues/5128)) ([a81d22e](https://github.com/Flagsmith/flagsmith/commit/a81d22e4bf5e2c5c2b0b4fac37aeb7944e98bb35))
+* Consistent hover styles for tabs & improved dark mode side menu UX ([#5133](https://github.com/Flagsmith/flagsmith/issues/5133)) ([145bf1f](https://github.com/Flagsmith/flagsmith/commit/145bf1f3e5d598feeba9a69e4cc0288f803bcd76))
+* **edge-identities:** prevent unauthorised identity access ([#5135](https://github.com/Flagsmith/flagsmith/issues/5135)) ([690f87c](https://github.com/Flagsmith/flagsmith/commit/690f87c0a96b5566ec7768ccf7705ee8ea760fc3))
+* feature specific segment creation ([#5148](https://github.com/Flagsmith/flagsmith/issues/5148)) ([789e394](https://github.com/Flagsmith/flagsmith/commit/789e39486102992474edf156291d3d255e4977d3))
+* Fix StaleFlagWarning Display & Migrate FeatureRow to TypeScript ([#5129](https://github.com/Flagsmith/flagsmith/issues/5129)) ([a1dcdb8](https://github.com/Flagsmith/flagsmith/commit/a1dcdb8110935fa06ea9a13c2c5d72c9a67db286))
+* identity overrides only called once ([#5145](https://github.com/Flagsmith/flagsmith/issues/5145)) ([8621b26](https://github.com/Flagsmith/flagsmith/commit/8621b261f8fe6d01186f5268442e53021354e190))
+* Segment override permissions ([#5134](https://github.com/Flagsmith/flagsmith/issues/5134)) ([66629e4](https://github.com/Flagsmith/flagsmith/commit/66629e4fba95e3dc948d2584ad86e9639e3c4484))
+* Show "Clear all" to the left of feature filters to prevent layout shift ([#5143](https://github.com/Flagsmith/flagsmith/issues/5143)) ([cff5c96](https://github.com/Flagsmith/flagsmith/commit/cff5c96d820f56e541d57dd498f36d665779bcc1))
+* **typing:** Add missing type stubs for dependencies ([#5126](https://github.com/Flagsmith/flagsmith/issues/5126)) ([4e1ba8b](https://github.com/Flagsmith/flagsmith/commit/4e1ba8b63cd0c4f1b44808eb3c956acdca98e9e8))
+
 ## [2.162.0](https://github.com/Flagsmith/flagsmith/compare/v2.161.0...v2.162.0) (2025-02-18)
 
 
