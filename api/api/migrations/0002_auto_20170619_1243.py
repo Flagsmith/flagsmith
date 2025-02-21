@@ -6,18 +6,19 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0001_initial"),
+        ('api', '0001_initial'),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name="identity",
-            old_name="version",
-            new_name="environment",
+            model_name='identity',
+            old_name='version',
+            new_name='environment',
         ),
         migrations.AlterUniqueTogether(
-            name="identityfeature",
-            unique_together=set([("feature", "identity")]),
+            name='identityfeature',
+            unique_together=set([('feature', 'identity')]),
         ),
     ]

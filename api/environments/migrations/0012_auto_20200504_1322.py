@@ -4,33 +4,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("permissions", "0002_auto_20200221_2126"),
-        ("environments", "0011_auto_20200220_0044"),
+        ('permissions', '0002_auto_20200221_2126'),
+        ('environments', '0011_auto_20200220_0044'),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name="EnvironmentPermission",
+            name='EnvironmentPermission',
         ),
         migrations.CreateModel(
-            name="EnvironmentPermissionModel",
-            fields=[],
+            name='EnvironmentPermissionModel',
+            fields=[
+            ],
             options={
-                "proxy": True,
-                "indexes": [],
-                "constraints": [],
+                'proxy': True,
+                'indexes': [],
+                'constraints': [],
             },
-            bases=("permissions.permissionmodel",),
+            bases=('permissions.permissionmodel',),
         ),
         migrations.AlterField(
-            model_name="userenvironmentpermission",
-            name="permissions",
-            field=models.ManyToManyField(blank=True, to="permissions.PermissionModel"),
+            model_name='userenvironmentpermission',
+            name='permissions',
+            field=models.ManyToManyField(blank=True, to='permissions.PermissionModel'),
         ),
         migrations.AlterField(
-            model_name="userpermissiongroupenvironmentpermission",
-            name="permissions",
-            field=models.ManyToManyField(blank=True, to="permissions.PermissionModel"),
+            model_name='userpermissiongroupenvironmentpermission',
+            name='permissions',
+            field=models.ManyToManyField(blank=True, to='permissions.PermissionModel'),
         ),
     ]

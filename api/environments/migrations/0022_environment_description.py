@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0021_environment_allow_client_traits"),
+        ('environments', '0021_environment_allow_client_traits'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="description",
+            model_name='environment',
+            name='description',
             field=models.TextField(blank=True, max_length=20000, null=True),
         ),
     ]

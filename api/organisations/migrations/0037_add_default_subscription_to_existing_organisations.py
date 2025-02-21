@@ -19,6 +19,7 @@ def create_default_subscription(apps, schema_editor):  # type: ignore[no-untyped
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("organisations", "0036_alter_subscription_plan"),
     ]

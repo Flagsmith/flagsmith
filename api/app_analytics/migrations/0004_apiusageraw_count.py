@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("app_analytics", "0003_add_feature_name_index"),
+        ('app_analytics', '0003_add_feature_name_index'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="apiusageraw",
-            name="count",
+            model_name='apiusageraw',
+            name='count',
             field=models.PositiveIntegerField(default=1),
         ),
     ]

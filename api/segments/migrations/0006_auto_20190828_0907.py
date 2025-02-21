@@ -6,22 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("segments", "0005_auto_20190529_1426"),
+        ('segments', '0005_auto_20190529_1426'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="segmentrule",
-            name="type",
-            field=models.CharField(
-                choices=[
-                    ("ALL", "all"),
-                    ("ANY", "any"),
-                    ("NONE", "none"),
-                    ("PERCENTAGE_SPLIT", "Percentage split"),
-                ],
-                max_length=50,
-            ),
+            model_name='segmentrule',
+            name='type',
+            field=models.CharField(choices=[('ALL', 'all'), ('ANY', 'any'), ('NONE', 'none'), ('PERCENTAGE_SPLIT', 'Percentage split')], max_length=50),
         ),
     ]

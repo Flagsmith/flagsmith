@@ -4,19 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0048_add_default_subscription_to_orphaned_organisations"),
+        ('organisations', '0048_add_default_subscription_to_orphaned_organisations'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="subscription",
-            name="billing_status",
-            field=models.CharField(
-                blank=True,
-                choices=[("ACTIVE", "Active"), ("DUNNING", "Dunning")],
-                max_length=20,
-                null=True,
-            ),
+            model_name='subscription',
+            name='billing_status',
+            field=models.CharField(blank=True, choices=[('ACTIVE', 'Active'), ('DUNNING', 'Dunning')], max_length=20, null=True),
         ),
     ]

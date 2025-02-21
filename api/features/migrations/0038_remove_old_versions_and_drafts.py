@@ -2,6 +2,10 @@
 
 from django.db import migrations
 
+
+from features.constants import DRAFT
+
+
 sub_query = """
     select
         distinct fs1.id
@@ -28,7 +32,7 @@ sub_query = """
 # seen here:
 # https://stackoverflow.com/questions/45494/mysql-error-1093-cant-specify-target-table-for-update-in-from-clause
 sql = f"""
-    delete from features_featurestatevalue
+    delete from features_featurestatevalue 
     where feature_state_id in ({sub_query});
 
     delete from features_featurestate

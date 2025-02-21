@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0006_featurestate_type"),
+        ('features', '0006_featurestate_type'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="feature",
-            name="default_enabled",
+            model_name='feature',
+            name='default_enabled',
             field=models.BooleanField(default=False),
         ),
     ]

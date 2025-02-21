@@ -4,19 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("tags", "0005_add_tag_fields_for_stale_flags_logic"),
+        ('tags', '0005_add_tag_fields_for_stale_flags_logic'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="tag",
-            name="type",
-            field=models.CharField(
-                choices=[("NONE", "None"), ("STALE", "Stale"), ("GITHUB", "Github")],
-                default="NONE",
-                help_text="Field used to provide a consistent identifier for the FE and API to use for business logic.",
-                max_length=100,
-            ),
+            model_name='tag',
+            name='type',
+            field=models.CharField(choices=[('NONE', 'None'), ('STALE', 'Stale'), ('GITHUB', 'Github')], default='NONE', help_text='Field used to provide a consistent identifier for the FE and API to use for business logic.', max_length=100),
         ),
     ]

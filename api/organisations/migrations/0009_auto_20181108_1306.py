@@ -6,20 +6,14 @@ from django.db import migrations
 
 from ..models import Organisation
 
-
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0008_auto_20181108_1259"),
+        ('organisations', '0008_auto_20181108_1259'),
     ]
 
     operations = [
         migrations.RunSQL(
-            [
-                (
-                    "Update "
-                    + Organisation._meta.db_table
-                    + " SET free_to_use_subscription = true;"
-                )
-            ],
+            [("Update " + Organisation._meta.db_table + " SET free_to_use_subscription = true;")],
         )
     ]

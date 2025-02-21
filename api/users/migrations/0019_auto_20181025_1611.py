@@ -7,21 +7,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("users", "0018_auto_20180920_1234"),
+        ('users', '0018_auto_20180920_1234'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="ffadminuser",
-            name="username",
-            field=models.CharField(
-                error_messages={"unique": "A user with that username already exists."},
-                help_text="Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
-                max_length=150,
-                unique=True,
-                validators=[django.contrib.auth.validators.ASCIIUsernameValidator()],
-                verbose_name="username",
-            ),
+            model_name='ffadminuser',
+            name='username',
+            field=models.CharField(error_messages={'unique': 'A user with that username already exists.'}, help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=150, unique=True, validators=[django.contrib.auth.validators.ASCIIUsernameValidator()], verbose_name='username'),
         ),
     ]

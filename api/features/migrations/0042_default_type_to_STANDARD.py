@@ -4,23 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0041_merge_20220406_0806"),
+        ('features', '0041_merge_20220406_0806'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="feature",
-            name="type",
-            field=models.CharField(
-                blank=True, default="STANDARD", max_length=50, null=True
-            ),
+            model_name='feature',
+            name='type',
+            field=models.CharField(blank=True, default='STANDARD', max_length=50, null=True),
         ),
         migrations.AlterField(
-            model_name="historicalfeature",
-            name="type",
-            field=models.CharField(
-                blank=True, default="STANDARD", max_length=50, null=True
-            ),
+            model_name='historicalfeature',
+            name='type',
+            field=models.CharField(blank=True, default='STANDARD', max_length=50, null=True),
         ),
     ]

@@ -26,6 +26,7 @@ def reverse(
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("permissions", "0009_move_view_audit_log_permission"),
     ]

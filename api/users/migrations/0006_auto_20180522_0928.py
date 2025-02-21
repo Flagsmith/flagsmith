@@ -6,13 +6,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("users", "0005_auto_20180518_1659"),
+        ('users', '0005_auto_20180518_1659'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="ffadminuser",
-            options={"ordering": ["id"]},
+            name='ffadminuser',
+            options={'ordering': ['id']},
         ),
     ]

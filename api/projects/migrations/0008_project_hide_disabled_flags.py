@@ -4,17 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("projects", "0007_auto_20200504_1322"),
+        ('projects', '0007_auto_20200504_1322'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="project",
-            name="hide_disabled_flags",
-            field=models.BooleanField(
-                default=False,
-                help_text="If true will exclude flags from SDK which are disabled",
-            ),
+            model_name='project',
+            name='hide_disabled_flags',
+            field=models.BooleanField(default=False, help_text='If true will exclude flags from SDK which are disabled'),
         ),
     ]

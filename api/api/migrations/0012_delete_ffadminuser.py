@@ -6,12 +6,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0011_auto_20180517_1646"),
+        ('api', '0011_auto_20180517_1646'),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name="FFAdminUser",
+            name='FFAdminUser',
         ),
     ]

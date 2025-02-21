@@ -15,6 +15,7 @@ def add_manage_segments_permission(apps, schema_editor):  # type: ignore[no-unty
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("permissions", "0005_orphan_permission_cleanup"),
     ]

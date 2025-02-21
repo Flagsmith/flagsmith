@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0016_auto_20180522_1311"),
+        ('api', '0016_auto_20180522_1311'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="feature",
-            name="description",
+            model_name='feature',
+            name='description',
             field=models.TextField(null=True),
         ),
     ]

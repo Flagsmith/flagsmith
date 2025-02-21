@@ -4,8 +4,9 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0028_auto_20210223_2039"),
+        ('features', '0028_auto_20210223_2039'),
     ]
 
     operations = [
@@ -13,101 +14,59 @@ class Migration(migrations.Migration):
             database_operations=[],
             state_operations=[
                 migrations.RemoveField(
-                    model_name="featuresegment",
-                    name="enabled",
+                    model_name='featuresegment',
+                    name='enabled',
                 ),
                 migrations.RemoveField(
-                    model_name="featuresegment",
-                    name="value",
+                    model_name='featuresegment',
+                    name='value',
                 ),
                 migrations.RemoveField(
-                    model_name="featuresegment",
-                    name="value_type",
+                    model_name='featuresegment',
+                    name='value_type',
                 ),
                 migrations.RemoveField(
-                    model_name="historicalfeaturesegment",
-                    name="enabled",
+                    model_name='historicalfeaturesegment',
+                    name='enabled',
                 ),
                 migrations.RemoveField(
-                    model_name="historicalfeaturesegment",
-                    name="value",
+                    model_name='historicalfeaturesegment',
+                    name='value',
                 ),
                 migrations.RemoveField(
-                    model_name="historicalfeaturesegment",
-                    name="value_type",
+                    model_name='historicalfeaturesegment',
+                    name='value_type',
                 ),
                 migrations.AddField(
-                    model_name="featuresegment",
-                    name="_enabled",
-                    field=models.BooleanField(
-                        db_column="enabled",
-                        default=False,
-                        help_text="Deprecated in favour of using FeatureStateValue.",
-                    ),
+                    model_name='featuresegment',
+                    name='_enabled',
+                    field=models.BooleanField(db_column='enabled', default=False, help_text='Deprecated in favour of using FeatureStateValue.'),
                 ),
                 migrations.AddField(
-                    model_name="featuresegment",
-                    name="_value",
-                    field=models.CharField(
-                        blank=True,
-                        db_column="value",
-                        help_text="Deprecated in favour of using FeatureStateValue.",
-                        max_length=2000,
-                        null=True,
-                    ),
+                    model_name='featuresegment',
+                    name='_value',
+                    field=models.CharField(blank=True, db_column='value', help_text='Deprecated in favour of using FeatureStateValue.', max_length=2000, null=True),
                 ),
                 migrations.AddField(
-                    model_name="featuresegment",
-                    name="_value_type",
-                    field=models.CharField(
-                        blank=True,
-                        choices=[
-                            ("int", "Integer"),
-                            ("unicode", "String"),
-                            ("bool", "Boolean"),
-                        ],
-                        db_column="value_type",
-                        help_text="Deprecated in favour of using FeatureStateValue.",
-                        max_length=50,
-                        null=True,
-                    ),
+                    model_name='featuresegment',
+                    name='_value_type',
+                    field=models.CharField(blank=True, choices=[('int', 'Integer'), ('unicode', 'String'), ('bool', 'Boolean')], db_column='value_type', help_text='Deprecated in favour of using FeatureStateValue.', max_length=50, null=True),
                 ),
                 migrations.AddField(
-                    model_name="historicalfeaturesegment",
-                    name="_enabled",
-                    field=models.BooleanField(
-                        db_column="enabled",
-                        default=False,
-                        help_text="Deprecated in favour of using FeatureStateValue.",
-                    ),
+                    model_name='historicalfeaturesegment',
+                    name='_enabled',
+                    field=models.BooleanField(db_column='enabled', default=False, help_text='Deprecated in favour of using FeatureStateValue.'),
                 ),
                 migrations.AddField(
-                    model_name="historicalfeaturesegment",
-                    name="_value",
-                    field=models.CharField(
-                        blank=True,
-                        db_column="value",
-                        help_text="Deprecated in favour of using FeatureStateValue.",
-                        max_length=2000,
-                        null=True,
-                    ),
+                    model_name='historicalfeaturesegment',
+                    name='_value',
+                    field=models.CharField(blank=True, db_column='value', help_text='Deprecated in favour of using FeatureStateValue.', max_length=2000, null=True),
                 ),
                 migrations.AddField(
-                    model_name="historicalfeaturesegment",
-                    name="_value_type",
-                    field=models.CharField(
-                        blank=True,
-                        choices=[
-                            ("int", "Integer"),
-                            ("unicode", "String"),
-                            ("bool", "Boolean"),
-                        ],
-                        db_column="value_type",
-                        help_text="Deprecated in favour of using FeatureStateValue.",
-                        max_length=50,
-                        null=True,
-                    ),
+                    model_name='historicalfeaturesegment',
+                    name='_value_type',
+                    field=models.CharField(blank=True, choices=[('int', 'Integer'), ('unicode', 'String'), ('bool', 'Boolean')], db_column='value_type', help_text='Deprecated in favour of using FeatureStateValue.', max_length=50, null=True),
                 ),
-            ],
+            ]
         )
     ]

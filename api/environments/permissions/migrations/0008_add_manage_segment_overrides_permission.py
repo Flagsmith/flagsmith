@@ -4,9 +4,9 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
 )
+from core.migration_helpers import create_new_environment_permissions
 from django.db import migrations
 
-from core.migration_helpers import create_new_environment_permissions
 from permissions.models import ENVIRONMENT_PERMISSION_TYPE
 
 
@@ -47,6 +47,7 @@ def remove_manage_segment_overrides_permission(apps, schema_editor):  # type: ig
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("environment_permissions", "0007_add_unique_permission_constraint"),
     ]

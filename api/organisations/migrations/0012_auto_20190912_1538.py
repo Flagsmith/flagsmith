@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0011_subscription_max_seats"),
+        ('organisations', '0011_subscription_max_seats'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="subscription",
-            name="max_seats",
+            model_name='subscription',
+            name='max_seats',
             field=models.IntegerField(default=1),
         ),
     ]

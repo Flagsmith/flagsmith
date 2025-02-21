@@ -4,27 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("invites", "0002_auto_20210118_2026"),
+        ('invites', '0002_auto_20210118_2026'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="invite",
-            name="role",
-            field=models.CharField(
-                choices=[("ADMIN", "Admin"), ("USER", "User")],
-                default="USER",
-                max_length=50,
-            ),
+            model_name='invite',
+            name='role',
+            field=models.CharField(choices=[('ADMIN', 'Admin'), ('USER', 'User')], default='USER', max_length=50),
         ),
         migrations.AlterField(
-            model_name="invitelink",
-            name="role",
-            field=models.CharField(
-                choices=[("ADMIN", "Admin"), ("USER", "User")],
-                default="USER",
-                max_length=50,
-            ),
+            model_name='invitelink',
+            name='role',
+            field=models.CharField(choices=[('ADMIN', 'Admin'), ('USER', 'User')], default='USER', max_length=50),
         ),
     ]

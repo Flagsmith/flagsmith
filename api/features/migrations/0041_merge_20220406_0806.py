@@ -4,9 +4,11 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0039_merge_20220329_1252"),
-        ("features", "0040_add_change_request_to_feature_state"),
+        ('features', '0039_merge_20220329_1252'),
+        ('features', '0040_add_change_request_to_feature_state'),
     ]
 
-    operations = []
+    operations = [
+    ]

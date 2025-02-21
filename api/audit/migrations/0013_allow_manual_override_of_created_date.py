@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("audit", "0012_auto_20230517_1006"),
+        ('audit', '0012_auto_20230517_1006'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="auditlog",
-            name="created_date",
-            field=models.DateTimeField(verbose_name="DateCreated"),
+            model_name='auditlog',
+            name='created_date',
+            field=models.DateTimeField(verbose_name='DateCreated'),
         ),
     ]

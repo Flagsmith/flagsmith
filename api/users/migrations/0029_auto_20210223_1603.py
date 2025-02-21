@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("users", "0028_delete_invite"),
+        ('users', '0028_delete_invite'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="userpermissiongroup",
-            options={"ordering": ("id",)},
+            name='userpermissiongroup',
+            options={'ordering': ('id',)},
         ),
     ]

@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("invites", "0003_auto_20220323_1455"),
+        ('invites', '0003_auto_20220323_1455'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name="invite",
-            name="frontend_base_url",
+            model_name='invite',
+            name='frontend_base_url',
         ),
     ]

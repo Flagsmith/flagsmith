@@ -4,17 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("projects", "0009_project_enable_dynamo_db"),
+        ('projects', '0009_project_enable_dynamo_db'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="project",
-            name="enable_dynamo_db",
-            field=models.BooleanField(
-                default=False,
-                help_text="If true will sync environment data with dynamodb and allow access to dynamodb identities",
-            ),
+            model_name='project',
+            name='enable_dynamo_db',
+            field=models.BooleanField(default=False, help_text='If true will sync environment data with dynamodb and allow access to dynamodb identities'),
         ),
     ]

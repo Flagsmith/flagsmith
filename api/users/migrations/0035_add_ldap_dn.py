@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("users", "0034_add_user_permission_group_membership_through_model"),
+        ('users', '0034_add_user_permission_group_membership_through_model'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="userpermissiongroup",
-            name="ldap_dn",
+            model_name='userpermissiongroup',
+            name='ldap_dn',
             field=models.CharField(blank=True, max_length=255, null=True, unique=True),
         ),
     ]

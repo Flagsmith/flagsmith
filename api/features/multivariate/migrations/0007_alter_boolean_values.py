@@ -4,19 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("multivariate", "0006_add_audit_log_events_form_multivariate_models"),
+        ('multivariate', '0006_add_audit_log_events_form_multivariate_models'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="historicalmultivariatefeatureoption",
-            name="boolean_value",
+            model_name='historicalmultivariatefeatureoption',
+            name='boolean_value',
             field=models.BooleanField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name="multivariatefeatureoption",
-            name="boolean_value",
+            model_name='multivariatefeatureoption',
+            name='boolean_value',
             field=models.BooleanField(blank=True, null=True),
         ),
     ]

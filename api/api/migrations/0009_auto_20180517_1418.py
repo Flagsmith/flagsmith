@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0008_auto_20180517_1104"),
+        ('api', '0008_auto_20180517_1104'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="identity",
-            name="hash",
+            model_name='identity',
+            name='hash',
             field=models.CharField(max_length=100, unique=True),
         ),
     ]

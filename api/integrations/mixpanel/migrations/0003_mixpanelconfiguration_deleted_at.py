@@ -4,16 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("mixpanel", "0002_add_uuid_field"),
+        ('mixpanel', '0002_add_uuid_field'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="mixpanelconfiguration",
-            name="deleted_at",
-            field=models.DateTimeField(
-                blank=True, db_index=True, default=None, editable=False, null=True
-            ),
+            model_name='mixpanelconfiguration',
+            name='deleted_at',
+            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
         ),
     ]

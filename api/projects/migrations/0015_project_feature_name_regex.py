@@ -4,19 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("projects", "0014_project_only_allow_lower_case_feature_names"),
+        ('projects', '0014_project_only_allow_lower_case_feature_names'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="project",
-            name="feature_name_regex",
-            field=models.CharField(
-                blank=True,
-                help_text="Used for validating feature names",
-                max_length=255,
-                null=True,
-            ),
+            model_name='project',
+            name='feature_name_regex',
+            field=models.CharField(blank=True, help_text='Used for validating feature names', max_length=255, null=True),
         ),
     ]

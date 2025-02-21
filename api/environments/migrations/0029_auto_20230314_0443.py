@@ -4,25 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0028_add_use_mv_v2_evaluation"),
+        ('environments', '0028_add_use_mv_v2_evaluation'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="hide_sensitive_data",
-            field=models.BooleanField(
-                default=False,
-                help_text="If true, will hide sensitive data(e.g: tags and description) from the SDK endpoints",
-            ),
+            model_name='environment',
+            name='hide_sensitive_data',
+            field=models.BooleanField(default=False, help_text='If true, will hide sensitive data(e.g: tags and description) from the SDK endpoints'),
         ),
         migrations.AddField(
-            model_name="historicalenvironment",
-            name="hide_sensitive_data",
-            field=models.BooleanField(
-                default=False,
-                help_text="If true, will hide sensitive data(e.g: tags and description) from the SDK endpoints",
-            ),
+            model_name='historicalenvironment',
+            name='hide_sensitive_data',
+            field=models.BooleanField(default=False, help_text='If true, will hide sensitive data(e.g: tags and description) from the SDK endpoints'),
         ),
     ]

@@ -4,17 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("projects", "0012_add_prevent_flag_defaults_to_project"),
+        ('projects', '0012_add_prevent_flag_defaults_to_project'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="project",
-            name="enable_realtime_updates",
-            field=models.BooleanField(
-                default=False,
-                help_text="Enable this to trigger a realtime(sse) event whenever the value of a flag changes",
-            ),
+            model_name='project',
+            name='enable_realtime_updates',
+            field=models.BooleanField(default=False, help_text='Enable this to trigger a realtime(sse) event whenever the value of a flag changes'),
         ),
     ]

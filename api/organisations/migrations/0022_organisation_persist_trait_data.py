@@ -4,17 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0021_auto_20200619_1555"),
+        ('organisations', '0021_auto_20200619_1555'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="organisation",
-            name="persist_trait_data",
-            field=models.BooleanField(
-                default=settings.DEFAULT_ORG_STORE_TRAITS_VALUE,
-                help_text="Disable this if you don't want Flagsmith to store trait data for this org's identities.",
-            ),
+            model_name='organisation',
+            name='persist_trait_data',
+            field=models.BooleanField(default=settings.DEFAULT_ORG_STORE_TRAITS_VALUE, help_text="Disable this if you don't want Flagsmith to store trait data for this org's identities."),
         ),
     ]

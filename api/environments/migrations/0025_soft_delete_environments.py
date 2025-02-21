@@ -4,16 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0024_auto_20221206_0601"),
+        ('environments', '0024_auto_20221206_0601'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="deleted_at",
-            field=models.DateTimeField(
-                blank=True, db_index=True, default=None, editable=False, null=True
-            ),
+            model_name='environment',
+            name='deleted_at',
+            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
         ),
     ]

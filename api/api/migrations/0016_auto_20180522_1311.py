@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0015_auto_20180522_0931"),
+        ('api', '0015_auto_20180522_0931'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="feature",
-            name="initial_value",
+            model_name='feature',
+            name='initial_value',
             field=models.CharField(default=None, max_length=2000, null=True),
         ),
     ]

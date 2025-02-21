@@ -4,6 +4,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("environments", "0035_add_use_identity_overrides_in_local_eval"),
     ]

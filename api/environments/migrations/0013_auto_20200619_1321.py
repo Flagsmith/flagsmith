@@ -4,56 +4,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0012_auto_20200504_1322"),
+        ('environments', '0012_auto_20200504_1322'),
         # The following dependency is added to prevent issues with other applications
         # running migrations and throwing a ValueError concerning a lazy reference
         # to environments.Identity which does not exist. This dependency forces django
         # to run the migrations in the order that we want.
-        ("features", "0024_auto_20200917_1032"),
+        ('features', '0024_auto_20200917_1032'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="historicaltrait",
-            name="float_value",
+            model_name='historicaltrait',
+            name='float_value',
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="trait",
-            name="float_value",
+            model_name='trait',
+            name='float_value',
             field=models.FloatField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name="historicaltrait",
-            name="value_type",
-            field=models.CharField(
-                blank=True,
-                choices=[
-                    ("int", "Integer"),
-                    ("unicode", "String"),
-                    ("bool", "Boolean"),
-                    ("float", "Float"),
-                ],
-                default="unicode",
-                max_length=10,
-                null=True,
-            ),
+            model_name='historicaltrait',
+            name='value_type',
+            field=models.CharField(blank=True, choices=[('int', 'Integer'), ('unicode', 'String'), ('bool', 'Boolean'), ('float', 'Float')], default='unicode', max_length=10, null=True),
         ),
         migrations.AlterField(
-            model_name="trait",
-            name="value_type",
-            field=models.CharField(
-                blank=True,
-                choices=[
-                    ("int", "Integer"),
-                    ("unicode", "String"),
-                    ("bool", "Boolean"),
-                    ("float", "Float"),
-                ],
-                default="unicode",
-                max_length=10,
-                null=True,
-            ),
+            model_name='trait',
+            name='value_type',
+            field=models.CharField(blank=True, choices=[('int', 'Integer'), ('unicode', 'String'), ('bool', 'Boolean'), ('float', 'Float')], default='unicode', max_length=10, null=True),
         ),
     ]

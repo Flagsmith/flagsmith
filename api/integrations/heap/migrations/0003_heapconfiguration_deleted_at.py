@@ -4,16 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("heap", "0002_add_uuid_field"),
+        ('heap', '0002_add_uuid_field'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="heapconfiguration",
-            name="deleted_at",
-            field=models.DateTimeField(
-                blank=True, db_index=True, default=None, editable=False, null=True
-            ),
+            model_name='heapconfiguration',
+            name='deleted_at',
+            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
         ),
     ]

@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0024_organisation_feature_analytics"),
+        ('organisations', '0024_organisation_feature_analytics'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="organisationwebhook",
-            options={"ordering": ("id",)},
+            name='organisationwebhook',
+            options={'ordering': ('id',)},
         ),
     ]

@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api_keys", "0002_soft_delete_api_keys"),
+        ('api_keys', '0002_soft_delete_api_keys'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="masterapikey",
-            name="is_admin",
+            model_name='masterapikey',
+            name='is_admin',
             field=models.BooleanField(default=True),
         ),
     ]

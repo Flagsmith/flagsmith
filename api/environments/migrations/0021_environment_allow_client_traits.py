@@ -4,17 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0020_add_uuid_field_to_environment_webhook"),
+        ('environments', '0020_add_uuid_field_to_environment_webhook'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="allow_client_traits",
-            field=models.BooleanField(
-                default=True,
-                help_text="Allows clients using the client API key to set traits.",
-            ),
+            model_name='environment',
+            name='allow_client_traits',
+            field=models.BooleanField(default=True, help_text='Allows clients using the client API key to set traits.'),
         ),
     ]

@@ -8,19 +8,15 @@ from ..models import Feature
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0004_auto_20180604_1259"),
+        ('features', '0004_auto_20180604_1259'),
     ]
 
     operations = [
         migrations.RunSQL(
-            [
-                (
-                    "CREATE UNIQUE INDEX lowercase_feature_name ON "
-                    + Feature._meta.db_table
-                    + "(lower(name), project_id);"
-                )
-            ],
+            [("CREATE UNIQUE INDEX lowercase_feature_name ON " + Feature._meta.db_table +
+              "(lower(name), project_id);")],
             [("DROP INDEX lowercase_feature_name;")],
         )
     ]

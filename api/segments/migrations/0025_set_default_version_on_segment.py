@@ -13,12 +13,11 @@ def set_default_segment_version(
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("segments", "0024_add_timestamps_to_segments"),
+        ('segments', '0024_add_timestamps_to_segments'),
     ]
 
     operations = [
-        migrations.RunPython(
-            set_default_segment_version, reverse_code=migrations.RunPython.noop
-        ),
+        migrations.RunPython(set_default_segment_version, reverse_code=migrations.RunPython.noop),
     ]

@@ -4,17 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("users", "0030_ffadminuser_marketing_consent_given"),
+        ('users', '0030_ffadminuser_marketing_consent_given'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="userpermissiongroup",
-            name="is_default",
-            field=models.BooleanField(
-                default=False,
-                help_text="If set to true, all new users will be added to this group",
-            ),
+            model_name='userpermissiongroup',
+            name='is_default',
+            field=models.BooleanField(default=False, help_text='If set to true, all new users will be added to this group'),
         ),
     ]

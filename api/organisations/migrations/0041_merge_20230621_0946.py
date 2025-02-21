@@ -4,12 +4,11 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0040_alter_organisationwebhook_url"),
-        (
-            "organisations",
-            "0040_organisationsubscriptioninformationcache_chargebee_email",
-        ),
+        ('organisations', '0040_alter_organisationwebhook_url'),
+        ('organisations', '0040_organisationsubscriptioninformationcache_chargebee_email'),
     ]
 
-    operations = []
+    operations = [
+    ]

@@ -4,9 +4,11 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0036_alter_feature_options"),
-        ("features", "0038_remove_old_versions_and_drafts"),
+        ('features', '0036_alter_feature_options'),
+        ('features', '0038_remove_old_versions_and_drafts'),
     ]
 
-    operations = []
+    operations = [
+    ]

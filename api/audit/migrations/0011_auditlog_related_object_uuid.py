@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("audit", "0010_do_nothing_on_project_or_environment_delete"),
+        ('audit', '0010_do_nothing_on_project_or_environment_delete'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="auditlog",
-            name="related_object_uuid",
+            model_name='auditlog',
+            name='related_object_uuid',
             field=models.CharField(max_length=36, null=True),
         ),
     ]

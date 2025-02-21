@@ -6,35 +6,36 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0020_auto_20180525_1541"),
+        ('api', '0020_auto_20180525_1541'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name="feature",
-            name="project",
+            model_name='feature',
+            name='project',
         ),
         migrations.AlterUniqueTogether(
-            name="featurestate",
+            name='featurestate',
             unique_together=set([]),
         ),
         migrations.RemoveField(
-            model_name="featurestate",
-            name="environment",
+            model_name='featurestate',
+            name='environment',
         ),
         migrations.RemoveField(
-            model_name="featurestate",
-            name="feature",
+            model_name='featurestate',
+            name='feature',
         ),
         migrations.RemoveField(
-            model_name="featurestate",
-            name="identity",
+            model_name='featurestate',
+            name='identity',
         ),
         migrations.DeleteModel(
-            name="Feature",
+            name='Feature',
         ),
         migrations.DeleteModel(
-            name="FeatureState",
+            name='FeatureState',
         ),
     ]

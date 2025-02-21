@@ -4,22 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        (
-            "environments",
-            "0032_rename_use_mv_v2_evaluation_to_use_in_percentage_split_evaluation",
-        ),
+        ('environments', '0032_rename_use_mv_v2_evaluation_to_use_in_percentage_split_evaluation'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="use_v2_feature_versioning",
+            model_name='environment',
+            name='use_v2_feature_versioning',
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name="historicalenvironment",
-            name="use_v2_feature_versioning",
+            model_name='historicalenvironment',
+            name='use_v2_feature_versioning',
             field=models.BooleanField(default=False),
         ),
     ]

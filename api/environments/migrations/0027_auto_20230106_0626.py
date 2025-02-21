@@ -4,27 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0026_add_auditable_base_class_to_environment_model"),
+        ('environments', '0026_add_auditable_base_class_to_environment_model'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="hide_disabled_flags",
-            field=models.BooleanField(
-                blank=True,
-                help_text="If true will exclude flags from SDK which are disabled. NOTE: If set, this will override the project `hide_disabled_flags`",
-                null=True,
-            ),
+            model_name='environment',
+            name='hide_disabled_flags',
+            field=models.BooleanField(blank=True, help_text='If true will exclude flags from SDK which are disabled. NOTE: If set, this will override the project `hide_disabled_flags`', null=True),
         ),
         migrations.AddField(
-            model_name="historicalenvironment",
-            name="hide_disabled_flags",
-            field=models.BooleanField(
-                blank=True,
-                help_text="If true will exclude flags from SDK which are disabled. NOTE: If set, this will override the project `hide_disabled_flags`",
-                null=True,
-            ),
+            model_name='historicalenvironment',
+            name='hide_disabled_flags',
+            field=models.BooleanField(blank=True, help_text='If true will exclude flags from SDK which are disabled. NOTE: If set, this will override the project `hide_disabled_flags`', null=True),
         ),
     ]

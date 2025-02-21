@@ -4,21 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("projects", "0017_merge_duplicate_permissions"),
+        ('projects', '0017_merge_duplicate_permissions'),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name="userpermissiongroupprojectpermission",
-            constraint=models.UniqueConstraint(
-                fields=("group", "project"), name="unique_group_project_permission"
-            ),
+            model_name='userpermissiongroupprojectpermission',
+            constraint=models.UniqueConstraint(fields=('group', 'project'), name='unique_group_project_permission'),
         ),
         migrations.AddConstraint(
-            model_name="userprojectpermission",
-            constraint=models.UniqueConstraint(
-                fields=("user", "project"), name="unique_user_project_permission"
-            ),
+            model_name='userprojectpermission',
+            constraint=models.UniqueConstraint(fields=('user', 'project'), name='unique_user_project_permission'),
         ),
     ]

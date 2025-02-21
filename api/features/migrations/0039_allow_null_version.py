@@ -9,6 +9,7 @@ def remove_null_version_feature_states(apps, schema_editor):  # type: ignore[no-
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("features", "0038_remove_old_versions_and_drafts"),
     ]

@@ -6,6 +6,7 @@ from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
 from integrations.segment import constants
 
+
 _INVALID_DEFAULT_BASE_URL = "api.segment.io/"
 
 
@@ -17,6 +18,7 @@ def set_base_url(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("segment", "0005_set_base_url_to_default"),
     ]

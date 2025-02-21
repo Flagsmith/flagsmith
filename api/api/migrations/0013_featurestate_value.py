@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0012_delete_ffadminuser"),
+        ('api', '0012_delete_ffadminuser'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="featurestate",
-            name="value",
+            model_name='featurestate',
+            name='value',
             field=models.CharField(max_length=2000, null=True),
         ),
     ]

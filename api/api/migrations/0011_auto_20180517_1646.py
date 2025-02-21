@@ -8,16 +8,15 @@ import app
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0010_remove_identity_hash"),
+        ('api', '0010_remove_identity_hash'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="environment",
-            name="api_key",
-            field=models.CharField(
-                default=app.utils.create_hash, max_length=100, unique=True
-            ),
+            model_name='environment',
+            name='api_key',
+            field=models.CharField(default=app.utils.create_hash, max_length=100, unique=True),
         ),
     ]

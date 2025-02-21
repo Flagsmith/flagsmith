@@ -6,14 +6,15 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0015_auto_20180522_0931"),
-        ("users", "0007_invite"),
+        ('api', '0015_auto_20180522_0931'),
+        ('users', '0007_invite'),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name="invite",
-            unique_together=set([("email", "organisation")]),
+            name='invite',
+            unique_together=set([('email', 'organisation')]),
         ),
     ]

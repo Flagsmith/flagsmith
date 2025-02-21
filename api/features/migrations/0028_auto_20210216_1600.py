@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0027_merge_20210215_1059"),
+        ('features', '0027_merge_20210215_1059'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="feature",
+            name='feature',
             options={},
         ),
     ]

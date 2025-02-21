@@ -6,6 +6,7 @@ from core.migration_helpers import PostgresOnlyRunSQL
 
 
 class Migration(migrations.Migration):
+
     atomic = False
     dependencies = [
         ("app_analytics", "0004_apiusageraw_count"),

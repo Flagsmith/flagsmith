@@ -6,14 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0001_initial"),
+        ('organisations', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="organisation",
-            name="has_requested_features",
+            model_name='organisation',
+            name='has_requested_features',
             field=models.BooleanField(default=False),
         ),
     ]

@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0018_add_minimum_change_request_approvals_to_environment"),
+        ('environments', '0018_add_minimum_change_request_approvals_to_environment'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="environment",
-            name="minimum_change_request_approvals",
+            model_name='environment',
+            name='minimum_change_request_approvals',
             field=models.IntegerField(blank=True, null=True),
         ),
     ]

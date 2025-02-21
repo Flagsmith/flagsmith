@@ -6,20 +6,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0006_auditlog"),
+        ('environments', '0006_auditlog'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name="auditlog",
-            name="author",
+            model_name='auditlog',
+            name='author',
         ),
         migrations.RemoveField(
-            model_name="auditlog",
-            name="environment",
+            model_name='auditlog',
+            name='environment',
         ),
         migrations.DeleteModel(
-            name="AuditLog",
+            name='AuditLog',
         ),
     ]

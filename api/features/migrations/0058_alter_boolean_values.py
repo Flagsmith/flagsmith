@@ -4,19 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0057_add_feature_is_server_key_only"),
+        ('features', '0057_add_feature_is_server_key_only'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="featurestatevalue",
-            name="boolean_value",
+            model_name='featurestatevalue',
+            name='boolean_value',
             field=models.BooleanField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name="historicalfeaturestatevalue",
-            name="boolean_value",
+            model_name='historicalfeaturestatevalue',
+            name='boolean_value',
             field=models.BooleanField(blank=True, null=True),
         ),
     ]

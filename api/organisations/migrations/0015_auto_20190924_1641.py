@@ -6,28 +6,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0014_userorganisation"),
+        ('organisations', '0014_userorganisation'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name="subscription",
-            name="free_to_use_subscription",
+            model_name='subscription',
+            name='free_to_use_subscription',
         ),
         migrations.RemoveField(
-            model_name="subscription",
-            name="paid_subscription",
+            model_name='subscription',
+            name='paid_subscription',
         ),
         migrations.RemoveField(
-            model_name="subscription",
-            name="pending_cancellation",
+            model_name='subscription',
+            name='pending_cancellation',
         ),
         migrations.AlterField(
-            model_name="userorganisation",
-            name="role",
-            field=models.CharField(
-                choices=[("ADMIN", "ADMIN"), ("USER", "USER")], max_length=50
-            ),
+            model_name='userorganisation',
+            name='role',
+            field=models.CharField(choices=[('ADMIN', 'ADMIN'), ('USER', 'USER')], max_length=50),
         ),
     ]

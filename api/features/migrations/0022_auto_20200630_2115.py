@@ -4,15 +4,16 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0021_historicalfeaturesegment"),
+        ('features', '0021_historicalfeaturesegment'),
     ]
 
     operations = [
         # this migration should have no affect but should fix the issues on dev after
         # screwing around with the migrations
         migrations.AlterUniqueTogether(
-            name="featuresegment",
-            unique_together={("feature", "environment", "segment")},
+            name='featuresegment',
+            unique_together={('feature', 'environment', 'segment')},
         ),
     ]

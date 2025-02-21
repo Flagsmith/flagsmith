@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("traits", "0001_initial"),
+        ('traits', '0001_initial'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="trait",
-            name="boolean_value",
+            model_name='trait',
+            name='boolean_value',
             field=models.BooleanField(blank=True, null=True),
         ),
     ]

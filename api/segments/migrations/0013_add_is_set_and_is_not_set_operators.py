@@ -11,32 +11,13 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AlterField(
-            model_name="condition",
-            name="operator",
-            field=models.CharField(
-                choices=[
-                    ("EQUAL", "Exactly Matches"),
-                    ("GREATER_THAN", "Greater than"),
-                    ("LESS_THAN", "Less than"),
-                    ("CONTAINS", "Contains"),
-                    ("GREATER_THAN_INCLUSIVE", "Greater than or equal to"),
-                    ("LESS_THAN_INCLUSIVE", "Less than or equal to"),
-                    ("NOT_CONTAINS", "Does not contain"),
-                    ("NOT_EQUAL", "Does not match"),
-                    ("REGEX", "Matches regex"),
-                    ("PERCENTAGE_SPLIT", "Percentage split"),
-                    ("MODULO", "Modulo Operation"),
-                    ("IS_SET", "Is set"),
-                    ("IS_NOT_SET", "Is not set"),
-                ],
-                max_length=500,
-            ),
+            model_name='condition',
+            name='operator',
+            field=models.CharField(choices=[('EQUAL', 'Exactly Matches'), ('GREATER_THAN', 'Greater than'), ('LESS_THAN', 'Less than'), ('CONTAINS', 'Contains'), ('GREATER_THAN_INCLUSIVE', 'Greater than or equal to'), ('LESS_THAN_INCLUSIVE', 'Less than or equal to'), ('NOT_CONTAINS', 'Does not contain'), ('NOT_EQUAL', 'Does not match'), ('REGEX', 'Matches regex'), ('PERCENTAGE_SPLIT', 'Percentage split'), ('MODULO', 'Modulo Operation'), ('IS_SET', 'Is set'), ('IS_NOT_SET', 'Is not set')], max_length=500),
         ),
         migrations.AlterField(
-            model_name="condition",
-            name="value",
-            field=models.CharField(
-                blank=True, max_length=settings.SEGMENT_CONDITION_VALUE_LIMIT, null=True
-            ),
+            model_name='condition',
+            name='value',
+            field=models.CharField(blank=True, max_length=settings.SEGMENT_CONDITION_VALUE_LIMIT, null=True),
         ),
     ]

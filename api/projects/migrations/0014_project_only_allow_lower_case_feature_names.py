@@ -4,16 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("projects", "0013_project_enable_realtime_updates"),
+        ('projects', '0013_project_enable_realtime_updates'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="project",
-            name="only_allow_lower_case_feature_names",
-            field=models.BooleanField(
-                default=True, help_text="Used by UI to validate feature names"
-            ),
+            model_name='project',
+            name='only_allow_lower_case_feature_names',
+            field=models.BooleanField(default=True, help_text='Used by UI to validate feature names'),
         ),
     ]

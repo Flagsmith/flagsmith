@@ -7,9 +7,7 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import (  # type: ignore[import-untyped]
-    PROJECT_PERMISSIONS,
-)
+from common.projects.permissions import PROJECT_PERMISSIONS  # type: ignore[import-untyped]
 from django.db import migrations, models
 
 from permissions.models import (
@@ -65,6 +63,7 @@ def insert_default_environment_permissions(apps, schema_model):  # type: ignore[
 
 
 class Migration(migrations.Migration):
+
     initial = True
 
     dependencies = []

@@ -17,17 +17,13 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.AddField(
-            model_name="condition",
-            name="deleted_at",
-            field=models.DateTimeField(
-                blank=True, db_index=True, default=None, editable=False, null=True
-            ),
+            model_name='condition',
+            name='deleted_at',
+            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
         ),
         migrations.AddField(
-            model_name="historicalcondition",
-            name="deleted_at",
-            field=models.DateTimeField(
-                blank=True, db_index=True, default=None, editable=False, null=True
-            ),
+            model_name='historicalcondition',
+            name='deleted_at',
+            field=models.DateTimeField(blank=True, db_index=True, default=None, editable=False, null=True),
         ),
     ]

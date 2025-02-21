@@ -4,19 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0056_create_organisation_breached_grace_period"),
+        ('organisations', '0056_create_organisation_breached_grace_period'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="organisationsubscriptioninformationcache",
-            name="audit_log_visibility_days",
+            model_name='organisationsubscriptioninformationcache',
+            name='audit_log_visibility_days',
             field=models.IntegerField(default=0, null=True, blank=True),
         ),
         migrations.AddField(
-            model_name="organisationsubscriptioninformationcache",
-            name="feature_history_visibility_days",
+            model_name='organisationsubscriptioninformationcache',
+            name='feature_history_visibility_days',
             field=models.IntegerField(default=7, null=True, blank=True),
         ),
     ]

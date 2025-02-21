@@ -22,6 +22,7 @@ def set_null_timestamps(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> 
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("segments", "0023_add_versioning_to_segments"),
     ]

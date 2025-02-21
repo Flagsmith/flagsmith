@@ -4,24 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("environments", "0023_environment_updated_at"),
+        ('environments', '0023_environment_updated_at'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="environment",
-            name="banner_colour",
-            field=models.CharField(
-                blank=True,
-                help_text="hex code for the banner colour",
-                max_length=7,
-                null=True,
-            ),
+            model_name='environment',
+            name='banner_colour',
+            field=models.CharField(blank=True, help_text='hex code for the banner colour', max_length=7, null=True),
         ),
         migrations.AddField(
-            model_name="environment",
-            name="banner_text",
+            model_name='environment',
+            name='banner_text',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
     ]

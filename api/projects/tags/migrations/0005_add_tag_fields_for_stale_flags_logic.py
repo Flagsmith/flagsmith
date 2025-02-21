@@ -5,6 +5,8 @@ from django.apps.registry import Apps
 from django.db import migrations, models
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
 
+from projects.tags.models import TagType
+
 PROTECTED_LABELS = {"protected", "donotdelete", "permanent"}
 LABEL_REGEX = re.compile(r"[ _]")
 

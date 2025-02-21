@@ -4,6 +4,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("features", "0033_feature_owners"),
         ("features", "0033_auto_20210918_1048"),

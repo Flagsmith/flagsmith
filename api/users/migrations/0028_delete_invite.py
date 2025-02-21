@@ -4,8 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("users", "0027_ffadminuser_github_user_id"),
+        ('users', '0027_ffadminuser_github_user_id'),
     ]
 
     operations = [
@@ -13,7 +14,7 @@ class Migration(migrations.Migration):
             database_operations=[],
             state_operations=[
                 migrations.DeleteModel(
-                    name="Invite",
+                    name='Invite',
                 ),
             ],
         ),

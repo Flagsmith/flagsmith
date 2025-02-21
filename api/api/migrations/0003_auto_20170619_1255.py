@@ -6,8 +6,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0002_auto_20170619_1243"),
+        ('api', '0002_auto_20170619_1243'),
     ]
 
     # gives error: django.db.utils.OperationalError: (1071, 'Specified key was too long; max key length is 767 bytes')

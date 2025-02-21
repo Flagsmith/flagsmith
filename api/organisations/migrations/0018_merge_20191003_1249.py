@@ -6,9 +6,11 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0014_organisation_stop_serving_flags"),
-        ("organisations", "0017_subscription_cancellation_date"),
+        ('organisations', '0014_organisation_stop_serving_flags'),
+        ('organisations', '0017_subscription_cancellation_date'),
     ]
 
-    operations = []
+    operations = [
+    ]

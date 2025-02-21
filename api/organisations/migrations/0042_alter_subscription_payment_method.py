@@ -4,23 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("organisations", "0041_merge_20230621_0946"),
+        ('organisations', '0041_merge_20230621_0946'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="subscription",
-            name="payment_method",
-            field=models.CharField(
-                blank=True,
-                choices=[
-                    ("CHARGEBEE", "Chargebee"),
-                    ("XERO", "Xero"),
-                    ("AWS_MARKETPLACE", "AWS Marketplace"),
-                ],
-                max_length=20,
-                null=True,
-            ),
+            model_name='subscription',
+            name='payment_method',
+            field=models.CharField(blank=True, choices=[('CHARGEBEE', 'Chargebee'), ('XERO', 'Xero'), ('AWS_MARKETPLACE', 'AWS Marketplace')], max_length=20, null=True),
         ),
     ]

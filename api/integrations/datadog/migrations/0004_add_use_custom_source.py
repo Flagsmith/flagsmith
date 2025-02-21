@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("datadog", "0003_datadogconfiguration_deleted_at"),
+        ('datadog', '0003_datadogconfiguration_deleted_at'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="datadogconfiguration",
-            name="use_custom_source",
+            model_name='datadogconfiguration',
+            name='use_custom_source',
             field=models.BooleanField(default=False),
         ),
     ]

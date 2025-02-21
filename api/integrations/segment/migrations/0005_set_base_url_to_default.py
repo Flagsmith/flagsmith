@@ -13,6 +13,7 @@ def set_base_url(apps: Apps, schema_editor: BaseDatabaseSchemaEditor) -> None:
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("segment", "0004_segmentconfiguration_deleted_at"),
     ]

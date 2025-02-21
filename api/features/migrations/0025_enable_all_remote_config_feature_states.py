@@ -4,7 +4,7 @@ from django.db import migrations
 
 
 def enable_all_remote_config_feature_states(apps, schema_editor):  # type: ignore[no-untyped-def]
-    FeatureState = apps.get_model("features", "FeatureState")
+    FeatureState = apps.get_model('features', 'FeatureState')
 
     # update all existing remote config feature states to maintain current
     # functionality when hiding disabled flags since we've now merged flags
@@ -17,8 +17,9 @@ def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("features", "0024_auto_20200917_1032"),
+        ('features', '0024_auto_20200917_1032'),
     ]
 
     operations = [

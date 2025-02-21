@@ -37,6 +37,7 @@ def create_default_permissions(apps, schema_editor):  # type: ignore[no-untyped-
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("environments", "0009_auto_20200219_1922"),
     ]

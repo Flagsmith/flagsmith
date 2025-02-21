@@ -6,38 +6,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0013_featurestate_value"),
+        ('api', '0013_featurestate_value'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="environment",
-            options={"ordering": ["id"]},
+            name='environment',
+            options={'ordering': ['id']},
         ),
         migrations.AlterModelOptions(
-            name="feature",
-            options={"ordering": ["id"]},
+            name='feature',
+            options={'ordering': ['id']},
         ),
         migrations.AlterModelOptions(
-            name="featurestate",
-            options={"ordering": ["id"]},
+            name='featurestate',
+            options={'ordering': ['id']},
         ),
         migrations.AlterModelOptions(
-            name="identity",
-            options={"ordering": ["id"], "verbose_name_plural": "Identities"},
+            name='identity',
+            options={'ordering': ['id'], 'verbose_name_plural': 'Identities'},
         ),
         migrations.AlterModelOptions(
-            name="organisation",
-            options={"ordering": ["id"]},
+            name='organisation',
+            options={'ordering': ['id']},
         ),
         migrations.AlterModelOptions(
-            name="project",
-            options={"ordering": ["id"]},
+            name='project',
+            options={'ordering': ['id']},
         ),
         migrations.AddField(
-            model_name="feature",
-            name="default_value",
+            model_name='feature',
+            name='default_value',
             field=models.CharField(max_length=2000, null=True),
         ),
     ]

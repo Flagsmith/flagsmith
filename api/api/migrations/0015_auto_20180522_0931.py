@@ -6,14 +6,15 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0014_auto_20180522_0928"),
+        ('api', '0014_auto_20180522_0928'),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name="feature",
-            old_name="default_value",
-            new_name="initial_value",
+            model_name='feature',
+            old_name='default_value',
+            new_name='initial_value',
         ),
     ]

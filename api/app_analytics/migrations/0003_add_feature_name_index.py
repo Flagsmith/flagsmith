@@ -6,6 +6,7 @@ from core.migration_helpers import PostgresOnlyRunSQL
 
 
 class Migration(migrations.Migration):
+
     atomic = False
 
     dependencies = [

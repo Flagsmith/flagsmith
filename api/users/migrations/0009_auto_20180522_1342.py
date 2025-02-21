@@ -6,17 +6,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("api", "0015_auto_20180522_0931"),
-        ("users", "0008_auto_20180522_1302"),
+        ('api', '0015_auto_20180522_0931'),
+        ('users', '0008_auto_20180522_1302'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="ffadminuser",
-            name="organisations",
-            field=models.ManyToManyField(
-                blank=True, related_name="users", to="api.Organisation"
-            ),
+            model_name='ffadminuser',
+            name='organisations',
+            field=models.ManyToManyField(blank=True, related_name='users', to='api.Organisation'),
         ),
     ]

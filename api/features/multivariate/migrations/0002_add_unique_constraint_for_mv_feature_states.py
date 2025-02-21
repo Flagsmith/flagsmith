@@ -38,6 +38,7 @@ def remove_duplicate_mv_feature_state_values(apps, schema_editor):  # type: igno
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
         ("multivariate", "0001_initial"),
     ]
