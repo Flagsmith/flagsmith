@@ -39,8 +39,6 @@ docstring-code-format = true
 # docstrings.
 docstring-code-line-length = "dynamic"
 
-
-
 [tool.ruff.lint]
 # Establish parity with flake8 + isort
 select = ["C901", "E4", "E7", "E9", "F", "I", "W"]
