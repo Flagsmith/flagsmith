@@ -1,6 +1,8 @@
 import logging
 
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
 from environments.models import Webhook
 from features.models import Feature, FeatureState

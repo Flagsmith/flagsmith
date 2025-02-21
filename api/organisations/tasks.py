@@ -2,7 +2,6 @@ import logging
 import math
 from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import get_current_api_usage
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
@@ -13,6 +12,7 @@ from task_processor.decorators import (  # type: ignore[import-untyped]
     register_task_handler,
 )
 
+from app_analytics.influxdb_wrapper import get_current_api_usage
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
 from organisations.chargebee import (  # type: ignore[attr-defined]

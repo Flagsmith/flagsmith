@@ -12,7 +12,12 @@ from django.db.models import (
     TextField,
 )
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, BEFORE_SAVE, LifecycleModel, hook  # type: ignore[import-untyped]
+from django_lifecycle import (  # type: ignore[import-untyped]
+    BEFORE_CREATE,
+    BEFORE_SAVE,
+    LifecycleModel,
+    hook,
+)
 
 from custom_auth.mfa.trench.exceptions import MFAMethodDoesNotExistError
 

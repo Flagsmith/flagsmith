@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import re
 
-from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.db import models
@@ -17,6 +16,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.models import SoftDeleteExportableModel
 from environments.dynamodb import DynamoProjectMetadata
 from organisations.models import Organisation
 from permissions.models import (
@@ -50,7 +50,7 @@ class Project(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[d
     )
     hide_disabled_flags = models.BooleanField(
         default=False,
-        help_text="If true will exclude flags from SDK which are " "disabled",
+        help_text="If true will exclude flags from SDK which are disabled",
     )
     enable_dynamo_db = models.BooleanField(
         default=False,

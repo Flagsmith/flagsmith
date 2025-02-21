@@ -1,5 +1,4 @@
 import pytest
-from core.constants import FLOAT
 from django.utils import timezone
 from flag_engine.segments.constants import (
     EQUAL,
@@ -10,6 +9,7 @@ from flag_engine.segments.constants import (
 )
 from pytest_django import DjangoAssertNumQueries
 
+from core.constants import FLOAT
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment

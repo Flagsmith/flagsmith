@@ -1,5 +1,7 @@
 import pytest
-from common.metadata.serializers import MetadataSerializer  # type: ignore[import-untyped]
+from common.metadata.serializers import (  # type: ignore[import-untyped]
+    MetadataSerializer,
+)
 
 from metadata.models import (
     FIELD_VALUE_MAX_LENGTH,

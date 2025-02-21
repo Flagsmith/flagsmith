@@ -1,6 +1,11 @@
 from datetime import datetime
 
 import pytest
+from django.conf import settings
+from django.utils import timezone
+from freezegun.api import FrozenDateTimeFactory
+from pytest_django.fixtures import SettingsWrapper
+
 from app_analytics.models import (
     APIUsageBucket,
     APIUsageRaw,
@@ -15,10 +20,6 @@ from app_analytics.tasks import (
     track_feature_evaluation,
     track_request,
 )
-from django.conf import settings
-from django.utils import timezone
-from freezegun.api import FrozenDateTimeFactory
-from pytest_django.fixtures import SettingsWrapper
 
 if "analytics" not in settings.DATABASES:
     pytest.skip(
@@ -208,11 +209,17 @@ def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory):
     # for the last two hours, i.e: from 9:09:47 to 7:10:47
     for i in range(60 * 2):
         _create_feature_evaluation_event(  # type: ignore[no-untyped-call]
-            environment_id, feature_name, 1, now - timezone.timedelta(minutes=1 * i)  # type: ignore[attr-defined]
+            environment_id,
+            feature_name,
+            1,
+            now - timezone.timedelta(minutes=1 * i),  # type: ignore[attr-defined]
         )
         # create events in some other environments
         _create_feature_evaluation_event(  # type: ignore[no-untyped-call]
-            999, feature_name, 1, now - timezone.timedelta(minutes=1 * i)  # type: ignore[attr-defined]
+            999,
+            feature_name,
+            1,
+            now - timezone.timedelta(minutes=1 * i),  # type: ignore[attr-defined]
         )
         # create events for some other features
         _create_feature_evaluation_event(  # type: ignore[no-untyped-call]
@@ -449,16 +456,25 @@ def test_clean_up_old_analytics_data_removes_old_data(
     )
     new_feature_evaluation_raw_data.append(
         _create_feature_evaluation_event(  # type: ignore[no-untyped-call]
-            environment_id, "feature1", 1, now - timezone.timedelta(days=1)  # type: ignore[attr-defined]
+            environment_id,
+            "feature1",
+            1,
+            now - timezone.timedelta(days=1),  # type: ignore[attr-defined]
         )
     )
 
     # FeatureEvaluationRaw data that should be removed
     _create_feature_evaluation_event(  # type: ignore[no-untyped-call]
-        environment_id, "feature1", 1, now - timezone.timedelta(days=3)  # type: ignore[attr-defined]
+        environment_id,
+        "feature1",
+        1,
+        now - timezone.timedelta(days=3),  # type: ignore[attr-defined]
     )
     _create_feature_evaluation_event(  # type: ignore[no-untyped-call]
-        environment_id, "feature1", 1, now - timezone.timedelta(days=2)  # type: ignore[attr-defined]
+        environment_id,
+        "feature1",
+        1,
+        now - timezone.timedelta(days=2),  # type: ignore[attr-defined]
     )
 
     # FeatureEvaluationBucket data that should not be removed

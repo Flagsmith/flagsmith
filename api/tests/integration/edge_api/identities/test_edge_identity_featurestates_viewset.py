@@ -5,7 +5,6 @@ import uuid
 from unittest import mock
 
 import pytest
-from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
 from flag_engine.features.models import (
     FeatureModel,
@@ -21,6 +20,7 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
+from core.constants import BOOLEAN, INTEGER, STRING
 from edge_api.identities.models import (  # type: ignore[attr-defined]
     EdgeIdentity,
     IdentityFeaturesList,
@@ -545,9 +545,9 @@ def test_edge_identities_update_featurestate(  # type: ignore[no-untyped-def]
     expected_identity_document = copy.deepcopy(identity_document)
 
     # Next, let's modify the fs value that we updated
-    expected_identity_document["identity_features"][0][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    expected_identity_document["identity_features"][0]["feature_state_value"] = (
+        expected_feature_state_value
+    )
 
     # Next, let's update the enabled
     expected_identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
@@ -644,9 +644,9 @@ def test_edge_identities_update_mv_featurestate(  # type: ignore[no-untyped-def]
     expected_identity_document = copy.deepcopy(identity_document)
 
     # Next, let's modify the fs value that we updated
-    expected_identity_document["identity_features"][2][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    expected_identity_document["identity_features"][2]["feature_state_value"] = (
+        expected_feature_state_value
+    )
     # Next, let's update the enabled
     expected_identity_document["identity_features"][2]["enabled"] = expected_fs_enabled
 
@@ -880,9 +880,9 @@ def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no
     # have correct updates
 
     # First, let's modify the fs value that we updated
-    identity_document["identity_features"][0][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    identity_document["identity_features"][0]["feature_state_value"] = (
+        expected_feature_state_value
+    )
 
     # Next, let's update the enabled
     identity_document["identity_features"][0]["enabled"] = expected_fs_enabled

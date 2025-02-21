@@ -2,14 +2,6 @@ import json
 from datetime import date, timedelta
 
 import pytest
-from app_analytics.constants import (
-    CURRENT_BILLING_PERIOD,
-    NINETY_DAY_PERIOD,
-    PREVIOUS_BILLING_PERIOD,
-)
-from app_analytics.dataclasses import UsageData
-from app_analytics.models import FeatureEvaluationRaw
-from app_analytics.views import SDKAnalyticsFlags
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -18,6 +10,14 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from app_analytics.constants import (
+    CURRENT_BILLING_PERIOD,
+    NINETY_DAY_PERIOD,
+    PREVIOUS_BILLING_PERIOD,
+)
+from app_analytics.dataclasses import UsageData
+from app_analytics.models import FeatureEvaluationRaw
+from app_analytics.views import SDKAnalyticsFlags
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature

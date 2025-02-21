@@ -101,7 +101,6 @@ def build_paginated_response(
 def post_comment_to_github(
     installation_id: str, owner: str, repo: str, issue: str, body: str
 ) -> dict[str, Any]:
-
     url = f"{GITHUB_API_URL}repos/{owner}/{repo}/issues/{issue}/comments"
     headers = build_request_headers(installation_id)
     payload = {"body": body}

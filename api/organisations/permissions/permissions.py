@@ -204,7 +204,10 @@ class GithubIsAdminOrganisation(NestedIsOrganisationAdminPermission):
                 return request.user.is_master_api_key_user  # type: ignore[no-any-return,union-attr]
 
     def has_object_permission(  # type: ignore[no-untyped-def]
-        self, request: Request, view: GenericViewSet, obj  # type: ignore[override,type-arg]
+        self,
+        request: Request,
+        view: GenericViewSet,  # type: ignore[override,type-arg]
+        obj,
     ) -> bool:
         organisation_pk = view.kwargs.get("organisation_pk")
         if isinstance(request.user, FFAdminUser):

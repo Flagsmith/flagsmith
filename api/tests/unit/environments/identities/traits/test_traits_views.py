@@ -7,13 +7,13 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     VIEW_IDENTITIES,
 )
 from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
-from core.constants import INTEGER, STRING
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
+from core.constants import INTEGER, STRING
 from environments.identities.models import Identity
 from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,

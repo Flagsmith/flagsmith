@@ -2,11 +2,11 @@ import json
 from datetime import timedelta
 
 import pytest
-from core.constants import STRING
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
+from core.constants import STRING
 from environments.models import Environment
 from environments.tasks import rebuild_environment_document
 from features.models import Feature, FeatureSegment, FeatureState

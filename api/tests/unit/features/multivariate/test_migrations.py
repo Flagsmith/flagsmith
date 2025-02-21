@@ -1,8 +1,9 @@
 import typing
 
 import pytest
-from core.constants import STRING
 from django.conf import settings
+
+from core.constants import STRING
 
 
 @pytest.mark.skipif(

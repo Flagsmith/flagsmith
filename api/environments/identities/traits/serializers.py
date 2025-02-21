@@ -1,6 +1,6 @@
-from core.constants import INTEGER
 from rest_framework import exceptions, serializers
 
+from core.constants import INTEGER
 from environments.identities.models import Identity
 from environments.identities.serializers import IdentitySerializer
 from environments.identities.traits.fields import TraitValueField

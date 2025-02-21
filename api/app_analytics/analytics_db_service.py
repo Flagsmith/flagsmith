@@ -1,6 +1,11 @@
 from datetime import date, datetime, timedelta
 from typing import List
 
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db.models import Sum
+from django.utils import timezone
+
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
@@ -16,11 +21,6 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
-from dateutil.relativedelta import relativedelta
-from django.conf import settings
-from django.db.models import Sum
-from django.utils import timezone
-
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation
