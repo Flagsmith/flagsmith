@@ -163,12 +163,6 @@ jobs:
         with:
           file_path: './chart/charts/flagsmith/Chart.yaml'
 
-      - uses: us-ignite/action-bump-semver@main
-        id: bump-semver
-        with:
-          current_version: ${{ steps.yaml-output.outputs.version }}
-          level: minor
-
       - name: Update flagsmith-charts values.yaml with latest docker version
         uses: fjogeleit/yaml-update-action@main
         with:
@@ -185,6 +179,5 @@ jobs:
           valueFile: 'charts/flagsmith/Chart.yaml'
           changes: |
             {
-              "appVersion": "${{ steps.version-trim.outputs.version }}",
-              "version": "${{ steps.bump-semver.outputs.new_version }}"
+              "appVersion": "${{ steps.version-trim.outputs.version }}"
             }
