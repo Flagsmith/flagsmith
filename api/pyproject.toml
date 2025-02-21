@@ -16,6 +16,7 @@ dynamic = ["dependencies"]
 line-length = 88
 indent-width = 4
 target-version = "py311"
+extend-exclude = ["migrations"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.
@@ -37,6 +38,8 @@ docstring-code-format = true
 # Set the line length limit used when formatting code snippets in
 # docstrings.
 docstring-code-line-length = "dynamic"
+
+
 
 [tool.ruff.lint]
 # Establish parity with flake8 + isort
