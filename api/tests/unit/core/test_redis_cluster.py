@@ -1,8 +1,11 @@
 import pytest
-from core.redis_cluster import ClusterConnectionFactory, SafeRedisClusterClient
-from django_redis.exceptions import ConnectionInterrupted  # type: ignore[import-untyped]
+from django_redis.exceptions import (  # type: ignore[import-untyped]
+    ConnectionInterrupted,
+)
 from pytest_mock import MockerFixture
 from redis.exceptions import RedisClusterException
+
+from core.redis_cluster import ClusterConnectionFactory, SafeRedisClusterClient
 
 
 def test_cluster_connection_factory__connect_cache(mocker: MockerFixture):  # type: ignore[no-untyped-def]

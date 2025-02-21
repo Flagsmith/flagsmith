@@ -1,9 +1,10 @@
 import typing
 from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
 from django.utils import timezone
+
+from app_analytics.influxdb_wrapper import get_top_organisations
 
 from .chargebee import get_subscription_metadata_from_id  # type: ignore[attr-defined]
 from .models import Organisation, OrganisationSubscriptionInformationCache

@@ -1,7 +1,11 @@
 import typing
 
-from common.environments.permissions import VIEW_ENVIRONMENT  # type: ignore[import-untyped]
-from common.projects.permissions import CREATE_ENVIRONMENT  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    VIEW_ENVIRONMENT,
+)
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+)
 from django.db.models import Model, Q
 from rest_framework import exceptions
 from rest_framework.permissions import BasePermission, IsAuthenticated

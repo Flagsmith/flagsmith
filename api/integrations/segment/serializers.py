@@ -8,7 +8,6 @@ from integrations.segment.models import SegmentConfiguration
 
 
 class SegmentConfigurationSerializer(BaseEnvironmentIntegrationModelSerializer):
-
     base_url = serializers.ChoiceField(
         choices=[
             constants.DEFAULT_BASE_URL,

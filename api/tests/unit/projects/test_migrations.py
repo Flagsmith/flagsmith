@@ -1,5 +1,8 @@
 import pytest
-from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 
 

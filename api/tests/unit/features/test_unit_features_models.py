@@ -226,7 +226,6 @@ def test_cannot_create_duplicate_feature_state_in_an_environment(
     feature: Feature,
     environment: Environment,
 ) -> None:
-
     # Given
     duplicate_feature_state = FeatureState(
         feature=feature, environment=environment, enabled=True

@@ -1,8 +1,15 @@
 from django.conf import settings
 from django.db import models
-from django_lifecycle import BEFORE_UPDATE, LifecycleModelMixin, hook  # type: ignore[import-untyped]
+from django_lifecycle import (  # type: ignore[import-untyped]
+    BEFORE_UPDATE,
+    LifecycleModelMixin,
+    hook,
+)
 from rest_framework_api_key.models import AbstractAPIKey, APIKeyManager
-from softdelete.models import SoftDeleteManager, SoftDeleteObject  # type: ignore[import-untyped]
+from softdelete.models import (  # type: ignore[import-untyped]
+    SoftDeleteManager,
+    SoftDeleteObject,
+)
 
 from organisations.models import Organisation
 

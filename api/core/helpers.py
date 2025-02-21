@@ -7,7 +7,7 @@ from rest_framework.request import Request
 
 INSECURE_DOMAINS = ("localhost", "127.0.0.1")
 
-_insecure_domain_pattern = re.compile(rf'({"|".join(INSECURE_DOMAINS)})(:\d+)?')
+_insecure_domain_pattern = re.compile(rf"({'|'.join(INSECURE_DOMAINS)})(:\d+)?")
 
 
 def get_current_site_url(request: HttpRequest | Request | None = None) -> str:

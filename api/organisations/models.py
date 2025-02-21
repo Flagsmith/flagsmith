@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from typing import Any
 
-from core.models import SoftDeleteExportableModel
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -19,6 +18,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from app.utils import is_enterprise, is_saas
+from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead,
@@ -396,9 +396,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         if self.organisation.has_subscription_information_cache():
             # Getting the data from the subscription information cache because
             # data is guaranteed to be up to date by using a Chargebee webhook.
-            cb_metadata = (
-                self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
-            )
+            cb_metadata = self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
         else:
             cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 

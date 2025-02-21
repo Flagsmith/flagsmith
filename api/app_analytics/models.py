@@ -2,7 +2,11 @@ from datetime import timedelta
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook  # type: ignore[import-untyped]
+from django_lifecycle import (  # type: ignore[import-untyped]
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 
 
 class Resource(models.IntegerChoices):

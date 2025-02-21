@@ -1,6 +1,6 @@
-from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
 from django.db import models
 
+from core.models import AbstractBaseExportableModel, SoftDeleteExportableModel
 from projects.models import Project
 
 

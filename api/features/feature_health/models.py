@@ -1,13 +1,13 @@
 import typing
 
-from core.models import (
-    AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.db import models
 from django.utils import timezone
 
 from audit.related_object_type import RelatedObjectType
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from features.feature_health.constants import (
     FEATURE_HEALTH_EVENT_CREATED_FOR_ENVIRONMENT_MESSAGE,
     FEATURE_HEALTH_EVENT_CREATED_MESSAGE,

@@ -1,7 +1,9 @@
 import json
 
 import pytest
-from common.environments.permissions import VIEW_ENVIRONMENT  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    VIEW_ENVIRONMENT,
+)
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient

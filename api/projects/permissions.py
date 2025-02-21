@@ -34,7 +34,7 @@ class ProjectPermissions(IsAuthenticated):
             if (
                 subscription_metadata.projects
                 and total_projects_created >= subscription_metadata.projects
-                and not getattr(request, "is_e2e", False) is True
+                and getattr(request, "is_e2e", False) is not True
             ):
                 return False
             if organisation.restrict_project_create_to_admin:

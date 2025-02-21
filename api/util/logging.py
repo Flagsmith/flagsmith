@@ -6,7 +6,9 @@ from typing import Any
 
 from django.conf import settings
 from gunicorn.config import Config  # type: ignore[import-untyped]
-from gunicorn.instrument.statsd import Statsd as GunicornLogger  # type: ignore[import-untyped]
+from gunicorn.instrument.statsd import (  # type: ignore[import-untyped]
+    Statsd as GunicornLogger,
+)
 
 
 class JsonFormatter(logging.Formatter):

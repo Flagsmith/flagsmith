@@ -3,10 +3,6 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import (
-    SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
@@ -25,6 +21,10 @@ from audit.constants import (
     SEGMENT_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from core.models import (
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
@@ -235,7 +235,8 @@ class SegmentRule(
         num_parents = sum(parent is not None for parent in parents)
         if num_parents != 1:
             raise ValidationError(
-                "Segment rule must have exactly one parent, %d found", num_parents  # type: ignore[arg-type]
+                "Segment rule must have exactly one parent, %d found",
+                num_parents,  # type: ignore[arg-type]
             )
 
     def __str__(self):  # type: ignore[no-untyped-def]
@@ -319,7 +320,8 @@ class SegmentRule(
 
 
 class Condition(
-    SoftDeleteExportableModel, abstract_base_auditable_model_factory(["uuid"])  # type: ignore[misc]
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     history_record_class_path = "segments.models.HistoricalCondition"
     related_object_type = RelatedObjectType.SEGMENT
@@ -370,7 +372,6 @@ class Condition(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
-
             if self.rule.deleted_at:
                 return True
 

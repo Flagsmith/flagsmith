@@ -1,9 +1,9 @@
 import typing
 
-from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
+from core.constants import BOOLEAN, FLOAT, INTEGER, STRING
 from environments.identities.traits.exceptions import TraitPersistenceError
 
 

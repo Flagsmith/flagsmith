@@ -32,11 +32,16 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
             tag_ids = list(feature.tags.values_list("id", flat=True))
 
         return request.user.has_environment_permission(  # type: ignore[union-attr]
-            permission=required_permission, environment=environment, tag_ids=tag_ids  # type: ignore[arg-type]
+            permission=required_permission,
+            environment=environment,
+            tag_ids=tag_ids,  # type: ignore[arg-type]
         )
 
     def has_object_permission(
-        self, request: Request, view: GenericViewSet, obj: EnvironmentFeatureVersion  # type: ignore[override,type-arg]  # noqa: E501
+        self,
+        request: Request,
+        view: GenericViewSet,  # type: ignore[override,type-arg]
+        obj: EnvironmentFeatureVersion,  # noqa: E501
     ) -> bool:
         if view.action == "retrieve":
             # permissions for retrieving handled in view.get_queryset
@@ -49,7 +54,9 @@ class EnvironmentFeatureVersionPermissions(BasePermission):
             tag_ids = list(obj.feature.tags.values_list("id", flat=True))
 
         return request.user.has_environment_permission(  # type: ignore[union-attr]
-            permission=required_permission, environment=obj.environment, tag_ids=tag_ids  # type: ignore[arg-type]
+            permission=required_permission,
+            environment=obj.environment,
+            tag_ids=tag_ids,  # type: ignore[arg-type]
         )
 
 
@@ -75,13 +82,18 @@ class EnvironmentFeatureVersionFeatureStatePermissions(BasePermission):
         )
 
     def has_object_permission(
-        self, request: Request, view: GenericViewSet, obj: FeatureState  # type: ignore[override,type-arg]
+        self,
+        request: Request,
+        view: GenericViewSet,  # type: ignore[override,type-arg]
+        obj: FeatureState,
     ) -> bool:
         if view.action == "retrieve":
             return request.user.has_environment_permission(  # type: ignore[union-attr]
-                permission=VIEW_ENVIRONMENT, environment=obj.environment  # type: ignore[arg-type]
+                permission=VIEW_ENVIRONMENT,
+                environment=obj.environment,  # type: ignore[arg-type]
             )
 
         return request.user.has_environment_permission(  # type: ignore[union-attr]
-            permission=UPDATE_FEATURE_STATE, environment=obj.environment  # type: ignore[arg-type]
+            permission=UPDATE_FEATURE_STATE,
+            environment=obj.environment,  # type: ignore[arg-type]
         )

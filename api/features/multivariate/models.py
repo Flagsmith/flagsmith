@@ -1,10 +1,6 @@
 import typing
 import uuid
 
-from core.models import (
-    AbstractBaseExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -17,6 +13,10 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 
 from audit.related_object_type import RelatedObjectType
+from core.models import (
+    AbstractBaseExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE, STANDARD
 

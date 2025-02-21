@@ -1,6 +1,8 @@
 from unittest import mock
 
-from common.projects.permissions import CREATE_ENVIRONMENT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+)
 
 from environments.identities.models import Identity
 from environments.models import Environment

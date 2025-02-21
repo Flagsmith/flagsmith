@@ -5,7 +5,9 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog

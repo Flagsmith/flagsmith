@@ -6,8 +6,9 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_ENVIRONMENT  # type: ignore[import-untyped]
-from core.constants import STRING
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+)
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -20,6 +21,7 @@ from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
+from core.constants import STRING
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook

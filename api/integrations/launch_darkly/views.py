@@ -1,4 +1,7 @@
-from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+    VIEW_PROJECT,
+)
 from django.db.models import QuerySet
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404

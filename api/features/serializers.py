@@ -13,7 +13,9 @@ from common.metadata.serializers import (  # type: ignore[import-untyped]
     MetadataSerializer,
     SerializerWithMetadata,
 )
-from drf_writable_nested import WritableNestedModelSerializer  # type: ignore[attr-defined]
+from drf_writable_nested import (  # type: ignore[attr-defined]
+    WritableNestedModelSerializer,
+)
 from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -344,13 +346,10 @@ class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
 
     class Meta(FeatureSerializerWithMetadata.Meta):
-        read_only_fields = (
-            FeatureSerializerWithMetadata.Meta.read_only_fields
-            + (  # type: ignore[assignment]
-                "default_enabled",
-                "initial_value",
-                "name",
-            )
+        read_only_fields = FeatureSerializerWithMetadata.Meta.read_only_fields + (  # type: ignore[assignment]
+            "default_enabled",
+            "initial_value",
+            "name",
         )
 
 
@@ -499,7 +498,6 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
                 and feature_state.environment.project.github_project.exists()  # type: ignore[union-attr]
                 and feature_state.environment.project.organisation.github_config.exists()  # type: ignore[union-attr]
             ):
-
                 call_github_task(
                     organisation_id=feature_state.feature.project.organisation_id,  # type: ignore[union-attr]
                     type=GitHubEventType.FLAG_UPDATED.value,

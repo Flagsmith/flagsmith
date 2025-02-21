@@ -19,7 +19,9 @@ class BasePipedriveModel:
 
     @classmethod
     def from_response_data(
-        cls, data: dict, schema: Schema = None  # type: ignore[type-arg,assignment]
+        cls,
+        data: dict,  # type: ignore[type-arg]
+        schema: Schema = None,  # type: ignore[assignment]
     ) -> "BasePipedriveModel":
         schema = schema or cls.schema
         return cls(**schema.load(data))

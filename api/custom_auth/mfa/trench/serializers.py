@@ -24,7 +24,8 @@ class MFAMethodActivationConfirmationValidator(Serializer):  # type: ignore[type
     def validate_code(self, value: str) -> str:
         mfa_model = get_mfa_model()
         mfa = mfa_model.objects.get_by_name(
-            user_id=self._user.id, name=self._mfa_method_name  # type: ignore[attr-defined]
+            user_id=self._user.id,  # type: ignore[attr-defined]
+            name=self._mfa_method_name,
         )
         self._validate_mfa_method(mfa)
 

@@ -1,6 +1,6 @@
-from core.models import AbstractBaseExportableModel
 from django.db import models
 
+from core.models import AbstractBaseExportableModel
 from projects.models import Project
 
 

@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
-from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from django.conf import settings
 from django.db.models import Q, Sum
 from django.utils import timezone
@@ -10,6 +9,7 @@ from task_processor.decorators import (  # type: ignore[import-untyped]
     register_task_handler,
 )
 
+from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from environments.models import Environment
 
 from .models import (
@@ -29,7 +29,9 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:
         },
     )
     def populate_bucket(  # type: ignore[no-untyped-def]
-        bucket_size: int, run_every: int, source_bucket_size: int = None  # type: ignore[assignment]
+        bucket_size: int,
+        run_every: int,
+        source_bucket_size: int = None,  # type: ignore[assignment]
     ):
         populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
@@ -139,7 +141,9 @@ def get_time_buckets(
 
 
 def populate_api_usage_bucket(  # type: ignore[no-untyped-def]
-    bucket_size: int, run_every: int, source_bucket_size: int = None  # type: ignore[assignment]
+    bucket_size: int,
+    run_every: int,
+    source_bucket_size: int = None,  # type: ignore[assignment]
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_api_usage_source_data(
@@ -156,7 +160,9 @@ def populate_api_usage_bucket(  # type: ignore[no-untyped-def]
 
 
 def populate_feature_evaluation_bucket(  # type: ignore[no-untyped-def]
-    bucket_size: int, run_every: int, source_bucket_size: int = None  # type: ignore[assignment]
+    bucket_size: int,
+    run_every: int,
+    source_bucket_size: int = None,  # type: ignore[assignment]
 ):
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_feature_evaluation_source_data(
@@ -173,7 +179,9 @@ def populate_feature_evaluation_bucket(  # type: ignore[no-untyped-def]
 
 
 def _get_api_usage_source_data(
-    process_from: datetime, process_till: datetime, source_bucket_size: int = None  # type: ignore[assignment]
+    process_from: datetime,
+    process_till: datetime,
+    source_bucket_size: int = None,  # type: ignore[assignment]
 ) -> dict:  # type: ignore[type-arg]
     filters = Q(
         created_at__lte=process_till,
@@ -193,7 +201,9 @@ def _get_api_usage_source_data(
 
 
 def _get_feature_evaluation_source_data(
-    process_from: datetime, process_till: datetime, source_bucket_size: int = None  # type: ignore[assignment]
+    process_from: datetime,
+    process_till: datetime,
+    source_bucket_size: int = None,  # type: ignore[assignment]
 ) -> dict:  # type: ignore[type-arg]
     filters = Q(
         created_at__lte=process_till,

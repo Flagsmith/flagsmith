@@ -1,4 +1,6 @@
-from djoser.serializers import UserSerializer as DjoserUserSerializer  # type: ignore[import-untyped]
+from djoser.serializers import (  # type: ignore[import-untyped]
+    UserSerializer as DjoserUserSerializer,
+)
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 

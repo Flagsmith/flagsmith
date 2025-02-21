@@ -1,6 +1,7 @@
+from django.conf import settings
+
 from app_analytics.cache import APIUsageCache
 from app_analytics.tasks import track_request
-from django.conf import settings
 
 from .models import Resource
 from .track import (

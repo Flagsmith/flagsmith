@@ -3,7 +3,6 @@ from decimal import Decimal
 
 import pytest
 from boto3.dynamodb.conditions import Key
-from core.constants import INTEGER
 from django.core.exceptions import ObjectDoesNotExist
 from flag_engine.identities.models import IdentityModel
 from flag_engine.segments.constants import IN
@@ -11,6 +10,7 @@ from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
 
+from core.constants import INTEGER
 from edge_api.identities.search import (
     IDENTIFIER_ATTRIBUTE,
     EdgeIdentitySearchData,

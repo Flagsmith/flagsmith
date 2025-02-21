@@ -6,7 +6,6 @@ from .models import FeatureExternalResource
 
 
 class FeatureExternalResourceSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-
     metadata = serializers.JSONField(required=False, allow_null=True, default=None)
 
     class Meta:

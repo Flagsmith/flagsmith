@@ -174,7 +174,9 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         return self.query_items(**query_kwargs)
 
     def get_segment_ids(
-        self, identity_pk: str = None, identity_model: IdentityModel = None  # type: ignore[assignment]
+        self,
+        identity_pk: str = None,  # type: ignore[assignment]
+        identity_model: IdentityModel = None,  # type: ignore[assignment]
     ) -> list:  # type: ignore[type-arg]
         if not (identity_pk or identity_model):
             raise ValueError("Must provide one of identity_pk or identity_model.")

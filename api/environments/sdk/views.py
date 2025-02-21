@@ -1,9 +1,9 @@
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.http import HttpRequest
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.models import Environment
 from environments.permissions.permissions import EnvironmentKeyPermissions

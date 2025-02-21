@@ -4,8 +4,10 @@ from typing import Any
 from unittest import mock
 
 import pytest
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES  # type: ignore[import-untyped]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +17,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )

@@ -15,7 +15,8 @@ class CustomApplicationBackend:
 
     def dispatch_message(self):  # type: ignore[no-untyped-def]
         qr_link = self._totp.provisioning_uri(
-            self._mfa_method.user.email, settings.TRENCH_AUTH["APPLICATION_ISSUER_NAME"]  # type: ignore[arg-type]
+            self._mfa_method.user.email,
+            settings.TRENCH_AUTH["APPLICATION_ISSUER_NAME"],  # type: ignore[arg-type]
         )
         data = {
             "qr_link": qr_link,

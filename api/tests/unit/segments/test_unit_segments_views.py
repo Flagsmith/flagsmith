@@ -2,7 +2,10 @@ import json
 import random
 
 import pytest
-from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    MANAGE_SEGMENTS,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType

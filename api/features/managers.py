@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 
 import typing
 
-from core.models import UUIDNaturalKeyManagerMixin
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from ordered_model.models import OrderedModelManager  # type: ignore[import-untyped]
 from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
 
+from core.models import UUIDNaturalKeyManagerMixin
 from features.versioning.models import EnvironmentFeatureVersion
 
 if typing.TYPE_CHECKING:
@@ -25,7 +25,10 @@ class FeatureManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ig
 
 class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # type: ignore[misc]
     def get_live_feature_states(  # type: ignore[no-untyped-def]
-        self, environment: "Environment", additional_filters: Q = None, **kwargs  # type: ignore[assignment]
+        self,
+        environment: "Environment",
+        additional_filters: Q = None,  # type: ignore[assignment]
+        **kwargs,
     ) -> QuerySet["FeatureState"]:
         # TODO: replace additional_filters with just using kwargs in calling locations
 

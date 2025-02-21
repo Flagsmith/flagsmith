@@ -3,8 +3,6 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import abstract_base_auditable_model_factory
-from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
@@ -28,6 +26,8 @@ from audit.constants import (
     ENVIRONMENT_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from core.models import abstract_base_auditable_model_factory
+from core.request_origin import RequestOrigin
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -172,7 +172,10 @@ class Environment(
         return (self.api_key,)
 
     def clone(
-        self, name: str, api_key: str = None, clone_feature_states_async: bool = False  # type: ignore[assignment]
+        self,
+        name: str,
+        api_key: str = None,  # type: ignore[assignment]
+        clone_feature_states_async: bool = False,
     ) -> "Environment":
         """
         Creates a clone of the environment, related objects and returns the
@@ -243,7 +246,9 @@ class Environment(
 
     @classmethod
     def write_environments_to_dynamodb(
-        cls, environment_id: int = None, project_id: int = None  # type: ignore[assignment]
+        cls,
+        environment_id: int = None,  # type: ignore[assignment]
+        project_id: int = None,  # type: ignore[assignment]
     ) -> None:
         # use a list to make sure the entire qs is evaluated up front
         environments_filter = (
@@ -289,7 +294,9 @@ class Environment(
             environment_v2_wrapper.write_environments(environments)
 
     def get_feature_state(
-        self, feature_id: int, filter_kwargs: dict = None  # type: ignore[type-arg,assignment]
+        self,
+        feature_id: int,
+        filter_kwargs: dict = None,  # type: ignore[type-arg,assignment]
     ) -> typing.Optional[FeatureState]:
         """
         Get the corresponding feature state in an environment for a given feature id.

@@ -54,9 +54,7 @@ class UserPermissionGroupOrganisationPermissionViewSet(
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return UserPermissionGroupOrganisationPermission.objects.select_related(  # type: ignore[misc]
             "group"
-        ).filter(
-            organisation_id=self.kwargs.get("organisation_pk")
-        )
+        ).filter(organisation_id=self.kwargs.get("organisation_pk"))
 
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         return {"list": UserPermissionGroupOrganisationPermissionListSerializer}.get(

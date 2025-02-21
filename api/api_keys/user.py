@@ -73,7 +73,10 @@ class APIKeyUser(UserABC):
         return False
 
     def has_project_permission(
-        self, permission: str, project: "Project", tag_ids: typing.List[int] = None  # type: ignore[assignment]
+        self,
+        permission: str,
+        project: "Project",
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> bool:
         return project in self.get_permitted_projects(permission, tag_ids)
 
@@ -95,7 +98,9 @@ class APIKeyUser(UserABC):
         )
 
     def get_permitted_projects(
-        self, permission_key: str, tag_ids: typing.List[int] = None  # type: ignore[assignment]
+        self,
+        permission_key: str,
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> QuerySet["Project"]:
         return get_permitted_projects_for_master_api_key(
             self.key, permission_key, tag_ids

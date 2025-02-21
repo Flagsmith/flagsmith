@@ -125,7 +125,9 @@ class EdgeIdentityViewSet(
         search_query: typing.Optional[EdgeIdentitySearchData]
         if not (search_query := query_serializer.validated_data.get("q")):
             return EdgeIdentity.dynamo_wrapper.get_all_items(
-                self.kwargs["environment_api_key"], page_size, start_key  # type: ignore[arg-type]
+                self.kwargs["environment_api_key"],
+                page_size,  # type: ignore[arg-type]
+                start_key,
             )
 
         return EdgeIdentity.dynamo_wrapper.search_items(

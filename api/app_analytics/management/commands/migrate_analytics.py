@@ -1,8 +1,9 @@
 import argparse
 from typing import Any
 
-from app_analytics.migrate_to_pg import migrate_feature_evaluations
 from django.core.management import BaseCommand
+
+from app_analytics.migrate_to_pg import migrate_feature_evaluations
 
 
 class Command(BaseCommand):

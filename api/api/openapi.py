@@ -2,7 +2,11 @@ import inspect
 from typing import Any
 
 from drf_yasg.inspectors import SwaggerAutoSchema  # type: ignore[import-untyped]
-from drf_yasg.openapi import SCHEMA_DEFINITIONS, Response, Schema  # type: ignore[import-untyped]
+from drf_yasg.openapi import (  # type: ignore[import-untyped]
+    SCHEMA_DEFINITIONS,
+    Response,
+    Schema,
+)
 from pydantic import BaseModel
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from pydantic_core import core_schema

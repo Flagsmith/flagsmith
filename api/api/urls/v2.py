@@ -1,5 +1,6 @@
-from app_analytics.views import SDKAnalyticsFlagsV2
 from django.urls import re_path
+
+from app_analytics.views import SDKAnalyticsFlagsV2
 
 app_name = "v2"
 

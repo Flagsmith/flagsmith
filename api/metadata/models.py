@@ -1,10 +1,10 @@
 from urllib.parse import urlparse
 
-from core.models import AbstractBaseExportableModel
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+from core.models import AbstractBaseExportableModel
 from organisations.models import Organisation
 
 from .fields import GenericObjectID

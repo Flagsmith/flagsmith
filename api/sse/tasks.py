@@ -2,7 +2,6 @@ import logging
 from datetime import timedelta
 
 import requests
-from app_analytics.influxdb_wrapper import influxdb_client
 from django.conf import settings
 from influxdb_client import Point, WriteOptions
 from task_processor.decorators import (  # type: ignore[import-untyped]
@@ -10,6 +9,7 @@ from task_processor.decorators import (  # type: ignore[import-untyped]
     register_task_handler,
 )
 
+from app_analytics.influxdb_wrapper import influxdb_client
 from environments.models import Environment
 from projects.models import Project
 from sse import sse_service

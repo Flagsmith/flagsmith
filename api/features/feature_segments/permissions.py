@@ -1,6 +1,8 @@
 from contextlib import suppress
 
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_SEGMENT_OVERRIDES,
+)
 from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment

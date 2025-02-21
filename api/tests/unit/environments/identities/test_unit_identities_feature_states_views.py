@@ -5,11 +5,11 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from core.constants import STRING
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
+from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature, FeatureState, FeatureStateValue
@@ -123,7 +123,6 @@ def test_identity_clone_flag_states_from(
     environment: Environment,
     admin_client: Client,
 ) -> None:
-
     def features_for_identity_clone_flag_states_from(
         project: Project,
     ) -> tuple[Feature, ...]:

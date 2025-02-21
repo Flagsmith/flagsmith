@@ -1,6 +1,6 @@
 import pytest
-from core.constants import STRING
 
+from core.constants import STRING
 from features.models import FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,

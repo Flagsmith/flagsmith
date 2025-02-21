@@ -4,18 +4,22 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import (
-    SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.conf import settings
 from django.db import models
 from django.db.models import Index
 from django.utils import timezone
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook  # type: ignore[import-untyped]
+from django_lifecycle import (  # type: ignore[import-untyped]
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
+from core.models import (
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from features.versioning.dataclasses import Conflict
 from features.versioning.exceptions import FeatureVersioningError
 from features.versioning.managers import EnvironmentFeatureVersionManager
@@ -142,9 +146,9 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         live_from: datetime.datetime | None = None,
         persist: bool = True,
     ) -> None:
-        assert not (
-            published_by and published_by_api_key
-        ), "Version must be published by either a user or a MasterAPIKey"
+        assert not (published_by and published_by_api_key), (
+            "Version must be published by either a user or a MasterAPIKey"
+        )
 
         now = timezone.now()
 

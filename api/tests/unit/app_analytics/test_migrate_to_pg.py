@@ -1,9 +1,10 @@
 import pytest
-from app_analytics.migrate_to_pg import migrate_feature_evaluations
-from app_analytics.models import FeatureEvaluationBucket
 from django.conf import settings
 from django.utils import timezone
 from pytest_mock import MockerFixture
+
+from app_analytics.migrate_to_pg import migrate_feature_evaluations
+from app_analytics.models import FeatureEvaluationBucket
 
 
 @pytest.mark.skipif(

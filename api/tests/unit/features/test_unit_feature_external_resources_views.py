@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 import pytest
 import responses
 import simplejson as json  # type: ignore[import-untyped]
-from common.environments.permissions import UPDATE_FEATURE_STATE  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    UPDATE_FEATURE_STATE,
+)
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 from django.utils.formats import get_format
@@ -78,7 +80,6 @@ def test_create_feature_external_resource(
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
-
     # Given
     repository_owner_name = (
         f"{github_repository.repository_owner}/{github_repository.repository_name}"
@@ -195,7 +196,6 @@ def test_create_feature_external_resource_missing_tags(
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
-
     # Given
     Tag.objects.all().delete()
     repository_owner_name = (
@@ -788,7 +788,6 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
     post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
-
     # Given
     environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature

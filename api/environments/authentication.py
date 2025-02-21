@@ -1,9 +1,9 @@
-from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from core.request_origin import RequestOrigin
 from environments.api_keys import SERVER_API_KEY_PREFIX
 from environments.models import Environment
 

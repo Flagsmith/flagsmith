@@ -4,7 +4,6 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
-from core.helpers import get_current_site_url
 from dateutil.relativedelta import relativedelta
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -13,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
+from core.helpers import get_current_site_url
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.constants import (
     API_USAGE_ALERT_THRESHOLDS,

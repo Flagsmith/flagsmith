@@ -1,10 +1,11 @@
 from typing import Any
 from urllib.parse import urlparse
 
-from core.helpers import get_current_site_url
 from corsheaders.signals import check_request_enabled  # type: ignore[import-untyped]
 from django.dispatch import receiver
 from django.http import HttpRequest
+
+from core.helpers import get_current_site_url
 
 
 @receiver(check_request_enabled)

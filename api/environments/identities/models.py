@@ -157,7 +157,9 @@ class Identity(models.Model):
         return {fs.feature_id: fs for fs in self.identity_features.all()}
 
     def get_segments(
-        self, traits: typing.List[Trait] = None, overrides_only: bool = False  # type: ignore[assignment]
+        self,
+        traits: typing.List[Trait] = None,  # type: ignore[assignment]
+        overrides_only: bool = False,
     ) -> typing.List[Segment]:
         """
         Get the list of segments this identity is a part of.

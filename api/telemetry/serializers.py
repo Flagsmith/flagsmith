@@ -1,7 +1,8 @@
-from app_analytics.influxdb_wrapper import InfluxDBWrapper
-from core.helpers import get_ip_address_from_request
 from django.conf import settings
 from rest_framework import serializers
+
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from core.helpers import get_ip_address_from_request
 
 
 class TelemetrySerializer(serializers.Serializer):  # type: ignore[type-arg]

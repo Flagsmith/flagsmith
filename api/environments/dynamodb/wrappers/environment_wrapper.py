@@ -76,7 +76,6 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         feature_id: int | None = None,
         feature_ids: None | list[int] = None,
     ) -> list[dict[str, Any]] | list[IdentityOverridesQueryResponse]:
-
         try:
             if feature_ids is None:
                 return list(

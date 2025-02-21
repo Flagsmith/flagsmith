@@ -3,7 +3,6 @@ from datetime import timedelta
 
 import freezegun
 import pytest
-from core.helpers import get_current_site_url
 from django.contrib.sites.models import Site
 from django.db.models import Q
 from django.utils import timezone
@@ -20,6 +19,7 @@ from audit.constants import (
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.helpers import get_current_site_url
 from environments.models import Environment
 from features.models import Feature, FeatureState
 from features.versioning.models import (
@@ -131,9 +131,7 @@ def test_change_request_is_approved_returns_true_when_minimum_change_request_app
     change_request_no_required_approvals, mocker, environment
 ):
     # Given
-    change_request_no_required_approvals.environment.minimum_change_request_approvals = (
-        None
-    )
+    change_request_no_required_approvals.environment.minimum_change_request_approvals = None
     change_request_no_required_approvals.save()
     # Then
     assert change_request_no_required_approvals.is_approved() is True

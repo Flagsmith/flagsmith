@@ -149,7 +149,7 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
     from django.conf import settings
 
     for db_settings in settings.DATABASES.values():
-        test_db_name = f'{TEST_DATABASE_PREFIX}{db_settings["NAME"]}_{test_db_suffix}'
+        test_db_name = f"{TEST_DATABASE_PREFIX}{db_settings['NAME']}_{test_db_suffix}"
         db_settings["NAME"] = test_db_name
 
 

@@ -5,8 +5,6 @@ from unittest import mock
 from unittest.mock import MagicMock, Mock
 
 import pytest
-from core.constants import STRING
-from core.request_origin import RequestOrigin
 from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
@@ -16,6 +14,8 @@ from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.constants import STRING
+from core.request_origin import RequestOrigin
 from environments.identities.models import Identity
 from environments.models import (
     Environment,

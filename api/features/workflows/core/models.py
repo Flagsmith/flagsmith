@@ -3,12 +3,6 @@ import logging
 import typing
 from datetime import datetime
 
-from core.helpers import get_current_site_url
-from core.models import (
-    AbstractBaseExportableModel,
-    SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
@@ -35,6 +29,12 @@ from audit.related_object_type import RelatedObjectType
 from audit.tasks import (
     create_feature_state_updated_by_change_request_audit_log,
     create_feature_state_went_live_audit_log,
+)
+from core.helpers import get_current_site_url
+from core.models import (
+    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
 )
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
@@ -339,9 +339,10 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
             return first_change_set.live_from  # type: ignore[no-any-return]
 
         # Finally, we do the same for environment feature versions.
-        elif first_environment_feature_version := self.environment_feature_versions.order_by(
-            "live_from"
-        ).first():
+        elif (
+            first_environment_feature_version
+            := self.environment_feature_versions.order_by("live_from").first()
+        ):
             return first_environment_feature_version.live_from
 
         return None

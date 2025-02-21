@@ -2,12 +2,16 @@ import logging
 import uuid
 
 import requests
-from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from django.conf import settings
 from django.core.cache import caches
-from six.moves.urllib.parse import quote  # type: ignore[import-untyped]  # python 2/3 compatible urllib import
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from six.moves.urllib.parse import (  # type: ignore[import-untyped]
+    quote,  # python 2/3 compatible urllib import
+)
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
+from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
 from util.util import postpone
 

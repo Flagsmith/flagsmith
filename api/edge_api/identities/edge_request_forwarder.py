@@ -1,12 +1,14 @@
 import json
 
 import requests
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
-from core.signing import sign_payload
 from django.conf import settings
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 from task_processor.models import TaskPriority  # type: ignore[import-untyped]
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from core.signing import sign_payload
 from environments.dynamodb.migrator import IdentityMigrator
 
 
@@ -47,7 +49,10 @@ def forward_trait_request(  # type: ignore[no-untyped-def]
 
 
 def forward_trait_request_sync(  # type: ignore[no-untyped-def]
-    request_method: str, headers: dict, project_id: int, payload: dict  # type: ignore[type-arg]
+    request_method: str,
+    headers: dict,  # type: ignore[type-arg]
+    project_id: int,
+    payload: dict,  # type: ignore[type-arg]
 ):
     if not _should_forward(project_id):
         return

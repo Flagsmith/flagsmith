@@ -1,7 +1,6 @@
-from core.models import AbstractBaseAuditableModel
-
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.models import AbstractBaseAuditableModel
 from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 

@@ -224,7 +224,6 @@ def test_multivariate_feature_state_value__get_skip_create_audit_log_for_feature
     multivariate_feature: MultivariateFeatureOption,
     environment: Environment,
 ) -> None:
-
     # Given
     mvfsv = MultivariateFeatureStateValue.objects.filter(
         feature_state__environment=environment
@@ -235,7 +234,8 @@ def test_multivariate_feature_state_value__get_skip_create_audit_log_for_feature
 
     # Then
     mvfsv_history_instance = MultivariateFeatureStateValue.history.filter(
-        id=mvfsv.id, history_type="-"  # type: ignore[union-attr]
+        id=mvfsv.id,  # type: ignore[union-attr]
+        history_type="-",
     ).first()
 
     assert mvfsv_history_instance.instance.get_skip_create_audit_log() is True

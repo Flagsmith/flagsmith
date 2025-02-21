@@ -89,7 +89,8 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
             )
         validate_state(request.GET.get("state"), request)  # type: ignore[no-untyped-call]
         bot_token = SlackWrapper().get_bot_token(
-            code, self._get_slack_callback_url(environment_api_key)  # type: ignore[no-untyped-call]
+            code,
+            self._get_slack_callback_url(environment_api_key),  # type: ignore[no-untyped-call]
         )
 
         SlackConfiguration.objects.update_or_create(

@@ -44,7 +44,6 @@ logger = logging.getLogger(__name__)
 def github_auth_required(func):  # type: ignore[no-untyped-def]
     @wraps(func)
     def wrapper(request, organisation_pk):  # type: ignore[no-untyped-def]
-
         if not GithubConfiguration.has_github_configuration(
             organisation_id=organisation_pk
         ):
@@ -71,14 +70,14 @@ def github_api_call_error_handler(
                 return func(*args, **kwargs)  # type: ignore[no-any-return]
             except ValueError as e:
                 return Response(
-                    data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
+                    data={"detail": (f"{error or default_error} Error: {str(e)}")},
                     content_type="application/json",
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             except requests.RequestException as e:
                 logger.error(f"{error or default_error} Error: {str(e)}", exc_info=e)
                 return Response(
-                    data={"detail": (f"{error or default_error}" f" Error: {str(e)}")},
+                    data={"detail": (f"{error or default_error} Error: {str(e)}")},
                     content_type="application/json",
                     status=status.HTTP_502_BAD_GATEWAY,
                 )
@@ -141,7 +140,6 @@ class GithubRepositoryViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             raise ValidationError({"github_pk": ["Must be an integer"]})
 
     def create(self, request, *args, **kwargs) -> Response | None:  # type: ignore[no-untyped-def,return,override]
-
         try:
             response: Response = super().create(request, *args, **kwargs)
             github_configuration: GithubConfiguration = GithubConfiguration.objects.get(

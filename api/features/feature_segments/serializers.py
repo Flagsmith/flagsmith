@@ -1,4 +1,6 @@
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_SEGMENT_OVERRIDES,
+)
 from common.features.serializers import (  # type: ignore[import-untyped]
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
@@ -57,9 +59,9 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
         priority: int | None = self.validated_data.get("priority", None)
 
         if kwargs["environment"].use_v2_feature_versioning:  # pragma: no cover
-            assert (
-                kwargs["environment_feature_version"] is not None
-            ), "Must provide environment_feature_version for environment using v2 versioning"
+            assert kwargs["environment_feature_version"] is not None, (
+                "Must provide environment_feature_version for environment using v2 versioning"
+            )
 
         if priority is not None:
             collision_qs = FeatureSegment.objects.filter(

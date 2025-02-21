@@ -6,11 +6,6 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import (
-    AbstractBaseExportableModel,
-    SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import (
@@ -48,6 +43,11 @@ from audit.constants import (
 )
 from audit.related_object_type import RelatedObjectType
 from audit.tasks import create_segment_priorities_changed_audit_log
+from core.models import (
+    AbstractBaseExportableModel,
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -148,7 +148,6 @@ class Feature(  # type: ignore[django-manager-missing]
             and self.project.organisation.github_config.exists()
             and self.deleted_at
         ):
-
             call_github_task(
                 organisation_id=self.project.organisation_id,  # type: ignore[arg-type]
                 type=GitHubEventType.FLAG_DELETED.value,
@@ -428,7 +427,6 @@ class FeatureSegment(
             and self.feature.project.github_project.exists()
             and self.feature.project.organisation.github_config.exists()
         ):
-
             call_github_task(
                 self.feature.project.organisation_id,  # type: ignore[arg-type]
                 GitHubEventType.SEGMENT_OVERRIDE_DELETED.value,
@@ -698,7 +696,8 @@ class FeatureState(
         }
 
     def get_feature_state_value_by_hash_key(
-        self, identity_hash_key: typing.Union[str, int] = None  # type: ignore[assignment]
+        self,
+        identity_hash_key: typing.Union[str, int] = None,  # type: ignore[assignment]
     ) -> typing.Any:
         feature_state_value = (
             self.get_multivariate_feature_state_value(identity_hash_key)  # type: ignore[arg-type]

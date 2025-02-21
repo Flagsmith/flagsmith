@@ -3,7 +3,10 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+    VIEW_PROJECT,
+)
 
 from environments.permissions.models import (
     EnvironmentPermissionModel,

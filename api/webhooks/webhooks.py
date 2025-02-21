@@ -6,16 +6,18 @@ from typing import Type, Union
 
 import backoff
 import requests
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
-from core.signing import sign_payload
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils import timezone
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from organisations.models import OrganisationWebhook
 from projects.models import Organisation  # type: ignore[attr-defined]
