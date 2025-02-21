@@ -31,9 +31,6 @@ from flag_engine.segments.models import (
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
 
-if TYPE_CHECKING:
-    from segments.models import Segment
-
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import (  # type: ignore[attr-defined]
         Identity,
@@ -49,7 +46,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import SegmentRule
+    from segments.models import Segment, SegmentRule
 
 
 __all__ = (
