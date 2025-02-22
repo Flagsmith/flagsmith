@@ -17,6 +17,7 @@ import {
   Operator,
   Segment,
   SegmentRule,
+  SegmentConditionsError,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { useGetIdentitiesQuery } from 'common/services/useIdentity'
@@ -74,6 +75,16 @@ type CreateSegmentType = {
   readOnly?: boolean
   segment?: Segment
 }
+type CreateSegmentError = {
+  status: number,
+  data: {
+    rules: [{
+      rules: Array<{
+        conditions: SegmentConditionsError[]
+      }>
+    }]
+  }
+}
 
 enum UserTabs {
   RULES = 0,
@@ -82,6 +93,35 @@ enum UserTabs {
 }
 
 let _operators: Operator[] | null = null
+
+const formatError = (error: CreateSegmentError): { errorRuleIndexes: Record<number, 'value' | 'property' | 'all'>, messages: string | string[] } => {
+  if (!error) {
+    return { errorRuleIndexes: [], messages: "" }
+  }
+  const mainRule = error.data.rules[0]
+  const errorMessages: string[] = []
+  const errorRuleIndexes: Record<number, 'value' | 'property' | 'all'> = {}
+
+  mainRule.rules?.forEach((rule, index) => {
+    rule.conditions?.forEach((condition) => {
+      if (!condition.property && !condition.value) {
+        return
+      }
+      if (condition.property) {
+        errorRuleIndexes[index] = 'property'
+        errorMessages.push(`Property - ${condition.property.join(', ')}`)
+      }
+      if (condition.value) {
+        errorRuleIndexes[index] = errorRuleIndexes?.[index] === 'property' ? 'all' : 'value'
+        errorMessages.push(`Value - ${condition.value.join(', ')}`)
+      }
+    })
+  })
+  return {
+    errorRuleIndexes: errorRuleIndexes,
+    messages: errorMessages?.length > 1 ? errorMessages : errorMessages?.[0],
+  }
+}
 
 const CreateSegment: FC<CreateSegmentType> = ({
   className,
@@ -161,7 +201,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     segment.metadata,
   )
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const error = createError || updateError
+  const error: CreateSegmentError = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
   const isLimitReached = totalSegments >= maxSegmentsAllowed
@@ -344,10 +384,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 >
                   <Flex className='and-divider__line' />
                   {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
+                    `${displayIndex > 0 ? 'And ' : ''}${rule.type === 'ANY'
+                      ? 'Any of the following'
+                      : 'None of the following'
                     }`,
                   )}
                   <Flex className='and-divider__line' />
@@ -357,6 +396,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
+                  errorType={formatError(error)?.errorRuleIndexes?.[i]}
                   operators={operators}
                   onRemove={() => {
                     setValueChanged(true)
@@ -450,7 +490,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={error}
+                error={formatError(error)?.messages}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -525,7 +565,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={error}
+                error={formatError(error)?.messages}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -561,7 +601,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
             setShowDescriptions={setShowDescriptions}
             allWarnings={allWarnings}
             rulesEl={rulesEl}
-            error={error}
+            error={formatError(error)?.messages}
             isEdit={isEdit}
             segment={segment}
             isSaving={isSaving}

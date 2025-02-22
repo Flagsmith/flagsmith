@@ -32,7 +32,7 @@ interface CreateSegmentRulesTabFormProps {
   setShowDescriptions: (show: boolean) => void
   allWarnings: string[]
   rulesEl: React.ReactNode
-  error: string
+  error: string[] | string
   isEdit: boolean
   segment: Segment | DefaultSegmentType
   isSaving: boolean
@@ -64,6 +64,7 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   setValueChanged,
   showDescriptions,
 }) => {
+
   const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID
   return (
     <form id='create-segment-modal' onSubmit={save}>

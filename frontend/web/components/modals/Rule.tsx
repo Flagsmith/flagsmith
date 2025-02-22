@@ -18,6 +18,7 @@ export default class Rule extends PureComponent<{
   readOnly?: boolean
   showDescription?: boolean
   'data-test'?: string
+  errorType?: 'value' | 'property' | 'all'
 }> {
   static displayName = 'Rule'
 
@@ -70,7 +71,7 @@ export default class Rule extends PureComponent<{
                 readOnly={this.props.readOnly}
                 data-test={`${this.props['data-test']}-property-${i}`}
                 value={`${rule.property}`}
-                style={{ width: '135px' }}
+                style={{ borderColor: !!this.props.errorType && ['property', 'all']?.includes(this.props.errorType) ? '#ef4d56' : '' }}
                 placeholder={
                   operator && operator === 'PERCENTAGE_SPLIT'
                     ? 'Trait (N/A)'
@@ -81,6 +82,7 @@ export default class Rule extends PureComponent<{
                     value: Utils.safeParseEventValue(e),
                   })
                 }
+                error={!!this.props.errorType && ['property', 'all'].includes(this.props.errorType)}
                 disabled={operator && operator === 'PERCENTAGE_SPLIT'}
               />
             }
@@ -107,7 +109,7 @@ export default class Rule extends PureComponent<{
             value={value || ''}
             placeholder={valuePlaceholder}
             disabled={operatorObj && operatorObj.hideValue}
-            style={{ width: '135px' }}
+            style={{ borderColor: !!this.props.errorType && ['value', 'all']?.includes(this.props.errorType) ? '#ef4d56' : '', width: '135px' }}
             onChange={(e: InputEvent) => {
               const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
               this.setRuleProperty(i, 'value', {
