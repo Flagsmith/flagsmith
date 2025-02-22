@@ -56,14 +56,17 @@ const controller = {
             `${Project.api}environments/${environmentId}/featurestates/?feature=${feature}`,
           ),
           data.get(`${Project.api}projects/${projectId}/features/${feature}/`),
-        ]).then(([environmentFlag, projectFlag]) => {
-          store.model[id] = res
-          store.flags[id] = {
-            environmentFlag: environmentFlag.results[0],
-            projectFlag,
-          }
-          store.loaded()
-        })
+        ])
+          .then(([environmentFlag, projectFlag]) => {
+            store.flags[id] = {
+              environmentFlag: environmentFlag.results[0],
+              projectFlag,
+            }
+          })
+          .finally(() => {
+            store.model[id] = res
+            store.loaded()
+          })
       })
       .catch((e) => API.ajaxHandler(store, e))
   },

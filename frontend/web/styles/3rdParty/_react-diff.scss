@@ -15,6 +15,20 @@
 .react-diff-1989f1g-code-fold-gutter {
   background-color: $black-alpha-8 !important;
 }
+.react-diff-same {
+  font-size: 13px;
+  .react-diff-marker {
+    background-color: rgba(0, 0, 0, 0.16);
+    width: 27px;
+    height: 28px;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+  }
+  pre {
+    padding-left: 2px;
+  }
+}
 .react-diff-marker {
   background-color: $black-alpha-8;
   width: 31px;
@@ -50,6 +64,8 @@
   display: flex;
   flex:1;
   line-height: 28px;
+  font-family: $font-family-code;
+  font-size: 13px !important;
 }
 .react-diff-42iver-word-diff {
   padding:0 !important;

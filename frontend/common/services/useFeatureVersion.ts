@@ -14,7 +14,7 @@ import transformCorePaging from 'common/transformCorePaging'
 import Utils from 'common/utils/utils'
 import {
   getFeatureStateDiff,
-  getSegmentDiff,
+  getSegmentOverrideDiff,
   getVariationDiff,
 } from 'components/diff/diff-utils'
 import { getSegments } from './useSegment'
@@ -43,13 +43,12 @@ export const getFeatureStateCrud = (
     if (!oldFeatureStates) {
       return featureStates
     }
-    const segmentDiffs = segments?.length
-      ? getSegmentDiff(
-          featureStates.filter((v) => !!v.feature_segment),
-          oldFeatureStates.filter((v) => !!v.feature_segment),
-          segments,
-        )
-      : null
+    const segmentDiffs = getSegmentOverrideDiff(
+      featureStates.filter((v) => !!v.feature_segment),
+      oldFeatureStates.filter((v) => !!v.feature_segment),
+      segments,
+    )
+
     const featureStateDiffs = featureStates.filter((v) => {
       if (!v.feature_segment) return
       const diff = segmentDiffs?.diffs?.find(
@@ -102,6 +101,7 @@ export const getFeatureStateCrud = (
     segment_ids_to_delete_overrides,
   }
 }
+
 export const featureVersionService = service
   .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
   .injectEndpoints({

@@ -31,6 +31,7 @@ export type PaidFeature =
   | 'AUDIT'
   | 'FORCE_2FA'
   | '4_EYES'
+  | '4_EYES_PROJECT'
   | 'STALE_FLAGS'
   | 'VERSIONING_DAYS'
   | 'AUDIT_DAYS'
@@ -350,6 +351,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return `/organisation/${orgId}/projects`
   },
   getPlanName: (plan: string) => {
+    return planNames.enterprise
+
     if (plan && plan.includes('free')) {
       return planNames.free
     }
@@ -413,6 +416,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'FLAG_OWNERS':
       case 'RBAC':
       case 'AUDIT':
+      case 'FORCE_2FA':
       case '4_EYES': {
         plan = 'scale-up'
         break
