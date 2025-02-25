@@ -39,10 +39,7 @@ import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
-import {
-  useGetBuildVersionQuery,
-  hasEmailProvider as getHasEmailProvider,
-} from 'common/services/useBuildVersion'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -80,7 +77,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   )
   const { data: version } = useGetBuildVersionQuery({})
 
-  const hasEmailProvider = getHasEmailProvider(version)
+  const hasEmailProvider = version?.backend?.has_email_provider ?? false
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',

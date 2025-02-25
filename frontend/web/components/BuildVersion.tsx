@@ -1,24 +1,16 @@
-import { FC, useEffect, useState } from 'react'
-import getBuildVersion from 'project/getBuildVersion'
+import { FC } from 'react'
 import { IonIcon } from '@ionic/react'
 import { pricetag } from 'ionicons/icons'
-import { Version } from 'common/types/responses'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 
 type BuildVersionType = {}
 
 const BuildVersion: FC<BuildVersionType> = ({}) => {
-  const [version, setVersion] = useState<Version>()
-
-  useEffect(() => {
-    getBuildVersion().then((version: Version) => {
-      setVersion(version)
-    })
-  }, [])
+  const { data: version } = useGetBuildVersionQuery({})
   return (
     <div className='text-muted position-fixed bottom-0 p-2 fs-caption'>
       {version?.tag !== 'Unknown' && (
         <Tooltip
-          html
           title={
             <span>
               <span className='icon'>

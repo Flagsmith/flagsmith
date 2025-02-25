@@ -1,23 +1,17 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, FormEvent, useEffect, useState } from 'react'
 import Logo from 'components/Logo'
-import getBuildVersion from 'project/getBuildVersion'
-import { Version } from 'components/BuildVersion'
 import Button from 'components/base/forms/Button'
-import AccountStore from 'common/stores/account-store'
 import Card from 'components/Card'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
-import { RouterChildContext } from 'react-router'
 import Checkbox from 'components/base/forms/Checkbox'
 import { useCreateOnboardingMutation } from 'common/services/useOnboarding'
 import PasswordRequirements from 'components/PasswordRequirements'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 
-// Types
-interface OnboardingPageProps {
-  router: RouterChildContext['router']
-}
+type OnboardingPageProps = {}
 
 interface StepProps {
   value: number
@@ -109,24 +103,23 @@ const Step: FC<StepProps> = ({
   )
 }
 
-const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
-  const [version, setVersion] = useState<Version>()
+const OnboardingPage: FC<OnboardingPageProps> = ({}) => {
+  const { data: version } = useGetBuildVersionQuery({})
   const [step, setStep] = useState(0)
   const [requirementsMet, setRequirementsMet] = useState(false)
 
   const [onboarding, setOnboarding] = useState({
     confirm_password: '',
+    contact_consent_given: true,
     email: '',
     first_name: '',
     last_name: '',
     organisation_name: '',
     password: '',
-    support_opt_in: true,
   })
 
   useEffect(() => {
     document.body.classList.add('onboarding')
-    getBuildVersion().then(setVersion)
     return () => document.body.classList.remove('onboarding')
   }, [])
 
@@ -147,8 +140,9 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
     try {
       await createOnboarding({
         ...onboarding,
-        support_opt_in:
-          !isFreeEmailDomain(onboarding.email) && onboarding.support_opt_in,
+        contact_consent_given:
+          !isFreeEmailDomain(onboarding.email) &&
+          onboarding.contact_consent_given,
       })
       setStep(3)
     } catch (e) {
@@ -188,7 +182,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                       name: 'first_name',
                     }}
                     value={onboarding.first_name}
-                    onChange={(e) => setFieldValue('first_name', e)}
+                    onChange={(e: FormEvent) => setFieldValue('first_name', e)}
                   />
                 </div>
                 <div className='col-md-6'>
@@ -202,7 +196,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                       name: 'last_name',
                     }}
                     value={onboarding.last_name}
-                    onChange={(e) => setFieldValue('last_name', e)}
+                    onChange={(e: FormEvent) => setFieldValue('last_name', e)}
                   />
                 </div>
                 <div className='col-md-12'>
@@ -217,7 +211,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                       name: 'email',
                     }}
                     value={onboarding.email}
-                    onChange={(e) => setFieldValue('email', e)}
+                    onChange={(e: FormEvent) => setFieldValue('email', e)}
                   />
                 </div>
                 <div className='col-md-12'>
@@ -230,7 +224,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                       isValid: requirementsMet,
                       name: 'password',
                     }}
-                    onChange={(e) => {
+                    onChange={(e: FormEvent) => {
                       setFieldValue('password', e)
                     }}
                     className='mb-0 full-width'
@@ -269,15 +263,19 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                       name: 'organisation_name',
                     }}
                     value={onboarding.organisation_name}
-                    onChange={(e) => setFieldValue('organisation_name', e)}
+                    onChange={(e: FormEvent) =>
+                      setFieldValue('organisation_name', e)
+                    }
                   />
                 </div>
                 {!!isCompanyEmail && (
                   <div className='col-md-12'>
                     <Checkbox
-                      label='Opt in to free technical support. No strings, just booleans. You won’t be subscribed to any marketing communications. .'
-                      checked={onboarding.support_opt_in}
-                      onChange={(e) => setFieldValue('support_opt_in', e)}
+                      label='Opt in to free technical support. No strings, just booleans. You won’t be subscribed to any marketing communications.'
+                      checked={onboarding.contact_consent_given}
+                      onChange={(e) =>
+                        setFieldValue('contact_consent_given', e)
+                      }
                     />
                   </div>
                 )}

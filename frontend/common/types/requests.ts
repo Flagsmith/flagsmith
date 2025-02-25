@@ -48,6 +48,18 @@ export type CreateVersionFeatureState = {
   sha: string
   featureState: FeatureState
 }
+
+export type LoginRequest = {
+  email: string
+  password: string
+}
+export type RegisterRequest = {
+  email: string
+  first_name: string
+  last_name: string
+  marketing_consent_given: boolean
+  password: string
+}
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -580,8 +592,7 @@ export type Req = {
     password: string
     contact_consent_given: boolean
     organisation_name: string
-    support_opt_in: boolean
   }
-  getBuildVersion: { id: string }
+  getBuildVersion: {}
   // END OF TYPES
 }

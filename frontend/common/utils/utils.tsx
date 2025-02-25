@@ -22,6 +22,8 @@ import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
+import { selectBuildVersion } from 'common/services/useBuildVersion'
+import { getStore } from 'common/store'
 
 const semver = require('semver')
 
@@ -561,7 +563,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-  isEnterpriseImage: () => global.flagsmithVersion?.backend.is_enterprise,
+  //todo: Remove when migrating to RTK
+  isEnterpriseImage: () =>
+    selectBuildVersion(getStore().getState())?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -572,7 +576,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
+  isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
@@ -631,9 +635,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return ''
     }
     return `${value}`
-  },
-  showOnboarding() {
-    return true
   },
 
   tagDisabled: (tag: Tag | undefined) => {

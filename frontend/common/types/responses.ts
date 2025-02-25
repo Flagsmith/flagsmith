@@ -663,8 +663,8 @@ export type Version = {
   backend_sha: string
   frontend_sha: string
   frontend: {
-    ci_commit_sha: string
-    image_tag: string
+    ci_commit_sha?: string
+    image_tag?: string
   }
   backend: {
     ci_commit_sha: string
@@ -812,9 +812,5 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
-  identitySegments: PagedResponse<Segment>
-  organisationWebhooks: PagedResponse<Webhook>
-  onboarding: { token: string }
-  buildVersion: { id: string }
   // END OF TYPES
 }
