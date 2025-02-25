@@ -145,7 +145,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
     API.trackEvent(Constants.events.VIEW_FEATURE)
     const tabValue = tab || Utils.fromParam().tab || 'value'
 
-    history.replace(
+    window.history.replaceState(
       {},
       '',
       `${document.location.pathname}?feature=${projectFlag.id}&tab=${tabValue}`,
@@ -177,7 +177,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
       />,
       'side-modal create-feature-modal',
       () => {
-        history.replace({}, '', `${document.location.pathname}`)
+        window.history.replaceState({}, '', `${document.location.pathname}`)
       },
     )
   }
