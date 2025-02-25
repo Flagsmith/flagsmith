@@ -51,10 +51,10 @@ const SamlForm = class extends React.Component {
             }
             value={this.state.saml}
             type='text'
-            title='Organization Name'
+            title='Organisation Name'
           />
           {this.state.error && (
-            <ErrorMessage error='Please check your organization name and try again.' />
+            <ErrorMessage error='Please check your organisation name and try again.' />
           )}
 
           <Row className='mt-4'>
@@ -74,7 +74,7 @@ const SamlForm = class extends React.Component {
               <span className='checkbox mr-2'>
                 {this.state.remember && <Icon name='checkmark-square' />}
               </span>
-              Remember this SAML organization
+              Remember this SAML organisation
             </label>
           </Row>
         </div>

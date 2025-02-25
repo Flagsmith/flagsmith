@@ -43,7 +43,7 @@ const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
               AccountStore.getOrganisation()?.id
             }/integrations`}
           >
-            Organization Integrations
+            Organisation Integrations
           </Link>
           . If you add any of the same integrations here, they will override the
           ones set at the organization level.

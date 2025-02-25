@@ -17,7 +17,7 @@ type OrganisationsPageType = {
 
 const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
   const handleCreateOrganisationClick = useCallback(() => {
-    openModal('Create Organization', <CreateOrganisationModal />, 'side-modal')
+    openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
   }, [])
 
   const onSave = (id: number) => {
@@ -34,7 +34,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
               id='organisation-list'
               className='no-pad panel-projects'
               listClassName='row mt-n2 gy-3'
-              title='Organizations'
+              title='Organisations'
               filterRow={(item: Organisation, search: string) =>
                 item.name.toLowerCase().indexOf(search) > -1
               }
@@ -48,7 +48,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
               ]}
               header={
                 <div className='fs-small mb-2 lh-sm'>
-                  Organizations allow you to manage multiple projects within a
+                  Organisations allow you to manage multiple projects within a
                   team.
                 </div>
               }
@@ -69,7 +69,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
                                 <Icon name='plus' width={32} fill='#9DA4AE' />
                               </div>
                               <div className='font-weight-medium btn-project-title'>
-                                Create Organization
+                                Create Organisation
                               </div>
                             </Row>
                           </Button>

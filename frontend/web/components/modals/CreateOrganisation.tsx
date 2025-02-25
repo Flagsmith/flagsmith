@@ -38,7 +38,7 @@ const CreateOrganisationModal: FC = () => {
           >
             <InputGroup
               inputProps={{ className: 'full-width', name: 'orgName' }}
-              title='Organization Name'
+              title='Organisation Name'
               placeholder='E.g. ACME Ltd'
               onChange={(e: React.FormEvent<HTMLInputElement>) =>
                 setName(Utils.safeParseEventValue(e))
@@ -51,7 +51,7 @@ const CreateOrganisationModal: FC = () => {
                 disabled={isSaving || !name}
                 id='create-org-btn'
               >
-                Create Organization
+                Create Organisation
               </Button>
             </div>
           </form>

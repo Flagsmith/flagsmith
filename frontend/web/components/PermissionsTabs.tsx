@@ -86,7 +86,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
         isRoles={true}
       >
         <TabItem
-          tabLabel={<Row className='justify-content-center'>Organization</Row>}
+          tabLabel={<Row className='justify-content-center'>Organisation</Row>}
           data-test='organisation-permissions-tab'
         >
           <EditPermissionsModal

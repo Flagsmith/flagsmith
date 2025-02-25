@@ -60,20 +60,20 @@ const OrganisationSettingsPage = class extends Component {
 
   onSave = () => {
     this.setState({ name: null }, () => {
-      toast('Saved organization')
+      toast('Saved organisation')
     })
   }
 
   confirmRemove = (organisation, cb) => {
     openModal(
-      'Delete Organization',
+      'Delete Organisation',
       <ConfirmRemoveOrganisation organisation={organisation} cb={cb} />,
       'p-0',
     )
   }
 
   onRemove = () => {
-    toast('Your organization has been removed')
+    toast('Your organisation has been removed')
     if (AccountStore.getOrganisation()) {
       this.context.router.history.replace(Utils.getOrganisationHomePage())
     } else {
@@ -207,14 +207,14 @@ const OrganisationSettingsPage = class extends Component {
                   }
                   return (
                     <div>
-                      <PageTitle title={'Organization Settings'} />
+                      <PageTitle title={'Organisation Settings'} />
                       <Tabs hideNavOnSingleTab urlParam='tab' className='mt-0'>
                         {displayedTabs.includes(SettingsTab.General) && (
                           <TabItem tabLabel='General'>
                             <FormGroup className='mt-4'>
                               <h5 className='mb-5'>General Settings</h5>
                               <JSONReference
-                                title={'Organization'}
+                                title={'Organisation'}
                                 json={organisation}
                               />
                               <div className='mt-2'>
@@ -241,8 +241,8 @@ const OrganisationSettingsPage = class extends Component {
                                           isValid={name && name.length}
                                           type='text'
                                           inputClassName='input--wide'
-                                          placeholder='My Organization'
-                                          title='Organization Name'
+                                          placeholder='My Organisation'
+                                          title='Organisation Name'
                                           inputProps={{
                                             className: 'full-width',
                                           }}
@@ -283,7 +283,7 @@ const OrganisationSettingsPage = class extends Component {
                                         }
                                       />
                                       <p className='fs-small ml-3 mb-0 lh-sm'>
-                                        Only allow organization admins to create
+                                        Only allow organisation admins to create
                                         projects
                                       </p>
                                     </Row>
@@ -295,9 +295,9 @@ const OrganisationSettingsPage = class extends Component {
                             <FormGroup className='mt-4 col-md-8'>
                               <Row space>
                                 <div className='col-md-7'>
-                                  <h5 className='mn-2'>Delete Organization</h5>
+                                  <h5 className='mn-2'>Delete Organisation</h5>
                                   <p className='fs-small lh-sm'>
-                                    This organization will be permanently
+                                    This organisation will be permanently
                                     deleted, along with all projects and
                                     features.
                                   </p>
@@ -372,7 +372,7 @@ const OrganisationSettingsPage = class extends Component {
                                         </div>
                                         <div>
                                           <p className='fs-small lh-sm mb-0'>
-                                            Organization ID
+                                            Organisation ID
                                           </p>
                                           <h4 className='mb-0'>
                                             {organisation.id}

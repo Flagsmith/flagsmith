@@ -222,7 +222,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
                   <div>
                     <InfoMessage>
                       Signing up with a work email makes it easier for
-                      co-workers to join your Flagsmith organization.
+                      co-workers to join your Flagsmith organisation.
                     </InfoMessage>
                   </div>
                 )}
@@ -259,15 +259,15 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
                 step={2}
                 value={step}
                 setValue={setStep}
-                title='Your organization'
-                description='Organizations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
-                completedTitle={`Creating the organization ${onboarding.organisation_name}`}
+                title='Your organisation'
+                description='Organisations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
+                completedTitle={`Creating the organisation ${onboarding.organisation_name}`}
                 onSubmit={onSubmitStep2}
                 isValid={isStep2Valid}
               >
                 <div className='col-md-12'>
                   <InputGroup
-                    title='Organization Name'
+                    title='Organisation Name'
                     className='mb-0'
                     inputProps={{
                       autoFocus: true,

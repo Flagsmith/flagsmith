@@ -654,7 +654,7 @@ const App = class extends Component {
                                       AccountStore.getOrganisation().id
                                     }/integrations`}
                                   >
-                                    Organization Integrations
+                                    Organisation Integrations
                                   </NavSubLink>
                                 )}
                                 <NavSubLink
@@ -665,7 +665,7 @@ const App = class extends Component {
                                     AccountStore.getOrganisation().id
                                   }/settings`}
                                 >
-                                  Organization Settings
+                                  Organisation Settings
                                 </NavSubLink>
                               </>
                             )}

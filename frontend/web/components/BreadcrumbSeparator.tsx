@@ -368,7 +368,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                             onClick={() => {
                               setOpen(false)
                               openModal(
-                                'Create Organization',
+                                'Create Organisation',
                                 <CreateOrganisationModal />,
                                 'side-modal',
                               )
@@ -378,7 +378,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                               className='fs-small'
                               icon={createOutline}
                             />
-                            Create Organization
+                            Create Organisation
                           </Button>
                         )
                       }

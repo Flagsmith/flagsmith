@@ -29,7 +29,7 @@ const OrganisationIntegrationsPage = ({ match }) => {
   }
   return (
     <div className='app-container container'>
-      <PageTitle title={'Organization Integrations'}>
+      <PageTitle title={'Organisation Integrations'}>
         Enhance Flagsmith with your favourite tools. Have any products you want
         to see us integrate with? Message us and we will be right with you.
       </PageTitle>

@@ -96,7 +96,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
         )}
       {Utils.getFlagsmithHasFeature('read_only_mode') && (
         <div className='butter-bar'>
-          Your organization is over its usage limit, please{' '}
+          Your organisation is over its usage limit, please{' '}
           <Link to={Constants.getUpgradeUrl()}>upgrade your plan</Link>.
         </div>
       )}

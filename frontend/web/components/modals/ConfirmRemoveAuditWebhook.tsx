@@ -27,7 +27,7 @@ const ConfirmRemoveAuditWebhook: FC<ConfirmRemoveAuditWebhookType> = ({
     <form id='confirm-remove-feature-modal' onSubmit={submit}>
       <div className='modal-body'>
         <p>
-          This will remove <strong>{url}</strong> for the organization{' '}
+          This will remove <strong>{url}</strong> for the organisation{' '}
           <strong>{AccountStore.getOrganisation().name}</strong>. You should
           ensure that you do not contain any references to this webhook in your
           applications before proceeding.

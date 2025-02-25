@@ -21,7 +21,7 @@ const Blocked = class extends React.Component {
         <div className='col-md-6 mt-5' id='sign-up'>
           <h1>Please get in touch</h1>
           <span className='h4'>
-            Your organization has been disabled. Please contact Flagsmith
+            Your organisation has been disabled. Please contact Flagsmith
             support at
             {
               <>
@@ -44,7 +44,7 @@ const Blocked = class extends React.Component {
           {
             <>
               <Payment
-                isDisableAccountText={`Your organization has been disabled. Please upgrade your plan or contact us:`}
+                isDisableAccountText={`Your organisation has been disabled. Please upgrade your plan or contact us:`}
               />
             </>
           }

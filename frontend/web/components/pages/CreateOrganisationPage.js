@@ -42,7 +42,7 @@ class CreateOrganisationPage extends Component {
       return (
         <div className='text-center alert'>
           Your Flagsmith instance is setup to only allow super users to create
-          an organization, please contact your administrator.
+          an organisation, please contact your administrator.
         </div>
       )
     }
@@ -52,13 +52,13 @@ class CreateOrganisationPage extends Component {
           This Flagsmith instance is configured to prevent additional
           organisations from being created. Please contact an administrator. If
           you think you are seeing this page by mistake, please check you are
-          invited to the correct organization.
+          invited to the correct organisation.
         </div>
       )
     }
     return (
       <div id='create-org-page' className='container app-container'>
-        <PageTitle title={'Create your organization'}>
+        <PageTitle title={'Create your organisation'}>
           Organisations allow you to manage multiple projects within a team.
         </PageTitle>
         <AccountProvider onSave={this.onSave}>
@@ -79,7 +79,7 @@ class CreateOrganisationPage extends Component {
                 <InputGroup
                   ref={(e) => (this.input = e)}
                   inputProps={{ className: 'full-width', name: 'orgName' }}
-                  title='Organization Name'
+                  title='Organisation Name'
                   placeholder='E.g. ACME Ltd'
                   onChange={(e) =>
                     this.setState({ name: Utils.safeParseEventValue(e) })
@@ -92,7 +92,7 @@ class CreateOrganisationPage extends Component {
                     disabled={isSaving || !this.state.name}
                     id='create-org-btn'
                   >
-                    Create Organization
+                    Create Organisation
                   </Button>
                 </div>
               </CondensedRow>

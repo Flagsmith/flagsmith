@@ -188,7 +188,7 @@ const UserGroupList: FC<UserGroupListType> = ({
     <FormGroup>
       <div className='col-md-6'>
         <InfoMessage collapseId={'user-groups'}>
-          Group admins and users with the organization permission{' '}
+          Group admins and users with the organisation permission{' '}
           <strong>Manage Groups</strong> can invite additional members to
           groups.
         </InfoMessage>
@@ -273,7 +273,7 @@ const UserGroupList: FC<UserGroupListType> = ({
           <Panel title={noTitle ? '' : 'Groups'} className='no-pad'>
             <div className='search-list'>
               <Row className='list-item p-3 text-muted'>
-                You have no groups in your organization.
+                You have no groups in your organisation.
               </Row>
             </div>
           </Panel>

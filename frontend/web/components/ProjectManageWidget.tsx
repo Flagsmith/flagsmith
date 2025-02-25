@@ -187,7 +187,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                             <div className='container-mw-700 mb-4'>
                               <p className='fs-small lh-sm mb-0'>
                                 You do not have access to any projects within
-                                this Organization. If this is unexpected please
+                                this Organisation. If this is unexpected please
                                 contact a member of the Project who has
                                 Administrator privileges. Users can be added to
                                 Projects from the Project settings menu.

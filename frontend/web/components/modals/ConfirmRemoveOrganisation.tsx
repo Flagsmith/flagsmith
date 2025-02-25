@@ -32,14 +32,14 @@ const ConfirmRemoveOrganisation: FC<ConfirmRemoveOrganisationType> = ({
             <>
               This will remove <strong>{organisation.name}</strong> and{' '}
               <strong>all of it's projects</strong>. You should ensure that you
-              do not contain any references to this organization in your
+              do not contain any references to this organisation in your
               applications before proceeding. This action cannot be undone.
             </>
             <InputGroup
               className='mb-0'
               inputProps={{ className: 'full-width', name: 'confirm-org-name' }}
-              title='Please type the organization name to confirm'
-              placeholder='Organization name'
+              title='Please type the organisation name to confirm'
+              placeholder='Organisation name'
               onChange={(e: InputEvent) =>
                 setChallenge(Utils.safeParseEventValue(e))
               }

@@ -54,7 +54,7 @@ const OrganisationLimit: FC<OrganisationLimitType> = ({
               flexDirection: 'column',
             }}
           >
-            Your organization has exceeded its API usage quota{' '}
+            Your organisation has exceeded its API usage quota{' '}
             {`(${alertMaxApiCallsText}).`}{' '}
             {Utils.getPlanName(organisationPlan) === 'Free' ? (
               <b>Please upgrade your plan to continue receiving service.</b>
