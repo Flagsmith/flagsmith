@@ -14,13 +14,10 @@ import PasswordRequirements from 'components/PasswordRequirements'
 import { informationCircleOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import classNames from 'classnames'
-import freeEmailDomains from 'free-email-domains'
 import InfoMessage from 'components/InfoMessage'
 import OnboardingPage from './OnboardingPage'
-const freeEmail = (value) => {
-  const domain = value?.split('@')?.[1]
-  return freeEmailDomains.includes(domain)
-}
+import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
+
 const HomePage = class extends React.Component {
   static contextTypes = {
     router: propTypes.object.isRequired,
@@ -633,7 +630,7 @@ const HomePage = class extends React.Component {
                                       name='email'
                                       id='email'
                                     />
-                                    {freeEmail(email) && (
+                                    {isFreeEmailDomain(email) && (
                                       <InfoMessage>
                                         Signing up with a work email makes it
                                         easier for co-workers to join your

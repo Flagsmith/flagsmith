@@ -2,13 +2,10 @@ import { FC, useEffect, useState } from 'react'
 import getBuildVersion from 'project/getBuildVersion'
 import { IonIcon } from '@ionic/react'
 import { pricetag } from 'ionicons/icons'
+import { Version } from 'common/types/responses'
 
 type BuildVersionType = {}
-export type Version = {
-  tag: string
-  backend_sha: string
-  frontend_sha: string
-}
+
 const BuildVersion: FC<BuildVersionType> = ({}) => {
   const [version, setVersion] = useState<Version>()
 

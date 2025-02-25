@@ -658,6 +658,23 @@ export type HealthProvider = {
   webhook_url: number
 }
 
+export type Version = {
+  tag: string
+  backend_sha: string
+  frontend_sha: string
+  frontend: {
+    ci_commit_sha: string
+    image_tag: string
+  }
+  backend: {
+    ci_commit_sha: string
+    image_tag: string
+    has_email_provider: boolean
+    is_enterprise: boolean
+    is_saas: boolean
+  }
+}
+
 export type Webhook = {
   id: number
   url: string
@@ -796,5 +813,6 @@ export type Res = {
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   onboarding: { token: string }
+  buildVersion: { id: string }
   // END OF TYPES
 }

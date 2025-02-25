@@ -12,7 +12,7 @@ import { RouterChildContext } from 'react-router'
 import Checkbox from 'components/base/forms/Checkbox'
 import { useCreateOnboardingMutation } from 'common/services/useOnboarding'
 import PasswordRequirements from 'components/PasswordRequirements'
-import passwordRequirements from 'components/PasswordRequirements'
+import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
 // Types
 interface OnboardingPageProps {
@@ -121,7 +121,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
     last_name: '',
     organisation_name: '',
     password: '',
-    share_details: true,
+    support_opt_in: true,
   })
 
   useEffect(() => {
@@ -145,13 +145,18 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
   const onSubmitStep1 = () => setStep(2)
   const onSubmitStep2 = async () => {
     try {
-      await createOnboarding(onboarding)
+      await createOnboarding({
+        ...onboarding,
+        support_opt_in:
+          !isFreeEmailDomain(onboarding.email) && onboarding.support_opt_in,
+      })
       setStep(3)
     } catch (e) {
       console.error(e)
     }
   }
   const isValidEmail = Utils.isValidEmail(onboarding.email)
+  const isCompanyEmail = !isFreeEmailDomain(onboarding.email)
   return (
     <div className='position-fixed overflow-auto top-0 bottom-0 left-0 w-100'>
       <div className='min-vh-100 w-100 d-flex flex-1 flex-column justify-content-center align-items-center'>
@@ -239,13 +244,6 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                   />
                 </div>
                 <div className='col-md-12'>
-                  <Checkbox
-                    label='I consent to Flagsmith contacting me for free onboarding support.'
-                    checked={onboarding.share_details}
-                    onChange={(e) => setFieldValue('share_details', e)}
-                  />
-                </div>
-                <div className='col-md-12'>
                   <Button type='submit' disabled={!isStep1Valid}>
                     Next
                   </Button>
@@ -274,6 +272,15 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
                     onChange={(e) => setFieldValue('organisation_name', e)}
                   />
                 </div>
+                {!!isCompanyEmail && (
+                  <div className='col-md-12'>
+                    <Checkbox
+                      label='Opt in to free technical support. No strings, just booleans. You won’t be subscribed to any marketing communications. .'
+                      checked={onboarding.support_opt_in}
+                      onChange={(e) => setFieldValue('support_opt_in', e)}
+                    />
+                  </div>
+                )}
                 <div className='d-flex gap-2'>
                   <Button
                     className='px-4'
@@ -291,9 +298,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
           ) : (
             <div className='text-center'>
               <Logo size={100} />
-              <h3 className='fw-semibold mt-2'>
-                Welcome to Flagsmith
-              </h3>
+              <h3 className='fw-semibold mt-2'>Welcome to Flagsmith</h3>
               <h5 className='fw-normal text-muted'>
                 You've successfully installed Flagsmith v{version?.tag}, let's
                 get started!
@@ -307,7 +312,9 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ router }) => {
 
         <hr />
         <div className='text-center mb-4'>
-          Unsure about something?<br/>View our{' '}
+          Unsure about something?
+          <br />
+          View our{' '}
           <a
             className='text-primary'
             href='https://docs.flagsmith.com/deployment'

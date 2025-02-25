@@ -567,6 +567,8 @@ export type Req = {
     password: string
     contact_consent_given: boolean
     organisation_name: string
+    support_opt_in: boolean
   }
+  getBuildVersion: { id: string }
   // END OF TYPES
 }
