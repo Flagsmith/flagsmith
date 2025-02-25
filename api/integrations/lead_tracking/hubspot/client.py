@@ -2,15 +2,17 @@ import json
 import logging
 from typing import Any
 
-import hubspot
+import hubspot  # type: ignore[import-untyped]
 import requests
 from django.conf import settings
-from hubspot.crm.companies import (
+from hubspot.crm.companies import (  # type: ignore[import-untyped]
     PublicObjectSearchRequest,
     SimplePublicObjectInput,
     SimplePublicObjectInputForCreate,
 )
-from hubspot.crm.contacts import BatchReadInputSimplePublicObjectId
+from hubspot.crm.contacts import (  # type: ignore[import-untyped]
+    BatchReadInputSimplePublicObjectId,
+)
 
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_FORM_ID,
@@ -48,7 +50,7 @@ class HubspotClient:
                 "Hubspot contact endpoint is non-unique which should not be possible"
             )
 
-        return results[0]
+        return results[0]  # type: ignore[no-any-return]
 
     def create_lead_form(
         self, user: FFAdminUser, hubspot_cookie: str
@@ -98,7 +100,7 @@ class HubspotClient:
                 f"Problem posting data to Hubspot's form API due to {response.status_code} "
                 f"status code and following response: {response.text}"
             )
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     def create_contact(
         self, user: FFAdminUser, hubspot_company_id: str
@@ -126,7 +128,7 @@ class HubspotClient:
                 ],
             )
         )
-        return response.to_dict()
+        return response.to_dict()  # type: ignore[no-any-return]
 
     def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
         """
@@ -154,13 +156,13 @@ class HubspotClient:
         if len(results) > 1:
             logger.error("Multiple companies exist in Hubspot for domain %s.", domain)
 
-        return results[0]
+        return results[0]  # type: ignore[no-any-return]
 
     def create_company(
         self,
         name: str,
-        active_subscription: str = None,
-        organisation_id: int = None,
+        active_subscription: str = None,  # type: ignore[assignment]
+        organisation_id: int = None,  # type: ignore[assignment]
         domain: str | None = None,
     ) -> dict[str, Any]:
         properties = {"name": name}
@@ -170,7 +172,7 @@ class HubspotClient:
         if active_subscription:
             properties["active_subscription"] = active_subscription
         if organisation_id:
-            properties["orgid_unique"] = organisation_id
+            properties["orgid_unique"] = organisation_id  # type: ignore[assignment]
 
         simple_public_object_input_for_create = SimplePublicObjectInputForCreate(
             properties=properties,
@@ -180,7 +182,7 @@ class HubspotClient:
             simple_public_object_input_for_create=simple_public_object_input_for_create,
         )
 
-        return response.to_dict()
+        return response.to_dict()  # type: ignore[no-any-return]
 
     def update_company(
         self, active_subscription: str, hubspot_company_id: str
@@ -195,4 +197,4 @@ class HubspotClient:
             simple_public_object_input=simple_public_object_input,
         )
 
-        return response.to_dict()
+        return response.to_dict()  # type: ignore[no-any-return]

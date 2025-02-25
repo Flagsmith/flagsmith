@@ -2,7 +2,11 @@ from datetime import timedelta
 
 from django.core.exceptions import ValidationError
 from django.db import models
-from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
+from django_lifecycle import (  # type: ignore[import-untyped]
+    BEFORE_CREATE,
+    LifecycleModelMixin,
+    hook,
+)
 
 
 class Resource(models.IntegerChoices):
@@ -22,7 +26,7 @@ class Resource(models.IntegerChoices):
     @classmethod
     def get_from_resource_name(cls, resource: str) -> int:
         try:
-            return getattr(cls, resource.upper().replace("-", "_")).value
+            return getattr(cls, resource.upper().replace("-", "_")).value  # type: ignore[no-any-return]
         except (KeyError, AttributeError) as err:
             raise ValueError(f"Invalid resource: {resource}") from err
 
@@ -38,7 +42,7 @@ class APIUsageRaw(models.Model):
         index_together = (("environment_id", "created_at"),)
 
 
-class AbstractBucket(LifecycleModelMixin, models.Model):
+class AbstractBucket(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     bucket_size = models.PositiveIntegerField(help_text="Bucket size in minutes")
     created_at = models.DateTimeField()
     total_count = models.PositiveIntegerField()
@@ -47,7 +51,7 @@ class AbstractBucket(LifecycleModelMixin, models.Model):
     class Meta:
         abstract = True
 
-    def check_overlapping_buckets(self, filters):
+    def check_overlapping_buckets(self, filters):  # type: ignore[no-untyped-def]
         overlapping_buckets = self.__class__.objects.filter(
             environment_id=self.environment_id,
             bucket_size=self.bucket_size,
@@ -68,9 +72,9 @@ class APIUsageBucket(AbstractBucket):
     resource = models.IntegerField(choices=Resource.choices)
 
     @hook(BEFORE_CREATE)
-    def check_overlapping_buckets(self):
+    def check_overlapping_buckets(self):  # type: ignore[no-untyped-def]
         filter = models.Q(resource=self.resource)
-        super().check_overlapping_buckets(filter)
+        super().check_overlapping_buckets(filter)  # type: ignore[no-untyped-call]
 
 
 class FeatureEvaluationRaw(models.Model):
@@ -96,6 +100,6 @@ class FeatureEvaluationBucket(AbstractBucket):
     feature_name = models.CharField(max_length=2000)
 
     @hook(BEFORE_CREATE)
-    def check_overlapping_buckets(self):
+    def check_overlapping_buckets(self):  # type: ignore[no-untyped-def]
         filter = models.Q(feature_name=self.feature_name)
-        super().check_overlapping_buckets(filter)
+        super().check_overlapping_buckets(filter)  # type: ignore[no-untyped-call]

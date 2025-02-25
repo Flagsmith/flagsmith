@@ -16,7 +16,10 @@ from flag_engine.features.models import (
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.models import IdentityModel, TraitModel
+from flag_engine.identities.models import (  # type: ignore[attr-defined]
+    IdentityModel,
+    TraitModel,
+)
 from flag_engine.organisations.models import OrganisationModel
 from flag_engine.projects.models import ProjectModel
 from flag_engine.segments.models import (
@@ -27,10 +30,12 @@ from flag_engine.segments.models import (
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
-from segments.models import Segment
 
 if TYPE_CHECKING:  # pragma: no cover
-    from environments.identities.models import Identity, Trait
+    from environments.identities.models import (  # type: ignore[attr-defined]
+        Identity,
+        Trait,
+    )
     from environments.models import Environment, EnvironmentAPIKey
     from features.models import Feature, FeatureSegment, FeatureState
     from features.multivariate.models import (
@@ -41,7 +46,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import SegmentRule
+    from segments.models import Segment, SegmentRule
 
 
 __all__ = (
@@ -85,14 +90,14 @@ def map_segment_rule_to_engine(
     conditions = segment_rule.conditions.all()
 
     return SegmentRuleModel(
-        type=segment_rule.type,
+        type=segment_rule.type,  # type: ignore[arg-type]
         rules=[
             map_segment_rule_to_engine(segment_sub_rule)
             for segment_sub_rule in segment_sub_rules
         ],
         conditions=[
             SegmentConditionModel(
-                operator=condition.operator,
+                operator=condition.operator,  # type: ignore[arg-type]
                 value=condition.value,
                 property_=condition.property,
             )
@@ -146,7 +151,7 @@ def map_feature_state_to_engine(
         featurestate_uuid=feature_state.uuid,
         feature_segment=feature_segment_model,
         feature=map_feature_to_engine(feature),
-        multivariate_feature_state_values=[
+        multivariate_feature_state_values=[  # type: ignore[arg-type]
             map_mv_fs_value_to_engine(mv_fs_value) for mv_fs_value in mv_fs_values or []
         ],
     )
@@ -408,7 +413,7 @@ def map_identity_to_engine(
         django_id=identity.pk,
         #
         # Relationships:
-        identity_features=identity_feature_state_models,
+        identity_features=identity_feature_state_models,  # type: ignore[arg-type]
         identity_traits=identity_trait_models,
     )
 
@@ -416,7 +421,7 @@ def map_identity_to_engine(
 def _get_prioritised_feature_states(
     feature_states: Iterable["FeatureState"],
 ) -> List["FeatureState"]:
-    prioritised_feature_state_by_feature_id = {}
+    prioritised_feature_state_by_feature_id = {}  # type: ignore[var-annotated]
     for feature_state in feature_states:
         # TODO: this call to is_live was causing an N+1 issue.
         #  For now, we have solved it with an extra select_related, but
@@ -439,7 +444,7 @@ def _get_segment_feature_states(
     environment_id: int,
     latest_environment_feature_version_uuids: Iterable[UUID],
 ) -> Dict[int, List["FeatureState"]]:
-    feature_states_by_segment_id = {}
+    feature_states_by_segment_id = {}  # type: ignore[var-annotated]
 
     for segment in segments:
         segment_feature_states = feature_states_by_segment_id.setdefault(segment.pk, [])
@@ -450,7 +455,7 @@ def _get_segment_feature_states(
 
             if (
                 latest_environment_feature_version_uuids
-                and feature_segment.environment_feature_version_id
+                and feature_segment.environment_feature_version_id  # type: ignore[operator]
                 not in latest_environment_feature_version_uuids
             ):
                 continue

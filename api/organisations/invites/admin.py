@@ -4,7 +4,7 @@ from organisations.invites.models import Invite
 
 
 @admin.register(Invite)
-class InviteAdmin(admin.ModelAdmin):
+class InviteAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     date_hierarchy = "date_created"
     list_display = (
         "email",

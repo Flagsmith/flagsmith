@@ -30,6 +30,6 @@ class EnvironmentFeatureVersionWebhookDataSerializer(Schema):
     published_by = fields.Nested(_UserSchema(), allow_none=True)
     feature_states = fields.Method(serialize="get_feature_states")
 
-    def get_feature_states(self, obj: EnvironmentFeatureVersion) -> List[dict]:
+    def get_feature_states(self, obj: EnvironmentFeatureVersion) -> List[dict]:  # type: ignore[type-arg]
         schema = _FeatureStateSchema()
-        return schema.dump([fs for fs in obj.feature_states.all()], many=True)
+        return schema.dump([fs for fs in obj.feature_states.all()], many=True)  # type: ignore[no-any-return]

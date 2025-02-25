@@ -12,7 +12,9 @@ from custom_auth.mfa.trench.utils import get_mfa_model
 
 class ActivateMFAMethodCommand:
     def __init__(
-        self, mfa_model: Type[MFAMethod], backup_codes_generator: Callable
+        self,
+        mfa_model: Type[MFAMethod],
+        backup_codes_generator: Callable,  # type: ignore[type-arg]
     ) -> None:
         self._mfa_model = mfa_model
         self._backup_codes_generator = backup_codes_generator

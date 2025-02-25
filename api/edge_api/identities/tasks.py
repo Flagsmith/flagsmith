@@ -2,8 +2,10 @@ import logging
 import typing
 
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
-from task_processor.models import TaskPriority
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
+from task_processor.models import TaskPriority  # type: ignore[import-untyped]
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -18,19 +20,19 @@ from webhooks.webhooks import WebhookEventType, call_environment_webhooks
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()
-def call_environment_webhook_for_feature_state_change(
+@register_task_handler()  # type: ignore[misc]
+def call_environment_webhook_for_feature_state_change(  # type: ignore[no-untyped-def]
     feature_id: int,
     environment_api_key: str,
-    identity_id: typing.Union[id, str],
+    identity_id: typing.Union[id, str],  # type: ignore[valid-type]
     identity_identifier: str,
     timestamp: str,
-    changed_by_user_id: int = None,  # deprecated(use changed_by)
-    changed_by: str = None,
-    new_enabled_state: bool = None,
-    new_value: typing.Union[bool, int, str] = None,
-    previous_enabled_state: bool = None,
-    previous_value: typing.Union[bool, int, str] = None,
+    changed_by_user_id: int = None,  # type: ignore[assignment] # deprecated(use changed_by)
+    changed_by: str = None,  # type: ignore[assignment]
+    new_enabled_state: bool = None,  # type: ignore[assignment]
+    new_value: typing.Union[bool, int, str] = None,  # type: ignore[assignment]
+    previous_enabled_state: bool = None,  # type: ignore[assignment]
+    previous_value: typing.Union[bool, int, str] = None,  # type: ignore[assignment]
 ):
     environment = Environment.objects.get(api_key=environment_api_key)
     if not environment.webhooks.filter(enabled=True).exists():
@@ -51,7 +53,7 @@ def call_environment_webhook_for_feature_state_change(
     }
 
     if previous_enabled_state is not None:
-        data["previous_state"] = Webhook.generate_webhook_feature_state_data(
+        data["previous_state"] = Webhook.generate_webhook_feature_state_data(  # type: ignore[assignment]
             feature=feature,
             environment=environment,
             identity_id=identity_id,
@@ -61,7 +63,7 @@ def call_environment_webhook_for_feature_state_change(
         )
 
     if new_enabled_state is not None:
-        data["new_state"] = Webhook.generate_webhook_feature_state_data(
+        data["new_state"] = Webhook.generate_webhook_feature_state_data(  # type: ignore[assignment]
             feature=feature,
             environment=environment,
             identity_id=identity_id,
@@ -79,8 +81,8 @@ def call_environment_webhook_for_feature_state_change(
     call_environment_webhooks(environment.id, data, event_type=event_type.value)
 
 
-@register_task_handler(priority=TaskPriority.HIGH)
-def sync_identity_document_features(identity_uuid: str):
+@register_task_handler(priority=TaskPriority.HIGH)  # type: ignore[misc]
+def sync_identity_document_features(identity_uuid: str):  # type: ignore[no-untyped-def]
     from .models import EdgeIdentity
 
     identity = EdgeIdentity.from_identity_document(
@@ -97,7 +99,7 @@ def sync_identity_document_features(identity_uuid: str):
     identity.save()
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def generate_audit_log_records(
     environment_api_key: str,
     identifier: str,
@@ -137,7 +139,7 @@ def generate_audit_log_records(
     AuditLog.objects.bulk_create(audit_records)
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def update_flagsmith_environments_v2_identity_overrides(
     environment_api_key: str,
     identity_uuid: str,
@@ -161,7 +163,7 @@ def update_flagsmith_environments_v2_identity_overrides(
     dynamodb_wrapper_v2.update_identity_overrides(identity_override_changeset)
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def delete_environments_v2_identity_overrides_by_feature(feature_id: int) -> None:
     dynamodb_wrapper_v2 = DynamoEnvironmentV2Wrapper()
 

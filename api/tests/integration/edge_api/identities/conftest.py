@@ -12,7 +12,7 @@ from users.models import FFAdminUser
 
 
 @pytest.fixture()
-def webhook_mock(mocker):
+def webhook_mock(mocker):  # type: ignore[no-untyped-def]
     return mocker.patch(
         "edge_api.identities.serializers.call_environment_webhook_for_feature_state_change"
     )
@@ -33,7 +33,7 @@ def identity_overrides_v2(
         edge_identity.add_feature_override(feature_override)
     edge_identity.save(admin_user)
     return [
-        item["document_key"]
+        item["document_key"]  # type: ignore[misc]
         for item in dynamodb_wrapper_v2.query_iter_all_items(
             KeyConditionExpression=Key("environment_id").eq(
                 str(dynamo_enabled_environment)

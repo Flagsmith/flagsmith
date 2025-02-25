@@ -2,11 +2,11 @@ import json
 from datetime import timedelta
 
 import pytest
-from core.constants import STRING
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
+from core.constants import STRING
 from environments.models import Environment
 from environments.tasks import rebuild_environment_document
 from features.models import Feature, FeatureSegment, FeatureState
@@ -23,7 +23,7 @@ from users.models import FFAdminUser
 now = timezone.now()
 
 
-def test_create_new_environment_feature_version_clones_feature_states_from_previous_version(
+def test_create_new_environment_feature_version_clones_feature_states_from_previous_version(  # type: ignore[no-untyped-def]  # noqa: E501
     environment_v2_versioning, feature
 ):
     # Given

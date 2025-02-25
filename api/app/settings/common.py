@@ -18,13 +18,13 @@ import warnings
 from datetime import datetime, timedelta
 from importlib import reload
 
-import dj_database_url
+import dj_database_url  # type: ignore[import-untyped]
 import pytz
-from corsheaders.defaults import default_headers
+from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
-from task_processor.task_run_method import TaskRunMethod
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
 
@@ -42,8 +42,8 @@ if ENV not in ("local", "dev", "staging", "production"):
 
 DEBUG = env.bool("DEBUG", default=False)
 
-ADMINS = []
-MANAGERS = []
+ADMINS = []  # type: ignore[var-annotated]
+MANAGERS = []  # type: ignore[var-annotated]
 
 # Enables the sending of telemetry data to the central Flagsmith API for usage tracking
 ENABLE_TELEMETRY = env.bool("ENABLE_TELEMETRY", default=True)
@@ -68,7 +68,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 
 if sys.version[0] == "2":
     reload(sys)
-    sys.setdefaultencoding("utf-8")
+    sys.setdefaultencoding("utf-8")  # type: ignore[attr-defined]
 
 # Application definition
 

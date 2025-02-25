@@ -1,5 +1,7 @@
 import pytest
-from common.metadata.serializers import MetadataSerializer
+from common.metadata.serializers import (  # type: ignore[import-untyped]
+    MetadataSerializer,
+)
 
 from metadata.models import (
     FIELD_VALUE_MAX_LENGTH,
@@ -26,7 +28,7 @@ from metadata.models import (
         ("multiline_str", "a valid string", True),
     ],
 )
-def test_metadata_serializer_validate_validates_field_value_type_correctly(
+def test_metadata_serializer_validate_validates_field_value_type_correctly(  # type: ignore[no-untyped-def]
     organisation, environment_content_type, field_type, field_value, expected_is_valid
 ):
     # Given

@@ -46,29 +46,29 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
 
 
 class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
-    def get_table_name(self) -> str | None:
-        return settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
+    def get_table_name(self) -> str | None:  # type: ignore[override]
+        return settings.ENVIRONMENTS_TABLE_NAME_DYNAMO  # type: ignore[no-any-return]
 
-    def write_environments(self, environments: Iterable["Environment"]):
-        with self.table.batch_writer() as writer:
+    def write_environments(self, environments: Iterable["Environment"]):  # type: ignore[no-untyped-def]
+        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
             for environment in environments:
                 writer.put_item(
                     Item=map_environment_to_environment_document(environment),
                 )
 
-    def get_item(self, api_key: str) -> dict:
+    def get_item(self, api_key: str) -> dict:  # type: ignore[type-arg]
         try:
-            return self.table.get_item(Key={"api_key": api_key})["Item"]
+            return self.table.get_item(Key={"api_key": api_key})["Item"]  # type: ignore[union-attr]
         except KeyError as e:
             raise ObjectDoesNotExist() from e
 
     def delete_environment(self, api_key: str) -> None:
-        self.table.delete_item(Key={"api_key": api_key})
+        self.table.delete_item(Key={"api_key": api_key})  # type: ignore[union-attr]
 
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
-    def get_table_name(self) -> str | None:
-        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
+    def get_table_name(self) -> str | None:  # type: ignore[override]
+        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO  # type: ignore[no-any-return]
 
     def get_identity_overrides_by_environment_id(
         self,
@@ -76,7 +76,6 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         feature_id: int | None = None,
         feature_ids: None | list[int] = None,
     ) -> list[dict[str, Any]] | list[IdentityOverridesQueryResponse]:
-
         try:
             if feature_ids is None:
                 return list(
@@ -109,8 +108,8 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     def get_identity_overrides_page(
         self, environment_id: int, feature_id: int
     ) -> IdentityOverridesQueryResponse:
-        query_response = self.table.query(
-            KeyConditionExpression=self.get_identity_overrides_key_condition_expression(
+        query_response = self.table.query(  # type: ignore[union-attr]
+            KeyConditionExpression=self.get_identity_overrides_key_condition_expression(  # type: ignore[arg-type]
                 environment_id=environment_id,
                 feature_id=feature_id,
             )
@@ -126,7 +125,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         environment_id: int,
         feature_id: None | int,
     ) -> Key:
-        return Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(
+        return Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(  # type: ignore[return-value]
             str(environment_id),
         ) & Key(ENVIRONMENTS_V2_SORT_KEY).begins_with(
             get_environments_v2_identity_override_document_key(
@@ -143,7 +142,7 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
             changeset.to_delete,
             chunk_size=DYNAMODB_MAX_BATCH_WRITE_ITEM_COUNT,
         ):
-            with self.table.batch_writer() as writer:
+            with self.table.batch_writer() as writer:  # type: ignore[union-attr]
                 for identity_override_to_delete in to_delete:
                     writer.delete_item(
                         Key={
@@ -159,20 +158,20 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
                     )
 
     def write_environments(self, environments: Iterable["Environment"]) -> None:
-        with self.table.batch_writer() as writer:
+        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
             for environment in environments:
                 writer.put_item(
                     Item=map_environment_to_environment_v2_document(environment),
                 )
 
-    def delete_environment(self, environment_id: int):
-        environment_id = str(environment_id)
+    def delete_environment(self, environment_id: int):  # type: ignore[no-untyped-def]
+        environment_id = str(environment_id)  # type: ignore[assignment]
         filter_expression = Key(ENVIRONMENTS_V2_PARTITION_KEY).eq(environment_id)
-        query_kwargs: "QueryInputRequestTypeDef" = {
-            "KeyConditionExpression": filter_expression,
+        query_kwargs: "QueryInputRequestTypeDef" = {  # type: ignore[typeddict-item]
+            "KeyConditionExpression": filter_expression,  # type: ignore[typeddict-item]
             "ProjectionExpression": "document_key",
         }
-        with self.table.batch_writer() as writer:
+        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
             for item in self.query_iter_all_items(**query_kwargs):
                 writer.delete_item(
                     Key={
@@ -185,12 +184,12 @@ class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
         filter_expression = self.get_identity_overrides_key_condition_expression(
             environment_id=environment_id, feature_id=feature_id
         )
-        query_kwargs: "QueryInputRequestTypeDef" = {
-            "KeyConditionExpression": filter_expression,
+        query_kwargs: "QueryInputRequestTypeDef" = {  # type: ignore[typeddict-item]
+            "KeyConditionExpression": filter_expression,  # type: ignore[typeddict-item]
             "ProjectionExpression": "document_key",
         }
 
-        with self.table.batch_writer() as writer:
+        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
             for item in self.query_iter_all_items(**query_kwargs):
                 writer.delete_item(
                     Key={

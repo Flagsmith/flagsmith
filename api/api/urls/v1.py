@@ -1,10 +1,10 @@
-from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf import settings
 from django.urls import include, path, re_path
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.views import get_schema_view  # type: ignore[import-untyped]
 from rest_framework import authentication, permissions, routers
 
+from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
 from environments.sdk.views import SDKEnvironmentAPIView
@@ -82,7 +82,7 @@ urlpatterns = [
 ]
 
 if settings.SPLIT_TESTING_INSTALLED:
-    from split_testing.views import (
+    from split_testing.views import (  # type: ignore[import-not-found]
         ConversionEventTypeView,
         CreateConversionEventView,
         SplitTestViewSet,

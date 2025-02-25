@@ -10,7 +10,7 @@ from features.feature_health.providers.services import (
 
 
 @admin.register(FeatureHealthProvider)
-class FeatureHealthProviderAdmin(admin.ModelAdmin):
+class FeatureHealthProviderAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     list_display = (
         "project",
         "name",
@@ -18,14 +18,14 @@ class FeatureHealthProviderAdmin(admin.ModelAdmin):
         "webhook_url",
     )
 
-    def changelist_view(
+    def changelist_view(  # type: ignore[override]
         self,
         request: HttpRequest,
         *args: typing.Any,
         **kwargs: typing.Any,
     ) -> None:
         self.request = request
-        return super().changelist_view(request, *args, **kwargs)
+        return super().changelist_view(request, *args, **kwargs)  # type: ignore[return-value]
 
     def webhook_url(
         self,

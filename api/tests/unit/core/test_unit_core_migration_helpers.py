@@ -1,7 +1,7 @@
 from core.migration_helpers import AddDefaultUUIDs, PostgresOnlyRunSQL
 
 
-def test_add_default_uuids_class_correctly_sets_uuid_attribute(mocker):
+def test_add_default_uuids_class_correctly_sets_uuid_attribute(mocker):  # type: ignore[no-untyped-def]
     # Given
     mock_apps = mocker.MagicMock()
     mock_schema_editor = mocker.MagicMock()
@@ -29,7 +29,7 @@ def test_add_default_uuids_class_correctly_sets_uuid_attribute(mocker):
     )
 
 
-def test_postgres_only_run_sql__from_sql_file__with_reverse_sql_as_string(
+def test_postgres_only_run_sql__from_sql_file__with_reverse_sql_as_string(  # type: ignore[no-untyped-def]
     mocker, tmp_path
 ):
     # Given
@@ -51,7 +51,7 @@ def test_postgres_only_run_sql__from_sql_file__with_reverse_sql_as_string(
     mocked_init.assert_called_once_with(forward_sql, reverse_sql=reverse_sql)
 
 
-def test_postgres_only_run_sql__from_sql_file__with_reverse_sql_as_file_path(
+def test_postgres_only_run_sql__from_sql_file__with_reverse_sql_as_file_path(  # type: ignore[no-untyped-def]
     mocker, tmp_path
 ):
     # Given
@@ -76,7 +76,7 @@ def test_postgres_only_run_sql__from_sql_file__with_reverse_sql_as_file_path(
     mocked_init.assert_called_once_with(forward_sql, reverse_sql=reverse_sql)
 
 
-def test_postgres_only_run_sql__from_sql_file__without_reverse_sql(mocker, tmp_path):
+def test_postgres_only_run_sql__from_sql_file__without_reverse_sql(mocker, tmp_path):  # type: ignore[no-untyped-def]
     # Given
     forward_sql = "SELECT 1;"
 

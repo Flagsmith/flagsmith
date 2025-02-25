@@ -30,7 +30,6 @@ import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import IdentifierString from 'components/IdentifierString'
 import IdentityProvider from 'common/providers/IdentityProvider'
-import IdentitySegmentsProvider from 'common/providers/IdentitySegmentsProvider'
 import InfoMessage from 'components/InfoMessage'
 import JSONReference from 'components/JSONReference'
 import PageTitle from 'components/PageTitle'
@@ -57,6 +56,8 @@ import { isEqual } from 'lodash'
 import ClearFilters from 'components/ClearFilters'
 import SegmentsIcon from 'components/svg/SegmentsIcon'
 import UsersIcon from 'components/svg/UsersIcon'
+import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
+import useSearchThrottle from 'common/useSearchThrottle'
 
 const width = [200, 48, 78]
 
@@ -132,7 +133,23 @@ const UserPage: FC<UserPageType> = (props) => {
   const [actualFlags, setActualFlags] =
     useState<Record<string, IdentityFeatureState>>()
   const [preselect, setPreselect] = useState(Utils.fromParam().flag)
-
+  const [segmentsPage, setSegmentsPage] = useState(1)
+  const {
+    search,
+    searchInput: segmentSearchInput,
+    setSearchInput: setSegmentSearchInput,
+  } = useSearchThrottle('')
+  const {
+    data: segments,
+    isFetching: isFetchingSegments,
+    refetch: refetchIdentitySegments,
+  } = useGetIdentitySegmentsQuery({
+    identity: id,
+    page: segmentsPage,
+    page_size: 10,
+    projectId,
+    q: search,
+  })
   const getFilter = useCallback(
     (filter) => ({
       ...filter,
@@ -165,7 +182,6 @@ const UserPage: FC<UserPageType> = (props) => {
 
   useEffect(() => {
     AppActions.getIdentity(environmentId, id)
-    AppActions.getIdentitySegments(projectId, id)
     getTags(getStore(), { projectId: `${projectId}` })
     getActualFlags()
     API.trackPage(Constants.pages.USER)
@@ -267,7 +283,7 @@ const UserPage: FC<UserPageType> = (props) => {
       'Create User Trait',
       <CreateTraitModal
         isEdit={false}
-        onSave={onTraitSaved}
+        onSave={refetchIdentitySegments}
         identity={id}
         identityName={decodeURIComponent(identity)}
         environmentId={environmentId}
@@ -275,10 +291,6 @@ const UserPage: FC<UserPageType> = (props) => {
       />,
       'p-0',
     )
-  }
-
-  const onTraitSaved = () => {
-    AppActions.getIdentitySegments(projectId, id)
   }
 
   const editTrait = (trait: {
@@ -291,7 +303,7 @@ const UserPage: FC<UserPageType> = (props) => {
       <CreateTraitModal
         isEdit
         {...trait}
-        onSave={onTraitSaved}
+        onSave={refetchIdentitySegments}
         identity={id}
         identityName={decodeURIComponent(identity)}
         environmentId={environmentId}
@@ -483,6 +495,9 @@ const UserPage: FC<UserPageType> = (props) => {
                                       value={filter.search}
                                     />
                                     <Row className='flex-fill justify-content-end'>
+                                      {hasFilters && (
+                                        <ClearFilters onClick={clearFilters} />
+                                      )}
                                       <TableTagFilter
                                         projectId={projectId}
                                         className='me-4'
@@ -597,9 +612,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                           })
                                         }}
                                       />
-                                      {hasFilters && (
-                                        <ClearFilters onClick={clearFilters} />
-                                      )}
                                     </Row>
                                   </div>
                                 </Row>
@@ -1129,101 +1141,108 @@ const UserPage: FC<UserPageType> = (props) => {
                                 }
                               />
                             </FormGroup>
+                          )}{' '}
+                          {!segments?.results ? (
+                            <div className='text-center'>
+                              <Loader />
+                            </div>
+                          ) : (
+                            <FormGroup>
+                              <PanelSearch
+                                id='user-segments-list'
+                                className='no-pad'
+                                title='Segments'
+                                isLoading={isFetchingSegments}
+                                search={segmentSearchInput}
+                                onChange={(e: InputEvent) => {
+                                  setSegmentSearchInput(
+                                    Utils.safeParseEventValue(e),
+                                  )
+                                }}
+                                itemHeight={70}
+                                paging={segments}
+                                nextPage={() =>
+                                  setSegmentsPage(segmentsPage + 1)
+                                }
+                                prevPage={() =>
+                                  setSegmentsPage(segmentsPage - 1)
+                                }
+                                goToPage={setSegmentsPage}
+                                header={
+                                  <Row className='table-header'>
+                                    <Flex
+                                      className='table-column px-3'
+                                      style={{ maxWidth: '230px' }}
+                                    >
+                                      Name
+                                    </Flex>
+                                    <Flex className='table-column'>
+                                      Description
+                                    </Flex>
+                                  </Row>
+                                }
+                                items={segments.results}
+                                renderRow={(
+                                  { created_date, description, name }: any,
+                                  i: number,
+                                ) => (
+                                  <Row
+                                    className='list-item clickable'
+                                    space
+                                    key={i}
+                                    onClick={() =>
+                                      editSegment(segments.results[i])
+                                    }
+                                  >
+                                    <Flex
+                                      className='table-column px-3'
+                                      style={{ maxWidth: '230px' }}
+                                    >
+                                      <div
+                                        onClick={() =>
+                                          editSegment(segments.results[i])
+                                        }
+                                      >
+                                        <span
+                                          data-test={`segment-${i}-name`}
+                                          className='font-weight-medium'
+                                        >
+                                          {name}
+                                        </span>
+                                      </div>
+                                      <div className='list-item-subtitle mt-1'>
+                                        Created{' '}
+                                        {moment(created_date).format(
+                                          'DD/MMM/YYYY',
+                                        )}
+                                      </div>
+                                    </Flex>
+                                    <Flex className='table-column list-item-subtitle'>
+                                      {description && <div>{description}</div>}
+                                    </Flex>
+                                  </Row>
+                                )}
+                                renderNoResults={
+                                  <Panel title='Segments' className='no-pad'>
+                                    <div className='search-list'>
+                                      <Row className='list-item text-muted px-3'>
+                                        This user is not a member of any
+                                        segments.
+                                      </Row>
+                                    </div>
+                                  </Panel>
+                                }
+                                filterRow={(
+                                  { name }: any,
+                                  searchString: string,
+                                ) =>
+                                  name
+                                    .toLowerCase()
+                                    .indexOf(searchString.toLowerCase()) > -1
+                                }
+                              />
+                            </FormGroup>
                           )}
-                          <IdentitySegmentsProvider id={id}>
-                            {({ segments }: any) =>
-                              !segments ? (
-                                <div className='text-center'>
-                                  <Loader />
-                                </div>
-                              ) : (
-                                <FormGroup>
-                                  <PanelSearch
-                                    id='user-segments-list'
-                                    className='no-pad'
-                                    title='Segments'
-                                    itemHeight={70}
-                                    header={
-                                      <Row className='table-header'>
-                                        <Flex
-                                          className='table-column px-3'
-                                          style={{ maxWidth: '230px' }}
-                                        >
-                                          Name
-                                        </Flex>
-                                        <Flex className='table-column'>
-                                          Description
-                                        </Flex>
-                                      </Row>
-                                    }
-                                    items={segments || []}
-                                    renderRow={(
-                                      { created_date, description, name }: any,
-                                      i: number,
-                                    ) => (
-                                      <Row
-                                        className='list-item clickable'
-                                        space
-                                        key={i}
-                                        onClick={() => editSegment(segments[i])}
-                                      >
-                                        <Flex
-                                          className='table-column px-3'
-                                          style={{ maxWidth: '230px' }}
-                                        >
-                                          <div
-                                            onClick={() =>
-                                              editSegment(segments[i])
-                                            }
-                                          >
-                                            <span
-                                              data-test={`segment-${i}-name`}
-                                              className='font-weight-medium'
-                                            >
-                                              {name}
-                                            </span>
-                                          </div>
-                                          <div className='list-item-subtitle mt-1'>
-                                            Created{' '}
-                                            {moment(created_date).format(
-                                              'DD/MMM/YYYY',
-                                            )}
-                                          </div>
-                                        </Flex>
-                                        <Flex className='table-column list-item-subtitle'>
-                                          {description && (
-                                            <div>{description}</div>
-                                          )}
-                                        </Flex>
-                                      </Row>
-                                    )}
-                                    renderNoResults={
-                                      <Panel
-                                        title='Segments'
-                                        className='no-pad'
-                                      >
-                                        <div className='search-list'>
-                                          <Row className='list-item text-muted px-3'>
-                                            This user is not a member of any
-                                            segments.
-                                          </Row>
-                                        </div>
-                                      </Panel>
-                                    }
-                                    filterRow={(
-                                      { name }: any,
-                                      searchString: string,
-                                    ) =>
-                                      name
-                                        .toLowerCase()
-                                        .indexOf(searchString.toLowerCase()) >
-                                      -1
-                                    }
-                                  />
-                                </FormGroup>
-                              )
-                            }
-                          </IdentitySegmentsProvider>
                         </FormGroup>
                       </div>
                       <div className='col-md-12 mt-2'>

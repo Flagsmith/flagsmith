@@ -1,12 +1,13 @@
 from unittest import mock
 
 import pytest
+from pytest_mock import MockerFixture
+
 from app_analytics.track import (
     track_feature_evaluation_influxdb,
     track_request_googleanalytics,
     track_request_influxdb,
 )
-from pytest_mock import MockerFixture
 
 
 @pytest.mark.parametrize(
@@ -21,7 +22,7 @@ from pytest_mock import MockerFixture
 )
 @mock.patch("app_analytics.track.requests")
 @mock.patch("app_analytics.track.Environment")
-def test_track_request_googleanalytics(
+def test_track_request_googleanalytics(  # type: ignore[no-untyped-def]
     MockEnvironment, mock_requests, request_uri, expected_ga_requests
 ):
     """
@@ -38,7 +39,7 @@ def test_track_request_googleanalytics(
     request.headers = {"X-Environment-Key": environment_api_key}
 
     # When
-    track_request_googleanalytics(request)
+    track_request_googleanalytics(request)  # type: ignore[no-untyped-call]
 
     # Then
     assert mock_requests.post.call_count == expected_ga_requests
@@ -55,7 +56,7 @@ def test_track_request_googleanalytics(
 )
 @mock.patch("app_analytics.track.InfluxDBWrapper")
 @mock.patch("app_analytics.track.Environment")
-def test_track_request_sends_data_to_influxdb_for_tracked_uris(
+def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[no-untyped-def]
     MockEnvironment, MockInfluxDBWrapper, request_uri, expected_resource
 ):
     """
@@ -71,7 +72,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
     MockInfluxDBWrapper.return_value = mock_influxdb
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(request)  # type: ignore[no-untyped-call]
 
     # Then
     call_list = MockInfluxDBWrapper.call_args_list
@@ -84,7 +85,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(
 
 @mock.patch("app_analytics.track.InfluxDBWrapper")
 @mock.patch("app_analytics.track.Environment")
-def test_track_request_sends_host_data_to_influxdb(
+def test_track_request_sends_host_data_to_influxdb(  # type: ignore[no-untyped-def]
     MockEnvironment, MockInfluxDBWrapper, rf
 ):
     """
@@ -100,7 +101,7 @@ def test_track_request_sends_host_data_to_influxdb(
     MockInfluxDBWrapper.return_value = mock_influxdb
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(request)  # type: ignore[no-untyped-call]
 
     # Then
     assert (
@@ -111,7 +112,7 @@ def test_track_request_sends_host_data_to_influxdb(
 
 @mock.patch("app_analytics.track.InfluxDBWrapper")
 @mock.patch("app_analytics.track.Environment")
-def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
+def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(  # type: ignore[no-untyped-def]
     MockEnvironment, MockInfluxDBWrapper
 ):
     """
@@ -127,7 +128,7 @@ def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
     MockInfluxDBWrapper.return_value = mock_influxdb
 
     # When
-    track_request_influxdb(request)
+    track_request_influxdb(request)  # type: ignore[no-untyped-call]
 
     # Then
     MockInfluxDBWrapper.assert_not_called()

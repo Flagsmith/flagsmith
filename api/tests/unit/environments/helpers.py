@@ -1,6 +1,6 @@
 import typing
 
-from common.projects.permissions import VIEW_PROJECT
+from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 from rest_framework.test import APIClient
 
 from environments.models import Environment
@@ -15,7 +15,7 @@ from users.models import FFAdminUser
 def get_environment_user_client(
     user: FFAdminUser,
     environment: Environment,
-    permission_keys: typing.List[str] = None,
+    permission_keys: typing.List[str] = None,  # type: ignore[assignment]
     admin: bool = False,
 ) -> APIClient:
     """

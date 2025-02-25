@@ -13,9 +13,10 @@ class CustomApplicationBackend:
         self._config = config
         self._totp = TOTP(self._mfa_method.secret)
 
-    def dispatch_message(self):
+    def dispatch_message(self):  # type: ignore[no-untyped-def]
         qr_link = self._totp.provisioning_uri(
-            self._mfa_method.user.email, settings.TRENCH_AUTH["APPLICATION_ISSUER_NAME"]
+            self._mfa_method.user.email,
+            settings.TRENCH_AUTH["APPLICATION_ISSUER_NAME"],  # type: ignore[arg-type]
         )
         data = {
             "qr_link": qr_link,
@@ -24,5 +25,5 @@ class CustomApplicationBackend:
         return Response(data)
 
     def validate_code(self, code: str) -> bool:
-        validity_period = settings.TRENCH_AUTH["MFA_METHODS"]["app"]["VALIDITY_PERIOD"]
+        validity_period = settings.TRENCH_AUTH["MFA_METHODS"]["app"]["VALIDITY_PERIOD"]  # type: ignore[index]
         return self._totp.verify(otp=code, valid_window=int(validity_period / 20))

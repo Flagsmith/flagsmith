@@ -1,11 +1,7 @@
 import json
 from datetime import timedelta
 
-import re2 as re
-from app_analytics.influxdb_wrapper import (
-    get_event_list_for_organisation,
-    get_events_for_organisation,
-)
+import re2 as re  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
@@ -26,6 +22,10 @@ from django.utils.safestring import mark_safe
 from django.views.generic import ListView
 from django.views.generic.edit import FormView
 
+from app_analytics.influxdb_wrapper import (
+    get_event_list_for_organisation,
+    get_events_for_organisation,
+)
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
 from import_export.export import full_export
@@ -61,12 +61,12 @@ domain_regex = re.compile(r"^[a-z0-9.-]+\.[a-z]{2,}$")
     name="get",
     decorator=staff_member_required(),
 )
-class OrganisationList(ListView):
+class OrganisationList(ListView):  # type: ignore[type-arg]
     model = Organisation
     paginate_by = OBJECTS_PER_PAGE
     template_name = "sales_dashboard/home.html"
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         queryset = Organisation.objects.annotate(
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
@@ -98,7 +98,7 @@ class OrganisationList(ListView):
 
         return queryset
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):  # type: ignore[no-untyped-def]
         data = super().get_context_data(**kwargs)
 
         data["search"] = self.request.GET.get("search", "")
@@ -111,7 +111,7 @@ class OrganisationList(ListView):
         # when the caches were last updated.
         try:
             subscription_information_caches_influx_updated_at = (
-                OrganisationSubscriptionInformationCache.objects.order_by(
+                OrganisationSubscriptionInformationCache.objects.order_by(  # type: ignore[union-attr]
                     F("influx_updated_at").desc(nulls_last=True)
                 )
                 .first()
@@ -167,7 +167,7 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
             environment__project=project
         ).count()
         if settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
-            identity_migration_status_dict[project.id] = IdentityMigrator(
+            identity_migration_status_dict[project.id] = IdentityMigrator(  # type: ignore[no-untyped-call]
                 project.id
             ).migration_status.name
 
@@ -216,21 +216,21 @@ def organisation_info(request: HttpRequest, organisation_id: int) -> HttpRespons
 
 
 @staff_member_required
-def update_seats(request, organisation_id):
+def update_seats(request, organisation_id):  # type: ignore[no-untyped-def]
     max_seats_form = MaxSeatsForm(request.POST)
     if max_seats_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
-        max_seats_form.save(organisation)
+        max_seats_form.save(organisation)  # type: ignore[no-untyped-call]
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
 @staff_member_required
-def update_max_api_calls(request, organisation_id):
+def update_max_api_calls(request, organisation_id):  # type: ignore[no-untyped-def]
     max_api_calls_form = MaxAPICallsForm(request.POST)
     if max_api_calls_form.is_valid():
         organisation = get_object_or_404(Organisation, pk=organisation_id)
-        max_api_calls_form.save(organisation)
+        max_api_calls_form.save(organisation)  # type: ignore[no-untyped-call]
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
@@ -268,16 +268,16 @@ def organisation_end_trial(request: HttpRequest, organisation_id: int) -> HttpRe
 
 
 @staff_member_required
-def migrate_identities_to_edge(request, project_id):
+def migrate_identities_to_edge(request, project_id):  # type: ignore[no-untyped-def]
     if not settings.PROJECT_METADATA_TABLE_NAME_DYNAMO:
         return HttpResponseBadRequest("DynamoDB is not enabled")
 
-    identity_migrator = IdentityMigrator(project_id)
+    identity_migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
     if not identity_migrator.can_migrate:
         return HttpResponseBadRequest(
             "Migration is either already done or is in progress"
         )
-    identity_migrator.trigger_migration()
+    identity_migrator.trigger_migration()  # type: ignore[no-untyped-call]
 
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
@@ -290,18 +290,18 @@ def migrate_identities_to_edge(request, project_id):
     name="post",
     decorator=staff_member_required(),
 )
-class EmailUsage(FormView):
+class EmailUsage(FormView):  # type: ignore[type-arg]
     form_class = EmailUsageForm
     template_name = "sales_dashboard/email-usage.html"
     success_url = reverse_lazy("sales_dashboard:index")
 
-    def form_valid(self, form):
+    def form_valid(self, form):  # type: ignore[no-untyped-def]
         form.save()
         return super().form_valid(form)
 
 
-@staff_member_required()
-def download_org_data(request, organisation_id):
+@staff_member_required()  # type: ignore[misc]
+def download_org_data(request, organisation_id):  # type: ignore[no-untyped-def]
     data = full_export(organisation_id)
     response = HttpResponse(
         json.dumps(data, cls=DjangoJSONEncoder), content_type="application/json"
@@ -312,19 +312,19 @@ def download_org_data(request, organisation_id):
     return response
 
 
-@staff_member_required()
-def trigger_update_organisation_subscription_information_influx_cache(request):
+@staff_member_required()  # type: ignore[misc]
+def trigger_update_organisation_subscription_information_influx_cache(request):  # type: ignore[no-untyped-def]
     update_organisation_subscription_information_influx_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
-@staff_member_required()
-def trigger_update_organisation_subscription_information_cache(request):
+@staff_member_required()  # type: ignore[misc]
+def trigger_update_organisation_subscription_information_cache(request):  # type: ignore[no-untyped-def]
     update_organisation_subscription_information_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))
 
 
-@staff_member_required()
-def trigger_update_chargebee_caches(request):
+@staff_member_required()  # type: ignore[misc]
+def trigger_update_chargebee_caches(request):  # type: ignore[no-untyped-def]
     update_chargebee_cache.delay()
     return HttpResponseRedirect(reverse("sales_dashboard:index"))

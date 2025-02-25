@@ -3,8 +3,10 @@ import typing
 from contextlib import suppress
 from datetime import datetime
 
-import chargebee
-from chargebee.api_error import APIError as ChargebeeAPIError
+import chargebee  # type: ignore[import-untyped]
+from chargebee.api_error import (  # type: ignore[import-untyped]
+    APIError as ChargebeeAPIError,
+)
 from django.conf import settings
 from pytz import UTC
 
@@ -38,10 +40,10 @@ CHARGEBEE_PAYMENT_ERROR_CODES = [
 ]
 
 
-def get_subscription_data_from_hosted_page(hosted_page_id):
-    hosted_page = get_hosted_page(hosted_page_id)
-    subscription = get_subscription_from_hosted_page(hosted_page)
-    plan_metadata = get_plan_meta_data(subscription.plan_id)
+def get_subscription_data_from_hosted_page(hosted_page_id):  # type: ignore[no-untyped-def]
+    hosted_page = get_hosted_page(hosted_page_id)  # type: ignore[no-untyped-call]
+    subscription = get_subscription_from_hosted_page(hosted_page)  # type: ignore[no-untyped-call]
+    plan_metadata = get_plan_meta_data(subscription.plan_id)  # type: ignore[no-untyped-call]
     if subscription:
         return {
             "subscription_id": subscription.id,
@@ -51,53 +53,53 @@ def get_subscription_data_from_hosted_page(hosted_page_id):
             ),
             "max_seats": get_max_seats_for_plan(plan_metadata),
             "max_api_calls": get_max_api_calls_for_plan(plan_metadata),
-            "customer_id": get_customer_id_from_hosted_page(hosted_page),
+            "customer_id": get_customer_id_from_hosted_page(hosted_page),  # type: ignore[no-untyped-call]
             "payment_method": CHARGEBEE,
         }
     else:
         return {}
 
 
-def get_hosted_page(hosted_page_id):
+def get_hosted_page(hosted_page_id):  # type: ignore[no-untyped-def]
     response = chargebee.HostedPage.retrieve(hosted_page_id)
     return response.hosted_page
 
 
-def get_subscription_from_hosted_page(hosted_page):
+def get_subscription_from_hosted_page(hosted_page):  # type: ignore[no-untyped-def]
     if hasattr(hosted_page, "content"):
         content = hosted_page.content
         if hasattr(content, "subscription"):
             return content.subscription
 
 
-def get_customer_id_from_hosted_page(hosted_page):
+def get_customer_id_from_hosted_page(hosted_page):  # type: ignore[no-untyped-def]
     if hasattr(hosted_page, "content"):
         content = hosted_page.content
         if hasattr(content, "customer"):
             return content.customer.id
 
 
-def get_max_seats_for_plan(meta_data: dict) -> int:
-    return meta_data.get("seats", 1)
+def get_max_seats_for_plan(meta_data: dict) -> int:  # type: ignore[type-arg]
+    return meta_data.get("seats", 1)  # type: ignore[no-any-return]
 
 
-def get_max_api_calls_for_plan(meta_data: dict) -> int:
-    return meta_data.get("api_calls", 50000)
+def get_max_api_calls_for_plan(meta_data: dict) -> int:  # type: ignore[type-arg]
+    return meta_data.get("api_calls", 50000)  # type: ignore[no-any-return]
 
 
-def get_plan_meta_data(plan_id):
-    plan_details = get_plan_details(plan_id)
+def get_plan_meta_data(plan_id):  # type: ignore[no-untyped-def]
+    plan_details = get_plan_details(plan_id)  # type: ignore[no-untyped-call]
     if plan_details and hasattr(plan_details.plan, "meta_data"):
         return plan_details.plan.meta_data or {}
     return {}
 
 
-def get_plan_details(plan_id):
+def get_plan_details(plan_id):  # type: ignore[no-untyped-def]
     if plan_id:
         return chargebee.Plan.retrieve(plan_id)
 
 
-def get_portal_url(customer_id, redirect_url):
+def get_portal_url(customer_id, redirect_url):  # type: ignore[no-untyped-def]
     result = chargebee.PortalSession.create(
         {"redirect_url": redirect_url, "customer": {"id": customer_id}}
     )
@@ -105,7 +107,7 @@ def get_portal_url(customer_id, redirect_url):
         return result.portal_session.access_url
 
 
-def get_customer_id_from_subscription_id(subscription_id):
+def get_customer_id_from_subscription_id(subscription_id):  # type: ignore[no-untyped-def]
     subscription_response = chargebee.Subscription.retrieve(subscription_id)
     if hasattr(subscription_response, "customer"):
         return subscription_response.customer.id
@@ -116,15 +118,15 @@ def get_hosted_page_url_for_subscription_upgrade(
 ) -> str:
     params = {"subscription": {"id": subscription_id, "plan_id": plan_id}}
     checkout_existing_response = chargebee.HostedPage.checkout_existing(params)
-    return checkout_existing_response.hosted_page.url
+    return checkout_existing_response.hosted_page.url  # type: ignore[no-any-return]
 
 
 def extract_subscription_metadata(
-    chargebee_subscription: dict,
+    chargebee_subscription: dict,  # type: ignore[type-arg]
     customer_email: str,
 ) -> ChargebeeObjMetadata:
     chargebee_addons = chargebee_subscription.get("addons", [])
-    chargebee_cache = ChargebeeCache()
+    chargebee_cache = ChargebeeCache()  # type: ignore[no-untyped-call]
     subscription_metadata: ChargebeeObjMetadata = chargebee_cache.plans[
         chargebee_subscription["plan_id"]
     ]
@@ -140,7 +142,7 @@ def extract_subscription_metadata(
     return subscription_metadata
 
 
-def get_subscription_metadata_from_id(
+def get_subscription_metadata_from_id(  # type: ignore[return]
     subscription_id: str,
 ) -> typing.Optional[ChargebeeObjMetadata]:
     if not (subscription_id and subscription_id.strip() != ""):
@@ -158,7 +160,7 @@ def get_subscription_metadata_from_id(
         )
 
 
-def cancel_subscription(subscription_id: str):
+def cancel_subscription(subscription_id: str):  # type: ignore[no-untyped-def]
     try:
         chargebee.Subscription.cancel(subscription_id, {"end_of_term": True})
     except ChargebeeAPIError as e:
@@ -167,7 +169,7 @@ def cancel_subscription(subscription_id: str):
         raise CannotCancelChargebeeSubscription(msg) from e
 
 
-def add_single_seat(subscription_id: str):
+def add_single_seat(subscription_id: str):  # type: ignore[no-untyped-def]
     try:
         subscription = chargebee.Subscription.retrieve(subscription_id).subscription
         addons = subscription.addons or []
@@ -259,10 +261,10 @@ def add_100k_api_calls(
 
 def _convert_chargebee_subscription_to_dictionary(
     chargebee_subscription: chargebee.Subscription,
-) -> dict:
+) -> dict:  # type: ignore[type-arg]
     chargebee_subscription_dict = vars(chargebee_subscription)
     # convert the addons into a list of dictionaries since vars don't do it recursively
     addons = chargebee_subscription.addons or []
     chargebee_subscription_dict["addons"] = [vars(addon) for addon in addons]
 
-    return chargebee_subscription_dict
+    return chargebee_subscription_dict  # type: ignore[no-any-return]

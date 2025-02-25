@@ -27,7 +27,7 @@ from webhooks.webhooks import WebhookEventType
     "new_enabled_state, new_value",
     ((True, "foo"), (False, "foo"), (True, None), (False, None)),
 )
-def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
+def test_call_environment_webhook_for_feature_state_change_with_new_state_only(  # type: ignore[no-untyped-def]
     mocker, environment, feature, identity, admin_user, new_value, new_enabled_state
 ):
     # Given
@@ -78,7 +78,7 @@ def test_call_environment_webhook_for_feature_state_change_with_new_state_only(
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_with_previous_state_only(
+def test_call_environment_webhook_for_feature_state_change_with_previous_state_only(  # type: ignore[no-untyped-def]
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -189,7 +189,7 @@ def test_call_environment_webhook_for_feature_state_change_with_changed_by_user_
         (False, None, True, None),
     ),
 )
-def test_call_environment_webhook_for_feature_state_change_with_both_states(
+def test_call_environment_webhook_for_feature_state_change_with_both_states(  # type: ignore[no-untyped-def]
     mocker,
     environment,
     feature,
@@ -264,7 +264,7 @@ def test_call_environment_webhook_for_feature_state_change_with_both_states(
     assert data["timestamp"] == now_isoformat
 
 
-def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_webhooks(
+def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_webhooks(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker, environment, feature, identity, admin_user
 ):
     # Given
@@ -292,7 +292,7 @@ def test_call_environment_webhook_for_feature_state_change_does_nothing_if_no_we
     mock_call_environment_webhooks.assert_not_called()
 
 
-def test_sync_identity_document_features_removes_deleted_features(
+def test_sync_identity_document_features_removes_deleted_features(  # type: ignore[no-untyped-def]
     edge_identity_dynamo_wrapper_mock,
     identity_document_without_fs,
     environment,
@@ -375,7 +375,7 @@ def test_sync_identity_document_features_removes_deleted_features(
         ),
     ),
 )
-def test_generate_audit_log_records(
+def test_generate_audit_log_records(  # type: ignore[no-untyped-def]
     changes, identifier, expected_log_message, db, environment, admin_user
 ):
     # Given
@@ -536,7 +536,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__no_overrides__call
     dynamodb_wrapper_v2_mock = dynamodb_wrapper_v2_cls_mock.return_value
     identity_uuid = "a35a02f2-fefd-4932-8f5c-e84a0bf542c7"
     identifier = "identity1"
-    changes = {"feature_overrides": []}
+    changes = {"feature_overrides": []}  # type: ignore[var-annotated]
 
     # When
     update_flagsmith_environments_v2_identity_overrides(

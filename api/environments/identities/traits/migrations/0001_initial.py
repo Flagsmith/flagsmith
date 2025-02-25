@@ -3,7 +3,7 @@
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import simple_history.models
+import simple_history.models  # type: ignore[import-untyped]
 
 
 class Migration(migrations.Migration):

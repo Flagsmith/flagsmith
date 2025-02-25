@@ -14,6 +14,8 @@ urlpatterns = [
     re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
     re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
     re_path(r"^admin/", admin.site.urls),
+    re_path(r"^health/liveness/?", views.version_info),
+    re_path(r"^health/readiness/?", include("health_check.urls")),
     re_path(r"^health", include("health_check.urls", namespace="health")),
     # Aptible health checks must be on /healthcheck and cannot redirect
     # see https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks

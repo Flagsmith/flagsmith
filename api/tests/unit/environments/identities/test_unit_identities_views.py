@@ -4,8 +4,10 @@ from typing import Any
 from unittest import mock
 
 import pytest
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -15,6 +17,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -385,7 +388,7 @@ def test_identities_endpoint_returns_traits(
 
     # Then
     assert response.data["traits"] is not None
-    assert response.data["traits"][0].get("trait_value") == trait.get_trait_value()
+    assert response.data["traits"][0].get("trait_value") == trait.get_trait_value()  # type: ignore[no-untyped-call]
 
     # and amplitude identify users should not be called
     mock_amplitude_wrapper.assert_not_called()
@@ -649,7 +652,7 @@ def test_post_identify_with_new_identity_work_with_null_trait_value(
     assert identity.identity_traits.count() == 0
 
 
-def test_post_identify_deletes_a_trait_if_trait_value_is_none(
+def test_post_identify_deletes_a_trait_if_trait_value_is_none(  # type: ignore[no-untyped-def]
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
@@ -885,8 +888,8 @@ def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_
 
     assert Trait.objects.count() == 1
     trait = Trait.objects.first()
-    assert trait.trait_key == trait_key
-    assert trait.trait_value == trait_value
+    assert trait.trait_key == trait_key  # type: ignore[union-attr]
+    assert trait.trait_value == trait_value  # type: ignore[union-attr]
 
 
 def test_post_identities_request_includes_updated_at_header(
@@ -966,7 +969,7 @@ def test_get_identities_nplus1(
         api_client.get(url)
 
 
-def test_get_identities_with_hide_sensitive_data_with_feature_name(
+def test_get_identities_with_hide_sensitive_data_with_feature_name(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
     # Given
@@ -998,7 +1001,7 @@ def test_get_identities_with_hide_sensitive_data_with_feature_name(
         assert flag["feature"][field] is None
 
 
-def test_get_identities_with_hide_sensitive_data(
+def test_get_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
     # Given
@@ -1049,7 +1052,7 @@ def test_get_identities__transient__no_persistence(
     assert not Identity.objects.filter(identifier=identifier).count()
 
 
-def test_post_identities_with_hide_sensitive_data(
+def test_post_identities_with_hide_sensitive_data(  # type: ignore[no-untyped-def]
     environment, feature, identity, api_client
 ):
     # Given
@@ -1275,7 +1278,7 @@ def test_post_identities__transient_traits__no_persistence(
     assert not Trait.objects.filter(trait_key=transient_trait_key).exists()
 
 
-def test_user_with_view_identities_permission_can_retrieve_identity(
+def test_user_with_view_identities_permission_can_retrieve_identity(  # type: ignore[no-untyped-def]
     environment,
     identity,
     test_user_client,
@@ -1304,7 +1307,7 @@ def test_user_with_view_identities_permission_can_retrieve_identity(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_user_with_view_environment_permission_can_not_list_identities(
+def test_user_with_view_environment_permission_can_not_list_identities(  # type: ignore[no-untyped-def]
     environment,
     identity,
     test_user_client,
@@ -1331,12 +1334,12 @@ def test_user_with_view_environment_permission_can_not_list_identities(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_identity_view_set_get_permissions():
+def test_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
     # Given
     view_set = IdentityViewSet()
 
     # When
-    permissions = view_set.get_permissions()
+    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
 
     # Then
     assert isinstance(permissions[0], IsAuthenticated)

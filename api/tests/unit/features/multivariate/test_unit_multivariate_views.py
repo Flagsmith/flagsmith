@@ -1,21 +1,24 @@
 import uuid
 
 import pytest
-from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+)
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 
 from features.multivariate.views import MultivariateFeatureOptionViewSet
 from projects.permissions import NestedProjectPermissions
 
 
-def test_multivariate_feature_options_view_set_get_permissions():
+def test_multivariate_feature_options_view_set_get_permissions():  # type: ignore[no-untyped-def]
     # Given
     view_set = MultivariateFeatureOptionViewSet()
 
     # When
-    permissions = view_set.get_permissions()
+    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
 
     # Then
     assert len(permissions) == 1
@@ -34,7 +37,7 @@ def test_multivariate_feature_options_view_set_get_permissions():
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):
+def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):  # type: ignore[no-untyped-def]
     # Given
     mv_option_uuid = multivariate_feature.multivariate_options.first().uuid
     url = reverse(
@@ -54,7 +57,7 @@ def test_get_mv_feature_option_by_uuid(client, project, multivariate_feature):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_mv_feature_option_by_uuid_returns_404_if_mv_option_does_not_exists(
+def test_get_mv_feature_option_by_uuid_returns_404_if_mv_option_does_not_exists(  # type: ignore[no-untyped-def]
     client, project
 ):
     # Given

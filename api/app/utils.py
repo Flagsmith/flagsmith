@@ -64,7 +64,7 @@ def get_version_info() -> VersionInfo:
         "is_saas": is_saas(),
     }
 
-    return version_json
+    return version_json  # type: ignore[return-value]
 
 
 def _get_file_contents(file_path: str) -> str:

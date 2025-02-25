@@ -226,7 +226,6 @@ def test_cannot_create_duplicate_feature_state_in_an_environment(
     feature: Feature,
     environment: Environment,
 ) -> None:
-
     # Given
     duplicate_feature_state = FeatureState(
         feature=feature, environment=environment, enabled=True
@@ -542,7 +541,7 @@ def test_feature_state_type_feature_segment(
 
 @pytest.mark.parametrize("hashed_percentage", (0.0, 0.3, 0.5, 0.8, 0.999999))
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
-def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(
+def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(  # type: ignore[no-untyped-def]
     mock_get_hashed_percentage,
     hashed_percentage,
     multivariate_feature,
@@ -573,7 +572,7 @@ def test_get_multivariate_value_returns_correct_value_when_we_pass_identity(
 
 
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
-def test_get_feature_state_value_for_multivariate_features(
+def test_get_feature_state_value_for_multivariate_features(  # type: ignore[no-untyped-def]
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
 ):
     # Given
@@ -602,7 +601,7 @@ def test_get_feature_state_value_for_multivariate_features(
 
 
 @mock.patch.object(FeatureState, "get_multivariate_feature_state_value")
-def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(
+def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(  # type: ignore[no-untyped-def]
     mock_get_mv_feature_state_value, environment, multivariate_feature, identity
 ):
     # Given
@@ -642,7 +641,7 @@ def test_get_feature_state_value_for_multivariate_features_mv_v2_evaluation(
     ),
     indirect=True,
 )
-def test_feature_state_gt_operator(feature_state_version_generator):
+def test_feature_state_gt_operator(feature_state_version_generator):  # type: ignore[no-untyped-def]
     first, second, expected_result = feature_state_version_generator
     assert (first > second) is expected_result
 
@@ -657,7 +656,7 @@ def test_feature_state_gt_operator(feature_state_version_generator):
         (1, tomorrow, False),
     ),
 )
-def test_feature_state_is_live(version, live_from, expected_is_live, environment):
+def test_feature_state_is_live(version, live_from, expected_is_live, environment):  # type: ignore[no-untyped-def]
     assert (
         FeatureState(
             version=version, live_from=live_from, environment=environment
@@ -666,7 +665,7 @@ def test_feature_state_is_live(version, live_from, expected_is_live, environment
     )
 
 
-def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
+def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(  # type: ignore[no-untyped-def]
     project, environment
 ):
     # Given
@@ -692,7 +691,7 @@ def test_creating_a_feature_with_defaults_does_not_set_defaults_if_disabled(
     assert not feature_state.get_feature_state_value()
 
 
-def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
+def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(  # type: ignore[no-untyped-def]
     environment, feature, admin_user
 ):
     # Given
@@ -710,7 +709,7 @@ def test_feature_state_get_skip_create_audit_log_if_uncommitted_change_request(
     assert feature_state.get_skip_create_audit_log() is True
 
 
-def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
+def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(  # type: ignore[no-untyped-def]
     environment_v2_versioning: Environment, feature: Feature
 ):
     # Given
@@ -727,7 +726,7 @@ def test_feature_state_get_skip_create_audit_log_if_environment_feature_version(
     assert feature_state.get_skip_create_audit_log() is True
 
 
-def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_version(
+def test_feature_state_value_get_skip_create_audit_log_if_environment_feature_version(  # type: ignore[no-untyped-def]
     environment_v2_versioning: Environment, feature: Feature
 ):
     # Given
@@ -818,7 +817,7 @@ def test_feature_state_value__get_skip_create_audit_log_for_feature_delete(
         (None, None, "get_environment_feature_state_created_audit_message"),
     ),
 )
-def test_feature_state_get_create_log_message_calls_correct_helper_function(
+def test_feature_state_get_create_log_message_calls_correct_helper_function(  # type: ignore[no-untyped-def]
     mocker,
     feature_segment_id,
     identity_id,
@@ -845,7 +844,7 @@ def test_feature_state_get_create_log_message_calls_correct_helper_function(
     expected_function.assert_called_once_with(feature_state)
 
 
-def test_feature_state_get_create_log_message_returns_null_if_environment_created_after_feature(
+def test_feature_state_get_create_log_message_returns_null_if_environment_created_after_feature(  # type: ignore[no-untyped-def]  # noqa: E501
     feature, mocker
 ):
     # Given
@@ -861,7 +860,7 @@ def test_feature_state_get_create_log_message_returns_null_if_environment_create
     assert log is None
 
 
-def test_feature_state_get_create_log_message_returns_value_if_environment_created_after_feature_for_override(
+def test_feature_state_get_create_log_message_returns_value_if_environment_created_after_feature_for_override(  # type: ignore[no-untyped-def]  # noqa: E501
     feature, mocker, identity
 ):
     # Given
@@ -879,7 +878,7 @@ def test_feature_state_get_create_log_message_returns_value_if_environment_creat
     assert log is not None
 
 
-def test_feature_state_get_create_log_message_returns_message_if_environment_created_before_feature(
+def test_feature_state_get_create_log_message_returns_message_if_environment_created_before_feature(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, mocker
 ):
     # Given
@@ -893,7 +892,7 @@ def test_feature_state_get_create_log_message_returns_message_if_environment_cre
     assert log is not None
 
 
-def test_feature_segment_update_priorities_when_no_changes(
+def test_feature_segment_update_priorities_when_no_changes(  # type: ignore[no-untyped-def]
     project, environment, feature, feature_segment, admin_user, mocker
 ):
     # Given
@@ -927,7 +926,7 @@ def test_feature_segment_update_priorities_when_no_changes(
     mocked_create_segment_priorities_changed_audit_log.delay.assert_not_called()
 
 
-def test_feature_segment_update_priorities_when_changes(
+def test_feature_segment_update_priorities_when_changes(  # type: ignore[no-untyped-def]
     project, environment, feature, feature_segment, admin_user, mocker
 ):
     # Given
@@ -974,7 +973,7 @@ def test_feature_segment_update_priorities_when_changes(
     )
 
 
-def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(
+def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(  # type: ignore[no-untyped-def]
     feature, segment, feature_segment, environment
 ):
     # Given
@@ -992,7 +991,7 @@ def test_feature_state_gt_operator_for_multiple_versions_of_segment_overrides(
     assert v2_segment_override > v1_segment_override
 
 
-def test_feature_state_gt_operator_for_segment_overrides_and_environment_default(
+def test_feature_state_gt_operator_for_segment_overrides_and_environment_default(  # type: ignore[no-untyped-def]
     feature, segment, feature_segment, environment
 ):
     # Given
@@ -1023,12 +1022,12 @@ def test_feature_state_clone_for_segment_override_clones_feature_segment(
     assert cloned_fs.feature_segment != segment_featurestate.feature_segment
 
     assert (
-        cloned_fs.feature_segment.segment
-        == segment_featurestate.feature_segment.segment
+        cloned_fs.feature_segment.segment  # type: ignore[union-attr]
+        == segment_featurestate.feature_segment.segment  # type: ignore[union-attr]
     )
     assert (
-        cloned_fs.feature_segment.priority
-        == segment_featurestate.feature_segment.priority
+        cloned_fs.feature_segment.priority  # type: ignore[union-attr]
+        == segment_featurestate.feature_segment.priority  # type: ignore[union-attr]
     )
 
 

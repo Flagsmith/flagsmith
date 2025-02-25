@@ -8,7 +8,7 @@ from environments.models import Environment
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_should_create_amplitude_config_when_post(
+def test_should_create_amplitude_config_when_post(  # type: ignore[no-untyped-def]
     admin_client: APIClient,
     environment: Environment,
 ):
@@ -137,7 +137,7 @@ def test_should_remove_configuration_when_delete(
     assert not AmplitudeConfiguration.objects.filter(environment=environment).exists()
 
 
-def test_create_amplitude_integration(environment, admin_client):
+def test_create_amplitude_integration(environment, admin_client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:environments:integrations-amplitude-list", args=[environment.api_key]
@@ -154,7 +154,7 @@ def test_create_amplitude_integration(environment, admin_client):
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_amplitude_integration_in_environment_with_deleted_integration(
+def test_create_amplitude_integration_in_environment_with_deleted_integration(  # type: ignore[no-untyped-def]
     environment, admin_client, deleted_amplitude_integration
 ):
     # Given

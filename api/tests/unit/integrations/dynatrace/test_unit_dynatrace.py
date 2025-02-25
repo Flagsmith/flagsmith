@@ -2,7 +2,7 @@ from typing import Type
 
 import pytest
 from django.contrib.auth.models import AbstractUser
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
@@ -14,7 +14,7 @@ from projects.models import Project
 from segments.models import Segment
 
 
-def test_dynatrace_initialized_correctly():
+def test_dynatrace_initialized_correctly():  # type: ignore[no-untyped-def]
     # Given
     api_key = "123key"
     base_url = "http://test.com"
@@ -99,7 +99,7 @@ def test_dynatrace_when_generate_event_data_with_correct_values_then_success(
     )
 
 
-def test_dynatrace_when_generate_event_data_with_missing_author_then_success():
+def test_dynatrace_when_generate_event_data_with_missing_author_then_success():  # type: ignore[no-untyped-def]
     # Given
     log = "some log data"
 
@@ -122,7 +122,7 @@ def test_dynatrace_when_generate_event_data_with_missing_author_then_success():
     assert event_data["properties"]["environment"] == environment.name
 
 
-def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(
+def test_dynatrace_when_generate_event_data_with_missing_environment_then_success(  # type: ignore[no-untyped-def]
     django_user_model, feature
 ):
     # Given

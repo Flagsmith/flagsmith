@@ -1,11 +1,14 @@
-from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    MANAGE_SEGMENTS,
+    VIEW_PROJECT,
+)
 from rest_framework.permissions import IsAuthenticated
 
 from projects.models import Project
 
 
 class SegmentPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -27,7 +30,7 @@ class SegmentPermissions(IsAuthenticated):
         # move on to object specific permissions
         return view.detail
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         return request.user.has_project_permission(MANAGE_SEGMENTS, obj.project) or (
             view.action == "retrieve"
             and request.user.has_project_permission(VIEW_PROJECT, obj.project)

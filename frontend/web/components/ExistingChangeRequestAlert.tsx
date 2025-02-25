@@ -1,54 +1,82 @@
-import { FC, useRef } from 'react'
-import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
-import WarningMessage from './WarningMessage'
-import moment from 'moment'
+import { FC } from 'react'
+import InfoMessage from './InfoMessage'
+import { RouterChildContext } from 'react-router-dom'
+import Button from './base/forms/Button'
+import { ChangeRequestSummary } from 'common/types/responses'
 
 type ExistingChangeRequestAlertType = {
+  changeRequests: ChangeRequestSummary[]
+  editingChangeRequest?: ChangeRequestSummary
+  scheduledChangeRequests: ChangeRequestSummary[]
+  projectId: number | string
   environmentId: string
-  featureId: number
   className?: string
+  history: RouterChildContext['router']['history']
 }
 
 const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
+  changeRequests,
   className,
+  editingChangeRequest,
   environmentId,
-  featureId,
+  history,
+  projectId,
+  scheduledChangeRequests,
 }) => {
-  const { data } = useGetChangeRequestsQuery({
-    committed: false,
-    environmentId,
-    feature_id: featureId,
-  })
-  const date = useRef(moment().toISOString())
-  const { data: scheduledChangeRequests } = useGetChangeRequestsQuery({
-    environmentId,
-    feature_id: featureId,
-    live_from_after: date.current,
-  })
+  const handleNavigate = () => {
+    const changes = scheduledChangeRequests?.length
+      ? scheduledChangeRequests
+      : changeRequests
+    const latestChangeRequest = !editingChangeRequest?.id
+      ? changes?.at(-1)?.id
+      : editingChangeRequest?.id
+    closeModal()
+    history.push(
+      `/project/${projectId}/environment/${environmentId}/change-requests/${latestChangeRequest}`,
+    )
+  }
 
-  if (scheduledChangeRequests?.results?.length) {
-    return (
-      <div className={className}>
-        <WarningMessage
-          warningMessage={
-            'You have scheduled changes upcoming for this feature, please check the Scheduling page.'
-          }
-        />
-      </div>
-    )
+  const getRequestChangeInfoText = (
+    hasScheduledChangeRequests: boolean,
+    hasChangeRequests: boolean,
+  ) => {
+    if (hasScheduledChangeRequests) {
+      return [
+        'You have scheduled changes upcoming for this feature.',
+        'to view your scheduled changes.',
+      ]
+    }
+
+    if (hasChangeRequests) {
+      return [
+        'You have open change requests for this feature.',
+        'to view your requested changes.',
+      ]
+    }
   }
-  if (data?.results?.length) {
-    return (
-      <div className={className}>
-        <WarningMessage
-          warningMessage={
-            'You have open change requests for this feature, please check the Change Requests page.'
-          }
-        />
-      </div>
-    )
+
+  const requestChangeInfoText = getRequestChangeInfoText(
+    !!scheduledChangeRequests?.length,
+    !!changeRequests?.length,
+  )
+
+  if (!requestChangeInfoText?.length) {
+    return null
   }
-  return null
+
+  return (
+    <div className={className}>
+      <InfoMessage>
+        <span>
+          {requestChangeInfoText[0]} Click{' '}
+          <Button onClick={handleNavigate} theme='text'>
+            here
+          </Button>{' '}
+          {requestChangeInfoText[1]}
+        </span>
+      </InfoMessage>
+    </div>
+  )
 }
 
 export default ExistingChangeRequestAlert

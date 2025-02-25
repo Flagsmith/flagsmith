@@ -45,4 +45,4 @@ class OrganisationPermissionModel(PermissionModel):
     class Meta:
         proxy = True
 
-    objects = OrganisationPermissionManager()
+    objects = OrganisationPermissionManager()  # type: ignore[misc]

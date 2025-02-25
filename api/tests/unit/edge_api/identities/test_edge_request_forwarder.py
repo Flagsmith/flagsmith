@@ -1,8 +1,8 @@
 import json
 
 import pytest
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from edge_api.identities.edge_request_forwarder import (
     forward_identity_request,
     forward_trait_request,
@@ -14,16 +14,16 @@ from edge_api.identities.edge_request_forwarder import (
 @pytest.mark.parametrize(
     "forwarder_function", [forward_identity_request, forward_trait_request_sync]
 )
-def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(
+def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(  # type: ignore[no-untyped-def]
     mocker, forwarder_mocked_requests, forwarder_mocked_migrator, forwarder_function
 ):
     # Given
     project_id = 1
 
     mocked_migration_done = mocker.PropertyMock(return_value=False)
-    type(forwarder_mocked_migrator.return_value).is_migration_done = (
-        mocked_migration_done
-    )
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forwarder_function("GET", {}, project_id, None)
@@ -33,7 +33,7 @@ def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_identity_request_makes_correct_get_request(
+def test_forward_identity_request_makes_correct_get_request(  # type: ignore[no-untyped-def]
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
@@ -47,9 +47,9 @@ def test_forward_identity_request_makes_correct_get_request(
     headers = {"X-Environment-Key": api_key}
 
     mocked_migration_done = mocker.PropertyMock(return_value=True)
-    type(forwarder_mocked_migrator.return_value).is_migration_done = (
-        mocked_migration_done
-    )
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forward_identity_request("GET", headers, project_id, query_params)
@@ -64,7 +64,7 @@ def test_forward_identity_request_makes_correct_get_request(
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_identity_request_makes_correct_post_request(
+def test_forward_identity_request_makes_correct_post_request(  # type: ignore[no-untyped-def]
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
@@ -78,9 +78,9 @@ def test_forward_identity_request_makes_correct_post_request(
     headers = {"X-Environment-Key": api_key}
 
     mocked_migration_done = mocker.MagicMock(return_value=True)
-    type(forwarder_mocked_migrator.return_value).is_migration_done = (
-        mocked_migration_done
-    )
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forward_identity_request("POST", headers, project_id, request_data=request_data)
@@ -96,7 +96,7 @@ def test_forward_identity_request_makes_correct_post_request(
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_trait_request_sync_makes_correct_post_request(
+def test_forward_trait_request_sync_makes_correct_post_request(  # type: ignore[no-untyped-def]
     mocker,
     forward_enable_settings,
     forwarder_mocked_migrator,
@@ -113,9 +113,9 @@ def test_forward_trait_request_sync_makes_correct_post_request(
     headers = {"X-Environment-Key": api_key}
 
     mocked_migration_done = mocker.MagicMock(return_value=True)
-    type(forwarder_mocked_migrator.return_value).is_migration_done = (
-        mocked_migration_done
-    )
+    type(
+        forwarder_mocked_migrator.return_value
+    ).is_migration_done = mocked_migration_done
 
     # When
     forward_trait_request_sync("POST", headers, project_id, payload=request_data)
@@ -131,7 +131,7 @@ def test_forward_trait_request_sync_makes_correct_post_request(
     forwarder_mocked_migrator.assert_called_with(project_id)
 
 
-def test_forward_trait_request_calls_sync_function_correctly(mocker):
+def test_forward_trait_request_calls_sync_function_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     mocked_forward_trait_request = mocker.patch(
         "edge_api.identities.edge_request_forwarder.forward_trait_request_sync",
@@ -151,7 +151,7 @@ def test_forward_trait_request_calls_sync_function_correctly(mocker):
     )
 
 
-def test_forward_trait_requests_calls_sync_function_correctly(mocker):
+def test_forward_trait_requests_calls_sync_function_correctly(mocker):  # type: ignore[no-untyped-def]
     # Given
     mocked_forward_trait_request = mocker.patch(
         "edge_api.identities.edge_request_forwarder.forward_trait_request_sync",

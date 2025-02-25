@@ -1,7 +1,7 @@
 from integrations.sentry.middleware import ForceSentryTraceMiddleware
 
 
-def test_force_sentry_trace_middleware_starts_transaction_when_param_present(
+def test_force_sentry_trace_middleware_starts_transaction_when_param_present(  # type: ignore[no-untyped-def]
     rf, mocker, settings
 ):
     # Given
@@ -15,7 +15,7 @@ def test_force_sentry_trace_middleware_starts_transaction_when_param_present(
     settings.FORCE_SENTRY_TRACE_KEY = auth_key
 
     mock_response = mocker.MagicMock()
-    middleware = ForceSentryTraceMiddleware(get_response=lambda r: mock_response)
+    middleware = ForceSentryTraceMiddleware(get_response=lambda r: mock_response)  # type: ignore[no-untyped-call]
 
     request = rf.get(path="/some-endpoint", HTTP_X_FORCE_SENTRY_TRACE_KEY=auth_key)
 
@@ -30,7 +30,7 @@ def test_force_sentry_trace_middleware_starts_transaction_when_param_present(
     assert response == mock_response
 
 
-def test_force_sentry_trace_middleware_does_nothing_when_key_incorrect(
+def test_force_sentry_trace_middleware_does_nothing_when_key_incorrect(  # type: ignore[no-untyped-def]
     rf, mocker, settings
 ):
     # Given
@@ -39,7 +39,7 @@ def test_force_sentry_trace_middleware_does_nothing_when_key_incorrect(
     settings.FORCE_SENTRY_TRACE_KEY = "auth-key"
 
     mock_response = mocker.MagicMock()
-    middleware = ForceSentryTraceMiddleware(get_response=lambda r: mock_response)
+    middleware = ForceSentryTraceMiddleware(get_response=lambda r: mock_response)  # type: ignore[no-untyped-call]
 
     request = rf.get(
         path="/some-endpoint", HTTP_X_FORCE_SENTRY_TRACE_KEY="some-incorrect-auth"
@@ -53,7 +53,7 @@ def test_force_sentry_trace_middleware_does_nothing_when_key_incorrect(
     assert response == mock_response
 
 
-def test_force_sentry_trace_middleware_does_nothing_when_key_missing(
+def test_force_sentry_trace_middleware_does_nothing_when_key_missing(  # type: ignore[no-untyped-def]
     rf, mocker, settings
 ):
     # Given
@@ -62,7 +62,7 @@ def test_force_sentry_trace_middleware_does_nothing_when_key_missing(
     settings.FORCE_SENTRY_TRACE_KEY = "auth-key"
 
     mock_response = mocker.MagicMock()
-    middleware = ForceSentryTraceMiddleware(get_response=lambda r: mock_response)
+    middleware = ForceSentryTraceMiddleware(get_response=lambda r: mock_response)  # type: ignore[no-untyped-call]
 
     request = rf.get(path="/some-endpoint")
 
