@@ -10,7 +10,7 @@ import {
   useDeleteTagMutation,
   useGetTagsQuery,
 } from 'common/services/useTag'
-import { TagType, Tag as TTag } from 'common/types/responses'
+import { Tag as TTag } from 'common/types/responses'
 import Tag from './Tag'
 import CreateEditTag from './CreateEditTag'
 import Input from 'components/base/forms/Input'
@@ -20,14 +20,12 @@ import TagUsage from 'components/TagUsage'
 
 type AddEditTagsType = {
   value?: number[]
-  hideTagsByType?: TagType[]
   readOnly?: boolean
   onChange: (value: number[]) => void
   projectId: string
 }
 
 const AddEditTags: FC<AddEditTagsType> = ({
-  hideTagsByType = [],
   onChange,
   projectId,
   readOnly,
@@ -36,11 +34,22 @@ const AddEditTags: FC<AddEditTagsType> = ({
   const { data, isLoading: tagsLoading } = useGetTagsQuery({
     projectId,
   })
+
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+
+  const unhealthyTagId = useMemo(() => {
+    return data?.find((tag) => tag?.type === 'UNHEALTHY')?.id
+  }, [data])
+
   const projectTags = useMemo(() => {
+    if (!isFeatureHealthEnabled) {
+      return data
+    }
+
     return data?.filter(
-      (projectTag) => !hideTagsByType.includes(projectTag.type),
+      (projectTag) => !['UNHEALTHY'].includes(projectTag.type),
     )
-  }, [data, hideTagsByType])
+  }, [data, isFeatureHealthEnabled])
 
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
@@ -142,6 +151,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
       <Row className='inline-tags mt-2'>
         <TagValues
           hideNames={false}
+          hideTags={unhealthyTagId ? [unhealthyTagId] : undefined}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
           value={value}
