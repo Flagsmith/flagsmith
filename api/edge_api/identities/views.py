@@ -10,7 +10,7 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
-from flag_engine.identities.models import IdentityFeaturesList
+from flag_engine.identities.models import IdentityFeaturesList, IdentityModel
 from flag_engine.identities.traits.models import TraitModel
 from pyngo import drf_error_details
 from rest_framework import status, viewsets
