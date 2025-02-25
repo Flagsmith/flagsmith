@@ -14,6 +14,7 @@ from flag_engine.features.models import (
     MultivariateFeatureStateValueModel,
 )
 from mypy_boto3_dynamodb.service_resource import Table
+from mypy_boto3_dynamodb.type_defs import TableAttributeValueTypeDef
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -899,12 +900,12 @@ def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no
 def test_put_identity_override_creates_identity_if_not_found(
     dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
     admin_client: APIClient,
-    environment: Environment,
+    environment: int,
     environment_api_key: str,
-    feature: Feature,
+    feature: int,
     webhook_mock: mock.MagicMock,
     flagsmith_identities_table: Table,
-):
+) -> None:
     # Given
     identifier = "some_new_identity"
     url = reverse(
@@ -939,13 +940,19 @@ def test_put_identity_override_creates_identity_if_not_found(
     assert identity["identifier"] == identifier
 
     # and that they have the relevant override
-    assert len(identity["identity_features"]) == 1
-    assert identity["identity_features"][0]["feature"]["id"] == feature
-    assert identity["identity_features"][0]["enabled"] == expected_fs_enabled
-    assert (
-        identity["identity_features"][0]["feature_state_value"]
-        == expected_feature_state_value
+    identity_features_data = typing.cast(
+        list[typing.Mapping[str, TableAttributeValueTypeDef]],
+        identity["identity_features"],
     )
+    feature_state_data = identity_features_data[0]
+    feature_data = typing.cast(
+        typing.Mapping[str, TableAttributeValueTypeDef],
+        feature_state_data["feature"],
+    )
+    assert len(identity_features_data) == 1
+    assert feature_data["id"] == feature
+    assert feature_state_data["enabled"] == expected_fs_enabled
+    assert feature_state_data["feature_state_value"] == expected_feature_state_value
 
 
 @pytest.mark.parametrize(
