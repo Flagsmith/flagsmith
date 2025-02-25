@@ -80,7 +80,10 @@ const FeatureRow: FC<FeatureRowProps> = ({
     const { feature } = Utils.fromParam()
     const { id } = projectFlag
 
-    if (`${id}` === feature) {
+    const isModalOpen = !!document?.getElementsByClassName(
+      'create-feature-modal',
+    )?.length
+    if (`${id}` === feature && !isModalOpen) {
       editFeature(projectFlag, environmentFlags?.[id])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,11 +148,10 @@ const FeatureRow: FC<FeatureRowProps> = ({
     API.trackEvent(Constants.events.VIEW_FEATURE)
     const tabValue = tab || Utils.fromParam().tab || 'value'
 
-    history.replace(
-      {},
-      '',
-      `${document.location.pathname}?feature=${projectFlag.id}&tab=${tabValue}`,
-    )
+    history.replace({
+      pathname: document.location.pathname,
+      search: `?feature=${projectFlag.id}&tab=${tabValue}`,
+    })
 
     openModal(
       <Row>
@@ -177,7 +179,10 @@ const FeatureRow: FC<FeatureRowProps> = ({
       />,
       'side-modal create-feature-modal',
       () => {
-        history.replace({}, '', `${document.location.pathname}`)
+        history.replace({
+          pathname: document.location.pathname,
+          search: '',
+        })
       },
     )
   }
