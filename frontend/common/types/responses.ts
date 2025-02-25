@@ -804,5 +804,7 @@ export type Res = {
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
   identitySegments: PagedResponse<Segment>
   organisationWebhooks: PagedResponse<Webhook>
+  identityTrait: { id: string }
+  identityTraits: IdentityTrait[]
   // END OF TYPES
 }
