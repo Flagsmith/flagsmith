@@ -1,12 +1,13 @@
 from unittest import mock
 
 import pytest
+from pytest_mock import MockerFixture
+
 from app_analytics.track import (
     track_feature_evaluation_influxdb,
     track_request_googleanalytics,
     track_request_influxdb,
 )
-from pytest_mock import MockerFixture
 
 
 @pytest.mark.parametrize(

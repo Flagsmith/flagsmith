@@ -375,6 +375,9 @@ const FeaturesPage = class extends Component {
                                     value={this.state.search}
                                   />
                                   <Row className='flex-fill justify-content-end'>
+                                    {hasFilters && (
+                                      <ClearFilters onClick={clearFilters} />
+                                    )}
                                     <TableTagFilter
                                       useLocalStorage
                                       isLoading={FeatureListStore.isLoading}
@@ -526,9 +529,6 @@ const FeaturesPage = class extends Component {
                                         this.setState({ sort }, this.filter)
                                       }}
                                     />
-                                    {hasFilters && (
-                                      <ClearFilters onClick={clearFilters} />
-                                    )}
                                   </Row>
                                 </div>
                               </Row>

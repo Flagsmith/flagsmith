@@ -35,5 +35,6 @@ class AbstractBaseFeatureValueModel(models.Model):
             STRING: self.string_value,
             BOOLEAN: self.boolean_value,
         }.get(
-            self.type, self.string_value  # type: ignore[arg-type]
+            self.type,  # type: ignore[arg-type]
+            self.string_value,
         )

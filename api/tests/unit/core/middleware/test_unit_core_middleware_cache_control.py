@@ -1,5 +1,6 @@
-from core.middleware.cache_control import NeverCacheMiddleware
 from django.http import HttpResponse
+
+from core.middleware.cache_control import NeverCacheMiddleware
 
 
 def test_NoCacheMiddleware_adds_cache_control_headers(mocker):  # type: ignore[no-untyped-def]

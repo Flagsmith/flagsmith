@@ -6,8 +6,14 @@ from django.db import models
 from django.db.models import Manager
 from django.forms import model_to_dict
 from django.http import HttpRequest
-from simple_history.models import HistoricalRecords, ModelChange  # type: ignore[import-untyped]
-from softdelete.models import SoftDeleteManager, SoftDeleteObject  # type: ignore[import-untyped]
+from simple_history.models import (  # type: ignore[import-untyped]
+    HistoricalRecords,
+    ModelChange,
+)
+from softdelete.models import (  # type: ignore[import-untyped]
+    SoftDeleteManager,
+    SoftDeleteObject,
+)
 
 from audit.related_object_type import RelatedObjectType
 
@@ -44,7 +50,10 @@ class AbstractBaseExportableModel(models.Model):
 
 class SoftDeleteAwareHistoricalRecords(HistoricalRecords):  # type: ignore[misc]
     def create_historical_record(
-        self, instance: models.Model, history_type: str, using: str = None  # type: ignore[assignment]
+        self,
+        instance: models.Model,
+        history_type: str,
+        using: str = None,  # type: ignore[assignment]
     ) -> None:
         if getattr(instance, "deleted_at", None) is not None and history_type == "~":
             # Don't create `update` historical record for soft-deleted objects

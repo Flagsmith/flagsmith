@@ -7,11 +7,11 @@ from unittest.mock import MagicMock
 
 import pytest
 import responses
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from requests.exceptions import ConnectionError, Timeout
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
 from webhooks.sample_webhook_data import (

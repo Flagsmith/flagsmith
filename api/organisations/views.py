@@ -4,12 +4,7 @@ from __future__ import unicode_literals
 import logging
 from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import (
-    get_events_for_organisation,
-    get_multiple_event_list_for_organisation,
-)
-from core.helpers import get_current_site_url
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
@@ -22,6 +17,11 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+    get_multiple_event_list_for_organisation,
+)
+from core.helpers import get_current_site_url
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker,
 )

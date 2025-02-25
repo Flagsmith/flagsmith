@@ -75,8 +75,9 @@ const CreateFlag = class extends Component {
         }
     const { allowEditDescription } = this.props
     const hideTags = this.props.hideTags || []
+
     if (this.props.projectFlag) {
-      this.userOverridesPage(1)
+      this.userOverridesPage(1, true)
     }
     this.state = {
       allowEditDescription,
@@ -224,14 +225,18 @@ const CreateFlag = class extends Component {
     }
   }
 
-  userOverridesPage = (page) => {
+  userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(getStore(), {
-          id: this.props.environmentId,
-          level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
-        }).then((permissions) => {
+        getPermission(
+          getStore(),
+          {
+            id: this.props.environmentId,
+            level: 'environment',
+            permissions: 'VIEW_IDENTITIES',
+          },
+          { forceRefetch },
+        ).then((permissions) => {
           if (permissions?.length) {
             data
               .get(
@@ -573,7 +578,6 @@ const CreateFlag = class extends Component {
 
     const date = moment().toISOString()
 
-    console.log('data', date)
     getChangeRequests(
       getStore(),
       {
@@ -622,9 +626,6 @@ const CreateFlag = class extends Component {
     const noPermissions = this.props.noPermissions
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
-
-    const { changeRequests, scheduledChangeRequests } = this.state
-    console.log({ changeRequests, out: true, scheduledChangeRequests })
 
     try {
       if (!isEdit && name && regex) {

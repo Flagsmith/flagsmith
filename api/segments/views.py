@@ -1,7 +1,9 @@
 import logging
 
 from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
-from common.segments.serializers import SegmentSerializer  # type: ignore[import-untyped]
+from common.segments.serializers import (  # type: ignore[import-untyped]
+    SegmentSerializer,
+)
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import viewsets

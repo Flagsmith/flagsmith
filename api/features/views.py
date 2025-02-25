@@ -3,11 +3,7 @@ import typing
 from datetime import timedelta
 from functools import reduce
 
-from app_analytics.analytics_db_service import get_feature_evaluation_data
-from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
-from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Max, Q, QuerySet
@@ -26,6 +22,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from app_analytics.analytics_db_service import get_feature_evaluation_data
+from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.request_origin import RequestOrigin
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
 from environments.identities.serializers import (
@@ -190,7 +190,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(
-            project_id=int(self.kwargs.get("project_pk")), user=self.request.user  # type: ignore[arg-type]
+            project_id=int(self.kwargs.get("project_pk")),  # type: ignore[arg-type]
+            user=self.request.user,
         )
 
     def perform_update(self, serializer):  # type: ignore[no-untyped-def]

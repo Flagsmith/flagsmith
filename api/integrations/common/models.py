@@ -1,6 +1,5 @@
 import logging
 
-from core.models import SoftDeleteExportableModel
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
@@ -9,6 +8,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 
 logger = logging.getLogger(__name__)

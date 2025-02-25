@@ -1,7 +1,10 @@
 import uuid
 
 import pytest
-from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+)
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status

@@ -240,13 +240,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     }
   }
 
-  const fetchUserIdentityList = () => {
-    if (!environmentId) return
-    identities?.results.forEach((identity) =>
-      AppActions.getIdentitySegments(projectId, identity.id),
-    )
-  }
-
   const [valueChanged, setValueChanged] = useState(false)
   const [metadataValueChanged, setMetadataValueChanged] = useState(false)
   const onClosing = useCallback(() => {
@@ -288,7 +281,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (createSuccess && createSegmentData) {
       setSegment(createSegmentData)
       onComplete?.(createSegmentData)
-      fetchUserIdentityList()
     }
     //eslint-disable-next-line
   }, [createSuccess])
@@ -296,7 +288,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     if (updateSuccess && updateSegmentData) {
       setSegment(updateSegmentData)
       onComplete?.(updateSegmentData)
-      fetchUserIdentityList()
     }
     //eslint-disable-next-line
   }, [updateSuccess])

@@ -1,6 +1,11 @@
 from datetime import date, datetime, timedelta
 
 import pytest
+from django.conf import settings
+from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
@@ -17,11 +22,6 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
-from django.conf import settings
-from django.utils import timezone
-from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
-
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import (

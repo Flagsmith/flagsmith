@@ -1,5 +1,3 @@
-from core.helpers import get_current_site_url
-from core.models import AbstractBaseExportableModel
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -13,6 +11,8 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 
 from app.utils import create_hash
+from core.helpers import get_current_site_url
+from core.models import AbstractBaseExportableModel
 from organisations.invites.exceptions import InviteLinksDisabledError
 from organisations.models import Organisation, OrganisationRole
 from users.models import FFAdminUser, UserPermissionGroup
@@ -33,7 +33,9 @@ class AbstractBaseInviteModel(models.Model):
 
 
 class InviteLink(
-    LifecycleModelMixin, AbstractBaseInviteModel, AbstractBaseExportableModel  # type: ignore[misc]
+    LifecycleModelMixin,  # type: ignore[misc]
+    AbstractBaseInviteModel,
+    AbstractBaseExportableModel,
 ):
     expires_at = models.DateTimeField(
         blank=True,

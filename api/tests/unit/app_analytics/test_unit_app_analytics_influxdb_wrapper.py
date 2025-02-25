@@ -3,9 +3,17 @@ from typing import Generator, Type
 from unittest import mock
 from unittest.mock import MagicMock
 
-import app_analytics
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
+from django.conf import settings
+from django.utils import timezone
+from influxdb_client.client.exceptions import InfluxDBError
+from influxdb_client.rest import ApiException
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+from urllib3.exceptions import HTTPError
+
+import app_analytics
 from app_analytics.influxdb_wrapper import (
     InfluxDBWrapper,
     build_filter_string,
@@ -19,14 +27,6 @@ from app_analytics.influxdb_wrapper import (
     get_top_organisations,
     get_usage_data,
 )
-from django.conf import settings
-from django.utils import timezone
-from influxdb_client.client.exceptions import InfluxDBError  # type: ignore[import-untyped]
-from influxdb_client.rest import ApiException  # type: ignore[import-untyped]
-from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
-from urllib3.exceptions import HTTPError
-
 from organisations.models import Organisation
 
 # Given
@@ -190,7 +190,6 @@ def test_influx_db_query_when_get_events_list_then_query_api_called(monkeypatch)
 def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_api_called(  # type: ignore[no-untyped-def]  # noqa: E501
     monkeypatch, project_id, environment_id, expected_filters
 ):
-
     expected_query = (
         (
             f'from(bucket:"{read_bucket}") '

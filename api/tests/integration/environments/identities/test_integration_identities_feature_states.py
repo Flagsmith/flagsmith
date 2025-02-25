@@ -2,10 +2,11 @@ import json
 import typing
 
 import pytest
-from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
+
+from core.constants import BOOLEAN, INTEGER, STRING
 
 
 @pytest.mark.parametrize(

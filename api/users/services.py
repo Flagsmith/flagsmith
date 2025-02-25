@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
-from core.helpers import get_current_site_url
 from django.conf import settings
 from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
 
+from core.helpers import get_current_site_url
 from users.models import FFAdminUser
 
 
@@ -41,4 +41,4 @@ def _get_user_password_reset_url(
     user: FFAdminUser,
 ) -> str:
     _email = PasswordResetEmail(context={"user": user})
-    return f'{get_current_site_url()}/{_email.get_context_data()["url"]}'
+    return f"{get_current_site_url()}/{_email.get_context_data()['url']}"

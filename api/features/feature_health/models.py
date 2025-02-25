@@ -1,13 +1,13 @@
 import typing
 
+from django.db import models
+from django.utils import timezone
+
+from audit.related_object_type import RelatedObjectType
 from core.models import (
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory,
 )
-from django.db import models
-from django_lifecycle import AFTER_CREATE, LifecycleModelMixin, hook  # type: ignore[import-untyped]
-
-from audit.related_object_type import RelatedObjectType
 from features.feature_health.constants import (
     FEATURE_HEALTH_EVENT_CREATED_FOR_ENVIRONMENT_MESSAGE,
     FEATURE_HEALTH_EVENT_CREATED_MESSAGE,
@@ -83,8 +83,17 @@ class FeatureHealthEventManager(models.Manager):  # type: ignore[type-arg]
     ) -> "models.QuerySet[FeatureHealthEvent]":
         return (
             self.filter(feature=feature)
-            .order_by("provider_name", "environment_id", "-created_at")
-            .distinct("provider_name", "environment_id")
+            .order_by(
+                "provider_name",
+                "environment_id",
+                "external_id",
+                "-created_at",
+            )
+            .distinct(
+                "provider_name",
+                "environment_id",
+                "external_id",
+            )
         )
 
     def get_latest_by_project(
@@ -93,13 +102,23 @@ class FeatureHealthEventManager(models.Manager):  # type: ignore[type-arg]
     ) -> "models.QuerySet[FeatureHealthEvent]":
         return (
             self.filter(feature__project=project)
-            .order_by("provider_name", "environment_id", "feature_id", "-created_at")
-            .distinct("provider_name", "environment_id", "feature_id")
+            .order_by(
+                "provider_name",
+                "environment_id",
+                "external_id",
+                "feature_id",
+                "-created_at",
+            )
+            .distinct(
+                "provider_name",
+                "environment_id",
+                "external_id",
+                "feature_id",
+            )
         )
 
 
 class FeatureHealthEvent(
-    LifecycleModelMixin,  # type: ignore[misc]
     AbstractBaseExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
@@ -126,16 +145,11 @@ class FeatureHealthEvent(
         null=True,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False, blank=True)
     type = models.CharField(max_length=50, choices=FeatureHealthEventType.choices)
     provider_name = models.CharField(max_length=255, null=True, blank=True)
     reason = models.TextField(null=True, blank=True)
-
-    @hook(AFTER_CREATE)
-    def set_feature_health_tag(self):  # type: ignore[no-untyped-def]
-        from features.feature_health.tasks import update_feature_unhealthy_tag
-
-        update_feature_unhealthy_tag.delay(args=(self.feature.id,))
+    external_id = models.CharField(max_length=255, null=True, blank=True)
 
     def get_create_log_message(
         self,

@@ -1,9 +1,10 @@
-from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
-from app_analytics.models import Resource
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+
+from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
+from app_analytics.models import Resource
 
 
 def test_api_usage_cache(

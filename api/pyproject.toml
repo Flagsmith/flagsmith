@@ -12,26 +12,47 @@ readme = "readme.md"
 requires-python = ">=3.11, <3.13"
 dynamic = ["dependencies"]
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py310', 'py311']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | \.direnv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-)/
-'''
+indent-width = 4
+target-version = "py311"
+extend-exclude = ["migrations"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+docstring-code-format = true
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint]
+# Establish parity with flake8 + isort
+select = ["C901", "E4", "E7", "E9", "F", "I", "W"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Need the * prefix to work with pre-commit which runs from the root of the repo
+"*app/settings/local.py"= ["F403", "F405"]
+"*app/settings/production.py"= ["F403", "F405"]
+"*app/settings/saas.py"= ["F403", "F405"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -43,66 +64,6 @@ exclude_also = [
 
 [tool.coverage.run]
 omit = ["scripts/*"]
-
-[tool.isort]
-profile = "black"
-known_first_party = [
-  'analytics',
-  'app',
-  'custom_auth',
-  'environments',
-  'integrations',
-  'organisations',
-  'projects',
-  'segments',
-  'tests',
-  'users',
-  'webhooks',
-  'api',
-  'audit',
-  'e2etests',
-  'features',
-  'permissions',
-  'util',
-]
-known_third_party = [
-  '_pytest',
-  'apiclient',
-  'app_analytics',
-  'axes',
-  'chargebee',
-  'core',
-  'coreapi',
-  'corsheaders',
-  'dj_database_url',
-  'django',
-  'django_lifecycle',
-  'djoser',
-  'drf_writable_nested',
-  'drf_yasg',
-  'environs',
-  'google',
-  'influxdb_client',
-  'ordered_model',
-  'pyotp',
-  'pytest',
-  'pytz',
-  'requests',
-  'responses',
-  'rest_framework',
-  'rest_framework_nested',
-  'rest_framework_recursive',
-  'sentry_sdk',
-  'shortuuid',
-  'simple_history',
-  'six',
-  'task_processor',
-  'telemetry',
-  'tests',
-  'trench',
-  'whitenoise',
-]
-skip = ['migrations', '.venv', '.direnv']
 
 [tool.pytest.ini_options]
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
@@ -235,7 +196,6 @@ pep8 = "~1.7.1"
 autopep8 = "~2.0.1"
 pytest = "~7.2.1"
 pytest-django = "^4.8.0"
-black = "~24.3.0"
 pytest-cov = "~4.1.0"
 datamodel-code-generator = "~0.25"
 requests-mock = "^1.11.0"
@@ -249,6 +209,13 @@ django-stubs = "^5.1.3"
 djangorestframework-stubs = "^3.15.2"
 boto3-stubs = "^1.36.20"
 types-requests = "^2.32.0.20241016"
+types-markdown = "^3.7.0.20241204"
+types-pygments = "^2.19.0.20250107"
+types-influxdb-client = "^1.45.0.20241221"
+types-psycopg2 = "^2.9.21.20250121"
+types-python-dateutil = "^2.9.0.20241206"
+types-pytz = "^2025.1.0.20250204"
+ruff = "^0.9.7"
 
 [build-system]
 requires = ["poetry>=2.0.0"]
