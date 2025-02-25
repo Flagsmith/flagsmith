@@ -16,5 +16,6 @@ suggesting the next steps.
 - If your PR involves a lot of commits, squash them using `git rebase -i` as this makes it easier for us to review.
 - Keep lines under 80 characters.
 
-### ⚠️ Windows Users: Install WSL
-Flagsmith does not support Windows natively. If you are contributing from Windows, you must install WSL (Windows Subsystem for Linux).
+### Windows support
+
+Flagsmith development under Windows is not currently supported. If you are contributing from Windows, consider using Windows Subsystem for Linux.
