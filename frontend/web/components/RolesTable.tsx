@@ -168,10 +168,10 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
           </Row>
         )}
         renderNoResults={
-          <Panel title={'Organisation roles'} className='no-pad'>
+          <Panel title={'Organization roles'} className='no-pad'>
             <div className='search-list'>
               <Row className='list-item p-3 text-muted'>
-                You currently have no organisation roles
+                You currently have no organization roles
               </Row>
             </div>
           </Panel>

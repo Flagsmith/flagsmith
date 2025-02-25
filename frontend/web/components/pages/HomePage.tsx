@@ -176,9 +176,10 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
     'disable_oauth_registration',
   )
   const oauthClasses = 'col-12 col-xl-4'
+  const [onboarding, setOnboarding] = useState(true)
 
-  if (false) {
-    return <OnboardingPage />
+  if (onboarding) {
+    return <OnboardingPage onComplete={() => setOnboarding(false)} />
   }
 
   if ((!isSignup || !disableOauthRegister) && !disableSignup) {
@@ -313,7 +314,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                 {disableSignup ? (
                   <div id='sign-up'>
                     <Card>
-                      To join an organisation please contact your administrator
+                      To join an organization please contact your administrator
                       for an invite link.
                       <div>
                         <Link id='existing-member-btn' to={`/login${redirect}`}>
@@ -602,7 +603,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                                   <InfoMessage>
                                     Signing up with a work email makes it easier
                                     for co-workers to join your Flagsmith
-                                    organisation.
+                                    organization.
                                   </InfoMessage>
                                 )}
                                 <InputGroup

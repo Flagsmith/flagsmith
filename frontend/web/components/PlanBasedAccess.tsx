@@ -28,7 +28,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   },
   'AUDIT': {
     description:
-      'View and search through a history of all changes made in your Flagsmith organisation.',
+      'View and search through a history of all changes made in your Flagsmith organization.',
     docs: 'https://docs.flagsmith.com/system-administration/audit-logs',
     title: 'Audit Log',
   },
@@ -51,7 +51,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
     title: 'Flag Owners',
   },
   'FORCE_2FA': {
-    description: 'Improve security compliance across your organisation.',
+    description: 'Improve security compliance across your organization.',
     title: 'Enforce Two-Factor Authentication',
   },
   'METADATA': {

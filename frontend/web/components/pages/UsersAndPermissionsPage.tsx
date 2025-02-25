@@ -171,7 +171,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       body: (
         <div>
           Are you sure you want to remove the user{' '}
-          <strong>{userDisplayName}</strong> from the organisation? This action
+          <strong>{userDisplayName}</strong> from the organization? This action
           cannot be undone.
         </div>
       ),
@@ -313,7 +313,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     <strong>
                                       You will automatically be charged
                                       $20/month for each additional member that
-                                      joins your organisation.
+                                      joins your organization.
                                     </strong>
                                   )}
                                 </>
@@ -336,7 +336,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       value={{
                                         label:
                                           role === 'ADMIN'
-                                            ? 'Organisation Administrator'
+                                            ? 'Organization Administrator'
                                             : 'User',
                                         value: role,
                                       }}
@@ -345,7 +345,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       }) => setRole(v.value)}
                                       options={[
                                         {
-                                          label: 'Organisation Administrator',
+                                          label: 'Organization Administrator',
                                           value: 'ADMIN',
                                         },
                                         getPlanBasedOption(
@@ -602,7 +602,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                             )
                           }}
                           renderNoResults={
-                            <div>You have no users in this organisation.</div>
+                            <div>You have no users in this organization.</div>
                           }
                           filterRow={(item: User, search: string) => {
                             const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`

@@ -133,7 +133,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
             <div className='mb-3'>
               <p className='text-dark fw-bold'>
                 This will {isEdit ? 'update' : 'create'} a webhook for the
-                Organisation{' '}
+                Organization{' '}
                 <strong>{AccountStore.getOrganisation().name}</strong>
               </p>
             </div>

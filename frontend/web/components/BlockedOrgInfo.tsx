@@ -5,10 +5,10 @@ import AppActions from 'common/dispatcher/app-actions'
 export default function BlockedOrgInfo() {
   return (
     <div className='text-nowrap'>
-      <div>Organisation name: {AccountStore.getOrganisation().name}</div>
-      <div>Organisation ID: {AccountStore.getOrganisation().id}</div>
+      <div>Organization name: {AccountStore.getOrganisation().name}</div>
+      <div>Organization ID: {AccountStore.getOrganisation().id}</div>
       <div>
-        <a href='/organisations'>Switch to a different organisation</a>
+        <a href='/organisations'>Switch to a different organization</a>
       </div>
       <div>
         <a

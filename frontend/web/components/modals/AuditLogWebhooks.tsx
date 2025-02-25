@@ -69,7 +69,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
           <h5 className='mb-2'>Audit Webhooks</h5>
           <p className='fs-small lh-sm mb-4'>
             Audit webhooks let you know when audit logs occur. You can configure
-            1 or more audit webhooks per organisation.
+            1 or more audit webhooks per organization.
             <br />
             <Button
               theme='text'
@@ -145,7 +145,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
               <div className='search-list'>
                 <Row className='list-item p-3 text-muted'>
                   You currently have no webhooks configured for this
-                  organisation.
+                  organization.
                 </Row>
               </div>
             </Panel>

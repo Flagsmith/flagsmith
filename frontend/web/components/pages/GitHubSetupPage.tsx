@@ -124,7 +124,7 @@ const GitHubSetupPage: FC<GitHubSetupPageType> = ({ location }) => {
             title={'GitHub App Installation Id'}
           />
           <div className='mr-4 mb-4'>
-            <label>Select your Flagsmith Organisation</label>
+            <label>Select your Flagsmith Organization</label>
             <OrganisationSelect
               onChange={(organisationId: string) => {
                 setOrganisation(`${organisationId}`)

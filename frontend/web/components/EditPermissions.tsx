@@ -1179,10 +1179,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                 {role === 'ADMIN' ? (
                                   <Flex className='table-column fs-small lh-sm'>
                                     <Tooltip
-                                      title={'Organisation Administrator'}
+                                      title={'Organization Administrator'}
                                     >
                                       {
-                                        'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                        'Organization administrators have all permissions enabled.<br/>To change the role of this user, visit Organization Settings.'
                                       }
                                     </Tooltip>
                                   </Flex>
@@ -1215,7 +1215,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                             )
                           }}
                           renderNoResults={
-                            <div>You have no users in this organisation.</div>
+                            <div>You have no users in this organization.</div>
                           }
                           filterRow={(item: User, search: string) => {
                             const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`

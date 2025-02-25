@@ -263,7 +263,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                       </Row>
                     }
                   >
-                    New users that sign up to your organisation will be
+                    New users that sign up to your organization will be
                     automatically added to this group with USER permissions
                   </Tooltip>
                 </Row>

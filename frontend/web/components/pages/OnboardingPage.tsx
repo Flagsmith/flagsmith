@@ -10,8 +10,11 @@ import { useCreateOnboardingMutation } from 'common/services/useOnboarding'
 import PasswordRequirements from 'components/PasswordRequirements'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import InfoMessage from 'components/InfoMessage'
 
-type OnboardingPageProps = {}
+type OnboardingPageProps = {
+  onComplete?: () => void
+}
 
 interface StepProps {
   value: number
@@ -103,7 +106,7 @@ const Step: FC<StepProps> = ({
   )
 }
 
-const OnboardingPage: FC<OnboardingPageProps> = ({}) => {
+const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
   const { data: version } = useGetBuildVersionQuery({})
   const [step, setStep] = useState(0)
   const [requirementsMet, setRequirementsMet] = useState(false)
@@ -138,6 +141,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({}) => {
   const onSubmitStep1 = () => setStep(2)
   const onSubmitStep2 = async () => {
     try {
+      onComplete()
       await createOnboarding({
         ...onboarding,
         contact_consent_given:
@@ -214,6 +218,14 @@ const OnboardingPage: FC<OnboardingPageProps> = ({}) => {
                     onChange={(e: FormEvent) => setFieldValue('email', e)}
                   />
                 </div>
+                {isFreeEmailDomain(onboarding.email) && (
+                  <div>
+                    <InfoMessage>
+                      Signing up with a work email makes it easier for
+                      co-workers to join your Flagsmith organization.
+                    </InfoMessage>
+                  </div>
+                )}
                 <div className='col-md-12'>
                   <InputGroup
                     title='Password'
@@ -247,15 +259,15 @@ const OnboardingPage: FC<OnboardingPageProps> = ({}) => {
                 step={2}
                 value={step}
                 setValue={setStep}
-                title='Your organisation'
-                description='Organisations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
-                completedTitle={`Creating the organisation ${onboarding.organisation_name}`}
+                title='Your organization'
+                description='Organizations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
+                completedTitle={`Creating the organization ${onboarding.organisation_name}`}
                 onSubmit={onSubmitStep2}
                 isValid={isStep2Valid}
               >
                 <div className='col-md-12'>
                   <InputGroup
-                    title='Organisation Name'
+                    title='Organization Name'
                     className='mb-0'
                     inputProps={{
                       autoFocus: true,
@@ -271,7 +283,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({}) => {
                 {!!isCompanyEmail && (
                   <div className='col-md-12'>
                     <Checkbox
-                      label='Opt in to free technical support. No strings, just booleans. You won’t be subscribed to any marketing communications.'
+                      label='Opt in to a free technical onboarding call. No strings, just booleans. You won’t be subscribed to any marketing communications.'
                       checked={onboarding.contact_consent_given}
                       onChange={(e) =>
                         setFieldValue('contact_consent_given', e)

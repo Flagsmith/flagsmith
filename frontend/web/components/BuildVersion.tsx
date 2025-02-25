@@ -8,7 +8,7 @@ type BuildVersionType = {}
 const BuildVersion: FC<BuildVersionType> = ({}) => {
   const { data: version } = useGetBuildVersionQuery({})
   return (
-    <div className='text-muted position-fixed bottom-0 p-2 fs-caption'>
+    <>
       {version?.tag !== 'Unknown' && (
         <Tooltip
           title={
@@ -33,7 +33,7 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
           }`}
         </Tooltip>
       )}
-    </div>
+    </>
   )
 }
 
