@@ -10,7 +10,9 @@ from hubspot.crm.companies import (  # type: ignore[import-untyped]
     SimplePublicObjectInput,
     SimplePublicObjectInputForCreate,
 )
-from hubspot.crm.contacts import BatchReadInputSimplePublicObjectId  # type: ignore[import-untyped]
+from hubspot.crm.contacts import (  # type: ignore[import-untyped]
+    BatchReadInputSimplePublicObjectId,
+)
 
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_FORM_ID,

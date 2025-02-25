@@ -16,7 +16,10 @@ from flag_engine.features.models import (
     MultivariateFeatureOptionModel,
     MultivariateFeatureStateValueModel,
 )
-from flag_engine.identities.models import IdentityModel, TraitModel  # type: ignore[attr-defined]
+from flag_engine.identities.models import (  # type: ignore[attr-defined]
+    IdentityModel,
+    TraitModel,
+)
 from flag_engine.organisations.models import OrganisationModel
 from flag_engine.projects.models import ProjectModel
 from flag_engine.segments.models import (
@@ -27,10 +30,12 @@ from flag_engine.segments.models import (
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
-from segments.models import Segment
 
 if TYPE_CHECKING:  # pragma: no cover
-    from environments.identities.models import Identity, Trait  # type: ignore[attr-defined]
+    from environments.identities.models import (  # type: ignore[attr-defined]
+        Identity,
+        Trait,
+    )
     from environments.models import Environment, EnvironmentAPIKey
     from features.models import Feature, FeatureSegment, FeatureState
     from features.multivariate.models import (
@@ -41,7 +46,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import SegmentRule
+    from segments.models import Segment, SegmentRule
 
 
 __all__ = (

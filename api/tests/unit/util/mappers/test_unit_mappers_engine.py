@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
-import pytz  # type: ignore[import-untyped]
+import pytz
 from django.utils import timezone
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (

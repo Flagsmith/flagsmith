@@ -1,5 +1,6 @@
-from core.models import AbstractBaseExportableModelManager
 from softdelete.models import SoftDeleteManager  # type: ignore[import-untyped]
+
+from core.models import AbstractBaseExportableModelManager
 
 
 class ProjectManager(SoftDeleteManager, AbstractBaseExportableModelManager):  # type: ignore[misc]

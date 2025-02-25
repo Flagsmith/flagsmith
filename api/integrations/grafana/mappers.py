@@ -7,7 +7,7 @@ from features.models import (
     FeatureStateValue,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from integrations.grafana.types import GrafanaAnnotation
+from integrations.grafana.types import PostAnnotationsCmd
 from segments.models import Segment
 
 
@@ -30,7 +30,7 @@ def _get_instance_tags_from_audit_log_record(
         if isinstance(instance, FeatureState):
             return [
                 f"feature:{(feature := instance.feature).name}",
-                f'flag:{"enabled" if instance.enabled else "disabled"}',
+                f"flag:{'enabled' if instance.enabled else 'disabled'}",
                 *_get_feature_tags(feature),  # type: ignore[has-type]
             ]
 
@@ -61,7 +61,7 @@ def _get_instance_tags_from_audit_log_record(
 
 def map_audit_log_record_to_grafana_annotation(
     audit_log_record: AuditLog,
-) -> GrafanaAnnotation:
+) -> PostAnnotationsCmd:
     tags = [
         "flagsmith",
         f"project:{audit_log_record.project_name}",

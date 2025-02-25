@@ -1,7 +1,6 @@
 import logging
 import re
 
-from core.models import SoftDeleteExportableModel
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -11,6 +10,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 
+from core.models import SoftDeleteExportableModel
 from integrations.github.constants import GITHUB_TAG_COLOR
 from organisations.models import Organisation
 

@@ -1,12 +1,12 @@
-from app_analytics.views import (
-    get_usage_data_total_count_view,
-    get_usage_data_view,
-)
 from django.conf import settings
 from django.urls import include, path, re_path
 from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from api_keys.views import MasterAPIKeyViewSet
+from app_analytics.views import (
+    get_usage_data_total_count_view,
+    get_usage_data_view,
+)
 from audit.views import OrganisationAuditLogViewSet
 from integrations.github.views import (
     GithubConfigurationViewSet,
@@ -155,7 +155,9 @@ urlpatterns = [
 ]
 
 if settings.LICENSING_INSTALLED:  # pragma: no cover
-    from licensing.views import create_or_update_licence  # type: ignore[import-not-found]
+    from licensing.views import (  # type: ignore[import-not-found]
+        create_or_update_licence,
+    )
 
     urlpatterns.extend(
         [

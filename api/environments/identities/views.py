@@ -1,9 +1,10 @@
 import typing
 from collections import namedtuple
 
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES  # type: ignore[import-untyped]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
-from core.request_origin import RequestOrigin
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
@@ -15,6 +16,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.request_origin import RequestOrigin
 from edge_api.identities.edge_request_forwarder import forward_identity_request
 from environments.identities.models import Identity
 from environments.identities.serializers import (

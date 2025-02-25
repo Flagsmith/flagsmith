@@ -1,6 +1,9 @@
 from unittest import mock
 
-from common.projects.permissions import MANAGE_TAGS, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    MANAGE_TAGS,
+    VIEW_PROJECT,
+)
 
 from projects.models import Project
 from projects.tags.models import Tag

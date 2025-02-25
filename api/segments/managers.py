@@ -1,5 +1,6 @@
-from core.models import SoftDeleteExportableManager
 from django.db.models import F
+
+from core.models import SoftDeleteExportableManager
 
 
 class SegmentManager(SoftDeleteExportableManager):

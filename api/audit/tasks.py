@@ -4,7 +4,9 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 from task_processor.models import TaskPriority  # type: ignore[import-untyped]
 
 from audit.constants import (

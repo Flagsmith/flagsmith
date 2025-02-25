@@ -1,4 +1,7 @@
-from drf_writable_nested import NestedCreateMixin, NestedUpdateMixin  # type: ignore[attr-defined]
+from drf_writable_nested import (  # type: ignore[attr-defined]
+    NestedCreateMixin,
+    NestedUpdateMixin,
+)
 from rest_framework import serializers
 
 
@@ -29,6 +32,8 @@ class NestedUpdateMixinDeleteBeforeUpdate(NestedUpdateMixin):
 
 
 class DeleteBeforeUpdateWritableNestedModelSerializer(
-    NestedCreateMixin, NestedUpdateMixinDeleteBeforeUpdate, serializers.ModelSerializer  # type: ignore[type-arg]
+    NestedCreateMixin,
+    NestedUpdateMixinDeleteBeforeUpdate,
+    serializers.ModelSerializer,  # type: ignore[type-arg]
 ):
     pass

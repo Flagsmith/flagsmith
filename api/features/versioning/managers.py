@@ -46,7 +46,9 @@ class EnvironmentFeatureVersionManager(SoftDeleteManager):  # type: ignore[misc]
         )
 
     def _get_latest_versions(
-        self, environment_id: int = None, environment_api_key: str = None  # type: ignore[assignment]
+        self,
+        environment_id: int = None,  # type: ignore[assignment]
+        environment_api_key: str = None,  # type: ignore[assignment]
     ) -> RawQuerySet:  # type: ignore[type-arg]
         assert (environment_id or environment_api_key) and not (
             environment_id and environment_api_key

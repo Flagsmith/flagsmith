@@ -5,7 +5,6 @@ import uuid
 from unittest import mock
 
 import pytest
-from core.constants import BOOLEAN, INTEGER, STRING
 from django.urls import reverse
 from flag_engine.features.models import (
     FeatureModel,
@@ -21,6 +20,7 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.test import APIClient
 
+from core.constants import BOOLEAN, INTEGER, STRING
 from edge_api.identities.models import (  # type: ignore[attr-defined]
     EdgeIdentity,
     IdentityFeaturesList,
@@ -545,9 +545,9 @@ def test_edge_identities_update_featurestate(  # type: ignore[no-untyped-def]
     expected_identity_document = copy.deepcopy(identity_document)
 
     # Next, let's modify the fs value that we updated
-    expected_identity_document["identity_features"][0][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    expected_identity_document["identity_features"][0]["feature_state_value"] = (
+        expected_feature_state_value
+    )
 
     # Next, let's update the enabled
     expected_identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
@@ -644,9 +644,9 @@ def test_edge_identities_update_mv_featurestate(  # type: ignore[no-untyped-def]
     expected_identity_document = copy.deepcopy(identity_document)
 
     # Next, let's modify the fs value that we updated
-    expected_identity_document["identity_features"][2][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    expected_identity_document["identity_features"][2]["feature_state_value"] = (
+        expected_feature_state_value
+    )
     # Next, let's update the enabled
     expected_identity_document["identity_features"][2]["enabled"] = expected_fs_enabled
 
@@ -880,9 +880,9 @@ def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no
     # have correct updates
 
     # First, let's modify the fs value that we updated
-    identity_document["identity_features"][0][
-        "feature_state_value"
-    ] = expected_feature_state_value
+    identity_document["identity_features"][0]["feature_state_value"] = (
+        expected_feature_state_value
+    )
 
     # Next, let's update the enabled
     identity_document["identity_features"][0]["enabled"] = expected_fs_enabled
@@ -893,6 +893,58 @@ def test_edge_identities_with_identifier_update_featurestate(  # type: ignore[no
             Key={"composite_key": identity_document["composite_key"]}
         )["Item"]
         == identity_document
+    )
+
+
+def test_put_identity_override_creates_identity_if_not_found(
+    dynamodb_wrapper_v2: DynamoEnvironmentV2Wrapper,
+    admin_client: APIClient,
+    environment: Environment,
+    environment_api_key: str,
+    feature: Feature,
+    webhook_mock: mock.MagicMock,
+    flagsmith_identities_table: Table,
+):
+    # Given
+    identifier = "some_new_identity"
+    url = reverse(
+        "api-v1:environments:edge-identities-with-identifier-featurestates",
+        args=[environment_api_key],
+    )
+    expected_feature_state_value = "new_feature_state_value"
+    expected_fs_enabled = True
+    data = {
+        "multivariate_feature_state_values": [],
+        "enabled": expected_fs_enabled,
+        "feature": feature,
+        "feature_state_value": expected_feature_state_value,
+        "identifier": identifier,
+    }
+
+    # When
+    response = admin_client.put(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["feature"] == feature
+    assert response.json()["feature_state_value"] == expected_feature_state_value
+    assert response.json()["enabled"] == data["enabled"]
+
+    # Let's verify that the identity was added to the table
+    identity = flagsmith_identities_table.get_item(
+        Key={"composite_key": f"{environment_api_key}_{identifier}"}
+    )["Item"]
+    assert identity["identifier"] == identifier
+
+    # and that they have the relevant override
+    assert len(identity["identity_features"]) == 1
+    assert identity["identity_features"][0]["feature"]["id"] == feature
+    assert identity["identity_features"][0]["enabled"] == expected_fs_enabled
+    assert (
+        identity["identity_features"][0]["feature_state_value"]
+        == expected_feature_state_value
     )
 
 

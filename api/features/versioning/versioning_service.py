@@ -9,7 +9,8 @@ from features.versioning.models import EnvironmentFeatureVersion
 
 
 def get_environment_flags_queryset(
-    environment: Environment, feature_name: str = None  # type: ignore[assignment]
+    environment: Environment,
+    feature_name: str = None,  # type: ignore[assignment]
 ) -> QuerySet[FeatureState]:
     """
     Get a queryset of the latest live versions of an environments' feature states

@@ -46,7 +46,8 @@ def test_audit_log_can_be_filtered_by_environments(
     url = reverse("api-v1:audit-list")
     # When
     response = admin_client.get(
-        url, {"project": project.id, "environments": [audit_env.id]}  # type: ignore[arg-type]
+        url,
+        {"project": project.id, "environments": [audit_env.id]},  # type: ignore[arg-type]
     )
     # Then
     assert response.status_code == status.HTTP_200_OK

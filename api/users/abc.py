@@ -31,13 +31,19 @@ class UserABC(ABC):
 
     @abstractmethod
     def has_project_permission(
-        self, permission: str, project: "Project", tag_ids: list[int] = None  # type: ignore[assignment]
+        self,
+        permission: str,
+        project: "Project",
+        tag_ids: list[int] = None,  # type: ignore[assignment]
     ) -> bool:
         raise NotImplementedError()
 
     @abstractmethod
     def has_environment_permission(
-        self, permission: str, environment: "Environment", tag_ids: list[int] = None  # type: ignore[assignment]
+        self,
+        permission: str,
+        environment: "Environment",
+        tag_ids: list[int] = None,  # type: ignore[assignment]
     ) -> bool:
         raise NotImplementedError()
 
