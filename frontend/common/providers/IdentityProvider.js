@@ -24,7 +24,6 @@ const IdentityProvider = class extends React.Component {
         identityFlags: IdentityStore.getIdentityFlags(),
         isLoading: IdentityStore.isLoading || FeatureListStore.isLoading,
         isSaving: IdentityStore.isSaving,
-        traits: IdentityStore.getTraits(),
       })
     })
     this.listenTo(FeatureListStore, 'change', () => {
@@ -72,14 +71,6 @@ const IdentityProvider = class extends React.Component {
     })
   }
 
-  editTrait = ({ environmentId, identity, trait }) => {
-    AppActions.editTrait({ environmentId, identity, trait })
-  }
-
-  createTrait = ({ environmentId, identity, isCreate, trait }) => {
-    AppActions.editTrait({ environmentId, identity, isCreate, trait })
-  }
-
   removeFlag = ({ environmentId, identity, identityFlag }) => {
     AppActions.removeUserFlag({ environmentId, identity, identityFlag })
   }
@@ -94,21 +85,12 @@ const IdentityProvider = class extends React.Component {
   }
 
   render() {
-    const {
-      changeUserFlag,
-      createTrait,
-      editFeatureValue,
-      editTrait,
-      removeFlag,
-      toggleFlag,
-    } = this
+    const { changeUserFlag, editFeatureValue, removeFlag, toggleFlag } = this
     return this.props.children(
       { ...this.state },
       {
         changeUserFlag,
-        createTrait,
         editFeatureValue,
-        editTrait,
         removeFlag,
         toggleFlag,
       },
