@@ -108,6 +108,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
     project?: number
   } = {
     description: '',
+    metadata: [],
     name: '',
     rules: [
       {
@@ -157,9 +158,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const isSaving = creating || updating
   const [showDescriptions, setShowDescriptions] = useState(false)
   const [tab, setTab] = useState(UserTabs.RULES)
-  const [metadata, setMetadata] = useState<CustomMetadataField[]>(
-    segment.metadata,
-  )
+  const [metadata, setMetadata] = useState<Metadata[]>(segment.metadata)
   const metadataEnable = Utils.getPlansPermission('METADATA')
   const error = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
@@ -357,11 +356,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
-                  operators={operators}
-                  onRemove={() => {
-                    setValueChanged(true)
-                    removeRule(0, i)
-                  }}
+                  operators={operators!}
                   onChange={(v: SegmentRule) => {
                     setValueChanged(true)
                     updateRule(0, i, v)
@@ -409,8 +404,8 @@ const CreateSegment: FC<CreateSegmentType> = ({
             entityId={`${segment.id}` || ''}
             entityContentType={segmentContentType?.id}
             entity={segmentContentType?.model}
-            onChange={(m: CustomMetadataField[]) => {
-              setMetadata(m)
+            onChange={(m) => {
+              setMetadata(m as Metadata[])
               if (isEdit) {
                 setMetadataValueChanged(true)
               }
@@ -479,7 +474,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
               environmentId={environmentId}
               setEnvironmentId={setEnvironmentId}
               identitiesLoading={identitiesLoading}
-              identities={identities}
+              identities={identities!}
               page={page}
               setPage={setPage}
               name={name}
@@ -629,7 +624,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
         pageType: page.pageType,
         page_size: 10,
         pages: page.pages,
-        search,
+        q: search,
       },
       {
         skip: !environmentId,
