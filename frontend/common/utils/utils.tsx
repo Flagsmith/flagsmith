@@ -560,8 +560,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-  hasEmailProvider: () =>
-    global.flagsmithVersion?.backend?.has_email_provider ?? false,
   isEnterpriseImage: () => global.flagsmithVersion?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType

@@ -39,6 +39,10 @@ import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
+import {
+  useGetBuildVersionQuery,
+  hasEmailProvider as getHasEmailProvider,
+} from 'common/services/useBuildVersion'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -74,7 +78,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
-  const hasEmailProvider = Utils.hasEmailProvider()
+  const { data: version } = useGetBuildVersionQuery({})
+
+  const hasEmailProvider = getHasEmailProvider(version)
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
