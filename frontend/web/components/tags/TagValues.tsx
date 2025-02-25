@@ -13,19 +13,23 @@ type TagValuesType = {
   children?: ReactNode
   inline?: boolean
   hideNames?: boolean
+  hideTags?: number[]
 }
 
 const TagValues: FC<TagValuesType> = ({
   children,
   hideNames = true,
+  hideTags = [],
   inline,
   onAdd,
   projectId,
   value,
 }) => {
-  const { data: tags } = useGetTagsQuery({ projectId })
+  const { data } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
   const permissionType = 'MANAGE_TAGS'
+
+  const tags = data?.filter((tag) => !hideTags?.includes(tag.id))
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
