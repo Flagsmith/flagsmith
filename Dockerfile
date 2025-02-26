@@ -19,11 +19,11 @@
 # Build a SaaS API image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-saas-api:dev --target saas-api \
 #     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
 
 # Build a Private Cloud Unified image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
 
 # Table of Contents
 # Stages are described as stage-name [dependencies]
@@ -90,7 +90,7 @@ ARG PYTHON_VERSION
 RUN apk add build-base linux-headers curl git \
   python-${PYTHON_VERSION} \
   python-${PYTHON_VERSION}-dev \
-  py${PYTHON_VERSION}-pip 
+  py${PYTHON_VERSION}-pip
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
@@ -119,7 +119,7 @@ FROM wolfi-base AS api-runtime
 
 # Install Python and make it available to venv entrypoints
 ARG PYTHON_VERSION
-RUN apk add python-${PYTHON_VERSION} && \
+RUN apk add curl python-${PYTHON_VERSION} && \
   mkdir /build/ && ln -s /usr/local/ /build/.venv
 
 WORKDIR /app
@@ -138,6 +138,9 @@ EXPOSE 8000
 ENTRYPOINT ["/app/scripts/run-docker.sh"]
 
 CMD ["migrate-and-serve"]
+
+HEALTHCHECK --interval=2s --timeout=2s --retries=3 --start-period=20s \
+  CMD curl -f http://localhost:8000/health/liveness || exit 1
 
 # * api-runtime-private [api-runtime]
 FROM api-runtime AS api-runtime-private
