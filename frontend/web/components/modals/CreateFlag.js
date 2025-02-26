@@ -967,6 +967,7 @@ const CreateFlag = class extends Component {
                       : 'New Change Request',
                     <ChangeRequestModal
                       showAssignees={is4Eyes}
+                      isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
                       onSave={({
                         approvals,

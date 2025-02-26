@@ -4,13 +4,10 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
-export type Approval =
-  | {
-      user: number
-    }
-  | {
-      group: number
-    }
+export type Approval = {
+  user?: number
+  group?: number
+}
 export type PagedResponse<T> = {
   count?: number
   next?: string
