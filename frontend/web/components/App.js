@@ -335,7 +335,7 @@ const App = class extends Component {
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
-    if (document.location.href.includes('widget')) {
+    if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'
