@@ -1,5 +1,4 @@
 import importlib
-from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib import admin
@@ -51,11 +50,9 @@ if not settings.TASK_PROCESSOR_MODE:
         ),
     ]
 
-if settings.DEBUG or TYPE_CHECKING:
-    import debug_toolbar
-
+if settings.DEBUG:
     urlpatterns = [
-        re_path(r"^__debug__/", include(debug_toolbar.urls)),  # type: ignore[attr-defined]
+        re_path(r"^__debug__/", include("debug_toolbar.urls")),
     ] + urlpatterns
 
 if settings.SAML_INSTALLED:
