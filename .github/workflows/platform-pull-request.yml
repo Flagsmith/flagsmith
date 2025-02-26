@@ -117,7 +117,7 @@ jobs:
       scan: false
 
   docker-build-private-cloud:
-    if: needs.permissions-check.outputs.can-write == 'true'
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
     needs: [permissions-check, docker-prepare-report-comment]
     name: Build Private Cloud Image
     uses: ./.github/workflows/.reusable-docker-build.yml
