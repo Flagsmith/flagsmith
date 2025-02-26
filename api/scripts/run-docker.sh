@@ -32,7 +32,7 @@ serve() {
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
              --logger-class $GUNICORN_LOGGER_CLASS \
-             --access-logformat $ACCESS_LOG_FORMAT \
+             --access-logformat "$ACCESS_LOG_FORMAT" \
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
              ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
@@ -52,7 +52,7 @@ run_task_processor() {
              --bind 0.0.0.0:8000 \
              --access-logfile $ACCESS_LOG_LOCATION \
              --logger-class $GUNICORN_LOGGER_CLASS \
-             --access-logformat $ACCESS_LOG_FORMAT
+             --access-logformat "$ACCESS_LOG_FORMAT"
 }
 migrate_analytics_db(){
     # if `$ANALYTICS_DATABASE_URL` or DJANGO_DB_NAME_ANALYTICS is set
