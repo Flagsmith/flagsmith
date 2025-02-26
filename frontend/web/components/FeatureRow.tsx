@@ -163,11 +163,11 @@ const FeatureRow: FC<FeatureRowProps> = ({
     API.trackEvent(Constants.events.VIEW_FEATURE)
     const tabValue = tab || Utils.fromParam().tab || 'value'
 
-    history.replace(
-      {},
-      '',
-      `${document.location.pathname}?feature=${projectFlag.id}&tab=${tabValue}`,
-    )
+    history.replace({
+      pathname: document.location.pathname,
+      search: `?feature=${projectFlag.id}&tab=${tabValue}`,
+    })
+
     openModal(
       <Row>
         {permission ? 'Edit Feature' : 'Feature'}: {projectFlag.name}
@@ -331,7 +331,15 @@ const FeatureRow: FC<FeatureRowProps> = ({
                   }
                 </Tooltip>
               )}
-              <TagValues projectId={`${projectId}`} value={projectFlag.tags}>
+              <TagValues
+                projectId={`${projectId}`}
+                value={projectFlag.tags}
+                onClick={(tag) => {
+                  if (tag?.type === 'UNHEALTHY') {
+                    openFeatureHealthTab(id)
+                  }
+                }}
+              >
                 {projectFlag.is_archived && (
                   <Tag className='chip--xs' tag={Constants.archivedTag} />
                 )}

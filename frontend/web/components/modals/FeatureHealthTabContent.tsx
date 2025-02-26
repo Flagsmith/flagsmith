@@ -50,7 +50,7 @@ const EventTextBlocks = ({
     <div className='d-flex flex-column m-0 gap-2 flex-1'>
       <strong className='text-body'>Incident Insights</strong>
       {textBlocks.map((textBlock, index) => (
-        <div key={textBlock.text}>
+        <div key={`${textBlock.text}-${index}`}>
           {textBlock.title && (
             <div className='mb-2 text-body'>
               <strong style={{ color }}>{textBlock.title ?? 'Event'}</strong>
@@ -87,9 +87,9 @@ const EventURLBlocks = ({
       <div>
         <strong className='text-body'>Provider Links</strong>
       </div>
-      {urlBlocks.map((urlBlock) => (
+      {urlBlocks.map((urlBlock, index) => (
         <Button
-          key={urlBlock.url}
+          key={`${urlBlock.url}-${index}`}
           theme='text'
           onClick={() => window.open(urlBlock.url, '_blank')}
         >
