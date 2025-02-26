@@ -656,6 +656,23 @@ export type HealthProvider = {
   webhook_url: number
 }
 
+export type Version = {
+  tag: string
+  backend_sha: string
+  frontend_sha: string
+  frontend: {
+    ci_commit_sha?: string
+    image_tag?: string
+  }
+  backend: {
+    ci_commit_sha: string
+    image_tag: string
+    has_email_provider: boolean
+    is_enterprise: boolean
+    is_saas: boolean
+  }
+}
+
 export type Webhook = {
   id: number
   url: string
@@ -663,6 +680,10 @@ export type Webhook = {
   enabled: boolean
   created_at: string
   updated_at: string
+}
+
+export type AccountModel = User & {
+  organisations: Organisation[]
 }
 
 export type IdentityTrait = {

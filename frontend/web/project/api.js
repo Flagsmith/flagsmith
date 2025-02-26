@@ -1,7 +1,8 @@
 import * as amplitude from '@amplitude/analytics-browser'
 import data from 'common/data/base/_data'
+import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
+
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
-import freeEmailDomains from 'free-email-domains'
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -63,7 +64,7 @@ global.API = {
     if (enableDynatrace && user?.id) {
       dtrum.identifyUser(`${user.id}`)
     }
-
+    Utils.setupCrisp()
     if (Project.heap) {
       heap.identify(id)
       const user = AccountStore.model
@@ -121,7 +122,7 @@ global.API = {
       .then(() => {
         const organisation = AccountStore.getOrganisation()
         const emailDomain = `${user?.email}`?.split('@')[1] || ''
-        const freeDomain = freeEmailDomains.includes(emailDomain)
+        const freeDomain = isFreeEmailDomain(emailDomain)
         if (
           !freeDomain &&
           typeof delighted !== 'undefined' &&

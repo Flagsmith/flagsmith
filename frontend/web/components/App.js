@@ -12,7 +12,6 @@ import ButterBar from './ButterBar'
 import AccountSettingsPage from './pages/AccountSettingsPage'
 import Headway from './Headway'
 import ProjectStore from 'common/stores/project-store'
-import getBuildVersion from 'project/getBuildVersion'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
@@ -104,7 +103,6 @@ const App = class extends Component {
       })
       amplitude.add(sessionReplayTracking)
     }
-    getBuildVersion()
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
