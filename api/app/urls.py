@@ -55,7 +55,7 @@ if settings.DEBUG:
         re_path(r"^__debug__/", include("debug_toolbar.urls")),
     ] + urlpatterns
 
-if settings.SAML_INSTALLED:
+if settings.SAML_INSTALLED:  # pragma: no cover
     urlpatterns += [
         path("api/v1/auth/saml/", include("saml.urls")),
     ]
