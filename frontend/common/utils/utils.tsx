@@ -478,14 +478,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
   },
 
-  getShouldSendIdentityToTraits(_project: ProjectType) {
-    const project = _project || ProjectStore.model
-    if (project && project.use_edge_identities) {
-      return false
-    }
-    return true
-  },
-
   getShouldUpdateTraitOnDelete(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -496,22 +488,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getTagColour(index: number) {
     return Constants.tagColors[index % (Constants.tagColors.length - 1)]
-  },
-
-  getTraitEndpoint(environmentId: string, userId: string) {
-    const model = ProjectStore.model as null | ProjectType
-
-    if (model?.use_edge_identities) {
-      return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`
-    }
-    return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`
-  },
-
-  getTraitEndpointMethod(id?: number) {
-    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
-      return 'put'
-    }
-    return id ? 'put' : 'post'
   },
 
   getTypedValue(
@@ -553,16 +529,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return str
   },
 
-  getUpdateTraitEndpoint(environmentId: string, userId: string, id?: string) {
-    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
-      return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`
-    }
-    return `${
-      Project.api
-    }environments/${environmentId}/identities/${userId}/traits/${
-      id ? `${id}/` : ''
-    }`
-  },
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },

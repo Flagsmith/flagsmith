@@ -324,7 +324,7 @@ export type Organisation = {
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
-  id?: string
+  id: string
   identifier: string
   identity_uuid?: string
   dashboard_alias?: string
@@ -391,6 +391,8 @@ export type IdentityFeatureState = {
     name: string
     type: FeatureType
   }
+  identity?: string
+  identity_uuid?: string
   enabled: boolean
   feature_state_value: FlagsmithValue
   segment: null
@@ -407,7 +409,6 @@ export type FeatureState = {
   id: number
   feature_state_value: FlagsmithValue
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  identity?: string
   uuid: string
   enabled: boolean
   created_at: string
@@ -688,6 +689,12 @@ export type AccountModel = User & {
   organisations: Organisation[]
 }
 
+export type IdentityTrait = {
+  id: number | string
+  trait_key: string
+  trait_value: FlagsmithValue
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -730,7 +737,7 @@ export type Res = {
   account: Account
   userEmail: {}
   groupAdmin: { id: string }
-  groups: PagedResponse<UserGroupSummary>
+  groups: PagedResponse<UserGroup>
   group: UserGroup
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
@@ -805,7 +812,7 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
-  identityFeatureStates: PagedResponse<FeatureState>
+  identityFeatureStates: IdentityFeatureState[]
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
   samlConfiguration: SAMLConfiguration
@@ -816,5 +823,9 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identitySegments: PagedResponse<Segment>
+  organisationWebhooks: PagedResponse<Webhook>
+  identityTrait: { id: string }
+  identityTraits: IdentityTrait[]
   // END OF TYPES
 }

@@ -15,7 +15,7 @@ import { useGetGroupsQuery } from 'common/services/useGroup'
 type OrganisationProviderType = {
   onRemoveProject?: () => void
   onSave?: (data: { environmentId: number; projectId: number }) => void
-  id?: number | string
+  id?: number | string | null
   children: (props: {
     createProject: typeof AppActions.createProject
     invalidateInviteLink: typeof AppActions.invalidateInviteLink
