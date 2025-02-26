@@ -116,7 +116,6 @@ const CreateSegmentUsersTabContent: React.FC<
             isLoading={identitiesLoading}
             items={identities?.results}
             paging={identities}
-            showExactFilter
             nextPage={() => {
               setPage({
                 number: page.number + 1,
@@ -155,10 +154,7 @@ const CreateSegmentUsersTabContent: React.FC<
                     )
                 : undefined
             }
-            renderRow={(
-              { id, identifier }: { id: string; identifier: string },
-              index: number,
-            ) => (
+            renderRow={({ id, identifier }, index) => (
               <UserRow
                 segmentName={name}
                 projectId={`${projectId}`}
@@ -169,7 +165,7 @@ const CreateSegmentUsersTabContent: React.FC<
             )}
             filterRow={() => true}
             search={searchInput}
-            onChange={(e: InputEvent) => {
+            onChange={(e) => {
               setSearchInput(Utils.safeParseEventValue(e))
             }}
           />

@@ -7,7 +7,7 @@ import { createPortal } from 'react-dom'
 
 export type TooltipProps = {
   title: ReactNode
-  children: string
+  children: string | undefined | null
   place?: _TooltipProps['place']
   plainText?: boolean
   titleClassName?: string

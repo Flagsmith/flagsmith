@@ -8,7 +8,10 @@ import { getViewMode, setViewMode } from 'common/useViewMode'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import {
   FeatureState,
+  FlagsmithValue,
+  Identity,
   IdentityFeatureState,
+  IdentityTrait,
   ProjectFlag,
   TagStrategy,
 } from 'common/types/responses'
@@ -35,6 +38,7 @@ import PageTitle from 'components/PageTitle'
 import Panel from 'components/base/grid/Panel'
 import PanelSearch from 'components/PanelSearch'
 import Permission from 'common/providers/Permission'
+// @ts-ignore
 import Project from 'common/project'
 import Switch from 'components/Switch'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
@@ -50,7 +54,6 @@ import Utils from 'common/utils/utils'
 // @ts-ignore
 import _data from 'common/data/base/_data'
 import classNames from 'classnames'
-import moment from 'moment'
 import { removeIdentity } from './UsersPage'
 import { isEqual } from 'lodash'
 import ClearFilters from 'components/ClearFilters'
@@ -299,7 +302,14 @@ const UserPage: FC<UserPageType> = (props) => {
               isLoading,
               projectFlags,
               traits,
-            }: any,
+            }: {
+              environmentFlags: FeatureState[]
+              identity: { identity: Identity; identifier: string }
+              identityFlags: IdentityFeatureState[]
+              isLoading: boolean
+              projectFlags: ProjectFlag[]
+              traits: IdentityTrait[]
+            },
             { toggleFlag }: any,
           ) =>
             isLoading &&
@@ -549,8 +559,8 @@ const UserPage: FC<UserPageType> = (props) => {
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
                           renderRow={(
-                            { description, id: featureId, name, tags }: any,
-                            i: number,
+                            { description, id: featureId, name, tags },
+                            i,
                           ) => {
                             return (
                               <Permission
@@ -609,7 +619,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                   const onClick = () => {
                                     if (permission) {
                                       editFeature(
-                                        projectFlag,
+                                        projectFlag!,
                                         environmentFlags[featureId],
                                         identityFlags[featureId] ||
                                           actualFlags![name],
@@ -676,7 +686,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                                     e?.stopPropagation()
                                                     e?.currentTarget?.blur()
                                                     Utils.copyToClipboard(
-                                                      projectFlag.name,
+                                                      projectFlag!.name,
                                                     )
                                                   }}
                                                   theme='icon'
@@ -687,7 +697,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                               </Row>
                                               <TagValues
                                                 projectId={`${projectId}`}
-                                                value={projectFlag.tags}
+                                                value={projectFlag!.tags}
                                               />
                                             </Row>
                                             {hasUserOverride ? (
@@ -864,7 +874,7 @@ const UserPage: FC<UserPageType> = (props) => {
                                                         .identifier,
                                                     identity: id,
                                                     identityFlag,
-                                                    projectFlag,
+                                                    projectFlag: projectFlag!,
                                                   })
                                                 }}
                                               >
@@ -943,7 +953,7 @@ const UserPage: FC<UserPageType> = (props) => {
                             title='Segments'
                             isLoading={isFetchingSegments}
                             search={segmentSearchInput}
-                            onChange={(e: InputEvent) => {
+                            onChange={(e) => {
                               setSegmentSearchInput(
                                 Utils.safeParseEventValue(e),
                               )
@@ -967,10 +977,7 @@ const UserPage: FC<UserPageType> = (props) => {
                               </Row>
                             }
                             items={segments.results}
-                            renderRow={(
-                              { created_date, description, name }: any,
-                              i: number,
-                            ) => (
+                            renderRow={({ description, name }, i) => (
                               <Row
                                 className='list-item clickable'
                                 space
@@ -992,10 +999,6 @@ const UserPage: FC<UserPageType> = (props) => {
                                     >
                                       {name}
                                     </span>
-                                  </div>
-                                  <div className='list-item-subtitle mt-1'>
-                                    Created{' '}
-                                    {moment(created_date).format('DD/MMM/YYYY')}
                                   </div>
                                 </Flex>
                                 <Flex className='table-column list-item-subtitle'>
