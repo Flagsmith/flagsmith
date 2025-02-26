@@ -639,12 +639,27 @@ export type SAMLAttributeMapping = {
 
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
 
+export type FeatureHealthEventReasonTextBlock = {
+  text: string
+  title?: string
+}
+
+export type FeatureHealthEventReasonUrlBlock = {
+  url: string
+  title?: string
+}
+
+export type HealthEventReason = {
+  text_blocks: FeatureHealthEventReasonTextBlock[]
+  url_blocks: FeatureHealthEventReasonUrlBlock[]
+}
+
 export type HealthEvent = {
   created_at: string
   environment: number
   feature: number
   provider_name: string
-  reason: string
+  reason: HealthEventReason | null
   type: HealthEventType
 }
 

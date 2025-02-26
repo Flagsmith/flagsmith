@@ -5,6 +5,7 @@ import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
+import Constants from 'common/constants'
 
 type TagType = {
   className?: string
@@ -20,7 +21,7 @@ export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
     return '#9DA4AE'
   }
   if (tag.type === 'UNHEALTHY') {
-    return '#D35400'
+    return Constants.featureHealth.unhealthyColor
   }
   if (selected) {
     return tag.color

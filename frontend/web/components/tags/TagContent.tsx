@@ -2,7 +2,7 @@ import React, { FC } from 'react'
 import { Tag as TTag } from 'common/types/responses'
 import Format from 'common/utils/format'
 import { IonIcon } from '@ionic/react'
-import { alarmOutline, lockClosed } from 'ionicons/icons'
+import { alarmOutline, lockClosed, warning } from 'ionicons/icons'
 import Tooltip from 'components/Tooltip'
 import { getTagColor } from './Tag'
 import OrganisationStore from 'common/stores/organisation-store'
@@ -30,6 +30,8 @@ const renderIcon = (
   switch (tagType) {
     case 'STALE':
       return <IonIcon className='ms-1' icon={alarmOutline} color={darkened} />
+    case 'UNHEALTHY':
+      return <IonIcon className='ms-1' icon={warning} color={darkened} />
     case 'GITHUB':
       switch (tagLabel) {
         case 'PR Open':
@@ -95,7 +97,7 @@ const getTooltip = (tag: TTag | undefined) => {
         >
           ${`${escapeHTML(tag.label)}`}
         </span>
-          ${tooltip || ''}
+          ${tooltip ?? ''}
       </div>`
   }
   return tooltip

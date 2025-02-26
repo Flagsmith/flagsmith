@@ -9,6 +9,7 @@ import FeatureValue from './FeatureValue'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Constants from 'common/constants'
+import Utils from 'common/utils/utils'
 
 export interface CondensedFeatureRowProps {
   disableControls?: boolean
@@ -27,6 +28,7 @@ export interface CondensedFeatureRowProps {
   isCompact?: boolean
   fadeEnabled?: boolean
   fadeValue?: boolean
+  hasUnhealthyEvents?: boolean
   index: number
 }
 
@@ -37,6 +39,7 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
   environmentFlags,
   fadeEnabled,
   fadeValue,
+  hasUnhealthyEvents,
   index,
   isCompact,
   onChange,
@@ -53,7 +56,14 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
     <Flex
       onClick={() => {
         if (disableControls) return
-        !readOnly && editFeature(projectFlag, environmentFlags?.[id])
+        !readOnly &&
+          editFeature(
+            projectFlag,
+            environmentFlags?.[id],
+            hasUnhealthyEvents
+              ? Constants.featurePanelTabs.FEATURE_HEALTH
+              : undefined,
+          )
       }}
       style={{ ...style }}
       className={classNames('flex-row', { 'fs-small': isCompact }, className)}
