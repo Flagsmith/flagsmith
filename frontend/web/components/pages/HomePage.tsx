@@ -19,7 +19,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import { Link } from 'react-router-dom'
 import Project from 'common/project'
 import API from 'project/api'
-import Utils from 'common/utils/Utils'
+import Utils from 'common/utils/utils'
 // @ts-ignore
 import data from 'common/data/base/_data'
 import AppActions from 'common/dispatcher/app-actions'
