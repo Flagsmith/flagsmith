@@ -64,7 +64,7 @@ global.API = {
     if (enableDynatrace && user?.id) {
       dtrum.identifyUser(`${user.id}`)
     }
-
+    Utils.setupCrisp()
     if (Project.heap) {
       heap.identify(id)
       const user = AccountStore.model

@@ -684,6 +684,10 @@ export type Webhook = {
   updated_at: string
 }
 
+export type AccountModel = User & {
+  organisations: Organisation[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
