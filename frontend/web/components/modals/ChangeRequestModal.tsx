@@ -3,8 +3,7 @@ import UserSelect from 'components/UserSelect'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Button from 'components/base/forms/Button'
 import MyGroupsSelect from 'components/MyGroupsSelect'
-import { getMyGroups } from 'common/services/useMyGroup'
-import { getStore } from 'common/store'
+import { useGetMyGroupsQuery } from 'common/services/useMyGroup'
 import DateSelect, { DateSelectProps } from 'components/DateSelect'
 import { close } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -13,20 +12,14 @@ import AccountStore from 'common/stores/account-store'
 import InputGroup from 'components/base/forms/InputGroup'
 import moment from 'moment'
 import Utils from 'common/utils/utils'
+import { Approval, ChangeRequest, User } from 'common/types/responses'
+import { Req } from 'common/types/requests'
 
 interface ChangeRequestModalProps {
-  changeRequest?: {
-    approvals: Array<{ user?: number; group?: number }>
-    description: string
-    feature_states: Array<{ live_from: string }>
-    title: string
-  }
-  onSave: (data: {
-    approvals: Array<{ user?: number; group?: number }>
-    description: string
-    live_from?: string
-    title: string
-  }) => void
+  changeRequest?: ChangeRequest
+  onSave: (
+    data: Omit<Req['createChangeRequest'], 'multivariate_options'>,
+  ) => void
   isScheduledChange?: boolean
   showAssignees?: boolean
 }
@@ -37,11 +30,14 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   onSave,
   showAssignees,
 }) => {
-  const [approvals, setApprovals] = useState(changeRequest?.approvals || [])
-  const [description, setDescription] = useState(
-    changeRequest?.description ?? '',
+  const [approvals, setApprovals] = useState<Approval[]>([
+    ...(changeRequest?.approvals ?? []),
+    ...(changeRequest?.group_assignments ?? []),
+  ])
+  const [description, setDescription] = useState<string>(
+    String(changeRequest?.description ?? ''),
   )
-  const [groups, setGroups] = useState([])
+  // const [groups, setGroups] = useState([])
   const [liveFrom, setLiveFrom] = useState(
     changeRequest?.feature_states[0]?.live_from,
   )
@@ -50,13 +46,9 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   const [showGroups, setShowGroups] = useState(false)
   const [currDate, setCurrDate] = useState(new Date())
 
-  useEffect(() => {
-    getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
-      (res) => {
-        setGroups(res?.data?.results || [])
-      },
-    )
-  }, [])
+  const { data: groups } = useGetMyGroupsQuery({
+    orgId: AccountStore.getOrganisation().id,
+  })
 
   useEffect(() => {
     const currLiveFromDate = changeRequest?.feature_states[0]?.live_from
@@ -66,20 +58,31 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   }, [isScheduledChange, showAssignees, changeRequest, currDate])
 
   const addOwner = (id: number, isUser = true) => {
-    setApprovals((prev) => [...prev, isUser ? { user: id } : { group: id }])
+    if (!isUser) {
+      setApprovals((prev) => [...prev, { group: id }])
+      return
+    }
+
+    setApprovals((prev) => [...prev, { user: id }])
   }
 
   const removeOwner = (id: number, isUser = true) => {
-    setApprovals((prev) =>
-      prev.filter((v) => (isUser ? v.user !== id : v.group !== id)),
-    )
+    if (!isUser) {
+      setApprovals((prev) => prev.filter((v) => v.group !== id))
+      return
+    }
+
+    setApprovals((prev) => prev.filter((v) => v.user !== id))
   }
 
-  const getApprovals = (users: any[], approvals: any[]) =>
-    users.filter((v) => approvals.find((a) => a.user === v.id))
+  const getApprovals = (users: User[], approvals: Approval[]) =>
+    users.filter((u) => approvals.find((a) => a.user === u.id))
 
-  const getGroupApprovals = (groups: any[], approvals: any[]) =>
-    groups.filter((v) => approvals.find((a) => a.group === v.id))
+  const ownerGroups = useMemo(
+    () =>
+      groups?.results?.filter((g) => approvals.find((a) => a.group === g.id)),
+    [groups?.results, approvals],
+  )
 
   const save = () => {
     onSave({
@@ -107,7 +110,6 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
   return (
     <OrganisationProvider>
       {({ users }) => {
-        const ownerGroups = getGroupApprovals(groups, approvals)
         const ownerUsers = getApprovals(users, approvals)
         return (
           <div>
@@ -217,7 +219,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                         )}
                         <Row>
                           <strong style={{ width: 70 }}> Groups: </strong>
-                          {ownerGroups.map((u) => (
+                          {ownerGroups?.map((u) => (
                             <Row
                               key={u.id}
                               onClick={() => removeOwner(u.id, false)}

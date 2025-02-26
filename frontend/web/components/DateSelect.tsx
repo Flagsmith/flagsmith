@@ -3,7 +3,8 @@ import Icon from './Icon'
 import { useState, FC } from 'react'
 
 export interface DateSelectProps
-  extends Pick<DatePickerProps, 'dateFormat' | 'selected' | 'value'> {
+  extends Pick<DatePickerProps, 'dateFormat' | 'selected'> {
+  value?: DatePickerProps['value']
   className?: string
   isValid?: boolean
   onChange?: (
