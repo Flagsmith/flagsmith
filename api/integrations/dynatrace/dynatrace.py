@@ -26,7 +26,7 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
         self.entity_selector = entity_selector
         self.url = f"{self.base_url}{EVENTS_API_URI}?api-token={self.api_key}"
 
-    def _track_event(self, event: dict) -> None:
+    def _track_event(self, event: dict) -> None:  # type: ignore[type-arg]
         event["entitySelector"] = self.entity_selector
         response = requests.post(
             self.url, headers=self._headers(), data=json.dumps(event)
@@ -35,11 +35,11 @@ class DynatraceWrapper(AbstractBaseEventIntegrationWrapper):
             "Sent event to Dynatrace. Response code was %s" % response.status_code
         )
 
-    def _headers(self) -> dict:
+    def _headers(self) -> dict:  # type: ignore[type-arg]
         return {"Content-Type": "application/json"}
 
     @staticmethod
-    def generate_event_data(audit_log_record: AuditLog) -> dict:
+    def generate_event_data(audit_log_record: AuditLog) -> dict:  # type: ignore[type-arg]
         log = audit_log_record.log
         environment_name = audit_log_record.environment_name
         email = audit_log_record.author_identifier

@@ -1,6 +1,6 @@
 import typing
 
-from drf_yasg.utils import swagger_serializer_method
+from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-untyped]
 from rest_framework import serializers
 
 from audit.models import AuditLog
@@ -9,7 +9,7 @@ from projects.serializers import ProjectListSerializer
 from users.serializers import UserListSerializer
 
 
-class AuditLogListSerializer(serializers.ModelSerializer):
+class AuditLogListSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     author = UserListSerializer()
     environment = EnvironmentSerializerLight()
     project = ProjectListSerializer()
@@ -30,13 +30,13 @@ class AuditLogListSerializer(serializers.ModelSerializer):
         )
 
 
-class AuditLogChangeDetailsSerializer(serializers.Serializer):
+class AuditLogChangeDetailsSerializer(serializers.Serializer):  # type: ignore[type-arg]
     field = serializers.ReadOnlyField()
     old = serializers.ReadOnlyField()
     new = serializers.ReadOnlyField()
 
 
-class AuditLogRetrieveSerializer(serializers.ModelSerializer):
+class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     author = UserListSerializer()
     environment = EnvironmentSerializerLight()
     project = ProjectListSerializer()
@@ -60,15 +60,16 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
             "change_type",
         )
 
-    @swagger_serializer_method(
+    @swagger_serializer_method(  # type: ignore[misc]
         serializer_or_field=AuditLogChangeDetailsSerializer(many=True)
     )
     def get_change_details(
         self, instance: AuditLog
     ) -> typing.List[typing.Dict[str, typing.Any]]:
         if history_record := instance.history_record:
-            return AuditLogChangeDetailsSerializer(
-                instance=history_record.get_change_details(), many=True
+            return AuditLogChangeDetailsSerializer(  # type: ignore[return-value]
+                instance=history_record.get_change_details(),  # type: ignore[attr-defined]
+                many=True,
             ).data
 
         return []
@@ -77,14 +78,16 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):
         if not (history_record := instance.history_record):
             return "UNKNOWN"
 
-        return {
+        return {  # type: ignore[return-value]
             "+": "CREATE",
             "-": "DELETE",
             "~": "UPDATE",
-        }.get(history_record.history_type)
+        }.get(
+            history_record.history_type  # type: ignore[attr-defined]
+        )
 
 
-class AuditLogsQueryParamSerializer(serializers.Serializer):
+class AuditLogsQueryParamSerializer(serializers.Serializer):  # type: ignore[type-arg]
     project = serializers.IntegerField(required=False)
     environments = serializers.ListField(
         child=serializers.IntegerField(min_value=0), required=False

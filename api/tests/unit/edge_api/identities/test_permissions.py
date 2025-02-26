@@ -1,11 +1,13 @@
-from common.environments.permissions import UPDATE_FEATURE_STATE
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    UPDATE_FEATURE_STATE,
+)
 
 from edge_api.identities.permissions import (
     EdgeIdentityWithIdentifierViewPermissions,
 )
 
 
-def test_edge_identity_with_identifier_view_permissions_has_permissions_calls_has_environment_permission(
+def test_edge_identity_with_identifier_view_permissions_has_permissions_calls_has_environment_permission(  # type: ignore[no-untyped-def]  # noqa: E501
     environment,
     mocker,
 ):
@@ -15,7 +17,7 @@ def test_edge_identity_with_identifier_view_permissions_has_permissions_calls_ha
     view = mocker.Mock(kwargs=dict(environment_api_key=environment.api_key))
 
     # When
-    has_permission = permissions.has_permission(request, view)
+    has_permission = permissions.has_permission(request, view)  # type: ignore[no-untyped-call]
 
     # Then
     request.user.has_environment_permission.assert_called_once_with(

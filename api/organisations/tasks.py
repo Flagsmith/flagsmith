@@ -2,20 +2,20 @@ import logging
 import math
 from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import get_current_api_usage
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import F, Max, Q
 from django.utils import timezone
-from task_processor.decorators import (
+from task_processor.decorators import (  # type: ignore[import-untyped]
     register_recurring_task,
     register_task_handler,
 )
 
+from app_analytics.influxdb_wrapper import get_current_api_usage
 from integrations.flagsmith.client import get_client
 from organisations import subscription_info_cache
-from organisations.chargebee import (
+from organisations.chargebee import (  # type: ignore[attr-defined]
     add_100k_api_calls_scale_up,
     add_100k_api_calls_start_up,
 )
@@ -50,12 +50,12 @@ from .task_helpers import (
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
     subscription_metadata = organisation.subscription.get_subscription_metadata()
-    FFAdminUser.send_alert_to_admin_users(
+    FFAdminUser.send_alert_to_admin_users(  # type: ignore[no-untyped-call]
         subject=ALERT_EMAIL_SUBJECT,
         message=ALERT_EMAIL_MESSAGE
         % (
@@ -67,7 +67,7 @@ def send_org_over_limit_alert(organisation_id: int) -> None:
     )
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
@@ -86,7 +86,7 @@ def send_org_subscription_cancelled_alert(
 @register_recurring_task(
     run_every=timedelta(hours=6),
 )
-def update_organisation_subscription_information_influx_cache_recurring():
+def update_organisation_subscription_information_influx_cache_recurring():  # type: ignore[no-untyped-def]
     """
     We're redefining the task function here to register a recurring task
     since the decorators don't stack correctly. (TODO)
@@ -95,18 +95,18 @@ def update_organisation_subscription_information_influx_cache_recurring():
 
 
 @register_task_handler()
-def update_organisation_subscription_information_influx_cache():
+def update_organisation_subscription_information_influx_cache():  # type: ignore[no-untyped-def]
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
         (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
     )
 
 
-@register_recurring_task(
+@register_recurring_task(  # type: ignore[misc]
     run_every=timedelta(hours=12),
 )
 def finish_subscription_cancellation() -> None:
@@ -150,7 +150,7 @@ def handle_api_usage_notifications() -> None:
 
 
 # Task enqueued in register_recurring_tasks below.
-def charge_for_api_call_count_overages():
+def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
     now = timezone.now()
 
     # Get the period where we're interested in any new API usage

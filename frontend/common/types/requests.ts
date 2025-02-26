@@ -16,6 +16,8 @@ import {
   Identity,
   Role,
   RolePermission,
+  Webhook,
+  IdentityTrait,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -90,6 +92,26 @@ export type Req = {
       | 'current_billing_period'
       | 'previous_billing_period'
       | '90_day_period'
+  }
+  getWebhooks: {
+    environmentId: string
+  }
+  createWebhook: {
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  updateWebhook: {
+    id: number
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  deleteWebhook: {
+    id: number
+    environmentId: string
   }
   deleteIdentity: {
     id: string
@@ -540,6 +562,41 @@ export type Req = {
     environmentId: string
     data: Identity
   }
+  createAuditLogWebhooks: {
+    organisationId: string
+    data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
+  }
+  getAuditLogWebhooks: { organisationId: string }
+  updateAuditLogWebhooks: { organisationId: string; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: string; id: number }
+  createIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  getIdentityTraits: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+  }
+  updateIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  deleteIdentityTrait: {
+    environmentId: string
+    identity: string
+    use_edge_identities: boolean
+    data: Omit<IdentityTrait, 'trait_value'>
+  }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: string
+  }>
   getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string

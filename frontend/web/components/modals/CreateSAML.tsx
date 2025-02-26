@@ -130,7 +130,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       />
 
       <InputGroup
-        className='mt-2 mb-4'
+        className={`mt-2 mb-4 ${Utils.isSaas() ? 'd-none' : ''}`}
         title='Frontend URL*'
         data-test='frontend-url'
         tooltip='The base URL of the Flagsmith dashboard. Users will be redirected here after authenticating successfully.'

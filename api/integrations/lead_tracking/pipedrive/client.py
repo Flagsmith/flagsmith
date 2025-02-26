@@ -25,8 +25,10 @@ class PipedriveAPIClient:
         self.base_url = base_url
         self.session = session or requests.Session()
 
-    def create_organization(
-        self, name: str, organization_fields: typing.Dict[str, typing.Any] = None
+    def create_organization(  # type: ignore[no-untyped-def]
+        self,
+        name: str,
+        organization_fields: typing.Dict[str, typing.Any] = None,  # type: ignore[assignment]
     ):
         api_response_data = self._make_request(
             resource="organizations",
@@ -45,7 +47,7 @@ class PipedriveAPIClient:
             query_params={"term": search_term, "fields": "custom_fields"},
         )
         return [
-            PipedriveOrganization.from_response_data(org["item"])
+            PipedriveOrganization.from_response_data(org["item"])  # type: ignore[misc]
             for org in api_response_data["items"]
         ]
 
@@ -56,7 +58,7 @@ class PipedriveAPIClient:
             query_params={"term": search_term},
         )
         return [
-            PipedrivePerson.from_response_data(person["item"])
+            PipedrivePerson.from_response_data(person["item"])  # type: ignore[misc]
             for person in api_response_data["items"]
         ]
 
@@ -69,7 +71,7 @@ class PipedriveAPIClient:
             data={"name": name, "field_type": field_type},
             expected_status_code=201,
         )
-        return PipedriveOrganizationField.from_response_data(api_response_data)
+        return PipedriveOrganizationField.from_response_data(api_response_data)  # type: ignore[return-value]
 
     def create_deal_field(
         self, name: str, field_type: str = "varchar"
@@ -80,15 +82,15 @@ class PipedriveAPIClient:
             data={"name": name, "field_type": field_type},
             expected_status_code=201,
         )
-        return PipedriveDealField.from_response_data(api_response_data)
+        return PipedriveDealField.from_response_data(api_response_data)  # type: ignore[return-value]
 
     def create_lead(
         self,
         title: str,
         organization_id: int,
-        person_id: int = None,
-        custom_fields: typing.Dict[str, typing.Any] = None,
-        label_ids: typing.List[str] = None,
+        person_id: int = None,  # type: ignore[assignment]
+        custom_fields: typing.Dict[str, typing.Any] = None,  # type: ignore[assignment]
+        label_ids: typing.List[str] = None,  # type: ignore[assignment]
     ) -> PipedriveLead:
         data = {
             "title": title,
@@ -102,7 +104,7 @@ class PipedriveAPIClient:
         api_response_data = self._make_request(
             resource="leads", http_method="post", data=data, expected_status_code=201
         )
-        return PipedriveLead.from_response_data(api_response_data)
+        return PipedriveLead.from_response_data(api_response_data)  # type: ignore[return-value]
 
     def create_person(
         self, name: str, email: str, marketing_status: str = MarketingStatus.NO_CONSENT
@@ -117,7 +119,7 @@ class PipedriveAPIClient:
             },
             expected_status_code=201,
         )
-        return PipedrivePerson.from_response_data(api_response_data)
+        return PipedrivePerson.from_response_data(api_response_data)  # type: ignore[return-value]
 
     def list_lead_labels(self) -> typing.List[PipedriveLeadLabel]:
         api_response_data = self._make_request(
@@ -126,17 +128,18 @@ class PipedriveAPIClient:
             expected_status_code=200,
         )
         return [
-            PipedriveLeadLabel.from_response_data(label) for label in api_response_data
+            PipedriveLeadLabel.from_response_data(label)  # type: ignore[misc]
+            for label in api_response_data
         ]
 
     def _make_request(
         self,
         resource: str,
         http_method: str,
-        data: dict = None,
-        query_params: dict = None,
+        data: dict = None,  # type: ignore[type-arg,assignment]
+        query_params: dict = None,  # type: ignore[type-arg,assignment]
         expected_status_code: int = 200,
-    ) -> dict:
+    ) -> dict:  # type: ignore[type-arg]
         http_method = http_method.lower()
         if not hasattr(self.session, http_method):
             raise ValueError("`http_method` argument must be valid HTTP verb")
@@ -155,4 +158,4 @@ class PipedriveAPIClient:
                 f"Response code was {response.status_code}. Expected {expected_status_code}"
             )
 
-        return response.json()["data"]
+        return response.json()["data"]  # type: ignore[no-any-return]

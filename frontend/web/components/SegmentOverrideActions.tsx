@@ -1,10 +1,6 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
-import classNames from 'classnames'
 
 import useOutsideClick from 'common/useOutsideClick'
-import Utils from 'common/utils/utils'
-import Constants from 'common/constants'
-import Permission from 'common/providers/Permission'
 import Button from './base/forms/Button'
 import Icon from './Icon'
 import ActionButton from './ActionButton'

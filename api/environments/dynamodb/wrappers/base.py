@@ -25,7 +25,7 @@ boto3.dynamodb.types.DYNAMODB_CONTEXT = Context(prec=100)
 
 
 class BaseDynamoWrapper:
-    table_name: str = None
+    table_name: str = None  # type: ignore[assignment]
 
     def __init__(self) -> None:
         self._table: typing.Optional["Table"] = None
@@ -39,7 +39,7 @@ class BaseDynamoWrapper:
     def get_table_name(self) -> str:
         return self.table_name
 
-    def get_table(self) -> typing.Optional["Table"]:
+    def get_table(self) -> typing.Optional["Table"]:  # type: ignore[return]
         if table_name := self.get_table_name():
             return boto3.resource("dynamodb", config=Config(tcp_keepalive=True)).Table(
                 table_name
@@ -49,9 +49,9 @@ class BaseDynamoWrapper:
     def is_enabled(self) -> bool:
         return self.table is not None
 
-    def _iter_all_items(
+    def _iter_all_items(  # type: ignore[valid-type]
         self,
-        response_getter_method: "typing.Callable[[P], DynamoDBOutput]",
+        response_getter_method: "typing.Callable[[P], DynamoDBOutput]",  # type: ignore[valid-type]
         **kwargs: "P.kwargs",
     ) -> typing.Generator[dict[str, "TableAttributeValueTypeDef"], None, None]:
         response_getter = partial(response_getter_method, **kwargs)
@@ -61,7 +61,7 @@ class BaseDynamoWrapper:
         )
 
         while True:
-            query_response = response_getter()
+            query_response = response_getter()  # type: ignore[call-arg]
 
             for item in query_response["Items"]:
                 yield item
@@ -80,10 +80,10 @@ class BaseDynamoWrapper:
         self,
         **kwargs: typing.Any,
     ) -> typing.Generator[dict[str, "TableAttributeValueTypeDef"], None, None]:
-        return self._iter_all_items(self.table.scan, **kwargs)
+        return self._iter_all_items(self.table.scan, **kwargs)  # type: ignore[arg-type,union-attr]
 
     def query_iter_all_items(
         self,
         **kwargs: typing.Any,
     ) -> typing.Generator[dict[str, "TableAttributeValueTypeDef"], None, None]:
-        return self._iter_all_items(self.table.query, **kwargs)
+        return self._iter_all_items(self.table.query, **kwargs)  # type: ignore[arg-type,union-attr]

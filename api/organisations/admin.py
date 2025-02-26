@@ -13,7 +13,7 @@ from organisations.models import (
 from projects.models import Project
 
 
-class ProjectInline(admin.StackedInline):
+class ProjectInline(admin.StackedInline):  # type: ignore[type-arg]
     model = Project
     extra = 0
     show_change_link = True
@@ -21,14 +21,14 @@ class ProjectInline(admin.StackedInline):
     classes = ("collapse",)
 
 
-class SubscriptionInline(admin.StackedInline):
+class SubscriptionInline(admin.StackedInline):  # type: ignore[type-arg]
     model = Subscription
     extra = 0
     show_change_link = True
     verbose_name_plural = "Subscription"
 
 
-class UserOrganisationInline(admin.TabularInline):
+class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
     model = UserOrganisation
     extra = 0
     show_change_link = True
@@ -36,7 +36,7 @@ class UserOrganisationInline(admin.TabularInline):
     verbose_name_plural = "Users"
 
 
-class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):
+class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):  # type: ignore[type-arg]
     model = OrganisationSubscriptionInformationCache
     extra = 0
     show_change_link = False
@@ -97,7 +97,7 @@ class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):
 
 
 @admin.register(Organisation)
-class OrganisationAdmin(admin.ModelAdmin):
+class OrganisationAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     inlines = [
         ProjectInline,
         SubscriptionInline,
@@ -117,7 +117,7 @@ class OrganisationAdmin(admin.ModelAdmin):
     list_filter = ("subscription__plan",)
     search_fields = ("id", "name", "subscription__subscription_id", "users__email")
 
-    def get_queryset(self, request):  # pragma: no cover
+    def get_queryset(self, request):  # type: ignore[no-untyped-def] # pragma: no cover
         return (
             Organisation.objects.select_related("subscription")
             .annotate(
@@ -134,10 +134,10 @@ class OrganisationAdmin(admin.ModelAdmin):
         )
 
     def num_users(self, instance: Organisation) -> int:
-        return instance.num_users
+        return instance.num_users  # type: ignore[no-any-return]
 
     def num_projects(self, instance: Organisation) -> int:
-        return instance.num_projects
+        return instance.num_projects  # type: ignore[no-any-return]
 
     def subscription_id(self, instance: Organisation) -> str:
         if instance.subscription and instance.subscription.subscription_id:

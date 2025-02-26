@@ -1,5 +1,4 @@
 import pytest
-from core.constants import FLOAT
 from django.utils import timezone
 from flag_engine.segments.constants import (
     EQUAL,
@@ -10,6 +9,7 @@ from flag_engine.segments.constants import (
 )
 from pytest_django import DjangoAssertNumQueries
 
+from core.constants import FLOAT
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -159,10 +159,10 @@ def test_get_all_traits_for_identity(environment: Environment) -> None:
     )
 
     # Identity one should have 3
-    traits_identity_one = identity.get_all_user_traits()
+    traits_identity_one = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
     assert len(traits_identity_one) == 3
 
-    traits_identity_two = identity2.get_all_user_traits()
+    traits_identity_two = identity2.get_all_user_traits()  # type: ignore[no-untyped-call]
     assert len(traits_identity_two) == 1
 
 
@@ -870,7 +870,7 @@ def test_get_all_feature_states_does_not_return_null_versions(
     assert identity_feature_states[0].id == version_1_feature_state.id
 
 
-def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(
+def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change(  # type: ignore[no-untyped-def]
     identity, django_assert_num_queries, trait
 ):
     # Given
@@ -898,7 +898,7 @@ def test_update_traits_does_not_make_extra_queries_if_traits_value_do_not_change
         (None, False, True),
     ),
 )
-def test_get_all_feature_hide_disabled_flags(
+def test_get_all_feature_hide_disabled_flags(  # type: ignore[no-untyped-def]
     project,
     environment,
     identity,
@@ -946,7 +946,7 @@ def test_get_all_feature_hide_disabled_flags(
     assert bool(identity_flags) == disabled_flag_returned
 
 
-def test_identity_get_all_feature_states_gets_latest_committed_version(environment):
+def test_identity_get_all_feature_states_gets_latest_committed_version(environment):  # type: ignore[no-untyped-def]
     # Given
     identity = Identity.objects.create(identifier="identity", environment=environment)
 
@@ -993,7 +993,7 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     assert identity_feature_state.get_feature_state_value() == "v2"
 
 
-def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(  # type: ignore[no-untyped-def]
     identity: Identity,
 ):
     assert (
@@ -1002,7 +1002,7 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_enabled(
     )
 
 
-def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
+def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(  # type: ignore[no-untyped-def]
     identity: Identity,
 ):
     assert identity.get_hash_key(use_identity_composite_key_for_hashing=False) == str(
@@ -1010,7 +1010,7 @@ def test_get_hash_key_with_use_identity_composite_key_for_hashing_disabled(
     )
 
 
-def test_identity_get_all_feature_states__returns_identity_override__when_v2_feature_versioning_enabled(
+def test_identity_get_all_feature_states__returns_identity_override__when_v2_feature_versioning_enabled(  # type: ignore[no-untyped-def]  # noqa: E501
     identity: Identity, environment_v2_versioning: "Environment", feature: Feature
 ):
     # Given

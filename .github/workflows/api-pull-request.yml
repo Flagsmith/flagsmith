@@ -64,6 +64,9 @@ jobs:
           opts: --no-input --dry-run --check
         run: make django-make-migrations
 
+      - name: Check for new typing errors
+        run: make typecheck
+
       - name: Run Tests
         env:
           DOTENV_OVERRIDE_FILE: .env-ci

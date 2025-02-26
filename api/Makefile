@@ -43,6 +43,10 @@ install: install-pip install-poetry install-packages
 lint:
 	poetry run pre-commit run -a
 
+.PHONY: typecheck
+typecheck:
+	poetry run mypy .
+
 .PHONY: docker-up
 docker-up:
 	docker compose up --force-recreate --remove-orphans -d
@@ -73,11 +77,20 @@ django-make-migrations:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
+.PHONY: django-squash-migrations
+django-squash-migrations:
+	poetry run python manage.py waitfordb
+	poetry run python manage.py squashmigrations $(opts)
+
 .PHONY: django-migrate
 django-migrate:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
 	poetry run python manage.py createcachetable
+
+.PHONY: django-shell
+django-shell:
+	poetry run python manage.py shell
 
 .PHONY: django-collect-static
 django-collect-static:
@@ -94,9 +107,23 @@ serve:
 generate-ld-client-types:
 	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
 	npx openapi-format /dev/fd/0 \
-		--filterFile ld-openapi-filter.yaml | \
+		--filterFile openapi-filter-launchdarkly.yaml | \
 	datamodel-codegen \
 		--output integrations/launch_darkly/types.py \
+		--output-model-type typing.TypedDict \
+		--target-python-version 3.10 \
+		--use-double-quotes \
+		--use-standard-collections \
+		--wrap-string-literal \
+		--special-field-name-prefix=
+
+.PHONY: generate-grafana-client-types
+generate-grafana-client-types:
+	curl -sSL https://raw.githubusercontent.com/grafana/grafana/refs/heads/main/public/openapi3.json | \
+	npx openapi-format /dev/fd/0 \
+		--filterFile openapi-filter-grafana.yaml | \
+	datamodel-codegen \
+		--output integrations/grafana/types.py \
 		--output-model-type typing.TypedDict \
 		--target-python-version 3.10 \
 		--use-double-quotes \

@@ -3,15 +3,13 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import abstract_base_auditable_model_factory
-from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.utils import timezone
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
     AFTER_SAVE,
@@ -20,7 +18,7 @@ from django_lifecycle import (
     hook,
 )
 from rest_framework.request import Request
-from softdelete.models import SoftDeleteObject
+from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
 from app.utils import create_hash
 from audit.constants import (
@@ -28,6 +26,8 @@ from audit.constants import (
     ENVIRONMENT_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from core.models import abstract_base_auditable_model_factory
+from core.request_origin import RequestOrigin
 from environments.api_keys import (
     generate_client_api_key,
     generate_server_api_key,
@@ -62,21 +62,21 @@ environment_api_key_wrapper = DynamoEnvironmentAPIKeyWrapper()
 
 
 class Environment(
-    LifecycleModel,
-    abstract_base_auditable_model_factory(
+    LifecycleModel,  # type: ignore[misc]
+    abstract_base_auditable_model_factory(  # type: ignore[misc]
         change_details_excluded_fields=["updated_at"],
         historical_records_excluded_fields=["uuid"],
     ),
-    SoftDeleteObject,
+    SoftDeleteObject,  # type: ignore[misc]
 ):
     history_record_class_path = "environments.models.HistoricalEnvironment"
     related_object_type = RelatedObjectType.ENVIRONMENT
 
-    name = models.CharField(max_length=2000)
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    created_date = models.DateTimeField("DateCreated", auto_now_add=True)
-    description = models.TextField(null=True, blank=True, max_length=20000)
-    project = models.ForeignKey(
+    name = models.CharField(max_length=2000)  # type: ignore[var-annotated]
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)  # type: ignore[var-annotated]
+    created_date = models.DateTimeField("DateCreated", auto_now_add=True)  # type: ignore[var-annotated]
+    description = models.TextField(null=True, blank=True, max_length=20000)  # type: ignore[var-annotated]
+    project = models.ForeignKey(  # type: ignore[var-annotated]
         "projects.Project",
         related_name="environments",
         help_text=(
@@ -90,29 +90,29 @@ class Environment(
         on_delete=models.DO_NOTHING,
     )
 
-    api_key = models.CharField(
+    api_key = models.CharField(  # type: ignore[var-annotated]
         default=generate_client_api_key, unique=True, max_length=100
     )
 
-    minimum_change_request_approvals = models.IntegerField(blank=True, null=True)
+    minimum_change_request_approvals = models.IntegerField(blank=True, null=True)  # type: ignore[var-annotated]
 
-    webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")
-    webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")
+    webhooks_enabled = models.BooleanField(default=False, help_text="DEPRECATED FIELD.")  # type: ignore[var-annotated]  # noqa: E501
+    webhook_url = models.URLField(null=True, blank=True, help_text="DEPRECATED FIELD.")  # type: ignore[var-annotated]
 
-    allow_client_traits = models.BooleanField(
+    allow_client_traits = models.BooleanField(  # type: ignore[var-annotated]
         default=True, help_text="Allows clients using the client API key to set traits."
     )
-    updated_at = models.DateTimeField(
+    updated_at = models.DateTimeField(  # type: ignore[var-annotated]
         default=timezone.now,
         help_text="Tracks changes to self and related entities, e.g. FeatureStates.",
     )
-    banner_text = models.CharField(null=True, blank=True, max_length=255)
-    banner_colour = models.CharField(
+    banner_text = models.CharField(null=True, blank=True, max_length=255)  # type: ignore[var-annotated]
+    banner_colour = models.CharField(  # type: ignore[var-annotated]
         null=True, blank=True, max_length=7, help_text="hex code for the banner colour"
     )
     metadata = GenericRelation(Metadata)
 
-    hide_disabled_flags = models.BooleanField(
+    hide_disabled_flags = models.BooleanField(  # type: ignore[var-annotated]
         null=True,
         blank=True,
         help_text=(
@@ -120,7 +120,7 @@ class Environment(
             " will override the project `hide_disabled_flags`"
         ),
     )
-    use_identity_composite_key_for_hashing = models.BooleanField(
+    use_identity_composite_key_for_hashing = models.BooleanField(  # type: ignore[var-annotated]
         default=True,
         help_text=(
             "Enable this to have consistent multivariate and percentage split evaluations "
@@ -128,18 +128,18 @@ class Environment(
         ),
         db_column="use_mv_v2_evaluation",  # see https://github.com/Flagsmith/flagsmith/issues/2186
     )
-    hide_sensitive_data = models.BooleanField(
+    hide_sensitive_data = models.BooleanField(  # type: ignore[var-annotated]
         default=False,
         help_text="If true, will hide sensitive data(e.g: traits, description etc) from the SDK endpoints",
     )
 
-    use_v2_feature_versioning = models.BooleanField(default=False)
-    use_identity_overrides_in_local_eval = models.BooleanField(
+    use_v2_feature_versioning = models.BooleanField(default=False)  # type: ignore[var-annotated]
+    use_identity_overrides_in_local_eval = models.BooleanField(  # type: ignore[var-annotated]
         default=True,
         help_text="When enabled, identity overrides will be included in the environment document",
     )
 
-    is_creating = models.BooleanField(
+    is_creating = models.BooleanField(  # type: ignore[var-annotated]
         default=False,
         help_text="Attribute used to indicate when an environment is still being created (via clone for example)",
     )
@@ -150,29 +150,32 @@ class Environment(
         ordering = ["id"]
 
     @hook(AFTER_CREATE)
-    def create_feature_states(self):
+    def create_feature_states(self):  # type: ignore[no-untyped-def]
         FeatureState.create_initial_feature_states_for_environment(environment=self)
 
     @hook(AFTER_UPDATE)
-    def clear_environment_cache(self):
+    def clear_environment_cache(self):  # type: ignore[no-untyped-def]
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
 
     @hook(AFTER_DELETE)
-    def delete_from_dynamo(self):
+    def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
         if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
             from environments.tasks import delete_environment_from_dynamo
 
             delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return (self.api_key,)
 
     def clone(
-        self, name: str, api_key: str = None, clone_feature_states_async: bool = False
+        self,
+        name: str,
+        api_key: str = None,  # type: ignore[assignment]
+        clone_feature_states_async: bool = False,
     ) -> "Environment":
         """
         Creates a clone of the environment, related objects and returns the
@@ -199,7 +202,7 @@ class Environment(
         return clone
 
     @staticmethod
-    def get_environment_from_request(request):
+    def get_environment_from_request(request):  # type: ignore[no-untyped-def]
         try:
             environment_key = request.META["HTTP_X_ENVIRONMENT_KEY"]
         except KeyError:
@@ -210,7 +213,7 @@ class Environment(
         ).get(api_key=environment_key)
 
     @classmethod
-    def get_from_cache(cls, api_key):
+    def get_from_cache(cls, api_key):  # type: ignore[no-untyped-def]
         try:
             if not api_key:
                 logger.warning("Requested environment with null api_key.")
@@ -243,7 +246,9 @@ class Environment(
 
     @classmethod
     def write_environments_to_dynamodb(
-        cls, environment_id: int = None, project_id: int = None
+        cls,
+        environment_id: int = None,  # type: ignore[assignment]
+        project_id: int = None,  # type: ignore[assignment]
     ) -> None:
         # use a list to make sure the entire qs is evaluated up front
         environments_filter = (
@@ -280,16 +285,18 @@ class Environment(
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
 
-        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):
+        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):  # type: ignore[union-attr]
             return
 
         environment_wrapper.write_environments(environments)
 
-        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:
+        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:  # type: ignore[union-attr]
             environment_v2_wrapper.write_environments(environments)
 
     def get_feature_state(
-        self, feature_id: int, filter_kwargs: dict = None
+        self,
+        feature_id: int,
+        filter_kwargs: dict = None,  # type: ignore[type-arg,assignment]
     ) -> typing.Optional[FeatureState]:
         """
         Get the corresponding feature state in an environment for a given feature id.
@@ -300,7 +307,7 @@ class Environment(
         if not filter_kwargs:
             filter_kwargs = {"feature_segment_id": None, "identity_id": None}
 
-        return next(
+        return next(  # type: ignore[no-any-return]
             filter(
                 lambda fs: fs.feature.id == feature_id,
                 self.feature_states.filter(**filter_kwargs),
@@ -309,7 +316,7 @@ class Environment(
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:
-        return (
+        return (  # type: ignore[no-any-return]
             settings.CACHE_BAD_ENVIRONMENTS_SECONDS > 0
             and bad_environments_cache.get(environment_key, 0)
             >= settings.CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES
@@ -350,7 +357,7 @@ class Environment(
                 )
             )
             environment_segments_cache.set(self.id, segments)
-        return segments
+        return segments  # type: ignore[no-any-return]
 
     @classmethod
     def get_environment_document(
@@ -361,17 +368,17 @@ class Environment(
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
-        return ENVIRONMENT_CREATED_MESSAGE % self.name
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        return ENVIRONMENT_CREATED_MESSAGE % self.name  # type: ignore[no-any-return]
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
-        return ENVIRONMENT_UPDATED_MESSAGE % self.name
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        return ENVIRONMENT_UPDATED_MESSAGE % self.name  # type: ignore[no-any-return]
 
     def get_hide_disabled_flags(self) -> bool:
         if self.hide_disabled_flags is not None:
-            return self.hide_disabled_flags
+            return self.hide_disabled_flags  # type: ignore[no-any-return]
 
-        return self.project.hide_disabled_flags
+        return self.project.hide_disabled_flags  # type: ignore[no-any-return]
 
     @classmethod
     def _get_environment_document_from_cache(
@@ -382,7 +389,7 @@ class Environment(
         if not environment_document:
             environment_document = cls._get_environment_document_from_db(api_key)
             environment_document_cache.set(api_key, environment_document)
-        return environment_document
+        return environment_document  # type: ignore[no-any-return]
 
     @classmethod
     def _get_environment_document_from_db(
@@ -424,10 +431,10 @@ class Environment(
         ).get()
         return map_environment_to_sdk_document(environment)
 
-    def _get_environment(self):
+    def _get_environment(self):  # type: ignore[no-untyped-def]
         return self
 
-    def _get_project(self):
+    def _get_project(self):  # type: ignore[no-untyped-def]
         return self.project
 
 
@@ -444,11 +451,11 @@ class Webhook(AbstractBaseExportableWebhookModel):
         feature: Feature,
         environment: Environment,
         enabled: bool,
-        value: typing.Union[str, int, bool, type(None)],
-        identity_id: typing.Union[int, str] = None,
-        identity_identifier: str = None,
-        feature_segment: FeatureSegment = None,
-    ) -> dict:
+        value: typing.Union[str, int, bool, type(None)],  # type: ignore[valid-type]
+        identity_id: typing.Union[int, str] = None,  # type: ignore[assignment]
+        identity_identifier: str = None,  # type: ignore[assignment]
+        feature_segment: FeatureSegment = None,  # type: ignore[assignment]
+    ) -> dict:  # type: ignore[type-arg]
         if (identity_id or identity_identifier) and not (
             identity_id and identity_identifier
         ):
@@ -494,21 +501,21 @@ class Webhook(AbstractBaseExportableWebhookModel):
         return data
 
 
-class EnvironmentAPIKey(LifecycleModel):
+class EnvironmentAPIKey(LifecycleModel):  # type: ignore[misc]
     """
     These API keys are only currently used for server side integrations.
     """
 
-    environment = models.ForeignKey(
+    environment = models.ForeignKey(  # type: ignore[var-annotated]
         Environment, on_delete=models.CASCADE, related_name="api_keys"
     )
-    key = models.CharField(default=generate_server_api_key, max_length=100, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    name = models.CharField(max_length=100)
-    expires_at = models.DateTimeField(blank=True, null=True)
-    active = models.BooleanField(default=True)
+    key = models.CharField(default=generate_server_api_key, max_length=100, unique=True)  # type: ignore[var-annotated]  # noqa: E501
+    created_at = models.DateTimeField(auto_now_add=True)  # type: ignore[var-annotated]
+    name = models.CharField(max_length=100)  # type: ignore[var-annotated]
+    expires_at = models.DateTimeField(blank=True, null=True)  # type: ignore[var-annotated]
+    active = models.BooleanField(default=True)  # type: ignore[var-annotated]
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return (self.key,)
 
     @property
@@ -516,11 +523,11 @@ class EnvironmentAPIKey(LifecycleModel):
         return self.active and (not self.expires_at or self.expires_at > timezone.now())
 
     @hook(AFTER_SAVE, when="_should_update_dynamo", is_now=True)
-    def send_to_dynamo(self):
+    def send_to_dynamo(self):  # type: ignore[no-untyped-def]
         environment_api_key_wrapper.write_api_key(self)
 
     @hook(AFTER_DELETE, when="_should_update_dynamo", is_now=True)
-    def delete_from_dynamo(self):
+    def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
         environment_api_key_wrapper.delete_api_key(self.key)
 
     @property

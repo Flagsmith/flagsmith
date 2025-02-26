@@ -17,6 +17,7 @@ export type PagedResponse<T> = {
   previous?: string
   results: T[]
 }
+
 export interface GitHubPagedResponse<T> extends PagedResponse<T> {
   incomplete_results: boolean
 }
@@ -323,7 +324,7 @@ export type Organisation = {
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
-  id?: string
+  id: string
   identifier: string
   identity_uuid?: string
   dashboard_alias?: string
@@ -390,6 +391,8 @@ export type IdentityFeatureState = {
     name: string
     type: FeatureType
   }
+  identity?: string
+  identity_uuid?: string
   enabled: boolean
   feature_state_value: FlagsmithValue
   segment: null
@@ -406,7 +409,6 @@ export type FeatureState = {
   id: number
   feature_state_value: FlagsmithValue
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  identity?: string
   uuid: string
   enabled: boolean
   created_at: string
@@ -455,18 +457,17 @@ export type ProjectFlag = {
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
+  environmentFlags: Record<number, FeatureState> | undefined
   error: boolean
   isLoading: boolean
 }
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
+    projectId: string,
+    environmentId: string,
+    projectFlag: ProjectFlag,
+    environmentFlags: FeatureState | undefined,
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }
@@ -709,6 +710,21 @@ export type ConversionEvent = {
   updated_at: string
   created_at: string
 }
+export type Webhook = {
+  id: number
+  url: string
+  secret: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type IdentityTrait = {
+  id: number | string
+  trait_key: string
+  trait_value: FlagsmithValue
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -718,6 +734,8 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  webhook: Webhook
+  webhooks: Webhook[]
   organisationUsage: {
     totals: {
       flags: number
@@ -749,7 +767,7 @@ export type Res = {
   account: Account
   userEmail: {}
   groupAdmin: { id: string }
-  groups: PagedResponse<UserGroupSummary>
+  groups: PagedResponse<UserGroup>
   group: UserGroup
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
@@ -824,7 +842,7 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
-  identityFeatureStates: PagedResponse<FeatureState>
+  identityFeatureStates: IdentityFeatureState[]
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
   samlConfiguration: SAMLConfiguration
@@ -835,6 +853,10 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identitySegments: PagedResponse<Segment>
+  organisationWebhooks: PagedResponse<Webhook>
+  identityTrait: { id: string }
+  identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   // END OF TYPES

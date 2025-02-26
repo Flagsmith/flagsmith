@@ -7,12 +7,10 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import {
   deleteIdentity,
-  useDeleteIdentityMutation,
   useGetIdentitiesQuery,
 } from 'common/services/useIdentity'
 import useSearchThrottle from 'common/useSearchThrottle'
 import { Req } from 'common/types/requests'
-import { Identity } from 'common/types/responses'
 import CreateUserModal from 'components/modals/CreateUser'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button' // we need this to make JSX compile
@@ -23,7 +21,6 @@ import PageTitle from 'components/PageTitle'
 import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
-import { index } from 'd3-array'
 
 type UsersPageType = {
   router: RouterChildContext['router']
@@ -61,6 +58,7 @@ export const removeIdentity = (
         id,
         isEdge: Utils.getIsEdge(),
       }).then((res) => {
+        // @ts-ignore
         if (res.error) {
           toast('Identity could not be removed', 'danger')
         } else {
@@ -189,7 +187,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   <Select
                     options={searchTypes}
                     value={searchTypes.find((v) => v.value === searchType)}
-                    onChange={(v) => {
+                    onChange={(v: { value: 'id' | 'alias' }) => {
                       setSearchType(v.value)
                     }}
                   />
@@ -207,10 +205,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
             title='Identities'
             className='no-pad'
             isLoading={isLoading}
-            filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
             items={identities?.results}
             paging={identities}
-            showExactFilter
             nextPage={() => {
               setPage({
                 number: page.number + 1,
@@ -240,8 +236,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
               })
             }}
             renderRow={(
-              { dashboard_alias, id, identifier, identity_uuid }: Identity,
-              index: number,
+              { dashboard_alias, id, identifier, identity_uuid },
+              index,
             ) =>
               permission ? (
                 <Row
@@ -331,7 +327,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
             }
             filterRow={() => true}
             search={searchInput}
-            onChange={(e: InputEvent) => {
+            onChange={(e) => {
               setSearchInput(Utils.safeParseEventValue(e))
             }}
           />

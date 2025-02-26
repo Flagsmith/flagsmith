@@ -9,7 +9,7 @@ from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 
 
-def test_migrate_calls_internal_methods_with_correct_arguments(
+def test_migrate_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]
     mocker, project, identity, settings, environment_api_key
 ):
     # Given
@@ -34,10 +34,10 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
         "environments.dynamodb.migrator.DynamoIdentityWrapper", autospec=True
     )
 
-    identity_migrator = IdentityMigrator(project.id)
+    identity_migrator = IdentityMigrator(project.id)  # type: ignore[no-untyped-call]
 
     # When
-    identity_migrator.migrate()
+    identity_migrator.migrate()  # type: ignore[no-untyped-call]
 
     # Then
     mocked_identity_wrapper.assert_called_with()
@@ -71,7 +71,7 @@ def test_migrate_calls_internal_methods_with_correct_arguments(
     assert project.enable_dynamo_db is True
 
 
-def test_trigger_migration_calls_internal_methods_with_correct_arguments(
+def test_trigger_migration_calls_internal_methods_with_correct_arguments(  # type: ignore[no-untyped-def]
     mocker, project
 ):
     # Given
@@ -87,10 +87,10 @@ def test_trigger_migration_calls_internal_methods_with_correct_arguments(
     )
     mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
 
-    identity_migrator = IdentityMigrator(project.id)
+    identity_migrator = IdentityMigrator(project.id)  # type: ignore[no-untyped-call]
 
     # When
-    identity_migrator.trigger_migration()
+    identity_migrator.trigger_migration()  # type: ignore[no-untyped-call]
 
     # Then
     mocked_project_metadata.get_or_new.assert_called_with(project.id)
@@ -98,7 +98,7 @@ def test_trigger_migration_calls_internal_methods_with_correct_arguments(
     mocked_send_migration_event.assert_called_once_with(project.id)
 
 
-def test_is_migration_done_returns_true_if_migration_is_completed(
+def test_is_migration_done_returns_true_if_migration_is_completed(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -113,14 +113,14 @@ def test_is_migration_done_returns_true_if_migration_is_completed(
 
     mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
 
-    identity_migrator = IdentityMigrator(project_id)
+    identity_migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
 
     # Then
     assert identity_migrator.is_migration_done is True
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
 
 
-def test_can_migrate_returns_true_if_migration_was_not_started(
+def test_can_migrate_returns_true_if_migration_was_not_started(  # type: ignore[no-untyped-def]
     mocker,
 ):
     # Given
@@ -135,7 +135,7 @@ def test_can_migrate_returns_true_if_migration_was_not_started(
 
     mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
 
-    identity_migrator = IdentityMigrator(project_id)
+    identity_migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
 
     # Then
     assert identity_migrator.can_migrate is True
@@ -143,7 +143,7 @@ def test_can_migrate_returns_true_if_migration_was_not_started(
     mocked_project_metadata.get_or_new.assert_called_with(project_id)
 
 
-def test_get_migration_status_returns_correct_migraion_status_for_in_progress_migration(
+def test_get_migration_status_returns_correct_migraion_status_for_in_progress_migration(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker,
 ):
     # Given
@@ -158,7 +158,7 @@ def test_get_migration_status_returns_correct_migraion_status_for_in_progress_mi
 
     mocked_project_metadata.get_or_new.return_value = mocked_project_metadata_instance
 
-    identity_migrator = IdentityMigrator(project_id)
+    identity_migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
 
     # When
     status = identity_migrator.migration_status

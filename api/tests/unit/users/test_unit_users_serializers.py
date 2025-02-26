@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 from users.serializers import UserIdsSerializer
 
 
-def test_user_ids_serializer_raises_exception_for_invalid_user_id(db):
+def test_user_ids_serializer_raises_exception_for_invalid_user_id(db):  # type: ignore[no-untyped-def]
     # Given
     serializer = UserIdsSerializer(data={"user_ids": [99999]})
 

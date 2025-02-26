@@ -1,11 +1,12 @@
 import typing
 from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import get_top_organisations
 from django.conf import settings
 from django.utils import timezone
 
-from .chargebee import get_subscription_metadata_from_id
+from app_analytics.influxdb_wrapper import get_top_organisations
+
+from .chargebee import get_subscription_metadata_from_id  # type: ignore[attr-defined]
 from .models import Organisation, OrganisationSubscriptionInformationCache
 from .subscriptions.constants import CHARGEBEE, SubscriptionCacheEntity
 
@@ -14,7 +15,7 @@ OrganisationSubscriptionInformationCacheDict = typing.Dict[
 ]
 
 
-def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):
+def update_caches(update_cache_entities: typing.Tuple[SubscriptionCacheEntity, ...]):  # type: ignore[no-untyped-def]
     """
     Update the cache objects for an update_cache_entity in the database.
     """
@@ -102,7 +103,7 @@ def _update_caches_with_influx_data(
                 setattr(subscription_info_cache, key, 0)
 
 
-def _update_caches_with_chargebee_data(
+def _update_caches_with_chargebee_data(  # type: ignore[no-untyped-def]
     organisations: typing.Iterable[Organisation],
     organisation_info_cache_dict: OrganisationSubscriptionInformationCacheDict,
 ):

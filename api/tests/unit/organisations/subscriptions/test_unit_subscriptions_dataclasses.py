@@ -4,14 +4,14 @@ from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 
 
 class SourceASubscriptionMetadata(BaseSubscriptionMetadata):
-    payment_source = "SOURCE_A"
+    payment_source = "SOURCE_A"  # type: ignore[assignment]
 
 
 class SourceBSubscriptionMetadata(BaseSubscriptionMetadata):
-    payment_source = "SOURCE_B"
+    payment_source = "SOURCE_B"  # type: ignore[assignment]
 
 
-def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_source():
+def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_source():  # type: ignore[no-untyped-def]
     # Given
     source_a_metadata = SourceASubscriptionMetadata(seats=1, api_calls=50000)
     source_b_metadata = SourceBSubscriptionMetadata(seats=1, api_calls=50000)
@@ -54,5 +54,5 @@ def test_base_subscription_metadata_add_raises_error_if_not_matching_payment_sou
         ),
     ),
 )
-def test_base_subscription_metadata_add(add_to, add, expected_result):
+def test_base_subscription_metadata_add(add_to, add, expected_result):  # type: ignore[no-untyped-def]
     assert add_to + add == expected_result

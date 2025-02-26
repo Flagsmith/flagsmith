@@ -8,8 +8,8 @@ from django.conf import settings
 T = TypeVar("T")
 
 
-def postpone(function):
-    def decorator(*args, **kwargs):
+def postpone(function):  # type: ignore[no-untyped-def]
+    def decorator(*args, **kwargs):  # type: ignore[no-untyped-def]
         if settings.ENABLE_POSTPONE_DECORATOR:  # pragma: no cover
             t = Thread(target=function, args=args, kwargs=kwargs)
             t.daemon = True

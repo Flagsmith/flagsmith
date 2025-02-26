@@ -1,19 +1,19 @@
-from google.rpc import code_pb2
-from opencensus.trace import execution_context
+from google.rpc import code_pb2  # type: ignore[import-untyped]
+from opencensus.trace import execution_context  # type: ignore[import-untyped]
 from opencensus.trace import span as span_module
 from opencensus.trace import status as status_module
 
 
 class QueryLogger:
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def]
         self.queries = []
 
-    def _get_current_tracer(self):
+    def _get_current_tracer(self):  # type: ignore[no-untyped-def]
         """Get the current request tracer."""
         return execution_context.get_opencensus_tracer()
 
-    def __call__(self, execute, sql, params, many, context):
-        tracer = self._get_current_tracer()
+    def __call__(self, execute, sql, params, many, context):  # type: ignore[no-untyped-def]
+        tracer = self._get_current_tracer()  # type: ignore[no-untyped-call]
         if not tracer:
             return execute(sql, params, many, context)
 

@@ -70,7 +70,7 @@ class Command(BaseCommand):
             help="Time to send the data point with. Defaults to current time.",
         )
 
-    def handle(
+    def handle(  # type: ignore[no-untyped-def]
         self,
         *args,
         tags: list[str],

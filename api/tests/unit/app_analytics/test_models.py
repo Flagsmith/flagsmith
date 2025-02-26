@@ -1,12 +1,13 @@
 import pytest
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
 from app_analytics.models import (
     APIUsageBucket,
     FeatureEvaluationBucket,
     Resource,
 )
-from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 
 if "analytics" not in settings.DATABASES:
     pytest.skip(
@@ -15,7 +16,7 @@ if "analytics" not in settings.DATABASES:
 
 
 @pytest.mark.django_db(databases=["analytics"])
-def test_creating_overlapping_api_usage_bucket_raises_error(db):
+def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore[no-untyped-def]
     # Given
     created_at = timezone.now()
     bucket_size = 15
@@ -44,7 +45,7 @@ def test_creating_overlapping_api_usage_bucket_raises_error(db):
 
 
 @pytest.mark.django_db(databases=["analytics"])
-def test_creating_overlapping_feature_evaluation_bucket_raises_error(db):
+def test_creating_overlapping_feature_evaluation_bucket_raises_error(db):  # type: ignore[no-untyped-def]
     # Given
     created_at = timezone.now()
     bucket_size = 15

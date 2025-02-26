@@ -4,23 +4,19 @@ import {
   useUpdateGroupMutation,
 } from 'common/services/useGroup'
 import { sortBy } from 'lodash'
-import { User, UserGroup, UserGroupSummary } from 'common/types/responses'
+import { GroupUser, UserGroupSummary } from 'common/types/responses'
 import Switch from './Switch'
 import PanelSearch from './PanelSearch'
 import ErrorMessage from './ErrorMessage'
 
 type UsersGroupsType = {
-  user: User
+  user: GroupUser
   orgId: number
 }
 const widths = [120]
 
 const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
-  const {
-    data,
-    error: groupsError,
-    isLoading,
-  } = useGetGroupsQuery({ orgId })
+  const { data, error: groupsError, isLoading } = useGetGroupsQuery({ orgId })
   const [updateGroup, { error: saveError, isLoading: isSaving }] =
     useUpdateGroupMutation({})
   const error = groupsError || saveError
@@ -72,7 +68,7 @@ const UsersGroups: FC<UsersGroupsType> = ({ orgId, user }) => {
             </Row>
           </>
         }
-        renderRow={(group: UserGroup) => {
+        renderRow={(group) => {
           const { external_id, id, name, users } = group
           const groupUser = users.find((v) => v.id === user.id)
           const isInGroup = !!groupUser

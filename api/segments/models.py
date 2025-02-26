@@ -3,15 +3,11 @@ import typing
 import uuid
 from copy import deepcopy
 
-from core.models import (
-    SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory,
-)
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     BEFORE_CREATE,
     LifecycleModelMixin,
@@ -25,19 +21,26 @@ from audit.constants import (
     SEGMENT_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from core.models import (
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory,
+)
 from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
 from .managers import LiveSegmentManager, SegmentManager
 
+if typing.TYPE_CHECKING:
+    from features.workflows.core.models import ChangeRequest
+
 logger = logging.getLogger(__name__)
 
 
 class Segment(
-    LifecycleModelMixin,
+    LifecycleModelMixin,  # type: ignore[misc]
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     history_record_class_path = "segments.models.HistoricalSegment"
     related_object_type = RelatedObjectType.SEGMENT
@@ -79,7 +82,7 @@ class Segment(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    objects = SegmentManager()
+    objects = SegmentManager()  # type: ignore[misc]
 
     # Only serves segments that are the canonical version.
     live_objects = LiveSegmentManager()
@@ -87,7 +90,7 @@ class Segment(
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Segment - %s" % self.name
 
     def get_skip_create_audit_log(self) -> bool:
@@ -100,7 +103,7 @@ class Segment(
         return False
 
     @staticmethod
-    def id_exists_in_rules_data(rules_data: typing.List[dict]) -> bool:
+    def id_exists_in_rules_data(rules_data: typing.List[dict]) -> bool:  # type: ignore[type-arg]
         """
         Given a list of segment rules, return whether any of the rules or conditions contain an id.
 
@@ -131,12 +134,12 @@ class Segment(
         return False
 
     @hook(BEFORE_CREATE, when="version_of", is_now=None)
-    def set_default_version_to_one_if_new_segment(self):
+    def set_default_version_to_one_if_new_segment(self):  # type: ignore[no-untyped-def]
         if self.version is None:
             self.version = 1
 
     @hook(AFTER_CREATE, when="version_of", is_now=None)
-    def set_version_of_to_self_if_none(self):
+    def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
         """
         This allows the segment model to reference all versions of
         itself including itself.
@@ -148,7 +151,7 @@ class Segment(
         self,
         name: str,
         description: str,
-        change_request: typing.Optional["ChangeRequest"],  # noqa: F821
+        change_request: typing.Optional["ChangeRequest"],
     ) -> "Segment":
         cloned_segment = Segment(
             version_of=self,
@@ -171,7 +174,7 @@ class Segment(
         cloned_segment.version_of = self
         cloned_segment.save()
 
-        self.version += 1
+        self.version += 1  # type: ignore[operator]
         self.save_without_historical_record()
 
         cloned_rules = []
@@ -189,22 +192,22 @@ class Segment(
 
         return cloned_segment
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_CREATED_MESSAGE % self.name
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_UPDATED_MESSAGE % self.name
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_DELETED_MESSAGE % self.name
 
-    def _get_project(self):
+    def _get_project(self):  # type: ignore[no-untyped-def]
         return self.project
 
 
 class SegmentRule(
     SoftDeleteExportableModel,
-    abstract_base_auditable_model_factory(["uuid"]),
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     ALL_RULE = "ALL"
     ANY_RULE = "ANY"
@@ -226,16 +229,17 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
-    def clean(self):
+    def clean(self):  # type: ignore[no-untyped-def]
         super().clean()
         parents = [self.segment, self.rule]
         num_parents = sum(parent is not None for parent in parents)
         if num_parents != 1:
             raise ValidationError(
-                "Segment rule must have exactly one parent, %d found", num_parents
+                "Segment rule must have exactly one parent, %d found",
+                num_parents,  # type: ignore[arg-type]
             )
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "%s rule for %s" % (
             self.type,
             str(self.segment) if self.segment else str(self.rule),
@@ -243,18 +247,18 @@ class SegmentRule(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
-            segment = self.get_segment()
+            segment = self.get_segment()  # type: ignore[no-untyped-call]
             if segment.deleted_at:
                 return True
-            return segment.version_of_id != segment.id
+            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
             return True
 
     def _get_project(self) -> typing.Optional[Project]:
-        return self.get_segment().project
+        return self.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
 
-    def get_segment(self):
+    def get_segment(self):  # type: ignore[no-untyped-def]
         """
         rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
         segment
@@ -263,7 +267,7 @@ class SegmentRule(
         """
         rule = self
         while not rule.segment_id:
-            rule = rule.rule
+            rule = rule.rule  # type: ignore[assignment]
         return rule.segment
 
     def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
@@ -316,7 +320,8 @@ class SegmentRule(
 
 
 class Condition(
-    SoftDeleteExportableModel, abstract_base_auditable_model_factory(["uuid"])
+    SoftDeleteExportableModel,
+    abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
 ):
     history_record_class_path = "segments.models.HistoricalCondition"
     related_object_type = RelatedObjectType.SEGMENT
@@ -357,7 +362,7 @@ class Condition(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Condition for %s: %s %s %s" % (
             str(self.rule),
             self.property,
@@ -367,31 +372,30 @@ class Condition(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
-
             if self.rule.deleted_at:
                 return True
 
-            segment = self.rule.get_segment()
+            segment = self.rule.get_segment()  # type: ignore[no-untyped-call]
             if segment.deleted_at:
                 return True
 
-            return segment.version_of_id != segment.id
+            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
             return True
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return f"Condition updated on segment '{self._get_segment().name}'."
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
         if not self.created_with_segment:
             return f"Condition added to segment '{self._get_segment().name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
         if not self._get_segment().deleted_at:
             return f"Condition removed from segment '{self._get_segment().name}'."
 
-    def get_audit_log_related_object_id(self, history_instance) -> int:
+    def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
         return self._get_segment().id
 
     def _get_segment(self) -> Segment:
@@ -399,11 +403,11 @@ class Condition(
         Temporarily cache the segment on the condition object to reduce number of queries.
         """
         if not hasattr(self, "segment"):
-            setattr(self, "segment", self.rule.get_segment())
-        return self.segment
+            setattr(self, "segment", self.rule.get_segment())  # type: ignore[no-untyped-call]
+        return self.segment  # type: ignore[no-any-return]
 
     def _get_project(self) -> typing.Optional[Project]:
-        return self.rule.get_segment().project
+        return self.rule.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
 
 
 class WhitelistedSegment(models.Model):

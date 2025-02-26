@@ -1,16 +1,16 @@
 import json
 
 import pytest
-from common.environments.permissions import (
+from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import VIEW_PROJECT
+from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
 from django.conf import settings
 from django.urls import reverse
 from pytest_django import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -147,7 +147,7 @@ def _list_feature_segment_setup_data(
     "client",
     [lazy_fixture("admin_client"), lazy_fixture("admin_master_api_key_client")],
 )
-def test_list_feature_segments_is_feature_specific(
+def test_list_feature_segments_is_feature_specific(  # type: ignore[no-untyped-def]
     segment,
     feature,
     environment,
@@ -179,7 +179,7 @@ def test_list_feature_segments_is_feature_specific(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_feature_segment(segment, feature, environment, client):
+def test_create_feature_segment(segment, feature, environment, client):  # type: ignore[no-untyped-def]
     # Given
     data = {
         "feature": feature.id,
@@ -197,7 +197,7 @@ def test_create_feature_segment(segment, feature, environment, client):
     assert response_json["id"]
 
 
-def test_create_feature_segment_without_permission_returns_403(
+def test_create_feature_segment_without_permission_returns_403(  # type: ignore[no-untyped-def]
     segment, feature, environment, test_user_client
 ):
     # Given
@@ -232,7 +232,7 @@ def test_create_feature_segment_staff_with_permission(
         "environment": environment.id,
     }
     url = reverse("api-v1:features:feature-segment-list")
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
 
     # When
     response = staff_client.post(
@@ -243,7 +243,7 @@ def test_create_feature_segment_staff_with_permission(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_create_feature_segment_staff_wrong_permission(
+def test_create_feature_segment_staff_wrong_permission(  # type: ignore[no-untyped-def]
     segment: Segment,
     feature: Feature,
     environment: Environment,
@@ -259,7 +259,7 @@ def test_create_feature_segment_staff_wrong_permission(
     }
     url = reverse("api-v1:features:feature-segment-list")
     # Former permission; no longer authorizes.
-    with_environment_permissions([UPDATE_FEATURE_STATE])
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
 
     # When
     response = staff_client.post(
@@ -274,7 +274,7 @@ def test_create_feature_segment_staff_wrong_permission(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_delete_feature_segment(segment, feature, environment, client):
+def test_delete_feature_segment(segment, feature, environment, client):  # type: ignore[no-untyped-def]
     # Given
     feature_segment = FeatureSegment.objects.create(
         feature=feature, environment=environment, segment=segment
@@ -293,7 +293,7 @@ def test_delete_feature_segment(segment, feature, environment, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_priority_of_multiple_feature_segments(
+def test_update_priority_of_multiple_feature_segments(  # type: ignore[no-untyped-def]
     feature_segment,
     project,
     client,
@@ -345,7 +345,7 @@ def test_update_priority_for_staff(
         {"id": feature_segment.id, "priority": 1},
     ]
 
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
 
     # When
     response = staff_client.post(
@@ -356,7 +356,7 @@ def test_update_priority_for_staff(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_update_priority_returns_403_if_user_does_not_have_permission(
+def test_update_priority_returns_403_if_user_does_not_have_permission(  # type: ignore[no-untyped-def]
     feature_segment,
     project,
     environment,
@@ -383,7 +383,7 @@ def test_update_priority_returns_403_if_user_does_not_have_permission(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_priorities_empty_list(client):
+def test_update_priorities_empty_list(client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
 
@@ -399,7 +399,7 @@ def test_update_priorities_empty_list(client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_feature_segment_by_uuid(
+def test_get_feature_segment_by_uuid(  # type: ignore[no-untyped-def]
     feature_segment, project, client, environment, feature
 ):
     # Given
@@ -431,8 +431,8 @@ def test_get_feature_segment_by_uuid_for_staff(
     url = reverse(
         "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
     )
-    with_environment_permissions([UPDATE_FEATURE_STATE])
-    with_project_permissions([VIEW_PROJECT])
+    with_environment_permissions([UPDATE_FEATURE_STATE])  # type: ignore[call-arg]
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(url)
@@ -444,7 +444,7 @@ def test_get_feature_segment_by_uuid_for_staff(
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
+def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(  # type: ignore[no-untyped-def]
     feature_segment, project, test_user_client, environment, feature
 ):
     # Given
@@ -463,7 +463,7 @@ def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_feature_segment_by_id(
+def test_get_feature_segment_by_id(  # type: ignore[no-untyped-def]
     feature_segment, project, client, environment, feature
 ):
     # Given
@@ -479,7 +479,7 @@ def test_get_feature_segment_by_id(
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-def test_get_feature_segment_by_id_for_staff(
+def test_get_feature_segment_by_id_for_staff(  # type: ignore[no-untyped-def]
     feature_segment: FeatureSegment,
     project: Project,
     staff_client: FFAdminUser,
@@ -491,7 +491,7 @@ def test_get_feature_segment_by_id_for_staff(
     # Given
     url = reverse("api-v1:features:feature-segment-detail", args=[feature_segment.id])
 
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
     user_project_permission = UserProjectPermission.objects.create(
         user=staff_user, project=project
     )
@@ -511,7 +511,7 @@ def test_get_feature_segment_by_id_for_staff(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(
+def test_creating_segment_override_for_feature_based_segment_returns_400_for_wrong_feature(  # type: ignore[no-untyped-def]  # noqa: E501
     client, feature_based_segment, project, environment
 ):
     # Given - A different feature
@@ -539,7 +539,7 @@ def test_creating_segment_override_for_feature_based_segment_returns_400_for_wro
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(
+def test_creating_segment_override_for_feature_based_segment_returns_201_for_correct_feature(  # type: ignore[no-untyped-def]  # noqa: E501
     client, feature_based_segment, project, environment, feature
 ):
     # Given
@@ -560,7 +560,7 @@ def test_creating_segment_override_for_feature_based_segment_returns_201_for_cor
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_segment_override_reaching_max_limit(
+def test_creating_segment_override_reaching_max_limit(  # type: ignore[no-untyped-def]
     client, segment, environment, project, feature, feature_based_segment
 ):
     # Given
@@ -608,8 +608,8 @@ def test_get_feature_segments_only_returns_latest_version(
         feature.id,
         environment_v2_versioning.id,
     )
-    with_project_permissions([VIEW_PROJECT])
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # grab the current version (v0)
     version_0 = EnvironmentFeatureVersion.objects.get(
@@ -671,8 +671,8 @@ def test_delete_feature_segment_does_not_create_audit_log_for_versioning_v2(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
-    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES, VIEW_ENVIRONMENT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES, VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # we first need to create a new version so that we can modify the feature segment
     # that is generated as part of the new version

@@ -1,9 +1,11 @@
 from django.conf import settings
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
 
-@register_task_handler()
-def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:
+@register_task_handler()  # type: ignore[misc]
+def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
@@ -28,7 +30,7 @@ def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:
     hubspot_lead_tracker.create_lead(**create_lead_kwargs)
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def update_hubspot_active_subscription(subscription_id: int) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
@@ -41,7 +43,7 @@ def update_hubspot_active_subscription(subscription_id: int) -> None:
     hubspot_lead_tracker.update_company_active_subscription(subscription)
 
 
-@register_task_handler()
+@register_task_handler()  # type: ignore[misc]
 def track_hubspot_lead_without_organisation(user_id: int) -> None:
     """
     The Hubspot logic relies on users joining or creating an organisation

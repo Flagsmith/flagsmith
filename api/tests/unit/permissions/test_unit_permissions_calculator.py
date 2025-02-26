@@ -1,9 +1,12 @@
 import pytest
-from common.environments.permissions import (
+from common.environments.permissions import (  # type: ignore[import-untyped]
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_ENVIRONMENT,
+    VIEW_PROJECT,
+)
 
 from environments.permissions.models import (
     EnvironmentPermissionModel,
@@ -63,7 +66,7 @@ from users.models import UserPermissionGroup
         ),
     ),
 )
-def test_project_permissions_calculator_get_permission_data(
+def test_project_permissions_calculator_get_permission_data(  # type: ignore[no-untyped-def]
     project,
     organisation,
     django_user_model,
@@ -150,7 +153,7 @@ def test_project_permissions_calculator_get_permission_data(
         ),
     ),
 )
-def test_environment_permissions_calculator_get_permission_data(
+def test_environment_permissions_calculator_get_permission_data(  # type: ignore[no-untyped-def]
     environment,
     organisation,
     django_user_model,
@@ -203,7 +206,7 @@ def test_environment_permissions_calculator_get_permission_data(
     assert user_permission_data.permissions == expected_permissions
 
 
-def test_environment_permissions_calculator_returns_admin_for_project_admin(
+def test_environment_permissions_calculator_returns_admin_for_project_admin(  # type: ignore[no-untyped-def]
     environment, project, organisation, django_user_model
 ):
     # Given
@@ -241,7 +244,7 @@ def test_environment_permissions_calculator_returns_admin_for_project_admin(
         ),
     ),
 )
-def test_organisation_permissions_calculator_get_permission_data(
+def test_organisation_permissions_calculator_get_permission_data(  # type: ignore[no-untyped-def]
     organisation,
     django_user_model,
     user_permissions,

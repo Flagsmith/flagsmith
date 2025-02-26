@@ -19,7 +19,7 @@ def get_edge_identity_overrides(
     )
     return [
         IdentityOverrideV2.model_validate(
-            {**item, "environment_id": str(item["environment_id"])}
+            {**item, "environment_id": str(item["environment_id"])}  # type: ignore[dict-item,index]
         )
         for item in override_items
     ]
@@ -42,9 +42,9 @@ def get_edge_identity_overrides_for_feature_ids(
             IdentityOverrideV2.model_validate(
                 {**item, "environment_id": str(item["environment_id"])}
             )
-            for item in identity_overrides_query_response.items
+            for item in identity_overrides_query_response.items  # type: ignore[union-attr]
         ]
-        complete = identity_overrides_query_response.is_num_identity_overrides_complete
+        complete = identity_overrides_query_response.is_num_identity_overrides_complete  # type: ignore[union-attr]
         results.append(
             IdentityOverridesV2List(
                 identity_overrides=identity_overrides,

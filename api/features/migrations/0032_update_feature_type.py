@@ -5,12 +5,12 @@ from django.db import migrations
 from features.feature_types import CONFIG, FLAG, STANDARD
 
 
-def update_feature_type(apps, schema_editor):
+def update_feature_type(apps, schema_editor):  # type: ignore[no-untyped-def]
     Feature = apps.get_model("features", "Feature")
     Feature.objects.filter(type__in=[FLAG, CONFIG]).update(type=STANDARD)
 
 
-def reverse(apps, schema_editor):
+def reverse(apps, schema_editor):  # type: ignore[no-untyped-def]
     # we cannot accurately determine which should be flags, configs or standard so we
     # just ignore the reverse path for now.
     pass

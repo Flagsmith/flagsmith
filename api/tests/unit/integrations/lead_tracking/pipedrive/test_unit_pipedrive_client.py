@@ -7,7 +7,7 @@ from integrations.lead_tracking.pipedrive.constants import MarketingStatus
 
 
 @responses.activate
-def test_pipedrive_api_client_create_lead(
+def test_pipedrive_api_client_create_lead(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -36,13 +36,13 @@ def test_pipedrive_api_client_create_lead(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    request_body = json.loads(call.request.body.decode("utf-8"))
+    request_body = json.loads(call.request.body.decode("utf-8"))  # type: ignore[union-attr]
     assert request_body == {
         "title": title,
         "organization_id": organization_id,
         "label_ids": [],
     }
-    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
 
     assert lead.id == lead_id
     assert lead.title == title
@@ -50,7 +50,7 @@ def test_pipedrive_api_client_create_lead(
 
 
 @responses.activate
-def test_pipedrive_api_client_create_organization(
+def test_pipedrive_api_client_create_organization(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -81,12 +81,12 @@ def test_pipedrive_api_client_create_organization(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    request_body = json.loads(call.request.body.decode("utf-8"))
+    request_body = json.loads(call.request.body.decode("utf-8"))  # type: ignore[union-attr]
     assert request_body == {
         "name": name,
         organization_field_key: organization_field_value,
     }
-    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
 
     assert organization.id == organization_id
     assert organization.name == name
@@ -94,7 +94,7 @@ def test_pipedrive_api_client_create_organization(
 
 
 @responses.activate
-def test_pipedrive_api_client_search_organizations(
+def test_pipedrive_api_client_search_organizations(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -121,9 +121,9 @@ def test_pipedrive_api_client_search_organizations(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    assert call.request.params["api_token"] == pipedrive_api_token
-    assert call.request.params["term"] == search_term
-    assert call.request.params["fields"] == "custom_fields"
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
+    assert call.request.params["term"] == search_term  # type: ignore[union-attr]
+    assert call.request.params["fields"] == "custom_fields"  # type: ignore[union-attr]
 
     assert len(organizations) == 1
     assert organizations[0].name == result_organization_name
@@ -131,7 +131,7 @@ def test_pipedrive_api_client_search_organizations(
 
 
 @responses.activate
-def test_pipedrive_api_client_search_persons(
+def test_pipedrive_api_client_search_persons(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -158,8 +158,8 @@ def test_pipedrive_api_client_search_persons(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    assert call.request.params["api_token"] == pipedrive_api_token
-    assert call.request.params["term"] == search_term
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
+    assert call.request.params["term"] == search_term  # type: ignore[union-attr]
 
     assert len(persons) == 1
     assert persons[0].name == result_person_name
@@ -167,7 +167,7 @@ def test_pipedrive_api_client_search_persons(
 
 
 @responses.activate
-def test_pipedrive_api_client_create_organization_field(
+def test_pipedrive_api_client_create_organization_field(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -196,14 +196,14 @@ def test_pipedrive_api_client_create_organization_field(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
 
     assert organization_field.key == organization_field_key
     assert organization_field.name == organization_field_name
 
 
 @responses.activate
-def test_pipedrive_api_client_create_deal_field(
+def test_pipedrive_api_client_create_deal_field(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -230,14 +230,14 @@ def test_pipedrive_api_client_create_deal_field(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
 
     assert organization_field.key == deal_field_key
     assert organization_field.name == deal_field_name
 
 
 @responses.activate
-def test_pipedrive_api_client_create_person(
+def test_pipedrive_api_client_create_person(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -267,9 +267,9 @@ def test_pipedrive_api_client_create_person(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
 
-    json_request_body = json.loads(call.request.body)
+    json_request_body = json.loads(call.request.body)  # type: ignore[union-attr]
     assert json_request_body["name"] == person_name
     assert json_request_body["email"] == person_email
     assert json_request_body["marketing_status"] == marketing_status
@@ -279,7 +279,7 @@ def test_pipedrive_api_client_create_person(
 
 
 @responses.activate
-def test_pipedrive_api_client_list_lead_labels(
+def test_pipedrive_api_client_list_lead_labels(  # type: ignore[no-untyped-def]
     pipedrive_api_client, pipedrive_base_url, pipedrive_api_token
 ):
     # Given
@@ -305,7 +305,7 @@ def test_pipedrive_api_client_list_lead_labels(
     # Then
     assert len(responses.calls) == 1
     call = responses.calls[0]
-    assert call.request.params["api_token"] == pipedrive_api_token
+    assert call.request.params["api_token"] == pipedrive_api_token  # type: ignore[union-attr]
 
     assert len(persons) == 1
     assert persons[0].name == result_label_name
