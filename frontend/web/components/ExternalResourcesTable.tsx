@@ -166,7 +166,7 @@ const ExternalResourcesTable: FC<ExternalResourcesTableType> = ({
             </div>
           </Row>
         }
-        renderRow={(v: ExternalResource) => (
+        renderRow={(v) => (
           <ExternalResourceRow
             key={v.id}
             featureId={featureId}

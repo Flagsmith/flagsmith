@@ -238,7 +238,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
         filter={envFilter}
         search={searchInput}
         searchPanel={props.searchPanel}
-        onChange={(e: InputEvent) => {
+        onChange={(e) => {
           setSearchInput(Utils.safeParseEventValue(e))
         }}
         paging={{

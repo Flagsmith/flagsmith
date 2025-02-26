@@ -221,7 +221,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             </Row>
           }
           items={metadataFieldsAssociatedtoEntity}
-          renderRow={(m: CustomMetadata) => {
+          renderRow={(m) => {
             return (
               <MetadataRow
                 metadata={m}

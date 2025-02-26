@@ -51,7 +51,7 @@ const GithubRepositoriesTable: FC<GithubRepositoriesTableType> = ({
             </div>
           </Row>
         }
-        renderRow={(repo: GithubRepository) => (
+        renderRow={(repo) => (
           <TableRow
             repo={repo}
             githubId={githubId}

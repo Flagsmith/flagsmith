@@ -123,7 +123,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
             </div>
           </Row>
         }
-        renderRow={(role: Role, index: number) => (
+        renderRow={(role, index) => (
           <Row
             className='list-item clickable cursor-pointer'
             key={role.id}

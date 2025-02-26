@@ -169,7 +169,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                   <Flex className='table-column'>Webhook URL</Flex>
                 </Row>
               }
-              renderRow={(provider: HealthProvider) => {
+              renderRow={(provider) => {
                 const { name, webhook_url: webhook } = provider
                 const matchingPermissions = {
                   admin: true,

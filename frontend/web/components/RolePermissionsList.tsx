@@ -22,7 +22,7 @@ type RolePermissionsListProps = {
   ref?: Ref<any>
   level: PermissionLevel
   filter: string
-  orgId?: string
+  orgId?: number
   user?: User
   group?: UserGroupSummary
 }
@@ -101,7 +101,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
             <Flex className='px-3'>Name</Flex>
           </Row>
         }
-        renderRow={(mainItem: NameAndId, index: number) => (
+        renderRow={(mainItem, index) => (
           <div
             className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
             data-test={`permissions-${mainItem.name.toLowerCase()}`}
@@ -121,8 +121,8 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
                 <div className={'list-item-subtitle'}>
                   <PermissionsSummary
                     level={level}
-                    levelId={mainItem.id}
-                    organisationId={orgId}
+                    levelId={mainItem.id as number}
+                    organisationId={orgId!}
                     role={role}
                   />
                 </div>
@@ -141,7 +141,7 @@ const RolePermissionsList: React.FC<RolePermissionsListProps> = forwardRef(
             <div>
               {expandedItems.includes(mainItem.id) && (
                 <EditPermissionsModal
-                  id={mainItem.id}
+                  id={mainItem.id as number}
                   level={level}
                   role={role}
                   className='mt-2 px-3'

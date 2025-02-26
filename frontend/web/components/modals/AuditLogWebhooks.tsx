@@ -90,7 +90,7 @@ const AuditLogWebhooks: FC<AuditLogWebhooksType> = ({ organisationId }) => {
           id='webhook-list'
           className='no-pad'
           items={webhooks?.results}
-          renderRow={(webhook: Webhook) => (
+          renderRow={(webhook) => (
             <Row
               onClick={() => {
                 editWebhook(webhook)

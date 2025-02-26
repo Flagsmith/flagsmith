@@ -159,7 +159,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                 isLoading={FeatureListStore.isLoading}
                 paging={FeatureListStore.paging}
                 nextPage={() => setPage(page + 1)}
-                renderRow={(projectFlag: ProjectFlag, i: number) => (
+                renderRow={(projectFlag, i) => (
                   <FeatureRow
                     readOnly
                     hideRemove
@@ -202,9 +202,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
               <Flex className='table-column px-3'>Export</Flex>
             </Row>
           }
-          renderRow={(data: FeatureExportType) => (
-            <FeatureExportItem data={data} />
-          )}
+          renderRow={(data) => <FeatureExportItem data={data} />}
         />
       )}
     </div>

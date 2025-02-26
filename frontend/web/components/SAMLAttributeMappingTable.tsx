@@ -47,7 +47,7 @@ const SAMLAttributeMappingTable: FC<SAMLAttributeMappingTableType> = ({
           </Row>
         }
         items={data?.results || []}
-        renderRow={(attribute: SAMLAttributeMapping) => (
+        renderRow={(attribute) => (
           <Row
             space
             className='list-item'

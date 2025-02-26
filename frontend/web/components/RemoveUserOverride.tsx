@@ -1,7 +1,11 @@
 import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature'
 import React from 'react'
 import AppActions from 'common/dispatcher/app-actions'
-import { FeatureState, ProjectFlag } from 'common/types/responses'
+import {
+  FeatureState,
+  IdentityFeatureState,
+  ProjectFlag,
+} from 'common/types/responses'
 export const removeUserOverride = ({
   cb,
   environmentId,
@@ -13,7 +17,7 @@ export const removeUserOverride = ({
   environmentId: string
   identifier: string
   identity: string
-  identityFlag: FeatureState
+  identityFlag: IdentityFeatureState
   projectFlag: ProjectFlag
   cb?: () => void
 }) => {

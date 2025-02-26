@@ -101,7 +101,7 @@ const ContentTypesMetadataFieldTable: FC<
         </Row>
       }
       items={selectedContentTypes}
-      renderRow={(s: selectedContentType) => (
+      renderRow={(s) => (
         <ContentTypesMetadataRow
           item={s}
           isEdit={isEdit}

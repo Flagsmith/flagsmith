@@ -416,7 +416,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                 </div>
               </Row>
             }
-            renderRow={(projectFlag: ProjectFlag, i: number) => (
+            renderRow={(projectFlag, i) => (
               <FeatureRow
                 hideAudit
                 disableControls

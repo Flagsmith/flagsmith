@@ -4,9 +4,7 @@ import AccountProvider from 'common/providers/AccountProvider'
 import CreateOrganisationModal from 'components/modals/CreateOrganisation'
 import { Organisation, User } from 'common/types/responses'
 import Utils from 'common/utils/utils'
-import AccountStore from 'common/stores/account-store'
 import Icon from 'components/Icon'
-import Project from 'common/project'
 import PanelSearch from 'components/PanelSearch'
 import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext } from 'react-router'
@@ -27,7 +25,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
   }
   return (
     <AccountProvider onSave={onSave}>
-      {({ user }: { user: User }) => {
+      {({ user }: { user: User & { organisations: Organisation[] } }) => {
         return (
           <div className='app-container container'>
             <PanelSearch
@@ -52,8 +50,8 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
                   team.
                 </div>
               }
-              items={user?.organisations || []}
-              renderRow={({ id, name }: Organisation, i: number) => {
+              items={(user?.organisations || []) as Organisation[]}
+              renderRow={({ id, name }, i) => {
                 return (
                   <>
                     {i === 0 && (
