@@ -273,7 +273,7 @@ export class CreateAPIKey extends PureComponent {
                 <DateSelect
                   onChange={(e) => {
                     this.setState({
-                      expiry_date: e.toISOString(),
+                      expiry_date: e?.toISOString(),
                     })
                   }}
                   selected={expiry_date ? moment(expiry_date)._d : null}

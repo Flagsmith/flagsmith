@@ -1,15 +1,39 @@
-import DatePicker from 'react-datepicker'
+import DatePicker, { DatePickerProps } from 'react-datepicker'
 import Icon from './Icon'
-import { useState } from 'react'
+import { useState, FC } from 'react'
 
-const DateSelect = ({ dateFormat, onChange, onSelect, selected, value }) => {
-  const [isMonthPicker, setMonthPicker] = useState(false)
-  const [isYearPicker, setYearPicker] = useState(false)
-  const [isOpen, setOpen] = useState(false)
+export interface DateSelectProps
+  extends Pick<DatePickerProps, 'dateFormat' | 'selected'> {
+  value?: DatePickerProps['value']
+  className?: string
+  isValid?: boolean
+  onChange?: (
+    date: Date | null,
+    event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>,
+  ) => void
+}
+
+const DateSelect: FC<DateSelectProps> = ({
+  className,
+  dateFormat,
+  isValid,
+  onChange,
+  selected,
+  value,
+}) => {
+  const [isMonthPicker, setIsMonthPicker] = useState(false)
+  const [isYearPicker, setIsYearPicker] = useState(false)
+  const [touched, setTouched] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
     <Flex style={{ position: 'relative' }}>
       <DatePicker
+        className={`input-lg ${className} ${
+          !isValid && touched ? 'invalid' : ''
+        }`}
         dateFormat={dateFormat}
+        onFocus={() => setTouched(true)}
         renderCustomHeader={({
           date,
           decreaseMonth,
@@ -32,9 +56,9 @@ const DateSelect = ({ dateFormat, onChange, onSelect, selected, value }) => {
             </span>
             <div
               onClick={() => {
-                setMonthPicker(true)
+                setIsMonthPicker(true)
                 if (isMonthPicker) {
-                  setYearPicker(true)
+                  setIsYearPicker(true)
                 }
               }}
               className='react-datepicker-header-title'
@@ -64,25 +88,33 @@ const DateSelect = ({ dateFormat, onChange, onSelect, selected, value }) => {
           </Row>
         )}
         minDate={new Date()}
-        onChange={(date, e) => {
-          if (date < new Date()) {
-            setMonthPicker(false)
-            setYearPicker(false)
-            onChange(new Date())
-          } else {
-            onChange(date)
-            if (!e) {
-              setOpen(false)
-            }
-            if (isMonthPicker) {
-              setMonthPicker(false)
-            }
-            if (isYearPicker) {
-              setYearPicker(false)
-            }
+        onChange={(date, e): DatePickerProps['onChange'] => {
+          if (date === null) {
+            setIsMonthPicker(false)
+            setIsYearPicker(false)
+            onChange?.(null)
+            return
+          }
+
+          const today = new Date()
+          if (date < today) {
+            setIsMonthPicker(false)
+            setIsYearPicker(false)
+            onChange?.(new Date())
+            return
+          }
+
+          onChange?.(date)
+          if (!e) {
+            setIsOpen(false)
+          }
+          if (isMonthPicker) {
+            setIsMonthPicker(false)
+          }
+          if (isYearPicker) {
+            setIsYearPicker(false)
           }
         }}
-        className='input-lg'
         formatWeekDay={(nameOfDay) => nameOfDay.substr(0, 1)}
         showTimeSelect={!isMonthPicker && !isYearPicker}
         showMonthYearPicker={isMonthPicker}
@@ -92,12 +124,12 @@ const DateSelect = ({ dateFormat, onChange, onSelect, selected, value }) => {
         selected={selected}
         value={value}
         timeFormat='HH:mm'
-        onInputClick={() => setOpen(true)}
+        onInputClick={() => setIsOpen(true)}
         onClickOutside={(e) => {
           if (e) {
-            setOpen(false)
-            setMonthPicker(false)
-            setYearPicker(false)
+            setIsOpen(false)
+            setIsMonthPicker(false)
+            setIsYearPicker(false)
           }
         }}
         open={isOpen}
