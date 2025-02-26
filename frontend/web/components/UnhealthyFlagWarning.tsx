@@ -1,51 +1,38 @@
 import { FC } from 'react'
 import Constants from 'common/constants'
-import { ProjectFlag } from 'common/types/responses'
+import { HealthEvent } from 'common/types/responses'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
-import { useGetTagsQuery } from 'common/services/useTag'
-import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 
 type UnhealthyFlagWarningType = {
-  projectFlag: ProjectFlag
+  featureUnhealthyEvents?: HealthEvent[]
+  onClick?: (e?: React.MouseEvent) => void
 }
 
 const UnhealthyFlagWarning: FC<UnhealthyFlagWarningType> = ({
-  projectFlag,
+  featureUnhealthyEvents,
+  onClick,
 }) => {
-  const { data: tags } = useGetTagsQuery(
-    { projectId: String(projectFlag.project) },
-    { refetchOnFocus: false, skip: !projectFlag?.project },
-  )
-  const { data: healthEvents } = useGetHealthEventsQuery(
-    { projectId: String(projectFlag.project) },
-    { refetchOnFocus: false, skip: !projectFlag?.project },
-  )
-  const unhealthyTagId = tags?.find((tag) => tag.type === 'UNHEALTHY')?.id
-  const latestHealthEvent = healthEvents?.find(
-    (event) => event.feature === projectFlag.id,
-  )
-
-  if (
-    !unhealthyTagId ||
-    !projectFlag?.tags?.includes(unhealthyTagId) ||
-    latestHealthEvent?.type !== 'UNHEALTHY'
-  )
-    return null
+  if (!featureUnhealthyEvents?.length) return null
 
   return (
     <Tooltip
       title={
-        <div className='fs-caption' style={{ color: Constants.tagColors[16] }}>
-          {/* TODO: Provider info and link to issue will be provided by reason via the API */}
-          {latestHealthEvent.reason}
-          {latestHealthEvent.reason && (
+        <div
+          className='fs-caption'
+          style={{ color: Constants.featureHealth.unhealthyColor }}
+          onClick={onClick}
+        >
+          <div>
+            This feature has {featureUnhealthyEvents?.length} active alert
+            {featureUnhealthyEvents?.length > 1 ? 's' : ''}. Check them in the
+            'Feature Health' tab.
             <IonIcon
               style={{ marginBottom: -2 }}
               className='ms-1'
               icon={warning}
             />
-          )}
+          </div>
         </div>
       }
     >
