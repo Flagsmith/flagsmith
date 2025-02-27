@@ -16,7 +16,6 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
   organisationId: string
-  projectId: string
 }
 
 type MergeMetadata = {
@@ -28,7 +27,7 @@ type MergeMetadata = {
   organisation: number
 }
 
-const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
+const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
   const { data: metadataFieldList } = useGetMetadataFieldListQuery({
     organisation: organisationId,
   })
