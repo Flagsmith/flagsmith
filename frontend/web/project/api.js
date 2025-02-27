@@ -96,6 +96,21 @@ global.API = {
       amplitude.setUserId(id)
       const identify = new amplitude.Identify().set('email', id)
       amplitude.identify(identify)
+      if (typeof window.engagement !== 'undefined') {
+        window.engagement.boot({
+          integrations: [
+            {
+              track: (event) => {
+                amplitude.track(event.event_type, event.event_properties)
+              },
+            },
+          ],
+          user: {
+            user_id: id,
+            user_properties: {},
+          },
+        })
+      }
     }
     API.flagsmithIdentify()
   },
