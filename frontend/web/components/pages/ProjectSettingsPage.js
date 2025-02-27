@@ -603,12 +603,6 @@ const ProjectSettingsPage = class extends Component {
                         roles={this.state.roles}
                       />
                     </TabItem>
-                    <TabItem tabLabel='Custom Fields'>
-                      <MetadataPage
-                        organisationId={AccountStore.getOrganisation().id}
-                        projectId={this.props.match.params.projectId}
-                      />
-                    </TabItem>
                     {!!ProjectStore.getEnvs()?.length && (
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage
