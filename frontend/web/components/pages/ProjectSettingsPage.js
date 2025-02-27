@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
-import MetadataPage from 'components/metadata/MetadataPage'
 import EditPermissions from 'components/EditPermissions'
 import Switch from 'components/Switch'
 import _data from 'common/data/base/_data'

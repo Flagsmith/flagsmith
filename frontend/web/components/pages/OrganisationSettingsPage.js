@@ -432,7 +432,6 @@ const OrganisationSettingsPage = class extends Component {
                           <TabItem tabLabel='Custom Fields'>
                             <MetadataPage
                               organisationId={AccountStore.getOrganisation().id}
-                              projectId={AccountStore.getOrganisation()}
                             />
                           </TabItem>
                         )}
