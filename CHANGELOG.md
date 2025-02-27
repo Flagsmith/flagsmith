@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.164.0](https://github.com/Flagsmith/flagsmith/compare/v2.163.0...v2.164.0) (2025-02-26)
+
+
+### Features
+
+* Add separate liveness and readiness checks ([#5151](https://github.com/Flagsmith/flagsmith/issues/5151)) ([27a69a9](https://github.com/Flagsmith/flagsmith/commit/27a69a95b4a52262a665e63e97d3f342d4492f1b))
+* Adds unhealthy events reason ([#5157](https://github.com/Flagsmith/flagsmith/issues/5157)) ([21aca25](https://github.com/Flagsmith/flagsmith/commit/21aca25c63b930ed615a46c2fa4502f11fc3fc3e))
+
+
+### Bug Fixes
+
+* allow identity overrides to be created for non-existent identities ([#5081](https://github.com/Flagsmith/flagsmith/issues/5081)) ([c61839e](https://github.com/Flagsmith/flagsmith/commit/c61839e0bea2999f32deb4232c0ed28b2d57e71c))
+* default scheduled changes ([#5141](https://github.com/Flagsmith/flagsmith/issues/5141)) ([c7533a8](https://github.com/Flagsmith/flagsmith/commit/c7533a80772c9a97b443316dcf7816a5d7c6a16e))
+* feature panel url updating url when opening ([#5159](https://github.com/Flagsmith/flagsmith/issues/5159)) ([4657071](https://github.com/Flagsmith/flagsmith/commit/46570719d361f1cc9c4fbf789f9f2bbfbf30256e))
+* Hides unhealthy tag ([#5158](https://github.com/Flagsmith/flagsmith/issues/5158)) ([e4f2a49](https://github.com/Flagsmith/flagsmith/commit/e4f2a49f160a1ccabbfb06fcf89a13b054b551a2))
+* Treat 0 padded number as string ([#5137](https://github.com/Flagsmith/flagsmith/issues/5137)) ([65058e3](https://github.com/Flagsmith/flagsmith/commit/65058e30f565519febc28981c1f787c50e428c6d))
+* widget search ([#5162](https://github.com/Flagsmith/flagsmith/issues/5162)) ([0289c97](https://github.com/Flagsmith/flagsmith/commit/0289c97c501c3a592d4cb8db1e28479ad9206e28))
+
 ## [2.163.0](https://github.com/Flagsmith/flagsmith/compare/v2.162.0...v2.163.0) (2025-02-21)
 
 
