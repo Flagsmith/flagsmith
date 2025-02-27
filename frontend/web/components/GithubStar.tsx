@@ -25,7 +25,9 @@ const GithubStar: FC<GithubStarType> = ({}) => {
       fetch('https://api.github.com/repos/flagsmith/flagsmith')
         .then((res) => res.json())
         .then((res) => {
-          setStars(res.stargazers_count)
+          if (res.stargazers_count) {
+            setStars(res.stargazers_count)
+          }
         })
         .catch(() => {})
     }
