@@ -263,6 +263,7 @@ const controller = {
           API.trackEvent(Constants.events.INVITE)
           return {
             email: invite.emailAddress,
+            permission_groups: invite.groups,
             role: invite.role.value,
           }
         }),
