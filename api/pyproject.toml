@@ -146,7 +146,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", rev = "2f4e95787d15f3c0fc86ecd0fc7036b353fbeba6" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.3.0" }
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
