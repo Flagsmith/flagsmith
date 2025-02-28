@@ -24,38 +24,25 @@ interface Invite {
   groups?: number[]
 }
 
-const Chip = ({
-  id,
-  name,
-  onClick,
-}: {
-  id: number
-  name: string
-  onClick: (id: number, name: string) => void
-}) => {
-  if (!name || !id) {
+const CustomMultiValue = (props: MultiValueProps<GroupOption>) => {
+  const { data, removeProps } = props
+
+  if (!data?.label || !data?.value) {
     return null
   }
+
   return (
     <Row className='chip p-1'>
-      <span className='font-weight-bold'>{name}</span>
+      <span className='font-weight-bold'>{data.label}</span>
       {
         <span className='chip-icon ion'>
-          <IonIcon icon={closeIcon} onClick={() => onClick?.(id, name)} />
+          <IonIcon
+            icon={closeIcon}
+            onClick={() => removeProps?.onClick?.(data)}
+          />
         </span>
       }
     </Row>
-  )
-}
-
-const CustomMultiValue = (props: MultiValueProps<GroupOption>) => {
-  const { data, removeProps } = props
-  return (
-    <Chip
-      id={data.value}
-      name={data.label}
-      onClick={() => removeProps?.onClick?.(data)}
-    />
   )
 }
 
