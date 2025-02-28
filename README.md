@@ -53,7 +53,7 @@ You can try our hosted version for free at https://flagsmith.com/
 
 ### Flagsmith Open Source
 
-The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can try the application out using:
+The Flagsmith API is built using Python 3, Django 4, and DjangoRestFramework 3. You can try the application out using:
 
 - [Docker](https://github.com/Flagsmith/flagsmith/blob/main/docker-compose.yml)
 - [Kubernetes](https://github.com/Flagsmith/flagsmith-charts)
