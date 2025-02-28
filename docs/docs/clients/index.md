@@ -82,7 +82,7 @@ the Flag Engine, and the engine runs within your server environment within the F
 ![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
 
 You have to configure the SDK to run in Local Evaluation mode. See the
-[SDK configuration options](server-side#configuring-the-sdk) for details on how to do that in your particular language.
+[SDK configuration options](/clients/server-side#configuring-the-sdk) for details on how to do that in your particular language.
 
 When the SDK is initialised in Local Evaluation mode, it grabs the entire set of details about the Environment from the
 Flagsmith API. For a given Environment, this includes:
