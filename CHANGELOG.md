@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.165.0](https://github.com/Flagsmith/flagsmith/compare/v2.164.0...v2.165.0) (2025-03-03)
+
+
+### Features
+
+* split testing UI ([#5093](https://github.com/Flagsmith/flagsmith/issues/5093)) ([1a7155b](https://github.com/Flagsmith/flagsmith/commit/1a7155b29a6753ae097a2dc89950ab20c968fef5))
+
+
+### Bug Fixes
+
+* Handle github star errors ([#5165](https://github.com/Flagsmith/flagsmith/issues/5165)) ([721bba6](https://github.com/Flagsmith/flagsmith/commit/721bba6bf512797c7e7bbbdb4a5cbd410e490a5e))
+* Integrations list is empty when self-hosting ([#5171](https://github.com/Flagsmith/flagsmith/issues/5171)) ([788d50b](https://github.com/Flagsmith/flagsmith/commit/788d50b17d86d134c3dcf3e9d678707905020c14))
+
 ## [2.164.0](https://github.com/Flagsmith/flagsmith/compare/v2.163.0...v2.164.0) (2025-02-26)
 
 
