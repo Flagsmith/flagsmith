@@ -13,6 +13,7 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
+  PConfidence,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -57,7 +58,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     img.src = src
     document.body.appendChild(img)
   },
-
   calculateControl(
     multivariateOptions: MultivariateOption[],
     variations?: MultivariateFeatureStateValue[],
@@ -79,7 +79,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     })
     return 100 - total
   },
-
   calculateRemainingLimitsPercentage(
     total: number | undefined,
     max: number | undefined,
@@ -120,6 +119,13 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       res = Color(fallback)
     }
     return res
+  },
+
+  convertToPConfidence(value: number) {
+    if (value > 0.05) return 'LOW' as PConfidence
+    if (value >= 0.01) return 'REASONABLE' as PConfidence
+    if (value > 0.002) return 'HIGH' as PConfidence
+    return 'VERY_HIGH' as PConfidence
   },
 
   copyToClipboard: async (
