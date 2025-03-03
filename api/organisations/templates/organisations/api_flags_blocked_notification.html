@@ -9,10 +9,18 @@
         <tr>
 
                <td>
-                 This is a system generated notification related to your Flagsmith API Usage. As per previous warnings, we have had to block your company {{ organisation.name }}{% if grace_period %} after the 7 day grace period{% endif %}. Flags are not currently being served for your organization, and will continue to be blocked until your billing period resets or you upgrade your account. You can upgrade your account at <a href="{{url}}">{{url}}</a>.
+                 This is a system generated notification related to your Flagsmith API Usage. As per previous warnings, we have had to block your company {{ organisation.name }} (ID: {{ organisation.id }}){% if grace_period %} after the 7 day grace period{% endif %}. Flags are not currently being served for your organisation, and will continue to be blocked until your billing period resets or you upgrade your account. You can upgrade your account at <a href="{{url}}">{{url}}</a>.
                </td>
 
 
+        </tr>
+
+        <tr>
+          <td>
+             {% with usage_url="{{ url }}/organisation/{{ organisation.id | urlencode }}/usage" %}
+                 You can view the details of your organisation's API usage at <a href="{{ usage_url }}">{{ usage_url }}</a>.
+             {% endwith %}
+          </td>
         </tr>
 
         <tr>
