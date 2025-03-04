@@ -76,6 +76,7 @@ def _send_api_usage_notification(
         "organisation": organisation,
         "matched_threshold": matched_threshold,
         "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "url": get_current_site_url(),
     }
 
     send_mail(

@@ -9,18 +9,22 @@
         <tr>
 
                <td>
-                 This is a system generated notification related to your Flagsmith API Usage. Your company,
-                 {{ organisation.name }}, has reached {{ matched_threshold }}% of your API usage within the
+                 This is a system generated notification related to your Flagsmith API usage. Your organisation,
+                 {{ organisation.name }} (ID: {{ organisation.id }}), has reached {{ matched_threshold }}% of your API usage within the
                  current subscription period.
 
                  {% if organisation.is_paid %}
                  We will charge for overages at the end of the pay period. Please see the pricing page for more information or check the <a href="https://www.flagsmith.com/terms-of-service">Terms of Service</a>.
-                 You can reach out to support@flagsmith.com if you’d like to take advantage of better contracted rates.
+                 You can reach out to support@flagsmith.com if you'd like to take advantage of better contracted rates.
                  {% else %}
                  Please note that the serving of feature flags and admin access will be disabled{% if grace_period %} after a 7 day grace
-                 period{% endif %} until the next subscription period. If you’d like to continue service you can upgrade your
-                 organisation’s account (see pricing page).
+                 period{% endif %} until the next subscription period. If you'd like to continue service you can upgrade your
+                 organisation's account (see pricing page).
                  {% endif %}
+
+                 {% with usage_url="{{ url }}/organisation/{{ organisation.id | urlencode }}/usage" %}
+                 You can view the details of your organisation's API usage at <a href="{{ usage_url }}">{{ usage_url }}</a>.
+                 {% endwith %}
                </td>
 
 
