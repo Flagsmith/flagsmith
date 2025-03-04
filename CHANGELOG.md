@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.166.0](https://github.com/Flagsmith/flagsmith/compare/v2.165.0...v2.166.0) (2025-03-04)
+
+
+### Features
+
+* Add org ID and link to usage page in email notifications ([#5178](https://github.com/Flagsmith/flagsmith/issues/5178)) ([edbd3fa](https://github.com/Flagsmith/flagsmith/commit/edbd3fa1c252a2b3f08132985c49e5b5e2f16eaa))
+* Try out amplitude engagement SDK ([#5164](https://github.com/Flagsmith/flagsmith/issues/5164)) ([e348826](https://github.com/Flagsmith/flagsmith/commit/e348826e2b0dbc50a36efa11220deb405599b8cf))
+
+
+### Bug Fixes
+
+* Deleting SAML attribute mappings from the frontend can fail in non-SaaS ([#5179](https://github.com/Flagsmith/flagsmith/issues/5179)) ([813d49e](https://github.com/Flagsmith/flagsmith/commit/813d49e1be26e577534d290ff73cf016ed7f499a))
+
+
+### Dependency Updates
+
+* Bump task-processor from 1.2.1 to 1.2.2 ([#5183](https://github.com/Flagsmith/flagsmith/issues/5183)) ([b9fb613](https://github.com/Flagsmith/flagsmith/commit/b9fb6134ededca9a4d1fd4ea5978d62bffe4566e))
+
 ## [2.165.0](https://github.com/Flagsmith/flagsmith/compare/v2.164.0...v2.165.0) (2025-03-03)
 
 
