@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import withWebhooks from 'common/providers/withWebhooks'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
@@ -29,17 +28,29 @@ import Format from 'common/utils/format'
 import Setting from 'components/Setting'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
-import { Environment } from 'common/types/responses'
+import {
+  Environment,
+  Webhook,
+  Role,
+  RolePermission,
+} from 'common/types/responses'
 import PanelSearch from 'components/PanelSearch'
 import moment from 'moment'
 import Panel from 'components/base/grid/Panel'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { Webhook } from 'common/types/webhooks'
 import useFormNotSavedModal from 'components/hooks/useFormNotSavedModal'
+import {
+  useCreateWebhookMutation,
+  useDeleteWebhookMutation,
+  useGetWebhooksQuery,
+  useUpdateWebhookMutation,
+} from 'common/services/useWebhooks'
+import Button from 'components/base/forms/Button'
+import Input from 'components/base/forms/Input'
 
-const showDisabledFlagOptions: { label: string, value: boolean | null }[] = [
+const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
   { label: 'Disabled', value: false },
   { label: 'Enabled', value: true },
@@ -54,34 +65,46 @@ interface EnvironmentSettingsPageProps {
     }
   }
   router: RouterChildContext['router']
-  // Webhook props from HOC
-  webhooks: Webhook[]
-  webhooksLoading: boolean
-  getWebhooks: () => void
-  createWebhook: (webhook: Partial<Webhook>) => Promise<void>
-  saveWebhook: (webhook: Webhook) => Promise<void>
-  deleteWebhook: (webhook: Webhook) => Promise<void>
 }
 
-const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ createWebhook, deleteWebhook, getWebhooks, match, router, saveWebhook, webhooks, webhooksLoading }) => {
+const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
+  match,
+  router,
+}) => {
+  const { data: webhooks, isLoading: webhooksLoading } = useGetWebhooksQuery(
+    { environmentId: match.params.environmentId },
+    { skip: !match.params.environmentId },
+  )
+  const [createWebhook] = useCreateWebhookMutation()
+  const [deleteWebhook] = useDeleteWebhookMutation()
+  const [saveWebhook] = useUpdateWebhookMutation()
+
   const store = getStore()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<any[]>([])
-  const [environmentContentType, setEnvironmentContentType] = useState<any>(null)
+  const [environmentContentType, setEnvironmentContentType] =
+    useState<any>(null)
 
   const has4EyesPermission = Utils.getPlansPermission('4_EYES')
   const metadataEnable = Utils.getPlansPermission('METADATA')
 
   const onDiscard = () => {
-    const env = ProjectStore?.getEnvs()?.find(
-      (env: Environment) => env.api_key === match.params.environmentId,
-    )
+    const env = (
+      ProjectStore?.getEnvs() as Environment[] | null | undefined
+    )?.find((env: Environment) => env.api_key === match.params.environmentId)
     if (env && currentEnv) {
-      setCurrentEnv({ ...currentEnv, description: env.description, name: env.name })
+      setCurrentEnv({
+        ...currentEnv,
+        description: env.description,
+        name: env.name,
+      })
     }
   }
 
-  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal(router.history, { onDiscard: onDiscard })
+  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal(
+    router.history,
+    { onDiscard: onDiscard },
+  )
 
   const getEnvironment = useCallback(async () => {
     const env = ProjectStore?.getEnvs()?.find(
@@ -106,11 +129,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
       { forceRefetch: true },
     )
 
-    const matchingItems = roles.data.results.filter((item1) =>
-      roleEnvironmentPermissions.data.results.some((item2) => item2.role === item1.id),
+    const matchingItems: Role[] = roles.data.results.filter((item1: Role) =>
+      roleEnvironmentPermissions.data.results.some(
+        (item2: RolePermission) => item2.role === item1.id,
+      ),
     )
     setRoles(matchingItems)
-
 
     if (Utils.getPlansPermission('METADATA')) {
       const supportedContentType = await getSupportedContentType(getStore(), {
@@ -123,9 +147,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
       )
       setEnvironmentContentType(environmentContentType)
     }
-
-    await getWebhooks()
-  }, [match.params.environmentId, getWebhooks, store])
+  }, [match.params.environmentId, store])
 
   useEffect(() => {
     AppActions.getProject(match.params.projectId)
@@ -138,8 +160,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
   useEffect(() => {
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
     getEnvironment()
-    getWebhooks()
-  }, [getEnvironment, getWebhooks])
+  }, [getEnvironment])
 
   const onSave = () => {
     toast('Environment Saved')
@@ -163,7 +184,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
     if (envs && envs?.length > 0) {
       router.history.replace(
         `/project/${match.params.projectId}/environment` +
-        `/${envs[0].api_key}/features`,
+          `/${envs[0].api_key}/features`,
       )
     } else {
       router.history.replace(
@@ -177,7 +198,11 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
     )
   }
 
-  const updateCurrentEnv = (newEnv: Partial<Environment> = {}, shouldSaveUpdate?: boolean, isDirtyDisabled?: boolean) => {
+  const updateCurrentEnv = (
+    newEnv: Partial<Environment> = {},
+    shouldSaveUpdate?: boolean,
+    isDirtyDisabled?: boolean,
+  ) => {
     if (!isDirtyDisabled) {
       setIsDirty(true)
     }
@@ -257,7 +282,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
         environmentId={match.params.environmentId}
         projectId={match.params.projectId}
         url={webhook.url}
-        cb={() => deleteWebhook(webhook)}
+        cb={() =>
+          deleteWebhook({
+            environmentId: match.params.environmentId,
+            id: webhook.id,
+          })
+        }
       />,
       'p-0',
     )
@@ -265,7 +295,11 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
 
   const saveDisabled = ProjectStore.isSaving || !currentEnv?.name
 
-  const confirmToggle = (title: string, environmentProperty: string, environmentPropertyValue: boolean) => {
+  const confirmToggle = (
+    title: string,
+    environmentProperty: string,
+    environmentPropertyValue: boolean,
+  ) => {
     openModal(
       title,
       <ConfirmToggleEnvFeature
@@ -273,7 +307,10 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
         feature={Format.enumeration.get(environmentProperty)}
         featureValue={environmentPropertyValue}
         onToggleChange={() => {
-          updateCurrentEnv({ [environmentProperty]: environmentPropertyValue }, true)
+          updateCurrentEnv(
+            { [environmentProperty]: environmentPropertyValue },
+            true,
+          )
           closeModal()
         }}
       />,
@@ -292,9 +329,13 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
           toast(
             'Feature Versioning Enabled, this may take several minutes to process.',
           )
-          updateCurrentEnv({
-            enabledFeatureVersioning: true,
-          }, false, true)
+          updateCurrentEnv(
+            {
+              enabledFeatureVersioning: true,
+            },
+            false,
+            true,
+          )
         })
       },
       title: 'Enable "Feature Versioning"',
@@ -315,28 +356,34 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
           })
           if (
             (env &&
-              typeof env?.minimum_change_request_approvals ===
-              'undefined') ||
+              typeof env?.minimum_change_request_approvals === 'undefined') ||
             env?.api_key !== match.params.environmentId
           ) {
             setTimeout(() => {
-              const minimumChangeRequestApprovals = Utils.changeRequestsEnabled(env?.minimum_change_request_approvals)
-              updateCurrentEnv({
-                allow_client_traits: !!env?.allow_client_traits,
-                banner_colour: env?.banner_colour || Constants.tagColors[0],
-                banner_text: env?.banner_text,
-                hide_disabled_flags: env?.hide_disabled_flags || false,
-                hide_sensitive_data: !!env?.hide_sensitive_data,
-                minimum_change_request_approvals: minimumChangeRequestApprovals
-                  ? env?.minimum_change_request_approvals
-                  : null,
-                name: env?.name || "",
-                use_identity_composite_key_for_hashing:
-                  !!env?.use_identity_composite_key_for_hashing,
-                use_identity_overrides_in_local_eval:
-                  !!env?.use_identity_overrides_in_local_eval,
-                use_v2_feature_versioning: !!env?.use_v2_feature_versioning,
-              }, false, true)
+              const minimumChangeRequestApprovals = Utils.changeRequestsEnabled(
+                env?.minimum_change_request_approvals,
+              )
+              updateCurrentEnv(
+                {
+                  allow_client_traits: !!env?.allow_client_traits,
+                  banner_colour: env?.banner_colour || Constants.tagColors[0],
+                  banner_text: env?.banner_text,
+                  hide_disabled_flags: env?.hide_disabled_flags || false,
+                  hide_sensitive_data: !!env?.hide_sensitive_data,
+                  minimum_change_request_approvals:
+                    minimumChangeRequestApprovals
+                      ? env?.minimum_change_request_approvals
+                      : null,
+                  name: env?.name || '',
+                  use_identity_composite_key_for_hashing:
+                    !!env?.use_identity_composite_key_for_hashing,
+                  use_identity_overrides_in_local_eval:
+                    !!env?.use_identity_overrides_in_local_eval,
+                  use_v2_feature_versioning: !!env?.use_v2_feature_versioning,
+                },
+                false,
+                true,
+              )
             }, 10)
           }
 
@@ -364,11 +411,15 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                               name: 'env-name',
                             }}
                             className='full-width'
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => {
                               const value = Utils.safeParseEventValue(e)
                               updateCurrentEnv({ name: value }, false)
                             }}
-                            isValid={currentEnv?.name && currentEnv?.name.length}
+                            isValid={
+                              currentEnv?.name && currentEnv?.name.length
+                            }
                             type='text'
                             title='Environment Name'
                             placeholder='Environment Name'
@@ -380,12 +431,16 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                             inputProps={{
                               className: 'input--wide textarea-lg',
                             }}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                            onChange={(
+                              e: React.ChangeEvent<HTMLInputElement>,
+                            ) => {
                               const value = Utils.safeParseEventValue(e)
                               updateCurrentEnv({ description: value })
+                            }}
+                            isValid={
+                              currentEnv?.description &&
+                              currentEnv?.description.length
                             }
-                            }
-                            isValid={currentEnv?.description && currentEnv?.description.length}
                             type='text'
                             title='Environment Description'
                             placeholder='Environment Description'
@@ -404,9 +459,16 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                       <hr className='py-0 my-4' />
                       <div className='col-md-8 mt-4'>
                         <Setting
-                          onChange={(value) => updateCurrentEnv({
-                            banner_text: value ? `${currentEnv?.name} Environment` : null
-                          }, true)}
+                          onChange={(value) =>
+                            updateCurrentEnv(
+                              {
+                                banner_text: value
+                                  ? `${currentEnv?.name} Environment`
+                                  : null,
+                              },
+                              true,
+                            )
+                          }
                           checked={typeof currentEnv?.banner_text === 'string'}
                           title={'Environment Banner'}
                           description={
@@ -424,9 +486,14 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                             <Input
                               placeholder='Banner text'
                               value={currentEnv?.banner_text}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              onChange={(
+                                e: React.ChangeEvent<HTMLInputElement>,
+                              ) => {
                                 const bannerText = Utils.safeParseEventValue(e)
-                                updateCurrentEnv({ banner_text: bannerText }, false)
+                                updateCurrentEnv(
+                                  { banner_text: bannerText },
+                                  false,
+                                )
                               }}
                               className='full-width'
                             />
@@ -447,13 +514,18 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                       {Utils.getFlagsmithHasFeature('feature_versioning') && (
                         <div>
                           <div className='col-md-8 mt-4'>
-                            {currentEnv?.use_v2_feature_versioning === false && (
+                            {env?.id && (
                               <EnvironmentVersioningListener
-                                // TODO: Should be listening on Id or API_KEY ?
-                                id={env.api_key}
-                                versioningEnabled={currentEnv?.use_v2_feature_versioning}
+                                id={env.id}
+                                versioningEnabled={
+                                  currentEnv?.use_v2_feature_versioning ?? false
+                                }
                                 onChange={() => {
-                                  updateCurrentEnv({ use_v2_feature_versioning: true }, false, true)
+                                  updateCurrentEnv(
+                                    { use_v2_feature_versioning: true },
+                                    false,
+                                    true,
+                                  )
                                 }}
                               />
                             )}
@@ -501,8 +573,8 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                           description={
                             <div>
                               Exclude sensitive data from endpoints returning
-                              flags and identity information to the SDKs or
-                              via our REST API.
+                              flags and identity information to the SDKs or via
+                              our REST API.
                               <br />
                               For full information on the excluded fields see
                               documentation{' '}
@@ -516,8 +588,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                               </Button>
                               <div className='text-danger'>
                                 Enabling this feature will change the response
-                                from the API and could break your existing
-                                code.
+                                from the API and could break your existing code.
                               </div>
                             </div>
                           }
@@ -533,7 +604,14 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                             )
                           }
                           onChange={(value) =>
-                            updateCurrentEnv({ minimum_change_request_approvals: value ? 0 : undefined }, true)
+                            updateCurrentEnv(
+                              {
+                                minimum_change_request_approvals: value
+                                  ? 0
+                                  : undefined,
+                              },
+                              true,
+                            )
                           }
                         />
                         {Utils.changeRequestsEnabled(
@@ -552,24 +630,32 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                                     name='env-name'
                                     min={0}
                                     style={{ minWidth: 50 }}
-                                    onChange={(e) => {
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLInputElement>,
+                                    ) => {
                                       const value = Utils.safeParseEventValue(e)
-                                      updateCurrentEnv({ minimum_change_request_approvals: value ? parseInt(value) : undefined }, false)
+                                      updateCurrentEnv(
+                                        {
+                                          minimum_change_request_approvals:
+                                            value ? parseInt(value) : undefined,
+                                        },
+                                        false,
+                                      )
                                     }}
-                                    isValid={currentEnv?.minimum_change_request_approvals && currentEnv?.minimum_change_request_approvals.length}
+                                    isValid={
+                                      !!currentEnv?.minimum_change_request_approvals
+                                    }
                                     type='number'
                                     placeholder='Minimum number of approvals'
                                   />
                                 </Flex>
                                 <Button
                                   type='button'
-                                  onClick={saveEnv}
+                                  onClick={() => saveEnv()}
                                   id='save-env-btn'
                                   className='ml-3'
                                   disabled={
-                                    saveDisabled ||
-                                    isSaving ||
-                                    isLoading
+                                    saveDisabled || isSaving || isLoading
                                   }
                                 >
                                   {isSaving || isLoading ? 'Saving' : 'Save'}
@@ -590,19 +676,17 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                           <Button
                             id='delete-env-btn'
                             onClick={() => {
-                              const envToRemove = _.find(project?.environments, {
-                                api_key:
-                                  match.params.environmentId,
-                              })
-                              if (!envToRemove) return
-                              confirmRemove(
-                                envToRemove,
-                                () => {
-                                  deleteEnv(envToRemove)
+                              const envToRemove = _.find(
+                                project?.environments,
+                                {
+                                  api_key: match.params.environmentId,
                                 },
                               )
-                            }
-                            }
+                              if (!envToRemove) return
+                              confirmRemove(envToRemove, () => {
+                                deleteEnv(envToRemove)
+                              })
+                            }}
                             className='btn btn-with-icon btn-remove'
                           >
                             <Icon name='trash-2' width={20} fill='#EF4D56' />
@@ -611,10 +695,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                       </FormGroup>
                     </div>
                   </TabItem>
-                  <TabItem
-                    data-test='js-sdk-settings'
-                    tabLabel='SDK Settings'
-                  >
+                  <TabItem data-test='js-sdk-settings' tabLabel='SDK Settings'>
                     <div className='mt-4'>
                       <JSONReference
                         title={'Environment'}
@@ -635,8 +716,14 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                                     currentEnv?.hide_disabled_flags,
                                 ) || showDisabledFlagOptions[0]
                               }
-                              onChange={(option: { label: string, value: boolean | null }) => {
-                                updateCurrentEnv({ hide_disabled_flags: option.value }, true)
+                              onChange={(option: {
+                                label: string
+                                value: boolean | null
+                              }) => {
+                                updateCurrentEnv(
+                                  { hide_disabled_flags: option.value },
+                                  true,
+                                )
                               }}
                               options={showDisabledFlagOptions}
                               data-test='js-hide-disabled-flags'
@@ -646,9 +733,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                             <p className='mb-0 fs-small lh-sm'>
                               To prevent letting your users know about your
                               upcoming features and to cut down on payload,
-                              enabling this will prevent the API from
-                              returning features that are disabled. You can
-                              also manage this in{' '}
+                              enabling this will prevent the API from returning
+                              features that are disabled. You can also manage
+                              this in{' '}
                               <Link
                                 to={`/project/${match.params.projectId}/settings`}
                               >
@@ -663,32 +750,42 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                               description={`Disabling this option will prevent client SDKs from using the client key from setting traits.`}
                               checked={currentEnv?.allow_client_traits}
                               onChange={(value) => {
-                                updateCurrentEnv({ allow_client_traits: value }, true)
+                                updateCurrentEnv(
+                                  { allow_client_traits: value },
+                                  true,
+                                )
                               }}
                             />
                           </div>
                           <div className='mt-4'>
                             <Setting
-                              checked={currentEnv?.use_identity_composite_key_for_hashing}
+                              checked={
+                                currentEnv?.use_identity_composite_key_for_hashing
+                              }
                               onChange={(value) =>
-                                updateCurrentEnv({ use_identity_composite_key_for_hashing: value }, true)
+                                updateCurrentEnv(
+                                  {
+                                    use_identity_composite_key_for_hashing:
+                                      value,
+                                  },
+                                  true,
+                                )
                               }
                               title={`Use consistent hashing`}
                               description={
                                 <div>
                                   Enabling this setting will ensure that
-                                  multivariate and percentage split
-                                  evaluations made by the API are consistent
-                                  with those made by local evaluation mode in
-                                  our server side SDKs.
+                                  multivariate and percentage split evaluations
+                                  made by the API are consistent with those made
+                                  by local evaluation mode in our server side
+                                  SDKs.
                                   <div className='text-danger'>
                                     Toggling this setting will mean that some
-                                    users will start receiving different
-                                    values for multivariate flags and flags
-                                    with a percentage split segment override
-                                    via the API / remote evaluation. Values
-                                    received in local evaluation mode will not
-                                    change.
+                                    users will start receiving different values
+                                    for multivariate flags and flags with a
+                                    percentage split segment override via the
+                                    API / remote evaluation. Values received in
+                                    local evaluation mode will not change.
                                   </div>
                                 </div>
                               }
@@ -697,17 +794,25 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                           {Utils.getFlagsmithHasFeature(
                             'use_identity_overrides_in_local_eval',
                           ) && (
-                              <div className='mt-4'>
-                                <Setting
-                                  title='Use identity overrides in local evaluation'
-                                  description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
-                                  checked={!!currentEnv?.use_identity_overrides_in_local_eval}
-                                  onChange={(value) => {
-                                    updateCurrentEnv({ use_identity_overrides_in_local_eval: value }, true)
-                                  }}
-                                />
-                              </div>
-                            )}
+                            <div className='mt-4'>
+                              <Setting
+                                title='Use identity overrides in local evaluation'
+                                description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
+                                checked={
+                                  !!currentEnv?.use_identity_overrides_in_local_eval
+                                }
+                                onChange={(value) => {
+                                  updateCurrentEnv(
+                                    {
+                                      use_identity_overrides_in_local_eval:
+                                        value,
+                                    },
+                                    true,
+                                  )
+                                }}
+                              />
+                            </div>
+                          )}
                         </form>
                       </div>
                     </div>
@@ -735,8 +840,8 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                         <h5 className='mb-2'>Feature Webhooks</h5>
                         <p className='fs-small lh-sm mb-4'>
                           Feature webhooks let you know when features have
-                          changed. You can configure 1 or more Feature
-                          Webhooks per Environment.{' '}
+                          changed. You can configure 1 or more Feature Webhooks
+                          per Environment.{' '}
                           <Button
                             theme='text'
                             href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks'
@@ -815,7 +920,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                           )}
                           renderNoResults={
                             <Panel
-                              id='users-list'
                               className='no-pad'
                               title={
                                 <Tooltip
@@ -843,36 +947,29 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
                       )}
                     </FormGroup>
                   </TabItem>
-                  {metadataEnable &&
-                    environmentContentType?.id && (
-                      <TabItem tabLabel='Custom Fields'>
-                        <FormGroup className='mt-5 setting'>
-                          <InputGroup
-                            title={'Custom fields'}
-                            tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
-                              'environments',
-                            )}`}
-                            tooltipPlace='right'
-                            component={
-                              <AddMetadataToEntity
-                                organisationId={
-                                  AccountStore.getOrganisation().id
-                                }
-                                projectId={match.params.projectId}
-                                entityId={currentEnv?.api_key || ''}
-                                envName={currentEnv?.name}
-                                entityContentType={
-                                  environmentContentType?.id
-                                }
-                                entity={
-                                  environmentContentType.model
-                                }
-                              />
-                            }
-                          />
-                        </FormGroup>
-                      </TabItem>
-                    )}
+                  {metadataEnable && environmentContentType?.id && (
+                    <TabItem tabLabel='Custom Fields'>
+                      <FormGroup className='mt-5 setting'>
+                        <InputGroup
+                          title={'Custom fields'}
+                          tooltip={`${Constants.strings.TOOLTIP_METADATA_DESCRIPTION(
+                            'environments',
+                          )}`}
+                          tooltipPlace='right'
+                          component={
+                            <AddMetadataToEntity
+                              organisationId={AccountStore.getOrganisation().id}
+                              projectId={match.params.projectId}
+                              entityId={currentEnv?.api_key || ''}
+                              envName={currentEnv?.name}
+                              entityContentType={environmentContentType?.id}
+                              entity={environmentContentType.model}
+                            />
+                          }
+                        />
+                      </FormGroup>
+                    </TabItem>
+                  )}
                 </Tabs>
               )}
             </>
@@ -883,8 +980,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({ creat
   )
 }
 
-
-
 EnvironmentSettingsPage.displayName = 'EnvironmentSettingsPage'
 
-export default ConfigProvider(withWebhooks(EnvironmentSettingsPage))
+export default ConfigProvider(EnvironmentSettingsPage)
