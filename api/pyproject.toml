@@ -63,7 +63,7 @@ exclude_also = [
 ]
 
 [tool.coverage.run]
-omit = ["scripts/*"]
+omit = ["scripts/*", "manage.py"]
 
 [tool.pytest.ini_options]
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
@@ -146,7 +146,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.2.2" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.3.1" }
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
