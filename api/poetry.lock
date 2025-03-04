@@ -2006,8 +2006,8 @@ simplejson = "~3.19.1"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.2.1"
-resolved_reference = "21cf8ac5f15e57c415416f03851346b04f695c46"
+reference = "v1.2.2"
+resolved_reference = "c833e2239b40d9aca813e7a2aedfb55751b031c2"
 
 [[package]]
 name = "freezegun"
@@ -5198,4 +5198,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "7eb9cdf46b0be2785338bab0a697d9ae8210237e91fc2a7c69b36843beb9f8d0"
+content-hash = "1e9641df3e4e44aab9ed2537d8130695837c5ef5b0bd57f2d1acdb78efe397a2"
