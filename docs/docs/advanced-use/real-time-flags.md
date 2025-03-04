@@ -29,7 +29,7 @@ documentation for subscribing to real-time flag updates.
 ## How it works
 
 The following sequence diagram shows how a typical application would use real-time flag updates.
-[Billable API requests](/pricing) are highlighted in yellow.
+[Billable API requests](/billing) are highlighted in yellow.
 
 ```mermaid
 sequenceDiagram
