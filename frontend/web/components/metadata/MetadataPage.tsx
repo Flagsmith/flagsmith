@@ -16,7 +16,6 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 const metadataWidth = [200, 150, 150, 90]
 type MetadataPageType = {
   organisationId: string
-  projectId: string
 }
 type MergeMetadata = {
   content_type_fields: MetadataModelField[]
@@ -27,7 +26,7 @@ type MergeMetadata = {
   organisation: number
 }
 
-const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
+const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
   const { data: metadataFieldList } = useGetMetadataFieldListQuery({
     organisation: organisationId,
   })
@@ -63,7 +62,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       <CreateMetadataField
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
-        projectId={projectId}
         isEdit={false}
       />,
       'side-modal create-feature-modal',
@@ -80,7 +78,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         onComplete={() => {
           toast('Custom Field Updated')
         }}
-        projectId={projectId}
         organisationId={organisationId}
       />,
       'side-modal create-feature-modal',
