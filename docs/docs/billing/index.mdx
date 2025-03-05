@@ -1,12 +1,11 @@
 ---
-title: Pricing and API usage
+title: Billing and API Usage
 sidebar_position: 120
-sidebar_label: Pricing
 ---
 
 When you use Flagsmith on Flagsmith-managed infrastructure (SaaS or private cloud), your pricing plan has a limit of API
-requests per month. This document describes how these limits work, and how to estimate how many API requests your
-applications will need.
+requests per month. This document describes how these limits work, how to estimate how many API requests your
+applications will need, and how to reduce the volume of API requests made by your applications.
 
 :::tip
 
@@ -28,18 +27,21 @@ The following screenshot shows an example usage graph from the Flagsmith dashboa
 
 ![img.png](usage-graph.png)
 
-## What counts as an API request?
+## What are billable API requests?
 
-Any operation that calls Flagsmith's API and retrieves information about the current state of flags counts as 1 billable
-API request.
+When your application is integrated with Flagsmith, it makes requests to the Flagsmith API to perform actions such as
+retrieving the current state of its flags. Some of these actions count towards your limit of billable API requests. The
+billable API requests that your application makes depend mainly on which [flag evaluation mode](/clients) it uses.
 
-The billable API requests your application makes depends mainly on which [flag evaluation mode](/clients) it uses:
-
-- Remote Evaluation is the default for all applications. Applications using Remote Evaluation call the Flagsmith API
+**Remote Evaluation** is the default for all applications. Applications using Remote Evaluation call the Flagsmith API
   when they need to fetch the flags for the current environment or user.
-- Local Evaluation is optional, and only for server-side applications. Each individual application or
-  [Edge Proxy](/advanced-use/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
-  default) to fetch the flags for the current environment and all users in one API request.
+  - `/flags`: [Get environment flags](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_flags_list)
+  - `/identities`: [Get identity flags](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environments_identities_create)
+
+**Local Evaluation** is optional, and only for server-side applications. Each individual application or
+[Edge Proxy](/advanced-use/edge-proxy) instance polls the Flagsmith API at a configurable interval (60 seconds by
+default) to fetch the flags for the current environment and all users in one API request.
+  - `/environment-document`: [Get environment document](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_environment-document_list)
 
 The following requests are not billable:
 
@@ -100,3 +102,27 @@ If you exceed your API call limit, your account may be blocked or charged for ov
 For more details, see [Traffic Limits](/system-administration/system-limits#traffic-limits).
 
 Accounts on paid plans are never blocked automatically.
+
+## How can I optimise my API usage?
+
+The only way to optimise your API usage is to make fewer API calls. Depending on your specific application and which
+evaluation mode it uses, there are several strategies to more efficiently use the Flagsmith API.
+
+For client-side applications (web, desktop and mobile):
+
+* Consider using caching to avoid requesting flags every time your application starts up. If you are already using
+caching, increase the cache expiration time or TTL.
+* Instead of updating flags at a regular interval by polling, update the flags when certain events happen in your
+application. For example, when a user visits a certain part of your application that requires up-to-date flags, or when
+a mobile application is brought to the foreground.
+* Consider using an Edge Proxy as your source of flags instead of calling the Flagsmith API directly.
+* If you have a suitable backend, consider evaluating flags server-side instead. This enables other usage patterns that
+result in fewer API calls, such as [Local Evaluation](/clients#local-evaluation) and custom cache implementations.
+
+For server-side applications:
+
+* Consider using [Local Evaluation](/clients#local-evaluation), or deploying [Edge Proxies](/advanced-use/edge-proxy).
+* Reduce the polling rate for Edge Proxies and any SDKs using Local Evaluation.
+* If your use case allows for it, use the Flagsmith SDK in Offline Mode.
+
+Using [real-time flag updates](/advanced-use/real-time-flags) can also reduce or eliminate the need for polling.
