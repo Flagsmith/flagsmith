@@ -3,7 +3,7 @@ import ModalClose from './modals/base/ModalClose'
 import ModalHR from './modals/ModalHR'
 import Icon from './Icon'
 import classNames from 'classnames'
-import { useClickOutside } from './useClickOutside'
+import useOutsideClick from 'common/useOutsideClick'
 
 interface InlineModalProps {
   bottom?: React.ReactNode
@@ -34,7 +34,7 @@ const InlineModal: FC<InlineModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null)
 
-  useClickOutside(modalRef, () => {
+  useOutsideClick(modalRef, () => {
     if (isOpen) {
       onClose()
     }
