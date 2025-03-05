@@ -27,14 +27,18 @@ class FeatureSegmentPermissions(IsAuthenticated):
                 environment = request.data.get("environment")
                 environment = Environment.objects.get(id=int(environment))
 
-                feature_id = request.data.get("feature") or view.kwargs.get("feature_pk")
+                feature_id = request.data.get("feature") or view.kwargs.get(
+                    "feature_pk"
+                )
                 feature = Feature.objects.get(
                     id=feature_id, project=environment.project
                 )
                 tag_ids = list(feature.tags.values_list("id", flat=True))
 
                 return request.user.has_environment_permission(
-                    permission=MANAGE_SEGMENT_OVERRIDES, environment=environment, tag_ids=tag_ids
+                    permission=MANAGE_SEGMENT_OVERRIDES,
+                    environment=environment,
+                    tag_ids=tag_ids,
                 )
 
         return False
