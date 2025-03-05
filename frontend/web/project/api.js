@@ -100,6 +100,9 @@ global.API = {
         Reo.init({ clientID: Project.reo })
         let authType = 'userID'
         switch (user.auth_type) {
+          case 'EMAIL':
+            authType = 'email'
+            break
           case 'GITHUB':
             authType = 'github'
             break
