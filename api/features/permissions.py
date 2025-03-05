@@ -213,15 +213,13 @@ class CreateSegmentOverridePermissions(IsAuthenticated):
 
         feature_id = request.data.get("feature") or view.kwargs.get("feature_pk")
 
-        feature = Feature.objects.get(
-            id=feature_id, project=environment.project
-        )
+        feature = Feature.objects.get(id=feature_id, project=environment.project)
         tag_ids = list(feature.tags.values_list("id", flat=True))
 
         return request.user.has_environment_permission(
             permission=MANAGE_SEGMENT_OVERRIDES,
             environment=environment,
-            tag_ids=tag_ids
+            tag_ids=tag_ids,
         )
 
 
