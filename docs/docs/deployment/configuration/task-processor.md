@@ -47,44 +47,33 @@ flagsmith_processor:
 ## Configuring the Processor
 
 The processor exposes a number of configuration options to tune the processor to your needs / setup. These configuration
-options are via command line arguments when starting the processor.
+options are via command line arguments when starting the processor. The default Flagsmith container entrypoint expects
+these options as `TASK_PROCESSOR_`-prefixed environment variables.
 
-| Argument            | Description                                                               | Default |
-| ------------------- | ------------------------------------------------------------------------- | ------- |
-| `--sleepintervalms` | The amount of ms each worker should sleep between checking for a new task | 2000    |
-| `--numthreads`      | The number of worker threads to run per task processor instance           | 5       |
-| `--graceperiodms`   | The amount of ms before a worker thread is considered 'stuck'.            | 20000   |
+| Environment variable               | Argument            | Description                                                                | Default |
+| ---------------------------------- | ------------------- | -------------------------------------------------------------------------- | ------- |
+| `TASK_PROCESSOR_SLEEP_INTERVAL_MS` | `--sleepintervalms` | The amount of ms each worker should sleep between checking for a new task. | 500     |
+| `TASK_PROCESSOR_NUM_THREADS`       | `--numthreads`      | The number of worker threads to run per task processor instance.           | 5       |
+| `TASK_PROCESSOR_GRACE_PERIOD_MS`   | `--graceperiodms`   | The amount of ms before a worker thread is considered 'stuck'.             | 20000   |
+| `TASK_PROCESSOR_QUEUE_POP_SIZE`    | `--queuepopsize`    | The number of enqueued tasks to retrieve for processing for one iteration. | 10      |
 
 ## Monitoring
 
 There are a number of options for monitoring the task processor's health.
 
-### Checking Thread / Worker Health
+### Health checks
 
-The task processor includes a management command which checks the health of the worker threads which are running tasks.
-
-```
-python manage.py checktaskprocessorthreadhealth
-```
-
-The command will exit with either a success exit code (0) or a failure exit code (1).
-
-### API to Task Processor health
-
-To monitor that the API can send tasks to the processor and that they are successfully run, there is a custom health
-check which can be enabled on the general health endpoint (`GET /health?format=json`). This health check needs to be
-enabled manually, which can be done by setting the `ENABLE_TASK_PROCESSOR_HEALTH_CHECK` environment variable to `True`
-(in the flagsmith application container, not the task processor). Note that this health check is not considered
-"critical" and hence, the endpoint will return a 200 OK regardless of whether the task processor is sucessfully
-processing tasks or not.
+A task processor container exposes `/health/readiness` and `/health/liveness` endpoints for readiness and liveness
+probes. The endpoints run simple availability checks. To include a test that enqueues a task and makes sure it's run
+to your readiness probe, set `ENABLE_TASK_PROCESSOR_HEALTH_CHECK` environment variable to `True`.
 
 ### Task statistics
 
-Within the API, there is an endpoint which returns, in JSON format, statistics about the tasks consumed / to be consumed
-by the processor. This endpoint is available at `GET /processor/monitoring`. This will respond with the following data:
+Both API and Task processor expose an endpoint which returns Task processor statistics in JSON format.
+This endpoint is available at `GET /processor/monitoring`. See an example response below:
 
 ```json
 {
- "waiting": 1
+ "waiting": 1  // The number of tasks waiting in the queue.
 }
 ```

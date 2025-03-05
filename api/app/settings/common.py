@@ -986,6 +986,9 @@ SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
 # Used to control the size(number of identities) of the project that can be self migrated to edge
 MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 100000)
 
+# RUN_BY_PROCESSOR is set by the task processor entrypoint
+TASK_PROCESSOR_MODE = env.bool("RUN_BY_PROCESSOR", False)
+
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
 # or in a separate thread for self-hosted users
 TASK_RUN_METHOD = env.enum(
@@ -993,7 +996,7 @@ TASK_RUN_METHOD = env.enum(
     type=TaskRunMethod,
     default=(
         TaskRunMethod.TASK_PROCESSOR.value
-        if env.bool("RUN_BY_PROCESSOR", False)
+        if TASK_PROCESSOR_MODE
         else TaskRunMethod.SEPARATE_THREAD.value
     ),
 )

@@ -2000,14 +2000,15 @@ dj-database-url = "~0.5.0"
 django-health-check = "~3.18.2"
 drf-yasg = "~1.21.6"
 environs = "~9.2.0"
+gunicorn = "*"
 psycopg2-binary = "~2.9.5"
 simplejson = "~3.19.1"
 
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.2.2"
-resolved_reference = "c833e2239b40d9aca813e7a2aedfb55751b031c2"
+reference = "v1.3.1"
+resolved_reference = "fffd43bc92bfe477fbc1e4ab435610b6e23639d2"
 
 [[package]]
 name = "freezegun"
@@ -5198,4 +5199,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "1e9641df3e4e44aab9ed2537d8130695837c5ef5b0bd57f2d1acdb78efe397a2"
+content-hash = "3263dce1b5b4fdad2c7fcb52e98e4fec1f77bb44ae5edb7f430a84318fae6bef"
