@@ -441,7 +441,7 @@ def test_write_environments_to_dynamodb_with_environment(  # type: ignore[no-unt
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(
+    Environment.write_environment_documents(
         environment_id=dynamo_enabled_project_environment_one.id
     )
 
@@ -465,7 +465,7 @@ def test_write_environments_to_dynamodb_project(  # type: ignore[no-untyped-def]
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
@@ -485,7 +485,7 @@ def test_write_environments_to_dynamodb_with_environment_and_project(  # type: i
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(
+    Environment.write_environment_documents(
         environment_id=dynamo_enabled_project_environment_one.id
     )
 
@@ -512,7 +512,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     args, kwargs = mock_dynamo_env_v2_wrapper.write_environments.call_args
@@ -536,7 +536,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
     dynamo_enabled_project.save()
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     mock_dynamo_env_v2_wrapper.write_environments.assert_not_called()
@@ -563,7 +563,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     mock_dynamo_env_v2_wrapper.write_environments.assert_not_called()
@@ -663,7 +663,7 @@ def test_environment_get_environment_document_with_caching_when_document_in_cach
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
-    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
+    settings.CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT = 60
 
     mocked_environment_document_cache = mocker.patch(
         "environments.models.environment_document_cache"
@@ -685,7 +685,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
-    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
+    settings.CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT = 60
 
     mocked_environment_document_cache = mocker.patch(
         "environments.models.environment_document_cache"
