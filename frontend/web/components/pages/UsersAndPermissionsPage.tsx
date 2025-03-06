@@ -39,6 +39,11 @@ import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
+import {
+  useDeleteUserInviteMutation,
+  useGetUserInvitesQuery,
+  useResendUserInviteMutation,
+} from 'common/services/useInvites'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -52,7 +57,6 @@ type UsersAndPermissionsInnerType = {
   error: any
   invalidateInviteLink: typeof AppActions.invalidateInviteLink
   inviteLinks: InviteLink[] | null
-  invites: Invite[] | null
   isLoading: boolean
   users: User[]
   subscriptionMeta: SubscriptionMeta | null
@@ -63,13 +67,19 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   error,
   invalidateInviteLink,
   inviteLinks,
-  invites,
   isLoading,
   organisation,
   router,
   subscriptionMeta,
   users,
 }) => {
+  const { data: userInvitesData } = useGetUserInvitesQuery({
+    organisationId: organisation.id,
+  })
+  const [deleteUserInvite] = useDeleteUserInviteMutation()
+  const [resendUserInvite] = useResendUserInviteMutation()
+
+  const invites = userInvitesData?.results
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
@@ -187,7 +197,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
         </div>
       ),
       destructive: true,
-      onYes: () => AppActions.deleteInvite(id),
+      onYes: () =>
+        deleteUserInvite({ inviteId: id, organisationId: organisation.id }),
       title: 'Delete Invite',
       yesText: 'Confirm',
     })
@@ -679,7 +690,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       id='resend-invite'
                                       type='button'
                                       onClick={() =>
-                                        AppActions.resendInvite(id)
+                                        resendUserInvite({
+                                          inviteId: id,
+                                          organisationId: organisation.id,
+                                        })
                                       }
                                       theme='text'
                                       size='small'
@@ -789,7 +803,6 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
             error,
             invalidateInviteLink,
             inviteLinks,
-            invites,
             isLoading,
             subscriptionMeta,
             users,
@@ -808,7 +821,6 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
                 error={error}
                 invalidateInviteLink={invalidateInviteLink}
                 inviteLinks={inviteLinks}
-                invites={invites}
                 isLoading={isLoading}
                 users={users}
                 subscriptionMeta={subscriptionMeta}
