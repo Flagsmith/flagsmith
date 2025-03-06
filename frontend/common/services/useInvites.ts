@@ -66,15 +66,45 @@ export async function createUserInvite(
   )
 }
 
+export async function deleteUserInvite(
+  store: any,
+  data: Req['deleteUserInvite'],
+  options?: Parameters<
+    typeof invitesService.endpoints.deleteUserInvite.initiate
+  >[1],
+) {
+  return store.dispatch(
+    invitesService.endpoints.deleteUserInvite.initiate(data, options),
+  )
+}
+
+export async function getUserInvites(
+  store: any,
+  data: Req['getUserInvites'],
+  options?: Parameters<
+    typeof invitesService.endpoints.getUserInvites.initiate
+  >[1],
+) {
+  return store.dispatch(
+    invitesService.endpoints.getUserInvites.initiate(data, options),
+  )
+}
+
+export async function resendUserInvite(
+  store: any,
+  data: Req['resendUserInvite'],
+  options?: Parameters<
+    typeof invitesService.endpoints.resendUserInvite.initiate
+  >[1],
+) {
+  return store.dispatch(
+    invitesService.endpoints.resendUserInvite.initiate(data, options),
+  )
+}
+
 export const {
   useCreateUserInviteMutation,
   useDeleteUserInviteMutation,
   useGetUserInvitesQuery,
   useResendUserInviteMutation,
 } = invitesService
-
-/* Usage examples:
-const { data, isLoading } = useGetRolesQuery({ id: 2 }, {}) //get hook
-const [createRole, { isLoading, data, isSuccess }] = useCreateRoleMutation() //create hook
-roleService.endpoints.getRoles.select({id: 2})(store.getState()) //access data from any function
-*/
