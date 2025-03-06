@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment'
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -23,7 +23,6 @@ import { Link, RouterChildContext } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
-import EnvironmentVersioningListener from 'components/EnvironmentVersioningListener'
 import Format from 'common/utils/format'
 import Setting from 'components/Setting'
 import API from 'project/api'
@@ -49,6 +48,7 @@ import {
 } from 'common/services/useWebhooks'
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -71,27 +71,30 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
   match,
   router,
 }) => {
-  const { data: webhooks, isLoading: webhooksLoading } = useGetWebhooksQuery(
-    { environmentId: match.params.environmentId },
-    { skip: !match.params.environmentId },
-  )
   const [createWebhook] = useCreateWebhookMutation()
   const [deleteWebhook] = useDeleteWebhookMutation()
   const [saveWebhook] = useUpdateWebhookMutation()
 
   const store = getStore()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
-  const [roles, setRoles] = useState<any[]>([])
+  const [roles, setRoles] = useState<Role[]>([])
   const [environmentContentType, setEnvironmentContentType] =
     useState<any>(null)
 
-  const has4EyesPermission = Utils.getPlansPermission('4_EYES')
-  const metadataEnable = Utils.getPlansPermission('METADATA')
+  const env = useMemo(() => {
+    return (
+      (ProjectStore?.getEnvs() as Environment[] | null | undefined)?.find(
+        (env: Environment) => env.api_key === match.params.environmentId,
+      ) ?? null
+    )
+  }, [match.params.environmentId])
+
+  const { data: webhooks, isLoading: webhooksLoading } = useGetWebhooksQuery(
+    { environmentId: match.params.environmentId },
+    { skip: !match.params.environmentId },
+  )
 
   const onDiscard = () => {
-    const env = (
-      ProjectStore?.getEnvs() as Environment[] | null | undefined
-    )?.find((env: Environment) => env.api_key === match.params.environmentId)
     if (env && currentEnv) {
       setCurrentEnv({
         ...currentEnv,
@@ -106,10 +109,24 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     { onDiscard: onDiscard },
   )
 
+  const {
+    data: environmentData,
+    isFetching: isFetchingEnvironment,
+    isSuccess: isSuccessEnvironment,
+  } = useGetEnvironmentQuery(
+    { id: env?.api_key ?? '' },
+    {
+      pollingInterval: currentEnv?.use_v2_feature_versioning ? undefined : 2000,
+      skip: isDirty || currentEnv?.use_v2_feature_versioning || !env?.api_key,
+    },
+  )
+
+  const has4EyesPermission = Utils.getPlansPermission('4_EYES')
+  const metadataEnable = Utils.getPlansPermission('METADATA')
+
   const getEnvironment = useCallback(async () => {
-    const env = ProjectStore?.getEnvs()?.find(
-      (env: Environment) => env.api_key === match.params.environmentId,
-    )
+    if (!env) return
+
     setCurrentEnv(env)
 
     const roles = await getRoles(
@@ -147,7 +164,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       )
       setEnvironmentContentType(environmentContentType)
     }
-  }, [match.params.environmentId, store])
+  }, [store, env])
 
   useEffect(() => {
     AppActions.getProject(match.params.projectId)
@@ -161,6 +178,24 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     API.trackPage(Constants.pages.ENVIRONMENT_SETTINGS)
     getEnvironment()
   }, [getEnvironment])
+
+  useEffect(() => {
+    if (isFetchingEnvironment || !env?.id) {
+      return
+    }
+    if (
+      environmentData?.use_v2_feature_versioning &&
+      !currentEnv?.use_v2_feature_versioning
+    ) {
+      AppActions.editEnv(environmentData)
+    }
+  }, [
+    env?.id,
+    isFetchingEnvironment,
+    environmentData,
+    isSuccessEnvironment,
+    currentEnv?.use_v2_feature_versioning,
+  ])
 
   const onSave = () => {
     toast('Environment Saved')
@@ -254,7 +289,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
         router={router}
         environmentId={match.params.environmentId}
         projectId={match.params.projectId}
-        save={createWebhook}
+        save={(webhook: Webhook) =>
+          createWebhook({
+            ...webhook,
+            environmentId: match.params.environmentId,
+          })
+        }
       />,
       'side-modal',
     )
@@ -269,7 +309,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
         isEdit
         environmentId={match.params.environmentId}
         projectId={match.params.projectId}
-        save={saveWebhook}
+        save={(webhook: Webhook) =>
+          saveWebhook({ ...webhook, environmentId: match.params.environmentId })
+        }
       />,
       'side-modal',
     )
@@ -374,7 +416,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                     minimumChangeRequestApprovals
                       ? env?.minimum_change_request_approvals
                       : null,
-                  name: env?.name || '',
+                  name: env?.name ?? '',
                   use_identity_composite_key_for_hashing:
                     !!env?.use_identity_composite_key_for_hashing,
                   use_identity_overrides_in_local_eval:
@@ -514,21 +556,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                       {Utils.getFlagsmithHasFeature('feature_versioning') && (
                         <div>
                           <div className='col-md-8 mt-4'>
-                            {env?.id && (
-                              <EnvironmentVersioningListener
-                                id={env.id}
-                                versioningEnabled={
-                                  currentEnv?.use_v2_feature_versioning ?? false
-                                }
-                                onChange={() => {
-                                  updateCurrentEnv(
-                                    { use_v2_feature_versioning: true },
-                                    false,
-                                    true,
-                                  )
-                                }}
-                              />
-                            )}
                             <Setting
                               title={'Feature Versioning'}
                               description={
@@ -824,12 +851,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                         parentId={match.params.projectId}
                         parentLevel='project'
                         parentSettingsLink={`/project/${match.params.projectId}/settings`}
-                        id={parseInt(match.params.environmentId)}
+                        id={match.params.environmentId}
                         envId={env?.id}
-                        router={router}
                         level='environment'
                         roleTabTitle='Environment Permissions'
                         roles={roles}
+                        router={router}
                       />
                     </FormGroup>
                   </TabItem>
@@ -960,7 +987,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                             <AddMetadataToEntity
                               organisationId={AccountStore.getOrganisation().id}
                               projectId={match.params.projectId}
-                              entityId={currentEnv?.api_key || ''}
+                              entityId={currentEnv?.api_key ?? ''}
                               envName={currentEnv?.name}
                               entityContentType={environmentContentType?.id}
                               entity={environmentContentType.model}
