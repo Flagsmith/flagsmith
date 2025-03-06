@@ -906,6 +906,7 @@ CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+REO_API_KEY = env("REO_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
 
 # Set this to enable create organisation for only superusers

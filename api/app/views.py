@@ -55,6 +55,7 @@ def project_overrides(request):  # type: ignore[no-untyped-def]
         "mixpanel": "MIXPANEL_API_KEY",
         "preventEmailPassword": "PREVENT_EMAIL_PASSWORD",
         "preventSignup": "PREVENT_SIGNUP",
+        "reo": "REO_API_KEY",
         "sentry": "SENTRY_API_KEY",
         "useSecureCookies": "USE_SECURE_COOKIES",
     }

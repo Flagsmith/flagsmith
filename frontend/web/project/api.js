@@ -1,6 +1,8 @@
 import * as amplitude from '@amplitude/analytics-browser'
 import data from 'common/data/base/_data'
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
+import { loadReoScript } from 'reodotdev'
+
 import freeEmailDomains from 'free-email-domains'
 global.API = {
   ajaxHandler(store, res) {
@@ -90,6 +92,34 @@ global.API = {
           !user.email.includes('@icloud'),
         orgs,
         'plan': plans && plans.join(','),
+      })
+    }
+    if (Project.reo) {
+      const reoPromise = loadReoScript({ clientID: Project.reo })
+      reoPromise.then((Reo) => {
+        Reo.init({ clientID: Project.reo })
+        let authType = 'userID'
+        switch (user.auth_type) {
+          case 'EMAIL':
+            authType = 'email'
+            break
+          case 'GITHUB':
+            authType = 'github'
+            break
+          case 'GOOGLE':
+            authType = 'gmail'
+            break
+          default:
+            break
+        }
+        const identity = {
+          company: user.organisations[0]?.name || '',
+          firstname: user.last_name,
+          lastname: user.first_name,
+          type: authType,
+          username: user.email,
+        }
+        Reo.identify(identity)
       })
     }
     if (Project.amplitude) {
