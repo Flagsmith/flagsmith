@@ -470,6 +470,7 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     response = api_client.post(register_url, data=register_data)
     jwt_access_cookie = response.cookies.get("jwt")
 
+    # TODO: UPDATE HERE
     # cookie is invalidated server-side but is still attached to the client
     SlidingToken(jwt_access_cookie.value).blacklist()  # type: ignore[union-attr]
 
