@@ -33,6 +33,7 @@ def test_authenticate_valid_cookie(mocker: MockerFixture) -> None:
     auth = JWTCookieAuthentication()
     request = mocker.MagicMock(spec=Request)
     raw_token = "valid_token"
+    # TODO: UPDATE HERE
     request.COOKIES = {JWT_SLIDING_COOKIE_KEY: raw_token}
 
     validated_token = mocker.MagicMock(spec=Token)
@@ -64,6 +65,7 @@ def test_authenticate_invalid_cookie(
     auth = JWTCookieAuthentication()
     request = mocker.MagicMock(spec=Request)
     raw_token = "invalid_token"
+    # TODO: UPDATE HERE
     request.COOKIES = {JWT_SLIDING_COOKIE_KEY: raw_token}
 
     # Test that no further exceptions are raised if the token is invalid in any way

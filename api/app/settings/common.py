@@ -845,13 +845,9 @@ DJOSER = {
     },
 }
 SIMPLE_JWT = {
-    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"],
-    "SLIDING_TOKEN_LIFETIME": timedelta(
-        minutes=env.int(
-            "COOKIE_AUTH_JWT_ACCESS_TOKEN_LIFETIME_MINUTES",
-            default=10 * 60,
-        )
-    ),
+    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.AccessToken"],
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # Shorter lifetime
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
 }
 
