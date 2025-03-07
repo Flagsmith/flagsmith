@@ -1,10 +1,11 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from custom_auth.jwt_cookie.views import JWTSlidingTokenLogoutView
+from custom_auth.jwt_cookie.views import JWTTokenLogoutView
 from custom_auth.views import (
     CustomAuthTokenLoginOrRequestMFACode,
     CustomAuthTokenLoginWithMFACode,
+    CustomTokenRefreshView,
     FFAdminUserViewSet,
     delete_token,
 )
@@ -28,8 +29,13 @@ urlpatterns = [
     ),
     path(
         "logout/",
-        JWTSlidingTokenLogoutView.as_view(),
+        JWTTokenLogoutView.as_view(),
         name="jwt-logout",
+    ),
+    path(
+        "token/refresh/",
+        CustomTokenRefreshView.as_view(),
+        name="token-refresh",
     ),
     path("", include(ffadmin_user_router.urls)),
     path("token/", delete_token, name="delete-token"),
