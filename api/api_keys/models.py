@@ -33,6 +33,8 @@ class MasterAPIKey(AbstractAPIKey, LifecycleModelMixin, SoftDeleteObject):  # ty
         self,
     ):
         if settings.IS_RBAC_INSTALLED:
-            from rbac.models import MasterAPIKeyRole  # type: ignore[import-not-found]
+            from rbac.models import (  # type: ignore[import-not-found,unused-ignore]
+                MasterAPIKeyRole,
+            )
 
             MasterAPIKeyRole.objects.filter(master_api_key=self.id).delete()
