@@ -9,6 +9,6 @@ class JWTTokenLogoutView(TokenDestroyView):  # type: ignore[misc]
         response = super().post(request)
         if isinstance(jwt_token := request.auth, (AccessToken, RefreshToken)):
             jwt_token.blacklist()
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token')
+            response.delete_cookie("access_token")
+            response.delete_cookie("refresh_token")
         return response  # type: ignore[no-any-return]

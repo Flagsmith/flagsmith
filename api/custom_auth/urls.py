@@ -5,9 +5,9 @@ from custom_auth.jwt_cookie.views import JWTTokenLogoutView
 from custom_auth.views import (
     CustomAuthTokenLoginOrRequestMFACode,
     CustomAuthTokenLoginWithMFACode,
+    CustomTokenRefreshView,
     FFAdminUserViewSet,
     delete_token,
-    CustomTokenRefreshView,
 )
 
 app_name = "custom_auth"
