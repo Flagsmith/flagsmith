@@ -46,9 +46,9 @@ ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 # Need the * prefix to work with pre-commit which runs from the root of the repo
-"*app/settings/local.py"= ["F403", "F405"]
-"*app/settings/production.py"= ["F403", "F405"]
-"*app/settings/saas.py"= ["F403", "F405"]
+"*app/settings/local.py" = ["F403", "F405"]
+"*app/settings/production.py" = ["F403", "F405"]
+"*app/settings/saas.py" = ["F403", "F405"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -75,6 +75,14 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = ["admin_sso.models"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["rbac.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["saml.*"]
 ignore_missing_imports = true
 
 [tool.django-stubs]
