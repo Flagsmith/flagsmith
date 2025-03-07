@@ -24,9 +24,9 @@ from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 env = Env()
 
@@ -174,7 +174,9 @@ if "DATABASE_URL" in os.environ:
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
     # Allow specifying replica database URLs as a JSON array to avoid delimiter conflicts
-    REPLICA_DATABASE_URLS_JSON = json.loads(env.str("REPLICA_DATABASE_URLS_JSON", "null"))
+    REPLICA_DATABASE_URLS_JSON = json.loads(
+        env.str("REPLICA_DATABASE_URLS_JSON", "null")
+    )
 
     if REPLICA_DATABASE_URLS_JSON:
         REPLICA_DATABASE_URLS = REPLICA_DATABASE_URLS_JSON
@@ -192,7 +194,9 @@ if "DATABASE_URL" in os.environ:
         "CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER", ","
     )
     # Allow specifying cross-region replica database URLs as a JSON array to avoid delimiter conflicts
-    CROSS_REGION_REPLICA_DATABASE_URLS_JSON = json.loads(env.str("CROSS_REGION_REPLICA_DATABASE_URLS_JSON", "null"))
+    CROSS_REGION_REPLICA_DATABASE_URLS_JSON = json.loads(
+        env.str("CROSS_REGION_REPLICA_DATABASE_URLS_JSON", "null")
+    )
 
     if CROSS_REGION_REPLICA_DATABASE_URLS_JSON:
         CROSS_REGION_REPLICA_DATABASE_URLS = CROSS_REGION_REPLICA_DATABASE_URLS_JSON
