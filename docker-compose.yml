@@ -69,6 +69,5 @@ services:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'
     depends_on:
-      flagsmith:
-        condition: service_healthy
+      - flagsmith
     command: run-task-processor
