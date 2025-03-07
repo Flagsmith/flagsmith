@@ -27,6 +27,7 @@ from environs import Env
 from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
+from environments.enums import EnvironmentDocumentCacheMode
 
 env = Env()
 
@@ -683,20 +684,21 @@ ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
 ENVIRONMENT_DOCUMENT_CACHE_BACKEND = env(
     "ENVIRONMENT_DOCUMENT_CACHE_BACKEND", "django.core.cache.backends.db.DatabaseCache"
 )
-EXPIRE_ENVIRONMENT_DOCUMENT_CACHE = env.bool("EXPIRE_ENVIRONMENT_DOCUMENT_CACHE", True)
+ENVIRONMENT_DOCUMENT_CACHE_MODE = env.enum(
+    "ENVIRONMENT_DOCUMENT_CACHE_MODE",
+    type=EnvironmentDocumentCacheMode,
+    default=EnvironmentDocumentCacheMode.EXPIRING.value,
+)
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
 
-if not EXPIRE_ENVIRONMENT_DOCUMENT_CACHE:
-    if "CACHE_ENVIRONMENT_DOCUMENT_SECONDS" in os.environ:
-        warnings.warn(
-            "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
-            "since EXPIRE_ENVIRONMENT_DOCUMENT_CACHE is False"
-        )
-    CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT = None
-else:
-    CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT = env.int(
-        "CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0
+if (
+    ENVIRONMENT_DOCUMENT_CACHE_MODE == EnvironmentDocumentCacheMode.PERSISTENT
+    and CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+):
+    warnings.warn(
+        "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
+        'since CACHE_ENVIRONMENT_DOCUMENT_MODE == "PERSISTENT"'
     )
-
 
 USER_THROTTLE_CACHE_NAME = "user-throttle"
 USER_THROTTLE_CACHE_BACKEND = env.str(
@@ -754,7 +756,12 @@ CACHES = {
     ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
         "BACKEND": ENVIRONMENT_DOCUMENT_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
-        "TIMEOUT": CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT,
+        "TIMEOUT": (
+            None
+            if ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+            else CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+        ),
     },
     GET_FLAGS_ENDPOINT_CACHE_NAME: {
         "BACKEND": GET_FLAGS_ENDPOINT_CACHE_BACKEND,
