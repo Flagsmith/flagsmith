@@ -1,7 +1,7 @@
 from typing import Type
-from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_mock import MockerFixture
 from rest_framework.request import Request
 from rest_framework_simplejwt.exceptions import (
     AuthenticationFailed,
@@ -15,10 +15,10 @@ from custom_auth.jwt_cookie.constants import JWT_SLIDING_COOKIE_KEY
 from users.models import FFAdminUser
 
 
-def test_authenticate_without_cookie() -> None:
+def test_authenticate_without_cookie(mocker: MockerFixture) -> None:
     # Given
     auth = JWTCookieAuthentication()
-    request = MagicMock(spec=Request)
+    request = mocker.MagicMock(spec=Request)
     request.COOKIES = {}
 
     # When
@@ -28,46 +28,51 @@ def test_authenticate_without_cookie() -> None:
     assert result is None
 
 
-def test_authenticate_valid_cookie() -> None:
+def test_authenticate_valid_cookie(mocker: MockerFixture) -> None:
     # Given
     auth = JWTCookieAuthentication()
-    request = MagicMock(spec=Request)
+    request = mocker.MagicMock(spec=Request)
     raw_token = "valid_token"
     request.COOKIES = {JWT_SLIDING_COOKIE_KEY: raw_token}
 
-    validated_token = MagicMock(spec=Token)
-    user = MagicMock(spec=FFAdminUser)
+    validated_token = mocker.MagicMock(spec=Token)
+    user = mocker.MagicMock(spec=FFAdminUser)
 
     # Mock the validation and user retrieval
-    with patch.object(
+    mock_validate = mocker.patch.object(
         auth, "get_validated_token", return_value=validated_token
-    ) as mock_validate:
-        with patch.object(auth, "get_user", return_value=user) as mock_get_user:
-            # When
-            result = auth.authenticate(request)
+    )
+    mock_get_user = mocker.patch.object(auth, "get_user", return_value=user)
 
-            # Then
-            assert result == (user, validated_token)
-            mock_validate.assert_called_once_with(raw_token)
-            mock_get_user.assert_called_once_with(validated_token)
+    # When
+    result = auth.authenticate(request)
+
+    # Then
+    assert result == (user, validated_token)
+    mock_validate.assert_called_once_with(raw_token)
+    mock_get_user.assert_called_once_with(validated_token)
 
 
 @pytest.mark.parametrize(
     "exception_class", [InvalidToken, TokenError, AuthenticationFailed]
 )
-def test_authenticate_invalid_cookie(exception_class: Type[Exception]) -> None:
+def test_authenticate_invalid_cookie(
+    mocker: MockerFixture,
+    exception_class: Type[Exception],
+) -> None:
     # Given
     auth = JWTCookieAuthentication()
-    request = MagicMock(spec=Request)
+    request = mocker.MagicMock(spec=Request)
     raw_token = "invalid_token"
     request.COOKIES = {JWT_SLIDING_COOKIE_KEY: raw_token}
 
     # Test that no further exceptions are raised if the token is invalid in any way
-    with patch.object(
+    mocker.patch.object(
         auth, "get_validated_token", side_effect=exception_class("Error")
-    ):
-        # When
-        result = auth.authenticate(request)
+    ).side_effect = exception_class("Error")
 
-        # Then
-        assert result is None
+    # When
+    result = auth.authenticate(request)
+
+    # Then
+    assert result is None
