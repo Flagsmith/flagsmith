@@ -77,6 +77,14 @@ strict = true
 module = ["admin_sso.models"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["rbac.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["saml.*"]
+ignore_missing_imports = true
+
 [tool.django-stubs]
 django_settings_module = "app.settings.local"
 
