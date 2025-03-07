@@ -781,7 +781,7 @@ export type Res = {
   groups: PagedResponse<UserGroup>
   group: UserGroup
   userInvites: PagedResponse<Invite>
-  userInvite: Invite[] // TODO: unify both types in the future
+  createdUserInvite: Invite[]
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
     id: number

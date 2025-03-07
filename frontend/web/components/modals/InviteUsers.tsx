@@ -131,6 +131,13 @@ const InviteUsers: FC = () => {
             onSubmit={(e) => {
               e.preventDefault()
               createUserInvite(getPayload(invites, orgId))
+                .then(() => {
+                  toast('Invite sent successfully')
+                })
+                .catch((error) => {
+                  toast('Error sending invite', 'error')
+                  console.error(error)
+                })
             }}
           >
             <div

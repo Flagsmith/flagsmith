@@ -198,7 +198,14 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       ),
       destructive: true,
       onYes: () =>
-        deleteUserInvite({ inviteId: id, organisationId: organisation.id }),
+        deleteUserInvite({ inviteId: id, organisationId: organisation.id })
+          .then(() => {
+            toast('Invite deleted successfully')
+          })
+          .catch((error) => {
+            toast('Error deleting invite', 'error')
+            console.error(error)
+          }),
       title: 'Delete Invite',
       yesText: 'Confirm',
     })
@@ -694,6 +701,16 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           inviteId: id,
                                           organisationId: organisation.id,
                                         })
+                                          .then(() => {
+                                            toast('Invite resent successfully')
+                                          })
+                                          .catch((error) => {
+                                            toast(
+                                              'Error resent invite',
+                                              'error',
+                                            )
+                                            console.error(error)
+                                          })
                                       }
                                       theme='text'
                                       size='small'

@@ -9,7 +9,7 @@ export const invitesService = service
   .injectEndpoints({
     endpoints: (builder) => ({
       createUserInvite: builder.mutation<
-        Res['userInvite'],
+        Res['createdUserInvite'],
         Req['createUserInvite']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'Invite' }],
