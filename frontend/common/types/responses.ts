@@ -480,7 +480,7 @@ export type Invite = {
   email: string
   date_created: string
   invited_by: User
-  link?: string
+  link: string
   permission_groups: number[]
 }
 
@@ -781,8 +781,6 @@ export type Res = {
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroup>
   group: UserGroup
-  userInvites: PagedResponse<Invite>
-  createdUserInvite: Invite[]
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
     id: number
