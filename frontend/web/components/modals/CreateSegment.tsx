@@ -496,7 +496,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 <Row className='justify-content-center'>
                   Custom Fields
                   {metadataValueChanged && (
-                    <div className='unread ml-2 px-1'>{'*'}</div>
+                    <div className='unread ml-2 px-1 pt-2'>{'*'}</div>
                   )}
                 </Row>
               }
