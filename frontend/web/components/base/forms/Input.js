@@ -156,6 +156,7 @@ const Input = class extends React.Component {
             autoComplete={
               this.props.enableAutoComplete ?? this.props.autocomplete
             }
+            isValid={false}
           />
         )}
         {this.props.type === 'password' && (

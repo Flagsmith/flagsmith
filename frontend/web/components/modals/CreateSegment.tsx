@@ -40,12 +40,9 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { cloneDeep } from 'lodash'
 import ProjectStore from 'common/stores/project-store'
 import classNames from 'classnames'
-import AddMetadataToEntity, {
-  CustomMetadataField,
-} from 'components/metadata/AddMetadataToEntity'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
-import AppActions from 'common/dispatcher/app-actions'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 
@@ -354,10 +351,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 >
                   <Flex className='and-divider__line' />
                   {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
+                    `${displayIndex > 0 ? 'And ' : ''}${rule.type === 'ANY'
+                      ? 'Any of the following'
+                      : 'None of the following'
                     }`,
                   )}
                   <Flex className='and-divider__line' />
@@ -372,6 +368,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     setValueChanged(true)
                     updateRule(0, i, v)
                   }}
+                  errors={error?.data?.rules?.[0]?.rules?.[i]?.conditions}
                 />
               </div>
             )
@@ -427,26 +424,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
     </FormGroup>
   )
 
-  const formatError = (error: CreateSegmentError): string | string[] => {
-    if (!error) {
-      return ""
-    }
-    const mainRule = error.data.rules[0]
-    const errorMessages: string[] = []
-  
-    mainRule.rules.forEach((rule) => {
-      rule.conditions.forEach((condition) => {
-        if (condition.property) {
-          errorMessages.push(`Property - ${condition.property.join(', ')}`)
-        }
-      if (condition.value) {
-        errorMessages.push(`Value - ${condition.value.join(', ')}`)
-        }
-      })
-    })
-    return errorMessages?.length > 1 ? errorMessages : errorMessages?.[0]
-  }
-
   return (
     <>
       {isEdit && !condensed ? (
@@ -476,7 +453,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={formatError(error)}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -551,7 +527,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={formatError(error)}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -587,7 +562,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
             setShowDescriptions={setShowDescriptions}
             allWarnings={allWarnings}
             rulesEl={rulesEl}
-            error={formatError(error)}
             isEdit={isEdit}
             segment={segment}
             isSaving={isSaving}
@@ -644,6 +618,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
       props.onSegmentRetrieved?.(segmentData)
     }
   }, [segmentData])
+
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =
