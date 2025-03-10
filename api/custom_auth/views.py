@@ -148,12 +148,3 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
             UserPasswordResetRequest.objects.create(user=user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class CustomTokenRefreshView(TokenRefreshView):
-    def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        response = super().post(request, *args, **kwargs)
-        if response.status_code == 200:
-            user = request.user
-            authorise_response(user, response)
-        return response
