@@ -13,7 +13,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.throttling import ScopedRateThrottle
-from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from custom_auth.jwt_cookie.services import authorise_response
@@ -142,8 +141,8 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
         if user and user.can_send_password_reset_email():
-            # Invalidate refresh tokens
-            RefreshToken.for_user(user).blacklist()
+            refresh_token = RefreshToken.for_user(user)
+            refresh_token.blacklist()
             super().reset_password(request, *args, **kwargs)
             UserPasswordResetRequest.objects.create(user=user)
 
