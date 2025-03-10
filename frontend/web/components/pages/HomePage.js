@@ -256,6 +256,7 @@ const HomePage = class extends React.Component {
                 }
               }}
               key='single-sign-on'
+              theme='secondary'
               className='w-100'
             >
               Single Sign-On
@@ -440,7 +441,7 @@ const HomePage = class extends React.Component {
                                               type='submit'
                                               className='mt-3 px-4 full-width'
                                             >
-                                              Login
+                                              Log in
                                             </Button>
                                           </div>
                                         </fieldset>
