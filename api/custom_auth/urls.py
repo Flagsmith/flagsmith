@@ -1,5 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from custom_auth.jwt_cookie.views import JWTTokenLogoutView
 from custom_auth.views import (
@@ -7,7 +8,6 @@ from custom_auth.views import (
     CustomAuthTokenLoginWithMFACode,
     FFAdminUserViewSet,
     delete_token,
-    CustomTokenRefreshView,
 )
 
 app_name = "custom_auth"
@@ -34,8 +34,8 @@ urlpatterns = [
     ),
     path(
         "token/refresh/",
-        CustomTokenRefreshView.as_view(),
-        name="token-refresh",
+        TokenRefreshView.as_view(),
+        name='token_refresh',
     ),
     path("", include(ffadmin_user_router.urls)),
     path("token/", delete_token, name="delete-token"),
