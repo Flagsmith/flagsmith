@@ -173,9 +173,19 @@ if "DATABASE_URL" in os.environ:
         ),
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
-    REPLICA_DATABASE_URLS = env.list(
-        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    # Allow specifying replica database URLs as a JSON array to avoid delimiter conflicts
+    REPLICA_DATABASE_URLS_JSON = json.loads(
+        env.str("REPLICA_DATABASE_URLS_JSON", "null")
     )
+
+    if REPLICA_DATABASE_URLS_JSON:
+        REPLICA_DATABASE_URLS = REPLICA_DATABASE_URLS_JSON
+    else:
+        REPLICA_DATABASE_URLS = env.list(
+            "REPLICA_DATABASE_URLS",
+            default=[],
+            delimiter=REPLICA_DATABASE_URLS_DELIMITER,
+        )
     NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
 
     # Cross region replica databases are used as fallbacks if the
@@ -183,11 +193,19 @@ if "DATABASE_URL" in os.environ:
     CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER = env(
         "CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER", ","
     )
-    CROSS_REGION_REPLICA_DATABASE_URLS = env.list(
-        "CROSS_REGION_REPLICA_DATABASE_URLS",
-        default=[],
-        delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+    # Allow specifying cross-region replica database URLs as a JSON array to avoid delimiter conflicts
+    CROSS_REGION_REPLICA_DATABASE_URLS_JSON = json.loads(
+        env.str("CROSS_REGION_REPLICA_DATABASE_URLS_JSON", "null")
     )
+
+    if CROSS_REGION_REPLICA_DATABASE_URLS_JSON:
+        CROSS_REGION_REPLICA_DATABASE_URLS = CROSS_REGION_REPLICA_DATABASE_URLS_JSON
+    else:
+        CROSS_REGION_REPLICA_DATABASE_URLS = env.list(
+            "CROSS_REGION_REPLICA_DATABASE_URLS",
+            default=[],
+            delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+        )
     NUM_CROSS_REGION_DB_REPLICAS = len(CROSS_REGION_REPLICA_DATABASE_URLS)
 
     # DISTRIBUTED spreads the load out across replicas while
