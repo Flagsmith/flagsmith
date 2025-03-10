@@ -20,7 +20,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
-from app.utils import create_hash
+from app.utils import create_hash, is_saas
 from audit.constants import (
     ENVIRONMENT_CREATED_MESSAGE,
     ENVIRONMENT_UPDATED_MESSAGE,
@@ -45,7 +45,10 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
-from util.mappers import map_environment_to_sdk_document
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_sdk_document,
+)
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -245,7 +248,7 @@ class Environment(
             logger.info("Environment with api_key %s does not exist" % api_key)
 
     @classmethod
-    def write_environments_to_dynamodb(
+    def write_environment_documents(
         cls,
         environment_id: int = None,  # type: ignore[assignment]
         project_id: int = None,  # type: ignore[assignment]
@@ -288,10 +291,21 @@ class Environment(
         if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):  # type: ignore[union-attr]
             return
 
-        environment_wrapper.write_environments(environments)
+        if is_saas():
+            environment_wrapper.write_environments(environments)
 
-        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:  # type: ignore[union-attr]
-            environment_v2_wrapper.write_environments(environments)
+            if (
+                project.edge_v2_environments_migrated
+                and environment_v2_wrapper.is_enabled
+            ):  # type: ignore[union-attr]
+                environment_v2_wrapper.write_environments(environments)
+        elif not settings.EXPIRE_ENVIRONMENT_DOCUMENT_CACHE:
+            environment_document_cache.set_many(
+                {
+                    e.api_key: map_environment_to_environment_document(e)
+                    for e in environments
+                }
+            )
 
     def get_feature_state(
         self,
@@ -364,8 +378,11 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        if settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0:
-            return cls._get_environment_document_from_cache(api_key)
+        if (
+            settings.CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT > 0
+            or not settings.EXPIRE_ENVIRONMENT_DOCUMENT_CACHE
+        ):
+            cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
