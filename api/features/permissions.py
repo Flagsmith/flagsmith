@@ -211,10 +211,11 @@ class CreateSegmentOverridePermissions(IsAuthenticated):
             Environment, api_key=view.kwargs["environment_api_key"]
         )
 
-        feature_id = request.data.get("feature") or view.kwargs.get("feature_pk")
-
-        feature = Feature.objects.get(id=feature_id, project=environment.project)
-        tag_ids = list(feature.tags.values_list("id", flat=True))
+        if feature_id := view.kwargs.get("feature_pk"):
+            feature = Feature.objects.get(id=feature_id, project=environment.project)
+            tag_ids = list(feature.tags.values_list("id", flat=True))
+        else:
+            tag_ids = []
 
         return request.user.has_environment_permission(
             permission=MANAGE_SEGMENT_OVERRIDES,
