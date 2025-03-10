@@ -10,9 +10,9 @@ class JWTTokenLogoutView(TokenDestroyView):  # type: ignore[misc]
 
         raw_refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)
         if raw_refresh_token:
-            refresh_token = RefreshToken(raw_refresh_token)
+            refresh_token = RefreshToken(raw_refresh_token)  # type: ignore[union-attr]
             refresh_token.blacklist()
 
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
-        return response
+        return response # type: ignore[no-any-return]
