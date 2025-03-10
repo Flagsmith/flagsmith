@@ -142,8 +142,8 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
         if user and user.can_send_password_reset_email():
-            # Invalidate refresh tokens
-            RefreshToken.for_user(user).blacklist()
+            refresh_token = RefreshToken.for_user(user)
+            refresh_token.blacklist()
             super().reset_password(request, *args, **kwargs)
             UserPasswordResetRequest.objects.create(user=user)
 
