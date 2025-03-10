@@ -12,8 +12,9 @@ from rest_framework.test import (  # type: ignore[attr-defined]
     APIClient,
     override_settings,
 )
-from rest_framework_simplejwt.tokens import SlidingToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from custom_auth.jwt_cookie.constants import REFRESH_TOKEN_COOKIE_KEY
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
@@ -468,10 +469,11 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
         "re_password": password,
     }
     response = api_client.post(register_url, data=register_data)
-    jwt_access_cookie = response.cookies.get("jwt")
+    raw_refresh_cookie = response.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)
 
+    # TODO: UPDATE HERE
     # cookie is invalidated server-side but is still attached to the client
-    SlidingToken(jwt_access_cookie.value).blacklist()  # type: ignore[union-attr]
+    RefreshToken(raw_refresh_cookie).blacklist()  # type: ignore[union-attr]
 
     # When
     response = api_client.get(protected_resource_url)
