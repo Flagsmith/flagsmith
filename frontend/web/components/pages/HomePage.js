@@ -256,6 +256,7 @@ const HomePage = class extends React.Component {
                 }
               }}
               key='single-sign-on'
+              theme='secondary'
               className='w-100'
             >
               Single Sign-On
