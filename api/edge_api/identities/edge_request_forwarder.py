@@ -1,23 +1,14 @@
 import json
+from typing import Any
 
 import requests
 from django.conf import settings
-from task_processor.decorators import (  # type: ignore[import-untyped]
-    register_task_handler,
-)
-from task_processor.models import TaskPriority  # type: ignore[import-untyped]
 
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.dynamodb.migrator import IdentityMigrator
 
 
-def _should_forward(project_id: int) -> bool:
-    migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
-    return bool(migrator.is_migration_done)
-
-
-@register_task_handler(queue_size=2000, priority=TaskPriority.LOW)  # type: ignore[misc]
 def forward_identity_request(  # type: ignore[no-untyped-def]
     request_method: str,
     headers: dict,  # type: ignore[type-arg]
@@ -38,21 +29,11 @@ def forward_identity_request(  # type: ignore[no-untyped-def]
     requests.get(url, params=query_params, headers=headers, timeout=5)
 
 
-@register_task_handler(queue_size=2000, priority=TaskPriority.LOW)  # type: ignore[misc]
 def forward_trait_request(  # type: ignore[no-untyped-def]
     request_method: str,
-    headers: dict,  # type: ignore[type-arg]
+    headers: dict[str, str],
     project_id: int,
-    payload: dict,  # type: ignore[type-arg]
-):
-    return forward_trait_request_sync(request_method, headers, project_id, payload)
-
-
-def forward_trait_request_sync(  # type: ignore[no-untyped-def]
-    request_method: str,
-    headers: dict,  # type: ignore[type-arg]
-    project_id: int,
-    payload: dict,  # type: ignore[type-arg]
+    payload: dict[str, Any],
 ):
     if not _should_forward(project_id):
         return
@@ -67,15 +48,19 @@ def forward_trait_request_sync(  # type: ignore[no-untyped-def]
     )
 
 
-@register_task_handler(queue_size=1000, priority=TaskPriority.LOW)  # type: ignore[misc]
 def forward_trait_requests(  # type: ignore[no-untyped-def]
     request_method: str,
-    headers: str,
+    headers: dict[str, str],
     project_id: int,
-    payload: dict,  # type: ignore[type-arg]
+    payload: list[dict[str, Any]],
 ):
     for trait_data in payload:
-        forward_trait_request_sync(request_method, headers, project_id, trait_data)  # type: ignore[arg-type]
+        forward_trait_request(request_method, headers, project_id, trait_data)
+
+
+def _should_forward(project_id: int) -> bool:
+    migrator = IdentityMigrator(project_id)  # type: ignore[no-untyped-call]
+    return bool(migrator.is_migration_done)
 
 
 def _get_headers(request_method: str, headers: dict, payload: str = "") -> dict:  # type: ignore[type-arg]
