@@ -55,14 +55,13 @@ def get_version_info() -> VersionInfo:
         "is_enterprise": is_enterprise(),
         "is_saas": is_saas(),
     }
-    image_tag = UNKNOWN
 
     manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
 
     if manifest_versions_content != UNKNOWN:
         manifest_versions = json.loads(manifest_versions_content)
         version_json["package_versions"] = manifest_versions
-        image_tag = manifest_versions["."]
+        version_json["image_tag"] = manifest_versions["."]
 
     return version_json
 
