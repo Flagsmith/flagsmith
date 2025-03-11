@@ -18,7 +18,7 @@ version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["main", "dev"]
 files = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
@@ -1376,6 +1376,26 @@ files = [
 Django = ">=3.2"
 
 [[package]]
+name = "django-migration-linter"
+version = "5.1.0"
+description = "Detect backward incompatible migrations for your django project"
+optional = false
+python-versions = ">=3.7"
+groups = ["dev"]
+files = [
+    {file = "django-migration-linter-5.1.0.tar.gz", hash = "sha256:638a6f39b0109fb95a747f10cb3ae4362b4ca46e7f45eee9546d3dd4c322b83a"},
+    {file = "django_migration_linter-5.1.0-py3-none-any.whl", hash = "sha256:eefdca0cd60b0bacdf61420b0779b2c680dd29d3b43e9ccb0d8d2aa89f036474"},
+]
+
+[package.dependencies]
+appdirs = ">=1.4.3"
+django = ">=2.2"
+toml = ">=0.10.2"
+
+[package.extras]
+test = ["coverage (>=7.2.7)", "django-add-default-value (>=0.4.0)", "mysqlclient (>=2.1.1)", "psycopg2 (>=2.9.6)", "tox (>=4.6.3)"]
+
+[[package]]
 name = "django-multiselectfield"
 version = "0.1.12"
 description = "Django multiple select field"
@@ -2007,8 +2027,8 @@ simplejson = "~3.19.1"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.3.1"
-resolved_reference = "fffd43bc92bfe477fbc1e4ab435610b6e23639d2"
+reference = "fix/tasks-module-not-autodiscovered"
+resolved_reference = "15c948379308249f6d57fa5ae6786412b1897eab"
 
 [[package]]
 name = "freezegun"
@@ -5199,4 +5219,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "3263dce1b5b4fdad2c7fcb52e98e4fec1f77bb44ae5edb7f430a84318fae6bef"
+content-hash = "5fb521f51bd3e21f04dc37ee83619322e7bd6ff52dba2c4ded80dae628b4905c"

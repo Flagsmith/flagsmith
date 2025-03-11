@@ -16,8 +16,10 @@ from app_analytics.analytics_db_service import (
     get_usage_data,
 )
 from app_analytics.cache import FeatureEvaluationCache
-from app_analytics.tasks import track_feature_evaluation_v2
-from app_analytics.track import track_feature_evaluation_influxdb_v2
+from app_analytics.tasks import (
+    track_feature_evaluation_influxdb_v2,
+    track_feature_evaluation_v2,
+)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState

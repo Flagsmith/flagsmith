@@ -6,13 +6,12 @@ from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from edge_api.identities.edge_request_forwarder import (
     forward_identity_request,
     forward_trait_request,
-    forward_trait_request_sync,
     forward_trait_requests,
 )
 
 
 @pytest.mark.parametrize(
-    "forwarder_function", [forward_identity_request, forward_trait_request_sync]
+    "forwarder_function", [forward_identity_request, forward_trait_request]
 )
 def test_forwarder_function_makes_no_request_if_migration_is_not_yet_done(  # type: ignore[no-untyped-def]
     mocker, forwarder_mocked_requests, forwarder_mocked_migrator, forwarder_function
@@ -118,7 +117,7 @@ def test_forward_trait_request_sync_makes_correct_post_request(  # type: ignore[
     ).is_migration_done = mocked_migration_done
 
     # When
-    forward_trait_request_sync("POST", headers, project_id, payload=request_data)
+    forward_trait_request("POST", headers, project_id, payload=request_data)
 
     # Then
     args, kwargs = forwarder_mocked_requests.post.call_args
