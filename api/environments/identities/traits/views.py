@@ -12,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from edge_api.identities.edge_request_forwarder import (
+from edge_api.identities.tasks import (
     forward_trait_request,
     forward_trait_requests,
 )

@@ -7,11 +7,11 @@ from task_processor.decorators import (  # type: ignore[import-untyped]
 from environments.models import Webhook
 from features.models import Feature, FeatureState
 from webhooks.constants import WEBHOOK_DATETIME_FORMAT
-from webhooks.webhooks import (
-    WebhookEventType,
+from webhooks.tasks import (
     call_environment_webhooks,
     call_organisation_webhooks,
 )
+from webhooks.webhooks import WebhookEventType
 
 from .models import HistoricalFeatureState  # type: ignore[attr-defined]
 

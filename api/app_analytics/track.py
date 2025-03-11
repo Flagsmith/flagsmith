@@ -7,9 +7,6 @@ from django.core.cache import caches
 from six.moves.urllib.parse import (  # type: ignore[import-untyped]
     quote,  # python 2/3 compatible urllib import
 )
-from task_processor.decorators import (  # type: ignore[import-untyped]
-    register_task_handler,
-)
 
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from environments.models import Environment
@@ -130,7 +127,6 @@ def track_request_influxdb(request):  # type: ignore[no-untyped-def]
         influxdb.write()  # type: ignore[no-untyped-call]
 
 
-@register_task_handler()  # type: ignore[misc]
 def track_feature_evaluation_influxdb(
     environment_id: int, feature_evaluations: dict[str, int]
 ) -> None:
@@ -149,7 +145,6 @@ def track_feature_evaluation_influxdb(
     influxdb.write()  # type: ignore[no-untyped-call]
 
 
-@register_task_handler()  # type: ignore[misc]
 def track_feature_evaluation_influxdb_v2(
     environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
 ) -> None:

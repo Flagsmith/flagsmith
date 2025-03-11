@@ -10,14 +10,19 @@ from task_processor.decorators import (  # type: ignore[import-untyped]
 )
 
 from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
-from environments.models import Environment
-
-from .models import (
+from app_analytics.models import (
     APIUsageBucket,
     APIUsageRaw,
     FeatureEvaluationBucket,
     FeatureEvaluationRaw,
 )
+from app_analytics.track import (
+    track_feature_evaluation_influxdb as track_feature_evaluation_influxdb_service,
+)
+from app_analytics.track import (
+    track_feature_evaluation_influxdb_v2 as track_feature_evaluation_influxdb_v2_service,
+)
+from environments.models import Environment
 
 if settings.USE_POSTGRES_FOR_ANALYTICS:
 
@@ -109,6 +114,15 @@ def track_request(resource: int, host: str, environment_key: str, count: int = 1
         host=host,
         count=count,
     )
+
+
+track_feature_evaluation_influxdb = register_task_handler()(
+    track_feature_evaluation_influxdb_service
+)
+
+track_feature_evaluation_influxdb_v2 = register_task_handler()(
+    track_feature_evaluation_influxdb_v2_service
+)
 
 
 def get_start_of_current_bucket(bucket_size: int) -> datetime:
