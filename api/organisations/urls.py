@@ -171,7 +171,7 @@ if settings.LICENSING_INSTALLED:  # pragma: no cover
 
 
 if settings.IS_RBAC_INSTALLED:
-    from rbac.views import (  # type: ignore[import-not-found]
+    from rbac.views import (  # type: ignore[import-not-found,unused-ignore]
         GroupRoleViewSet,
         MasterAPIKeyRoleViewSet,
         RoleEnvironmentPermissionsViewSet,
