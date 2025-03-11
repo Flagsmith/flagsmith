@@ -75,7 +75,9 @@ jobs:
       api-image: ${{ matrix.api-image }}
       concurrency: ${{ matrix.args.concurrency }}
       tests: ${{ matrix.args.tests }}
-    secrets: inherit
+    secrets:
+      GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
 
     strategy:
       matrix:
