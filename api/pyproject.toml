@@ -224,7 +224,6 @@ types-psycopg2 = "^2.9.21.20250121"
 types-python-dateutil = "^2.9.0.20241206"
 types-pytz = "^2025.1.0.20250204"
 ruff = "^0.9.7"
-django-migration-linter = "^5.1.0"
 
 [build-system]
 requires = ["poetry>=2.0.0"]

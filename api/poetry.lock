@@ -18,7 +18,7 @@ version = "1.4.4"
 description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = "*"
-groups = ["main", "dev"]
+groups = ["main"]
 files = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
@@ -1374,26 +1374,6 @@ files = [
 
 [package.dependencies]
 Django = ">=3.2"
-
-[[package]]
-name = "django-migration-linter"
-version = "5.1.0"
-description = "Detect backward incompatible migrations for your django project"
-optional = false
-python-versions = ">=3.7"
-groups = ["dev"]
-files = [
-    {file = "django-migration-linter-5.1.0.tar.gz", hash = "sha256:638a6f39b0109fb95a747f10cb3ae4362b4ca46e7f45eee9546d3dd4c322b83a"},
-    {file = "django_migration_linter-5.1.0-py3-none-any.whl", hash = "sha256:eefdca0cd60b0bacdf61420b0779b2c680dd29d3b43e9ccb0d8d2aa89f036474"},
-]
-
-[package.dependencies]
-appdirs = ">=1.4.3"
-django = ">=2.2"
-toml = ">=0.10.2"
-
-[package.extras]
-test = ["coverage (>=7.2.7)", "django-add-default-value (>=0.4.0)", "mysqlclient (>=2.1.1)", "psycopg2 (>=2.9.6)", "tox (>=4.6.3)"]
 
 [[package]]
 name = "django-multiselectfield"
@@ -5219,4 +5199,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "5fb521f51bd3e21f04dc37ee83619322e7bd6ff52dba2c4ded80dae628b4905c"
+content-hash = "967be544ee312bb63acf7ad3c99ee3978394ab3a4df101eaebbf338dab9ba505"
