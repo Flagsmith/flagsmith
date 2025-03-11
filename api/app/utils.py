@@ -2,6 +2,7 @@ import json
 import pathlib
 from functools import lru_cache
 from typing import TypedDict
+from typing_extensions import NotRequired
 
 import shortuuid
 from django.conf import settings
@@ -16,6 +17,7 @@ class VersionInfo(TypedDict):
     has_email_provider: bool
     is_enterprise: bool
     is_saas: bool
+    package_versions: NotRequired[dict[str, str]]
 
 
 def create_hash() -> str:
@@ -46,7 +48,13 @@ def has_email_provider() -> bool:
 @lru_cache
 def get_version_info() -> VersionInfo:
     """Reads the version info baked into src folder of the docker container"""
-    version_json = {}
+    version_json: VersionInfo = {
+        "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
+        "image_tag": UNKNOWN,
+        "has_email_provider": has_email_provider(),
+        "is_enterprise": is_enterprise(),
+        "is_saas": is_saas(),
+    }
     image_tag = UNKNOWN
 
     manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
@@ -56,15 +64,7 @@ def get_version_info() -> VersionInfo:
         version_json["package_versions"] = manifest_versions
         image_tag = manifest_versions["."]
 
-    version_json = version_json | {
-        "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
-        "image_tag": image_tag,
-        "has_email_provider": has_email_provider(),
-        "is_enterprise": is_enterprise(),
-        "is_saas": is_saas(),
-    }
-
-    return version_json  # type: ignore[return-value]
+    return version_json
 
 
 def _get_file_contents(file_path: str) -> str:

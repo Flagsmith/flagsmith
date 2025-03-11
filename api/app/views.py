@@ -17,7 +17,7 @@ def version_info(request: Request) -> JsonResponse:
 
 
 @csrf_exempt
-def index(request):  # type: ignore[no-untyped-def]
+def index(request: Request) -> HttpResponse:
     if request.method != "GET":
         logger.warning(
             "Invalid request made to %s with method %s", request.path, request.method
@@ -28,7 +28,7 @@ def index(request):  # type: ignore[no-untyped-def]
     return HttpResponse(template.render(request=request))
 
 
-def project_overrides(request):  # type: ignore[no-untyped-def]
+def project_overrides(request: Request) -> HttpResponse:
     """
     Build and return the dictionary of front-end relevant environment variables for configuration.
     It gets loaded as a script tag in the head of the browser when the frontend application starts up.

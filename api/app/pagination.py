@@ -5,9 +5,8 @@ from collections import OrderedDict
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.inspectors import PaginatorInspector  # type: ignore[import-untyped]
 from flag_engine.identities.models import IdentityModel
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import BasePagination, PageNumberPagination
 from rest_framework.response import Response
-
 
 class CustomPagination(PageNumberPagination):
     page_size = 999
@@ -16,7 +15,7 @@ class CustomPagination(PageNumberPagination):
 
 
 class EdgeIdentityPaginationInspector(PaginatorInspector):  # type: ignore[misc]
-    def get_paginator_parameters(self, paginator):  # type: ignore[no-untyped-def]
+    def get_paginator_parameters(self, paginator: BasePagination) -> list[openapi.Parameter]:
         """
         :param BasePagination paginator: the paginator
         :rtype: list[openapi.Parameter]
