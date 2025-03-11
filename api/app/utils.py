@@ -2,10 +2,10 @@ import json
 import pathlib
 from functools import lru_cache
 from typing import TypedDict
-from typing_extensions import NotRequired
 
 import shortuuid
 from django.conf import settings
+from typing_extensions import NotRequired
 
 UNKNOWN = "unknown"
 VERSIONS_INFO_FILE_LOCATION = ".versions.json"

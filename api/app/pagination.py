@@ -8,6 +8,7 @@ from flag_engine.identities.models import IdentityModel
 from rest_framework.pagination import BasePagination, PageNumberPagination
 from rest_framework.response import Response
 
+
 class CustomPagination(PageNumberPagination):
     page_size = 999
     page_size_query_param = "page_size"
@@ -15,7 +16,9 @@ class CustomPagination(PageNumberPagination):
 
 
 class EdgeIdentityPaginationInspector(PaginatorInspector):  # type: ignore[misc]
-    def get_paginator_parameters(self, paginator: BasePagination) -> list[openapi.Parameter]:
+    def get_paginator_parameters(
+        self, paginator: BasePagination
+    ) -> list[openapi.Parameter]:
         """
         :param BasePagination paginator: the paginator
         :rtype: list[openapi.Parameter]
