@@ -111,7 +111,7 @@
                     ],
                     "default": null,
                     "title": "Application Name",
-                    "description": "The name of the application. Sent to the Flagsmith API as the `X-Customer-Application-Name` HTTP header."
+                    "description": "Client application name. Sent to the Flagsmith API as the `X-Customer-Application-Name` HTTP header."
                 },
                 "version": {
                     "anyOf": [
@@ -124,7 +124,7 @@
                     ],
                     "default": null,
                     "title": "Application Version",
-                    "description": "The version of the application. Sent to the Flagsmith API as the `X-Customer-Application-Version` HTTP header."
+                    "description": "Client application version. Sent to the Flagsmith API as the `X-Customer-Application-Version` HTTP header."
                 }
             },
             "required": [],
