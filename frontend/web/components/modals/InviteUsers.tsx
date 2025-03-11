@@ -123,13 +123,13 @@ const InviteUsers: FC = () => {
             >
               <Row>
                 <Flex>
-                  <label>Email Address</label>
+                  <label>Email</label>
                 </Flex>
                 <Flex>
-                  <label className='ml-3'>Select Role</label>
+                  <label className='ml-3'>Built-in role</label>
                 </Flex>
                 <Flex>
-                  <label className='ml-3'>Select Group</label>
+                  <label className='ml-3'>Groups</label>
                 </Flex>
               </Row>
               {invites.map((invite, index) => (
@@ -155,7 +155,7 @@ const InviteUsers: FC = () => {
                       value={invite.emailAddress}
                       isValid={isValid}
                       type='text'
-                      placeholder='E-mail address'
+                      placeholder='Email'
                     />
                   </Flex>
                   <Flex className='mb-2'>

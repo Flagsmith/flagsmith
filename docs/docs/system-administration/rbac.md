@@ -85,7 +85,8 @@ If you are self-hosting Flagsmith, you must
 :::
 
 To send invitation emails to specific users, click on **Invite members**. Then, fill in the email address and built-in
-role of each user you want to invite.
+role of each user you want to invite. You can also add these users to any groups at this time, so that they have the 
+permissions they need as soon as they log in for the first time.
 
 When a user accepts their email invitation, they will be prompted to sign up for a Flagsmith account, or they can choose
 to log in if they already have an account with the same email address.
