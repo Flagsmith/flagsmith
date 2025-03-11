@@ -3,7 +3,7 @@ import logging
 import os
 
 
-def mkdir_p(path):  # type: ignore[no-untyped-def]
+def mkdir_p(path: str) -> None:
     """http://stackoverflow.com/a/600612/190597 (tzot)"""
     try:
         os.makedirs(path, exist_ok=True)  # Python>3.2
@@ -18,6 +18,12 @@ def mkdir_p(path):  # type: ignore[no-untyped-def]
 
 
 class MakeFileHandler(logging.FileHandler):
-    def __init__(self, filename, mode="a", encoding=None, delay=0):  # type: ignore[no-untyped-def]
-        mkdir_p(os.path.dirname(filename))  # type: ignore[no-untyped-call]
+    def __init__(
+        self,
+        filename: str,
+        mode: str = "a",
+        encoding: str | None = None,
+        delay: bool = False,
+    ) -> None:
+        mkdir_p(os.path.dirname(filename))
         logging.FileHandler.__init__(self, filename, mode, encoding, delay)

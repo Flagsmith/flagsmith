@@ -18,6 +18,10 @@ class VersionInfo(TypedDict):
     is_saas: bool
 
 
+class VersionInfoDict(VersionInfo):
+    package_versions: dict[str, str]
+
+
 def create_hash() -> str:
     """Helper function to create a short hash"""
     return shortuuid.uuid()
@@ -44,27 +48,28 @@ def has_email_provider() -> bool:
 
 
 @lru_cache
-def get_version_info() -> VersionInfo:
+def get_version_info() -> VersionInfo | VersionInfoDict:
     """Reads the version info baked into src folder of the docker container"""
-    version_json = {}
-    image_tag = UNKNOWN
-
     manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
 
     if manifest_versions_content != UNKNOWN:
         manifest_versions = json.loads(manifest_versions_content)
-        version_json["package_versions"] = manifest_versions
-        image_tag = manifest_versions["."]
+        return VersionInfoDict(
+            ci_commit_sha=_get_file_contents("./CI_COMMIT_SHA"),
+            image_tag=manifest_versions["."],
+            has_email_provider=has_email_provider(),
+            is_enterprise=is_enterprise(),
+            is_saas=is_saas(),
+            package_versions=manifest_versions,
+        )
 
-    version_json = version_json | {
-        "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
-        "image_tag": image_tag,
-        "has_email_provider": has_email_provider(),
-        "is_enterprise": is_enterprise(),
-        "is_saas": is_saas(),
-    }
-
-    return version_json  # type: ignore[return-value]
+    return VersionInfo(
+        ci_commit_sha=_get_file_contents("./CI_COMMIT_SHA"),
+        image_tag=UNKNOWN,
+        has_email_provider=has_email_provider(),
+        is_enterprise=is_enterprise(),
+        is_saas=is_saas(),
+    )
 
 
 def _get_file_contents(file_path: str) -> str:
