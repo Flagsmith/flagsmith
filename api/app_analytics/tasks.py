@@ -116,11 +116,11 @@ def track_request(resource: int, host: str, environment_key: str, count: int = 1
     )
 
 
-track_feature_evaluation_influxdb = register_task_handler(
+track_feature_evaluation_influxdb = register_task_handler()(
     track_feature_evaluation_influxdb_service
 )
 
-track_feature_evaluation_influxdb_v2 = register_task_handler(
+track_feature_evaluation_influxdb_v2 = register_task_handler()(
     track_feature_evaluation_influxdb_v2_service
 )
 
