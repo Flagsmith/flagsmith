@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.167.1](https://github.com/Flagsmith/flagsmith/compare/v2.167.0...v2.167.1) (2025-03-11)
+
+
+### Bug Fixes
+
+* **ci:** E2E builds Docker images unneccessarily on publish ([#5212](https://github.com/Flagsmith/flagsmith/issues/5212)) ([ba0610e](https://github.com/Flagsmith/flagsmith/commit/ba0610e1e04eed06d07a3a958959390660e2c602))
+* Some tasks are not being initialised ([#5213](https://github.com/Flagsmith/flagsmith/issues/5213)) ([e8b203b](https://github.com/Flagsmith/flagsmith/commit/e8b203be0ab9e2547002fec7c651d32aa45a94cb))
+
 ## [2.167.0](https://github.com/Flagsmith/flagsmith/compare/v2.166.0...v2.167.0) (2025-03-11)
 
 
