@@ -24,10 +24,10 @@ from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
 from app.utils import get_numbered_env_vars_with_prefix
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 env = Env()
 
