@@ -12,6 +12,10 @@ from . import utils
 logger = logging.getLogger(__name__)
 
 
+def liveness(request: Request) -> JsonResponse:
+    return JsonResponse({"status": "ok"})
+
+
 def version_info(request: Request) -> JsonResponse:
     return JsonResponse(utils.get_version_info())
 

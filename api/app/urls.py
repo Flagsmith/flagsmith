@@ -10,7 +10,7 @@ from users.views import password_reset_redirect
 from . import views
 
 urlpatterns = [
-    re_path(r"^health/liveness/?", views.version_info),
+    re_path(r"^health/liveness/?", views.liveness),
     re_path(r"^health/readiness/?", include("health_check.urls")),
     path("processor/", include("task_processor.urls")),
 ]
