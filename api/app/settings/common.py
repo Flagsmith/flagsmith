@@ -24,9 +24,10 @@ from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
+from app.utils import get_numbered_env_vars_with_prefix
+from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 env = Env()
 
@@ -176,8 +177,14 @@ if "DATABASE_URL" in os.environ:
         ),
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
-    REPLICA_DATABASE_URLS = env.list(
-        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    REPLICA_DATABASE_URLS = (
+        env.list(
+            "REPLICA_DATABASE_URLS",
+            default=[],
+            delimiter=REPLICA_DATABASE_URLS_DELIMITER,
+        )
+        if not os.getenv("REPLICA_DATABASE_URL_0")
+        else get_numbered_env_vars_with_prefix("REPLICA_DATABASE_URL_")
     )
     NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
 
@@ -186,10 +193,14 @@ if "DATABASE_URL" in os.environ:
     CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER = env(
         "CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER", ","
     )
-    CROSS_REGION_REPLICA_DATABASE_URLS = env.list(
-        "CROSS_REGION_REPLICA_DATABASE_URLS",
-        default=[],
-        delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+    CROSS_REGION_REPLICA_DATABASE_URLS = (
+        env.list(
+            "CROSS_REGION_REPLICA_DATABASE_URLS",
+            default=[],
+            delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+        )
+        if not os.getenv("CROSS_REGION_REPLICA_DATABASE_URL_0")
+        else get_numbered_env_vars_with_prefix("CROSS_REGION_REPLICA_DATABASE_URL_")
     )
     NUM_CROSS_REGION_DB_REPLICAS = len(CROSS_REGION_REPLICA_DATABASE_URLS)
 

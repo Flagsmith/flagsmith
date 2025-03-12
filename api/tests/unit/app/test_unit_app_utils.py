@@ -4,7 +4,7 @@ import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
 
-from app.utils import get_version_info
+from app.utils import get_numbered_env_vars_with_prefix, get_version_info
 
 
 def test_get_version_info(fs: FakeFilesystem) -> None:
@@ -97,3 +97,16 @@ def test_get_version_info__email_config_disabled__return_expected(
 
     # Then
     assert result["has_email_provider"] is False
+
+
+def test_get_numbered_env_vars_with_prefix(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Given
+    monkeypatch.setenv("DB_URL_0", "0")
+    monkeypatch.setenv("DB_URL_1", "1")
+    monkeypatch.setenv("DB_URL_3", "3")
+
+    # When
+    env_vars = get_numbered_env_vars_with_prefix("DB_URL_")
+
+    # Then
+    assert env_vars == ["0", "1"]
