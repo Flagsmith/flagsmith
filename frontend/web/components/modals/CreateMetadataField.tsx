@@ -32,7 +32,6 @@ type CreateMetadataFieldType = {
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
-  projectId: string
 }
 
 type QueryBody = Omit<MetadataModelField, 'id'>
@@ -60,7 +59,6 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   metadataModelFieldList,
   onComplete,
   organisationId,
-  projectId,
 }) => {
   const metadataTypes: MetadataType[] = [
     { id: 1, label: 'int', value: 'int' },
@@ -143,7 +141,6 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           ? ([
               {
                 content_type: projectContentType.id,
-                object_id: parseInt(projectId),
               } as isRequiredFor,
             ] as isRequiredFor[])
           : [],
