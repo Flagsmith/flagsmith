@@ -4,6 +4,8 @@ import pytest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
 
+from django.test import Client
+from users.models import FFAdminUser
 from app.utils import get_version_info
 
 
@@ -36,13 +38,60 @@ def test_get_version_info(fs: FakeFilesystem, db: None) -> None:
     }
 
 
-def test_get_version_info_with_missing_files(fs: FakeFilesystem) -> None:
+def test_get_version_info_self_hosted_data_is_bootstrapped(
+    fs: FakeFilesystem, db: None, settings: SettingsWrapper, user_one: FFAdminUser
+) -> None:
+    # Given
+    fs.create_file("./ENTERPRISE_VERSION")
+    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
+    settings.ADMIN_EMAIL = user_one.email
+
+    # When
+    result = get_version_info()
+
+    # Then
+    assert result["self_hosted_data"] == {
+        "is_bootstrapped": True,
+        "has_logins": False,
+        "has_users": True,
+    }
+
+
+def test_get_version_info_self_hosted_data_users_and_login(
+    fs: FakeFilesystem, db: None, settings: SettingsWrapper, client: Client
+) -> None:
+    # Given
+    fs.create_file("./ENTERPRISE_VERSION")
+
+    result = get_version_info()
+
+    # Let's make sure everything is
+    # as expected before we create the users
+    assert result["self_hosted_data"] == {
+        "is_bootstrapped": False,
+        "has_logins": False,
+        "has_users": False,
+    }
+    # When
+    user = FFAdminUser.objects.create(email="user_two@test.com")
+
+    client.force_login(user)
+    result = get_version_info()
+
+    # Then
+    result["self_hosted_data"] == {
+        "is_bootstrapped": False,
+        "has_logins": True,
+        "has_users": True,
+    }
+
+
+def test_get_version_info_with_missing_files(fs: FakeFilesystem, db: None) -> None:
     # Given
     fs.create_file("./ENTERPRISE_VERSION")
 
     # When
     result = get_version_info()
-
     # Then
     assert result == {
         "ci_commit_sha": "unknown",
@@ -50,6 +99,11 @@ def test_get_version_info_with_missing_files(fs: FakeFilesystem) -> None:
         "has_email_provider": False,
         "is_enterprise": True,
         "is_saas": False,
+        "self_hosted_data": {
+            "has_users": False,
+            "has_logins": False,
+            "is_bootstrapped": False,
+        },
     }
 
 
@@ -65,9 +119,7 @@ EMAIL_BACKENDS_AND_SETTINGS = [
     EMAIL_BACKENDS_AND_SETTINGS,
 )
 def test_get_version_info__email_config_enabled__return_expected(
-    settings: SettingsWrapper,
-    email_backend: str,
-    expected_setting_name: str,
+    settings: SettingsWrapper, email_backend: str, expected_setting_name: str, db: None
 ) -> None:
     # Given
     settings.EMAIL_BACKEND = email_backend
@@ -91,6 +143,7 @@ def test_get_version_info__email_config_disabled__return_expected(
     settings: SettingsWrapper,
     email_backend: str | None,
     expected_setting_name: str | None,
+    db: None,
 ) -> None:
     # Given
     settings.EMAIL_BACKEND = email_backend
