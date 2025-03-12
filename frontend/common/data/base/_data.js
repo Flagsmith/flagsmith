@@ -56,7 +56,7 @@ module.exports = {
       document.getElementById('e2e-request').innerText = JSON.stringify(payload)
     }
 
-    return fetch(url, options)
+    return this.fetchWithInterceptor(url, options)
       .then((response) => this.status(response, isExternal))
       .then((response) => {
         // always return json
@@ -73,8 +73,38 @@ module.exports = {
         return response
       })
   },
+
   delete(url, data, headers) {
     return this._request('delete', url, data, headers)
+  },
+  fetchWithInterceptor(url, options) {
+    const originalFetch = fetch
+    const isExternal = !url.startsWith(Project.api)
+    const excludedUrls = [
+      `${Project.api}auth/token/refresh/`,
+      `${Project.api}auth/logout/`,
+    ]
+    const isExcluded = excludedUrls.includes(url)
+    const isCookieAuthEnabled = Project.cookieAuthEnabled
+
+    return originalFetch(url, options).then((response) => {
+      if (
+        isCookieAuthEnabled &&
+        response.status === 401 &&
+        !isExternal &&
+        !isExcluded
+      ) {
+        return this.post(`${Project.api}auth/token/refresh/`)
+          .then(() => {
+            return originalFetch(url, options)
+          })
+          .catch((error) => {
+            AppActions.setUser(null)
+            return Promise.reject(error)
+          })
+      }
+      return Promise.resolve(response)
+    })
   },
 
   get(url, data, headers) {

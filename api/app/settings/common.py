@@ -846,7 +846,7 @@ DJOSER = {
 }
 SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.AccessToken"],
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # Shorter lifetime
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
 }

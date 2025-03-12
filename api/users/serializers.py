@@ -2,7 +2,7 @@ from djoser.serializers import (  # type: ignore[import-untyped]
     UserSerializer as DjoserUserSerializer,
 )
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, NotAuthenticated
 
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
@@ -160,6 +160,11 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
             "date_joined",
             "uuid",
         )
+    def to_representation(self, instance):
+        if not instance.is_authenticated:
+            raise NotAuthenticated("User is not authenticated.")
+
+        return super().to_representation(instance)
 
 
 class ListUsersQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
