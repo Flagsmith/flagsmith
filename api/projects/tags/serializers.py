@@ -5,7 +5,7 @@ from rest_framework import serializers
 from projects.tags.models import Tag
 
 
-class TagSerializer(serializers.ModelSerializer):
+class TagSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Tag
         fields = (
@@ -22,6 +22,6 @@ class TagSerializer(serializers.ModelSerializer):
         read_only_fields = ("project", "uuid", "is_system_tag", "type")
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        if self.instance and self.instance.is_system_tag:
+        if self.instance and self.instance.is_system_tag:  # type: ignore[union-attr]
             raise serializers.ValidationError("Cannot update a system tag.")
-        return super().validate(attrs)
+        return super().validate(attrs)  # type: ignore[no-any-return]

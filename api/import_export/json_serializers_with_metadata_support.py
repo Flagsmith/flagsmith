@@ -10,7 +10,7 @@ from metadata.models import Metadata, MetadataModelFieldRequirement
 Serializer = JsonSerializer
 
 
-def Deserializer(stream_or_string, **options):
+def Deserializer(stream_or_string, **options):  # type: ignore[no-untyped-def]
     if not isinstance(stream_or_string, (bytes, str)):
         stream_or_string = stream_or_string.read()
     if isinstance(stream_or_string, bytes):
@@ -24,7 +24,7 @@ def Deserializer(stream_or_string, **options):
                 obj.object, MetadataModelFieldRequirement
             ):
                 content_type = obj.object.content_type
-                content_object = content_type.model_class().objects.get_by_natural_key(
+                content_object = content_type.model_class().objects.get_by_natural_key(  # type: ignore[union-attr]
                     obj.object.object_id
                 )
                 obj.object.object_id = content_object.pk

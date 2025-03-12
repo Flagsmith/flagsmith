@@ -14,7 +14,7 @@ from .models import PipedriveLead, PipedriveOrganization, PipedrivePerson
 logger = logging.getLogger(__name__)
 
 try:
-    import re2 as re
+    import re2 as re  # type: ignore[import-untyped]
 
     logger.info("Using re2 library for regex.")
 except ImportError:
@@ -24,7 +24,7 @@ except ImportError:
 
 class PipedriveLeadTracker(LeadTracker):
     @staticmethod
-    def should_track(user: FFAdminUser):
+    def should_track(user: FFAdminUser):  # type: ignore[no-untyped-def]
         if not settings.ENABLE_PIPEDRIVE_LEAD_TRACKING:
             return False
 
@@ -79,15 +79,15 @@ class PipedriveLeadTracker(LeadTracker):
             settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY
             and settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE
         ):
-            create_lead_kwargs["custom_fields"][
+            create_lead_kwargs["custom_fields"][  # type: ignore[index]
                 settings.PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY
             ] = settings.PIPEDRIVE_API_LEAD_SOURCE_VALUE
         if user.sign_up_type and settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY:
-            create_lead_kwargs["custom_fields"][
+            create_lead_kwargs["custom_fields"][  # type: ignore[index]
                 settings.PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY
             ] = user.sign_up_type
 
-        return self.client.create_lead(**create_lead_kwargs)
+        return self.client.create_lead(**create_lead_kwargs)  # type: ignore[no-any-return]
 
     def create_organization(self, organization_domain: str) -> PipedriveOrganization:
         org_name = PipedriveOrganization.get_org_name_from_domain(organization_domain)
@@ -97,7 +97,7 @@ class PipedriveLeadTracker(LeadTracker):
                 settings.PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY: organization_domain
             },
         )
-        return organization
+        return organization  # type: ignore[no-any-return]
 
     @staticmethod
     def get_label_ids_for_user(user: FFAdminUser) -> typing.List[str]:
@@ -111,7 +111,7 @@ class PipedriveLeadTracker(LeadTracker):
             raise EntityNotFoundError()
         elif len(matching_organizations) > 1:
             raise MultipleMatchingOrganizationsError()
-        return matching_organizations[0]
+        return matching_organizations[0]  # type: ignore[no-any-return]
 
     def _get_or_create_person(
         self, name: str, email: str, marketing_consent_given: bool = False
@@ -121,14 +121,14 @@ class PipedriveLeadTracker(LeadTracker):
             if len(existing_persons) > 1:
                 logger.warning("Multiple persons found for email '%s'", email)
             # if there are multiple persons, just return the first one in the list
-            return existing_persons[0]
+            return existing_persons[0]  # type: ignore[no-any-return]
         else:
             marketing_status = (
                 MarketingStatus.SUBSCRIBED
                 if marketing_consent_given
                 else MarketingStatus.NO_CONSENT
             )
-            return self.client.create_person(name, email, marketing_status)
+            return self.client.create_person(name, email, marketing_status)  # type: ignore[no-any-return]
 
     def _get_client(self) -> PipedriveAPIClient:
         return PipedriveAPIClient(

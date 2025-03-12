@@ -70,14 +70,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       env,
     })
   },
-  deleteIdentityTrait(envId, identity, id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_IDENTITY_TRAIT,
-      envId,
-      id,
-      identity,
-    })
-  },
   deleteInvite(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_INVITE,
@@ -188,12 +180,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       project,
     })
   },
-  editTrait(params) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.EDIT_TRAIT,
-      ...params,
-    })
-  },
   editUserFlag(params) {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_USER_FLAG,
@@ -258,13 +244,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       actionType: Actions.GET_IDENTITY,
       envId,
       id,
-    })
-  },
-  getIdentitySegments(projectId, id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_IDENTITY_SEGMENTS,
-      id,
-      projectId,
     })
   },
   getOrganisation(organisationId) {

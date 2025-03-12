@@ -159,10 +159,7 @@ const ImportPage: FC<ImportPageType> = ({
                 listClassName='row mt-n2 gy-3'
                 title='LaunchDarkly Projects'
                 items={projects}
-                renderRow={(
-                  { key, name }: { key: string; name: string },
-                  i: number,
-                ) => {
+                renderRow={({ key, name }, i) => {
                   return (
                     <>
                       <Button

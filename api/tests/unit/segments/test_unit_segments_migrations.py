@@ -124,7 +124,9 @@ def test_add_versioning_to_segments_forwards(migrator: Migrator) -> None:
 
     # Next, create the setup data.
     organisation = Organisation.objects.create(name="Test Org")
-    project = Project.objects.create(name="Test Project", organisation_id=organisation.id)
+    project = Project.objects.create(
+        name="Test Project", organisation_id=organisation.id
+    )
 
     segment = Segment.objects.create(name="Segment1", project_id=project.id)
     segment_rule_1 = SegmentRule.objects.create(
@@ -188,20 +190,20 @@ def test_add_versioning_to_segments_reverse(migrator: Migrator) -> None:
     # possible when working in a migration state. As such, we
     # do the basic amount necessary from that method to allow
     # us to test the migration behaviour.
-    def _deep_clone(segment: Segment) -> Segment:
+    def _deep_clone(segment: Segment) -> Segment:  # type: ignore[valid-type]
         cloned_segment = Segment.objects.create(
-            name=segment.name,
-            project_id=segment.project_id,
-            description=segment.description,
-            feature=segment.feature,
+            name=segment.name,  # type: ignore[attr-defined]
+            project_id=segment.project_id,  # type: ignore[attr-defined]
+            description=segment.description,  # type: ignore[attr-defined]
+            feature=segment.feature,  # type: ignore[attr-defined]
             uuid=uuid.uuid4(),
-            version_of_id=segment.id,
+            version_of_id=segment.id,  # type: ignore[attr-defined]
         )
 
-        segment.version += 1
-        segment.save()
+        segment.version += 1  # type: ignore[attr-defined]
+        segment.save()  # type: ignore[attr-defined]
 
-        return cloned_segment
+        return cloned_segment  # type: ignore[no-any-return]
 
     version_1 = _deep_clone(segment)
     version_2 = _deep_clone(segment)
@@ -229,10 +231,10 @@ def test_add_versioning_to_segments_reverse(migrator: Migrator) -> None:
     # Then any historical versions of the segment are deleted.
     NewSegment = new_state.apps.get_model("segments", "Segment")
 
-    new_segment_v1 = NewSegment.objects.get(id=version_1.id)
+    new_segment_v1 = NewSegment.objects.get(id=version_1.id)  # type: ignore[attr-defined]
     assert new_segment_v1.deleted_at is not None
 
-    new_segment_v2 = NewSegment.objects.get(id=version_2.id)
+    new_segment_v2 = NewSegment.objects.get(id=version_2.id)  # type: ignore[attr-defined]
     assert new_segment_v2.deleted_at is not None
 
     new_segment_v3 = NewSegment.objects.get(id=version_3.id)

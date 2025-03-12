@@ -10,8 +10,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.urls import reverse
 from django.utils import timezone
-from djoser import utils
-from djoser.email import PasswordResetEmail
+from djoser import utils  # type: ignore[import-untyped]
+from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
 from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -90,7 +90,7 @@ def test_cannot_join_organisation_via_expired_link(
     assert organisation not in staff_user.organisations.all()
 
 
-def test_user_can_join_second_organisation(
+def test_user_can_join_second_organisation(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     staff_user: FFAdminUser,
     staff_client: APIClient,
@@ -153,7 +153,7 @@ def test_can_join_organisation_as_admin_if_invite_role_is_admin(
     assert staff_user.is_organisation_admin(organisation)
 
 
-def test_admin_can_update_role_for_a_user_in_organisation(
+def test_admin_can_update_role_for_a_user_in_organisation(  # type: ignore[no-untyped-def]
     admin_client_new: APIClient,
     organisation: Organisation,
 ):
@@ -235,7 +235,7 @@ def test_org_user_can_get_users_in_organisation(
     assert response.data[2]["email"] == organisation_user.email
 
 
-def test_org_user_can_exclude_themself_when_getting_users_in_organisation(
+def test_org_user_can_exclude_themself_when_getting_users_in_organisation(  # type: ignore[no-untyped-def]
     staff_client: APIClient,
     staff_user: FFAdminUser,
     organisation: Organisation,
@@ -421,7 +421,7 @@ def test_can_add_users_with_master_api_key(
     assert all(user in group.users.all() for user in [admin_user, staff_user])
 
 
-def test_cannot_add_user_from_another_organisation(
+def test_cannot_add_user_from_another_organisation(  # type: ignore[no-untyped-def]
     admin_client_new: APIClient,
     organisation: Organisation,
 ):
@@ -528,7 +528,7 @@ def test_remove_users_silently_fails_if_user_not_in_group(
     assert admin_user in group.users.all()
 
 
-def test_user_permission_group_can_update_is_default(
+def test_user_permission_group_can_update_is_default(  # type: ignore[no-untyped-def]
     admin_client_new, organisation, user_permission_group
 ):
     # Given
@@ -549,7 +549,7 @@ def test_user_permission_group_can_update_is_default(
     assert user_permission_group.is_default is True
 
 
-def test_user_permission_group_can_update_external_id(
+def test_user_permission_group_can_update_external_id(  # type: ignore[no-untyped-def]
     admin_client_new, organisation, user_permission_group
 ):
     # Given
@@ -567,7 +567,7 @@ def test_user_permission_group_can_update_external_id(
     assert response.json()["external_id"] == external_id
 
 
-def test_users_in_organisation_have_last_login(
+def test_users_in_organisation_have_last_login(  # type: ignore[no-untyped-def]
     admin_client_new, organisation, rf, mocker, admin_user
 ):
     # Given
@@ -588,7 +588,7 @@ def test_users_in_organisation_have_last_login(
     assert res.status_code == status.HTTP_200_OK
 
 
-def test_retrieve_user_permission_group_includes_group_admin(
+def test_retrieve_user_permission_group_includes_group_admin(  # type: ignore[no-untyped-def]
     admin_client_new, admin_user, organisation, user_permission_group
 ):
     # Given
@@ -619,18 +619,18 @@ def test_retrieve_user_permission_group_includes_group_admin(
     )
 
 
-def test_group_admin_can_retrieve_group(
+def test_group_admin_can_retrieve_group(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     django_user_model: typing.Type[AbstractUser],
     api_client: APIClient,
 ):
     # Given
     user = django_user_model.objects.create(email="test@example.com")
-    user.add_organisation(organisation)
+    user.add_organisation(organisation)  # type: ignore[attr-defined]
     group = UserPermissionGroup.objects.create(
         organisation=organisation, name="Test group"
     )
-    user.add_to_group(group, group_admin=True)
+    user.add_to_group(group, group_admin=True)  # type: ignore[attr-defined]
 
     api_client.force_authenticate(user)
     url = reverse(
@@ -645,9 +645,9 @@ def test_group_admin_can_retrieve_group(
     assert response.status_code == status.HTTP_200_OK
 
 
-def delete_user(
+def delete_user(  # type: ignore[no-untyped-def]
     user: FFAdminUser,
-    password: str = None,
+    password: str = None,  # type: ignore[assignment]
     delete_orphan_organisations: bool = True,
 ):
     client = APIClient()
@@ -656,22 +656,22 @@ def delete_user(
         "delete_orphan_organisations": delete_orphan_organisations,
     }
     if password:
-        data["password"] = password
+        data["password"] = password  # type: ignore[assignment]
 
     url = "/api/v1/auth/users/me/"
     return client.delete(url, data=json.dumps(data), content_type="application/json")
 
 
 @pytest.mark.django_db
-def test_delete_user():
+def test_delete_user():  # type: ignore[no-untyped-def]
     # create a couple of users
     email1 = "test1@example.com"
     email2 = "test2@example.com"
     email3 = "test3@example.com"
     password = "password"
-    user1 = FFAdminUser.objects.create_user(email=email1, password=password)
-    user2 = FFAdminUser.objects.create_user(email=email2, password=password)
-    user3 = FFAdminUser.objects.create_user(email=email3, password=password)
+    user1 = FFAdminUser.objects.create_user(email=email1, password=password)  # type: ignore[no-untyped-call]
+    user2 = FFAdminUser.objects.create_user(email=email2, password=password)  # type: ignore[no-untyped-call]
+    user3 = FFAdminUser.objects.create_user(email=email3, password=password)  # type: ignore[no-untyped-call]
 
     # create some organizations
     org1 = Organisation.objects.create(name="org1")
@@ -723,7 +723,7 @@ def test_delete_user():
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("password", [None, "", "random"])
-def test_delete_user_social_auth_with_no_password(password):
+def test_delete_user_social_auth_with_no_password(password):  # type: ignore[no-untyped-def]
     google_auth_user_email = "google@example.com"
     github_auth_user_email = "github@example.com"
 
@@ -733,10 +733,10 @@ def test_delete_user_social_auth_with_no_password(password):
     google_auth_user_org = Organisation.objects.create(name="google_auth_user_org")
     github_auth_user_org = Organisation.objects.create(name="github_auth_user_org")
 
-    google_auth_user = FFAdminUser.objects.create_user(
+    google_auth_user = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
         email=google_auth_user_email, google_user_id=123456
     )
-    github_auth_user = FFAdminUser.objects.create_user(
+    github_auth_user = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
         email=github_auth_user_email, github_user_id=123456
     )
 
@@ -758,13 +758,13 @@ def test_delete_user_social_auth_with_no_password(password):
 
 
 @pytest.mark.django_db
-def test_change_email_address_api(mocker):
+def test_change_email_address_api(mocker):  # type: ignore[no-untyped-def]
     # Given
     mocked_task = mocker.patch("users.tasks.send_email_changed_notification_email")
     # create an user
     old_email = "test_user@test.com"
     first_name = "firstname"
-    user = FFAdminUser.objects.create_user(
+    user = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
         username="test_user",
         email=old_email,
         first_name=first_name,
@@ -794,7 +794,7 @@ def test_change_email_address_api(mocker):
 
 
 @pytest.mark.django_db
-def test_send_reset_password_emails_rate_limit(settings, client, test_user):
+def test_send_reset_password_emails_rate_limit(settings, client, test_user):  # type: ignore[no-untyped-def]
     # Given
     settings.MAX_PASSWORD_RESET_EMAILS = 2
     settings.PASSWORD_RESET_EMAIL_COOLDOWN = 60
@@ -829,7 +829,7 @@ def test_send_reset_password_emails_rate_limit(settings, client, test_user):
 
 
 @pytest.mark.django_db
-def test_send_reset_password_emails_rate_limit_resets_after_password_reset(
+def test_send_reset_password_emails_rate_limit_resets_after_password_reset(  # type: ignore[no-untyped-def]
     settings, client, test_user
 ):
     # Given

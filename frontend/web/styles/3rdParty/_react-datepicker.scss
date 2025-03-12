@@ -4,6 +4,11 @@
     right: 12px;
 }
 
+.react-datepicker-wrapper .react-datepicker__input-container {
+    input[type=text].invalid, input[type=password].invalid {
+        border: 1px solid $danger;
+    }
+}
 .react-datepicker__triangle {
     display: none;
 }

@@ -129,7 +129,7 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         cancellation_date = subscription.get("current_term_end")
         if cancellation_date is not None:
             cancellation_date = datetime.fromtimestamp(cancellation_date).replace(
-                tzinfo=timezone.utc
+                tzinfo=timezone.utc  # type: ignore[attr-defined]
             )
         else:
             cancellation_date = timezone.now()
@@ -168,7 +168,9 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         else:
             osic_defaults["current_billing_term_ends_at"] = datetime.fromtimestamp(
                 current_term_end
-            ).replace(tzinfo=timezone.utc)
+            ).replace(
+                tzinfo=timezone.utc  # type: ignore[attr-defined]
+            )
 
     if "current_term_start" in subscription:
         current_term_start = subscription["current_term_start"]
@@ -177,7 +179,9 @@ def process_subscription(request: Request) -> Response:  # noqa: C901
         else:
             osic_defaults["current_billing_term_starts_at"] = datetime.fromtimestamp(
                 current_term_start
-            ).replace(tzinfo=timezone.utc)
+            ).replace(
+                tzinfo=timezone.utc  # type: ignore[attr-defined]
+            )
 
     OrganisationSubscriptionInformationCache.objects.update_or_create(
         organisation_id=existing_subscription.organisation_id,

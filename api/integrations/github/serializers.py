@@ -10,14 +10,14 @@ from integrations.github.dataclasses import (
 from integrations.github.models import GithubConfiguration, GitHubRepository
 
 
-class GithubConfigurationSerializer(ModelSerializer):
+class GithubConfigurationSerializer(ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = GithubConfiguration
         fields = ("id", "installation_id", "organisation")
         read_only_fields = ("organisation",)
 
 
-class GithubRepositorySerializer(ModelSerializer):
+class GithubRepositorySerializer(ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = GitHubRepository
         optional_fields = ("search_text", "page")
@@ -35,17 +35,17 @@ class GithubRepositorySerializer(ModelSerializer):
         )
 
 
-class PaginatedQueryParamsSerializer(DataclassSerializer):
+class PaginatedQueryParamsSerializer(DataclassSerializer):  # type: ignore[type-arg]
     class Meta:
         dataclass = PaginatedQueryParams
 
 
-class RepoQueryParamsSerializer(DataclassSerializer):
+class RepoQueryParamsSerializer(DataclassSerializer):  # type: ignore[type-arg]
     class Meta:
         dataclass = RepoQueryParams
 
 
-class IssueQueryParamsSerializer(DataclassSerializer):
+class IssueQueryParamsSerializer(DataclassSerializer):  # type: ignore[type-arg]
     class Meta:
         dataclass = IssueQueryParams
 

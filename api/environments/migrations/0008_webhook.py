@@ -6,7 +6,7 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-def create_webhooks(apps, schema_editor):
+def create_webhooks(apps, schema_editor):  # type: ignore[no-untyped-def]
     Webhook = apps.get_model('environments', 'Webhook')
     Environment = apps.get_model('environments', 'Environment')
 
@@ -19,7 +19,7 @@ def create_webhooks(apps, schema_editor):
     Environment.objects.exclude(webhook_url=None).update(webhook_url=None)
 
 
-def update_environment_webhooks(apps, schema_editor):
+def update_environment_webhooks(apps, schema_editor):  # type: ignore[no-untyped-def]
     Webhook = apps.get_model('environments', 'Webhook')
 
     for webhook in Webhook.objects.all().order_by('created_at'):

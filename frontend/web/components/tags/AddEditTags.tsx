@@ -31,18 +31,33 @@ const AddEditTags: FC<AddEditTagsType> = ({
   readOnly,
   value,
 }) => {
-  const { data: projectTags, isLoading: tagsLoading } = useGetTagsQuery({
+  const { data, isLoading: tagsLoading } = useGetTagsQuery({
     projectId,
   })
+
+  const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
+
+  const unhealthyTagId = useMemo(() => {
+    return data?.find((tag) => tag?.type === 'UNHEALTHY')?.id
+  }, [data])
+
+  const projectTags = useMemo(() => {
+    if (!isFeatureHealthEnabled) {
+      return data
+    }
+
+    return data?.filter(
+      (projectTag) => !['UNHEALTHY'].includes(projectTag.type),
+    )
+  }, [data, isFeatureHealthEnabled])
+
   const [filter, setFilter] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [tag, setTag] = useState<TTag>()
   const [tab, setTab] = useState<'SELECT' | 'CREATE' | 'EDIT'>('SELECT')
   const [deleteTag] = useDeleteTagMutation()
   const [createTag] = useCreateTagMutation()
-  const permissionType = Utils.getFlagsmithHasFeature('manage_tags_permission')
-    ? 'MANAGE_TAGS'
-    : 'ADMIN'
+  const permissionType = 'MANAGE_TAGS'
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
@@ -105,6 +120,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
         tag.label.toLowerCase().includes(filter),
       )
     }
+
     return projectTags || []
   }, [filter, projectTags])
 
@@ -135,6 +151,7 @@ const AddEditTags: FC<AddEditTagsType> = ({
       <Row className='inline-tags mt-2'>
         <TagValues
           hideNames={false}
+          hideTags={unhealthyTagId ? [unhealthyTagId] : undefined}
           projectId={projectId}
           onAdd={readOnly ? undefined : toggle}
           value={value}

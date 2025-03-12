@@ -137,7 +137,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
               </div>
             </Row>
           }
-          renderRow={(metadata: MergeMetadata) => (
+          renderRow={(metadata) => (
             <Row
               space
               className='list-item clickable cursor-pointer'

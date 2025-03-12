@@ -7,11 +7,11 @@ from unittest.mock import MagicMock
 
 import pytest
 import responses
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from requests.exceptions import ConnectionError, Timeout
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
 from webhooks.sample_webhook_data import (
@@ -187,7 +187,7 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
         environment=environment,
     )
 
-    expected_data = {}
+    expected_data = {}  # type: ignore[var-annotated]
     expected_event_type = WebhookEventType.FLAG_UPDATED.value
     expected_send_failure_email_data = {
         "event_type": expected_event_type,
@@ -248,7 +248,7 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
         url="http://url.2.com", enabled=True, organisation=organisation
     )
 
-    expected_data = {}
+    expected_data = {}  # type: ignore[var-annotated]
     expected_event_type = WebhookEventType.FLAG_UPDATED.value
     expected_send_failure_email_data = {
         "event_type": expected_event_type,
@@ -288,13 +288,13 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
 
-def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():
+def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():  # type: ignore[no-untyped-def]
     try_count = 10
     with pytest.raises(ValueError):
         call_webhook_with_failure_mail_after_retries(0, {}, "", try_count=try_count)
 
 
-def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_using_processor(
+def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_using_processor(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker: MockerFixture, organisation: Organisation, settings: SettingsWrapper
 ):
     # Given

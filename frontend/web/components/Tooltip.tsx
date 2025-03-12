@@ -3,16 +3,29 @@ import ReactTooltip, { TooltipProps as _TooltipProps } from 'react-tooltip'
 import Utils from 'common/utils/utils'
 import classNames from 'classnames'
 import { sanitize } from 'dompurify'
+import { createPortal } from 'react-dom'
 
 export type TooltipProps = {
   title: ReactNode
-  children: string
+  children: string | undefined | null
   place?: _TooltipProps['place']
   plainText?: boolean
   titleClassName?: string
   tooltipClassName?: string
   effect?: _TooltipProps['effect']
   afterShow?: _TooltipProps['afterShow']
+  renderInPortal?: boolean // Controls backwards compatibility for rendering in portal
+}
+
+const TooltipPortal: FC<{ children: ReactNode; renderInPortal?: boolean }> = ({
+  children,
+  renderInPortal = false,
+}) => {
+  const domNode = document.createElement('div')
+  document.body.appendChild(domNode)
+
+  if (!renderInPortal) return <>{children}</>
+  return domNode ? createPortal(children, domNode) : null
 }
 
 const Tooltip: FC<TooltipProps> = ({
@@ -21,6 +34,7 @@ const Tooltip: FC<TooltipProps> = ({
   effect,
   place,
   plainText,
+  renderInPortal,
   title,
   titleClassName,
   tooltipClassName,
@@ -39,22 +53,24 @@ const Tooltip: FC<TooltipProps> = ({
         </span>
       )}
       {!!children && (
-        <ReactTooltip
-          className={classNames('rounded', tooltipClassName)}
-          id={id}
-          place={place || 'top'}
-          effect={effect}
-          afterShow={afterShow}
-        >
-          {plainText ? (
-            `${children}`
-          ) : (
-            <div
-              style={{ wordBreak: 'break-word' }}
-              dangerouslySetInnerHTML={{ __html: sanitize(children) }}
-            />
-          )}
-        </ReactTooltip>
+        <TooltipPortal renderInPortal={renderInPortal}>
+          <ReactTooltip
+            className={classNames('rounded', tooltipClassName)}
+            id={id}
+            place={place || 'top'}
+            effect={effect}
+            afterShow={afterShow}
+          >
+            {plainText ? (
+              `${children}`
+            ) : (
+              <div
+                style={{ wordBreak: 'break-word' }}
+                dangerouslySetInnerHTML={{ __html: sanitize(children) }}
+              />
+            )}
+          </ReactTooltip>
+        </TooltipPortal>
       )}
     </>
   )

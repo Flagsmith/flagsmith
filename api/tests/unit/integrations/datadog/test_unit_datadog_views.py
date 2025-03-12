@@ -132,7 +132,7 @@ def test_should_remove_configuration_when_delete(
     assert not DataDogConfiguration.objects.filter(project=project).exists()
 
 
-def test_create_datadog_configuration_in_project_with_deleted_configuration(
+def test_create_datadog_configuration_in_project_with_deleted_configuration(  # type: ignore[no-untyped-def]
     admin_client, project, deleted_datadog_configuration
 ):
     # Given

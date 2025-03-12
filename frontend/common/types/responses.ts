@@ -4,19 +4,17 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
-export type Approval =
-  | {
-      user: number
-    }
-  | {
-      group: number
-    }
+export type Approval = {
+  user?: number
+  group?: number
+}
 export type PagedResponse<T> = {
   count?: number
   next?: string
   previous?: string
   results: T[]
 }
+
 export interface GitHubPagedResponse<T> extends PagedResponse<T> {
   incomplete_results: boolean
 }
@@ -323,7 +321,7 @@ export type Organisation = {
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
-  id?: string
+  id: string
   identifier: string
   identity_uuid?: string
   dashboard_alias?: string
@@ -344,6 +342,8 @@ export type APIKey = {
   name: string
 }
 
+export type TagType = 'STALE' | 'UNHEALTHY' | 'NONE'
+
 export type Tag = {
   id: number
   color: string
@@ -352,7 +352,7 @@ export type Tag = {
   label: string
   is_system_tag: boolean
   is_permanent: boolean
-  type: 'STALE' | 'NONE'
+  type: TagType
 }
 
 export type MultivariateFeatureStateValue = {
@@ -388,6 +388,8 @@ export type IdentityFeatureState = {
     name: string
     type: FeatureType
   }
+  identity?: string
+  identity_uuid?: string
   enabled: boolean
   feature_state_value: FlagsmithValue
   segment: null
@@ -404,7 +406,6 @@ export type FeatureState = {
   id: number
   feature_state_value: FlagsmithValue
   multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  identity?: string
   uuid: string
   enabled: boolean
   created_at: string
@@ -453,18 +454,17 @@ export type ProjectFlag = {
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
+  environmentFlags: Record<number, FeatureState> | undefined
   error: boolean
   isLoading: boolean
 }
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
+    projectId: string,
+    environmentId: string,
+    projectFlag: ProjectFlag,
+    environmentFlags: FeatureState | undefined,
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }
@@ -636,6 +636,106 @@ export type SAMLAttributeMapping = {
   django_attribute_name: AttributeName
   idp_attribute_name: string
 }
+export type ServersideSplitTestResult = {
+  conversion_count: number
+  evaluation_count: number
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  pvalue: number
+  value_data: FeatureStateValue
+}
+
+export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
+
+export type FeatureHealthEventReasonTextBlock = {
+  text: string
+  title?: string
+}
+
+export type FeatureHealthEventReasonUrlBlock = {
+  url: string
+  title?: string
+}
+
+export type HealthEventReason = {
+  text_blocks: FeatureHealthEventReasonTextBlock[]
+  url_blocks: FeatureHealthEventReasonUrlBlock[]
+}
+
+export type HealthEvent = {
+  created_at: string
+  environment: number
+  feature: number
+  provider_name: string
+  reason: HealthEventReason | null
+  type: HealthEventType
+}
+
+export type HealthProvider = {
+  id: number
+  created_by: string
+  name: string
+  project: number
+  webhook_url: number
+}
+
+export type PConfidence =
+  | 'VERY_LOW'
+  | 'LOW'
+  | 'REASONABLE'
+  | 'HIGH'
+  | 'VERY_HIGH'
+export type SplitTestResult = {
+  results: {
+    conversion_count: number
+    evaluation_count: number
+    conversion_percentage: number
+    pvalue: number
+    confidence: PConfidence
+    value_data: FeatureStateValue
+  }[]
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  max_conversion_percentage: number
+  max_conversion_count: number
+  conversion_variance: number
+  max_conversion_pvalue: number
+}
+
+export type ConversionEvent = {
+  id: number
+  name: string
+  updated_at: string
+  created_at: string
+}
+export type Webhook = {
+  id: number
+  url: string
+  secret: string
+  enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type IdentityTrait = {
+  id: number | string
+  trait_key: string
+  trait_value: FlagsmithValue
+}
 
 export type Res = {
   segments: PagedResponse<Segment>
@@ -646,6 +746,8 @@ export type Res = {
   projects: ProjectSummary[]
   project: Project
   environments: PagedResponse<Environment>
+  webhook: Webhook
+  webhooks: Webhook[]
   organisationUsage: {
     totals: {
       flags: number
@@ -671,10 +773,13 @@ export type Res = {
   availablePermissions: AvailablePermission[]
   tag: Tag
   tags: Tag[]
+  healthEvents: HealthEvent[]
+  healthProvider: HealthProvider
+  healthProviders: HealthProvider[]
   account: Account
   userEmail: {}
   groupAdmin: { id: string }
-  groups: PagedResponse<UserGroupSummary>
+  groups: PagedResponse<UserGroup>
   group: UserGroup
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
@@ -749,7 +854,7 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
-  identityFeatureStates: PagedResponse<FeatureState>
+  identityFeatureStates: IdentityFeatureState[]
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
   samlConfiguration: SAMLConfiguration
@@ -760,5 +865,11 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identitySegments: PagedResponse<Segment>
+  organisationWebhooks: PagedResponse<Webhook>
+  identityTrait: { id: string }
+  identityTraits: IdentityTrait[]
+  conversionEvents: PagedResponse<ConversionEvent>
+  splitTest: PagedResponse<SplitTestResult>
   // END OF TYPES
 }

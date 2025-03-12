@@ -1,9 +1,9 @@
-from core.request_origin import RequestOrigin
 from django.conf import settings
 from django.core.cache import caches
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from core.request_origin import RequestOrigin
 from environments.api_keys import SERVER_API_KEY_PREFIX
 from environments.models import Environment
 
@@ -16,16 +16,16 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
     endpoints used by the clients.
     """
 
-    def __init__(self, *args, required_key_prefix: str = "", **kwargs):
+    def __init__(self, *args, required_key_prefix: str = "", **kwargs):  # type: ignore[no-untyped-def]
         super(EnvironmentKeyAuthentication, self).__init__(*args, **kwargs)
         self.required_key_prefix = required_key_prefix
 
-    def authenticate(self, request):
+    def authenticate(self, request):  # type: ignore[no-untyped-def]
         api_key = request.META.get("HTTP_X_ENVIRONMENT_KEY")
         if not (api_key and api_key.startswith(self.required_key_prefix)):
             raise AuthenticationFailed("Invalid or missing Environment key")
 
-        environment = Environment.get_from_cache(api_key)
+        environment = Environment.get_from_cache(api_key)  # type: ignore[no-untyped-call]
         if not environment:
             raise AuthenticationFailed("Invalid or missing Environment Key")
 

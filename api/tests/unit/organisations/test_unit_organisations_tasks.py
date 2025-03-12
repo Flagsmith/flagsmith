@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, call
 
 import pytest
-from core.helpers import get_current_site_url
+from dateutil.relativedelta import relativedelta
 from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -12,6 +12,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
+from core.helpers import get_current_site_url
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.constants import (
     API_USAGE_ALERT_THRESHOLDS,
@@ -38,7 +39,7 @@ from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
 from organisations.task_helpers import (
     handle_api_usage_notification_for_organisation,
 )
-from organisations.tasks import (
+from organisations.tasks import (  # type: ignore[attr-defined]
     ALERT_EMAIL_MESSAGE,
     ALERT_EMAIL_SUBJECT,
     charge_for_api_call_count_overages,
@@ -53,7 +54,7 @@ from organisations.tasks import (
 from users.models import FFAdminUser
 
 
-def test_send_org_over_limit_alert_for_organisation_with_free_subscription(
+def test_send_org_over_limit_alert_for_organisation_with_free_subscription(  # type: ignore[no-untyped-def]
     organisation, mocker
 ):
     # Given
@@ -78,7 +79,7 @@ def test_send_org_over_limit_alert_for_organisation_with_free_subscription(
 @pytest.mark.parametrize(
     "SubscriptionMetadata", [ChargebeeObjMetadata, XeroSubscriptionMetadata]
 )
-def test_send_org_over_limit_alert_for_organisation_with_subscription(
+def test_send_org_over_limit_alert_for_organisation_with_subscription(  # type: ignore[no-untyped-def]
     organisation, subscription, mocker, SubscriptionMetadata
 ):
     # Given
@@ -307,7 +308,7 @@ def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_i
 
     # Then
     api_usage_mock.assert_not_called()
-    assert inspecting_handler.messages == [
+    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
         f"Paid organisation {organisation.id} is missing billing_starts_at datetime"
     ]
 
@@ -329,14 +330,14 @@ def test_handle_api_usage_notification_for_organisation_when_cancellation_date_i
     logger.addHandler(inspecting_handler)
 
     # When
-    result = handle_api_usage_notification_for_organisation(organisation)
+    result = handle_api_usage_notification_for_organisation(organisation)  # type: ignore[func-returns-value]
 
     # Then
     assert result is None
     assert OrganisationAPIUsageNotification.objects.count() == 0
 
     # Check to ensure that error messages haven't been set.
-    assert inspecting_handler.messages == []
+    assert inspecting_handler.messages == []  # type: ignore[attr-defined]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -448,7 +449,11 @@ def test_handle_api_usage_notifications_below_100(
     assert email.subject == "Flagsmith API use has reached 90%"
     assert email.body == render_to_string(
         "organisations/api_usage_notification.txt",
-        context={"organisation": organisation, "matched_threshold": 90},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 90,
+            "url": get_current_site_url(),
+        },
     )
 
     assert len(email.alternatives) == 1
@@ -457,7 +462,11 @@ def test_handle_api_usage_notifications_below_100(
 
     assert email.alternatives[0][0] == render_to_string(
         "organisations/api_usage_notification.html",
-        context={"organisation": organisation, "matched_threshold": 90},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 90,
+            "url": get_current_site_url(),
+        },
     )
 
     assert email.from_email == "noreply@flagsmith.com"
@@ -474,7 +483,7 @@ def test_handle_api_usage_notifications_below_100(
         organisation=organisation,
     ).first()
 
-    assert api_usage_notification.percent_usage == 90
+    assert api_usage_notification.percent_usage == 90  # type: ignore[union-attr]
 
     # Now re-run the usage to make sure the notification isn't resent.
     handle_api_usage_notifications()
@@ -589,7 +598,11 @@ def test_handle_api_usage_notifications_above_100(
     assert email.subject == "Flagsmith API use has reached 100%"
     assert email.body == render_to_string(
         "organisations/api_usage_notification_limit.txt",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "url": get_current_site_url(),
+        },
     )
 
     assert len(email.alternatives) == 1
@@ -598,7 +611,11 @@ def test_handle_api_usage_notifications_above_100(
 
     assert email.alternatives[0][0] == render_to_string(
         "organisations/api_usage_notification_limit.html",
-        context={"organisation": organisation, "matched_threshold": 100},
+        context={
+            "organisation": organisation,
+            "matched_threshold": 100,
+            "url": get_current_site_url(),
+        },
     )
 
     assert email.from_email == "noreply@flagsmith.com"
@@ -615,7 +632,7 @@ def test_handle_api_usage_notifications_above_100(
         organisation=organisation,
     ).first()
 
-    assert api_usage_notification.percent_usage == 100
+    assert api_usage_notification.percent_usage == 100  # type: ignore[union-attr]
 
     # Now re-run the usage to make sure the notification isn't resent.
     handle_api_usage_notifications()
@@ -676,8 +693,8 @@ def test_handle_api_usage_notifications_with_error(
         ).count()
         == 0
     )
-    assert len(inspecting_handler.messages) == 1
-    error_message = inspecting_handler.messages[0].split("\n")[0]
+    assert len(inspecting_handler.messages) == 1  # type: ignore[attr-defined]
+    error_message = inspecting_handler.messages[0].split("\n")[0]  # type: ignore[attr-defined]
 
     assert (
         error_message
@@ -726,6 +743,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
             "organisation": organisation,
             "matched_threshold": 100,
             "grace_period": True,
+            "url": get_current_site_url(),
         },
     )
 
@@ -739,6 +757,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
             "organisation": organisation,
             "matched_threshold": 100,
             "grace_period": True,
+            "url": get_current_site_url(),
         },
     )
 
@@ -756,7 +775,7 @@ def test_handle_api_usage_notifications_for_free_accounts(
         organisation=organisation,
     ).first()
 
-    assert api_usage_notification.percent_usage == 100
+    assert api_usage_notification.percent_usage == 100  # type: ignore[union-attr]
 
     # Now re-run the usage to make sure the notification isn't resent.
     handle_api_usage_notifications()
@@ -810,7 +829,7 @@ def test_handle_api_usage_notifications_missing_info_cache(
         organisation=organisation,
     ).exists()
 
-    assert inspecting_handler.messages == [
+    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
         f"Paid organisation {organisation.id} is missing subscription information cache"
     ]
 
@@ -834,10 +853,19 @@ def test_charge_for_api_call_count_overages_scale_up(
     organisation.subscription.subscription_id = "fancy_sub_id23"
     organisation.subscription.plan = "scale-up-v2"
     organisation.subscription.save()
+
+    # In order to cover an edge case found in production use, we make the
+    # notification date just outside the previous 30 days, because we want
+    # to make sure that we cover the case where someone with very high usage
+    # is notified in the first day of their subscription period (in a 31-day
+    # month).
+    notification_date = now - (timedelta(days=30) + timedelta(minutes=30))
+    assert notification_date > now - relativedelta(months=1)
+
     OrganisationAPIUsageNotification.objects.create(
         organisation=organisation,
         percent_usage=100,
-        notified_at=now,
+        notified_at=notification_date,
     )
 
     mocker.patch("organisations.chargebee.chargebee.chargebee.Subscription.retrieve")
@@ -857,7 +885,7 @@ def test_charge_for_api_call_count_overages_scale_up(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_called_once_with(
@@ -876,10 +904,10 @@ def test_charge_for_api_call_count_overages_scale_up(
 
     assert OrganisationAPIBilling.objects.count() == 1
     api_billing = OrganisationAPIBilling.objects.first()
-    assert api_billing.organisation == organisation
-    assert api_billing.api_overage == 200_000
-    assert api_billing.immediate_invoice is False
-    assert api_billing.billed_at == now
+    assert api_billing.organisation == organisation  # type: ignore[union-attr]
+    assert api_billing.api_overage == 200_000  # type: ignore[union-attr]
+    assert api_billing.immediate_invoice is False  # type: ignore[union-attr]
+    assert api_billing.billed_at == now  # type: ignore[union-attr]
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -918,7 +946,7 @@ def test_charge_for_api_call_count_overages_cancellation_date(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     assert OrganisationAPIBilling.objects.count() == 0
@@ -968,7 +996,7 @@ def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     # No charges are applied to the account.
@@ -1024,7 +1052,7 @@ def test_charge_for_api_call_count_overages_grace_period(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_not_called()
@@ -1074,7 +1102,7 @@ def test_charge_for_api_call_count_overages_grace_period_over(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     # Since the OrganisationBreachedGracePeriod was created already
@@ -1135,7 +1163,7 @@ def test_charge_for_api_call_count_overages_with_not_covered_plan(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_not_called()
@@ -1184,7 +1212,7 @@ def test_charge_for_api_call_count_overages_under_api_limit(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_not_called()
@@ -1232,7 +1260,7 @@ def test_charge_for_api_call_count_overages_start_up(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_called_once_with(
@@ -1251,16 +1279,16 @@ def test_charge_for_api_call_count_overages_start_up(
 
     assert OrganisationAPIBilling.objects.count() == 1
     api_billing = OrganisationAPIBilling.objects.first()
-    assert api_billing.organisation == organisation
-    assert api_billing.api_overage == 200_000
-    assert api_billing.immediate_invoice is False
-    assert api_billing.billed_at == now
+    assert api_billing.organisation == organisation  # type: ignore[union-attr]
+    assert api_billing.api_overage == 200_000  # type: ignore[union-attr]
+    assert api_billing.immediate_invoice is False  # type: ignore[union-attr]
+    assert api_billing.billed_at == now  # type: ignore[union-attr]
 
     # Now attempt to rebill the account should fail
     calls_mock = mocker.patch(
         "organisations.tasks.add_100k_api_calls_start_up",
     )
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
     assert OrganisationAPIBilling.objects.count() == 1
     calls_mock.assert_not_called()
 
@@ -1311,11 +1339,11 @@ def test_charge_for_api_call_count_overages_non_standard(
     mock_api_usage.return_value = 202_005
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_not_called()
-    assert inspecting_handler.messages == [
+    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
         f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
         f"for organisation {organisation.id}"
     ]
@@ -1372,10 +1400,10 @@ def test_charge_for_api_call_count_overages_with_exception(
     )
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
-    assert inspecting_handler.messages[0].startswith(
+    assert inspecting_handler.messages[0].startswith(  # type: ignore[attr-defined]
         f"Unable to charge organisation {organisation.id} due to billing error"
     )
     mock_chargebee_update.assert_not_called()
@@ -1430,7 +1458,7 @@ def test_charge_for_api_call_count_overages_start_up_with_api_billing(
     assert OrganisationAPIBilling.objects.count() == 1
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_called_once_with(
@@ -1488,7 +1516,7 @@ def test_charge_for_api_call_count_overages_with_yearly_account(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     mock_chargebee_update.assert_not_called()
@@ -1533,7 +1561,7 @@ def test_charge_for_api_call_count_overages_with_bad_plan(
     assert OrganisationAPIBilling.objects.count() == 0
 
     # When
-    charge_for_api_call_count_overages()
+    charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
     # Then
     # Since the plan is not known ahead of time, it isn't charged.
@@ -1595,8 +1623,8 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         organisation5,
         organisation6,
     ]:
-        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
-        staff_user.add_organisation(org, role=OrganisationRole.USER)
+        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)  # type: ignore[no-untyped-call]
+        staff_user.add_organisation(org, role=OrganisationRole.USER)  # type: ignore[no-untyped-call]
 
     organisation5.subscription.plan = "scale-up-v2"
     organisation5.subscription.payment_method = CHARGEBEE
@@ -1926,7 +1954,7 @@ def test_restrict_use_due_to_api_limit_grace_period_over_with_reduced_api_usage(
     assert organisation.block_access_to_admin is False
     assert not hasattr(organisation, "api_limit_access_block")
     assert len(mailoutbox) == 0
-    assert inspecting_handler.messages == [
+    assert inspecting_handler.messages == [  # type: ignore[attr-defined]
         f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."
     ]
 

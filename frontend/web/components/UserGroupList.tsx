@@ -199,9 +199,9 @@ const UserGroupList: FC<UserGroupListType> = ({
         className='no-pad'
         itemHeight={64}
         items={
-          userGroupsPermission
+          (userGroupsPermission
             ? sortBy(mergeduserGroupsPermissionWithUserGroups, 'group.name')
-            : sortBy(userGroups, 'name')
+            : sortBy(userGroups, 'name')) as (UserGroup | GroupPermission)[]
         }
         paging={mergeduserGroupsPermissionWithUserGroups || userGroups}
         nextPage={() => setPage(page + 1)}
@@ -223,7 +223,7 @@ const UserGroupList: FC<UserGroupListType> = ({
             </Row>
           )
         }
-        renderRow={(group: UserGroup | GroupPermission, index: number) => {
+        renderRow={(group, index: number) => {
           if (userGroupsPermission) {
             const {
               admin,

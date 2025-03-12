@@ -1,21 +1,24 @@
 import typing
 from collections import namedtuple
 
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
-from core.request_origin import RequestOrigin
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
-from edge_api.identities.edge_request_forwarder import forward_identity_request
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.request_origin import RequestOrigin
+from edge_api.identities.tasks import forward_identity_request
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentitySerializer,
@@ -36,15 +39,15 @@ from integrations.integration import (
 from util.views import SDKAPIView
 
 
-class IdentityViewSet(viewsets.ModelViewSet):
+class IdentityViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = IdentitySerializer
     pagination_class = CustomPagination
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Identity.objects.none()
 
-        environment = self.get_environment_from_request()
+        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         queryset = Identity.objects.filter(environment=environment)
 
         search_query = self.request.query_params.get("q")
@@ -64,7 +67,7 @@ class IdentityViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def get_permissions(self):
+    def get_permissions(self):  # type: ignore[no-untyped-def]
         return [
             IsAuthenticated(),
             NestedEnvironmentPermissions(
@@ -79,18 +82,18 @@ class IdentityViewSet(viewsets.ModelViewSet):
             ),
         ]
 
-    def get_environment_from_request(self):
+    def get_environment_from_request(self):  # type: ignore[no-untyped-def]
         """
         Get environment object from URL parameters in request.
         """
         return Environment.objects.get(api_key=self.kwargs["environment_api_key"])
 
-    def perform_create(self, serializer):
-        environment = self.get_environment_from_request()
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
+        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         serializer.save(environment=environment)
 
-    def perform_update(self, serializer):
-        environment = self.get_environment_from_request()
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
+        environment = self.get_environment_from_request()  # type: ignore[no-untyped-call]
         serializer.save(environment=environment)
 
 
@@ -108,7 +111,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
     schema = None
 
     # identifier is in a path parameter
-    def get(self, request, identifier, *args, **kwargs):
+    def get(self, request, identifier, *args, **kwargs):  # type: ignore[no-untyped-def]
         # if we have identifier fetch, or create if does not exist
         if identifier:
             identity, _ = Identity.objects.get_or_create_for_sdk(
@@ -122,7 +125,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
             )
 
         if identity:
-            traits_data = identity.get_all_user_traits()
+            traits_data = identity.get_all_user_traits()  # type: ignore[no-untyped-call]
             # traits_data = self.get_serializer(identity.get_all_user_traits(), many=True)
             # return Response(traits.data, status=status.HTTP_200_OK)
         else:
@@ -132,7 +135,7 @@ class SDKIdentitiesDeprecated(SDKAPIView):
             )
 
         # We need object type to pass into our IdentitySerializerTraitFlags
-        IdentityFlagsWithTraitsAndSegments = namedtuple(
+        IdentityFlagsWithTraitsAndSegments = namedtuple(  # type: ignore[name-match]
             "IdentityTraitFlagsSegments", ("flags", "traits", "segments")
         )
         identity_flags_traits_segments = IdentityFlagsWithTraitsAndSegments(
@@ -164,7 +167,7 @@ class SDKIdentities(SDKAPIView):
             cache=settings.GET_IDENTITIES_ENDPOINT_CACHE_NAME,
         )
     )
-    def get(self, request):
+    def get(self, request):  # type: ignore[no-untyped-def]
         identifier = request.query_params.get("identifier")
         if not identifier:
             return Response(
@@ -215,7 +218,7 @@ class SDKIdentities(SDKAPIView):
 
         return response
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super(SDKIdentities, self).get_serializer_context()
         if hasattr(self.request, "environment"):
             # only set it if the request has the attribute to ensure that the
@@ -231,7 +234,7 @@ class SDKIdentities(SDKAPIView):
         responses={200: SDKIdentitiesResponseSerializer()},
         operation_id="identify_user_with_traits",
     )
-    def post(self, request):
+    def post(self, request):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
@@ -251,7 +254,7 @@ class SDKIdentities(SDKAPIView):
         # trait values are serialized correctly
         response_serializer = IdentifyWithTraitsSerializer(
             instance=instance,
-            context=self.get_serializer_context(),
+            context=self.get_serializer_context(),  # type: ignore[no-untyped-call]
         )
         return Response(
             response_serializer.data,
@@ -271,7 +274,7 @@ class SDKIdentities(SDKAPIView):
         feature_name: str,
         headers: dict[str, typing.Any],
     ) -> Response:
-        context = self.get_serializer_context()
+        context = self.get_serializer_context()  # type: ignore[no-untyped-call]
 
         for feature_state in identity.get_all_feature_states(
             additional_filters=self._get_additional_filters(),
@@ -288,7 +291,7 @@ class SDKIdentities(SDKAPIView):
             headers=headers,
         )
 
-    def _get_all_feature_states_for_user_response(
+    def _get_all_feature_states_for_user_response(  # type: ignore[no-untyped-def]
         self,
         identity: Identity,
         headers: dict[str, typing.Any],
@@ -309,10 +312,10 @@ class SDKIdentities(SDKAPIView):
                 "identifier": identity.identifier,
                 "traits": identity.identity_traits.all() if identity.id else [],
             },
-            context=self.get_serializer_context(),
+            context=self.get_serializer_context(),  # type: ignore[no-untyped-call]
         )
 
-        identify_integrations(identity, all_feature_states)
+        identify_integrations(identity, all_feature_states)  # type: ignore[no-untyped-call]
 
         return Response(
             data=serializer.data, status=status.HTTP_200_OK, headers=headers

@@ -34,43 +34,43 @@ logger = logging.getLogger()
 
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
-    def get_table_name(self) -> str | None:
-        return settings.IDENTITIES_TABLE_NAME_DYNAMO
+    def get_table_name(self) -> str | None:  # type: ignore[override]
+        return settings.IDENTITIES_TABLE_NAME_DYNAMO  # type: ignore[no-any-return]
 
-    def query_items(self, *args, **kwargs) -> "QueryOutputTableTypeDef":
-        return self.table.query(*args, **kwargs)
+    def query_items(self, *args, **kwargs) -> "QueryOutputTableTypeDef":  # type: ignore[no-untyped-def]
+        return self.table.query(*args, **kwargs)  # type: ignore[union-attr]
 
-    def put_item(self, identity_dict: dict):
-        self.table.put_item(Item=identity_dict)
+    def put_item(self, identity_dict: dict):  # type: ignore[type-arg,no-untyped-def]
+        self.table.put_item(Item=identity_dict)  # type: ignore[union-attr]
 
-    def write_identities(self, identities: Iterable["Identity"]):
-        with self.table.batch_writer() as batch:
+    def write_identities(self, identities: Iterable["Identity"]):  # type: ignore[no-untyped-def]
+        with self.table.batch_writer() as batch:  # type: ignore[union-attr]
             for identity in identities:
                 identity_document = map_identity_to_identity_document(identity)
                 # Since sort keys can not be greater than 1024
                 # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ServiceQuotas.html#limits-partition-sort-keys
-                if len(identity_document["identifier"]) > 1024:
+                if len(identity_document["identifier"]) > 1024:  # type: ignore[arg-type]
                     logger.warning(
                         f"Can't migrate identity {identity.id}; identifier too long"
                     )
                     continue
                 batch.put_item(Item=identity_document)
 
-    def get_item(self, composite_key: str) -> typing.Optional[dict]:
-        return self.table.get_item(Key={"composite_key": composite_key}).get("Item")
+    def get_item(self, composite_key: str) -> typing.Optional[dict]:  # type: ignore[type-arg]
+        return self.table.get_item(Key={"composite_key": composite_key}).get("Item")  # type: ignore[union-attr]
 
-    def delete_item(self, composite_key: str):
-        self.table.delete_item(Key={"composite_key": composite_key})
+    def delete_item(self, composite_key: str):  # type: ignore[no-untyped-def]
+        self.table.delete_item(Key={"composite_key": composite_key})  # type: ignore[union-attr]
 
-    def delete_all_identities(self, environment_api_key: str):
-        with self.table.batch_writer() as writer:
+    def delete_all_identities(self, environment_api_key: str):  # type: ignore[no-untyped-def]
+        with self.table.batch_writer() as writer:  # type: ignore[union-attr]
             for item in self.iter_all_items_paginated(
                 environment_api_key=environment_api_key,
                 projection_expression="composite_key",
             ):
                 writer.delete_item(Key={"composite_key": item["composite_key"]})
 
-    def get_item_from_uuid(self, uuid: str) -> dict:
+    def get_item_from_uuid(self, uuid: str) -> dict:  # type: ignore[type-arg]
         filter_expression = Key("identity_uuid").eq(uuid)
         query_kwargs = {
             "IndexName": "identity_uuid-index",
@@ -82,7 +82,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         except IndexError:
             raise ObjectDoesNotExist()
 
-    def get_item_from_uuid_or_404(self, uuid: str) -> dict:
+    def get_item_from_uuid_or_404(self, uuid: str) -> dict:  # type: ignore[type-arg]
         try:
             return self.get_item_from_uuid(uuid)
         except ObjectDoesNotExist as e:
@@ -98,15 +98,15 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         return_consumed_capacity: bool = False,
     ) -> "QueryOutputTableTypeDef":
         key_condition_expression = Key("environment_api_key").eq(environment_api_key)
-        query_kwargs: "QueryInputRequestTypeDef" = {
+        query_kwargs: "QueryInputRequestTypeDef" = {  # type: ignore[typeddict-item]
             "IndexName": "environment_api_key-identifier-index",
-            "KeyConditionExpression": key_condition_expression,
+            "KeyConditionExpression": key_condition_expression,  # type: ignore[typeddict-item]
             "Limit": limit,
         }
         if start_key:
             query_kwargs["ExclusiveStartKey"] = start_key
         if filter_expression:
-            query_kwargs["FilterExpression"] = filter_expression
+            query_kwargs["FilterExpression"] = filter_expression  # type: ignore[typeddict-item]
         if projection_expression:
             query_kwargs["ProjectionExpression"] = projection_expression
         if return_consumed_capacity:
@@ -121,7 +121,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         projection_expression: str | None = None,
         capacity_budget: Decimal = Decimal("Inf"),
         overrides_only: bool = False,
-    ) -> typing.Generator[dict, None, None]:
+    ) -> typing.Generator[dict, None, None]:  # type: ignore[type-arg]
         last_evaluated_key = "initial"
         get_all_items_kwargs = {
             "environment_api_key": environment_api_key,
@@ -136,16 +136,16 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             if capacity_spent >= capacity_budget:
                 raise CapacityBudgetExceeded(
                     capacity_budget=capacity_budget,
-                    capacity_spent=capacity_spent,
+                    capacity_spent=capacity_spent,  # type: ignore[arg-type]
                 )
             query_response = self.get_all_items(
-                **get_all_items_kwargs,
+                **get_all_items_kwargs,  # type: ignore[arg-type]
             )
             with suppress(KeyError):
-                capacity_spent += query_response["ConsumedCapacity"]["CapacityUnits"]
+                capacity_spent += query_response["ConsumedCapacity"]["CapacityUnits"]  # type: ignore[assignment]
             for item in query_response["Items"]:
                 yield item
-            if last_evaluated_key := query_response.get("LastEvaluatedKey"):
+            if last_evaluated_key := query_response.get("LastEvaluatedKey"):  # type: ignore[assignment]
                 get_all_items_kwargs["start_key"] = last_evaluated_key
 
     def search_items(
@@ -153,7 +153,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         environment_api_key: str,
         search_data: EdgeIdentitySearchData,
         limit: int,
-        start_key: dict = None,
+        start_key: dict = None,  # type: ignore[type-arg,assignment]
     ) -> "QueryOutputTableTypeDef":
         partition_key_search_expression = Key("environment_api_key").eq(
             environment_api_key
@@ -174,8 +174,10 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
         return self.query_items(**query_kwargs)
 
     def get_segment_ids(
-        self, identity_pk: str = None, identity_model: IdentityModel = None
-    ) -> list:
+        self,
+        identity_pk: str = None,  # type: ignore[assignment]
+        identity_model: IdentityModel = None,  # type: ignore[assignment]
+    ) -> list:  # type: ignore[type-arg]
         if not (identity_pk or identity_model):
             raise ValueError("Must provide one of identity_pk or identity_model.")
 

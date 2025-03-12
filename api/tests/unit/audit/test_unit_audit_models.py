@@ -38,7 +38,7 @@ def test_organisation_webhooks_are_called_when_audit_log_saved(
     )
 
 
-def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(
+def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(  # type: ignore[no-untyped-def]
     project, mocker
 ):
     # Given Audit log and project not configured for Datadog
@@ -54,7 +54,7 @@ def test_data_dog_track_event_not_called_on_audit_log_saved_when_not_configured(
     datadog_mock.track_event_async.assert_not_called()
 
 
-def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, project):
+def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, project):  # type: ignore[no-untyped-def]  # noqa: E501
     # Given Audit log and project configured for Datadog integration
     datadog_mock = mocker.patch(
         "integrations.datadog.datadog.DataDogWrapper.track_event_async"
@@ -79,7 +79,7 @@ def test_data_dog_track_event_not_called_on_audit_log_saved_when_wrong(mocker, p
     datadog_mock.track_event_async.assert_not_called()
 
 
-def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(
+def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(  # type: ignore[no-untyped-def]
     project, mocker
 ):
     # Given project configured for Datadog integration
@@ -112,7 +112,7 @@ def test_data_dog_track_event_called_on_audit_log_saved_when_correct_type(
     assert 3 == datadog_mock.call_count
 
 
-def test_audit_log_get_history_record_model_class(mocker):
+def test_audit_log_get_history_record_model_class(mocker):  # type: ignore[no-untyped-def]
     # Given
     module_name = "module"
 
@@ -123,7 +123,7 @@ def test_audit_log_get_history_record_model_class(mocker):
 
     class_path = f"{module_name}.{DummyHistoricalRecordModel.__name__}"
 
-    def import_module_side_effect(m):
+    def import_module_side_effect(m):  # type: ignore[no-untyped-def]
         if m == module_name:
             return mocker.MagicMock(
                 **{DummyHistoricalRecordModel.__name__: DummyHistoricalRecordModel}
@@ -137,10 +137,10 @@ def test_audit_log_get_history_record_model_class(mocker):
     klass = AuditLog.get_history_record_model_class(class_path)
 
     # Then
-    assert klass == DummyHistoricalRecordModel
+    assert klass == DummyHistoricalRecordModel  # type: ignore[comparison-overlap]
 
 
-def test_audit_log_history_record(mocker):
+def test_audit_log_history_record(mocker):  # type: ignore[no-untyped-def]
     # Given
     module_name = "app.models"
     model_class_name = "MyModel"
@@ -171,7 +171,7 @@ def test_audit_log_history_record(mocker):
     )
 
 
-def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mocker):
+def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mocker):  # type: ignore[no-untyped-def]
     # Given
     audit_log = AuditLog()
 
@@ -182,7 +182,7 @@ def test_audit_log_history_record_for_audit_log_record_with_no_history_record(mo
     assert record is None
 
 
-def test_audit_log_save_project_is_added_if_not_set(environment):
+def test_audit_log_save_project_is_added_if_not_set(environment):  # type: ignore[no-untyped-def]
     # Given
     audit_log = AuditLog(environment=environment)
 
@@ -193,7 +193,7 @@ def test_audit_log_save_project_is_added_if_not_set(environment):
     assert audit_log.project == environment.project
 
 
-def test_creating_audit_logs_creates_process_environment_update_task(
+def test_creating_audit_logs_creates_process_environment_update_task(  # type: ignore[no-untyped-def]
     environment, mocker
 ):
     # Given
@@ -212,7 +212,7 @@ def test_creating_audit_logs_creates_process_environment_update_task(
     assert environment.updated_at == audit_log.created_date
 
 
-def test_creating_audit_logs_for_change_request_does_not_trigger_process_environment_update(
+def test_creating_audit_logs_for_change_request_does_not_trigger_process_environment_update(  # type: ignore[no-untyped-def]  # noqa: E501
     environment, mocker, project
 ):
     # Given

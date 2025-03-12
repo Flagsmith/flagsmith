@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import withSegmentOverrides from 'common/providers/withSegmentOverrides'
+import moment from 'moment'
 import Constants from 'common/constants'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -47,6 +48,10 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import { getPermission } from 'common/services/usePermission'
+import { getChangeRequests } from 'common/services/useChangeRequest'
+import FeatureHealthTabContent from './FeatureHealthTabContent'
+import { IonIcon } from '@ionic/react'
+import { warning } from 'ionicons/icons'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -72,11 +77,14 @@ const CreateFlag = class extends Component {
           multivariate_options: [],
         }
     const { allowEditDescription } = this.props
+    const hideTags = this.props.hideTags || []
+
     if (this.props.projectFlag) {
-      this.userOverridesPage(1)
+      this.userOverridesPage(1, true)
     }
     this.state = {
       allowEditDescription,
+      changeRequests: [],
       default_enabled: enabled,
       description,
       enabledIndentity: false,
@@ -105,8 +113,9 @@ const CreateFlag = class extends Component {
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
+      scheduledChangeRequests: [],
       selectedIdentity: null,
-      tags: tags || [],
+      tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
     }
   }
 
@@ -200,16 +209,17 @@ const CreateFlag = class extends Component {
       })
     }
 
-    if (Utils.getFlagsmithHasFeature('github_integration')) {
-      getGithubIntegration(getStore(), {
-        organisation_id: AccountStore.getOrganisation().id,
-      }).then((res) => {
-        this.setState({
-          githubId: res?.data?.results[0]?.id,
-          hasIntegrationWithGithub: !!res?.data?.results?.length,
-        })
+    this.fetchChangeRequests()
+    this.fetchScheduledChangeRequests()
+
+    getGithubIntegration(getStore(), {
+      organisation_id: AccountStore.getOrganisation().id,
+    }).then((res) => {
+      this.setState({
+        githubId: res?.data?.results[0]?.id,
+        hasIntegrationWithGithub: !!res?.data?.results?.length,
       })
-    }
+    })
   }
 
   componentWillUnmount() {
@@ -218,14 +228,18 @@ const CreateFlag = class extends Component {
     }
   }
 
-  userOverridesPage = (page) => {
+  userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(getStore(), {
-          id: this.props.environmentId,
-          level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
-        }).then((permissions) => {
+        getPermission(
+          getStore(),
+          {
+            id: this.props.environmentId,
+            level: 'environment',
+            permissions: 'VIEW_IDENTITIES',
+          },
+          { forceRefetch },
+        ).then((permissions) => {
           if (permissions?.length) {
             data
               .get(
@@ -544,6 +558,42 @@ const CreateFlag = class extends Component {
     this.forceUpdate()
   }
 
+  fetchChangeRequests = (forceRefetch) => {
+    const { environmentId, projectFlag } = this.props
+    if (!projectFlag?.id) return
+
+    getChangeRequests(
+      getStore(),
+      {
+        committed: false,
+        environmentId,
+        feature_id: projectFlag?.id,
+      },
+      { forceRefetch },
+    ).then((res) => {
+      this.setState({ changeRequests: res.data?.results })
+    })
+  }
+
+  fetchScheduledChangeRequests = (forceRefetch) => {
+    const { environmentId, projectFlag } = this.props
+    if (!projectFlag?.id) return
+
+    const date = moment().toISOString()
+
+    getChangeRequests(
+      getStore(),
+      {
+        environmentId,
+        feature_id: projectFlag.id,
+        live_from_after: date,
+      },
+      { forceRefetch },
+    ).then((res) => {
+      this.setState({ scheduledChangeRequests: res.data?.results })
+    })
+  }
+
   render() {
     const {
       default_enabled,
@@ -745,13 +795,18 @@ const CreateFlag = class extends Component {
 
     const Value = (error, projectAdmin, createFeature, hideValue) => {
       const { featureError, featureWarning } = this.parseError(error)
+      const { changeRequests, scheduledChangeRequests } = this.state
       return (
         <>
-          {!!isEdit && (
+          {!!isEdit && !identity && (
             <ExistingChangeRequestAlert
               className='mb-4'
-              featureId={projectFlag.id}
+              editingChangeRequest={this.props.changeRequest}
+              projectId={this.props.projectId}
               environmentId={this.props.environmentId}
+              history={this.props.history}
+              changeRequests={changeRequests}
+              scheduledChangeRequests={scheduledChangeRequests}
             />
           )}
           {!isEdit && (
@@ -886,6 +941,11 @@ const CreateFlag = class extends Component {
                 this.props.projectId,
                 this.props.environmentId,
               )
+
+              if (is4Eyes && !identity) {
+                this.fetchChangeRequests(true)
+                this.fetchScheduledChangeRequests(true)
+              }
             }}
           >
             {(
@@ -910,6 +970,7 @@ const CreateFlag = class extends Component {
                       : 'New Change Request',
                     <ChangeRequestModal
                       showAssignees={is4Eyes}
+                      isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
                       onSave={({
                         approvals,
@@ -1846,10 +1907,35 @@ const CreateFlag = class extends Component {
                                     </InfoMessage>
                                   </TabItem>
                                 )}
-                                {Utils.getFlagsmithHasFeature(
-                                  'github_integration',
-                                ) &&
-                                  hasIntegrationWithGithub &&
+                                {this.props.hasUnhealthyEvents && (
+                                  <TabItem
+                                    data-test='feature_health'
+                                    tabLabelString='Feature Health'
+                                    tabLabel={
+                                      <Row
+                                        className={`inline-block justify-content-center ${
+                                          true ? 'pr-1' : ''
+                                        }`}
+                                      >
+                                        Feature Health{' '}
+                                        <IonIcon
+                                          icon={warning}
+                                          style={{
+                                            color:
+                                              Constants.featureHealth
+                                                .unhealthyColor,
+                                            marginBottom: -2,
+                                          }}
+                                        />
+                                      </Row>
+                                    }
+                                  >
+                                    <FeatureHealthTabContent
+                                      projectId={projectFlag.project}
+                                    />
+                                  </TabItem>
+                                )}
+                                {hasIntegrationWithGithub &&
                                   projectFlag?.id && (
                                     <TabItem
                                       data-test='external-resources-links'
@@ -2073,7 +2159,13 @@ const FeatureProvider = (WrappedComponent) => {
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({ changeRequest, createdFlag, error, isCreate } = {}) => {
+        ({
+          changeRequest,
+          createdFlag,
+          error,
+          isCreate,
+          updatedChangeRequest,
+        } = {}) => {
           if (error?.data?.metadata) {
             error.data.metadata?.forEach((m) => {
               if (Object.keys(m).length > 0) {
@@ -2084,11 +2176,23 @@ const FeatureProvider = (WrappedComponent) => {
             toast('Error updating the Flag', 'danger')
             return
           } else {
-            toast(
-              `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
-                changeRequest ? 'Change Request' : 'Feature'
-              }`,
-            )
+            const operation = createdFlag || isCreate ? 'Created' : 'Updated'
+            const type = changeRequest ? 'Change Request' : 'Feature'
+
+            const toastText = `${operation} ${type}`
+            const toastAction = changeRequest
+              ? {
+                  buttonText: 'Open',
+                  onClick: () => {
+                    closeModal()
+                    this.props.history.push(
+                      `/project/${this.props.projectId}/environment/${this.props.environmentId}/change-requests/${updatedChangeRequest?.id}`,
+                    )
+                  },
+                }
+              : undefined
+
+            toast(toastText, 'success', undefined, toastAction)
           }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 

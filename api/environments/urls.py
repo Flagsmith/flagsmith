@@ -1,5 +1,5 @@
 from django.urls import include, path, re_path
-from rest_framework_nested import routers
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,

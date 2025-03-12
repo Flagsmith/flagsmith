@@ -39,7 +39,7 @@ def test_replica_router_db_for_read_with_one_offline_replica(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
 
     # Then
     # Read strategy DISTRIBUTED is random, so just this is a check
@@ -85,7 +85,7 @@ def test_replica_router_db_for_read_with_local_offline_replicas(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
 
     # Then
     # Read strategy DISTRIBUTED is random, so just this is a check
@@ -120,7 +120,7 @@ def test_replica_router_db_for_read_with_all_offline_replicas(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
 
     # Then
     # Fallback to primary database if all replicas are offline.
@@ -154,7 +154,7 @@ def test_replica_router_db_with_sequential_read(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
 
     # Then
     # Fallback from first replica to second one.
@@ -186,7 +186,7 @@ def test_replica_router_db_no_replicas(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)
+    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
 
     # Then
     # Should always use primary database.

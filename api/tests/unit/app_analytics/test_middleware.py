@@ -1,9 +1,10 @@
 import pytest
-from app_analytics.middleware import APIUsageMiddleware
-from app_analytics.models import Resource
 from django.test import RequestFactory
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+
+from app_analytics.middleware import APIUsageMiddleware
+from app_analytics.models import Resource
 
 
 @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     # Given
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key}
-    request = rf.get(path, **headers)
+    request = rf.get(path, **headers)  # type: ignore[arg-type]
     settings.USE_CACHE_FOR_USAGE_DATA = True
 
     mocked_api_usage_cache = mocker.patch(
@@ -33,7 +34,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     )
 
     mocked_get_response = mocker.MagicMock()
-    middleware = APIUsageMiddleware(mocked_get_response)
+    middleware = APIUsageMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
 
     # When
     middleware(request)
@@ -63,13 +64,13 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     # Given
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key}
-    request = rf.get(path, **headers)
+    request = rf.get(path, **headers)  # type: ignore[arg-type]
     settings.USE_CACHE_FOR_USAGE_DATA = False
 
     mocked_track_request = mocker.patch("app_analytics.middleware.track_request")
 
     mocked_get_response = mocker.MagicMock()
-    middleware = APIUsageMiddleware(mocked_get_response)
+    middleware = APIUsageMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
 
     # When
     middleware(request)
@@ -91,13 +92,13 @@ def test_APIUsageMiddleware_avoids_calling_track_request_if_resoure_is_not_track
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key}
     path = "/api/v1/unknown"
-    request = rf.get(path, **headers)
+    request = rf.get(path, **headers)  # type: ignore[arg-type]
     settings.USE_CACHE_FOR_USAGE_DATA = False
 
     mocked_track_request = mocker.patch("app_analytics.middleware.track_request")
 
     mocked_get_response = mocker.MagicMock()
-    middleware = APIUsageMiddleware(mocked_get_response)
+    middleware = APIUsageMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
 
     # When
     middleware(request)

@@ -102,5 +102,5 @@ def _iter_paginated_overrides(
                     identity_uuid=str(identity.identity_uuid),
                     identifier=identity.identifier,
                     environment_api_key=environment_api_key,
-                    environment_id=str(environment.id),
+                    environment_id=str(environment.id),  # type: ignore[arg-type]
                 )

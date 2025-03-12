@@ -1,13 +1,19 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { ComponentProps, FC, useEffect, useMemo, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
-import { Environment, Project } from 'common/types/responses'
+import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
-import { code, createOutline } from 'ionicons/icons'
+import {
+  checkmarkCircle,
+  code,
+  createOutline,
+  flask,
+  warning,
+} from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -17,11 +23,12 @@ import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext } from 'react-router'
-import Constants from 'common/constants'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
+import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import Constants from 'common/constants'
 
 type HomeAsideType = {
   environmentId: string
@@ -29,11 +36,89 @@ type HomeAsideType = {
   history: RouterChildContext['router']['history']
 }
 
+type CustomOptionProps = ComponentProps<typeof components.Option> & {
+  hasWarning?: boolean
+}
+
+type CustomSingleValueProps = ComponentProps<typeof components.SingleValue> & {
+  hasWarning?: boolean
+}
+
+const TooltipWrapper = ({
+  showWarning,
+  title,
+}: {
+  title: React.ReactElement
+  showWarning: boolean
+}) => {
+  return showWarning ? (
+    <Tooltip place='bottom' title={title} effect='solid' renderInPortal>
+      One or more environments have unhealthy features
+    </Tooltip>
+  ) : (
+    title
+  )
+}
+
+const CustomOption = ({ hasWarning, ...rest }: CustomOptionProps) => {
+  const showWarning =
+    Utils.getFlagsmithHasFeature('feature_health') && hasWarning
+  return (
+    <components.Option {...rest}>
+      <div className='d-flex align-items-center'>
+        {rest.children}
+        <div className='d-flex flex-1 align-items-center justify-content-between '>
+          {showWarning && (
+            <Tooltip
+              title={
+                <div className='flex ml-1'>
+                  <IonIcon className='text-warning' icon={warning} />
+                </div>
+              }
+            >
+              This environment has unhealthy features
+            </Tooltip>
+          )}
+          <div className='flex ml-auto'>
+            {rest.isSelected && (
+              <IonIcon icon={checkmarkCircle} className='text-primary' />
+            )}
+          </div>
+        </div>
+      </div>
+    </components.Option>
+  )
+}
+
+const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
+  const showWarning =
+    Utils.getFlagsmithHasFeature('feature_health') && hasWarning
+  return (
+    <components.SingleValue {...rest}>
+      <div className='d-flex align-items-center'>
+        <div>{rest.children}</div>
+        <div>
+          {showWarning && (
+            <div className='flex ml-1'>
+              <IonIcon className='text-warning' icon={warning} />
+            </div>
+          )}
+        </div>
+      </div>
+    </components.SingleValue>
+  )
+}
+
 const HomeAside: FC<HomeAsideType> = ({
   environmentId,
   history,
   projectId,
 }) => {
+  const { data: healthEvents } = useGetHealthEventsQuery(
+    { projectId: projectId },
+    { skip: !projectId },
+  )
+
   useEffect(() => {
     if (environmentId) {
       AppActions.getChangeRequests(environmentId, {})
@@ -50,6 +135,20 @@ const HomeAside: FC<HomeAsideType> = ({
     //eslint-disable-next-line
   }, [])
 
+  const unhealthyEnvironments = healthEvents
+    ?.filter((event) => event?.type === 'UNHEALTHY' && !!event?.environment)
+    .map(
+      (event) =>
+        (
+          ProjectStore.getEnvironmentById(
+            event.environment,
+          ) as Environment | null
+        )?.api_key,
+    )
+
+  const hasUnhealthyEnvironments =
+    Utils.getFlagsmithHasFeature('feature_health') &&
+    !!unhealthyEnvironments?.length
   const environment: Environment | null =
     environmentId === 'create'
       ? null
@@ -106,7 +205,10 @@ const HomeAside: FC<HomeAsideType> = ({
                             styles={{
                               container: (base: any) => ({
                                 ...base,
-                                border: 'none',
+                                border: hasUnhealthyEnvironments
+                                  ? `1px solid ${Constants.featureHealth.unhealthyColor}`
+                                  : 'none',
+                                borderRadius: 6,
                                 padding: 0,
                               }),
                             }}
@@ -114,14 +216,34 @@ const HomeAside: FC<HomeAsideType> = ({
                             value={environmentId}
                             projectId={projectId}
                             components={{
-                              Menu: ({ ...props }: any) => {
-                                return (
-                                  <components.Menu {...props}>
-                                    {props.children}
-                                    {createEnvironmentButton}
-                                  </components.Menu>
-                                )
-                              },
+                              Control: (props) => (
+                                <TooltipWrapper
+                                  showWarning={hasUnhealthyEnvironments}
+                                  title={<components.Control {...props} />}
+                                />
+                              ),
+                              Menu: ({ ...props }: any) => (
+                                <components.Menu {...props}>
+                                  {props.children}
+                                  {createEnvironmentButton}
+                                </components.Menu>
+                              ),
+                              Option: (props) => (
+                                <CustomOption
+                                  {...props}
+                                  hasWarning={unhealthyEnvironments?.includes(
+                                    props.data.value,
+                                  )}
+                                />
+                              ),
+                              SingleValue: (props) => (
+                                <CustomSingleValue
+                                  {...props}
+                                  hasWarning={unhealthyEnvironments?.includes(
+                                    props.data.value,
+                                  )}
+                                />
+                              ),
                             }}
                             onChange={(newEnvironmentId) => {
                               if (newEnvironmentId !== environmentId) {
@@ -225,6 +347,18 @@ const HomeAside: FC<HomeAsideType> = ({
                                     />
                                     SDK Keys
                                   </NavLink>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'split_testing',
+                                  ) && (
+                                    <NavLink
+                                      id='split-tests-link'
+                                      exact
+                                      to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
+                                    >
+                                      <IonIcon className='mr-2' icon={flask} />
+                                      Split Tests
+                                    </NavLink>
+                                  )}
                                   {environmentAdmin && (
                                     <NavLink
                                       id='env-settings-link'

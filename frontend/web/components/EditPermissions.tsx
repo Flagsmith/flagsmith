@@ -323,8 +323,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       },
     ] = useCreateRolePermissionsMutation()
 
-    const tagBasedPermissions =
-      Utils.getFlagsmithHasFeature('tag_based_permissions') && !!role
+    const tagBasedPermissions = !!role
     useEffect(() => {
       const isSaving = isRolePermCreating || isRolePermUpdating
       if (isSaving) {
@@ -856,7 +855,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               title='Permissions'
               className='no-pad mb-2 overflow-visible'
               items={permissions}
-              renderRow={(p: AvailablePermission, index: number) => {
+              renderRow={(p) => {
                 const levelUpperCase = level.toUpperCase()
                 const disabled =
                   level !== 'organisation' &&
@@ -1147,7 +1146,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                               </div>
                             </Row>
                           }
-                          renderRow={(user: User) => {
+                          renderRow={(user) => {
                             const { email, first_name, id, last_name, role } =
                               user
                             const onClick = () => {
@@ -1278,7 +1277,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                   </div>
                 </Row>
               }
-              renderRow={(role: Role) => (
+              renderRow={(role) => (
                 <Row
                   className='list-item clickable cursor-pointer'
                   key={role.id}

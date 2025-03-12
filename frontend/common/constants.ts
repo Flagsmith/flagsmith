@@ -363,7 +363,7 @@ const Constants = {
     },
   },
   exampleAuditWebhook: `{
- "created_date": "2020-02-23T17:30:57.006318Z",
+    "created_date": "2020-02-23T17:30:57.006318Z",
  "log": "New Flag / Remote Config created: my_feature",
  "author": {
   "id": 3,
@@ -435,6 +435,19 @@ const Constants = {
  },
  "event_type": "FLAG_UPDATED"
 }`,
+  featureHealth: {
+    unhealthyColor: '#D35400',
+  },
+  featurePanelTabs: {
+    ANALYTICS: 'analytics',
+    FEATURE_HEALTH: 'feature-health',
+    HISTORY: 'history',
+    IDENTITY_OVERRIDES: 'identity-overrides',
+    LINKS: 'links',
+    SEGMENT_OVERRIDES: 'segment-overrides',
+    SETTINGS: 'settings',
+    VALUE: 'value',
+  },
   forms: {
     maxLength: {
       'FEATURE_ID': 150,

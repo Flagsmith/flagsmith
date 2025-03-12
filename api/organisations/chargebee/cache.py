@@ -1,7 +1,7 @@
 from typing import Dict, Generator
 
-import chargebee
-from chargebee.result import Result as ChargebeeResult
+import chargebee  # type: ignore[import-untyped]
+from chargebee.result import Result as ChargebeeResult  # type: ignore[import-untyped]
 from django.conf import settings
 from django.core.cache import caches
 
@@ -11,29 +11,29 @@ CHARGEBEE_CACHE_KEY = "chargebee_items"
 
 
 class ChargebeeCache:
-    def __init__(self):
+    def __init__(self):  # type: ignore[no-untyped-def]
         self._cache = caches[settings.CHARGEBEE_CACHE_LOCATION]
 
-    def refresh(self):
+    def refresh(self):  # type: ignore[no-untyped-def]
         plans = self.fetch_plans()
         addons = self.fetch_addons()
         self._cache.set(CHARGEBEE_CACHE_KEY, {"plans": plans, "addons": addons})
 
     @property
     def plans(self) -> Dict[str, ChargebeeObjMetadata]:
-        return self._get_items()["plans"]
+        return self._get_items()["plans"]  # type: ignore[no-any-return]
 
     @property
     def addons(self) -> Dict[str, ChargebeeObjMetadata]:
-        return self._get_items()["addons"]
+        return self._get_items()["addons"]  # type: ignore[no-any-return]
 
-    def _get_items(self) -> dict:
+    def _get_items(self) -> dict:  # type: ignore[type-arg]
         chargebee_items = self._cache.get(CHARGEBEE_CACHE_KEY)
         if chargebee_items is None:
-            self.refresh()
-        return self._cache.get(CHARGEBEE_CACHE_KEY)
+            self.refresh()  # type: ignore[no-untyped-call]
+        return self._cache.get(CHARGEBEE_CACHE_KEY)  # type: ignore[no-any-return]
 
-    def fetch_plans(self) -> dict:
+    def fetch_plans(self) -> dict:  # type: ignore[type-arg]
         plans = {}
         for entry in get_item_generator(ChargebeeItem.PLAN):
             plan = entry.plan
@@ -41,7 +41,7 @@ class ChargebeeCache:
             plans[plan.id] = ChargebeeObjMetadata(**plan_metadata)
         return plans
 
-    def fetch_addons(self) -> dict:
+    def fetch_addons(self) -> dict:  # type: ignore[type-arg]
         addons = {}
         for entry in get_item_generator(ChargebeeItem.ADDON):
             addon = entry.addon

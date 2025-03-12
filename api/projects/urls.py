@@ -2,7 +2,7 @@ import importlib
 
 from django.conf import settings
 from django.urls import include, path, re_path
-from rest_framework_nested import routers
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from audit.views import ProjectAuditLogViewSet
 from features.feature_external_resources.views import (

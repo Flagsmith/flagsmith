@@ -132,7 +132,7 @@ def test_map_identity_to_identity_document__call_expected(
         "identity_traits": [{"trait_key": "key1", "trait_value": "value1"}],
         "identity_uuid": mocker.ANY,
     }
-    assert uuid.UUID(result["identity_uuid"])
+    assert uuid.UUID(result["identity_uuid"])  # type: ignore[arg-type]
 
 
 def test_map_environment_to_environment_v2_document__call_expected(
@@ -224,6 +224,6 @@ def test_map_identity_override_to_identity_override_document__decimal_feature_st
     )
 
     # Then
-    feature_state_value = result["feature_state"]["feature_state_value"]
+    feature_state_value = result["feature_state"]["feature_state_value"]  # type: ignore[index]
     assert isinstance(feature_state_value, Decimal)
     assert feature_state_value == expected_feature_state_value

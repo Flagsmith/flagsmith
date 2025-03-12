@@ -7,13 +7,13 @@ from .models import Environment, Webhook
 from .tasks import rebuild_environment_document
 
 
-class WebhookInline(admin.TabularInline):
+class WebhookInline(admin.TabularInline):  # type: ignore[type-arg]
     model = Webhook
     extra = 0
 
 
 @admin.register(Environment)
-class EnvironmentAdmin(admin.ModelAdmin):
+class EnvironmentAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     actions = ["rebuild_environments"]
     date_hierarchy = "created_date"
     list_display = (
@@ -30,6 +30,6 @@ class EnvironmentAdmin(admin.ModelAdmin):
     inlines = (WebhookInline,)
 
     @admin.action(description="Rebuild selected environment documents")
-    def rebuild_environments(self, request, queryset):
+    def rebuild_environments(self, request, queryset):  # type: ignore[no-untyped-def]
         for environment in queryset:
             rebuild_environment_document.delay(args=(environment.id,))

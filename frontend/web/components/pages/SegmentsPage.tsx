@@ -4,7 +4,7 @@ import { find, sortBy } from 'lodash'
 
 import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
-import { Segment } from 'common/types/responses'
+import { Environment, Segment } from 'common/types/responses'
 import {
   useDeleteSegmentMutation,
   useGetSegmentsQuery,
@@ -40,7 +40,9 @@ type SegmentsPageType = {
 
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
   const { projectId } = props.match.params
-  const environmentId = ProjectStore.getEnvironment()?.api_key
+  const environmentId = (
+    ProjectStore.getEnvironment() as unknown as Environment | undefined
+  )?.api_key
   const params = Utils.fromParam()
   const id = params.id
   const { search, searchInput, setSearchInput } = useSearchThrottle('')
@@ -98,7 +100,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
           setModalTitle(`Edit Segment: ${segment.name}`)
           toast('Created segment')
         }}
-        environmentId={environmentId}
+        environmentId={environmentId!}
         projectId={projectId}
       />,
       'side-modal create-new-segment-modal',
@@ -135,7 +137,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
           refetch()
           toast('Updated Segment')
         }}
-        environmentId={environmentId}
+        environmentId={environmentId!}
         projectId={projectId}
       />,
       'side-modal create-segment-modal',
@@ -245,10 +247,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   items={sortBy(segments, (v) => {
                     return `${v.feature ? 'a' : 'z'}${v.name}`
                   })}
-                  renderRow={(
-                    { description, feature, id, name }: Segment,
-                    i: number,
-                  ) => {
+                  renderRow={({ description, feature, id, name }, i) => {
                     return renderWithPermission(
                       manageSegmentsPermission,
                       'Manage segments',
@@ -343,7 +342,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         <FormGroup>
           <CodeHelp
             title='Managing user traits and segments'
-            snippets={Constants.codeHelp.USER_TRAITS(environmentId)}
+            snippets={Constants.codeHelp.USER_TRAITS(environmentId!)}
           />
         </FormGroup>
       </div>
@@ -351,4 +350,4 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   )
 }
 
-module.exports = ConfigProvider(withRouter(SegmentsPage))
+module.exports = ConfigProvider(withRouter(SegmentsPage as any))

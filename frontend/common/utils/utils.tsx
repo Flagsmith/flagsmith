@@ -13,6 +13,7 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
+  PConfidence,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -57,7 +58,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     img.src = src
     document.body.appendChild(img)
   },
-
   calculateControl(
     multivariateOptions: MultivariateOption[],
     variations?: MultivariateFeatureStateValue[],
@@ -79,7 +79,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     })
     return 100 - total
   },
-
   calculateRemainingLimitsPercentage(
     total: number | undefined,
     max: number | undefined,
@@ -122,6 +121,26 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return res
   },
 
+  convertToPConfidence(value: number) {
+    if (value > 0.05) return 'LOW' as PConfidence
+    if (value >= 0.01) return 'REASONABLE' as PConfidence
+    if (value > 0.002) return 'HIGH' as PConfidence
+    return 'VERY_HIGH' as PConfidence
+  },
+
+  copyToClipboard: async (
+    value: string,
+    successMessage?: string,
+    errorMessage?: string,
+  ) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast(successMessage ?? 'Copied to clipboard')
+    } catch (error) {
+      toast(errorMessage ?? 'Failed to copy to clipboard')
+      throw error
+    }
+  },
   displayLimitAlert(type: string, percentage: number | undefined) {
     const envOrProject =
       type === 'segment overrides' ? 'environment' : 'project'
@@ -158,6 +177,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return featureState.string_value
     }
   },
+
   findOperator(
     operator: SegmentCondition['operator'],
     value: string,
@@ -174,20 +194,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return conditions.find((v) => v.value === operator)
   },
-  
-  copyToClipboard: async (value: string, successMessage?: string, errorMessage?: string) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast(successMessage ?? 'Copied to clipboard')
-    } catch (error) {
-      toast(errorMessage ?? 'Failed to copy to clipboard')
-      throw error
-    }
-  },
   /** Checks whether the specified flag exists, which is different from the flag being enabled or not. This is used to
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
-flagsmithFeatureExists(flag: string) {
+  flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
   getApproveChangeRequestPermission() {
@@ -468,14 +478,6 @@ flagsmithFeatureExists(flag: string) {
     )
   },
 
-  getShouldSendIdentityToTraits(_project: ProjectType) {
-    const project = _project || ProjectStore.model
-    if (project && project.use_edge_identities) {
-      return false
-    }
-    return true
-  },
-
   getShouldUpdateTraitOnDelete(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -486,22 +488,6 @@ flagsmithFeatureExists(flag: string) {
 
   getTagColour(index: number) {
     return Constants.tagColors[index % (Constants.tagColors.length - 1)]
-  },
-
-  getTraitEndpoint(environmentId: string, userId: string) {
-    const model = ProjectStore.model as null | ProjectType
-
-    if (model?.use_edge_identities) {
-      return `${Project.api}environments/${environmentId}/edge-identities/${userId}/list-traits/`
-    }
-    return `${Project.api}environments/${environmentId}/identities/${userId}/traits/`
-  },
-
-  getTraitEndpointMethod(id?: number) {
-    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
-      return 'put'
-    }
-    return id ? 'put' : 'post'
   },
 
   getTypedValue(
@@ -517,7 +503,8 @@ flagsmithFeatureExists(flag: string) {
     }
 
     const typedValue = testWithTrim ? str.trim() : str
-    const isNum = /^-?\d+$/.test(typedValue)
+    // Check if the value is sensible number, returns false if it has leading 0s
+    const isNum = /^-?(0|[1-9]\d*)$/.test(typedValue)
 
     if (isNum && parseInt(typedValue) > Number.MAX_SAFE_INTEGER) {
       return `${str}`
@@ -542,16 +529,6 @@ flagsmithFeatureExists(flag: string) {
     return str
   },
 
-  getUpdateTraitEndpoint(environmentId: string, userId: string, id?: string) {
-    if ((ProjectStore.model as ProjectType | null)?.use_edge_identities) {
-      return `${Project.api}environments/${environmentId}/edge-identities/${userId}/update-traits/`
-    }
-    return `${
-      Project.api
-    }environments/${environmentId}/identities/${userId}/traits/${
-      id ? `${id}/` : ''
-    }`
-  },
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },

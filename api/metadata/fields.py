@@ -2,15 +2,15 @@ from django.core import exceptions
 from django.db import models
 
 
-class GenericObjectID(models.PositiveIntegerField):
-    def value_from_object(self, obj):
+class GenericObjectID(models.PositiveIntegerField):  # type: ignore[type-arg]
+    def value_from_object(self, obj):  # type: ignore[no-untyped-def]
         """
         Override to return natural_key of the object instead of pk; used by our custom serializer
         to support import/export of objects with natural keys
         """
         return obj.content_object.natural_key()[0]
 
-    def to_python(self, value):
+    def to_python(self, value):  # type: ignore[no-untyped-def]
         """
         Override to allow string values; used by our custom deserializer
         to support import/export using natural keys

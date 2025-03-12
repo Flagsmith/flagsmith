@@ -12,20 +12,22 @@ class Command(BaseCommand):
     Usage: python manage.py rollbackmigrationsappliedafter "2024-10-24 08:23:45"
     """
 
-    def add_arguments(self, parser: ArgumentParser):
+    def add_arguments(self, parser: ArgumentParser):  # type: ignore[no-untyped-def]
         parser.add_argument(
             "dt",
             type=str,
             help="Rollback all migrations applied on or after this datetime (provided in ISO format)",
         )
 
-    def handle(self, *args, dt: str, **kwargs) -> None:
+    def handle(self, *args, dt: str, **kwargs) -> None:  # type: ignore[no-untyped-def]
         try:
             _dt = datetime.fromisoformat(dt)
         except ValueError:
             raise CommandError("Date must be in ISO format")
 
-        applied_migrations = MigrationRecorder.Migration.objects.filter(applied__gte=_dt).order_by("applied")
+        applied_migrations = MigrationRecorder.Migration.objects.filter(
+            applied__gte=_dt
+        ).order_by("applied")
         if not applied_migrations.exists():
             self.stdout.write(self.style.NOTICE("No migrations to rollback."))
 
@@ -38,9 +40,7 @@ class Command(BaseCommand):
             earliest_migration_by_app[migration.app] = migration.name
 
         for app, migration_name in earliest_migration_by_app.items():
-            call_command(
-                "migrate", app, _get_previous_migration_number(migration_name)
-            )
+            call_command("migrate", app, _get_previous_migration_number(migration_name))
 
 
 def _get_previous_migration_number(migration_name: str) -> str:

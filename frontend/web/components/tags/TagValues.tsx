@@ -5,29 +5,35 @@ import { useGetTagsQuery } from 'common/services/useTag'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
+import { Tag as TTag } from 'common/types/responses'
 
 type TagValuesType = {
-  onAdd?: () => void
+  onAdd?: (tag?: TTag) => void
+  /** Optional callback function to handle click events on tags. If provided, it will override the onAdd callback. */
+  onClick?: (tag?: TTag) => void
   value?: number[]
   projectId: string
   children?: ReactNode
   inline?: boolean
   hideNames?: boolean
+  hideTags?: number[]
 }
 
 const TagValues: FC<TagValuesType> = ({
   children,
   hideNames = true,
+  hideTags = [],
   inline,
   onAdd,
+  onClick,
   projectId,
   value,
 }) => {
-  const { data: tags } = useGetTagsQuery({ projectId })
+  const { data } = useGetTagsQuery({ projectId })
   const Wrapper = inline ? Fragment : Row
-  const permissionType = Utils.getFlagsmithHasFeature('manage_tags_permission')
-    ? 'MANAGE_TAGS'
-    : 'ADMIN'
+  const permissionType = 'MANAGE_TAGS'
+
+  const tags = data?.filter((tag) => !hideTags?.includes(tag.id))
 
   const { permission: createEditTagPermission } = useHasPermission({
     id: projectId,
@@ -42,9 +48,10 @@ const TagValues: FC<TagValuesType> = ({
         (tag) =>
           value?.includes(tag.id) && (
             <Tag
+              key={tag.id}
               className='chip--xs'
               hideNames={hideNames}
-              onClick={onAdd}
+              onClick={onAdd ?? onClick}
               tag={tag}
             />
           ),
@@ -58,7 +65,7 @@ const TagValues: FC<TagValuesType> = ({
           <Button
             disabled={!createEditTagPermission}
             size='xSmall'
-            onClick={onAdd}
+            onClick={() => onAdd?.()}
             type='button'
             theme='outline'
           >

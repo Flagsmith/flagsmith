@@ -7,7 +7,7 @@ def migrate_feature_evaluations(migrate_till: int = 30) -> None:
     query_api = influxdb_client.query_api()
 
     for i in range(migrate_till):
-        range_start = f"-{i+1}d"
+        range_start = f"-{i + 1}d"
         range_stop = f"-{i}d"
         query = (
             f'from (bucket: "{read_bucket}") '
