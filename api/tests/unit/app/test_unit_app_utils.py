@@ -1,12 +1,12 @@
 import json
 
 import pytest
+from django.test import Client
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
 
-from django.test import Client
-from users.models import FFAdminUser
 from app.utils import get_version_info
+from users.models import FFAdminUser
 
 
 def test_get_version_info(fs: FakeFilesystem, db: None) -> None:
