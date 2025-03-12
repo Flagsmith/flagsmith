@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 
-def test_get_version_info(api_client: APIClient) -> None:
+def test_get_version_info(api_client: APIClient, db: None) -> None:
     # Given
     url = reverse("version-info")
 
@@ -18,4 +18,9 @@ def test_get_version_info(api_client: APIClient) -> None:
         "has_email_provider": False,
         "is_enterprise": False,
         "is_saas": False,
+        "self_hosted_data": {
+            "has_users": False,
+            "has_logins": False,
+            "is_bootstrapped": False,
+        },
     }
