@@ -77,16 +77,23 @@ export type Environment = {
   is_creating: boolean
   api_key: string
   description?: string
-  banner_text?: string
+  banner_text?: string | null
   banner_colour?: string
   project: number
-  minimum_change_request_approvals?: number
+  minimum_change_request_approvals?: number | null
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
   use_v2_feature_versioning: boolean
   metadata: Metadata[] | []
+  use_identity_overrides_in_local_eval: boolean
+  use_identity_composite_key_for_hashing: boolean
+  hide_disabled_flags: boolean | null
+  use_mv_v2_evaluation: boolean
+  show_disabled_flags: boolean
+  enabledFeatureVersioning?: boolean
 }
+
 export type Project = {
   id: number
   uuid: string
