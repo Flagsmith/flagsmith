@@ -55,12 +55,14 @@ def has_email_provider() -> bool:
 @lru_cache
 def get_version_info() -> VersionInfo:
     """Reads the version info baked into src folder of the docker container"""
+    _is_saas = is_saas()
     version_json: VersionInfo = {
         "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
         "image_tag": UNKNOWN,
         "has_email_provider": has_email_provider(),
         "is_enterprise": is_enterprise(),
-        "is_saas": is_saas(),
+        "is_saas": _is_saas,
+        "self_hosted_data": None,
     }
 
     _is_saas = is_saas()
@@ -70,17 +72,7 @@ def get_version_info() -> VersionInfo:
     if manifest_versions_content != UNKNOWN:
         manifest_versions = json.loads(manifest_versions_content)
         version_json["package_versions"] = manifest_versions
-
-        image_tag = manifest_versions["."]
-
-    version_json = version_json | {
-        "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
-        "image_tag": image_tag,
-        "has_email_provider": has_email_provider(),
-        "is_enterprise": is_enterprise(),
-        "is_saas": _is_saas,
-        "self_hosted_data": None,
-    }
+        version_json["image_tag"] = manifest_versions["."]
 
     if not _is_saas:
         from users.models import FFAdminUser
