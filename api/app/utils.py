@@ -82,7 +82,6 @@ def get_version_info() -> VersionInfo:
         "self_hosted_data": None,
     }
 
-
     if not _is_saas:
         from users.models import FFAdminUser
 
