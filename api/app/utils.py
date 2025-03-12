@@ -65,8 +65,6 @@ def get_version_info() -> VersionInfo:
         "self_hosted_data": None,
     }
 
-    _is_saas = is_saas()
-
     manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
 
     if manifest_versions_content != UNKNOWN:
