@@ -141,7 +141,8 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
         if user and user.can_send_password_reset_email():
-            refresh_token = RefreshToken.for_user(user)
+            # TODO https://github.com/jazzband/djangorestframework-simplejwt/pull/890
+            refresh_token: RefreshToken = RefreshToken.for_user(user)  # type: ignore[assignment]
             refresh_token.blacklist()
             super().reset_password(request, *args, **kwargs)
             UserPasswordResetRequest.objects.create(user=user)
