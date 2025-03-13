@@ -38,6 +38,7 @@ from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
 )
+from environments.enums import EnvironmentDocumentCacheMode
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
@@ -288,7 +289,9 @@ class Environment(
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
 
-        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):  # type: ignore[union-attr]
+        if project is None or not (
+            project.enable_dynamo_db and environment_wrapper.is_enabled
+        ):
             return
 
         if is_saas():
@@ -297,9 +300,12 @@ class Environment(
             if (
                 project.edge_v2_environments_migrated
                 and environment_v2_wrapper.is_enabled
-            ):  # type: ignore[union-attr]
+            ):
                 environment_v2_wrapper.write_environments(environments)
-        elif not settings.EXPIRE_ENVIRONMENT_DOCUMENT_CACHE:
+        elif (
+            settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+        ):
             environment_document_cache.set_many(
                 {
                     e.api_key: map_environment_to_environment_document(e)
@@ -379,8 +385,9 @@ class Environment(
         api_key: str,
     ) -> dict[str, typing.Any]:
         if (
-            settings.CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT > 0
-            or not settings.EXPIRE_ENVIRONMENT_DOCUMENT_CACHE
+            settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
+            or settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
         ):
             cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
