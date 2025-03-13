@@ -5,6 +5,7 @@ from collections import ChainMap
 import pyotp
 from django.conf import settings
 from django.core import mail
+from django.http import HttpResponse
 from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
@@ -14,7 +15,6 @@ from rest_framework.test import (  # type: ignore[attr-defined]
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from custom_auth.jwt_cookie.constants import REFRESH_TOKEN_COOKIE_KEY
 from organisations.invites.models import Invite
 from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
@@ -468,11 +468,12 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
         "password": password,
         "re_password": password,
     }
-    response = api_client.post(register_url, data=register_data)
-    raw_refresh_cookie = response.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)
+    response: HttpResponse = api_client.post(register_url, data=register_data)
+    raw_refresh_cookie = response.cookies["refresh_token"].value
 
     # cookie is invalidated server-side but is still attached to the client
-    RefreshToken(raw_refresh_cookie).blacklist()  # type: ignore[union-attr]
+    # TODO https://github.com/jazzband/djangorestframework-simplejwt/pull/889
+    RefreshToken(raw_refresh_cookie).blacklist()  # type: ignore[arg-type]
 
     # When
     response = api_client.get(protected_resource_url)
