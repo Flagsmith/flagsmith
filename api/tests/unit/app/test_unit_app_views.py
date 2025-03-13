@@ -21,6 +21,5 @@ def test_get_version_info(api_client: APIClient, db: None) -> None:
         "self_hosted_data": {
             "has_users": False,
             "has_logins": False,
-            "is_bootstrapped": False,
         },
     }

@@ -33,54 +33,34 @@ def test_get_version_info(fs: FakeFilesystem, db: None) -> None:
         "self_hosted_data": {
             "has_users": False,
             "has_logins": False,
-            "is_bootstrapped": False,
         },
     }
 
 
-def test_get_version_info_self_hosted_data_is_bootstrapped(
-    fs: FakeFilesystem, db: None, settings: SettingsWrapper, user_one: FFAdminUser
-) -> None:
-    # Given
-    fs.create_file("./ENTERPRISE_VERSION")
-    settings.ALLOW_ADMIN_INITIATION_VIA_CLI = True
-    settings.ADMIN_EMAIL = user_one.email
-
-    # When
-    result = get_version_info()
-
-    # Then
-    assert result["self_hosted_data"] == {
-        "is_bootstrapped": True,
-        "has_logins": False,
-        "has_users": True,
-    }
-
-
-def test_get_version_info_self_hosted_data_users_and_login(
+def test_get_version_info_self_hosted_data(
     fs: FakeFilesystem, db: None, settings: SettingsWrapper, client: Client
 ) -> None:
     # Given
     fs.create_file("./ENTERPRISE_VERSION")
 
     result = get_version_info()
-
     # Let's make sure everything is
     # as expected before we create the users
     assert result["self_hosted_data"] == {
-        "is_bootstrapped": False,
         "has_logins": False,
         "has_users": False,
     }
     # When
     user = FFAdminUser.objects.create(email="user_two@test.com")
 
+    # Clear the cache
+    get_version_info.cache_clear()
+
     client.force_login(user)
     result = get_version_info()
 
     # Then
-    result["self_hosted_data"] == {
-        "is_bootstrapped": False,
+    assert result["self_hosted_data"] == {
         "has_logins": True,
         "has_users": True,
     }
@@ -92,6 +72,7 @@ def test_get_version_info_with_missing_files(fs: FakeFilesystem, db: None) -> No
 
     # When
     result = get_version_info()
+
     # Then
     assert result == {
         "ci_commit_sha": "unknown",
@@ -102,7 +83,6 @@ def test_get_version_info_with_missing_files(fs: FakeFilesystem, db: None) -> No
         "self_hosted_data": {
             "has_users": False,
             "has_logins": False,
-            "is_bootstrapped": False,
         },
     }
 

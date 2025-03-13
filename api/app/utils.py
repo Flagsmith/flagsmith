@@ -14,7 +14,6 @@ VERSIONS_INFO_FILE_LOCATION = ".versions.json"
 class SelfHostedData(TypedDict):
     has_users: bool
     has_logins: bool
-    is_bootstrapped: bool
 
 
 class VersionInfo(TypedDict):
@@ -78,10 +77,6 @@ def get_version_info() -> VersionInfo:
         version_json["self_hosted_data"] = {
             "has_users": FFAdminUser.objects.count() > 0,
             "has_logins": FFAdminUser.objects.filter(last_login__isnull=False).exists(),
-            "is_bootstrapped": (
-                settings.ALLOW_ADMIN_INITIATION_VIA_CLI is True
-                and FFAdminUser.objects.filter(email=settings.ADMIN_EMAIL).exists()
-            ),
         }
 
     return version_json
