@@ -20,7 +20,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from rest_framework.request import Request
 from softdelete.models import SoftDeleteObject  # type: ignore[import-untyped]
 
-from app.utils import create_hash, is_saas
+from app.utils import create_hash
 from audit.constants import (
     ENVIRONMENT_CREATED_MESSAGE,
     ENVIRONMENT_UPDATED_MESSAGE,
@@ -285,16 +285,14 @@ class Environment(
         # project (which should always be the case). Since we're working with fairly
         # small querysets here, this shouldn't have a noticeable impact on performance.
         project: Project | None = getattr(environments[0], "project", None)
+        if project is None:
+            return
+
         for environment in environments[1:]:
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
 
-        if project is None or not (
-            project.enable_dynamo_db and environment_wrapper.is_enabled
-        ):
-            return
-
-        if is_saas():
+        if project.enable_dynamo_db and environment_wrapper.is_enabled:
             environment_wrapper.write_environments(environments)
 
             if (
@@ -389,7 +387,7 @@ class Environment(
             or settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
             == EnvironmentDocumentCacheMode.PERSISTENT
         ):
-            cls._get_environment_document_from_cache(api_key)
+            return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]

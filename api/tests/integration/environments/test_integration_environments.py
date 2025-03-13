@@ -1,11 +1,15 @@
 import json
+from typing import Any
 
 import pytest
 from django.urls import reverse
+from pytest_django.fixtures import DjangoAssertNumQueries, SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from environments.enums import EnvironmentDocumentCacheMode
 from tests.integration.helpers import (
     get_env_feature_states_list_with_api,
     get_feature_segement_list_with_api,
@@ -217,3 +221,51 @@ def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]
         == clone_feature_segment_id
     )
     assert clone_feature_segment_id != source_feature_segment_id
+
+
+class FakeCache:
+    def __init__(self) -> None:
+        self._cache: dict[str, Any] = {}
+
+    def set(self, key: str, value: Any) -> None:
+        self._cache[key] = value
+
+    def set_many(self, d: dict[str, Any]) -> None:
+        self._cache.update(d)
+
+    def get(self, key: str) -> Any:
+        return self._cache.get(key)
+
+
+@pytest.fixture()
+def persistent_environment_document_cache(
+    settings: SettingsWrapper, mocker: MockerFixture
+) -> FakeCache:
+    settings.ENVIRONMENT_DOCUMENT_CACHE_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+
+    mock_environment_document_cache = FakeCache()
+    mocker.patch(
+        "environments.models.environment_document_cache",
+        mock_environment_document_cache,
+    )
+    return mock_environment_document_cache
+
+
+def test_get_environment_document_using_persistent_cache(
+    persistent_environment_document_cache: FakeCache,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    server_side_sdk_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    url = reverse("api-v1:environment-document")
+
+    # When
+    with django_assert_num_queries(1):
+        # We still expect 1 query for authentication
+        response = server_side_sdk_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
