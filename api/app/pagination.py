@@ -1,6 +1,7 @@
 import base64
 import json
 from collections import OrderedDict
+from typing import Any, List, Optional, Type
 
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.inspectors import PaginatorInspector  # type: ignore[import-untyped]
@@ -17,7 +18,7 @@ class CustomPagination(PageNumberPagination):
 
 class EdgeIdentityPaginationInspector(PaginatorInspector):  # type: ignore[misc]
     def get_paginator_parameters(
-        self, paginator: BasePagination
+        self, paginator: Type[BasePagination]
     ) -> list[openapi.Parameter]:
         """
         :param BasePagination paginator: the paginator
@@ -40,13 +41,14 @@ class EdgeIdentityPaginationInspector(PaginatorInspector):  # type: ignore[misc]
             ),
         ]
 
-    def get_paginated_response(self, paginator, response_schema):  # type: ignore[no-untyped-def]
+    def get_paginated_response(
+        self, paginator: Type[BasePagination], response_schema: openapi.Schema
+    ) -> openapi.Schema:
         """
         :param BasePagination paginator: the paginator
         :param openapi.Schema response_schema: the response schema that must be paged.
         :rtype: openapi.Schema
         """
-
         return openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties=OrderedDict(
@@ -69,7 +71,9 @@ class EdgeIdentityPagination(CustomPagination):
     max_page_size = 100
     page_size = 100
 
-    def paginate_queryset(self, dynamo_queryset, request, view=None):  # type: ignore[no-untyped-def]
+    def paginate_queryset(
+        self, dynamo_queryset: Any, request: Any, view: Optional[Any] = None
+    ) -> Optional[List[Any]]:
         last_evaluated_key = dynamo_queryset.get("LastEvaluatedKey")
         if last_evaluated_key:
             self.last_evaluated_key = base64.b64encode(
@@ -81,7 +85,7 @@ class EdgeIdentityPagination(CustomPagination):
             for identity_document in dynamo_queryset["Items"]
         ]
 
-    def get_paginated_response(self, data) -> Response:  # type: ignore[no-untyped-def]
+    def get_paginated_response(self, data: Any) -> Response:
         """
         Note: "If the size of the Query result set is larger than 1 MB, ScannedCount
                 and Count represent only a partial count of the total items"
