@@ -5,9 +5,15 @@ from typing import TypedDict
 
 import shortuuid
 from django.conf import settings
+from typing_extensions import NotRequired
 
 UNKNOWN = "unknown"
 VERSIONS_INFO_FILE_LOCATION = ".versions.json"
+
+
+class SelfHostedData(TypedDict):
+    has_users: bool
+    has_logins: bool
 
 
 class VersionInfo(TypedDict):
@@ -16,10 +22,8 @@ class VersionInfo(TypedDict):
     has_email_provider: bool
     is_enterprise: bool
     is_saas: bool
-
-
-class VersionInfoDict(VersionInfo):
-    package_versions: dict[str, str]
+    self_hosted_data: SelfHostedData | None
+    package_versions: NotRequired[dict[str, str]]
 
 
 def create_hash() -> str:
@@ -48,28 +52,34 @@ def has_email_provider() -> bool:
 
 
 @lru_cache
-def get_version_info() -> VersionInfo | VersionInfoDict:
+def get_version_info() -> VersionInfo:
     """Reads the version info baked into src folder of the docker container"""
+    _is_saas = is_saas()
+    version_json: VersionInfo = {
+        "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
+        "image_tag": UNKNOWN,
+        "has_email_provider": has_email_provider(),
+        "is_enterprise": is_enterprise(),
+        "is_saas": _is_saas,
+        "self_hosted_data": None,
+    }
+
     manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
 
     if manifest_versions_content != UNKNOWN:
         manifest_versions = json.loads(manifest_versions_content)
-        return VersionInfoDict(
-            ci_commit_sha=_get_file_contents("./CI_COMMIT_SHA"),
-            image_tag=manifest_versions["."],
-            has_email_provider=has_email_provider(),
-            is_enterprise=is_enterprise(),
-            is_saas=is_saas(),
-            package_versions=manifest_versions,
-        )
+        version_json["package_versions"] = manifest_versions
+        version_json["image_tag"] = manifest_versions["."]
 
-    return VersionInfo(
-        ci_commit_sha=_get_file_contents("./CI_COMMIT_SHA"),
-        image_tag=UNKNOWN,
-        has_email_provider=has_email_provider(),
-        is_enterprise=is_enterprise(),
-        is_saas=is_saas(),
-    )
+    if not _is_saas:
+        from users.models import FFAdminUser
+
+        version_json["self_hosted_data"] = {
+            "has_users": FFAdminUser.objects.count() > 0,
+            "has_logins": FFAdminUser.objects.filter(last_login__isnull=False).exists(),
+        }
+
+    return version_json
 
 
 def _get_file_contents(file_path: str) -> str:
