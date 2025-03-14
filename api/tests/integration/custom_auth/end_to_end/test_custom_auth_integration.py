@@ -368,8 +368,8 @@ def test_register_and_login_workflows__jwt_access_cookie(
     # verify new token is different from the old one
     assert new_access_token_cookie != access_token_cookie.value
 
-    # verify the refresh token is the same as the old one
-    assert new_refresh_token_cookie == original_refresh_token_value
+    # verify the refresh token is also rotated for security
+    assert new_refresh_token_cookie != original_refresh_token_value
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
