@@ -362,7 +362,7 @@ are all computed locally.
 
 ```bash
 curl https://edge.api.flagsmith.com/api/v1/environment-document \
-  -H 'x-environment-key: <Your Server-Side Env Key>' \
+  -H 'X-Environment-Key: <Your server-side environment key>' \
   --verbose
 ```
 
