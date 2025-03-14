@@ -31,7 +31,7 @@ Identity flag values are passed into Heap. If we make the call to the Flagsmith 
 
 ```bash
 curl 'https://edge.api.flagsmith.com/api/v1/identities/?identifier=development_user_123456' \
-  -H 'x-environment-key: 8KzETdDeMY7xkqkSkY3Gsg'
+  -H 'X-Environment-Key: 8KzETdDeMY7xkqkSkY3Gsg'
 ```
 
 And then take a look in our Heap dashboard, you can see the user and the flag data that has been sent to the Heap

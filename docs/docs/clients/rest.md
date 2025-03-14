@@ -71,8 +71,8 @@ For example, to create a new Environment:
 
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \
-    -H 'content-type: application/json' \
-    -H 'authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
+    -H 'Content-Type: application/json' \
+    -H 'Authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
     --data-binary '{"name":"New Environment","project":"<Project ID>"}'
 ```
 
@@ -88,7 +88,7 @@ These are the two main endpoints that you need to consume the SDK aspect of the 
 ### Get Environment Flags
 
 ```bash
-curl 'https://edge.api.flagsmith.com/api/v1/flags/' -H 'X-Environment-Key: <Your Env Key>'
+curl 'https://edge.api.flagsmith.com/api/v1/flags/' -H 'X-Environment-Key: <Your client-side SDK key>'
 ```
 
 ### Send Identity with Traits and receive Flags
@@ -101,7 +101,7 @@ This command will perform the entire SDK Identity workflow in a single call:
 
 ```bash
 curl --request POST 'https://edge.api.flagsmith.com/api/v1/identities/' \
---header 'X-Environment-Key: <Your Env Key>' \
+--header 'X-Environment-Key: <Your client-side SDK key>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "identifier":"identifier_5",
@@ -286,7 +286,7 @@ curl --request PUT \
   --url https://api.flagsmith.com/api/v1/environments/environments/YOUR_ENVIRONMENT_API_KEY/edge-identities-featurestates \
   --header 'Accept: application/json' \
   --header 'Authorization: Token YOUR_ADMIN_API_KEY' \
-  --header 'content-type: application/json' \
+  --header 'Content-Type: application/json' \
   --data '{"enabled":true,"feature":"custom_background_colour","feature_state_value":"blue", "identifier":"my_user_id"}'
 ```
 

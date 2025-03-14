@@ -362,14 +362,14 @@ are all computed locally.
 
 ```bash
 curl https://edge.api.flagsmith.com/api/v1/environment-document \
-  -H 'x-environment-key: <Your Server-Side Env Key>' \
+  -H 'X-Environment-Key: <Your server-side environment key>' \
   --verbose
 ```
 
 The `link` response header will contain the url to next page:
 
 ```
-content-type: application/json
+Content-Type: application/json
 ...
 link: </api/v1/environment-document/?page_id=identity_override%3A60074%lastreadid>; rel="next"
 ...
