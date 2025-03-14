@@ -71,8 +71,8 @@ For example, to create a new Environment:
 
 ```bash
 curl 'https://api.flagsmith.com/api/v1/environments/' \
-    -H 'content-type: application/json' \
-    -H 'authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
+    -H 'Content-Type: application/json' \
+    -H 'Authorization: Api-Key <API TOKEN FROM ORGANISATION PAGE>' \
     --data-binary '{"name":"New Environment","project":"<Project ID>"}'
 ```
 
@@ -286,7 +286,7 @@ curl --request PUT \
   --url https://api.flagsmith.com/api/v1/environments/environments/YOUR_ENVIRONMENT_API_KEY/edge-identities-featurestates \
   --header 'Accept: application/json' \
   --header 'Authorization: Token YOUR_ADMIN_API_KEY' \
-  --header 'content-type: application/json' \
+  --header 'Content-Type: application/json' \
   --data '{"enabled":true,"feature":"custom_background_colour","feature_state_value":"blue", "identifier":"my_user_id"}'
 ```
 

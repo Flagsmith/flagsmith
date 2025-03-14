@@ -369,7 +369,7 @@ curl https://edge.api.flagsmith.com/api/v1/environment-document \
 The `link` response header will contain the url to next page:
 
 ```
-content-type: application/json
+Content-Type: application/json
 ...
 link: </api/v1/environment-document/?page_id=identity_override%3A60074%lastreadid>; rel="next"
 ...
