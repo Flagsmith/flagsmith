@@ -7,7 +7,7 @@ from rest_framework_simplejwt.exceptions import (
 )
 from rest_framework_simplejwt.tokens import Token
 
-from custom_auth.jwt_cookie.constants import ACCESS_TOKEN_COOKIE_KEY
+from custom_auth.jwt_cookie.constants import ACCESS_TOKEN_COOKIE_KEY, REFRESH_TOKEN_COOKIE_KEY
 
 
 class JWTCookieAuthentication(JWTAuthentication):
