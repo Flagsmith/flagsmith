@@ -34,7 +34,7 @@ urlpatterns = [
     path(
         "token/refresh/",
         JWTCookieTokenRefreshView.as_view(),
-        name="token_refresh",
+        name="token-refresh",
     ),
     path("", include(ffadmin_user_router.urls)),
     path("token/", delete_token, name="delete-token"),

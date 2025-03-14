@@ -1,6 +1,8 @@
 import json
 import re
 from collections import ChainMap
+from datetime import timedelta
+from time import sleep
 
 import pyotp
 from django.conf import settings
@@ -292,7 +294,7 @@ def test_login_workflow_with_mfa_enabled(
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_register_and_login_workflows__jwt_cookie(
+def test_register_and_login_workflows__jwt_access_cookie(
     db: None,
     api_client: APIClient,
 ) -> None:
@@ -319,8 +321,11 @@ def test_register_and_login_workflows__jwt_cookie(
     # verify the cookie is returned on registration
     response = api_client.post(register_url, data=register_data)
     assert response.status_code == status.HTTP_201_CREATED
-    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
-    assert jwt_access_cookie["httponly"]
+    assert (access_token_cookie := response.cookies.get("access_token")) is not None
+    assert access_token_cookie["httponly"]
+
+    assert (refresh_token_cookie := response.cookies.get("refresh_token")) is not None
+    assert refresh_token_cookie["httponly"]
 
     # verify the classic token is not returned on registration
     assert "key" not in response.json()
@@ -334,8 +339,11 @@ def test_register_and_login_workflows__jwt_cookie(
     # now verify we can login with the same credentials
     response = api_client.post(login_url, data=login_data)
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
-    assert jwt_access_cookie["httponly"]
+    assert (access_token_cookie := response.cookies.get("access_token")) is not None
+    assert access_token_cookie["httponly"]
+
+    assert (refresh_token_cookie := response.cookies.get("refresh_token")) is not None
+    assert refresh_token_cookie["httponly"]
 
     # verify the classic token is not returned on login
     assert not response.data
@@ -355,10 +363,14 @@ def test_register_and_login_workflows__jwt_cookie(
     # login again
     response = api_client.post(login_url, data=login_data)
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    new_jwt_access_cookie = response.cookies.get("jwt")
+    new_access_token_cookie = response.cookies.get("access_token")
+    new_refresh_token_cookie = response.cookies.get("refresh_token")
 
     # verify new token is different from the old one
-    assert new_jwt_access_cookie != jwt_access_cookie
+    assert new_access_token_cookie != access_token_cookie
+
+    # verify the refresh token is the same as the old one
+    assert new_refresh_token_cookie == refresh_token_cookie
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
@@ -388,7 +400,6 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
         "password": password,
     }
     response = api_client.post(register_url, data=register_data)
-    jwt_access_cookie = response.cookies.get("jwt")
     response = api_client.post(create_mfa_method_url)
     secret = response.json()["secret"]
     totp = pyotp.TOTP(secret)
@@ -406,8 +417,11 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
     confirm_login_data = {"ephemeral_token": ephemeral_token, "code": totp.now()}
     response = api_client.post(login_confirm_url, data=confirm_login_data)
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
-    assert jwt_access_cookie["httponly"]
+    assert (access_token_cookie := response.cookies.get("access_token")) is not None
+    assert access_token_cookie["httponly"]
+
+    assert (refresh_token_cookie := response.cookies.get("refresh_token")) is not None
+    assert refresh_token_cookie["httponly"]
 
     # verify the classic token is not returned on login
     assert not response.data
@@ -480,7 +494,55 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
 
     # Then
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert not response.cookies.get("jwt")
+    assert not response.cookies.get("access_token")
+    assert not response.cookies.get("refresh_token")
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
+def test_refresh_token_workflow__jwt_cookie__expired_access_token(
+    db: None,
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    protected_resource_url = reverse("api-v1:projects:project-list")
+    refresh_url = reverse("api-v1:custom_auth:token-refresh")
+    register_data = {
+        "first_name": "test",
+        "last_name": "last_name",
+        "email": email,
+        "password": password,
+        "re_password": password,
+    }
+
+    # Register user and get initial tokens
+    response = api_client.post(register_url, data=register_data)
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.cookies.get("access_token") is not None
+    assert response.cookies.get("refresh_token") is not None
+
+    # Verify access token works initially
+    response = api_client.get(protected_resource_url)
+    assert response.status_code == status.HTTP_200_OK
+
+    # Remove the access token cookie to simulate access token expiration
+    api_client.cookies.pop("access_token")
+
+    # Verify request fails without access token
+    response = api_client.get(protected_resource_url)
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    # Use refresh token to get new access token
+    response = api_client.post(refresh_url)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.cookies.get("access_token") is not None
+    assert response.cookies.get("refresh_token") is not None
+
+    # Verify new access token works
+    response = api_client.get(protected_resource_url)
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_throttle_login_workflows(
