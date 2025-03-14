@@ -49,4 +49,12 @@ class JWTCookieTokenRefreshView(TokenRefreshView):
             max_age=int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds()),
         )
 
+        response.set_cookie(
+            REFRESH_TOKEN_COOKIE_KEY,
+            str(serializer.validated_data["refresh"]),
+            httponly=True,
+            secure=settings.USE_SECURE_COOKIES,
+            samesite=settings.COOKIE_SAME_SITE,
+        )
+
         return response
