@@ -1,8 +1,6 @@
 import json
 import re
 from collections import ChainMap
-from datetime import timedelta
-from time import sleep
 
 import pyotp
 from django.conf import settings
