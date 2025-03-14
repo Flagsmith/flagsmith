@@ -3,28 +3,32 @@
         "EnvironmentEvaluationContext": {
             "properties": {
                 "api_key": {
-                    "title": "Api Key",
-                    "type": "string"
+                    "title": "API Key",
+                    "type": "string",
+                    "description": "An API key used for client-side or server-side authentication. Sent to the Flagsmith API as the `X-Environment-Key` HTTP header to authorize requests."
                 }
             },
             "required": [
                 "api_key"
             ],
-            "title": "EnvironmentEvaluationContext",
+            "title": "Environment Evaluation Context",
+            "description": "Contains information about the environment relevant to feature flag evaluation.",
             "type": "object"
         },
         "FeatureEvaluationContext": {
             "properties": {
                 "name": {
-                    "title": "Name",
-                    "type": "string"
+                    "title": "Feature Name",
+                    "type": "string",
+                    "description": "The name of the feature being evaluated."
                 }
             },
             "required": [
                 "name"
             ],
-            "title": "FeatureEvaluationContext",
-            "type": "object"
+            "title": "Feature Evaluation Context",
+            "type": "object",
+            "description": "Defines the context for evaluating a specific feature."
         },
         "IdentityEvaluationContext": {
             "properties": {
@@ -37,7 +41,8 @@
                             "type": "null"
                         }
                     ],
-                    "title": "Identifier"
+                    "title": "User Identifier",
+                    "description": "The unique identifier for which the evaluation is being performed. If empty, the SDK API uses an anonymous identifier based on a hash of provided traits."
                 },
                 "traits": {
                     "additionalProperties": {
@@ -50,7 +55,8 @@
                             }
                         ]
                     },
-                    "title": "Traits",
+                    "title": "User Traits",
+                    "description": "A set of traits associated with the identity for which the evaluation is being performed. The keys represent trait names.",
                     "type": "object"
                 },
                 "transient": {
@@ -63,27 +69,68 @@
                         }
                     ],
                     "default": null,
-                    "title": "Transient"
+                    "title": "Transient Evaluation",
+                    "description": "Indicates whether the evaluation is transient. If true, the identity is treated as temporary and no information is persisted on the server."
                 }
             },
             "required": [],
-            "title": "IdentityEvaluationContext",
+            "title": "Identity Evaluation Context",
+            "description": "Contains identity-related information for feature evaluation.",
             "type": "object"
         },
         "TraitEvaluationContext": {
             "properties": {
-                "value": {},
+                "value": {
+                    "title": "Trait Value",
+                    "description": "The value associated with the trait."
+                },
                 "transient": {
                     "type": "boolean",
                     "default": false,
-                    "title": "Transient"
+                    "title": "Transient Trait",
+                    "description": "Indicates whether the trait is transient. Transient traits are used for evaluation but are not persisted."
                 }
             },
             "required": [
                 "value"
             ],
-            "title": "TraitEvaluationContext",
+            "title": "Trait Evaluation Context",
+            "description": "Defines the context for an individual trait.",
             "type": "object"
+        },
+        "ApplicationEvaluationContext": {
+            "properties": {
+                "name": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Application Name",
+                    "description": "Client application name. Sent to the Flagsmith API as the `X-Customer-Application-Name` HTTP header."
+                },
+                "version": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Application Version",
+                    "description": "Client application version. Sent to the Flagsmith API as the `X-Customer-Application-Version` HTTP header."
+                }
+            },
+            "required": [],
+            "title": "Application Evaluation Context",
+            "type": "object",
+            "description": "Contains information about the application that initializes the SDK."
         }
     },
     "properties": {
@@ -96,7 +143,8 @@
                     "type": "null"
                 }
             ],
-            "default": null
+            "default": null,
+            "description": "Overrides the default environment API key set in the SDK configuration."
         },
         "identity": {
             "anyOf": [
@@ -107,7 +155,8 @@
                     "type": "null"
                 }
             ],
-            "default": null
+            "default": null,
+            "description": "Defines the identity context, allowing the SDK to evaluate feature flags for a specific identity using identity traits, segments, and overrides."
         },
         "feature": {
             "anyOf": [
@@ -118,9 +167,23 @@
                     "type": "null"
                 }
             ],
-            "default": null
+            "default": null,
+            "description": "Filters feature evaluation to a specific feature or features. Not supported by all SDKs."
+        },
+        "application": {
+            "anyOf": [
+                {
+                    "$ref": "#/$defs/ApplicationEvaluationContext"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "description": "Overrides the default application name and version set in the SDK configuration. Not supported by all SDKs."
         }
     },
-    "title": "FlagsmithEvaluationContext",
+    "title": "Flagsmith Evaluation Context",
+    "description": "The evaluation context used by the Flagsmith SDK to hold all relevant information for feature flag evaluation.",
     "type": "object"
 }
