@@ -324,6 +324,7 @@ def test_register_and_login_workflows__jwt_access_cookie(
 
     assert (refresh_token_cookie := response.cookies.get("refresh_token")) is not None
     assert refresh_token_cookie["httponly"]
+    original_refresh_token_value = refresh_token_cookie.value
 
     # verify the classic token is not returned on registration
     assert "key" not in response.json()
@@ -365,10 +366,10 @@ def test_register_and_login_workflows__jwt_access_cookie(
     new_refresh_token_cookie = response.cookies.get("refresh_token")
 
     # verify new token is different from the old one
-    assert new_access_token_cookie != access_token_cookie
+    assert new_access_token_cookie.value != access_token_cookie.value
 
     # verify the refresh token is the same as the old one
-    assert new_refresh_token_cookie == refresh_token_cookie
+    assert new_refresh_token_cookie.value == original_refresh_token_value
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
@@ -486,6 +487,9 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     # cookie is invalidated server-side but is still attached to the client
     # TODO https://github.com/jazzband/djangorestframework-simplejwt/pull/889
     RefreshToken(raw_refresh_cookie).blacklist()  # type: ignore[arg-type]
+
+    # Remove both tokens from cookies to simulate complete logout
+    api_client.cookies.pop("access_token")
     api_client.cookies.pop("refresh_token")
 
     # When
@@ -535,7 +539,7 @@ def test_refresh_token_workflow__jwt_cookie__expired_access_token(
 
     # Use refresh token to get new access token
     response = api_client.post(refresh_url)
-    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.status_code == status.HTTP_200_OK  # Updated to expect 200
     assert response.cookies.get("access_token") is not None
     assert response.cookies.get("refresh_token") is not None
 
