@@ -486,6 +486,7 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     # cookie is invalidated server-side but is still attached to the client
     # TODO https://github.com/jazzband/djangorestframework-simplejwt/pull/889
     RefreshToken(raw_refresh_cookie).blacklist()  # type: ignore[arg-type]
+    api_client.cookies.pop("refresh_token")
 
     # When
     response = api_client.get(protected_resource_url)
