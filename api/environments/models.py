@@ -38,6 +38,7 @@ from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
 )
+from environments.enums import EnvironmentDocumentCacheMode
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
 from features.models import Feature, FeatureSegment, FeatureState
@@ -45,7 +46,10 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
-from util.mappers import map_environment_to_sdk_document
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_sdk_document,
+)
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
@@ -245,7 +249,7 @@ class Environment(
             logger.info("Environment with api_key %s does not exist" % api_key)
 
     @classmethod
-    def write_environments_to_dynamodb(
+    def write_environment_documents(
         cls,
         environment_id: int = None,  # type: ignore[assignment]
         project_id: int = None,  # type: ignore[assignment]
@@ -281,17 +285,31 @@ class Environment(
         # project (which should always be the case). Since we're working with fairly
         # small querysets here, this shouldn't have a noticeable impact on performance.
         project: Project | None = getattr(environments[0], "project", None)
+        if project is None:
+            return
+
         for environment in environments[1:]:
             if not environment.project == project:
                 raise RuntimeError("Environments must all belong to the same project.")
 
-        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):  # type: ignore[union-attr]
-            return
+        if project.enable_dynamo_db and environment_wrapper.is_enabled:
+            environment_wrapper.write_environments(environments)
 
-        environment_wrapper.write_environments(environments)
-
-        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:  # type: ignore[union-attr]
-            environment_v2_wrapper.write_environments(environments)
+            if (
+                project.edge_v2_environments_migrated
+                and environment_v2_wrapper.is_enabled
+            ):
+                environment_v2_wrapper.write_environments(environments)
+        elif (
+            settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+        ):
+            environment_document_cache.set_many(
+                {
+                    e.api_key: map_environment_to_environment_document(e)
+                    for e in environments
+                }
+            )
 
     def get_feature_state(
         self,
@@ -364,7 +382,11 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        if settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0:
+        if (
+            settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
+            or settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+        ):
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
