@@ -11,12 +11,18 @@ UNKNOWN = "unknown"
 VERSIONS_INFO_FILE_LOCATION = ".versions.json"
 
 
+class SelfHostedData(TypedDict):
+    has_users: bool
+    has_logins: bool
+
+
 class VersionInfo(TypedDict):
     ci_commit_sha: str
     image_tag: str
     has_email_provider: bool
     is_enterprise: bool
     is_saas: bool
+    self_hosted_data: SelfHostedData | None
     package_versions: NotRequired[dict[str, str]]
 
 
@@ -48,12 +54,14 @@ def has_email_provider() -> bool:
 @lru_cache
 def get_version_info() -> VersionInfo:
     """Reads the version info baked into src folder of the docker container"""
+    _is_saas = is_saas()
     version_json: VersionInfo = {
         "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
         "image_tag": UNKNOWN,
         "has_email_provider": has_email_provider(),
         "is_enterprise": is_enterprise(),
-        "is_saas": is_saas(),
+        "is_saas": _is_saas,
+        "self_hosted_data": None,
     }
 
     manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
@@ -62,6 +70,14 @@ def get_version_info() -> VersionInfo:
         manifest_versions = json.loads(manifest_versions_content)
         version_json["package_versions"] = manifest_versions
         version_json["image_tag"] = manifest_versions["."]
+
+    if not _is_saas:
+        from users.models import FFAdminUser
+
+        version_json["self_hosted_data"] = {
+            "has_users": FFAdminUser.objects.count() > 0,
+            "has_logins": FFAdminUser.objects.filter(last_login__isnull=False).exists(),
+        }
 
     return version_json
 
