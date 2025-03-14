@@ -324,7 +324,7 @@ def test_register_and_login_workflows__jwt_access_cookie(
 
     assert (refresh_token_cookie := response.cookies.get("refresh_token")) is not None
     assert refresh_token_cookie["httponly"]
-    original_refresh_token_value = refresh_token_cookie.value
+    original_refresh_token_value = response.cookies["refresh_token"].value
 
     # verify the classic token is not returned on registration
     assert "key" not in response.json()
@@ -362,14 +362,14 @@ def test_register_and_login_workflows__jwt_access_cookie(
     # login again
     response = api_client.post(login_url, data=login_data)
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    new_access_token_cookie = response.cookies.get("access_token")
-    new_refresh_token_cookie = response.cookies.get("refresh_token")
+    new_access_token_cookie = response.cookies["access_token"].value
+    new_refresh_token_cookie = response.cookies["refresh_token"].value
 
     # verify new token is different from the old one
-    assert new_access_token_cookie.value != access_token_cookie.value
+    assert new_access_token_cookie != access_token_cookie.value
 
     # verify the refresh token is the same as the old one
-    assert new_refresh_token_cookie.value == original_refresh_token_value
+    assert new_refresh_token_cookie == original_refresh_token_value
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
