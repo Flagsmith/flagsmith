@@ -51,10 +51,11 @@ class JWTCookieTokenRefreshView(TokenRefreshView):
 
         response.set_cookie(
             REFRESH_TOKEN_COOKIE_KEY,
-            str(serializer.validated_data["refresh"]),
+            str(serializer.validated_data["refresh"]) if settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS") else raw_refresh_token,
             httponly=True,
             secure=settings.USE_SECURE_COOKIES,
             samesite=settings.COOKIE_SAME_SITE,
+            max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
         )
 
         return response
