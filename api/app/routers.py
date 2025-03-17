@@ -6,6 +6,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
 
+from core.db_context import read_replicas_enabled
+
 from .exceptions import ImproperlyConfiguredError
 
 logger = logging.getLogger(__name__)
@@ -48,7 +50,7 @@ def connection_check(database: str) -> bool:
 
 class PrimaryReplicaRouter:
     def db_for_read(self, model, **hints):  # type: ignore[no-untyped-def]
-        if settings.NUM_DB_REPLICAS == 0:
+        if settings.NUM_DB_REPLICAS == 0 or not read_replicas_enabled():
             return "default"
 
         replicas = [f"replica_{i}" for i in range(1, settings.NUM_DB_REPLICAS + 1)]

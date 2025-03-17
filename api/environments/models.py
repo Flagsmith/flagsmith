@@ -26,6 +26,7 @@ from audit.constants import (
     ENVIRONMENT_UPDATED_MESSAGE,
 )
 from audit.related_object_type import RelatedObjectType
+from core.db_context_manager import read_replicas
 from core.models import abstract_base_auditable_model_factory
 from core.request_origin import RequestOrigin
 from environments.api_keys import (
@@ -235,7 +236,9 @@ class Environment(
                 qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
                 qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
 
-                environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
+                with read_replicas():
+                    environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
+
                 environment_cache.set(
                     api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
                 )
@@ -396,40 +399,41 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        environment = cls.objects.filter_for_document_builder(
-            api_key=api_key,
-            extra_prefetch_related=[
-                Prefetch(
-                    "feature_states",
-                    queryset=FeatureState.objects.select_related(
-                        "feature",
-                        "feature_state_value",
-                        "identity",
-                        "identity__environment",
-                    ).prefetch_related(
-                        Prefetch(
-                            "identity__identity_features",
-                            queryset=FeatureState.objects.select_related(
-                                "feature", "feature_state_value", "environment"
+        with read_replicas():
+            environment = cls.objects.filter_for_document_builder(
+                api_key=api_key,
+                extra_prefetch_related=[
+                    Prefetch(
+                        "feature_states",
+                        queryset=FeatureState.objects.select_related(
+                            "feature",
+                            "feature_state_value",
+                            "identity",
+                            "identity__environment",
+                        ).prefetch_related(
+                            Prefetch(
+                                "identity__identity_features",
+                                queryset=FeatureState.objects.select_related(
+                                    "feature", "feature_state_value", "environment"
+                                ),
                             ),
-                        ),
-                        Prefetch(
-                            "identity__identity_features__multivariate_feature_state_values",
-                            queryset=MultivariateFeatureStateValue.objects.select_related(
-                                "multivariate_feature_option"
+                            Prefetch(
+                                "identity__identity_features__multivariate_feature_state_values",
+                                queryset=MultivariateFeatureStateValue.objects.select_related(
+                                    "multivariate_feature_option"
+                                ),
                             ),
                         ),
                     ),
-                ),
-                Prefetch(
-                    "feature_states__multivariate_feature_state_values",
-                    queryset=MultivariateFeatureStateValue.objects.select_related(
-                        "multivariate_feature_option"
+                    Prefetch(
+                        "feature_states__multivariate_feature_state_values",
+                        queryset=MultivariateFeatureStateValue.objects.select_related(
+                            "multivariate_feature_option"
+                        ),
                     ),
-                ),
-            ],
-        ).get()
-        return map_environment_to_sdk_document(environment)
+                ],
+            ).get()
+            return map_environment_to_sdk_document(environment)
 
     def _get_environment(self):  # type: ignore[no-untyped-def]
         return self
