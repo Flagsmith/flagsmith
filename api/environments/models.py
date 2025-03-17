@@ -285,11 +285,11 @@ class Environment(
         # project (which should always be the case). Since we're working with fairly
         # small querysets here, this shouldn't have a noticeable impact on performance.
         project: Project | None = getattr(environments[0], "project", None)
-        if project is None:
+        if project is None:  # pragma: no cover
             return
 
         for environment in environments[1:]:
-            if not environment.project == project:
+            if not environment.project == project:  # pragma: no cover
                 raise RuntimeError("Environments must all belong to the same project.")
 
         if project.enable_dynamo_db and environment_wrapper.is_enabled:

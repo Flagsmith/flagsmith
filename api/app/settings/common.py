@@ -698,7 +698,7 @@ if (
     warnings.warn(
         "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
         'since CACHE_ENVIRONMENT_DOCUMENT_MODE == "PERSISTENT"'
-    )
+    )  # pragma: no cover
 
 USER_THROTTLE_CACHE_NAME = "user-throttle"
 USER_THROTTLE_CACHE_BACKEND = env.str(

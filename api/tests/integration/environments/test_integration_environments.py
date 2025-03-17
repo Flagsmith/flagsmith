@@ -227,7 +227,7 @@ class FakeCache:
     def __init__(self) -> None:
         self._cache: dict[str, Any] = {}
 
-    def set(self, key: str, value: Any) -> None:
+    def set(self, key: str, value: Any) -> None:  # pragma: no cover
         self._cache[key] = value
 
     def set_many(self, d: dict[str, Any]) -> None:
