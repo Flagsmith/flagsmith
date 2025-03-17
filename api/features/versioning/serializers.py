@@ -155,7 +155,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             if fs["feature_segment"] is not None
         ]
 
-    @transaction.atomic
+    @transaction.atomic(using="default")
     def create(
         self, validated_data: dict[str, typing.Any]
     ) -> EnvironmentFeatureVersion:
