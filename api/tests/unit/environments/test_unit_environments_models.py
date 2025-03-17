@@ -663,7 +663,7 @@ def test_environment_get_environment_document_with_caching_when_document_in_cach
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
-    settings.CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT = 60
+    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
 
     mocked_environment_document_cache = mocker.patch(
         "environments.models.environment_document_cache"
@@ -685,7 +685,7 @@ def test_environment_get_environment_document_with_caching_when_document_not_in_
     environment, django_assert_num_queries, settings, mocker
 ):
     # Given
-    settings.CACHE_ENVIRONMENT_DOCUMENT_TIMEOUT = 60
+    settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS = 60
 
     mocked_environment_document_cache = mocker.patch(
         "environments.models.environment_document_cache"
