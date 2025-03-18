@@ -12,9 +12,7 @@ grace period{% endif %} until the next subscription period. If you'd like to con
 organisation's account (see pricing page).
 {% endif %}
 
-{% with usage_url="{{ url }}/organisation/{{ organisation.id | urlencode }}/usage" %}
 You can view the details of your organisation's API usage at {{ usage_url }}.
-{% endwith %}
 
 Thank you!
 

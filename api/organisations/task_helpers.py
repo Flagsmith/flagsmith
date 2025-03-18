@@ -72,11 +72,13 @@ def _send_api_usage_notification(
         message = "organisations/api_usage_notification_limit.txt"
         html_message = "organisations/api_usage_notification_limit.html"
 
+    url = get_current_site_url()
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
         "grace_period": not hasattr(organisation, "breached_grace_period"),
-        "url": get_current_site_url(),
+        "url": url,
+        "usage_url": f"{url}/organisations/{organisation.id}/usage",
     }
 
     send_mail(
