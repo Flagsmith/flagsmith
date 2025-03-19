@@ -1,12 +1,12 @@
 const globalThis = typeof window === 'undefined' ? global : window
 module.exports = global.Project = {
-  api: 'https://api-staging.flagsmith.com/api/v1/',
+  api: 'http://localhost:8000/api/v1/',
 
   chargebee: {
     site: 'flagsmith-test',
   },
 
-  env: 'staging',
+  env: 'dev',
 
   // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   flagsmith: 'ENktaJnfLVbLifybz34JmX',
