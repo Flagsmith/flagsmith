@@ -90,6 +90,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `PREVENT_EMAIL_PASSWORD`: Disables email address signup, login and change email functionality.
 - `ENABLE_MAINTENANCE_MODE`: Puts the site into maintenance mode. Set it to any value to enable maintenance.
 - `AMPLITUDE_API_KEY`: The Amplitude key to use for behaviour tracking.
+- `REO_API_KEY`: The Reo key to use for behaviour tracking.
 - `MIXPANEL_API_KEY`: Mixpanel analytics key to use for behaviour tracking.
 - `SENTRY_API_KEY`: Sentry key for error reporting.
 - `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.

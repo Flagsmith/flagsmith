@@ -49,6 +49,9 @@ import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
+import FeatureHealthTabContent from './FeatureHealthTabContent'
+import { IonIcon } from '@ionic/react'
+import { warning } from 'ionicons/icons'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -967,6 +970,7 @@ const CreateFlag = class extends Component {
                       : 'New Change Request',
                     <ChangeRequestModal
                       showAssignees={is4Eyes}
+                      isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
                       onSave={({
                         approvals,
@@ -1901,6 +1905,34 @@ const CreateFlag = class extends Component {
                                         View docs
                                       </a>
                                     </InfoMessage>
+                                  </TabItem>
+                                )}
+                                {this.props.hasUnhealthyEvents && (
+                                  <TabItem
+                                    data-test='feature_health'
+                                    tabLabelString='Feature Health'
+                                    tabLabel={
+                                      <Row
+                                        className={`inline-block justify-content-center ${
+                                          true ? 'pr-1' : ''
+                                        }`}
+                                      >
+                                        Feature Health{' '}
+                                        <IonIcon
+                                          icon={warning}
+                                          style={{
+                                            color:
+                                              Constants.featureHealth
+                                                .unhealthyColor,
+                                            marginBottom: -2,
+                                          }}
+                                        />
+                                      </Row>
+                                    }
+                                  >
+                                    <FeatureHealthTabContent
+                                      projectId={projectFlag.project}
+                                    />
                                   </TabItem>
                                 )}
                                 {hasIntegrationWithGithub &&

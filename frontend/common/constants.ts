@@ -435,8 +435,12 @@ const Constants = {
  },
  "event_type": "FLAG_UPDATED"
 }`,
+  featureHealth: {
+    unhealthyColor: '#D35400',
+  },
   featurePanelTabs: {
     ANALYTICS: 'analytics',
+    FEATURE_HEALTH: 'feature-health',
     HISTORY: 'history',
     IDENTITY_OVERRIDES: 'identity-overrides',
     LINKS: 'links',

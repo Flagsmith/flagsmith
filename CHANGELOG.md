@@ -1,5 +1,83 @@
 # Changelog
 
+## [2.167.1](https://github.com/Flagsmith/flagsmith/compare/v2.167.0...v2.167.1) (2025-03-11)
+
+
+### Bug Fixes
+
+* **ci:** E2E builds Docker images unneccessarily on publish ([#5212](https://github.com/Flagsmith/flagsmith/issues/5212)) ([ba0610e](https://github.com/Flagsmith/flagsmith/commit/ba0610e1e04eed06d07a3a958959390660e2c602))
+* Some tasks are not being initialised ([#5213](https://github.com/Flagsmith/flagsmith/issues/5213)) ([e8b203b](https://github.com/Flagsmith/flagsmith/commit/e8b203be0ab9e2547002fec7c651d32aa45a94cb))
+
+## [2.167.0](https://github.com/Flagsmith/flagsmith/compare/v2.166.0...v2.167.0) (2025-03-11)
+
+
+### Features
+
+* Switch existing task processor health checks to new liveness probe ([#5161](https://github.com/Flagsmith/flagsmith/issues/5161)) ([647712c](https://github.com/Flagsmith/flagsmith/commit/647712caf6e4e61eac18fca0a38ca7ee2beaadef))
+
+
+### Bug Fixes
+
+* Adds permission groups to invite ([#5173](https://github.com/Flagsmith/flagsmith/issues/5173)) ([1e10632](https://github.com/Flagsmith/flagsmith/commit/1e10632f7e01c1400e677ac062b367dd4929cf9e))
+* Catch errors when failing to verify JWTs ([#5153](https://github.com/Flagsmith/flagsmith/issues/5153)) ([0fed1d6](https://github.com/Flagsmith/flagsmith/commit/0fed1d67b9e4695a93e8d676962aef0c5a68f719))
+* Fix Docker Compose healthcheck ([#5198](https://github.com/Flagsmith/flagsmith/issues/5198)) ([5f611b5](https://github.com/Flagsmith/flagsmith/commit/5f611b53ed4e8fef33e8765a2aaca7879c813a5c))
+* Use consistent button style for SSO login actions ([#5202](https://github.com/Flagsmith/flagsmith/issues/5202)) ([3bd4dfd](https://github.com/Flagsmith/flagsmith/commit/3bd4dfdb647f6c6d47d3d3dce2cd66b0b2907140))
+
+
+### Dependency Updates
+
+* bump prismjs from 1.29.0 to 1.30.0 in /docs ([#5206](https://github.com/Flagsmith/flagsmith/issues/5206)) ([548a4e4](https://github.com/Flagsmith/flagsmith/commit/548a4e41f40d3c913fa61fb155b5f150c11ba8f3))
+* bump prismjs from 1.29.0 to 1.30.0 in /frontend ([#5205](https://github.com/Flagsmith/flagsmith/issues/5205)) ([4c6ef65](https://github.com/Flagsmith/flagsmith/commit/4c6ef65e56448e5b54859caa8a178acdca9266bb))
+
+## [2.166.0](https://github.com/Flagsmith/flagsmith/compare/v2.165.0...v2.166.0) (2025-03-04)
+
+
+### Features
+
+* Add org ID and link to usage page in email notifications ([#5178](https://github.com/Flagsmith/flagsmith/issues/5178)) ([edbd3fa](https://github.com/Flagsmith/flagsmith/commit/edbd3fa1c252a2b3f08132985c49e5b5e2f16eaa))
+* Try out amplitude engagement SDK ([#5164](https://github.com/Flagsmith/flagsmith/issues/5164)) ([e348826](https://github.com/Flagsmith/flagsmith/commit/e348826e2b0dbc50a36efa11220deb405599b8cf))
+
+
+### Bug Fixes
+
+* Deleting SAML attribute mappings from the frontend can fail in non-SaaS ([#5179](https://github.com/Flagsmith/flagsmith/issues/5179)) ([813d49e](https://github.com/Flagsmith/flagsmith/commit/813d49e1be26e577534d290ff73cf016ed7f499a))
+
+
+### Dependency Updates
+
+* Bump task-processor from 1.2.1 to 1.2.2 ([#5183](https://github.com/Flagsmith/flagsmith/issues/5183)) ([b9fb613](https://github.com/Flagsmith/flagsmith/commit/b9fb6134ededca9a4d1fd4ea5978d62bffe4566e))
+
+## [2.165.0](https://github.com/Flagsmith/flagsmith/compare/v2.164.0...v2.165.0) (2025-03-03)
+
+
+### Features
+
+* split testing UI ([#5093](https://github.com/Flagsmith/flagsmith/issues/5093)) ([1a7155b](https://github.com/Flagsmith/flagsmith/commit/1a7155b29a6753ae097a2dc89950ab20c968fef5))
+
+
+### Bug Fixes
+
+* Handle github star errors ([#5165](https://github.com/Flagsmith/flagsmith/issues/5165)) ([721bba6](https://github.com/Flagsmith/flagsmith/commit/721bba6bf512797c7e7bbbdb4a5cbd410e490a5e))
+* Integrations list is empty when self-hosting ([#5171](https://github.com/Flagsmith/flagsmith/issues/5171)) ([788d50b](https://github.com/Flagsmith/flagsmith/commit/788d50b17d86d134c3dcf3e9d678707905020c14))
+
+## [2.164.0](https://github.com/Flagsmith/flagsmith/compare/v2.163.0...v2.164.0) (2025-02-26)
+
+
+### Features
+
+* Add separate liveness and readiness checks ([#5151](https://github.com/Flagsmith/flagsmith/issues/5151)) ([27a69a9](https://github.com/Flagsmith/flagsmith/commit/27a69a95b4a52262a665e63e97d3f342d4492f1b))
+* Adds unhealthy events reason ([#5157](https://github.com/Flagsmith/flagsmith/issues/5157)) ([21aca25](https://github.com/Flagsmith/flagsmith/commit/21aca25c63b930ed615a46c2fa4502f11fc3fc3e))
+
+
+### Bug Fixes
+
+* allow identity overrides to be created for non-existent identities ([#5081](https://github.com/Flagsmith/flagsmith/issues/5081)) ([c61839e](https://github.com/Flagsmith/flagsmith/commit/c61839e0bea2999f32deb4232c0ed28b2d57e71c))
+* default scheduled changes ([#5141](https://github.com/Flagsmith/flagsmith/issues/5141)) ([c7533a8](https://github.com/Flagsmith/flagsmith/commit/c7533a80772c9a97b443316dcf7816a5d7c6a16e))
+* feature panel url updating url when opening ([#5159](https://github.com/Flagsmith/flagsmith/issues/5159)) ([4657071](https://github.com/Flagsmith/flagsmith/commit/46570719d361f1cc9c4fbf789f9f2bbfbf30256e))
+* Hides unhealthy tag ([#5158](https://github.com/Flagsmith/flagsmith/issues/5158)) ([e4f2a49](https://github.com/Flagsmith/flagsmith/commit/e4f2a49f160a1ccabbfb06fcf89a13b054b551a2))
+* Treat 0 padded number as string ([#5137](https://github.com/Flagsmith/flagsmith/issues/5137)) ([65058e3](https://github.com/Flagsmith/flagsmith/commit/65058e30f565519febc28981c1f787c50e428c6d))
+* widget search ([#5162](https://github.com/Flagsmith/flagsmith/issues/5162)) ([0289c97](https://github.com/Flagsmith/flagsmith/commit/0289c97c501c3a592d4cb8db1e28479ad9206e28))
+
 ## [2.163.0](https://github.com/Flagsmith/flagsmith/compare/v2.162.0...v2.163.0) (2025-02-21)
 
 

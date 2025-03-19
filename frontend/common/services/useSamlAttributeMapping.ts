@@ -24,7 +24,7 @@ export const samlAttributeMappingService = service
         invalidatesTags: [{ id: 'LIST', type: 'SamlAttributeMapping' }],
         query: (query: Req['deleteSamlAttributeMapping']) => ({
           method: 'DELETE',
-          url: `auth/saml/attribute-mapping/${query.attribute_id}`,
+          url: `auth/saml/attribute-mapping/${query.attribute_id}/`,
         }),
       }),
       getSamlAttributeMapping: builder.query<
@@ -44,7 +44,7 @@ export const samlAttributeMappingService = service
         query: (query: Req['updateSamlAttributeMapping']) => ({
           body: query.body,
           method: 'PUT',
-          url: `auth/saml/attribute-mapping/${query.attribute_id}`,
+          url: `auth/saml/attribute-mapping/${query.attribute_id}/`,
         }),
       }),
       // END OF ENDPOINTS

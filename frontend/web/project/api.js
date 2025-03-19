@@ -3,6 +3,9 @@ import data from 'common/data/base/_data'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
+import { loadReoScript } from 'reodotdev'
+
+import freeEmailDomains from 'free-email-domains'
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -93,10 +96,53 @@ global.API = {
         'plan': plans && plans.join(','),
       })
     }
+    if (Project.reo) {
+      const reoPromise = loadReoScript({ clientID: Project.reo })
+      reoPromise.then((Reo) => {
+        Reo.init({ clientID: Project.reo })
+        let authType = 'userID'
+        switch (user.auth_type) {
+          case 'EMAIL':
+            authType = 'email'
+            break
+          case 'GITHUB':
+            authType = 'github'
+            break
+          case 'GOOGLE':
+            authType = 'gmail'
+            break
+          default:
+            break
+        }
+        const identity = {
+          company: user.organisations[0]?.name || '',
+          firstname: user.last_name,
+          lastname: user.first_name,
+          type: authType,
+          username: user.email,
+        }
+        Reo.identify(identity)
+      })
+    }
     if (Project.amplitude) {
       amplitude.setUserId(id)
       const identify = new amplitude.Identify().set('email', id)
       amplitude.identify(identify)
+      if (typeof window.engagement !== 'undefined') {
+        window.engagement.boot({
+          integrations: [
+            {
+              track: (event) => {
+                amplitude.track(event.event_type, event.event_properties)
+              },
+            },
+          ],
+          user: {
+            user_id: id,
+            user_properties: {},
+          },
+        })
+      }
     }
     API.flagsmithIdentify()
   },

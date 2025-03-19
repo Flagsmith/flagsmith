@@ -609,6 +609,10 @@ export type Req = {
     identity: string
     projectId: string
   }>
+  getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
+  getSplitTest: PagedRequest<{
+    conversion_event_type_id: string
+  }>
   createOnboarding: {
     first_name: string
     last_name: string

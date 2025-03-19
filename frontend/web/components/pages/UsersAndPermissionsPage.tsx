@@ -392,7 +392,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                             Utils.copyToClipboard(
                                               `${
                                                 document.location.origin
-                                              }/invite/${
+                                              }/invite-link/${
                                                 inviteLinks?.find(
                                                   (f) => f.role === role,
                                                 )?.hash

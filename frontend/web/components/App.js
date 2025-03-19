@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { Link, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
+import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
@@ -36,6 +37,7 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
+import { plugin } from '@amplitude/plugin-session-replay-browser'
 
 const App = class extends Component {
   static propTypes = {
@@ -97,6 +99,7 @@ const App = class extends Component {
         defaultTracking: true,
         serverZone: 'EU',
       })
+      amplitude.add(engagementPlugin())
       const sessionReplayTracking = sessionReplayPlugin({
         sampleRate: 0.5,
         serverZone: 'EU',
@@ -333,7 +336,7 @@ const App = class extends Component {
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
-    if (document.location.href.includes('widget')) {
+    if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'

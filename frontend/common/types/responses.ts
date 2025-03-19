@@ -4,13 +4,10 @@ export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
-export type Approval =
-  | {
-      user: number
-    }
-  | {
-      group: number
-    }
+export type Approval = {
+  user?: number
+  group?: number
+}
 export type PagedResponse<T> = {
   count?: number
   next?: string
@@ -639,15 +636,45 @@ export type SAMLAttributeMapping = {
   django_attribute_name: AttributeName
   idp_attribute_name: string
 }
+export type ServersideSplitTestResult = {
+  conversion_count: number
+  evaluation_count: number
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  pvalue: number
+  value_data: FeatureStateValue
+}
 
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
+
+export type FeatureHealthEventReasonTextBlock = {
+  text: string
+  title?: string
+}
+
+export type FeatureHealthEventReasonUrlBlock = {
+  url: string
+  title?: string
+}
+
+export type HealthEventReason = {
+  text_blocks: FeatureHealthEventReasonTextBlock[]
+  url_blocks: FeatureHealthEventReasonUrlBlock[]
+}
 
 export type HealthEvent = {
   created_at: string
   environment: number
   feature: number
   provider_name: string
-  reason: string
+  reason: HealthEventReason | null
   type: HealthEventType
 }
 
@@ -676,6 +703,42 @@ export type Version = {
   }
 }
 
+export type PConfidence =
+  | 'VERY_LOW'
+  | 'LOW'
+  | 'REASONABLE'
+  | 'HIGH'
+  | 'VERY_HIGH'
+export type SplitTestResult = {
+  results: {
+    conversion_count: number
+    evaluation_count: number
+    conversion_percentage: number
+    pvalue: number
+    confidence: PConfidence
+    value_data: FeatureStateValue
+  }[]
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  max_conversion_percentage: number
+  max_conversion_count: number
+  conversion_variance: number
+  max_conversion_pvalue: number
+}
+
+export type ConversionEvent = {
+  id: number
+  name: string
+  updated_at: string
+  created_at: string
+}
 export type Webhook = {
   id: number
   url: string
@@ -827,5 +890,7 @@ export type Res = {
   organisationWebhooks: PagedResponse<Webhook>
   identityTrait: { id: string }
   identityTraits: IdentityTrait[]
+  conversionEvents: PagedResponse<ConversionEvent>
+  splitTest: PagedResponse<SplitTestResult>
   // END OF TYPES
 }

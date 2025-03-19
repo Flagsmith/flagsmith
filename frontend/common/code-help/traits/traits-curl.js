@@ -5,7 +5,7 @@ module.exports = (
   { TRAIT_NAME, USER_ID },
   userId,
 ) => `curl -i -X POST '${Constants.getFlagsmithSDKUrl()}identities/' \\
-     -H 'x-environment-key: ${envId}' \\
+     -H 'X-Environment-Key: ${envId}' \\
      -H 'Content-Type: application/json; charset=utf-8' \\
      -d $'{
   "traits": [

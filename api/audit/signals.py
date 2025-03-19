@@ -14,7 +14,8 @@ from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
-from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
+from webhooks.tasks import call_organisation_webhooks
+from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
