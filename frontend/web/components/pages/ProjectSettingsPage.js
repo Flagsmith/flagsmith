@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
-import MetadataPage from 'components/metadata/MetadataPage'
 import EditPermissions from 'components/EditPermissions'
 import Switch from 'components/Switch'
 import _data from 'common/data/base/_data'
@@ -601,12 +600,6 @@ const ProjectSettingsPage = class extends Component {
                         roleTabTitle='Project Permissions'
                         role
                         roles={this.state.roles}
-                      />
-                    </TabItem>
-                    <TabItem tabLabel='Custom Fields'>
-                      <MetadataPage
-                        organisationId={AccountStore.getOrganisation().id}
-                        projectId={this.props.match.params.projectId}
                       />
                     </TabItem>
                     {!!ProjectStore.getEnvs()?.length && (
