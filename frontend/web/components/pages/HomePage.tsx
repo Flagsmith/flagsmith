@@ -225,6 +225,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
         <div className={oauthClasses}>
           <Button
             disabled={samlLoading}
+            theme='secondary'
             onClick={() => {
               if (!Utils.getFlagsmithValue('sso_idp')) {
                 openModal('Single Sign-On', <SamlForm />, 'p-0 modal-sm')
@@ -425,7 +426,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                                       type='submit'
                                       className='mt-3 px-4 full-width'
                                     >
-                                      Login
+                                      Log in
                                     </Button>
                                   </div>
                                 </fieldset>
