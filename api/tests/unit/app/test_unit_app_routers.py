@@ -39,12 +39,12 @@ def test_replica_router_db_for_read_with_one_offline_replica(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
+    result = router.db_for_read(FFAdminUser)
 
     # Then
     # Read strategy DISTRIBUTED is random, so just this is a check
     # against loading the primary or one of the cross region replicas
-    assert result.startswith("replica_")
+    assert result is not None and result.startswith("replica_")
 
     # Check that the number of replica call counts is as expected.
     conn_call_count = 2
@@ -85,12 +85,12 @@ def test_replica_router_db_for_read_with_local_offline_replicas(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
+    result = router.db_for_read(FFAdminUser)
 
     # Then
     # Read strategy DISTRIBUTED is random, so just this is a check
     # against loading the primary or one of the cross region replicas
-    assert result.startswith("cross_region_replica_")
+    assert result is not None and result.startswith("cross_region_replica_")
 
     # Check that the number of replica call counts is as expected.
     conn_call_count = 6
@@ -120,7 +120,7 @@ def test_replica_router_db_for_read_with_all_offline_replicas(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
+    result = router.db_for_read(FFAdminUser)
 
     # Then
     # Fallback to primary database if all replicas are offline.
@@ -154,7 +154,7 @@ def test_replica_router_db_with_sequential_read(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
+    result = router.db_for_read(FFAdminUser)
 
     # Then
     # Fallback from first replica to second one.
@@ -186,7 +186,7 @@ def test_replica_router_db_no_replicas(
     router = PrimaryReplicaRouter()
 
     # When
-    result = router.db_for_read(FFAdminUser)  # type: ignore[no-untyped-call]
+    result = router.db_for_read(FFAdminUser)
 
     # Then
     # Should always use primary database.
