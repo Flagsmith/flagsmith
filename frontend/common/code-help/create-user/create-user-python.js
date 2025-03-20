@@ -7,8 +7,9 @@ module.exports = (
 ) => `from flagsmith import Flagsmith
 
 flagsmith = Flagsmith(environment_key="${envId}"${
-  Constants.isCustomFlagsmithUrl() &&
-  `,\n api_url="${Constants.getFlagsmithSDKUrl()}"\n`
+  Constants.isCustomFlagsmithUrl()
+    ? `, api_url="${Constants.getFlagsmithSDKUrl()}"`
+    : ''
 })
 
 # Identify the user
