@@ -1,12 +1,13 @@
 import logging
 import random
 from enum import Enum
-from typing import Any, Type
+from typing import Any, Optional, Type
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
 from django.db.models import Model
+from django_stubs_ext.db.router import TypedDatabaseRouter
 
 from .exceptions import ImproperlyConfiguredError
 
@@ -48,8 +49,8 @@ def connection_check(database: str) -> bool:
     return usable
 
 
-class PrimaryReplicaRouter:
-    def db_for_read(self, model: Type[Model], **hints: Any) -> str | None:
+class PrimaryReplicaRouter(TypedDatabaseRouter):
+    def db_for_read(self, model: Type[Model], **hints: Any) -> Optional[str]:
         if settings.NUM_DB_REPLICAS == 0:
             return "default"
 
@@ -77,12 +78,12 @@ class PrimaryReplicaRouter:
         )
         return "default"
 
-    def db_for_write(self, model: Type[Model], **hints: Any) -> str | None:
+    def db_for_write(self, model: Type[Model], **hints: Any) -> Optional[str]:
         return "default"
 
     def allow_relation(
         self, obj1: Type[Model], obj2: Type[Model], **hints: Any
-    ) -> bool | None:
+    ) -> Optional[bool]:
         """
         Relations between objects are allowed if both objects are
         in the primary/replica pool.
@@ -101,7 +102,7 @@ class PrimaryReplicaRouter:
 
     def allow_migrate(
         self, db: str, app_label: str, model_name: str | None = None, **hints: Any
-    ) -> bool | None:
+    ) -> Optional[bool]:
         return db == "default"
 
     def _get_replica(self, replicas: list[str]) -> None | str:
@@ -129,10 +130,10 @@ class PrimaryReplicaRouter:
         return None
 
 
-class AnalyticsRouter:
+class AnalyticsRouter(TypedDatabaseRouter):
     route_app_labels = ["app_analytics"]
 
-    def db_for_read(self, model: Type[Model], **hints: Any) -> str | None:
+    def db_for_read(self, model: Type[Model], **hints: Any) -> Optional[str]:
         """
         Attempts to read analytics models go to 'analytics' database.
         """
@@ -140,7 +141,7 @@ class AnalyticsRouter:
             return "analytics"
         return None
 
-    def db_for_write(self, model: Type[Model], **hints: Any) -> str | None:
+    def db_for_write(self, model: Type[Model], **hints: Any) -> Optional[str]:
         """
         Attempts to write analytics models go to 'analytics' database.
         """
@@ -150,7 +151,7 @@ class AnalyticsRouter:
 
     def allow_relation(
         self, obj1: Type[Model], obj2: Type[Model], **hints: Any
-    ) -> bool | None:
+    ) -> Optional[bool]:
         """
         Relations between objects are allowed if both objects are
         in the analytics database.
@@ -164,7 +165,7 @@ class AnalyticsRouter:
 
     def allow_migrate(
         self, db: str, app_label: str, model_name: str | None = None, **hints: Any
-    ) -> bool | None:
+    ) -> Optional[bool]:
         """
         Make sure the analytics app only appears in the 'analytics' database
         """
