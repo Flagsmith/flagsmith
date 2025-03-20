@@ -2,7 +2,7 @@ import Constants from 'common/constants'
 
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID },
+  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID, TRAIT_NAME },
   userId,
 ) => `from flagsmith import Flagsmith
 
@@ -11,6 +11,9 @@ flagsmith = Flagsmith(environment_key="${envId}"${
     ? `, api_url="${Constants.getFlagsmithSDKUrl()}"`
     : ''
 })
+
+# Optional - set traits for this identity
+traits = {"${TRAIT_NAME}": 42}
 
 # Identify the user
 identity_flags = flagsmith.get_identity_flags(identifier="${
