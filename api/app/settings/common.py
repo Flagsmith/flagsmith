@@ -680,7 +680,9 @@ ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
     "django.core.cache.backends.locmem.LocMemCache",
 )
 
-ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
+ENVIRONMENT_DOCUMENT_CACHE_LOCATION = env(
+    "ENVIRONMENT_DOCUMENT_CACHE_LOCATION", default="environment-documents"
+)
 ENVIRONMENT_DOCUMENT_CACHE_BACKEND = env(
     "ENVIRONMENT_DOCUMENT_CACHE_BACKEND", "django.core.cache.backends.db.DatabaseCache"
 )
