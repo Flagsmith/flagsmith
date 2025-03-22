@@ -23,7 +23,6 @@ import TabItem from './base/forms/TabItem'
 import Tabs from './base/forms/Tabs'
 import UserGroupList from './UserGroupList'
 import { PermissionLevel, Req } from 'common/types/requests'
-import { RouterChildContext } from 'react-router'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
@@ -65,8 +64,8 @@ import PlanBasedAccess from './PlanBasedAccess'
 import { useGetTagsQuery } from 'common/services/useTag'
 import { components } from 'react-select'
 import { SingleValueProps } from 'react-select/lib/components/SingleValue'
-import Utils from 'common/utils/utils'
 import AddEditTags from './tags/AddEditTags'
+import { RouterChildContext } from 'react-router'
 
 const Project = require('common/project')
 
@@ -88,11 +87,11 @@ const SingleValue = (props: SingleValueProps<any>) => {
 
 type EditPermissionModalType = {
   group?: UserGroupSummary
-  id: number
+  id: number | string
   className?: string
   isGroup?: boolean
   level: PermissionLevel
-  name: string
+  name?: string
   onSave?: () => void
   envId?: number | string | undefined
   parentId?: string
@@ -100,7 +99,7 @@ type EditPermissionModalType = {
   parentSettingsLink?: string
   roleTabTitle?: string
   permissions?: UserPermission[]
-  push: (route: string) => void
+  router?: RouterChildContext['router']
   user?: User
   role?: Role
   roles?: Role[]
@@ -111,8 +110,7 @@ type EditPermissionModalType = {
 
 type EditPermissionsType = Omit<EditPermissionModalType, 'onSave'> & {
   onSaveGroup?: () => void
-  onSaveUser: () => void
-  router: RouterChildContext['router']
+  onSaveUser?: () => void
   tabClassName?: string
 }
 type EntityPermissions = Omit<
@@ -178,9 +176,9 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       parentLevel,
       parentSettingsLink,
       permissionChanged,
-      push,
       role,
       roles,
+      router,
       user,
     } = props
 
@@ -526,7 +524,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   level.charAt(0).toUpperCase() + level.slice(1)
                 } Permissions Saved`,
               )
-              onSave && onSave()
+              onSave?.()
             },
           )
           .catch(() => {
@@ -805,10 +803,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const getEditText = () => {
       if (isGroup) {
-        return `the ${group?.name || ''} group`
+        return `the ${group?.name ?? ''} group`
       }
       if (user) {
-        return `${user.first_name || ''} ${user.last_name || ''}`
+        return `${user.first_name ?? ''} ${user.last_name ?? ''}`
       }
       if (role) {
         return role.name
@@ -949,7 +947,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   <a
                     onClick={() => {
                       if (parentSettingsLink) {
-                        push(parentSettingsLink)
+                        router?.history?.push(parentSettingsLink)
                       }
                       closeModal()
                     }}
@@ -1059,7 +1057,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentLevel={parentLevel}
         parentSettingsLink={parentSettingsLink}
         user={user}
-        push={router.history.push}
+        router={router}
       />,
       'p-0 side-modal',
     )
@@ -1078,7 +1076,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentLevel={parentLevel}
         parentSettingsLink={parentSettingsLink}
         group={group}
-        push={router.history.push}
+        router={router}
       />,
       'p-0 side-modal',
     )
@@ -1092,7 +1090,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         envId={envId}
         level={level}
         role={role}
-        push={router.history.push}
+        router={router}
       />,
       'p-0 side-modal',
     )
@@ -1320,6 +1318,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
   )
 }
 
-export default ConfigProvider(EditPermissions) as unknown as FC<
-  Omit<EditPermissionsType, 'router'>
->
+export default ConfigProvider(
+  EditPermissions,
+) as unknown as FC<EditPermissionsType>
