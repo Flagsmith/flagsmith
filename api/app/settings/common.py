@@ -27,6 +27,7 @@ from environs import Env
 from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
+from environments.enums import EnvironmentDocumentCacheMode
 
 env = Env()
 
@@ -682,8 +683,27 @@ ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
     "django.core.cache.backends.locmem.LocMemCache",
 )
 
+ENVIRONMENT_DOCUMENT_CACHE_LOCATION = env(
+    "ENVIRONMENT_DOCUMENT_CACHE_LOCATION", default="environment-documents"
+)
+ENVIRONMENT_DOCUMENT_CACHE_BACKEND = env(
+    "ENVIRONMENT_DOCUMENT_CACHE_BACKEND", "django.core.cache.backends.db.DatabaseCache"
+)
+ENVIRONMENT_DOCUMENT_CACHE_MODE = env.enum(
+    "ENVIRONMENT_DOCUMENT_CACHE_MODE",
+    type=EnvironmentDocumentCacheMode,
+    default=EnvironmentDocumentCacheMode.EXPIRING.value,
+)
 CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
-ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
+
+if (
+    ENVIRONMENT_DOCUMENT_CACHE_MODE == EnvironmentDocumentCacheMode.PERSISTENT
+    and CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+):
+    warnings.warn(
+        "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
+        'since CACHE_ENVIRONMENT_DOCUMENT_MODE == "PERSISTENT"'
+    )  # pragma: no cover
 
 USER_THROTTLE_CACHE_NAME = "user-throttle"
 USER_THROTTLE_CACHE_BACKEND = env.str(
@@ -739,9 +759,14 @@ CACHES = {
         "TIMEOUT": 12 * 60 * 60,  # 12 hours
     },
     ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "BACKEND": ENVIRONMENT_DOCUMENT_CACHE_BACKEND,
         "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
-        "timeout": CACHE_ENVIRONMENT_DOCUMENT_SECONDS,
+        "TIMEOUT": (
+            None
+            if ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+            else CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+        ),
     },
     GET_FLAGS_ENDPOINT_CACHE_NAME: {
         "BACKEND": GET_FLAGS_ENDPOINT_CACHE_BACKEND,
