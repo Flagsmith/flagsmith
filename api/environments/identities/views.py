@@ -18,7 +18,7 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from core.request_origin import RequestOrigin
-from edge_api.identities.edge_request_forwarder import forward_identity_request
+from edge_api.identities.tasks import forward_identity_request
 from environments.identities.models import Identity
 from environments.identities.serializers import (
     IdentitySerializer,

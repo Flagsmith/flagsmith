@@ -1,13 +1,15 @@
 import json
 
 import pytest
+from django.test import Client
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_django.fixtures import SettingsWrapper
 
 from app.utils import get_version_info
+from users.models import FFAdminUser
 
 
-def test_get_version_info(fs: FakeFilesystem) -> None:
+def test_get_version_info(fs: FakeFilesystem, db: None) -> None:
     # Given
     expected_manifest_contents = {
         ".": "2.66.2",
@@ -28,10 +30,43 @@ def test_get_version_info(fs: FakeFilesystem) -> None:
         "is_enterprise": True,
         "is_saas": False,
         "package_versions": {".": "2.66.2"},
+        "self_hosted_data": {
+            "has_users": False,
+            "has_logins": False,
+        },
     }
 
 
-def test_get_version_info_with_missing_files(fs: FakeFilesystem) -> None:
+def test_get_version_info_self_hosted_data(
+    fs: FakeFilesystem, db: None, settings: SettingsWrapper, client: Client
+) -> None:
+    # Given
+    fs.create_file("./ENTERPRISE_VERSION")
+
+    result = get_version_info()
+    # Let's make sure everything is
+    # as expected before we create the users
+    assert result["self_hosted_data"] == {
+        "has_logins": False,
+        "has_users": False,
+    }
+    # When
+    user = FFAdminUser.objects.create(email="user_two@test.com")
+
+    # Clear the cache
+    get_version_info.cache_clear()
+
+    client.force_login(user)
+    result = get_version_info()
+
+    # Then
+    assert result["self_hosted_data"] == {
+        "has_logins": True,
+        "has_users": True,
+    }
+
+
+def test_get_version_info_with_missing_files(fs: FakeFilesystem, db: None) -> None:
     # Given
     fs.create_file("./ENTERPRISE_VERSION")
 
@@ -45,6 +80,10 @@ def test_get_version_info_with_missing_files(fs: FakeFilesystem) -> None:
         "has_email_provider": False,
         "is_enterprise": True,
         "is_saas": False,
+        "self_hosted_data": {
+            "has_users": False,
+            "has_logins": False,
+        },
     }
 
 
@@ -60,9 +99,7 @@ EMAIL_BACKENDS_AND_SETTINGS = [
     EMAIL_BACKENDS_AND_SETTINGS,
 )
 def test_get_version_info__email_config_enabled__return_expected(
-    settings: SettingsWrapper,
-    email_backend: str,
-    expected_setting_name: str,
+    settings: SettingsWrapper, email_backend: str, expected_setting_name: str, db: None
 ) -> None:
     # Given
     settings.EMAIL_BACKEND = email_backend
@@ -86,6 +123,7 @@ def test_get_version_info__email_config_disabled__return_expected(
     settings: SettingsWrapper,
     email_backend: str | None,
     expected_setting_name: str | None,
+    db: None,
 ) -> None:
     # Given
     settings.EMAIL_BACKEND = email_backend

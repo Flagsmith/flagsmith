@@ -46,9 +46,9 @@ ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 # Need the * prefix to work with pre-commit which runs from the root of the repo
-"*app/settings/local.py"= ["F403", "F405"]
-"*app/settings/production.py"= ["F403", "F405"]
-"*app/settings/saas.py"= ["F403", "F405"]
+"*app/settings/local.py" = ["F403", "F405"]
+"*app/settings/production.py" = ["F403", "F405"]
+"*app/settings/saas.py" = ["F403", "F405"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -63,7 +63,7 @@ exclude_also = [
 ]
 
 [tool.coverage.run]
-omit = ["scripts/*"]
+omit = ["scripts/*", "manage.py"]
 
 [tool.pytest.ini_options]
 addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
@@ -75,6 +75,14 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = ["admin_sso.models"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["rbac.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["saml.*"]
 ignore_missing_imports = true
 
 [tool.django-stubs]
@@ -92,7 +100,7 @@ backoff = "~2.2.1"
 appdirs = "~1.4.4"
 django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.2"
-gunicorn = "~22.0.0"
+gunicorn = "~23.0.0"
 pyparsing = "~2.4.7"
 requests = "~2.32.2"
 six = "~1.16.0"
@@ -146,7 +154,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.2.1" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.3.2" }
 flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
