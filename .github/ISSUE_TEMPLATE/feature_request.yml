@@ -1,5 +1,5 @@
-name: Flagsmith Feature Request 🏗️
-description: Suggest a new feature for Flagsmith
+name: Feature request 🏗️
+description: Suggest a new feature or change for Flagsmith
 
 body:
   - type: markdown
@@ -9,9 +9,9 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: Is your feature request related to a problem? Please describe.
+      label: Is your feature request related to a problem?
       description: |
-        A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+        Please describe your actual problem, rather than your desired solution: https://xyproblem.info/
     validations:
       required: true
 
@@ -38,6 +38,6 @@ body:
     attributes:
       label: Additional context
       description: |
-        Add any other context or screenshots about the feature request here.
+        Anything else you think is helpful for us to understand or make a case for your request.
     validations:
       required: false
