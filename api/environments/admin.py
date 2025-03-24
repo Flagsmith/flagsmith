@@ -31,10 +31,6 @@ class EnvironmentAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     )
     inlines = (WebhookInline,)
 
-    # Since environment documents are stored using the API key in cache, and
-    # DynamoDB for SaaS, we shouldn't allow changing the API key.
-    readonly_fields = ("api_key",)
-
     @admin.action(description="Rebuild selected environment documents")
     def rebuild_environments(
         self, request: HttpRequest, queryset: QuerySet[Environment]

@@ -153,21 +153,35 @@ class Environment(
     class Meta:
         ordering = ["id"]
 
-    @hook(AFTER_CREATE)
-    def create_feature_states(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_CREATE)  # type: ignore[misc]
+    def create_feature_states(self) -> None:
         FeatureState.create_initial_feature_states_for_environment(environment=self)
 
-    @hook(AFTER_UPDATE)
-    def clear_environment_cache(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_UPDATE)  # type: ignore[misc]
+    def clear_environment_cache(self) -> None:
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
 
-    @hook(AFTER_DELETE)
-    def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_UPDATE, when="api_key")  # type: ignore[misc]
+    def update_environment_document_cache(self) -> None:
+        environment_document_cache.delete(self.initial_value("api_key"))
+        self.write_environment_documents(self.id)
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def delete_from_dynamo(self) -> None:
         if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
             from environments.tasks import delete_environment_from_dynamo
 
             delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def delete_environment_document_from_cache(self) -> None:
+        if (
+            settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+            or settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
+        ):
+            environment_document_cache.delete(self.api_key)
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
