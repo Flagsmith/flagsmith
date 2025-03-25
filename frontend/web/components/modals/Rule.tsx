@@ -3,12 +3,18 @@ import Constants from 'common/constants'
 import cloneDeep from 'lodash/cloneDeep'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
-import { Operator, SegmentCondition, SegmentConditionsError, SegmentRule } from 'common/types/responses'
+import {
+  Operator,
+  SegmentCondition,
+  SegmentConditionsError,
+  SegmentRule,
+} from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
 import RuleInputValue from './RuleInputValue'
 import ErrorMessage from 'components/ErrorMessage'
+import classNames from 'classnames'
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
@@ -74,7 +80,12 @@ export default class Rule extends PureComponent<{
                 readOnly={this.props.readOnly}
                 data-test={`${this.props['data-test']}-property-${i}`}
                 value={`${rule.property}`}
-                style={{ borderColor: ruleErrors?.property ? '#ef4d56' : '', width: '135px' }}
+                inputClassName={classNames({
+                  'border-danger': ruleErrors?.property,
+                })}
+                style={{
+                  width: '135px',
+                }}
                 placeholder={
                   operator && operator === 'PERCENTAGE_SPLIT'
                     ? 'Trait (N/A)'
