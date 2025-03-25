@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
+import prometheus_client
 import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
@@ -1303,3 +1304,4 @@ if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
 
 PROMETHEUS_ENABLED = True
+PROMETHEUS_HISTOGRAM_BUCKETS = prometheus_client.Histogram.DEFAULT_BUCKETS  # TODO @khvn26 make configurable once https://github.com/Flagsmith/flagsmith-task-processor/pull/28 is merged
