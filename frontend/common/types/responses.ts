@@ -54,6 +54,12 @@ export type SegmentCondition = {
   property: string
   value: string | number | null
 }
+
+export type SegmentConditionsError = {
+  property?: string[]
+  value?: string[]
+}
+
 export type SegmentRule = {
   type: string
   rules: SegmentRule[]

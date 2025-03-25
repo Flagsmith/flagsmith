@@ -145,6 +145,9 @@
     width: 16px;
     height: 16px;
     line-height: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 }
 .pill .btn-tab .unread {
