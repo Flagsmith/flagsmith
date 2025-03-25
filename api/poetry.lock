@@ -1821,25 +1821,24 @@ idna = ">=2.0.0"
 
 [[package]]
 name = "environs"
-version = "9.2.0"
+version = "14.1.1"
 description = "simplified environment variable parsing"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.9"
 groups = ["main", "workflows"]
 files = [
-    {file = "environs-9.2.0-py2.py3-none-any.whl", hash = "sha256:10dca340bff9c912e99d237905909390365e32723c2785a9f3afa6ef426c53bc"},
-    {file = "environs-9.2.0.tar.gz", hash = "sha256:36081033ab34a725c2414f48ee7ec7f7c57e498d8c9255d61fbc7f2d4bf60865"},
+    {file = "environs-14.1.1-py3-none-any.whl", hash = "sha256:45bc56f1d53bbc59d8dd69bba97377dd88ec28b8229d81cedbd455b21789445b"},
+    {file = "environs-14.1.1.tar.gz", hash = "sha256:03db7ee2d50ec697b68814cd175a3a05a7c7954804e4e419ca8b570dc5a835cf"},
 ]
 
 [package.dependencies]
-marshmallow = ">=2.7.0"
+marshmallow = ">=3.18.0"
 python-dotenv = "*"
 
 [package.extras]
-dev = ["dj-database-url", "dj-email-url", "django-cache-url", "flake8 (==3.8.4)", "flake8-bugbear (==20.1.4)", "mypy (==0.790)", "pre-commit (>=2.4,<3.0)", "pytest", "tox"]
+dev = ["environs[tests]", "pre-commit (>=4.0,<5.0)", "tox"]
 django = ["dj-database-url", "dj-email-url", "django-cache-url"]
-lint = ["flake8 (==3.8.4)", "flake8-bugbear (==20.1.4)", "mypy (==0.790)", "pre-commit (>=2.4,<3.0)"]
-tests = ["dj-database-url", "dj-email-url", "django-cache-url", "pytest"]
+tests = ["backports.strenum ; python_version < \"3.11\"", "environs[django]", "packaging", "pytest"]
 
 [[package]]
 name = "execnet"
@@ -1999,7 +1998,7 @@ backoff = "~2.2.1"
 dj-database-url = "~0.5.0"
 django-health-check = "~3.18.2"
 drf-yasg = "~1.21.6"
-environs = "~9.2.0"
+environs = "*"
 gunicorn = "*"
 psycopg2-binary = "~2.9.5"
 simplejson = "~3.19.1"
@@ -2007,8 +2006,8 @@ simplejson = "~3.19.1"
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.3.2"
-resolved_reference = "366274d584e28b9833ee0937511baafc2c6ec71b"
+reference = "v1.3.3"
+resolved_reference = "c2aaff26ec0c412c8c593d27231fd4ea4faccaa8"
 
 [[package]]
 name = "freezegun"
@@ -5214,4 +5213,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "89912f451020351b468f59d2d3bf05a3fdfea1f37b1b851f78b283e292044289"
+content-hash = "1e62240d98198789a4b9142b24480d7a3dadb29bc58cac0c38fb25eb44bfea3c"
