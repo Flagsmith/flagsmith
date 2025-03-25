@@ -73,6 +73,7 @@ if sys.version[0] == "2":
 # Application definition
 
 INSTALLED_APPS = [
+    "common.core",
     "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -271,6 +272,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.gunicorn.middleware.RouteLoggerMiddleware"
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -1299,3 +1301,5 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
+
+PROMETHEUS_ENABLED = True
