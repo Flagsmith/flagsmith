@@ -10,22 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
-import importlib.util
-import json
 import os
 import sys
 import warnings
-from datetime import datetime, time, timedelta
 from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
-import prometheus_client
-import pytz
-from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
-from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
 from app.routers import ReplicaReadStrategy
 from app.utils import get_numbered_env_vars_with_prefix
@@ -213,7 +205,7 @@ if "DATABASE_URL" in os.environ:
     REPLICA_READ_STRATEGY = env.enum(
         "REPLICA_READ_STRATEGY",
         enum=ReplicaReadStrategy,
-        default=ReplicaReadStrategy.DISTRIBUTED,
+        default=ReplicaReadStrategy.DISTRIBUTED.value,
     )
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
@@ -1359,5 +1351,11 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
 
-PROMETHEUS_ENABLED = True
-PROMETHEUS_HISTOGRAM_BUCKETS = prometheus_client.Histogram.DEFAULT_BUCKETS
+PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", default=True)
+PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
+    env.list(
+        "PROMETHEUS_HISTOGRAM_BUCKETS",
+        subcast=lambda x: float(x),
+        default=prometheus_client.Histogram.DEFAULT_BUCKETS,
+    )
+)
