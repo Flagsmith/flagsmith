@@ -17,6 +17,7 @@ import {
   Operator,
   Segment,
   SegmentRule,
+  SegmentConditionsError,
 } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { useGetIdentitiesQuery } from 'common/services/useIdentity'
@@ -39,12 +40,9 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import { cloneDeep } from 'lodash'
 import ProjectStore from 'common/stores/project-store'
 import classNames from 'classnames'
-import AddMetadataToEntity, {
-  CustomMetadataField,
-} from 'components/metadata/AddMetadataToEntity'
+import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
-import AppActions from 'common/dispatcher/app-actions'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 
@@ -73,6 +71,16 @@ type CreateSegmentType = {
   onComplete?: (segment: Segment) => void
   readOnly?: boolean
   segment?: Segment
+}
+type CreateSegmentError = {
+  status: number,
+  data: {
+    rules: [{
+      rules: Array<{
+        conditions: SegmentConditionsError[]
+      }>
+    }]
+  }
 }
 
 enum UserTabs {
@@ -160,7 +168,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
   const [tab, setTab] = useState(UserTabs.RULES)
   const [metadata, setMetadata] = useState<Metadata[]>(segment.metadata)
   const metadataEnable = Utils.getPlansPermission('METADATA')
-  const error = createError || updateError
+  const error: CreateSegmentError = createError || updateError
   const totalSegments = ProjectStore.getTotalSegments() ?? 0
   const maxSegmentsAllowed = ProjectStore.getMaxSegmentsAllowed() ?? 0
   const isLimitReached = totalSegments >= maxSegmentsAllowed
@@ -343,10 +351,9 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 >
                   <Flex className='and-divider__line' />
                   {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${
-                      rule.type === 'ANY'
-                        ? 'Any of the following'
-                        : 'None of the following'
+                    `${displayIndex > 0 ? 'And ' : ''}${rule.type === 'ANY'
+                      ? 'Any of the following'
+                      : 'None of the following'
                     }`,
                   )}
                   <Flex className='and-divider__line' />
@@ -361,6 +368,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     setValueChanged(true)
                     updateRule(0, i, v)
                   }}
+                  errors={error?.data?.rules?.[0]?.rules?.[i]?.conditions}
                 />
               </div>
             )
@@ -445,7 +453,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={error}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -489,7 +496,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 <Row className='justify-content-center'>
                   Custom Fields
                   {metadataValueChanged && (
-                    <div className='unread ml-2 px-1'>{'*'}</div>
+                    <div className='unread ml-2 px-1 pt-2'>{'*'}</div>
                   )}
                 </Row>
               }
@@ -520,7 +527,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 setShowDescriptions={setShowDescriptions}
                 allWarnings={allWarnings}
                 rulesEl={rulesEl}
-                error={error}
                 isEdit={isEdit}
                 segment={segment}
                 isSaving={isSaving}
@@ -556,7 +562,6 @@ const CreateSegment: FC<CreateSegmentType> = ({
             setShowDescriptions={setShowDescriptions}
             allWarnings={allWarnings}
             rulesEl={rulesEl}
-            error={error}
             isEdit={isEdit}
             segment={segment}
             isSaving={isSaving}
@@ -613,6 +618,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
       props.onSegmentRetrieved?.(segmentData)
     }
   }, [segmentData])
+
   const isEdge = Utils.getIsEdge()
 
   const { data: identities, isLoading: identitiesLoading } =
