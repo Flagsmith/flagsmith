@@ -25,18 +25,17 @@ serve() {
 
     waitfordb
 
-    exec gunicorn --bind 0.0.0.0:8000 \
+    exec flagsmith start \
              --worker-tmp-dir /dev/shm \
              --timeout ${GUNICORN_TIMEOUT:-30} \
              --workers ${GUNICORN_WORKERS:-3} \
              --threads ${GUNICORN_THREADS:-2} \
              --access-logfile $ACCESS_LOG_LOCATION \
-             --logger-class $GUNICORN_LOGGER_CLASS \
              --access-logformat "$ACCESS_LOG_FORMAT" \
              --keep-alive ${GUNICORN_KEEP_ALIVE:-2} \
              ${STATSD_HOST:+--statsd-host $STATSD_HOST:$STATSD_PORT} \
-             ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX} \
-             app.wsgi
+             ${STATSD_HOST:+--statsd-prefix $STATSD_PREFIX}
+             api
 }
 run_task_processor() {
     waitfordb --waitfor 30 --migrations
