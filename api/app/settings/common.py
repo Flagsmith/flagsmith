@@ -19,7 +19,6 @@ from datetime import datetime, time, timedelta
 from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
-import prometheus_client
 import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
@@ -74,7 +73,6 @@ if sys.version[0] == "2":
 # Application definition
 
 INSTALLED_APPS = [
-    "common.core",
     "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -277,7 +275,6 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
-    "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -1349,12 +1346,3 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
-
-PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", default=True)
-PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
-    env.list(
-        "PROMETHEUS_HISTOGRAM_BUCKETS",
-        subcast=lambda x: float(x),
-        default=prometheus_client.Histogram.DEFAULT_BUCKETS,
-    )
-)
