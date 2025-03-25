@@ -1984,32 +1984,6 @@ reference = "v0.1.1"
 resolved_reference = "d7cf0dd9e306a529498839c3f7a1d7c652093228"
 
 [[package]]
-name = "flagsmith-task-processor"
-version = "1.0.0"
-description = "Task Processor plugin for Flagsmith application."
-optional = false
-python-versions = ">=3.10,<4.0"
-groups = ["main"]
-files = []
-develop = false
-
-[package.dependencies]
-backoff = "~2.2.1"
-dj-database-url = "~0.5.0"
-django-health-check = "~3.18.2"
-drf-yasg = "~1.21.6"
-environs = "*"
-gunicorn = "*"
-psycopg2-binary = "~2.9.5"
-simplejson = "~3.19.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.3.3"
-resolved_reference = "c2aaff26ec0c412c8c593d27231fd4ea4faccaa8"
-
-[[package]]
 name = "freezegun"
 version = "1.2.2"
 description = "Let your Python tests travel through time"
@@ -5213,4 +5187,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "ebd0216a0c486e3251081146995a6fffb3cdc7687d7b08e41441ba18223cdc13"
+content-hash = "77ceabbe21c331bfaeb7a8633989a181d1514b449f2f588a5ccaed5ffbe7182b"
