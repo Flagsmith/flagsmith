@@ -278,7 +278,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
-    "common.gunicorn.middleware.RouteLoggerMiddleware"
+    "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
