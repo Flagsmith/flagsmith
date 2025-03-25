@@ -1,12 +1,5 @@
 import logging
 
-from app_analytics.analytics_db_service import (
-    get_total_events_count,
-    get_usage_data,
-)
-from app_analytics.cache import FeatureEvaluationCache
-from app_analytics.tasks import track_feature_evaluation_v2
-from app_analytics.track import track_feature_evaluation_influxdb_v2
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
@@ -17,12 +10,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
-from telemetry.serializers import TelemetrySerializer
 
+from app_analytics.analytics_db_service import (
+    get_total_events_count,
+    get_usage_data,
+)
+from app_analytics.cache import FeatureEvaluationCache
+from app_analytics.tasks import (
+    track_feature_evaluation_influxdb_v2,
+    track_feature_evaluation_v2,
+)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState
 from organisations.models import Organisation
+from telemetry.serializers import TelemetrySerializer
 
 from .permissions import UsageDataPermission
 from .serializers import (

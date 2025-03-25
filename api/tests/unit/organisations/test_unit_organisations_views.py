@@ -16,9 +16,12 @@ from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
-from pytz import UTC  # type: ignore[import-untyped]
+from pytz import UTC
 from rest_framework import status
-from rest_framework.test import APIClient, override_settings  # type: ignore[attr-defined]
+from rest_framework.test import (  # type: ignore[attr-defined]
+    APIClient,
+    override_settings,
+)
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
@@ -707,10 +710,22 @@ def test_chargebee_webhook(
         organisation=subscription.organisation
     )
     assert subscription_cache.current_billing_term_ends_at == datetime(
-        2023, 12, 10, 15, 33, 9, tzinfo=timezone.utc  # type: ignore[attr-defined]
+        2023,
+        12,
+        10,
+        15,
+        33,
+        9,
+        tzinfo=timezone.utc,  # type: ignore[attr-defined]
     )
     assert subscription_cache.current_billing_term_starts_at == datetime(
-        2023, 11, 10, 15, 33, 9, tzinfo=timezone.utc  # type: ignore[attr-defined]
+        2023,
+        11,
+        10,
+        15,
+        33,
+        9,
+        tzinfo=timezone.utc,  # type: ignore[attr-defined]
     )
     assert subscription_cache.allowed_projects is None
     assert subscription_cache.allowed_30d_api_calls == api_calls
@@ -1232,8 +1247,8 @@ def test_when_plan_is_changed_max_seats_and_max_api_calls_are_updated(  # type: 
     # Given
     chargebee_email = "chargebee@test.com"
     url = reverse("api-v1:chargebee-webhook")
-    updated_at = datetime.now(tz=UTC) - timedelta(
-        days=1
+    updated_at = (
+        datetime.now(tz=UTC) - timedelta(days=1)
     )  # The timestamp representing the last update time, one day ago from the current time.
 
     mock_get_plan_meta_data.return_value = {

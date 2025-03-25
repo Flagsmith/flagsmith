@@ -1,4 +1,6 @@
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
 from integrations.launch_darkly.models import LaunchDarklyImportRequest
 from integrations.launch_darkly.services import process_import_request

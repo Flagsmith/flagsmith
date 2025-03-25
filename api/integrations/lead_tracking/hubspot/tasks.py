@@ -1,5 +1,7 @@
 from django.conf import settings
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 
 
 @register_task_handler()  # type: ignore[misc]

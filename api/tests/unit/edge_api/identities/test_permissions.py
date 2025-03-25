@@ -1,4 +1,6 @@
-from common.environments.permissions import UPDATE_FEATURE_STATE  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    UPDATE_FEATURE_STATE,
+)
 
 from edge_api.identities.permissions import (
     EdgeIdentityWithIdentifierViewPermissions,

@@ -6,16 +6,15 @@ from typing import Type, Union
 
 import backoff
 import requests
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
-from core.signing import sign_payload
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils import timezone
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
 from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from organisations.models import OrganisationWebhook
 from projects.models import Organisation  # type: ignore[attr-defined]
@@ -61,7 +60,6 @@ def get_webhook_model(
         return Webhook
 
 
-@register_task_handler()  # type: ignore[misc]
 def call_environment_webhooks(  # type: ignore[no-untyped-def]
     environment_id: int,
     data: typing.Mapping,  # type: ignore[type-arg]
@@ -92,7 +90,6 @@ def call_environment_webhooks(  # type: ignore[no-untyped-def]
     )
 
 
-@register_task_handler()  # type: ignore[misc]
 def call_organisation_webhooks(  # type: ignore[no-untyped-def]
     organisation_id: int,
     data: typing.Mapping,  # type: ignore[type-arg]
@@ -167,7 +164,6 @@ def _call_webhook(
         raise
 
 
-@register_task_handler()  # type: ignore[misc]
 def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def]
     webhook_id: int,
     data: typing.Mapping,  # type: ignore[type-arg]
@@ -217,6 +213,8 @@ def call_webhook_with_failure_mail_after_retries(  # type: ignore[no-untyped-def
                     f"{f'HTTP {exc.response.status_code}' if exc.response else 'N/A'} ({exc.__class__.__name__})",
                 )
         else:
+            from webhooks.tasks import call_webhook_with_failure_mail_after_retries
+
             call_webhook_with_failure_mail_after_retries.delay(
                 delay_until=(
                     timezone.now()
@@ -246,6 +244,8 @@ def _call_webhooks(  # type: ignore[no-untyped-def]
     webhook_type: WebhookType,
     retries: int = settings.WEBHOOK_BACKOFF_RETRIES,
 ):
+    from webhooks.tasks import call_webhook_with_failure_mail_after_retries
+
     webhook_data = {"event_type": event_type, "data": data}
     serializer = WebhookSerializer(data=webhook_data)
     serializer.is_valid(raise_exception=False)

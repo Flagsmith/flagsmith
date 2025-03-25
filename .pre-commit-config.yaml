@@ -1,23 +1,14 @@
 repos:
-  - repo: https://github.com/PyCQA/isort
-    rev: 6.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.11.2
     hooks:
-      - id: isort
-        name: isort (python)
-
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
-    hooks:
-      - id: black
-        language_version: python3
-        exclude: migrations
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.2
-    hooks:
-      - id: flake8
-        name: flake8
-        args: [--config, api/.flake8]
+      # Run the linter.
+      - id: ruff
+        args: [--config, api/pyproject.toml, --config, "src = ['api']", --fix]
+      # Run the formatter.
+      - id: ruff-format
+        args: [--config, api/pyproject.toml, --config, "src = ['api']"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -52,5 +43,5 @@ repos:
         args: ["-C", "api"]
 
 ci:
-  skip: [python-typecheck, isort]
+  skip: [python-typecheck]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"

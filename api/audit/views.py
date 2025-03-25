@@ -27,7 +27,9 @@ from organisations.models import Organisation, OrganisationRole
     decorator=swagger_auto_schema(query_serializer=AuditLogsQueryParamSerializer()),
 )
 class _BaseAuditLogViewSet(
-    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet  # type: ignore[type-arg]
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     pagination_class = CustomPagination
 

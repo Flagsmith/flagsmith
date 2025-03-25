@@ -5,7 +5,6 @@ from unittest import mock
 import freezegun
 import pytest
 import responses
-from core.constants import STRING
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -13,6 +12,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from rest_framework.exceptions import ValidationError
 
+from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureSegment, FeatureState

@@ -10,8 +10,15 @@ from django.core.mail import send_mail
 from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
-from django_lifecycle import AFTER_CREATE, AFTER_SAVE, LifecycleModel, hook  # type: ignore[import-untyped]
-from django_lifecycle.conditions import WhenFieldHasChanged  # type: ignore[import-untyped]
+from django_lifecycle import (  # type: ignore[import-untyped]
+    AFTER_CREATE,
+    AFTER_SAVE,
+    LifecycleModel,
+    hook,
+)
+from django_lifecycle.conditions import (  # type: ignore[import-untyped]
+    WhenFieldHasChanged,
+)
 
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_lead_without_organisation,
@@ -278,12 +285,17 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             )
 
     def get_permitted_projects(
-        self, permission_key: str, tag_ids: typing.List[int] = None  # type: ignore[assignment]
+        self,
+        permission_key: str,
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> QuerySet[Project]:
         return get_permitted_projects_for_user(self, permission_key, tag_ids)
 
     def has_project_permission(
-        self, permission: str, project: Project, tag_ids: typing.List[int] = None  # type: ignore[assignment]
+        self,
+        permission: str,
+        project: Project,
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> bool:
         if self.is_project_admin(project):
             return True

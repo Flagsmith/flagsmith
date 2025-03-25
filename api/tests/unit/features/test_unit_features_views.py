@@ -5,15 +5,16 @@ from datetime import date, datetime, timedelta
 from unittest import mock
 
 import pytest
-import pytz  # type: ignore[import-untyped]
-from app_analytics.dataclasses import FeatureEvaluationData
+import pytz
 from common.environments.permissions import (  # type: ignore[import-untyped]
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_FEATURE, VIEW_PROJECT  # type: ignore[import-untyped]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    CREATE_FEATURE,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 from django.forms import model_to_dict
 from django.urls import reverse
@@ -26,12 +27,14 @@ from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from app_analytics.dataclasses import FeatureEvaluationData
 from audit.constants import (
     FEATURE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,

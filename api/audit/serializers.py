@@ -68,7 +68,8 @@ class AuditLogRetrieveSerializer(serializers.ModelSerializer):  # type: ignore[t
     ) -> typing.List[typing.Dict[str, typing.Any]]:
         if history_record := instance.history_record:
             return AuditLogChangeDetailsSerializer(  # type: ignore[return-value]
-                instance=history_record.get_change_details(), many=True  # type: ignore[attr-defined]
+                instance=history_record.get_change_details(),  # type: ignore[attr-defined]
+                many=True,
             ).data
 
         return []

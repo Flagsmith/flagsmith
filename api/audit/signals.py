@@ -14,7 +14,8 @@ from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
-from webhooks.webhooks import WebhookEventType, call_organisation_webhooks
+from webhooks.tasks import call_organisation_webhooks
+from webhooks.webhooks import WebhookEventType
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,8 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore
         return
 
     data_dog = DataDogWrapper(
-        base_url=data_dog_config.base_url, api_key=data_dog_config.api_key  # type: ignore[arg-type]
+        base_url=data_dog_config.base_url,  # type: ignore[arg-type]
+        api_key=data_dog_config.api_key,
     )
     _track_event_async(instance, data_dog)  # type: ignore[no-untyped-call]
 

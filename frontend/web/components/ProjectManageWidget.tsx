@@ -43,6 +43,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
     if (create && canCreateProject && organisation) {
       handleCreateProjectClick()
     }
+    //eslint-disable-next-line
   }, [organisationId, organisation, canCreateProject, create])
   const handleCreateProjectClick = useCallback(() => {
     openModal(
@@ -113,10 +114,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                       </div>
                     }
                     items={projects}
-                    renderRow={(
-                      { environments, id, name }: Project,
-                      i: number,
-                    ) => {
+                    renderRow={({ environments, id, name }, i) => {
                       return (
                         <>
                           {i === 0 && (

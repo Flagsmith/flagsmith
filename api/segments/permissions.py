@@ -1,4 +1,7 @@
-from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import (  # type: ignore[import-untyped]
+    MANAGE_SEGMENTS,
+    VIEW_PROJECT,
+)
 from rest_framework.permissions import IsAuthenticated
 
 from projects.models import Project

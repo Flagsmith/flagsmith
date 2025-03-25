@@ -1,8 +1,15 @@
 from datetime import date, datetime, timedelta
 from typing import List
 
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db.models import Sum
+from django.utils import timezone
+
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
-from app_analytics.influxdb_wrapper import get_events_for_organisation
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+)
 from app_analytics.influxdb_wrapper import (
     get_feature_evaluation_data as get_feature_evaluation_data_from_influxdb,
 )
@@ -14,11 +21,6 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
-from django.conf import settings
-from django.db.models import Sum
-from django.utils import timezone
-
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation
@@ -76,7 +78,7 @@ def get_usage_data(
 
         if date_start:
             assert date_stop
-            kwargs["date_start"] = date_start
+            kwargs["date_start"] = date_start  # type: ignore[assignment]
             kwargs["date_stop"] = date_stop  # type: ignore[assignment]
 
         return get_usage_data_from_local_db(**kwargs)  # type: ignore[arg-type]
@@ -89,7 +91,7 @@ def get_usage_data(
 
     if date_start:
         assert date_stop
-        kwargs["date_start"] = date_start
+        kwargs["date_start"] = date_start  # type: ignore[assignment]
         kwargs["date_stop"] = date_stop  # type: ignore[assignment]
 
     return get_usage_data_from_influxdb(**kwargs)  # type: ignore[arg-type]

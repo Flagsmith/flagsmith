@@ -1,4 +1,7 @@
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES  # type: ignore[import-untyped]
+from common.environments.permissions import (  # type: ignore[import-untyped]
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
@@ -9,7 +12,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from edge_api.identities.edge_request_forwarder import (
+from edge_api.identities.tasks import (
     forward_trait_request,
     forward_trait_requests,
 )

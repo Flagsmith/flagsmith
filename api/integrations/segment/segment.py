@@ -2,6 +2,7 @@ import logging
 import typing
 
 from analytics.client import Client as SegmentClient  # type: ignore[import-untyped]
+
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from features.models import FeatureState

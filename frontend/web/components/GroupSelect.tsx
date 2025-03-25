@@ -11,7 +11,7 @@ export type GroupSelectType = {
   value: number[] | undefined
   isOpen: boolean
   size?: 'sm'
-  onAdd: (id: number, isUser: boolean) => void
+  onAdd: (id: number, isUser: boolean, name?: string) => void
   onRemove: (id: number, isUser: boolean) => void
   onToggle: () => void
 }
@@ -58,7 +58,7 @@ const GroupSelect: FC<GroupSelectType> = ({
                 if (isRemove && onRemove) {
                   onRemove(v.id, false)
                 } else if (!isRemove && onAdd) {
-                  onAdd(v.id, false)
+                  onAdd(v.id, false, v.name)
                 }
               }}
               className='assignees-list-item clickable'

@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING
 
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey
 from features.feature_types import MULTIVARIATE

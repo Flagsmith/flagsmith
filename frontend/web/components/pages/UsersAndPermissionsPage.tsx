@@ -389,7 +389,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                             Utils.copyToClipboard(
                                               `${
                                                 document.location.origin
-                                              }/invite/${
+                                              }/invite-link/${
                                                 inviteLinks?.find(
                                                   (f) => f.role === role,
                                                 )?.hash
@@ -479,7 +479,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                           }
                           items={users}
                           itemHeight={65}
-                          renderRow={(user: User, i: number) => {
+                          renderRow={(user) => {
                             const {
                               email,
                               first_name,
@@ -643,14 +643,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               </Row>
                             }
                             renderRow={(
-                              {
-                                date_created,
-                                email,
-                                id,
-                                invited_by,
-                                link,
-                              }: Invite,
-                              i: number,
+                              { date_created, email, id, invited_by, link },
+                              i,
                             ) => (
                               <Row
                                 data-test={`pending-invite-${i}`}

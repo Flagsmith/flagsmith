@@ -81,6 +81,8 @@ class ProjectAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
         Segment.objects.filter(project__in=queryset).delete()
 
     def has_delete_all_segments_permission(
-        self, request: HttpRequest, obj: Project = None  # type: ignore[assignment]
+        self,
+        request: HttpRequest,
+        obj: Project = None,  # type: ignore[assignment]
     ) -> bool:
         return request.user.is_superuser

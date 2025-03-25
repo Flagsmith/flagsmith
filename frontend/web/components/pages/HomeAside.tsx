@@ -1,4 +1,11 @@
-import React, { ComponentProps, FC, useEffect, useRef, useMemo, useState } from 'react'
+import React, {
+  ComponentProps,
+  FC,
+  useEffect,
+  useRef,
+  useMemo,
+  useState,
+} from 'react'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
@@ -6,7 +13,13 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import { Link, NavLink } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, code, createOutline, warning } from 'ionicons/icons'
+import {
+  checkmarkCircle,
+  code,
+  createOutline,
+  flask,
+  warning,
+} from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -23,6 +36,7 @@ import BuildVersion from 'components/BuildVersion'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import moment from 'moment'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import Constants from 'common/constants'
 
 type HomeAsideType = {
   environmentId: string
@@ -111,7 +125,7 @@ const HomeAside: FC<HomeAsideType> = ({
   const date = useRef(moment().toISOString())
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
-    { refetchOnFocus: false, skip: !projectId },
+    { skip: !projectId },
   )
 
   const { data: scheduledData } = useGetChangeRequestsQuery({
@@ -199,7 +213,7 @@ const HomeAside: FC<HomeAsideType> = ({
                               container: (base: any) => ({
                                 ...base,
                                 border: hasUnhealthyEnvironments
-                                  ? '1px solid #D35400'
+                                  ? `1px solid ${Constants.featureHealth.unhealthyColor}`
                                   : 'none',
                                 borderRadius: 6,
                                 padding: 0,
@@ -340,6 +354,18 @@ const HomeAside: FC<HomeAsideType> = ({
                                     />
                                     SDK Keys
                                   </NavLink>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'split_testing',
+                                  ) && (
+                                    <NavLink
+                                      id='split-tests-link'
+                                      exact
+                                      to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
+                                    >
+                                      <IonIcon className='mr-2' icon={flask} />
+                                      Split Tests
+                                    </NavLink>
+                                  )}
                                   {environmentAdmin && (
                                     <NavLink
                                       id='env-settings-link'

@@ -38,7 +38,9 @@ def export_edge_identity_and_overrides(  # noqa: C901
             # export identity
             identity_export.append(
                 export_edge_identity(
-                    identifier, environment_api_key, item["created_date"]  # type: ignore[arg-type]
+                    identifier,  # type: ignore[arg-type]
+                    environment_api_key,
+                    item["created_date"],  # type: ignore[arg-type]
                 )
             )
             # export traits
@@ -199,7 +201,6 @@ def export_featurestate_value(
 def export_mv_featurestate_value(
     featurestate_uuid: str, mv_feature_option_uuid: int, percentage_allocation: float
 ) -> dict:  # type: ignore[type-arg]
-
     return {
         "model": "multivariate.multivariatefeaturestatevalue",
         "fields": {

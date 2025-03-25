@@ -1,6 +1,5 @@
 from contextlib import suppress
 
-from core.helpers import get_current_site_url
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.db.models import Prefetch, Q, QuerySet
 from django.http import (
@@ -21,6 +20,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from core.helpers import get_current_site_url
 from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.permissions import (
     MANAGE_USER_GROUPS,

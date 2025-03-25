@@ -8,7 +8,6 @@ import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import JSONReference from 'components/JSONReference'
-import ErrorMessage from 'components/ErrorMessage'
 import { Segment } from 'common/types/responses'
 import ChangeRequestModal from './ChangeRequestModal'
 
@@ -39,7 +38,6 @@ interface CreateSegmentRulesTabFormProps {
   setShowDescriptions: (show: boolean) => void
   allWarnings: string[]
   rulesEl: React.ReactNode
-  error: string
   isEdit: boolean
   segment: Segment | DefaultSegmentType
   isSaving: boolean
@@ -52,7 +50,6 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   allWarnings,
   condensed,
   description,
-  error,
   identity,
   is4Eyes,
   isEdit,
@@ -165,7 +162,6 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
         {rulesEl}
       </div>
 
-      <ErrorMessage error={error} />
       {isEdit && <JSONReference title={'Segment'} json={segment} />}
       {readOnly ? (
         <div className='text-right'>

@@ -1,8 +1,8 @@
 import pytest
-from core.request_origin import RequestOrigin
 from django.db.models import Q
 from pytest_mock import MockerFixture
 
+from core.request_origin import RequestOrigin
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment

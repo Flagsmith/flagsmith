@@ -1,6 +1,7 @@
 import logging
 
 import requests
+
 from telemetry.models import TelemetryData
 from telemetry.serializers import TelemetrySerializer
 

@@ -5,7 +5,6 @@ import uuid
 from decimal import Decimal
 
 import boto3
-from core.constants import STRING
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.core.serializers.json import DjangoJSONEncoder
@@ -14,6 +13,7 @@ from moto import mock_s3  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_mock import MockerFixture
 
+from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.feature_types import MULTIVARIATE

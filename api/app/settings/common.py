@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
-import pytz  # type: ignore[import-untyped]
+import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
@@ -94,16 +94,19 @@ INSTALLED_APPS = [
     "corsheaders",
     "users",
     "organisations",
+    "organisations.chargebee",
     "organisations.invites",
     "organisations.permissions",
     "projects",
     "sales_dashboard",
     "edge_api",
+    "edge_api.identities",
     "environments",
     "environments.permissions",
     "environments.identities",
     "environments.identities.traits",
     "features",
+    "features.feature_external_resources",
     "features.feature_health",
     "features.import_export",
     "features.multivariate",
@@ -118,7 +121,7 @@ INSTALLED_APPS = [
     "permissions",
     "projects.tags",
     "api_keys",
-    "features.feature_external_resources",
+    "webhooks",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
@@ -906,6 +909,7 @@ CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
 MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
+REO_API_KEY = env("REO_API_KEY", default=None)
 ENABLE_FLAGSMITH_REALTIME = env.bool("ENABLE_FLAGSMITH_REALTIME", default=False)
 
 # Set this to enable create organisation for only superusers
@@ -986,6 +990,9 @@ SAML_USE_NAME_ID_AS_EMAIL = env.bool("SAML_USE_NAME_ID_AS_EMAIL", False)
 # Used to control the size(number of identities) of the project that can be self migrated to edge
 MAX_SELF_MIGRATABLE_IDENTITIES = env.int("MAX_SELF_MIGRATABLE_IDENTITIES", 100000)
 
+# RUN_BY_PROCESSOR is set by the task processor entrypoint
+TASK_PROCESSOR_MODE = env.bool("RUN_BY_PROCESSOR", False)
+
 # Setting to allow asynchronous tasks to be run synchronously for testing purposes
 # or in a separate thread for self-hosted users
 TASK_RUN_METHOD = env.enum(
@@ -993,7 +1000,7 @@ TASK_RUN_METHOD = env.enum(
     type=TaskRunMethod,
     default=(
         TaskRunMethod.TASK_PROCESSOR.value
-        if env.bool("RUN_BY_PROCESSOR", False)
+        if TASK_PROCESSOR_MODE
         else TaskRunMethod.SEPARATE_THREAD.value
     ),
 )

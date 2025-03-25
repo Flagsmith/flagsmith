@@ -60,7 +60,9 @@ def is_master_api_key_environment_admin(
 
 
 def get_permitted_projects_for_user(
-    user: "FFAdminUser", permission_key: str, tag_ids: List[int] = None  # type: ignore[assignment]
+    user: "FFAdminUser",
+    permission_key: str,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
 ) -> QuerySet[Project]:
     """
     Get all projects that the user has the given permissions for.
@@ -78,7 +80,10 @@ def get_permitted_projects_for_user(
         be returned
     """
     project_ids_from_base_filter = get_object_id_from_base_permission_filter(
-        user, Project, permission_key, tag_ids=tag_ids  # type: ignore[arg-type]
+        user,
+        Project,  # type: ignore[arg-type]
+        permission_key,
+        tag_ids=tag_ids,
     )
 
     organisation_filter = Q(
@@ -94,7 +99,9 @@ def get_permitted_projects_for_user(
 
 
 def get_permitted_projects_for_master_api_key(
-    master_api_key: "MasterAPIKey", permission_key: str, tag_ids: List[int] = None  # type: ignore[assignment]
+    master_api_key: "MasterAPIKey",
+    permission_key: str,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
 ) -> QuerySet[Project]:
     if master_api_key.is_admin:
         return Project.objects.filter(organisation_id=master_api_key.organisation_id)
@@ -135,7 +142,10 @@ def get_permitted_environments_for_user(
         return queryset
 
     environment_ids_from_base_filter = get_object_id_from_base_permission_filter(
-        user, Environment, permission_key, tag_ids=tag_ids  # type: ignore[arg-type]
+        user,
+        Environment,  # type: ignore[arg-type]
+        permission_key,
+        tag_ids=tag_ids,
     )
     queryset = Environment.objects.filter(
         id__in=environment_ids_from_base_filter, project=project
@@ -182,7 +192,10 @@ def user_has_organisation_permission(
     # compared to project and environment `get_base_permission_filter`
     # with allow_admin=True will not work for organisation
     base_filter = get_base_permission_filter(
-        user, Organisation, permission_key, allow_admin=False  # type: ignore[arg-type]
+        user,
+        Organisation,  # type: ignore[arg-type]
+        permission_key,
+        allow_admin=False,
     )
     filter_ = base_filter & Q(id=organisation.id)
 
@@ -255,7 +268,9 @@ def get_object_id_from_base_permission_filter(  # type: ignore[no-untyped-def]
 
 
 def get_user_permission_filter(
-    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True  # type: ignore[assignment]
+    user: "FFAdminUser",
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
 ) -> Q:
     base_filter = Q(userpermission__user=user)
     permission_filter = Q(userpermission__admin=True) if allow_admin else Q()
@@ -269,7 +284,9 @@ def get_user_permission_filter(
 
 
 def get_group_permission_filter(
-    user: "FFAdminUser", permission_key: str = None, allow_admin: bool = True  # type: ignore[assignment]
+    user: "FFAdminUser",
+    permission_key: str = None,  # type: ignore[assignment]
+    allow_admin: bool = True,
 ) -> Q:
     base_filter = Q(grouppermission__group__users=user)
     permission_filter = Q(grouppermission__admin=True) if allow_admin else Q()

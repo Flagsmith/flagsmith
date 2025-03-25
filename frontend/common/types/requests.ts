@@ -19,6 +19,7 @@ import {
   Role,
   RolePermission,
   Webhook,
+  IdentityTrait,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -601,10 +602,37 @@ export type Req = {
   getAuditLogWebhooks: { organisationId: string }
   updateAuditLogWebhooks: { organisationId: string; data: Webhook }
   deleteAuditLogWebhook: { organisationId: string; id: number }
+  createIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  getIdentityTraits: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+  }
+  updateIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  deleteIdentityTrait: {
+    environmentId: string
+    identity: string
+    use_edge_identities: boolean
+    data: Omit<IdentityTrait, 'trait_value'>
+  }
   getIdentitySegments: PagedRequest<{
     q?: string
     identity: string
     projectId: string
+  }>
+  getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
+  getSplitTest: PagedRequest<{
+    conversion_event_type_id: string
   }>
   // END OF TYPES
 }

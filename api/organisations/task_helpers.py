@@ -1,14 +1,14 @@
 import logging
 from datetime import timedelta
 
-from app_analytics.influxdb_wrapper import get_current_api_usage
-from core.helpers import get_current_site_url
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 
+from app_analytics.influxdb_wrapper import get_current_api_usage
+from core.helpers import get_current_site_url
 from organisations.models import (
     Organisation,
     OrganisationAPIUsageNotification,
@@ -72,10 +72,13 @@ def _send_api_usage_notification(
         message = "organisations/api_usage_notification_limit.txt"
         html_message = "organisations/api_usage_notification_limit.html"
 
+    url = get_current_site_url()
     context = {
         "organisation": organisation,
         "matched_threshold": matched_threshold,
         "grace_period": not hasattr(organisation, "breached_grace_period"),
+        "url": url,
+        "usage_url": f"{url}/organisation/{organisation.id}/usage",
     }
 
     send_mail(

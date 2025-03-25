@@ -49,6 +49,9 @@ import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import { getPermission } from 'common/services/usePermission'
 import { getChangeRequests } from 'common/services/useChangeRequest'
+import FeatureHealthTabContent from './FeatureHealthTabContent'
+import { IonIcon } from '@ionic/react'
+import { warning } from 'ionicons/icons'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -75,8 +78,9 @@ const CreateFlag = class extends Component {
         }
     const { allowEditDescription } = this.props
     const hideTags = this.props.hideTags || []
+
     if (this.props.projectFlag) {
-      this.userOverridesPage(1)
+      this.userOverridesPage(1, true)
     }
     this.state = {
       allowEditDescription,
@@ -224,14 +228,18 @@ const CreateFlag = class extends Component {
     }
   }
 
-  userOverridesPage = (page) => {
+  userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(getStore(), {
-          id: this.props.environmentId,
-          level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
-        }).then((permissions) => {
+        getPermission(
+          getStore(),
+          {
+            id: this.props.environmentId,
+            level: 'environment',
+            permissions: 'VIEW_IDENTITIES',
+          },
+          { forceRefetch },
+        ).then((permissions) => {
           if (permissions?.length) {
             data
               .get(
@@ -573,7 +581,6 @@ const CreateFlag = class extends Component {
 
     const date = moment().toISOString()
 
-    console.log('data', date)
     getChangeRequests(
       getStore(),
       {
@@ -623,9 +630,6 @@ const CreateFlag = class extends Component {
     let regexValid = true
     const metadataEnable = Utils.getPlansPermission('METADATA')
 
-    const { changeRequests, scheduledChangeRequests } = this.state
-    console.log({ changeRequests, out: true, scheduledChangeRequests })
-
     try {
       if (!isEdit && name && regex) {
         regexValid = name.match(new RegExp(regex))
@@ -651,7 +655,6 @@ const CreateFlag = class extends Component {
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
-                    hideTagsByType={['UNHEALTHY']}
                     readOnly={!!identity || !createFeature}
                     projectId={`${this.props.projectId}`}
                     value={this.state.tags}
@@ -967,6 +970,7 @@ const CreateFlag = class extends Component {
                       : 'New Change Request',
                     <ChangeRequestModal
                       showAssignees={is4Eyes}
+                      isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
                       onSave={({
                         approvals,
@@ -1901,6 +1905,34 @@ const CreateFlag = class extends Component {
                                         View docs
                                       </a>
                                     </InfoMessage>
+                                  </TabItem>
+                                )}
+                                {this.props.hasUnhealthyEvents && (
+                                  <TabItem
+                                    data-test='feature_health'
+                                    tabLabelString='Feature Health'
+                                    tabLabel={
+                                      <Row
+                                        className={`inline-block justify-content-center ${
+                                          true ? 'pr-1' : ''
+                                        }`}
+                                      >
+                                        Feature Health{' '}
+                                        <IonIcon
+                                          icon={warning}
+                                          style={{
+                                            color:
+                                              Constants.featureHealth
+                                                .unhealthyColor,
+                                            marginBottom: -2,
+                                          }}
+                                        />
+                                      </Row>
+                                    }
+                                  >
+                                    <FeatureHealthTabContent
+                                      projectId={projectFlag.project}
+                                    />
                                   </TabItem>
                                 )}
                                 {hasIntegrationWithGithub &&

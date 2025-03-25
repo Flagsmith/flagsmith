@@ -66,7 +66,9 @@ class HubspotLeadTracker(LeadTracker):
             )
 
     def get_or_create_organisation_hubspot_id(
-        self, user: FFAdminUser, organisation: Organisation = None  # type: ignore[assignment]
+        self,
+        user: FFAdminUser,
+        organisation: Organisation = None,  # type: ignore[assignment]
     ) -> str:
         """
         Return the Hubspot API's id for an organisation.

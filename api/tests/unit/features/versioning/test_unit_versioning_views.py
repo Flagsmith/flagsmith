@@ -8,7 +8,6 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
     VIEW_ENVIRONMENT,
 )
 from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
-from core.constants import STRING
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time
@@ -21,6 +20,7 @@ from api_keys.models import MasterAPIKey
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from core.constants import STRING
 from environments.models import Environment
 from features.feature_segments.limits import (
     SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE,

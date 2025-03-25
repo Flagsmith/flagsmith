@@ -3,8 +3,8 @@ from datetime import datetime
 
 from django.conf import settings
 from django.core.management import BaseCommand
-from influxdb_client import InfluxDBClient, Point  # type: ignore[import-untyped]
-from influxdb_client.client.write_api import SYNCHRONOUS  # type: ignore[import-untyped]
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 
 class Command(BaseCommand):

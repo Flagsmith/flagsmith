@@ -26,7 +26,9 @@ class PipedriveAPIClient:
         self.session = session or requests.Session()
 
     def create_organization(  # type: ignore[no-untyped-def]
-        self, name: str, organization_fields: typing.Dict[str, typing.Any] = None  # type: ignore[assignment]
+        self,
+        name: str,
+        organization_fields: typing.Dict[str, typing.Any] = None,  # type: ignore[assignment]
     ):
         api_response_data = self._make_request(
             resource="organizations",
@@ -126,7 +128,8 @@ class PipedriveAPIClient:
             expected_status_code=200,
         )
         return [
-            PipedriveLeadLabel.from_response_data(label) for label in api_response_data  # type: ignore[misc]
+            PipedriveLeadLabel.from_response_data(label)  # type: ignore[misc]
+            for label in api_response_data
         ]
 
     def _make_request(

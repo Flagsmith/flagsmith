@@ -83,7 +83,6 @@ def test_map_environment_to_sdk_document__return_expected(
                 ],
                 "identity_traits": [],
                 "identity_uuid": mocker.ANY,
-                "dashboard_alias": None,
             }
         ],
         "hide_disabled_flags": None,

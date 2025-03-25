@@ -1,5 +1,4 @@
 from core.constants import STRING
-
 from environments.identities.traits.models import Trait
 from environments.identities.traits.serializers import TraitSerializerBasic
 from features.models import Feature, FeatureState

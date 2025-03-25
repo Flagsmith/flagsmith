@@ -2,11 +2,22 @@ import logging
 import typing
 
 from django.utils import timezone
-from task_processor.decorators import register_task_handler  # type: ignore[import-untyped]
+from task_processor.decorators import (  # type: ignore[import-untyped]
+    register_task_handler,
+)
 from task_processor.models import TaskPriority  # type: ignore[import-untyped]
 
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
+from edge_api.identities.edge_request_forwarder import (
+    forward_identity_request as forward_identity_request_service,
+)
+from edge_api.identities.edge_request_forwarder import (
+    forward_trait_request as forward_trait_request_service,
+)
+from edge_api.identities.edge_request_forwarder import (
+    forward_trait_requests as forward_trait_requests_service,
+)
 from edge_api.identities.types import IdentityChangeset
 from environments.dynamodb import DynamoEnvironmentV2Wrapper
 from environments.models import Environment, Webhook
@@ -170,3 +181,19 @@ def delete_environments_v2_identity_overrides_by_feature(feature_id: int) -> Non
         dynamodb_wrapper_v2.delete_identity_overrides(
             environment_id=environment.id, feature_id=feature_id
         )
+
+
+forward_identity_request = register_task_handler(
+    queue_size=2000,
+    priority=TaskPriority.LOW,
+)(forward_identity_request_service)
+
+forward_trait_request = register_task_handler(
+    queue_size=2000,
+    priority=TaskPriority.LOW,
+)(forward_trait_request_service)
+
+forward_trait_requests = register_task_handler(
+    queue_size=1000,
+    priority=TaskPriority.LOW,
+)(forward_trait_requests_service)

@@ -59,7 +59,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
             renderSearchWithNoResults
             itemHeight={65}
             isLoading={false}
-            filterRow={(samlConf: SAMLConfiguration, search: string) =>
+            filterRow={(samlConf, search: string) =>
               samlConf.name.toLowerCase().indexOf(search) > -1
             }
             header={
@@ -79,7 +79,7 @@ const SamlTab: FC<SamlTabType> = ({ organisationId }) => {
               </Row>
             }
             items={data?.results || []}
-            renderRow={(samlConf: SAMLConfiguration) => (
+            renderRow={(samlConf) => (
               <Row
                 onClick={() => {
                   openCreateSAML(

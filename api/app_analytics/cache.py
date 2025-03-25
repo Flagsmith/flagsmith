@@ -1,10 +1,14 @@
 from collections import defaultdict
 from threading import Lock
 
-from app_analytics.tasks import track_feature_evaluation, track_request
-from app_analytics.track import track_feature_evaluation_influxdb
 from django.conf import settings
 from django.utils import timezone
+
+from app_analytics.tasks import (
+    track_feature_evaluation,
+    track_feature_evaluation_influxdb,
+    track_request,
+)
 
 
 class APIUsageCache:

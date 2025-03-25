@@ -1,4 +1,6 @@
-from axes.middleware import AxesMiddleware as DefaultAxesMiddleware  # type: ignore[import-untyped]
+from axes.middleware import (  # type: ignore[import-untyped]
+    AxesMiddleware as DefaultAxesMiddleware,
+)
 from django.conf import settings
 
 
