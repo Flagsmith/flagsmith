@@ -445,7 +445,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                       <h5 className='mb-5'>General Settings</h5>
                       <JSONReference title={'Environment'} json={env} />
                       <div className='col-md-8'>
-                        <form onSubmit={() => saveEnv()}>
+                        <form
+                          onSubmit={(e) => {
+                            e.preventDefault()
+                            saveEnv()
+                          }}
+                        >
                           <InputGroup
                             value={currentEnv?.name}
                             inputProps={{
