@@ -331,6 +331,10 @@
         {
             "source": "/deployment/overview",
             "destination": "/deployment"
+        },
+        {
+            "source": "/pricing",
+            "destination": "/billing"
         }
     ]
 }
