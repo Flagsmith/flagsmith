@@ -19,22 +19,27 @@ from integrations.github.github import call_github_task
 from segments.models import Segment
 from users.models import FFAdminUser
 
+if typing.TYPE_CHECKING:
+    from features.models import FeatureState
+
 
 class CustomEnvironmentFeatureVersionFeatureStateSerializer(
     CustomCreateSegmentOverrideFeatureStateSerializer
 ):
     validate_override_limit = False
 
-    class Meta(CustomCreateSegmentOverrideFeatureStateSerializer.Meta):  # type: ignore[misc,name-defined]
+    class Meta(CustomCreateSegmentOverrideFeatureStateSerializer.Meta):
         read_only_fields = (
             CustomCreateSegmentOverrideFeatureStateSerializer.Meta.read_only_fields
-            + ("feature",)
+            + ("feature",)  # type: ignore[assignment]
         )
 
     def save(self, **kwargs):  # type: ignore[no-untyped-def]
-        response = super().save(**kwargs)
+        response = super().save(**kwargs)  # type: ignore[no-untyped-call]
 
-        feature_state = self.instance
+        feature_state: "FeatureState" = self.instance  # type: ignore[assignment]
+        if typing.TYPE_CHECKING:
+            assert feature_state.environment
         if (
             not feature_state.identity_id
             and feature_state.feature.external_resources.exists()

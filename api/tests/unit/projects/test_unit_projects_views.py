@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
     CREATE_FEATURE,
     TAG_SUPPORTED_PERMISSIONS,

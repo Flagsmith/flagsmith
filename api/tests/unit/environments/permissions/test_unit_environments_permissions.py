@@ -1,6 +1,6 @@
 from unittest import mock
 
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
 
