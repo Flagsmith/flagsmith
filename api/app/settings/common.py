@@ -19,6 +19,7 @@ from datetime import datetime, time, timedelta
 from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
+import prometheus_client
 import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
@@ -1346,3 +1347,6 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
+
+PROMETHEUS_ENABLED = True
+PROMETHEUS_HISTOGRAM_BUCKETS = prometheus_client.Histogram.DEFAULT_BUCKETS
