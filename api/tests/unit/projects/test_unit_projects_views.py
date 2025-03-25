@@ -177,7 +177,7 @@ def test_can_list_project_permission(client: APIClient, project: Project) -> Non
     # Then
     assert response.status_code == status.HTTP_200_OK
     # Hard code how many permissions we expect there to be.
-    assert len(response.json()) == 9, ",".join(p["key"] for p in response.json())
+    assert len(response.json()) == 10
 
     returned_supported_permissions = [
         permission["key"]
