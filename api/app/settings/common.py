@@ -940,7 +940,7 @@ GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
-if SAML_INSTALLED:
+if SAML_INSTALLED:  # pragma: no cover
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
     CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
