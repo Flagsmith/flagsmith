@@ -23,6 +23,6 @@ const flags = await flagsmith.getIdentityFlags('${
 }', traitList);
 
 // get the state / value of the user's flags 
-var isEnabled = flags.isFeatureEnabled('${FEATURE_NAME}');
-var featureValue = flags.getFeatureValue('${FEATURE_NAME_ALT}');
+const isEnabled = flags.isFeatureEnabled('${FEATURE_NAME}');
+const featureValue = flags.getFeatureValue('${FEATURE_NAME_ALT}');
 `
