@@ -2,17 +2,20 @@ import Constants from 'common/constants'
 
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_NODE_CLIENT, USER_ID },
+  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_NODE_CLIENT, USER_ID, TRAIT_NAME },
   userId,
 ) => `import Flagsmith from "${NPM_NODE_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
 
 const ${LIB_NAME} = new Flagsmith({${
-  Constants.isCustomFlagsmithUrl() &&
-  `\n    apiUrl: '${Constants.getFlagsmithSDKUrl()}',`
+  Constants.isCustomFlagsmithUrl()
+    ? `\n    apiUrl: '${Constants.getFlagsmithSDKUrl()}',`
+    : ''
 }
     environmentKey: '${envId}'
 });
 
+# Optional - set traits for this identity
+const traitList = {"${TRAIT_NAME}": 42}
 
 // Identify the user
 const flags = await flagsmith.getIdentityFlags('${
