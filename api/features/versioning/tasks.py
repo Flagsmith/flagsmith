@@ -37,7 +37,7 @@ environment_feature_version_webhook_schema = (
 )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler(transaction_on_commit=False)  # type: ignore[misc]
 def enable_v2_versioning(environment_id: int) -> None:
     from environments.models import Environment
 
