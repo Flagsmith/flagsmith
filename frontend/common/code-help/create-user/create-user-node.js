@@ -14,7 +14,7 @@ const ${LIB_NAME} = new Flagsmith({${
     environmentKey: '${envId}'
 });
 
-# Optional - set traits for this identity
+// Optional - set traits for this identity
 const traitList = {"${TRAIT_NAME}": 42}
 
 // Identify the user
