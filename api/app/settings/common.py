@@ -208,7 +208,7 @@ if "DATABASE_URL" in os.environ:
     REPLICA_READ_STRATEGY = env.enum(
         "REPLICA_READ_STRATEGY",
         enum=ReplicaReadStrategy,
-        default=ReplicaReadStrategy.DISTRIBUTED.value,
+        default=ReplicaReadStrategy.DISTRIBUTED,
     )
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
