@@ -161,7 +161,7 @@ version = "2.2.1"
 description = "Function decoration for backoff and retry"
 optional = false
 python-versions = ">=3.7,<4.0"
-groups = ["main"]
+groups = ["main", "workflows"]
 files = [
     {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
     {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
@@ -1520,7 +1520,7 @@ version = "5.1.3"
 description = "Mypy stubs for Django"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "django_stubs-5.1.3-py3-none-any.whl", hash = "sha256:716758ced158b439213062e52de6df3cff7c586f9f9ad7ab59210efbea5dfe78"},
     {file = "django_stubs-5.1.3.tar.gz", hash = "sha256:8c230bc5bebee6da282ba8a27ad1503c84a0c4cd2f46e63d149e76d2a63e639a"},
@@ -1544,7 +1544,7 @@ version = "5.1.3"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "django_stubs_ext-5.1.3-py3-none-any.whl", hash = "sha256:64561fbc53e963cc1eed2c8eb27e18b8e48dcb90771205180fe29fc8a59e55fd"},
     {file = "django_stubs_ext-5.1.3.tar.gz", hash = "sha256:3e60f82337f0d40a362f349bf15539144b96e4ceb4dbd0239be1cd71f6a74ad0"},
@@ -1765,14 +1765,14 @@ files = [
 
 [[package]]
 name = "drf-yasg"
-version = "1.21.7"
+version = "1.21.10"
 description = "Automated generation of real Swagger/OpenAPI 2.0 schemas from Django Rest Framework code."
 optional = false
 python-versions = ">=3.6"
-groups = ["main"]
+groups = ["main", "workflows"]
 files = [
-    {file = "drf-yasg-1.21.7.tar.gz", hash = "sha256:4c3b93068b3dfca6969ab111155e4dd6f7b2d680b98778de8fd460b7837bdb0d"},
-    {file = "drf_yasg-1.21.7-py3-none-any.whl", hash = "sha256:f85642072c35e684356475781b7ecf5d218fff2c6185c040664dd49f0a4be181"},
+    {file = "drf-yasg-1.21.10.tar.gz", hash = "sha256:f86d50faee3c31fcec4545985a871f832366c7fb5b77b62c48089d56ecf4f8d4"},
+    {file = "drf_yasg-1.21.10-py3-none-any.whl", hash = "sha256:4d832e108dfe38e365101c36123576b498487d33bf27d57d6a37efb4cc773438"},
 ]
 
 [package.dependencies]
@@ -1930,23 +1930,31 @@ name = "flagsmith-common"
 version = "1.5.2"
 description = "Flagsmith's common library"
 optional = false
-python-versions = "<4.0,>=3.11"
+python-versions = ">=3.11,<4.0"
 groups = ["main", "workflows"]
-files = [
-    {file = "flagsmith_common-1.5.2-py3-none-any.whl", hash = "sha256:1c99fc8b174e5ee2891d432e472ac1510be0b2ee184084dc846e76a03d2b6ca2"},
-    {file = "flagsmith_common-1.5.2.tar.gz", hash = "sha256:a24d499582607f2da35168a55fb8b69d1e19445a0840235953d59e0a4c98517a"},
-]
+files = []
+develop = false
 
 [package.dependencies]
-django = "<5"
+backoff = ">=2.2.1,<3.0.0"
+django = ">4,<5"
 django-health-check = "*"
 djangorestframework = "*"
 djangorestframework-recursive = "*"
 drf-writable-nested = "*"
+drf-yasg = ">=1.21.10,<2.0.0"
 environs = "<15"
 flagsmith-flag-engine = "*"
 gunicorn = ">=19.1"
 prometheus-client = ">=0.0.16"
+psycopg2 = ">=2,<3"
+simplejson = ">=3,<4"
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-common"
+reference = "v1.6.0a0"
+resolved_reference = "b0ef5479c2645b95ae3d68f591516b98bf936a5d"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -2536,7 +2544,7 @@ version = "0.5.1"
 description = "A port of Ruby on Rails inflector to Python"
 optional = false
 python-versions = ">=3.5"
-groups = ["main"]
+groups = ["main", "workflows"]
 files = [
     {file = "inflection-0.5.1-py2.py3-none-any.whl", hash = "sha256:f38b2b640938a4f35ade69ac3d053042959b62a0f1076a5bbaa1b9526605a8a2"},
     {file = "inflection-0.5.1.tar.gz", hash = "sha256:1a29730d366e996aaacffb2f1f1cb9593dc38e2ddd30c91250c6dde09ea9b417"},
@@ -3309,6 +3317,26 @@ files = [
 test = ["enum34 ; python_version <= \"3.4\"", "ipaddress ; python_version < \"3.0\"", "mock ; python_version < \"3.0\"", "pywin32 ; sys_platform == \"win32\"", "wmi ; sys_platform == \"win32\""]
 
 [[package]]
+name = "psycopg2"
+version = "2.9.10"
+description = "psycopg2 - Python-PostgreSQL Database Adapter"
+optional = false
+python-versions = ">=3.8"
+groups = ["main", "workflows"]
+files = [
+    {file = "psycopg2-2.9.10-cp310-cp310-win32.whl", hash = "sha256:5df2b672140f95adb453af93a7d669d7a7bf0a56bcd26f1502329166f4a61716"},
+    {file = "psycopg2-2.9.10-cp310-cp310-win_amd64.whl", hash = "sha256:c6f7b8561225f9e711a9c47087388a97fdc948211c10a4bccbf0ba68ab7b3b5a"},
+    {file = "psycopg2-2.9.10-cp311-cp311-win32.whl", hash = "sha256:47c4f9875125344f4c2b870e41b6aad585901318068acd01de93f3677a6522c2"},
+    {file = "psycopg2-2.9.10-cp311-cp311-win_amd64.whl", hash = "sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4"},
+    {file = "psycopg2-2.9.10-cp312-cp312-win32.whl", hash = "sha256:65a63d7ab0e067e2cdb3cf266de39663203d38d6a8ed97f5ca0cb315c73fe067"},
+    {file = "psycopg2-2.9.10-cp312-cp312-win_amd64.whl", hash = "sha256:4a579d6243da40a7b3182e0430493dbd55950c493d8c68f4eec0b302f6bbf20e"},
+    {file = "psycopg2-2.9.10-cp313-cp313-win_amd64.whl", hash = "sha256:91fd603a2155da8d0cfcdbf8ab24a2d54bca72795b90d2a3ed2b6da8d979dee2"},
+    {file = "psycopg2-2.9.10-cp39-cp39-win32.whl", hash = "sha256:9d5b3b94b79a844a986d029eee38998232451119ad653aea42bb9220a8c5066b"},
+    {file = "psycopg2-2.9.10-cp39-cp39-win_amd64.whl", hash = "sha256:88138c8dedcbfa96408023ea2b0c369eda40fe5d75002c0964c78f46f11fa442"},
+    {file = "psycopg2-2.9.10.tar.gz", hash = "sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11"},
+]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.9"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
@@ -4054,7 +4082,7 @@ version = "2023.4"
 description = "World timezone definitions, modern and historical"
 optional = false
 python-versions = "*"
-groups = ["main", "saml"]
+groups = ["main", "saml", "workflows"]
 files = [
     {file = "pytz-2023.4-py2.py3-none-any.whl", hash = "sha256:f90ef520d95e7c46951105338d918664ebfd6f1d995bd7d153127ce90efafa6a"},
     {file = "pytz-2023.4.tar.gz", hash = "sha256:31d4583c4ed539cd037956140d695e42c033a19e984bfce9964a3f7d59bc2b40"},
@@ -4091,7 +4119,7 @@ version = "6.0.1"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.6"
-groups = ["main", "dev"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a"},
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f"},
@@ -4507,7 +4535,7 @@ version = "3.19.1"
 description = "Simple, fast, extensible JSON encoder/decoder for Python"
 optional = false
 python-versions = ">=2.5, !=3.0.*, !=3.1.*, !=3.2.*"
-groups = ["main"]
+groups = ["main", "workflows"]
 files = [
     {file = "simplejson-3.19.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:412e58997a30c5deb8cab5858b8e2e5b40ca007079f7010ee74565cc13d19665"},
     {file = "simplejson-3.19.1-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:e765b1f47293dedf77946f0427e03ee45def2862edacd8868c6cf9ab97c8afbd"},
@@ -4847,7 +4875,7 @@ version = "6.0.12.20241230"
 description = "Typing stubs for PyYAML"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "types_PyYAML-6.0.12.20241230-py3-none-any.whl", hash = "sha256:fa4d32565219b68e6dee5f67534c722e53c00d1cfc09c435ef04d7353e1e96e6"},
     {file = "types_pyyaml-6.0.12.20241230.tar.gz", hash = "sha256:7f07622dbd34bb9c8b264fe860a17e0efcad00d50b5f27e93984909d9363498c"},
@@ -4934,7 +4962,7 @@ version = "3.0.1"
 description = "URI templates"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-groups = ["main"]
+groups = ["main", "workflows"]
 files = [
     {file = "uritemplate-3.0.1-py2.py3-none-any.whl", hash = "sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f"},
     {file = "uritemplate-3.0.1.tar.gz", hash = "sha256:5af8ad10cec94f215e3f48112de2022e1d5a37ed427fbd88652fa908f2ab7cae"},
