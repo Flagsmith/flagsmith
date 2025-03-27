@@ -2,7 +2,7 @@ import logging
 from typing import Any, List
 from urllib.parse import urlparse
 
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_task_handler,
 )
 
@@ -78,7 +78,7 @@ def send_post_request(data: CallGithubData) -> None:
         )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def call_github_app_webhook_for_feature_state(event_data: dict[str, Any]) -> None:
     from features.feature_external_resources.models import (
         FeatureExternalResource,
