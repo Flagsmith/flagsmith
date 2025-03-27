@@ -24,7 +24,7 @@ from app_analytics.track import (
 )
 from environments.models import Environment
 
-if settings.USE_POSTGRES_FOR_ANALYTICS:
+if settings.USE_POSTGRES_FOR_ANALYTICS:  # pragma: no cover
 
     @register_recurring_task(
         run_every=timedelta(minutes=60),
