@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import F, Max, Q
 from django.utils import timezone
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
@@ -50,7 +50,7 @@ from .task_helpers import (
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
@@ -67,7 +67,7 @@ def send_org_over_limit_alert(organisation_id: int) -> None:
     )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
@@ -99,14 +99,14 @@ def update_organisation_subscription_information_influx_cache():  # type: ignore
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
         (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
     )
 
 
-@register_recurring_task(  # type: ignore[misc]
+@register_recurring_task(
     run_every=timedelta(hours=12),
 )
 def finish_subscription_cancellation() -> None:

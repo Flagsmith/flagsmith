@@ -515,7 +515,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__call_expected(
     update_flagsmith_environments_v2_identity_overrides(
         environment_api_key=environment.api_key,
         identity_uuid=identity_uuid,
-        changes=changes,
+        changes=changes,  # type: ignore[arg-type]
         identifier=identifier,
     )
 
@@ -542,7 +542,7 @@ def test_update_flagsmith_environments_v2_identity_overrides__no_overrides__call
     update_flagsmith_environments_v2_identity_overrides(
         environment_api_key=environment.api_key,
         identity_uuid=identity_uuid,
-        changes=changes,
+        changes=changes,  # type: ignore[arg-type]
         identifier=identifier,
     )
 

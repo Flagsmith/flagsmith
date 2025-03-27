@@ -4,7 +4,7 @@ from typing import List, Tuple
 from django.conf import settings
 from django.db.models import Q, Sum
 from django.utils import timezone
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
@@ -26,7 +26,7 @@ from environments.models import Environment
 
 if settings.USE_POSTGRES_FOR_ANALYTICS:
 
-    @register_recurring_task(  # type: ignore[misc]
+    @register_recurring_task(
         run_every=timedelta(minutes=60),
         kwargs={
             "bucket_size": ANALYTICS_READ_BUCKET_SIZE,
@@ -68,7 +68,7 @@ def clean_up_old_analytics_data():  # type: ignore[no-untyped-def]
     ).delete()
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def track_feature_evaluation_v2(
     environment_id: int, feature_evaluations: list[dict[str, int | str | bool]]
 ) -> None:
@@ -86,7 +86,7 @@ def track_feature_evaluation_v2(
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def track_feature_evaluation(
     environment_id: int,
     feature_evaluations: dict[str, int],
@@ -103,7 +103,7 @@ def track_feature_evaluation(
     FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def track_request(resource: int, host: str, environment_key: str, count: int = 1):  # type: ignore[no-untyped-def]
     environment = Environment.get_from_cache(environment_key)  # type: ignore[no-untyped-call]
     if environment is None:
