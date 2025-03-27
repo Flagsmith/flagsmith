@@ -38,11 +38,10 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
         response = super().save(**kwargs)  # type: ignore[no-untyped-call]
 
         feature_state: "FeatureState" = self.instance  # type: ignore[assignment]
-        if typing.TYPE_CHECKING:
-            assert feature_state.environment
         if (
             not feature_state.identity_id
             and feature_state.feature.external_resources.exists()
+            and feature_state.environment
             and feature_state.environment.project.github_project.exists()
             and feature_state.environment.project.organisation.github_config.exists()
         ):
