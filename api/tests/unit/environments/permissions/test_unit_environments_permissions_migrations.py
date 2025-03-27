@@ -1,5 +1,5 @@
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     APPROVE_CHANGE_REQUEST,
     CREATE_CHANGE_REQUEST,
     MANAGE_IDENTITIES,

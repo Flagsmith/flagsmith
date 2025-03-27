@@ -199,7 +199,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         limit = timezone.now() - timezone.timedelta(  # type: ignore[attr-defined]
             seconds=settings.PASSWORD_RESET_EMAIL_COOLDOWN
         )
-        return (  # type: ignore[no-any-return]
+        return (
             self.password_reset_requests.filter(requested_at__gte=limit).count()
             < settings.MAX_PASSWORD_RESET_EMAILS
         )

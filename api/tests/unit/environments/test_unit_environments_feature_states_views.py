@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )

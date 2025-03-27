@@ -1,4 +1,4 @@
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
 )
 from common.environments.permissions import (

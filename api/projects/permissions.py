@@ -1,6 +1,6 @@
 import typing
 
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.db.models import Model
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import BasePermission, IsAuthenticated

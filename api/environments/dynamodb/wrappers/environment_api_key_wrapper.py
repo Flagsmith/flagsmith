@@ -13,7 +13,7 @@ if typing.TYPE_CHECKING:
 
 
 class DynamoEnvironmentAPIKeyWrapper(BaseDynamoWrapper):
-    table_name = settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO
+    table_name = settings.ENVIRONMENTS_API_KEY_TABLE_NAME_DYNAMO  # type: ignore[assignment]
 
     def write_api_key(self, api_key: "EnvironmentAPIKey"):  # type: ignore[no-untyped-def]
         self.write_api_keys([api_key])

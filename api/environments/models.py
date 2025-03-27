@@ -316,7 +316,7 @@ class Environment(
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:
-        return (  # type: ignore[no-any-return]
+        return (
             settings.CACHE_BAD_ENVIRONMENTS_SECONDS > 0
             and bad_environments_cache.get(environment_key, 0)
             >= settings.CACHE_BAD_ENVIRONMENTS_AFTER_FAILURES

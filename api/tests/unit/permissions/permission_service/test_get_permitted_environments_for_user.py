@@ -1,5 +1,5 @@
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,

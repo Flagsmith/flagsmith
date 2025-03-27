@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_PROJECT,
 )

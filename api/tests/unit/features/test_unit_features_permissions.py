@@ -2,7 +2,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_FEATURE,
     DELETE_FEATURE,
     VIEW_PROJECT,

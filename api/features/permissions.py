@@ -1,6 +1,6 @@
 from contextlib import suppress
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
@@ -8,7 +8,7 @@ from common.environments.permissions import (  # type: ignore[import-untyped]
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS as TAG_SUPPORTED_ENVIRONMENT_PERMISSIONS,
 )
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_FEATURE,
     DELETE_FEATURE,
     VIEW_PROJECT,

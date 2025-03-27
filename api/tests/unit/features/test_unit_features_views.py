@@ -6,12 +6,12 @@ from unittest import mock
 
 import pytest
 import pytz
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
@@ -50,6 +50,7 @@ from features.value_types import BOOLEAN, INTEGER, STRING
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import MetadataModelField
 from organisations.models import Organisation, OrganisationRole
+from permissions.models import PermissionModel
 from projects.models import Project, UserProjectPermission
 from projects.tags.models import Tag
 from segments.models import Segment
@@ -933,6 +934,7 @@ def test_create_segment_override_staff(
     environment: Environment,
     staff_user: FFAdminUser,
     staff_client: APIClient,
+    manage_segment_overrides_permission: PermissionModel,
 ) -> None:
     # Given
     url = reverse(
@@ -951,7 +953,7 @@ def test_create_segment_override_staff(
     user_environment_permission = UserEnvironmentPermission.objects.create(
         user=staff_user, admin=False, environment=environment
     )
-    user_environment_permission.permissions.add(MANAGE_SEGMENT_OVERRIDES)
+    user_environment_permission.permissions.add(manage_segment_overrides_permission)
 
     response = staff_client.post(
         url, data=json.dumps(data), content_type="application/json"

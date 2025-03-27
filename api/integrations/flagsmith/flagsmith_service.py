@@ -24,7 +24,10 @@ KEEP_ORGANISATION_FIELDS = (
 )
 
 
-def update_environment_json(environment_key: str = None, api_url: str = None) -> None:  # type: ignore[assignment]
+def update_environment_json(
+    environment_key: str | None = None,
+    api_url: str | None = None,
+) -> None:
     environment_key = environment_key or settings.FLAGSMITH_ON_FLAGSMITH_SERVER_KEY
     api_url = api_url or settings.FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL
 

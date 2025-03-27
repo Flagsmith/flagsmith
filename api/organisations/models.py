@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from typing import Any
 
+from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -17,7 +18,6 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
-from app.utils import is_enterprise, is_saas
 from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (

@@ -1,9 +1,9 @@
 from datetime import timedelta
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -257,7 +257,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
-        )
+        )  # type: ignore[no-untyped-call]
 
     def perform_update(
         self,
@@ -267,7 +267,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
-        )
+        )  # type: ignore[no-untyped-call]
 
     def perform_destroy(self, instance) -> None:  # type: ignore[no-untyped-def]
         if instance.feature_segment is None and instance.identity is None:

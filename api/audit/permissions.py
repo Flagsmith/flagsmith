@@ -1,4 +1,4 @@
-from common.projects.permissions import VIEW_AUDIT_LOG  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_AUDIT_LOG
 from django.views import View
 from rest_framework.permissions import BasePermission
 from rest_framework.request import Request

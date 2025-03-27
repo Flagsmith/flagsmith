@@ -1,7 +1,7 @@
 import uuid
 from unittest import mock
 
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 
 from environments.identities.models import Identity
 from environments.models import Environment

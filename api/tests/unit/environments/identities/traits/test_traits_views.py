@@ -1,12 +1,12 @@
 import json
 from unittest import mock
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status

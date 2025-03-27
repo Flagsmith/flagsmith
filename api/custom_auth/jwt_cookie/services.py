@@ -13,6 +13,6 @@ def authorise_response(user: FFAdminUser, response: Response) -> Response:
         str(sliding_token),
         httponly=True,
         secure=settings.USE_SECURE_COOKIES,
-        samesite=settings.COOKIE_SAME_SITE,
+        samesite=settings.COOKIE_SAME_SITE,  # type: ignore[arg-type]
     )
     return response

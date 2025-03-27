@@ -1,6 +1,6 @@
 import logging
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )

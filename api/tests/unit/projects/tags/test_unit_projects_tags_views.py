@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status

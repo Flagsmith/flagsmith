@@ -4,7 +4,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_IDENTITIES,
 )

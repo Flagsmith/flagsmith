@@ -1,7 +1,7 @@
 import typing
 
 import pytest as pytest
-from common.projects.permissions import VIEW_AUDIT_LOG  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_AUDIT_LOG
 from django.db.models import Model
 
 from organisations.models import OrganisationRole

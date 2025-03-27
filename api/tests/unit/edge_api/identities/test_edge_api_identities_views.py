@@ -1,6 +1,6 @@
 import typing
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,

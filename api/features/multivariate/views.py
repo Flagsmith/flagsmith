@@ -1,4 +1,4 @@
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
 )
