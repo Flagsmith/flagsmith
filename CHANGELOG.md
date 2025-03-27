@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.168.1](https://github.com/Flagsmith/flagsmith/compare/v2.168.0...v2.168.1) (2025-03-25)
+
+
+### Bug Fixes
+
+* format-create-segment-errors-from-payload ([#5082](https://github.com/Flagsmith/flagsmith/issues/5082)) ([e8c3803](https://github.com/Flagsmith/flagsmith/commit/e8c3803d1421afc1d1055430520ac21387ac2ab1))
+
 ## [2.168.0](https://github.com/Flagsmith/flagsmith/compare/v2.167.1...v2.168.0) (2025-03-25)
 
 
