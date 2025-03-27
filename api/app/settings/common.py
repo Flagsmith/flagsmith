@@ -821,14 +821,17 @@ DJOSER = {
     },
 }
 SIMPLE_JWT = {
-    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.SlidingToken"],
-    "SLIDING_TOKEN_LIFETIME": timedelta(
-        minutes=env.int(
-            "COOKIE_AUTH_JWT_ACCESS_TOKEN_LIFETIME_MINUTES",
-            default=10 * 60,
-        )
+    "AUTH_TOKEN_CLASSES": ["rest_framework_simplejwt.tokens.AccessToken"],
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        hours=env.int("COOKIE_AUTH_JWT_ACCESS_TOKEN_LIFETIME", default=1)
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        hours=env.int("COOKIE_AUTH_JWT_REFRESH_TOKEN_LIFETIME", default=24)
     ),
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
+    "ROTATE_REFRESH_TOKENS": env.bool(
+        "COOKIE_AUTH_JWT_ROTATE_REFRESH_TOKENS", default=False
+    ),
 }
 
 # Github OAuth credentials
