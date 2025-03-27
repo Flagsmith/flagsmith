@@ -2,7 +2,7 @@ import os
 from unittest import mock
 
 import pytest
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from rest_framework.exceptions import APIException, PermissionDenied
 

@@ -266,7 +266,7 @@ def _create_flagsmith_on_flagsmith_feature_export():  # type: ignore[no-untyped-
     environment_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
     tag_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
 
-    feature_export = FeatureExport.objects.create(
+    feature_export = FeatureExport.objects.create(  # type: ignore[misc]
         environment_id=environment_id,
         status=PROCESSING,
     )
