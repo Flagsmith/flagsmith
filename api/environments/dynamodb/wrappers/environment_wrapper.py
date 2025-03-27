@@ -47,7 +47,7 @@ class BaseDynamoEnvironmentWrapper(BaseDynamoWrapper):
 
 class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
     def get_table_name(self) -> str | None:  # type: ignore[override]
-        return settings.ENVIRONMENTS_TABLE_NAME_DYNAMO  # type: ignore[no-any-return]
+        return settings.ENVIRONMENTS_TABLE_NAME_DYNAMO
 
     def write_environments(self, environments: Iterable["Environment"]):  # type: ignore[no-untyped-def]
         with self.table.batch_writer() as writer:  # type: ignore[union-attr]
@@ -68,7 +68,7 @@ class DynamoEnvironmentWrapper(BaseDynamoEnvironmentWrapper):
 
 class DynamoEnvironmentV2Wrapper(BaseDynamoEnvironmentWrapper):
     def get_table_name(self) -> str | None:  # type: ignore[override]
-        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO  # type: ignore[no-any-return]
+        return settings.ENVIRONMENTS_V2_TABLE_NAME_DYNAMO
 
     def get_identity_overrides_by_environment_id(
         self,

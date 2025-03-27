@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 import responses
 import simplejson as json  # type: ignore[import-untyped]
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
 )
 from django.core.serializers.json import DjangoJSONEncoder

@@ -1,5 +1,5 @@
 import pytest
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
 
 from organisations.models import Organisation, OrganisationRole

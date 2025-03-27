@@ -3,7 +3,7 @@ import typing
 from datetime import timedelta
 from functools import reduce
 
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.conf import settings
 from django.core.cache import caches
 from django.db.models import Max, Q, QuerySet
@@ -923,5 +923,5 @@ def create_segment_override(  # type: ignore[no-untyped-def]
         data=request.data, context={"environment": environment, "feature": feature}
     )
     serializer.is_valid(raise_exception=True)
-    serializer.save(environment=environment, feature=feature)
+    serializer.save(environment=environment, feature=feature)  # type: ignore[no-untyped-call]
     return Response(serializer.data, status=201)

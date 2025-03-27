@@ -43,8 +43,8 @@ DEFAULT_DROP_COLUMNS = (
 def get_range_bucket_mappings(date_start: datetime) -> str:
     now = timezone.now()
     if (now - date_start).days > 10:
-        return settings.INFLUXDB_BUCKET + "_downsampled_1h"  # type: ignore[no-any-return]
-    return settings.INFLUXDB_BUCKET + "_downsampled_15m"  # type: ignore[no-any-return]
+        return settings.INFLUXDB_BUCKET + "_downsampled_1h"
+    return settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
 class InfluxDBWrapper:
