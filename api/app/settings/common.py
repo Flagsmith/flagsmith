@@ -1359,7 +1359,7 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
 
-PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", True)
+PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", False)
 PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
     env.list(
         "PROMETHEUS_HISTOGRAM_BUCKETS",
