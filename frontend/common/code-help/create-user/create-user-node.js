@@ -15,12 +15,12 @@ const ${LIB_NAME} = new Flagsmith({${
 });
 
 // Optional - set traits for this identity
-const traitList = { ${TRAIT_NAME}: 42 };
+const traits = { ${TRAIT_NAME}: 42 };
 
 // Identify the user
 const flags = await flagsmith.getIdentityFlags('${
   userId || USER_ID
-}', traitList);
+}', traits);
 
 // get the state / value of the user's flags 
 const isEnabled = flags.isFeatureEnabled('${FEATURE_NAME}');
