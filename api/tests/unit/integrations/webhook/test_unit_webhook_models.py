@@ -14,6 +14,6 @@ def test_webhook_model__save__call_expected(
     WebhookConfiguration.objects.create(environment=environment)
 
     # Then
-    environment_mock.write_environments_to_dynamodb.assert_called_with(
+    environment_mock.write_environment_documents.assert_called_with(
         environment_id=environment.id
     )
