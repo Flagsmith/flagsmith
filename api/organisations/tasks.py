@@ -228,7 +228,8 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
-            billed_at__gte=subscription_cache.current_billing_term_starts_at
+            organisation=organisation,
+            billed_at__gte=subscription_cache.current_billing_term_starts_at,
         )
         previous_api_overage = sum([ap.api_overage for ap in api_billings])
 
