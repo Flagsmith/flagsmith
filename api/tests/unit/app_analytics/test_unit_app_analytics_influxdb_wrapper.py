@@ -545,7 +545,10 @@ def test_get_current_api_usage(mocker: MockerFixture) -> None:
     influx_mock.return_value = [result]
 
     # When
-    result = get_current_api_usage(organisation_id=1)  # type: ignore[assignment]
+    result = get_current_api_usage(
+        organisation_id=1,
+        date_start=timezone.now() - timedelta(days=30),
+    )  # type: ignore[assignment]
 
     # Then
     assert result == 43
