@@ -243,6 +243,37 @@ elif "DJANGO_DB_NAME" in os.environ:
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         },
     }
+    if "DJANGO_DB_REPLICA_ENDPOINTS" in os.environ:
+        REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
+        DJANGO_DB_REPLICA_ENDPOINTS = (
+            env.list(
+                "DJANGO_DB_REPLICA_ENDPOINTS",
+                subcast=str,
+                default=[],
+                delimiter=REPLICA_DATABASE_URLS_DELIMITER,
+            )
+            if not os.getenv("DJANGO_DB_REPLICA_ENDPOINT_0")
+            else get_numbered_env_vars_with_prefix("DJANGO_DB_REPLICA_ENDPOINT_")
+        )
+        NUM_DB_REPLICAS = len(DJANGO_DB_REPLICA_ENDPOINTS)
+        for i, db_url in enumerate(DJANGO_DB_REPLICA_ENDPOINTS, start=1):
+            DATABASES[f"replica_{i}"] = {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.environ["DJANGO_DB_NAME"],
+                "USER": os.environ["DJANGO_DB_USER"],
+                "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
+                "HOST": os.environ["DJANGO_DB_REPLICA_ENDPOINT"],
+                "PORT": os.environ["DJANGO_DB_PORT"],
+                "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+            }
+        # DISTRIBUTED spreads the load out across replicas while
+        # SEQUENTIAL only falls back once the first replica connection is faulty
+        REPLICA_READ_STRATEGY = env.enum(
+            "REPLICA_READ_STRATEGY",
+            enum=ReplicaReadStrategy,
+            default=ReplicaReadStrategy.DISTRIBUTED,
+        )
+
     if "DJANGO_DB_NAME_ANALYTICS" in os.environ:
         DATABASES["analytics"] = {
             "ENGINE": "django.db.backends.postgresql",
