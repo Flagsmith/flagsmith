@@ -4,7 +4,7 @@ from datetime import timedelta
 import requests
 from django.conf import settings
 from influxdb_client import Point, WriteOptions
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
@@ -19,7 +19,7 @@ from .exceptions import SSEAuthTokenNotSet
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def send_environment_update_message_for_project(  # type: ignore[no-untyped-def]
     project_id: int,
 ):
@@ -31,7 +31,7 @@ def send_environment_update_message_for_project(  # type: ignore[no-untyped-def]
         )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def send_environment_update_message(environment_key: str, updated_at):  # type: ignore[no-untyped-def]
     url = f"{settings.SSE_SERVER_BASE_URL}/sse/environments/{environment_key}/queue-change"
     payload = {"updated_at": updated_at}
