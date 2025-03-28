@@ -32,6 +32,7 @@ export type PaidFeature =
   | 'AUDIT'
   | 'FORCE_2FA'
   | '4_EYES'
+  | '4_EYES_PROJECT'
   | 'STALE_FLAGS'
   | 'VERSIONING_DAYS'
   | 'AUDIT_DAYS'
@@ -73,8 +74,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       total += variation
         ? variation.percentage_allocation
         : typeof v.default_percentage_allocation === 'number'
-          ? v.default_percentage_allocation
-          : (v as any).percentage_allocation
+        ? v.default_percentage_allocation
+        : (v as any).percentage_allocation
       return null
     })
     return 100 - total
@@ -185,10 +186,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   ) {
     const findAppended = `${value}`.includes(':')
       ? (conditions || []).find((v) => {
-        const split = value.split(':')
-        const targetKey = `:${split[split.length - 1]}`
-        return v.value === operator + targetKey
-      })
+          const split = value.split(':')
+          const targetKey = `:${split[split.length - 1]}`
+          return v.value === operator + targetKey
+        })
       : false
     if (findAppended) return findAppended
 
@@ -356,6 +357,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return `/organisation/${orgId}/projects`
   },
   getPlanName: (plan: string) => {
+    return planNames.enterprise
+
     if (plan && plan.includes('free')) {
       return planNames.free
     }
@@ -419,6 +422,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'FLAG_OWNERS':
       case 'RBAC':
       case 'AUDIT':
+      case 'FORCE_2FA':
       case '4_EYES': {
         plan = 'scale-up'
         break

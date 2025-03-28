@@ -491,7 +491,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   onRemove={removeUserOrGroup}
                   isOpen={showGroupSelect}
                   onToggle={() => setShowGroupSelect(!showGroupSelect)}
-                  size='-sm'
+                  size='sm'
                 />
               )}
 
