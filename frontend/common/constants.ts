@@ -102,14 +102,15 @@ const Constants = {
         userId,
       ),
     }),
-
+ 
     'INIT': (envId: string) => ({
       '.NET': require('./code-help/init/init-dotnet')(envId, keywords),
       'Flutter': require('./code-help/init/init-flutter')(envId, keywords),
       'Go': require('./code-help/init/init-go')(envId, keywords),
       'Java': require('./code-help/init/init-java')(envId, keywords),
       'JavaScript': require('./code-help/init/init-js')(envId, keywords),
-      'Next.js': require('./code-help/init/init-next')(envId, keywords),
+      'Next.js (app router)': require('./code-help/init/init-next-app-router')(envId, keywords),
+      'Next.js (pages router)': require('./code-help/init/init-next-pages-router')(envId, keywords),
       'Node JS': require('./code-help/init/init-node')(envId, keywords),
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
