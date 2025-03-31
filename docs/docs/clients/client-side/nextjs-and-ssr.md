@@ -88,7 +88,7 @@ export default async function RootLayout({
   children: ReactNode;
 }>) {
    await flagsmith.init({
-      environmentID: "<YOUR_SERVERSIDE_ENVIRONMENT_ID>",
+      environmentID: "<YOUR_SERVERSIDE_ENVIRONMENT_KEY>",
       // Add optional identity, etc.
    });
    const serverState = flagsmith.getState();
@@ -127,7 +127,7 @@ MyApp.getInitialProps = async () => {
  const flagsmithSSR = createFlagsmithInstance();
  await flagsmithSSR.init({
   // fetches flags on the server
-  environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_ID>',
+  environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_KEY>',
   identity: 'my_user_id', // optionaly specify the identity of the user to get their specific flags
  });
  return { flagsmithState: flagsmithSSR.getState() };
@@ -176,7 +176,7 @@ export async function middleware(request: NextRequest) {
  }
 
  await flagsmith.init({
-  environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_ID>',
+  environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_KEY>',
   identity,
  });
 
@@ -204,7 +204,7 @@ Step 1: Initialising the SDK and passing the resulting state to the client.
 ```javascript
 await flagsmith.init({
  // fetches flags on the server
- environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_ID>',
+ environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_KEY>',
  identity: 'my_user_id', // optionaly specify the identity of the user to get their specific flags
 });
 const state = flagsmith.getState(); // Pass this data to your client
