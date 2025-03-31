@@ -213,7 +213,7 @@ const state = flagsmith.getState(); // Pass this data to your client
 Step 2: Initialising the SDK on the client.
 
 ```javascript
-flagsmith.setState(state); // set the state based on what is passed in.
+flagsmith.setState(state);
 ```
 
 Step 3: Optionally force the client to fetch a fresh set of flags
