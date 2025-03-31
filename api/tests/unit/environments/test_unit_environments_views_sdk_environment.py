@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from django.urls import reverse
+from django.utils.http import http_date
 from flag_engine.segments.constants import EQUAL
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -162,3 +163,48 @@ def test_get_environment_document_fails_with_invalid_key(
     # We get a 403 since only the server side API keys are able to access the
     # environment document
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_environment_document_caching(
+    organisation_one: "Organisation",
+    organisation_one_project_one: "Project",
+) -> None:
+    # Given
+    project = organisation_one_project_one
+    environment = Environment.objects.create(name="Test Environment", project=project)
+    api_key = EnvironmentAPIKey.objects.create(environment=environment).key
+
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key)
+    url = reverse("api-v1:environment-document")
+
+    # When - first request
+    response1 = client.get(url)
+
+    # Then - first request should return 200 and include Last-Modified header
+    assert response1.status_code == status.HTTP_200_OK
+    assert response1.headers["Last-Modified"] == http_date(
+        environment.updated_at.timestamp()
+    )
+
+    # When - second request with If-Modified-Since header
+    client.credentials(
+        HTTP_X_ENVIRONMENT_KEY=api_key,
+        HTTP_IF_MODIFIED_SINCE=http_date(environment.updated_at.timestamp()),
+    )
+    response2 = client.get(url)
+
+    # Then - second request should return 304 Not Modified
+    assert response2.status_code == status.HTTP_304_NOT_MODIFIED
+
+    # When - environment is updated
+    environment.clear_environment_cache()
+    environment.name = "Updated"
+    environment.save()
+
+    # Then - request with same If-Modified-Since header should return 200
+    response3 = client.get(url)
+    assert response3.status_code == status.HTTP_200_OK
+    assert response3.headers["Last-Modified"] == http_date(
+        environment.updated_at.timestamp()
+    )

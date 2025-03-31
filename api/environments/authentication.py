@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.cache import caches
+from django.http import HttpRequest
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -41,3 +42,19 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
 
         # DRF authentication expects a two tuple to be returned containing User, auth
         return None, None
+
+
+class AuthenticatedRequest(HttpRequest):
+    _environment: Environment
+
+    @property
+    def environment(self) -> Environment:
+        if not self._environment:
+            raise AssertionError(
+                "Tried to access environment on an authenticated request, but was None"
+            )
+        return self._environment
+
+    @environment.setter
+    def environment(self, environment: Environment) -> None:
+        self._environment = environment
