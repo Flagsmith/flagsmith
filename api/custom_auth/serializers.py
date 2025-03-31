@@ -57,6 +57,8 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             "is_active",
             "marketing_consent_given",
             "uuid",
+            "is_superuser",
+            "is_staff",
         )
         read_only_fields = ("is_active", "uuid")
         write_only_fields = ("sign_up_type",)
@@ -75,6 +77,17 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
         email = attrs.get("email")
+        if attrs.get("is_superuser") or attrs.get("is_staff"):
+            if FFAdminUser.objects.exists():
+                raise serializers.ValidationError(
+                    {
+                        "is_superuser": (
+                            "A superuser can only be created through this  "
+                            "endpoint if no other users exist."
+                        )
+                    }
+                )
+
         if settings.AUTH_CONTROLLER_INSTALLED:
             from auth_controller.controller import (  # type: ignore[import-not-found,import-untyped,unused-ignore]
                 is_authentication_method_valid,
