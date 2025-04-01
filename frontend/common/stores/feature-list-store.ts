@@ -280,15 +280,7 @@ const controller = {
               feature_segment: {
                 segment: v.segment,
               },
-              feature_state_value: {
-                boolean_value:
-                  v.feature_segment_value.feature_state_value.boolean_value,
-                integer_value:
-                  v.feature_segment_value.feature_state_value.integer_value,
-                string_value:
-                  v.feature_segment_value.feature_state_value.string_value,
-                type: v.feature_segment_value.feature_state_value.type,
-              },
+              feature_state_value: Utils.valueToFeatureState(v.value),
               multivariate_feature_state_values: v.multivariate_options,
             },
             { forceRefetch: true },
