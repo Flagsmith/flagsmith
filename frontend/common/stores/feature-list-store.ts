@@ -234,7 +234,7 @@ const controller = {
         }
       })
   },
-  editFeatureState: (
+  editFeatureState: async (
     projectId,
     environmentId,
     flag,
@@ -248,6 +248,7 @@ const controller = {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env = ProjectStore.getEnvironment(environmentId)
+
     if (env.use_v2_feature_versioning) {
       controller.editVersionedFeatureState(
         projectId,
@@ -288,10 +289,12 @@ const controller = {
                   v.feature_segment_value.feature_state_value.string_value,
                 type: v.feature_segment_value.feature_state_value.type,
               },
+              multivariate_feature_state_values: v.multivariate_options,
             },
             { forceRefetch: true },
           ).then((segmentOverride) => {
             const newValue = {
+              created: !segmentOverrides[i].id,
               environment: segmentOverride.data.environment,
               feature: featureFlagId,
               feature_segment_value: {
@@ -381,9 +384,12 @@ const controller = {
           )
         }
 
+        const priorityChanged = segmentOverrides?.find(
+          (v) => v.originalPriority !== v.priority,
+        )
         const segmentOverridesRequest =
           mode === 'SEGMENT' && segmentOverrides
-            ? (segmentOverrides.length
+            ? (priorityChanged
                 ? updateSegmentPriorities(
                     getStore(),
                     segmentOverrides.map((override, index) => ({
@@ -395,29 +401,32 @@ const controller = {
               ).then(() =>
                 Promise.all(
                   segmentOverrides.map((override) =>
-                    data.put(
-                      `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
-                      {
-                        ...override.feature_segment_value,
-                        enabled: override.enabled,
-                        feature_state_value: Utils.valueToFeatureState(
-                          override.value,
-                        ),
-                        multivariate_feature_state_values:
-                          override.multivariate_options &&
-                          override.multivariate_options.map((o) => {
-                            if (o.multivariate_feature_option) return o
-                            return {
-                              multivariate_feature_option:
-                                environmentFlag
-                                  .multivariate_feature_state_values[
-                                  o.multivariate_feature_option_index
-                                ].multivariate_feature_option,
-                              percentage_allocation: o.percentage_allocation,
-                            }
-                          }),
-                      },
-                    ),
+                    !override.created
+                      ? data.put(
+                          `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
+                          {
+                            ...override.feature_segment_value,
+                            enabled: override.enabled,
+                            feature_state_value: Utils.valueToFeatureState(
+                              override.value,
+                            ),
+                            multivariate_feature_state_values:
+                              override.multivariate_options &&
+                              override.multivariate_options.map((o) => {
+                                if (o.multivariate_feature_option) return o
+                                return {
+                                  multivariate_feature_option:
+                                    environmentFlag
+                                      .multivariate_feature_state_values[
+                                      o.multivariate_feature_option_index
+                                    ].multivariate_feature_option,
+                                  percentage_allocation:
+                                    o.percentage_allocation,
+                                }
+                              }),
+                          },
+                        )
+                      : Promise.resolve(override),
                   ),
                 ),
               )
