@@ -280,6 +280,7 @@ global.API = {
       const orgsByPlan = groupBy(AccountStore.getOrganisations(), (org) =>
         getPlanName(org?.subscription?.plan),
       )
+      //Picks the organisation with the highest plan
       const selectedOrg =
         orgsByPlan?.[planNames.enterprise]?.[0] ||
         orgsByPlan?.[planNames.scaleUp]?.[0] ||
