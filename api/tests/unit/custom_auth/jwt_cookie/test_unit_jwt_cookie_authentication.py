@@ -11,7 +11,10 @@ from rest_framework_simplejwt.exceptions import (
 from rest_framework_simplejwt.tokens import Token
 
 from custom_auth.jwt_cookie.authentication import JWTCookieAuthentication
-from custom_auth.jwt_cookie.constants import ACCESS_TOKEN_COOKIE_KEY
+from custom_auth.jwt_cookie.constants import (
+    ACCESS_TOKEN_COOKIE_KEY,
+    REFRESH_TOKEN_COOKIE_KEY,
+)
 from users.models import FFAdminUser
 
 
@@ -50,6 +53,33 @@ def test_authenticate_valid_cookie(mocker: MockerFixture) -> None:
     # Then
     assert result == (user, validated_token)
     mock_validate.assert_called_once_with(raw_access_token)
+    mock_get_user.assert_called_once_with(validated_token)
+
+
+def test_authenticate_with_valid_refresh_token_only(mocker: MockerFixture) -> None:
+    # Given
+    auth = JWTCookieAuthentication()
+    request = mocker.MagicMock(spec=Request)
+
+    # Only provide refresh token, no access token
+    raw_refresh_token = "valid_refresh_token"
+    request.COOKIES = {REFRESH_TOKEN_COOKIE_KEY: raw_refresh_token}
+
+    # Mock token validation and user retrieval
+    validated_token = mocker.MagicMock(spec=Token)
+    user = mocker.MagicMock(spec=FFAdminUser)
+
+    mock_validate = mocker.patch.object(
+        auth, "get_validated_token", return_value=validated_token
+    )
+    mock_get_user = mocker.patch.object(auth, "get_user", return_value=user)
+
+    # When
+    result = auth.authenticate(request)
+
+    # Then
+    assert result == (user, validated_token)
+    mock_validate.assert_called_once_with(raw_refresh_token)
     mock_get_user.assert_called_once_with(validated_token)
 
 

@@ -19,6 +19,11 @@ from organisations.invites.models import Invite
 from organisations.models import Organisation
 from users.models import FFAdminUser, SignUpType
 
+from custom_auth.jwt_cookie.constants import (
+    ACCESS_TOKEN_COOKIE_KEY,
+    REFRESH_TOKEN_COOKIE_KEY,
+)
+
 
 def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
     # try to register without first_name / last_name
@@ -424,6 +429,35 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
 
     # verify the classic token is not returned on login
     assert not response.data
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
+def test_jwt_token_logout_view_handles_missing_refresh_token(admin_client):
+    # Given
+    logout_url = reverse("api-v1:custom_auth:jwt-logout")
+
+    # When
+    response = admin_client.post(logout_url)
+
+    # Then
+    assert response.status_code == 204
+    assert response.cookies[REFRESH_TOKEN_COOKIE_KEY].value == ""
+    assert response.cookies[REFRESH_TOKEN_COOKIE_KEY]["max-age"] == 0
+    assert response.cookies[ACCESS_TOKEN_COOKIE_KEY].value == ""
+    assert response.cookies[ACCESS_TOKEN_COOKIE_KEY]["max-age"] == 0
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
+def test_jwt_cookie_token_refresh_view_raises_invalid_token_if_no_cookie(admin_client):
+    # Given
+    refresh_url = reverse("api-v1:custom_auth:token-refresh")
+
+    # When
+    response = admin_client.post(refresh_url)
+
+    # Then
+    assert response.status_code == 401
+    assert response.data["detail"] == "No valid refresh token found in cookie"
 
 
 # In the real world, setting `COOKIE_AUTH_ENABLED` to `True`
