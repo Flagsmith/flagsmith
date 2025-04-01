@@ -4,7 +4,7 @@ title: Feature Health
 
 :::info
 
-Feature Health is in Beta, please email support@flagsmith.com if you'd like to join. 
+Feature Health is in Beta, please email support@flagsmith.com or chat with us <a class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to join. 
 
 :::
 
