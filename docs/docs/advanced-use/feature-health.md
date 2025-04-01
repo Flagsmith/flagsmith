@@ -4,7 +4,7 @@ title: Feature Health
 
 :::info
 
-Feature Health is an upcoming feature that's not yet available.
+Feature Health is in Beta, please email support@flagsmith.com or chat with us <a href="#" class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to join. 
 
 :::
 
