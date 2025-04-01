@@ -4,7 +4,7 @@ title: Feature Health
 
 :::info
 
-Feature Health is an upcoming feature that's not yet available.
+Feature Health is in Beta, please email support@flagsmith.com if you'd like to join. 
 
 :::
 
