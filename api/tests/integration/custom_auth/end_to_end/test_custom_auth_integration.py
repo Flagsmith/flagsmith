@@ -15,14 +15,13 @@ from rest_framework.test import (  # type: ignore[attr-defined]
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from organisations.invites.models import Invite
-from organisations.models import Organisation
-from users.models import FFAdminUser, SignUpType
-
 from custom_auth.jwt_cookie.constants import (
     ACCESS_TOKEN_COOKIE_KEY,
     REFRESH_TOKEN_COOKIE_KEY,
 )
+from organisations.invites.models import Invite
+from organisations.models import Organisation
+from users.models import FFAdminUser, SignUpType
 
 
 def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:

@@ -1,9 +1,10 @@
+from unittest.mock import MagicMock
+
 import pytest
 from rest_framework.exceptions import NotAuthenticated
-from unittest.mock import MagicMock, patch
 
-from users.serializers import CustomCurrentUserSerializer
 from users.models import FFAdminUser
+from users.serializers import CustomCurrentUserSerializer
 
 
 class TestCustomCurrentUserSerializer:
