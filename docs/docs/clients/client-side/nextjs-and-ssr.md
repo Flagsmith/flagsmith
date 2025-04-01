@@ -11,6 +11,9 @@ application with the resulting state.
 Example applications for a variety of Next.js and SSR can be found
 [here](https://github.com/flagsmith/flagsmith-js-examples/tree/main/nextjs).
 
+Example application using the Next.js app router can be found
+[here](https://github.com/Flagsmith/flagsmith-js-examples/tree/main/nextjs-approuter).
+
 Example applications for Svelte be found [here](https://github.com/flagsmith/flagsmith-js-examples/tree/main/svelte).
 
 An example application for Next.js middleware can be found
@@ -43,10 +46,72 @@ The main flow with Next.js and any JavaScript-based SSR can be as follows:
 
 ### Example: Initialising the SDK with Next.js
 
-Taking the above into account, the following example fetches flags on the server and initialises Flagsmith with the
-state.
+Taking the above into account, the following examples fetch flags on the server and initialises Flagsmith with the
+state. Below is an example for the **app** router as well as the **pages** router.
+
+#### App Router Example
 
 ```javascript
+// src/app/components/FeatureFlagProvider.tsx
+"use client";
+
+import { ReactNode, useRef } from "react";
+
+import { FlagsmithProvider } from "flagsmith/react";
+import { IState } from "flagsmith/types";
+import { createFlagsmithInstance } from "flagsmith/isomorphic";
+
+export const FeatureFlagProvider = ({
+  serverState,
+  children,
+}: {
+  serverState: IState;
+  children: ReactNode;
+}) => {
+  const flagsmithInstance = useRef(createFlagsmithInstance());
+  return (
+    <FlagsmithProvider flagsmith={flagsmithInstance.current} serverState={serverState}>
+      <>{children}</>
+    </FlagsmithProvider>
+  );
+};
+
+
+// src/app/layout.jsx
+import { ReactNode } from "react";
+import { FeatureFlagProvider } from './components/FeatureFlagProvider';
+import flagsmith from "flagsmith/isomorphic";
+
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: ReactNode;
+}>) {
+   await flagsmith.init({
+      environmentID: "<YOUR_SERVERSIDE_ENVIRONMENT_KEY>",
+      // Add optional identity, etc.
+   });
+   const serverState = flagsmith.getState();
+
+   return (
+   <html lang="en">
+      <head>
+         <meta name="viewport" content="initial-scale=1, width=device-width" />
+      </head>
+      <body>
+         <FeatureFlagProvider serverState={serverState}>
+            {children}
+         </FeatureFlagProvider>
+      </body>
+   </html>
+   );
+}
+```
+
+#### Pages Router Example
+
+```javascript
+// src/pages/_app.jsx
 import { FlagsmithProvider } from 'flagsmith/react';
 import { createFlagsmithInstance } from 'flagsmith/isomorphic';
 function MyApp({ Component, pageProps, flagsmithState }) {
@@ -62,7 +127,7 @@ MyApp.getInitialProps = async () => {
  const flagsmithSSR = createFlagsmithInstance();
  await flagsmithSSR.init({
   // fetches flags on the server
-  environmentID: '<YOUR_ENVIRONMENT_ID>',
+  environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_KEY>',
   identity: 'my_user_id', // optionaly specify the identity of the user to get their specific flags
  });
  return { flagsmithState: flagsmithSSR.getState() };
@@ -71,7 +136,11 @@ MyApp.getInitialProps = async () => {
 export default MyApp;
 ```
 
+#### Client Component
+
 ```javascript
+'use client'; // Only required by the app router version.
+
 import { useFlags } from 'flagsmith/react';
 
 export function MyComponent() {
@@ -85,7 +154,7 @@ export function MyComponent() {
 }
 ```
 
-From that point the SDK usage is the same as the [React SDK Guide](/clients/react)
+From this point on, the SDK usage is the same as the [React SDK Guide](/clients/react)
 
 ### Example: Flagsmith with Next.js middleware
 
@@ -107,7 +176,7 @@ export async function middleware(request: NextRequest) {
  }
 
  await flagsmith.init({
-  environmentID: '<YOUR_ENVIRONMENT_ID>',
+  environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_KEY>',
   identity,
  });
 
@@ -135,7 +204,7 @@ Step 1: Initialising the SDK and passing the resulting state to the client.
 ```javascript
 await flagsmith.init({
  // fetches flags on the server
- environmentID: '<YOUR_ENVIRONMENT_ID>',
+ environmentID: '<YOUR_SERVERSIDE_ENVIRONMENT_KEY>',
  identity: 'my_user_id', // optionaly specify the identity of the user to get their specific flags
 });
 const state = flagsmith.getState(); // Pass this data to your client
@@ -144,13 +213,13 @@ const state = flagsmith.getState(); // Pass this data to your client
 Step 2: Initialising the SDK on the client.
 
 ```javascript
-flagsmith.setState(state); // set the state based on your
+flagsmith.setState(state);
 ```
 
 Step 3: Optionally force the client to fetch a fresh set of flags
 
 ```javascript
-flagsmith.getFlags(); // set the state based on your
+flagsmith.getFlags();
 ```
 
 From that point the SDK usage is the same as the [JavaScript SDK Guide](/clients/javascript)
