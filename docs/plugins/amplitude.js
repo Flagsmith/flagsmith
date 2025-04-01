@@ -1,6 +1,11 @@
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
-import amplitude from '@amplitude/analytics-browser';
+import * as amplitude from '@amplitude/analytics-browser';
 
 if (ExecutionEnvironment.canUseDOM) {
-    amplitude.init('541e058ce750dcdeb3a39d48a85f3425');
+    window.addEventListener('load', () => {
+        amplitude.init("541e058ce750dcdeb3a39d48a85f3425", {
+            defaultTracking: true,
+            serverZone: 'EU'
+        });
+    });
 }
