@@ -4,6 +4,7 @@ const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 import { loadReoScript } from 'reodotdev'
 
 import freeEmailDomains from 'free-email-domains'
+import { groupBy } from 'lodash'
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -248,6 +249,48 @@ global.API = {
         dtrum.identifyUser(`${user.id}`)
       }
 
+      const planNames = {
+        enterprise: 'Enterprise',
+        free: 'Free',
+        scaleUp: 'Scale-Up',
+        startup: 'Startup',
+      }
+
+      // Todo: this duplicates functionality in utils.tsx however it would create a circular dependency at the moment
+      // we should split out these into a standalone file
+      const getPlanName = (plan) => {
+        if (plan && plan.includes('free')) {
+          return planNames.free
+        }
+        if (plan && plan.includes('scale-up')) {
+          return planNames.scaleUp
+        }
+        if (plan && plan.includes('startup')) {
+          return planNames.startup
+        }
+        if (plan && plan.includes('start-up')) {
+          return planNames.startup
+        }
+        if (global.flagsmithVersion?.backend.is_enterprise || (plan && plan.includes('enterprise'))) {
+          return planNames.enterprise
+        }
+        return planNames.free
+      }
+
+      const orgsByPlan = groupBy(AccountStore.getOrganisations(), (org) =>
+        getPlanName(org?.subscription?.plan),
+      )
+      //Picks the organisation with the highest plan
+      const selectedOrg =
+        orgsByPlan?.[planNames.enterprise]?.[0] ||
+        orgsByPlan?.[planNames.scaleUp]?.[0] ||
+        orgsByPlan?.[planNames.startup]?.[0] ||
+        orgsByPlan?.[planNames.free]?.[0]
+      const selectedPlanName = Utils.getPlanName(
+        selectedOrg?.subscription?.plan,
+      )
+      const selectedRole = selectedOrg?.role //ADMIN | USER
+      const selectedOrgName = selectedOrg?.name
       if (Project.heap) {
         const plans = AccountStore.getPlans()
         heap.identify(id)
@@ -272,6 +315,9 @@ global.API = {
         const identify = new amplitude.Identify()
           .set('email', id)
           .set('name', { 'first': user.first_name, 'last': user.last_name })
+          .set('organisation', selectedOrgName)
+          .set('role', selectedRole)
+          .set('plan', selectedPlanName)
 
         amplitude.identify(identify)
       }
