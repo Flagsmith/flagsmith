@@ -178,6 +178,7 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
+    multivariate_feature_state_values: MultivariateOption[] | null
     feature_segment: {
       segment: number
     }

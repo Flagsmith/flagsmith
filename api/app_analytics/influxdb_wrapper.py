@@ -43,8 +43,8 @@ DEFAULT_DROP_COLUMNS = (
 def get_range_bucket_mappings(date_start: datetime) -> str:
     now = timezone.now()
     if (now - date_start).days > 10:
-        return settings.INFLUXDB_BUCKET + "_downsampled_1h"  # type: ignore[no-any-return]
-    return settings.INFLUXDB_BUCKET + "_downsampled_15m"  # type: ignore[no-any-return]
+        return settings.INFLUXDB_BUCKET + "_downsampled_1h"
+    return settings.INFLUXDB_BUCKET + "_downsampled_15m"
 
 
 class InfluxDBWrapper:
@@ -401,7 +401,8 @@ def get_top_organisations(
 
 
 def get_current_api_usage(
-    organisation_id: int, date_start: datetime | None = None
+    organisation_id: int,
+    date_start: datetime,
 ) -> int:
     """
     Query influx db for api usage
@@ -411,10 +412,6 @@ def get_current_api_usage(
 
     :return: number of current api calls
     """
-    now = timezone.now()
-    if date_start is None:
-        date_start = now - timedelta(days=30)
-
     bucket = read_bucket
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,

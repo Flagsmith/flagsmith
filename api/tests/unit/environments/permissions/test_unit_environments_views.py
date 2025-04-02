@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
 from django.urls import reverse

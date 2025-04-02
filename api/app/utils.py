@@ -1,29 +1,6 @@
-import json
-import pathlib
-from functools import lru_cache
-from typing import TypedDict
+import os
 
 import shortuuid
-from django.conf import settings
-from typing_extensions import NotRequired
-
-UNKNOWN = "unknown"
-VERSIONS_INFO_FILE_LOCATION = ".versions.json"
-
-
-class SelfHostedData(TypedDict):
-    has_users: bool
-    has_logins: bool
-
-
-class VersionInfo(TypedDict):
-    ci_commit_sha: str
-    image_tag: str
-    has_email_provider: bool
-    is_enterprise: bool
-    is_saas: bool
-    self_hosted_data: SelfHostedData | None
-    package_versions: NotRequired[dict[str, str]]
 
 
 def create_hash() -> str:
@@ -31,61 +8,17 @@ def create_hash() -> str:
     return shortuuid.uuid()
 
 
-def is_enterprise() -> bool:
-    return pathlib.Path("./ENTERPRISE_VERSION").exists()
-
-
-def is_saas() -> bool:
-    return pathlib.Path("./SAAS_DEPLOYMENT").exists()
-
-
-def has_email_provider() -> bool:
-    match settings.EMAIL_BACKEND:
-        case "django.core.mail.backends.smtp.EmailBackend":
-            return settings.EMAIL_HOST_USER is not None
-        case "sgbackend.SendGridBackend":
-            return settings.SENDGRID_API_KEY is not None
-        case "django_ses.SESBackend":
-            return settings.AWS_SES_REGION_ENDPOINT is not None
-        case _:
-            return False
-
-
-@lru_cache
-def get_version_info() -> VersionInfo:
-    """Reads the version info baked into src folder of the docker container"""
-    _is_saas = is_saas()
-    version_json: VersionInfo = {
-        "ci_commit_sha": _get_file_contents("./CI_COMMIT_SHA"),
-        "image_tag": UNKNOWN,
-        "has_email_provider": has_email_provider(),
-        "is_enterprise": is_enterprise(),
-        "is_saas": _is_saas,
-        "self_hosted_data": None,
-    }
-
-    manifest_versions_content: str = _get_file_contents(VERSIONS_INFO_FILE_LOCATION)
-
-    if manifest_versions_content != UNKNOWN:
-        manifest_versions = json.loads(manifest_versions_content)
-        version_json["package_versions"] = manifest_versions
-        version_json["image_tag"] = manifest_versions["."]
-
-    if not _is_saas:
-        from users.models import FFAdminUser
-
-        version_json["self_hosted_data"] = {
-            "has_users": FFAdminUser.objects.count() > 0,
-            "has_logins": FFAdminUser.objects.filter(last_login__isnull=False).exists(),
-        }
-
-    return version_json
-
-
-def _get_file_contents(file_path: str) -> str:
-    """Attempts to read a file from the filesystem and return the contents"""
-    try:
-        with open(file_path) as f:
-            return f.read().replace("\n", "")
-    except FileNotFoundError:
-        return UNKNOWN
+def get_numbered_env_vars_with_prefix(prefix: str) -> list[str]:
+    """
+    Returns a list containing the values of all environment variables whose names have a given prefix followed by an
+    integer, starting from 0, until no more variables with that prefix are found.
+    """
+    db_urls = []
+    i = 0
+    while True:
+        db_url = os.getenv(f"{prefix}{i}")
+        if not db_url:
+            break
+        db_urls.append(db_url)
+        i += 1
+    return db_urls
