@@ -55,7 +55,7 @@ from webhooks.models import AbstractBaseExportableWebhookModel
 logger = logging.getLogger(__name__)
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
-environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
+environment_document_cache = caches[settings.CACHE_ENVIRONMENT_DOCUMENT_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
@@ -177,7 +177,7 @@ class Environment(
     @hook(AFTER_DELETE)  # type: ignore[misc]
     def delete_environment_document_from_cache(self) -> None:
         if (
-            settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
             == EnvironmentDocumentCacheMode.PERSISTENT
             or settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
         ):
@@ -315,7 +315,7 @@ class Environment(
             ):
                 environment_v2_wrapper.write_environments(environments)
         elif (
-            settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
             == EnvironmentDocumentCacheMode.PERSISTENT
         ):
             environment_document_cache.set_many(
@@ -398,7 +398,7 @@ class Environment(
     ) -> dict[str, typing.Any]:
         if (
             settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
-            or settings.ENVIRONMENT_DOCUMENT_CACHE_MODE
+            or settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
             == EnvironmentDocumentCacheMode.PERSISTENT
         ):
             return cls._get_environment_document_from_cache(api_key)

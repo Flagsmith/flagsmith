@@ -120,7 +120,7 @@ def persistent_environment_document_cache(
     mocker: MockerFixture,
     environment: Environment,
 ) -> MagicMock:
-    settings.ENVIRONMENT_DOCUMENT_CACHE_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
 
     mock_environment_document_cache: MagicMock = mocker.MagicMock(spec=BaseCache)
     mocker.patch(
