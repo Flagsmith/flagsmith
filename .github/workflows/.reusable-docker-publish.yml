@@ -4,11 +4,6 @@ name: Publish Docker Image
 on:
   workflow_call:
     inputs:
-      source-registry-url:
-        type: string
-        description: Github Container Registry base URL
-        required: false
-        default: ghcr.io
       source-images:
         type: string
         description: Source image to publish
@@ -53,7 +48,7 @@ jobs:
       - name: Login to Github Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ inputs.source-registry-url }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
