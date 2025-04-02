@@ -72,12 +72,17 @@ export default (WrappedComponent) => {
             }
           })
           const resResults = res.results || []
-          const segmentOverrides = results.concat(
-            (this.props.newSegmentOverrides || []).map((v, i) => ({
+          const segmentOverrides = results
+            .concat(
+              (this.props.newSegmentOverrides || []).map((v, i) => ({
+                ...v,
+              })),
+            )
+            .map((v, i) => ({
               ...v,
-              priority: resResults.length + i,
-            })),
-          )
+              originalPriority: i,
+              priority: i,
+            }))
           const originalSegmentOverrides = _.cloneDeep(segmentOverrides)
           this.setState({
             environmentVariations:
