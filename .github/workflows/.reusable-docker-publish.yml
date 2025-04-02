@@ -4,7 +4,7 @@ name: Publish Docker Image
 on:
   workflow_call:
     inputs:
-      registry-url:
+      source-registry-url:
         type: string
         description: Github Container Registry base URL
         required: false
@@ -17,16 +17,21 @@ on:
         type: string
         description: Target image names
         required: true
+      target-registry-url:
+        type: string
+        description: URL of the target docker registry
+        required: false
+        default: docker.io
       docker-username:
         type: string
         description: Username for docker authentication
         required: false
-        default: ${{ secrets.DOCKERHUB_USERNAME }}
-      docker-password:
+        default: ${{ vars.DOCKERHUB_USERNAME_WRITE }}
+      docker-password-secret-name:
         type: string
-        description: Password for docker authentication
+        description: The name of the secret holding the docker password
         required: false
-        default: ${{ secrets.DOCKERHUB_TOKEN }}
+        default: DOCKERHUB_TOKEN_WRITE
 
 jobs:
   publish:
@@ -48,15 +53,16 @@ jobs:
       - name: Login to Github Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ inputs.registry-url }}
+          registry: ${{ inputs.source-registry-url }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
+          registry: ${{ inputs.target-registry-url }}
           username: ${{ inputs.docker-username }}
-          password: ${{ inputs.docker-password }}
+          password: ${{ secrets[inputs.docker-password-secret-name] }}
 
       - name: Docker metadata
         id: meta

@@ -152,8 +152,9 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-publish.yml
 #    if: github.event_name == 'release'
     with:
+      target-registry-url: quay.io
       docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
-      docker-password: ${{ secrets.QUAY_PUBLISH_PASSWORD }}
+      docker-password-secret-name: QUAY_PUBLISH_PASSWORD
       source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
       target-images: quay.io/flagsmithofficial/flagsmith-enterprise
     secrets: inherit
@@ -163,8 +164,9 @@ jobs:
     uses: ./.github/workflows/.reusable-docker-publish.yml
 #    if: github.event_name == 'release'
     with:
+      target-registry-url: quay.io
       docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
-      docker-password: ${{ secrets.QUAY_PUBLISH_PASSWORD }}
+      docker-password-secret-name: QUAY_PUBLISH_PASSWORD
       source-images: ${{ needs.docker-build-private-cloud-api.outputs.image }}
       target-images: quay.io/flagsmithofficial/flagsmith-enterprise-api
     secrets: inherit
