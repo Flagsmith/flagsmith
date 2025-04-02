@@ -97,6 +97,8 @@ jobs:
           - tests: organisation-permission environment-permission project-permission roles
             concurrency: 1
 
+  # Publish to dockerhub
+
   docker-publish-api:
     needs: [docker-build-api, run-e2e-tests]
     uses: ./.github/workflows/.reusable-docker-publish.yml
@@ -140,6 +142,30 @@ jobs:
     with:
       source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
       target-images: flagsmith/flagsmith-private-cloud
+    secrets: inherit
+
+  # Publish to Quay.io
+
+  docker-publish-quay-enterprise:
+    needs: [ docker-build-private-cloud, run-e2e-tests ]
+    uses: ./.github/workflows/.reusable-docker-publish.yml
+    if: github.event_name == 'release'
+    with:
+      docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
+      docker-password: ${{ secrets.QUAY_PUBLISH_PASSWORD }}
+      source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
+      target-images: quay.io/flagsmithofficial/flagsmith-enterprise
+    secrets: inherit
+
+  docker-publish-quay-enterprise-api:
+    needs: [ docker-build-private-cloud, run-e2e-tests ]
+    uses: ./.github/workflows/.reusable-docker-publish.yml
+    if: github.event_name == 'release'
+    with:
+      docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
+      docker-password: ${{ secrets.QUAY_PUBLISH_PASSWORD }}
+      source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
+      target-images: quay.io/flagsmithofficial/flagsmith-enterprise-api
     secrets: inherit
 
   update-charts:
