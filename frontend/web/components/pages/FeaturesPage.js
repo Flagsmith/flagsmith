@@ -107,7 +107,7 @@ const FeaturesPage = class extends Component {
       'lastEnv',
       JSON.stringify({
         environmentId: params.environmentId,
-        orgId: AccountStore.getOrganisation().id,
+        orgId: AccountStore.getOrganisation()?.id,
         projectId: params.projectId,
       }),
     )
