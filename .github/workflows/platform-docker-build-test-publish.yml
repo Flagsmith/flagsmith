@@ -4,31 +4,32 @@ on:
   push:
     branches:
       - main
+      - ci/push-to-quay
   release:
     types:
       - released
 
 jobs:
-  docker-build-api:
-    name: Build API Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      target: oss-api
-      image-name: flagsmith-api
-
-  docker-build-frontend:
-    name: Build Frontend Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      target: oss-frontend
-      image-name: flagsmith-frontend
-
-  docker-build-unified:
-    name: Build Unified Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      target: oss-unified
-      image-name: flagsmith
+#  docker-build-api:
+#    name: Build API Image
+#    uses: ./.github/workflows/.reusable-docker-build.yml
+#    with:
+#      target: oss-api
+#      image-name: flagsmith-api
+#
+#  docker-build-frontend:
+#    name: Build Frontend Image
+#    uses: ./.github/workflows/.reusable-docker-build.yml
+#    with:
+#      target: oss-frontend
+#      image-name: flagsmith-frontend
+#
+#  docker-build-unified:
+#    name: Build Unified Image
+#    uses: ./.github/workflows/.reusable-docker-build.yml
+#    with:
+#      target: oss-unified
+#      image-name: flagsmith
 
   docker-build-private-cloud-api:
     name: Build Private Cloud API Image
@@ -50,106 +51,106 @@ jobs:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
-  docker-build-api-test:
-    name: Build API Test Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      target: api-test
-      image-name: flagsmith-api-test
-      scan: false
+#  docker-build-api-test:
+#    name: Build API Test Image
+#    uses: ./.github/workflows/.reusable-docker-build.yml
+#    with:
+#      target: api-test
+#      image-name: flagsmith-api-test
+#      scan: false
+#
+#  docker-build-e2e:
+#    name: Build E2E Image
+#    uses: ./.github/workflows/.reusable-docker-build.yml
+#    with:
+#      file: frontend/Dockerfile.e2e
+#      image-name: flagsmith-e2e
+#      scan: false
 
-  docker-build-e2e:
-    name: Build E2E Image
-    uses: ./.github/workflows/.reusable-docker-build.yml
-    with:
-      file: frontend/Dockerfile.e2e
-      image-name: flagsmith-e2e
-      scan: false
-
-  run-e2e-tests:
-    needs: [docker-build-api, docker-build-private-cloud-api, docker-build-e2e]
-    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
-    with:
-      runs-on: ${{ matrix.runs-on }}
-      e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
-      api-image: ${{ matrix.api-image }}
-      concurrency: ${{ matrix.args.concurrency }}
-      tests: ${{ matrix.args.tests }}
-    secrets:
-      GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-
-    strategy:
-      matrix:
-        runs-on: [ubuntu-latest, ARM64-2c]
-        api-image:
-          - ${{ needs.docker-build-api.outputs.image }}
-          - ${{ needs.docker-build-private-cloud-api.outputs.image }}
-        args:
-          - tests: segment-part-1 environment
-            concurrency: 1
-          - tests: segment-part-2
-            concurrency: 1
-          - tests: segment-part-3 signup flag invite project
-            concurrency: 2
-          - tests: versioning
-            concurrency: 1
-          - tests: organisation-permission environment-permission project-permission roles
-            concurrency: 1
+#  run-e2e-tests:
+#    needs: [docker-build-api, docker-build-private-cloud-api, docker-build-e2e]
+#    uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
+#    with:
+#      runs-on: ${{ matrix.runs-on }}
+#      e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
+#      api-image: ${{ matrix.api-image }}
+#      concurrency: ${{ matrix.args.concurrency }}
+#      tests: ${{ matrix.args.tests }}
+#    secrets:
+#      GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+#
+#    strategy:
+#      matrix:
+#        runs-on: [ubuntu-latest, ARM64-2c]
+#        api-image:
+#          - ${{ needs.docker-build-api.outputs.image }}
+#          - ${{ needs.docker-build-private-cloud-api.outputs.image }}
+#        args:
+#          - tests: segment-part-1 environment
+#            concurrency: 1
+#          - tests: segment-part-2
+#            concurrency: 1
+#          - tests: segment-part-3 signup flag invite project
+#            concurrency: 2
+#          - tests: versioning
+#            concurrency: 1
+#          - tests: organisation-permission environment-permission project-permission roles
+#            concurrency: 1
 
   # Publish to dockerhub
 
-  docker-publish-api:
-    needs: [docker-build-api, run-e2e-tests]
-    uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
-    with:
-      source-images: ${{ needs.docker-build-api.outputs.image }}
-      target-images: flagsmith/flagsmith-api
-    secrets: inherit
-
-  docker-publish-frontend:
-    needs: [docker-build-frontend, run-e2e-tests]
-    uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
-    with:
-      source-images: ${{ needs.docker-build-frontend.outputs.image }}
-      target-images: flagsmith/flagsmith-frontend
-    secrets: inherit
-
-  docker-publish-unified:
-    needs: [docker-build-unified, run-e2e-tests]
-    uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
-    with:
-      source-images: ${{ needs.docker-build-unified.outputs.image }}
-      target-images: flagsmith/flagsmith
-    secrets: inherit
-
-  docker-publish-private-cloud-api:
-    needs: [docker-build-private-cloud-api, run-e2e-tests]
-    uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
-    with:
-      source-images: ${{ needs.docker-build-private-cloud-api.outputs.image }}
-      target-images: flagsmith/flagsmith-private-cloud-api
-    secrets: inherit
-
-  docker-publish-private-cloud:
-    needs: [docker-build-private-cloud, run-e2e-tests]
-    uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
-    with:
-      source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
-      target-images: flagsmith/flagsmith-private-cloud
-    secrets: inherit
+#  docker-publish-api:
+#    needs: [docker-build-api, run-e2e-tests]
+#    uses: ./.github/workflows/.reusable-docker-publish.yml
+#    if: github.event_name == 'release'
+#    with:
+#      source-images: ${{ needs.docker-build-api.outputs.image }}
+#      target-images: flagsmith/flagsmith-api
+#    secrets: inherit
+#
+#  docker-publish-frontend:
+#    needs: [docker-build-frontend, run-e2e-tests]
+#    uses: ./.github/workflows/.reusable-docker-publish.yml
+#    if: github.event_name == 'release'
+#    with:
+#      source-images: ${{ needs.docker-build-frontend.outputs.image }}
+#      target-images: flagsmith/flagsmith-frontend
+#    secrets: inherit
+#
+#  docker-publish-unified:
+#    needs: [docker-build-unified, run-e2e-tests]
+#    uses: ./.github/workflows/.reusable-docker-publish.yml
+#    if: github.event_name == 'release'
+#    with:
+#      source-images: ${{ needs.docker-build-unified.outputs.image }}
+#      target-images: flagsmith/flagsmith
+#    secrets: inherit
+#
+#  docker-publish-private-cloud-api:
+#    needs: [docker-build-private-cloud-api, run-e2e-tests]
+#    uses: ./.github/workflows/.reusable-docker-publish.yml
+#    if: github.event_name == 'release'
+#    with:
+#      source-images: ${{ needs.docker-build-private-cloud-api.outputs.image }}
+#      target-images: flagsmith/flagsmith-private-cloud-api
+#    secrets: inherit
+#
+#  docker-publish-private-cloud:
+#    needs: [docker-build-private-cloud, run-e2e-tests]
+#    uses: ./.github/workflows/.reusable-docker-publish.yml
+#    if: github.event_name == 'release'
+#    with:
+#      source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
+#      target-images: flagsmith/flagsmith-private-cloud
+#    secrets: inherit
 
   # Publish to Quay.io
 
   docker-publish-quay-enterprise:
-    needs: [ docker-build-private-cloud, run-e2e-tests ]
+    needs: [ docker-build-private-cloud ]
     uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
+#    if: github.event_name == 'release'
     with:
       docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
       docker-password: ${{ secrets.QUAY_PUBLISH_PASSWORD }}
@@ -158,54 +159,54 @@ jobs:
     secrets: inherit
 
   docker-publish-quay-enterprise-api:
-    needs: [ docker-build-private-cloud, run-e2e-tests ]
+    needs: [ docker-build-private-cloud-api ]
     uses: ./.github/workflows/.reusable-docker-publish.yml
-    if: github.event_name == 'release'
+#    if: github.event_name == 'release'
     with:
       docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
       docker-password: ${{ secrets.QUAY_PUBLISH_PASSWORD }}
-      source-images: ${{ needs.docker-build-private-cloud.outputs.image }}
+      source-images: ${{ needs.docker-build-private-cloud-api.outputs.image }}
       target-images: quay.io/flagsmithofficial/flagsmith-enterprise-api
     secrets: inherit
 
-  update-charts:
-    needs: [docker-publish-api, docker-publish-frontend, docker-publish-unified]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Target Charts Repository to update yaml
-        uses: actions/checkout@v4
-        with:
-          repository: flagsmith/flagsmith-charts
-          path: chart
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up release tag variables
-        id: version-trim
-        run: |
-          TAG=${{github.ref_name}}
-          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
-
-      - name: Run YAML to Github Output Action
-        id: yaml-output
-        uses: christian-ci/action-yaml-github-output@v2
-        with:
-          file_path: './chart/charts/flagsmith/Chart.yaml'
-
-      - name: Update flagsmith-charts values.yaml with latest docker version
-        uses: fjogeleit/yaml-update-action@main
-        with:
-          token: ${{ secrets.FLAGSMITH_CHARTS_GITHUB_TOKEN }}
-          repository: flagsmith/flagsmith-charts
-          workDir: chart
-          masterBranchName: 'main'
-          targetBranch: 'main'
-          branch: docker-image-version-bump-${{ steps.version-trim.outputs.version }}
-          commitChange: true
-          createPR: true
-          message: 'Flagsmith docker image version bump'
-          description: 'Automated PR generated by a release event in https://github.com/Flagsmith/flagsmith'
-          valueFile: 'charts/flagsmith/Chart.yaml'
-          changes: |
-            {
-              "appVersion": "${{ steps.version-trim.outputs.version }}"
-            }
+#  update-charts:
+#    needs: [docker-publish-api, docker-publish-frontend, docker-publish-unified]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout Target Charts Repository to update yaml
+#        uses: actions/checkout@v4
+#        with:
+#          repository: flagsmith/flagsmith-charts
+#          path: chart
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Set up release tag variables
+#        id: version-trim
+#        run: |
+#          TAG=${{github.ref_name}}
+#          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+#
+#      - name: Run YAML to Github Output Action
+#        id: yaml-output
+#        uses: christian-ci/action-yaml-github-output@v2
+#        with:
+#          file_path: './chart/charts/flagsmith/Chart.yaml'
+#
+#      - name: Update flagsmith-charts values.yaml with latest docker version
+#        uses: fjogeleit/yaml-update-action@main
+#        with:
+#          token: ${{ secrets.FLAGSMITH_CHARTS_GITHUB_TOKEN }}
+#          repository: flagsmith/flagsmith-charts
+#          workDir: chart
+#          masterBranchName: 'main'
+#          targetBranch: 'main'
+#          branch: docker-image-version-bump-${{ steps.version-trim.outputs.version }}
+#          commitChange: true
+#          createPR: true
+#          message: 'Flagsmith docker image version bump'
+#          description: 'Automated PR generated by a release event in https://github.com/Flagsmith/flagsmith'
+#          valueFile: 'charts/flagsmith/Chart.yaml'
+#          changes: |
+#            {
+#              "appVersion": "${{ steps.version-trim.outputs.version }}"
+#            }
