@@ -162,7 +162,7 @@ class Environment(
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
 
-    @hook(AFTER_UPDATE, when="api_key")  # type: ignore[misc]
+    @hook(AFTER_UPDATE, when="api_key", has_changed=True)  # type: ignore[misc]
     def update_environment_document_cache(self) -> None:
         environment_document_cache.delete(self.initial_value("api_key"))
         self.write_environment_documents(self.id)

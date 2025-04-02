@@ -1021,3 +1021,35 @@ def test_environment_clone_async(
             "clone_environment_id": cloned_environment.id,
         }
     )
+
+
+def test_delete_environment_removes_environment_document_cache(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+) -> None:
+    # When
+    environment.delete()
+
+    # Then
+    persistent_environment_document_cache.delete.assert_called_once_with(
+        environment.api_key
+    )
+
+
+def test_change_api_key_updates_environment_document_cache(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+) -> None:
+    # Given
+    old_api_key = copy(environment.api_key)
+    new_api_key = "new-key"
+
+    # When
+    environment.api_key = new_api_key
+    environment.save()
+
+    # Then
+    persistent_environment_document_cache.delete.assert_called_once_with(old_api_key)
+    persistent_environment_document_cache.set_many.assert_called_once_with(
+        {new_api_key: map_environment_to_environment_document(environment)}
+    )
