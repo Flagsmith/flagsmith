@@ -70,7 +70,8 @@ jobs:
         with:
           images: ${{ inputs.target-images }}
           tags: |
-            type=sha
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       # Setup Docker buildx with Depot builder so imagetools have access to Depot cache
       - uses: depot/use-action@v1
