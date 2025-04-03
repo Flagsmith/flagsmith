@@ -1,6 +1,5 @@
 import { FC } from 'react'
 import { FlagsmithValue } from 'common/types/responses'
-import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames' // we need this to make JSX compile
@@ -23,22 +22,22 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
   }
   const isCompact = getViewMode() === 'compact'
   return (
-    <span
-      className={classNames(`chip ${props.className || ''}`, {
-        'chip--sm justify-content-start d-inline': isCompact,
+    <div
+      className={classNames(`chip flex-row ${props.className || ''}`, {
+        'chip--sm justify-content-start': isCompact,
       })}
       onClick={props.onClick}
       data-test={props['data-test']}
+      style={{ maxWidth: 'fit-content' }}
     >
-      {type == 'string' && <span className='quot'>"</span>}
-      <span className='feature-value'>
-        {Format.truncateText(
-          `${Utils.getTypedValue(props.value)}`,
-          isCompact ? 24 : 20,
-        )}
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {type == 'string' && <span className='quot'>"</span>}
+        <span className='feature-value'>
+          {`${Utils.getTypedValue(props.value)}`}
+        </span>
+        {type == 'string' && <span className='quot'>"</span>}
       </span>
-      {type == 'string' && <span className='quot'>"</span>}
-    </span>
+    </div>
   )
 }
 
