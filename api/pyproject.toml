@@ -154,7 +154,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = { git = "https://github.com/flagsmith/flagsmith-common", branch = "feat/task-processor-metrics" }
+flagsmith-common = { git = "https://github.com/flagsmith/flagsmith-common", rev = "80943c0d9426cd07a8075cf9c0148bde8d39897a" }
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"

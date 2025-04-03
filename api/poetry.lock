@@ -1927,7 +1927,7 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "1.6.0a1"
+version = "1.6.0"
 description = "Flagsmith's common library"
 optional = false
 python-versions = ">=3.11,<4.0"
@@ -1953,8 +1953,8 @@ simplejson = ">=3,<4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-common"
-reference = "feat/task-processor-metrics"
-resolved_reference = "2c76e44ea6548912e8279506db04f3974167caa8"
+reference = "80943c0d9426cd07a8075cf9c0148bde8d39897a"
+resolved_reference = "80943c0d9426cd07a8075cf9c0148bde8d39897a"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5195,4 +5195,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "d19a41b91c40435d3c9f24e4f2628929e00eeea156a68366f0c5df38d1fbade1"
+content-hash = "447eb9a8c8e16a14c266f514905106c0b8adb9d3931b0a7517ebcb92adcc3d15"
