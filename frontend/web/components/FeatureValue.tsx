@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { FlagsmithValue } from 'common/types/responses'
+import Format from 'common/utils/format'
 import Utils from 'common/utils/utils'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames' // we need this to make JSX compile
@@ -33,7 +34,10 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {type == 'string' && <span className='quot'>"</span>}
         <span className='feature-value'>
-          {`${Utils.getTypedValue(props.value)}`}
+          {Format.truncateText(
+            `${Utils.getTypedValue(props.value)}`,
+            isCompact ? 24 : 20,
+          )}
         </span>
         {type == 'string' && <span className='quot'>"</span>}
       </span>
