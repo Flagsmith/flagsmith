@@ -14,7 +14,7 @@ import BlockedOrgInfo from 'components/BlockedOrgInfo'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
-    AccountStore.getOrganisation().id,
+    AccountStore.getOrganisation()?.id,
   )
 
   if (activeSubscription) {
