@@ -31,6 +31,7 @@ import {
   getWebhooks,
   updateWebhook,
 } from 'common/services/useWebhooks'
+import _data from 'common/data/base/_data'
 
 const showDisabledFlagOptions = [
   { label: 'Inherit from Project', value: null },
@@ -56,6 +57,7 @@ const EnvironmentSettingsPage = class extends Component {
       webhooksLoading: true,
     }
     AppActions.getProject(this.props.match.params.projectId)
+    this.getPermissions()
   }
 
   componentDidMount = () => {
@@ -76,6 +78,16 @@ const EnvironmentSettingsPage = class extends Component {
       })
       .finally(() => {
         this.setState({ webhooksLoading: false })
+      })
+  }
+
+  getPermissions = () => {
+    _data
+      .get(
+        `${Project.api}environments/${this.props.match.params.environmentId}/user-permissions/`,
+      )
+      .then((permissions) => {
+        this.setState({ permissions })
       })
   }
 
@@ -799,6 +811,9 @@ const EnvironmentSettingsPage = class extends Component {
                       <FormGroup>
                         <EditPermissions
                           tabClassName='flat-panel'
+                          onSaveUser={() => {
+                            this.getPermissions()
+                          }}
                           parentId={this.props.match.params.projectId}
                           parentLevel='project'
                           parentSettingsLink={`/project/${this.props.match.params.projectId}/settings`}
@@ -806,6 +821,7 @@ const EnvironmentSettingsPage = class extends Component {
                           envId={env.id}
                           router={this.context.router}
                           level='environment'
+                          permissions={this.state.permissions}
                           roleTabTitle='Environment Permissions'
                           roles={this.state.roles}
                         />

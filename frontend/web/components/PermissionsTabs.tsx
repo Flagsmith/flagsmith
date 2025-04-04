@@ -92,6 +92,7 @@ const PermissionsTabs: FC<PermissionsTabsType> = ({
           <EditPermissionsModal
             id={orgId}
             group={group}
+            permissions={[]}
             isGroup={!!group}
             user={user}
             className='mt-2'
