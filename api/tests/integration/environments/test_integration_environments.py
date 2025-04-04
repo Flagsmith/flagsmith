@@ -1,7 +1,9 @@
 import json
+from unittest.mock import MagicMock
 
 import pytest
 from django.urls import reverse
+from pytest_django.fixtures import DjangoAssertNumQueries
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -217,3 +219,23 @@ def test_env_clone_clones_segments_overrides(  # type: ignore[no-untyped-def]
         == clone_feature_segment_id
     )
     assert clone_feature_segment_id != source_feature_segment_id
+
+
+def test_get_environment_document_using_persistent_cache(
+    persistent_environment_document_cache: MagicMock,
+    environment: int,
+    environment_api_key: str,
+    feature: int,
+    server_side_sdk_client: APIClient,
+    django_assert_num_queries: DjangoAssertNumQueries,
+) -> None:
+    # Given
+    url = reverse("api-v1:environment-document")
+
+    # When
+    with django_assert_num_queries(1):
+        # We still expect 1 query for authentication
+        response = server_side_sdk_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
