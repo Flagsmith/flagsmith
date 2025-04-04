@@ -128,7 +128,7 @@ The request timeout when trying to retrieve new changes, in seconds. Defaults to
 Set a value for the `Access-Control-Allow-Origin` header. Defaults to `*`.
 
 ```json
-"allow_origins": "https://my-flagsmith.domain.com"
+"allow_origins": "https://www.example.com"
 ```
 
 ### Endpoint caches
