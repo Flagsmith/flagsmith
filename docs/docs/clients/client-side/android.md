@@ -229,6 +229,6 @@ realtime flag updates in your hosted environment you'll also need to pass the ev
         flagsmith = Flagsmith(
             environmentKey = Helper.environmentDevelopmentKey,
             context = context,
-            baseUrl = "https://hostedflagsmith.company.com/"),
-            eventSourceUrl = "https://api.hostedflagsmith.company.com/"
+            baseUrl = "https://flagsmith.example.com/api/v1/"),
+            eventSourceUrl = "https://realtime.flagsmith.example.com/"
 ```
