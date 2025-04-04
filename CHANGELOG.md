@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.169.1](https://github.com/Flagsmith/flagsmith/compare/v2.169.0...v2.169.1) (2025-04-04)
+
+
+### Bug Fixes
+
+* adds optional chaining to prevent errors ([#5294](https://github.com/Flagsmith/flagsmith/issues/5294)) ([9fa1ad1](https://github.com/Flagsmith/flagsmith/commit/9fa1ad15757611bca4acd1c7b1a7b836d26e3da2))
+* Display an error message if trying to create a server-side SDK key while not being an environment admin ([#5292](https://github.com/Flagsmith/flagsmith/issues/5292)) ([7407643](https://github.com/Flagsmith/flagsmith/commit/7407643da7de72e9b6b3428ec6e88b2f587fb8ff))
+* Unstyled content could be shown while the frontend loads ([#5250](https://github.com/Flagsmith/flagsmith/issues/5250)) ([a923785](https://github.com/Flagsmith/flagsmith/commit/a923785da6021294585ff6472f9992d938814bee))
+
+
+### Dependency Updates
+
+* bump image-size from 1.1.1 to 1.2.1 in /docs ([#5291](https://github.com/Flagsmith/flagsmith/issues/5291)) ([da3d61c](https://github.com/Flagsmith/flagsmith/commit/da3d61c68cef11a1897d4e60dd6a87ef225428be))
+
 ## [2.169.0](https://github.com/Flagsmith/flagsmith/compare/v2.168.1...v2.169.0) (2025-03-31)
 
 
