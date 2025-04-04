@@ -91,7 +91,8 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
               !readOnly &&
               editFeature(projectFlag, environmentFlags?.[id])
             }
-            className={`flex-fill ${fadeValue ? 'faded' : ''}`}
+            style={{ flex: 1 }}
+            className={`overflow-hidden ${fadeValue ? 'faded' : ''}`}
           >
             <FeatureValue
               value={environmentFlags?.[id]?.feature_state_value ?? null}

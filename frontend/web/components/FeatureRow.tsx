@@ -53,7 +53,7 @@ interface FeatureRowProps {
   history?: RouterChildContext['router']['history']
 }
 
-const width = [200, 70, 55, 70, 450]
+const width = [220, 70, 55, 70, 450]
 
 const FeatureRow: FC<FeatureRowProps> = ({
   className,
