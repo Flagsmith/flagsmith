@@ -4,7 +4,7 @@ import pytest
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from organisations.chargebee.metadata import ChargebeeObjMetadata
 from organisations.models import (

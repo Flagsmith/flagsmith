@@ -4,10 +4,10 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_task_handler,
 )
-from task_processor.models import TaskPriority  # type: ignore[import-untyped]
+from task_processor.models import TaskPriority
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
@@ -18,14 +18,14 @@ from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-define
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)  # type: ignore[misc]
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_went_live_audit_log(feature_state_id: int):  # type: ignore[no-untyped-def]
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_WENT_LIVE_MESSAGE
     )
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)  # type: ignore[misc]
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):  # type: ignore[no-untyped-def]
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE
@@ -63,7 +63,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
     )
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)  # type: ignore[misc]
+@register_task_handler(priority=TaskPriority.HIGHEST)
 def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
     history_instance_id: int,
     history_user_id: typing.Optional[int],
@@ -123,7 +123,7 @@ def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
     )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def create_segment_priorities_changed_audit_log(  # type: ignore[no-untyped-def]
     previous_id_priority_pairs: typing.List[typing.Tuple[int, int]],
     feature_segment_ids: typing.List[int],

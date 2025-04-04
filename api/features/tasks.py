@@ -1,6 +1,6 @@
 import logging
 
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_task_handler,
 )
 
@@ -95,6 +95,6 @@ def _get_feature_state_webhook_data(feature_state, previous=False):  # type: ign
     )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def delete_feature(feature_id: int) -> None:
     Feature.objects.get(pk=feature_id).delete()

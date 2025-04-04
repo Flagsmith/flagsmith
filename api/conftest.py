@@ -24,7 +24,7 @@ from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 from urllib3 import BaseHTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id  # type: ignore[import-untyped]
