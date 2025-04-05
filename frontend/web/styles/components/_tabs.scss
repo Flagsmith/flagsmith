@@ -149,7 +149,16 @@
     justify-content: center;
     align-items: center;
   }
+
+  &.btn-no-focus {
+    &:focus {
+      box-shadow: none !important;
+      outline: none !important;
+      background-color: transparent !important;
+    }
+  }
 }
+
 .pill .btn-tab .unread {
   margin-left: calc($spacer / 2);
   position: static;
