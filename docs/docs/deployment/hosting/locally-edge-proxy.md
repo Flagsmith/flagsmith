@@ -245,14 +245,17 @@ Or, log access logs to file in generic format while logging everything else to s
 When adding logger configurations, you can use the `"default"` handler which writes to stdout and uses formatter
 specified by the [`"logging.log_format"`](#logginglog_format) setting.
 
-### Health check
+### Health checks
 
-The Edge Proxy exposes a health check endpoint at `/proxy/health` that responds with a 200 status code if it was able to
-fetch all its configured environment documents. If any environment document could not be fetched during a configurable
-grace period, the health check will fail with a 500 status code. This allows the Edge Proxy to continue reporting as
-healthy even if the Flagsmith API is temporarily unavailable.
+The Edge Proxy exposes two health check endpoints:
 
-You can point your orchestration health checks to this endpoint.
+* `/proxy/health/liveness`: Always responds with a 200 status code. Use this health check to determine if the Edge
+  Proxy is alive and able to respond to requests.
+* `/proxy/health/readiness`: Responds with a 200 status if the Edge Proxy was able to fetch all its configured
+  environment documents within a configurable grace period. This allows the Edge Proxy to continue reporting as healthy
+  even if the Flagsmith API is temporarily unavailable. This health check is also available at `/proxy/health`.
+
+You should point your orchestration health checks to these endpoints.
 
 #### `health_check.environment_update_grace_period_seconds`
 
