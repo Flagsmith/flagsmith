@@ -3,7 +3,7 @@ import { Identity } from 'common/types/responses'
 import { useUpdateIdentityMutation } from 'common/services/useIdentity'
 import Button from './base/forms/Button'
 import ErrorMessage from './ErrorMessage'
-import classNames from 'classnames'
+import GhostInput from './base/forms/GhostInput'
 
 type EditIdentityType = {
   data: Identity
@@ -13,7 +13,7 @@ type EditIdentityType = {
 
 const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   const [alias, setAlias] = useState(data.dashboard_alias)
-  const aliasRef = useRef<HTMLSpanElement>(null)
+  const aliasRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setAlias(data?.dashboard_alias)
@@ -22,20 +22,11 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   const [updateIdentity, { error, isLoading }] = useUpdateIdentityMutation({})
 
   const handleBlur = () => {
-    if (aliasRef.current) {
-      const updatedAlias = (aliasRef.current.textContent || '')
-        .replace(/\n/g, ' ')
-        .trim()
-        .toLowerCase()
-
-      aliasRef.current.textContent = alias
-      setAlias(updatedAlias)
-      onSubmit(updatedAlias)
-    }
+    onSubmit(alias)
   }
 
-  const onSubmit = (updatedAlias: string) => {
-    if (!isLoading && updatedAlias) {
+  const onSubmit = (updatedAlias?: string) => {
+    if (!isLoading) {
       updateIdentity({
         data: { ...data, dashboard_alias: updatedAlias },
         environmentId,
@@ -44,26 +35,7 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
   }
 
   const handleFocus = () => {
-    if (!alias) {
-      aliasRef.current.textContent = '' // Clear the content
-    }
-
-    // Ensure that aliasRef.current has at least one child node (a text node)
-    if (aliasRef.current && aliasRef.current.childNodes.length === 0) {
-      aliasRef.current.appendChild(document.createTextNode(''))
-    }
-
-    if (aliasRef.current) {
-      const selection = window.getSelection()
-      const range = document.createRange()
-
-      const textLength = aliasRef.current.textContent?.length || 0
-      range.setStart(aliasRef.current.childNodes[0], textLength)
-      range.collapse(true)
-
-      selection?.removeAllRanges()
-      selection?.addRange(range)
-    }
+    aliasRef.current?.focus()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLSpanElement>) => {
@@ -73,48 +45,28 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
     }
   }
 
-  const handleInput = () => {
-    if (aliasRef.current) {
-      const selection = window.getSelection()
-      const range = selection?.getRangeAt(0)
-      const cursorPosition = range?.startOffset || 0
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value.toLowerCase()
+    setAlias(newValue.replace(/\n/g, ' ')
+      .trim())
 
-      const lowerCaseText = aliasRef.current.textContent?.toLowerCase() || ''
-      aliasRef.current.textContent = lowerCaseText
-
-      // Restore cursor position
-      const newRange = document.createRange()
-      newRange.setStart(
-        aliasRef.current.childNodes[0],
-        Math.min(cursorPosition, lowerCaseText.length),
-      )
-      newRange.collapse(true)
-
-      selection?.removeAllRanges()
-      selection?.addRange(newRange)
-    }
   }
-
   return (
     <>
-      <span
-        ref={aliasRef}
-        className={classNames('fw-normal', { 'text-muted': !alias })}
-        contentEditable={true}
-        suppressContentEditableWarning={true}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        onInput={handleInput}
-        role='textbox'
-        aria-label='Alias'
-      >
-        {alias || 'None'}
-      </span>
+    <GhostInput
+      ref={aliasRef}
+      value={alias}
+      onChange={handleInput}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      placeholder='None'
+    />
       <Button
         disabled={!data}
         iconSize={18}
         theme='text'
-        className='ms-2 text-primary'
+        style={{ lineHeight: 'inherit' }}
+        className='text-primary'
         iconRightColour='primary'
         iconRight={'edit'}
         onClick={handleFocus}
