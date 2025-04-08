@@ -67,6 +67,7 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
           onKeyDown={onKeyDown}
           role='textbox'
           aria-label={ariaLabel}
+          spellCheck={false}
           style={{
             background: 'transparent',
             border: 'none',
@@ -76,8 +77,6 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
             fontFamily: 'inherit',
             fontSize: 'inherit',
             margin: 0,
-            // maxWidth: 700,
-            // minWidth: 45,
             outline: 'none',
             padding: 0,
             width: inputWidth,
