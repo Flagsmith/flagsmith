@@ -13,7 +13,7 @@ def get_value_type(value: str) -> str:
     """
     if is_32_bit_integer(value):
         return INTEGER
-    elif is_boolean(value):  # type: ignore[no-untyped-call]
+    elif is_boolean(value):
         return BOOLEAN
     else:
         return STRING
@@ -31,18 +31,18 @@ def is_integer(value: str, max_value: int = sys.maxsize) -> bool:
         return False
 
 
-def is_boolean(value):  # type: ignore[no-untyped-def]
+def is_boolean(value: str) -> bool:
     return value in ("true", "True", "false", "False")
 
 
-def get_integer_from_string(value):  # type: ignore[no-untyped-def]
+def get_integer_from_string(value: str) -> int:
     try:
         return int(value)
     except ValueError:
         return 0
 
 
-def get_boolean_from_string(value):  # type: ignore[no-untyped-def]
+def get_boolean_from_string(value: str) -> bool:
     if value in ("false", "False"):
         return False
     else:
