@@ -1,5 +1,6 @@
 import importlib
 
+from common.core.urls import urlpatterns as core_urlpatterns
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
@@ -10,8 +11,7 @@ from users.views import password_reset_redirect
 from . import views
 
 urlpatterns = [
-    re_path(r"^health/liveness/?", views.liveness),
-    re_path(r"^health/readiness/?", include("health_check.urls")),
+    *core_urlpatterns,
     path("processor/", include("task_processor.urls")),
 ]
 
@@ -23,11 +23,6 @@ if not settings.TASK_PROCESSOR_MODE:
         re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
         re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
         re_path(r"^admin/", admin.site.urls),
-        re_path(r"^health", include("health_check.urls", namespace="health")),
-        # Aptible health checks must be on /healthcheck and cannot redirect
-        # see https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks
-        path("healthcheck", include("health_check.urls", namespace="aptible")),
-        re_path(r"^version", views.version_info, name="version-info"),
         re_path(
             r"^sales-dashboard/",
             include("sales_dashboard.urls", namespace="sales_dashboard"),

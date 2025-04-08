@@ -1,9 +1,9 @@
 import typing
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
 from django.db.models import Model, Q

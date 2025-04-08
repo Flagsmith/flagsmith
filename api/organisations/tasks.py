@@ -211,7 +211,10 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id)
+        api_usage = get_current_api_usage(
+            organisation_id=organisation.id,
+            date_start=subscription_cache.current_billing_term_starts_at,
+        )
 
         # Grace period for organisations < 200% of usage.
         if (
@@ -228,7 +231,8 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
-            billed_at__gte=subscription_cache.current_billing_term_starts_at
+            organisation=organisation,
+            billed_at__gte=subscription_cache.current_billing_term_starts_at,
         )
         previous_api_overage = sum([ap.api_overage for ap in api_billings])
 
@@ -342,7 +346,10 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id)
+        api_usage = get_current_api_usage(
+            organisation_id=organisation.id,
+            date_start=now - timedelta(days=30),
+        )
         if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
             logger.info(
                 f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."

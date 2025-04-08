@@ -1,5 +1,5 @@
 import pytest
-from common.metadata.serializers import (  # type: ignore[import-untyped]
+from common.metadata.serializers import (
     MetadataSerializer,
 )
 
