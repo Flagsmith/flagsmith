@@ -28,6 +28,7 @@ import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import Resources from 'components/Resources'
 import Constants from 'common/constants'
 
 type HomeAsideType = {
@@ -383,8 +384,13 @@ const HomeAside: FC<HomeAsideType> = ({
                     clearableValue={false}
                   />
                 </div>
-
-                <BuildVersion />
+                <div
+                  style={{ width: 280 }}
+                  className='text-muted position-fixed bottom-0 p-2 fs-caption'
+                >
+                  <Resources />
+                  <BuildVersion />
+                </div>
               </div>
             )
           }}
