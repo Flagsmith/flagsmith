@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.169.1](https://github.com/Flagsmith/flagsmith/compare/v2.169.0...v2.169.1) (2025-04-08)
+
+
+### Bug Fixes
+
+* adds optional chaining to prevent errors ([#5294](https://github.com/Flagsmith/flagsmith/issues/5294)) ([9fa1ad1](https://github.com/Flagsmith/flagsmith/commit/9fa1ad15757611bca4acd1c7b1a7b836d26e3da2))
+* Display an error message if trying to create a server-side SDK key while not being an environment admin ([#5292](https://github.com/Flagsmith/flagsmith/issues/5292)) ([7407643](https://github.com/Flagsmith/flagsmith/commit/7407643da7de72e9b6b3428ec6e88b2f587fb8ff))
+* Organisation ID check in payment button ([#5297](https://github.com/Flagsmith/flagsmith/issues/5297)) ([f6e36a7](https://github.com/Flagsmith/flagsmith/commit/f6e36a727f64f5ae44c223a0a8917c4235e94d5d))
+* Prevent the frontend from crashing if Chargebee.js failed to load ([#5302](https://github.com/Flagsmith/flagsmith/issues/5302)) ([3bc43db](https://github.com/Flagsmith/flagsmith/commit/3bc43db61955a1a588e4648cb3812ac4b01825b9))
+* Support tag based permissions for approve change request ([#5246](https://github.com/Flagsmith/flagsmith/issues/5246)) ([83e6ac1](https://github.com/Flagsmith/flagsmith/commit/83e6ac1987c47707f3a977d4c430eedc4e4a3700))
+* Unstyled content could be shown while the frontend loads ([#5250](https://github.com/Flagsmith/flagsmith/issues/5250)) ([a923785](https://github.com/Flagsmith/flagsmith/commit/a923785da6021294585ff6472f9992d938814bee))
+
+
+### Dependency Updates
+
+* bump image-size from 1.1.1 to 1.2.1 in /docs ([#5291](https://github.com/Flagsmith/flagsmith/issues/5291)) ([da3d61c](https://github.com/Flagsmith/flagsmith/commit/da3d61c68cef11a1897d4e60dd6a87ef225428be))
+
 ## [2.169.0](https://github.com/Flagsmith/flagsmith/compare/v2.168.1...v2.169.0) (2025-03-31)
 
 
