@@ -47,20 +47,19 @@ const EditIdentity: FC<EditIdentityType> = ({ data, environmentId }) => {
 
   const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value.toLowerCase()
-    setAlias(newValue.replace(/\n/g, ' ')
-      .trim())
-
+    setAlias(newValue.replace(/\n/g, ' ').trim())
   }
+
   return (
     <>
-    <GhostInput
-      ref={aliasRef}
-      value={alias}
-      onChange={handleInput}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      placeholder='None'
-    />
+      <GhostInput
+        ref={aliasRef}
+        value={alias}
+        onChange={handleInput}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder='None'
+      />
       <Button
         disabled={!data}
         iconSize={18}
