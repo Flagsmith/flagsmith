@@ -13,10 +13,8 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 import importlib.util
 import json
 import os
-import sys
 import warnings
 from datetime import datetime, time, timedelta
-from importlib import reload
 
 import dj_database_url  # type: ignore[import-untyped]
 import prometheus_client
@@ -67,10 +65,6 @@ USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 CSRF_TRUSTED_ORIGINS: list[str] = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
-
-if sys.version[0] == "2":
-    reload(sys)
-    sys.setdefaultencoding("utf-8")  # type: ignore[attr-defined]
 
 # Application definition
 
