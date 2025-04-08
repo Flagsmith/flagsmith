@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.169.2](https://github.com/Flagsmith/flagsmith/compare/v2.169.1...v2.169.2) (2025-04-08)
+
+
+### Dependency Updates
+
+* bump estree-util-value-to-estree from 3.1.1 to 3.3.3 in /docs ([#5309](https://github.com/Flagsmith/flagsmith/issues/5309)) ([f4581c9](https://github.com/Flagsmith/flagsmith/commit/f4581c9f3489557379190487279997a683357bce))
+
 ## [2.169.1](https://github.com/Flagsmith/flagsmith/compare/v2.169.0...v2.169.1) (2025-04-08)
 
 
