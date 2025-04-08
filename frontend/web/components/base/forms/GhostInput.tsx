@@ -25,7 +25,7 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
   const [width, setWidth] = useState(5);
   
   useEffect(() => {
-    setWidth((value?.length || 5) * 0.85)
+    setWidth((value?.length || 5) * 0.88)
   }, [value])
 
     return (
@@ -51,7 +51,7 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
           fontFamily: 'inherit',
           fontSize: 'inherit',
           margin: 0,
-          maxWidth: 360,
+          maxWidth: 420,
           minWidth: 45,
           outline: 'none',
           padding: 0,
