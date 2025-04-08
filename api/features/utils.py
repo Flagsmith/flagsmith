@@ -1,4 +1,7 @@
 # Feature State Value Types
+import sys
+
+from features.constants import MAX_32_BIT_INTEGER
 from features.value_types import BOOLEAN, INTEGER, STRING
 
 
@@ -8,7 +11,7 @@ def get_value_type(value: str) -> str:
 
     e.g. "12" -> "int", "12.34" -> "float", etc.
     """
-    if is_integer(value):  # type: ignore[no-untyped-call]
+    if is_32_bit_integer(value):
         return INTEGER
     elif is_boolean(value):  # type: ignore[no-untyped-call]
         return BOOLEAN
@@ -16,10 +19,14 @@ def get_value_type(value: str) -> str:
         return STRING
 
 
-def is_integer(value):  # type: ignore[no-untyped-def]
+def is_32_bit_integer(value: str) -> bool:
+    return is_integer(value, max_value=MAX_32_BIT_INTEGER)
+
+
+def is_integer(value: str, max_value: int = sys.maxsize) -> bool:
     try:
-        int(value)
-        return True
+        int_value = int(value)
+        return int_value < max_value
     except ValueError:
         return False
 
