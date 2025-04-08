@@ -25,12 +25,13 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
   const [width, setWidth] = useState(5);
   
   useEffect(() => {
-    setWidth(value?.length || 5)
+    setWidth((value?.length || 5) * 0.85)
   }, [value])
 
     return (
       <input
         ref={ref}
+        maxLength={100}
         className={classNames('fw-normal', className, { 
           'text-muted': !value 
         })}
@@ -50,6 +51,8 @@ const GhostInput = forwardRef<HTMLInputElement, GhostInputProps>(
           fontFamily: 'inherit',
           fontSize: 'inherit',
           margin: 0,
+          maxWidth: 360,
+          minWidth: 45,
           outline: 'none',
           padding: 0,
           width: width ? `${width}ch` : 'auto'
