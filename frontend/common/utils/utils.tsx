@@ -200,9 +200,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
   },
-  getApproveChangeRequestPermission() {
-    return 'APPROVE_CHANGE_REQUEST'
-  },
   getContentType(contentTypes: ContentType[], model: string, type: string) {
     return contentTypes.find((c: ContentType) => c[model] === type) || null
   },

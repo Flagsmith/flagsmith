@@ -1,5 +1,82 @@
 # Changelog
 
+## [2.169.2](https://github.com/Flagsmith/flagsmith/compare/v2.169.1...v2.169.2) (2025-04-08)
+
+
+### Dependency Updates
+
+* bump estree-util-value-to-estree from 3.1.1 to 3.3.3 in /docs ([#5309](https://github.com/Flagsmith/flagsmith/issues/5309)) ([f4581c9](https://github.com/Flagsmith/flagsmith/commit/f4581c9f3489557379190487279997a683357bce))
+
+## [2.169.1](https://github.com/Flagsmith/flagsmith/compare/v2.169.0...v2.169.1) (2025-04-08)
+
+
+### Bug Fixes
+
+* adds optional chaining to prevent errors ([#5294](https://github.com/Flagsmith/flagsmith/issues/5294)) ([9fa1ad1](https://github.com/Flagsmith/flagsmith/commit/9fa1ad15757611bca4acd1c7b1a7b836d26e3da2))
+* Display an error message if trying to create a server-side SDK key while not being an environment admin ([#5292](https://github.com/Flagsmith/flagsmith/issues/5292)) ([7407643](https://github.com/Flagsmith/flagsmith/commit/7407643da7de72e9b6b3428ec6e88b2f587fb8ff))
+* Organisation ID check in payment button ([#5297](https://github.com/Flagsmith/flagsmith/issues/5297)) ([f6e36a7](https://github.com/Flagsmith/flagsmith/commit/f6e36a727f64f5ae44c223a0a8917c4235e94d5d))
+* Prevent the frontend from crashing if Chargebee.js failed to load ([#5302](https://github.com/Flagsmith/flagsmith/issues/5302)) ([3bc43db](https://github.com/Flagsmith/flagsmith/commit/3bc43db61955a1a588e4648cb3812ac4b01825b9))
+* Support tag based permissions for approve change request ([#5246](https://github.com/Flagsmith/flagsmith/issues/5246)) ([83e6ac1](https://github.com/Flagsmith/flagsmith/commit/83e6ac1987c47707f3a977d4c430eedc4e4a3700))
+* Unstyled content could be shown while the frontend loads ([#5250](https://github.com/Flagsmith/flagsmith/issues/5250)) ([a923785](https://github.com/Flagsmith/flagsmith/commit/a923785da6021294585ff6472f9992d938814bee))
+
+
+### Dependency Updates
+
+* bump image-size from 1.1.1 to 1.2.1 in /docs ([#5291](https://github.com/Flagsmith/flagsmith/issues/5291)) ([da3d61c](https://github.com/Flagsmith/flagsmith/commit/da3d61c68cef11a1897d4e60dd6a87ef225428be))
+
+## [2.169.0](https://github.com/Flagsmith/flagsmith/compare/v2.168.1...v2.169.0) (2025-03-31)
+
+
+### Features
+
+* Each replica database URL can now be configured with an individual environment variable, using `REPLICA_DATABASE_URL_0`, `REPLICA_DATABASE_URL_1`, etc ([#5222](https://github.com/Flagsmith/flagsmith/issues/5222)) ([b704d1c](https://github.com/Flagsmith/flagsmith/commit/b704d1c9232f47331171203b822f5c8547d19624))
+
+
+### Bug Fixes
+
+* **billing:** Organisation overage compared to other organisations' overages when trying to charge for overages ([#5262](https://github.com/Flagsmith/flagsmith/issues/5262)) ([ef75ea8](https://github.com/Flagsmith/flagsmith/commit/ef75ea824eca0708cc18354b074a70cb4de10135))
+* Syntax error in NodeJS "Try it" code snippets ([#5252](https://github.com/Flagsmith/flagsmith/issues/5252)) ([31ffb7a](https://github.com/Flagsmith/flagsmith/commit/31ffb7a0cf6c08ea460f8eb1ab460200126b1bf2))
+
+
+### Dependency Updates
+
+* Bump flagsmith-common from 1.4.2 to 1.5.2, flagsmith-task-processor from 1.3.2 to 1.3.3, workflows-logic from 2.7.7 to 2.7.8, environs from 9.2.0 to 14.1.1 ([#5248](https://github.com/Flagsmith/flagsmith/issues/5248)) ([3059eeb](https://github.com/Flagsmith/flagsmith/commit/3059eeb940702b855a44c535f0933bb6f1eefbec))
+
+## [2.168.1](https://github.com/Flagsmith/flagsmith/compare/v2.168.0...v2.168.1) (2025-03-25)
+
+
+### Bug Fixes
+
+* format-create-segment-errors-from-payload ([#5082](https://github.com/Flagsmith/flagsmith/issues/5082)) ([e8c3803](https://github.com/Flagsmith/flagsmith/commit/e8c3803d1421afc1d1055430520ac21387ac2ab1))
+
+## [2.168.0](https://github.com/Flagsmith/flagsmith/compare/v2.167.1...v2.168.0) (2025-03-25)
+
+
+### Features
+
+* Add self-hosted user data to version endpoint ([#5056](https://github.com/Flagsmith/flagsmith/issues/5056)) ([c5b9679](https://github.com/Flagsmith/flagsmith/commit/c5b9679d8cbeb81d7c7ea9afb831addbcfb89239))
+* Distinct liveness probe ([#5221](https://github.com/Flagsmith/flagsmith/issues/5221)) ([33af709](https://github.com/Flagsmith/flagsmith/commit/33af7090a16006f2ea441887880c0d4bc23e1e84))
+
+
+### Bug Fixes
+
+* bad API usage URL rendering in email template ([#5234](https://github.com/Flagsmith/flagsmith/issues/5234)) ([5c61af5](https://github.com/Flagsmith/flagsmith/commit/5c61af594576537efb997e81e093e53d64ff2b69))
+* incorrect URL generated when copying invite link to clipboard ([#5223](https://github.com/Flagsmith/flagsmith/issues/5223)) ([91a50c7](https://github.com/Flagsmith/flagsmith/commit/91a50c7f91ec032e1f6c47b02a7e4cd24c02e640))
+* Properly URL-encode "Try It" curl command ([#5228](https://github.com/Flagsmith/flagsmith/issues/5228)) ([d26647c](https://github.com/Flagsmith/flagsmith/commit/d26647c602caa40017f307738550fd4add9a64d4))
+* **python-types:** Improve typing in `utils`, `views`, `pagination` modules ([#5210](https://github.com/Flagsmith/flagsmith/issues/5210)) ([d57f903](https://github.com/Flagsmith/flagsmith/commit/d57f903d3f46006f3cec8e2d6df14397439bff72))
+* Syntax error in Python "Try it" code snippets ([#5238](https://github.com/Flagsmith/flagsmith/issues/5238)) ([bce01e2](https://github.com/Flagsmith/flagsmith/commit/bce01e2712bc34c458f63db7088bdc08a0b74ef1))
+* URL parameter parsing for url parameters that don't contain = ([#5235](https://github.com/Flagsmith/flagsmith/issues/5235)) ([ccc8b17](https://github.com/Flagsmith/flagsmith/commit/ccc8b1792ae05d97ca025b3c8947f375a4f7c640))
+
+
+### Dependency Updates
+
+* bump @babel/helpers from 7.25.6 to 7.26.10 in /frontend ([#5217](https://github.com/Flagsmith/flagsmith/issues/5217)) ([b837628](https://github.com/Flagsmith/flagsmith/commit/b8376289862c73cfbb7e059df3e5abd54f811f66))
+* bump @babel/helpers from 7.26.0 to 7.26.10 in /docs ([#5220](https://github.com/Flagsmith/flagsmith/issues/5220)) ([809e071](https://github.com/Flagsmith/flagsmith/commit/809e0716af77e742b5a0a8f8c2b1fef32c22953f))
+* bump @babel/runtime from 7.26.0 to 7.26.10 in /docs ([#5219](https://github.com/Flagsmith/flagsmith/issues/5219)) ([3e608c7](https://github.com/Flagsmith/flagsmith/commit/3e608c7d240806afcb8c64bfe8420b599e781e8d))
+* bump @babel/runtime-corejs3 from 7.26.0 to 7.26.10 in /docs ([#5218](https://github.com/Flagsmith/flagsmith/issues/5218)) ([41325b1](https://github.com/Flagsmith/flagsmith/commit/41325b1add335a5e03291c657a4ed6e0b668b891))
+* bump axios from 1.7.7 to 1.8.2 in /frontend ([#5208](https://github.com/Flagsmith/flagsmith/issues/5208)) ([936107f](https://github.com/Flagsmith/flagsmith/commit/936107f410a94705b487e2b162ad6163bfc7b1cc))
+* bump gunicorn from 22.0.0 to 23.0.0 in /api ([#5239](https://github.com/Flagsmith/flagsmith/issues/5239)) ([4fb116f](https://github.com/Flagsmith/flagsmith/commit/4fb116f95edcd6ed0f21ace8e80c59fca9baad04))
+
 ## [2.167.1](https://github.com/Flagsmith/flagsmith/compare/v2.167.0...v2.167.1) (2025-03-11)
 
 

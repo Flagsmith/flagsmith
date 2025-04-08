@@ -19,7 +19,7 @@ def forward_identity_request(  # type: ignore[no-untyped-def]
     if not _should_forward(project_id):
         return
 
-    url = settings.EDGE_API_URL + "identities/"
+    url = settings.EDGE_API_URL + "identities/"  # type: ignore[operator]
     headers = _get_headers(
         request_method, headers, json.dumps(request_data) if request_data else ""
     )
@@ -38,7 +38,7 @@ def forward_trait_request(  # type: ignore[no-untyped-def]
     if not _should_forward(project_id):
         return
 
-    url = settings.EDGE_API_URL + "traits/"
+    url = settings.EDGE_API_URL + "traits/"  # type: ignore[operator]
     payload = json.dumps(payload)  # type: ignore[assignment]
     requests.post(
         url,
@@ -71,6 +71,6 @@ def _get_headers(request_method: str, headers: dict, payload: str = "") -> dict:
     # ref: https://groups.google.com/g/django-developers/c/xjYVJN-RguA/m/G9krDqawchQJ
     if request_method == "GET":
         headers.pop("Content-Length", None)
-    signature = sign_payload(payload, settings.EDGE_REQUEST_SIGNING_KEY)
+    signature = sign_payload(payload, settings.EDGE_REQUEST_SIGNING_KEY)  # type: ignore[arg-type]
     headers[FLAGSMITH_SIGNATURE_HEADER] = signature
     return headers

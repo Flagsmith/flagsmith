@@ -35,7 +35,7 @@ logger = logging.getLogger()
 
 class DynamoIdentityWrapper(BaseDynamoWrapper):
     def get_table_name(self) -> str | None:  # type: ignore[override]
-        return settings.IDENTITIES_TABLE_NAME_DYNAMO  # type: ignore[no-any-return]
+        return settings.IDENTITIES_TABLE_NAME_DYNAMO
 
     def query_items(self, *args, **kwargs) -> "QueryOutputTableTypeDef":  # type: ignore[no-untyped-def]
         return self.table.query(*args, **kwargs)  # type: ignore[union-attr]
