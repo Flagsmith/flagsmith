@@ -280,6 +280,9 @@
             }
         }
     ],
+    "dockerLabels": {
+        "ECS_PROMETHEUS_EXPORTER_PORT": 8000
+    },
     "requiresCompatibilities": [
         "FARGATE"
     ],
