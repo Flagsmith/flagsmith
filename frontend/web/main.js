@@ -47,20 +47,37 @@ if (res && !isInvite && !isOauth) {
   AppActions.setToken(res)
 }
 
+function isPublicURL() {
+  const pathname = document.location.pathname
+
+  if (
+    pathname === '/' ||
+    pathname.startsWith('/404') ||
+    pathname.startsWith('/home') ||
+    pathname.startsWith('/invite') ||
+    pathname.startsWith('/password-reset') ||
+    pathname.startsWith('/invite-link') ||
+    pathname.startsWith('/maintenance') ||
+    pathname.startsWith('/github-setup') ||
+    pathname.startsWith('/oauth') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/saml') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/login')
+  ) {
+    return true
+  }
+
+  return false
+}
+
 setTimeout(() => {
   const browserHistory = createBrowserHistory({
     basename: Project.basename || '',
   })
 
   // redirect before login
-  // todo: move to util to decide if url is public
-  if (
-    (document.location.pathname.indexOf('/project/') !== -1 ||
-      document.location.pathname.indexOf('/create') !== -1 ||
-      document.location.pathname.indexOf('/invite') !== -1 ||
-      document.location.pathname.indexOf('/organisation-settings') !== -1) &&
-    !AccountStore.getUser()
-  ) {
+  if (!isPublicURL() && !AccountStore.getUser()) {
     API.setRedirect(
       document.location.pathname + (document.location.search || ''),
     )
