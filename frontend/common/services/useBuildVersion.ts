@@ -14,17 +14,10 @@ export const buildVersionService = service
         queryFn: async (args, _, _2, baseQuery) => {
           // Fire both requests concurrently
           const [frontendRes, backendRes] = await Promise.all([
-            baseQuery('/version').then(
-              (res: { data?: Version['frontend'] }) => {
-                if (res.data) {
-                  return res.data
-                }
-                return {}
-              },
+            baseQuery(
+              `${new URL('/version/', Project.api.replace('api/v1/', ''))}`,
             ),
-            baseQuery(`${Project.api.replace('api/v1/', '')}version`).then(
-              (res: { data: Version['backend'] }) => res.data,
-            ),
+            baseQuery(`${Project.api.replace('api/v1/', '')}version`),
           ])
 
           if (backendRes.error) {

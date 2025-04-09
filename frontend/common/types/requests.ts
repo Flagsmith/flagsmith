@@ -58,8 +58,10 @@ export type RegisterRequest = {
   email: string
   first_name: string
   last_name: string
-  marketing_consent_given: boolean
   password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
 }
 export type Req = {
   getSegments: PagedRequest<{

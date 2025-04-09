@@ -179,7 +179,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
   const [onboarding, setOnboarding] = useState(true)
 
   if (onboarding) {
-    return <OnboardingPage onComplete={() => setOnboarding(false)} />
+    return <OnboardingPage />
   }
 
   if ((!isSignup || !disableOauthRegister) && !disableSignup) {
