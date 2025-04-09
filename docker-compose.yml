@@ -6,8 +6,6 @@ volumes:
 
 services:
   postgres:
-    networks:
-      - promtest
     image: postgres:15.5-alpine
     environment:
       POSTGRES_PASSWORD: password
@@ -23,12 +21,7 @@ services:
       start_period: 20s
 
   flagsmith:
-    networks:
-      - promtest
     image: ghcr.io/flagsmith/flagsmith-unified:prometheus
-    build:
-      context: .
-      target: oss-unified
     environment:
       # All environments variables are available here:
       # API: https://docs.flagsmith.com/deployment/locally-api#environment-variables
@@ -72,12 +65,7 @@ services:
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
   # in the application environment
   flagsmith-processor:
-    networks:
-      - promtest
     image: ghcr.io/flagsmith/flagsmith-api:prometheus
-    build:
-      context: .
-      target: oss-api
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'
@@ -88,7 +76,3 @@ services:
     depends_on:
       - flagsmith
     command: run-task-processor
-
-networks:
-  promtest:
-    name: promtest
