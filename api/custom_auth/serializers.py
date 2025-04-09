@@ -1,5 +1,6 @@
 from typing import Any
 
+from common.core.utils import is_saas
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyped]
 from rest_framework import serializers
@@ -7,7 +8,6 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueValidator
 
-from common.core.utils import is_saas
 from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
