@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.170.0](https://github.com/Flagsmith/flagsmith/compare/v2.169.2...v2.170.0) (2025-04-09)
+
+
+### Features
+
+* Initial Prometheus support ([#5254](https://github.com/Flagsmith/flagsmith/issues/5254)) ([3a98aca](https://github.com/Flagsmith/flagsmith/commit/3a98aca251260b04e23ab8d4097a92e40b383161))
+
+
+### Bug Fixes
+
+* Dashboard alias not updating in safari ([#5310](https://github.com/Flagsmith/flagsmith/issues/5310)) ([42590ae](https://github.com/Flagsmith/flagsmith/commit/42590aedc330dbb37a387d19c128bf8088e20eec))
+* Feature value overflowing container ([#5295](https://github.com/Flagsmith/flagsmith/issues/5295)) ([a0589eb](https://github.com/Flagsmith/flagsmith/commit/a0589ebc9bdfe3ff6ed1b95407013c2c07f9c90b))
+
 ## [2.169.2](https://github.com/Flagsmith/flagsmith/compare/v2.169.1...v2.169.2) (2025-04-08)
 
 
