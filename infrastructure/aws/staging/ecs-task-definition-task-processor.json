@@ -6,13 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "entryPoint": [
-                "python",
-                "manage.py",
-                "runprocessor",
-                "--sleepintervalms",
-                "700"
-            ],
+            "entryPoint": ["run-task-processor"],
             "essential": true,
             "environment": [
                 {
@@ -158,6 +152,14 @@
                 {
                     "name": "PROMETHEUS_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
+                    "value": "1000"
+                },
+                {
+                    "name": "TASK_PROCESSOR_NUM_THREADS",
+                    "value": "12"
                 }
             ],
             "secrets": [
