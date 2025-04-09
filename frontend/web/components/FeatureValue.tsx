@@ -23,22 +23,26 @@ const FeatureValue: FC<FeatureValueType> = (props) => {
   }
   const isCompact = getViewMode() === 'compact'
   return (
-    <span
-      className={classNames(`chip ${props.className || ''}`, {
-        'chip--sm justify-content-start d-inline': isCompact,
+    <div
+      className={classNames(`chip flex-row no-wrap ${props.className || ''}`, {
+        'chip--sm justify-content-start': isCompact,
       })}
       onClick={props.onClick}
       data-test={props['data-test']}
+      style={{ maxWidth: 'fit-content' }}
     >
       {type == 'string' && <span className='quot'>"</span>}
-      <span className='feature-value'>
+      <span
+        className='feature-value'
+        style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}
+      >
         {Format.truncateText(
           `${Utils.getTypedValue(props.value)}`,
           isCompact ? 24 : 20,
         )}
       </span>
       {type == 'string' && <span className='quot'>"</span>}
-    </span>
+    </div>
   )
 }
 
