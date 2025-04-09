@@ -6,15 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "entryPoint": [
-                "python",
-                "manage.py",
-                "runprocessor",
-                "--sleepintervalms",
-                "1000",
-                "--numthreads",
-                "12"
-            ],
+            "command": ["run-task-processor"],
             "essential": true,
             "environment": [
                 {
@@ -172,6 +164,14 @@
                 {
                     "name": "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST",
                     "value": "customersuccess@flagsmith.com"
+                },
+                {
+                    "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
+                    "value": "1000"
+                },
+                {
+                    "name": "TASK_PROCESSOR_NUM_THREADS",
+                    "value": "12"
                 }
             ],
             "secrets": [
