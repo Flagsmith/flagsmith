@@ -1209,7 +1209,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                         <Tooltip
                                           title={
                                             <div className='text-body gap-1 align-items-center d-flex'>
-                                              No Permissions{' '}
+                                              No User-level Permissions{' '}
                                               <span className='lh-1'>
                                                 <IonIcon
                                                   icon={informationCircle}
@@ -1218,8 +1218,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                             </div>
                                           }
                                         >
-                                          Permissions for this user may exist at
-                                          the Group or Role Level
+                                          This user has no permissions assigned
+                                          directly, but they may belong to a
+                                          group that has permissions on this
+                                          {level}.
                                         </Tooltip>
                                       ) : (
                                         <PermissionsSummaryList
