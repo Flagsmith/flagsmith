@@ -6,7 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "entryPoint": ["run-task-processor"],
+            "command": ["run-task-processor"],
             "essential": true,
             "environment": [
                 {
