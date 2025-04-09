@@ -32,7 +32,6 @@ type CreateMetadataFieldType = {
   metadataModelFieldList?: MetadataModelField[]
   onComplete?: () => void
   organisationId: string
-  projectId: string
 }
 
 type QueryBody = Omit<MetadataModelField, 'id'>
@@ -60,7 +59,6 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   metadataModelFieldList,
   onComplete,
   organisationId,
-  projectId,
 }) => {
   const metadataTypes: MetadataType[] = [
     { id: 1, label: 'int', value: 'int' },
@@ -88,9 +86,11 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const [updateMetadataModelField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
-  const projectContentType: ContentType =
-    supportedContentTypes &&
-    Utils.getContentType(supportedContentTypes, 'model', 'project')
+  const contentTypeKey = 'organisation'
+  const metadataContentType: ContentType =
+  supportedContentTypes &&
+  Utils.getContentType(supportedContentTypes, 'model', contentTypeKey)
+  
   useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
@@ -142,8 +142,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
         is_required_for: isRequiredFor
           ? ([
               {
-                content_type: projectContentType.id,
-                object_id: parseInt(projectId),
+                content_type: metadataContentType.id,
               } as isRequiredFor,
             ] as isRequiredFor[])
           : [],
@@ -191,8 +190,8 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
                 const query = generateDataQuery(
                   m.content_type,
                   m.field,
-                  m.is_required_for,
-                  m.id,
+                  !!m.is_required_for,
+                  parseInt(m.id),
                   m.new,
                 )
                 if (!m.removed && !m.new) {

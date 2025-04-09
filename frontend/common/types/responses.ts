@@ -616,7 +616,7 @@ export type ContentType = {
 
 export type isRequiredFor = {
   content_type: number
-  object_id: number
+  object_id?: number
 }
 
 export type MetadataModelField = {

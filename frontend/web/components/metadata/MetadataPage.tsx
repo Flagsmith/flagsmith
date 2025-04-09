@@ -18,6 +18,7 @@ type MetadataPageType = {
   organisationId: string
   projectId: string
 }
+
 type MergeMetadata = {
   content_type_fields: MetadataModelField[]
   id: number
@@ -179,6 +180,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           }
         />
       </FormGroup>
+      
     </PlanBasedBanner>
   )
 }
