@@ -10,17 +10,22 @@ import InputGroup from 'components/base/forms/InputGroup'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import Utils from 'common/utils/utils'
 import _ from 'lodash'
-import AppActions from 'common/dispatcher/app-actions'
 import ErrorMessage from 'components/ErrorMessage'
 import AccountStore from 'common/stores/account-store'
 import { close as closeIcon } from 'ionicons/icons'
 import { MultiValueProps } from 'react-select/lib/components/MultiValue'
 import { useGetGroupsQuery } from 'common/services/useGroup'
+import { useCreateUserInviteMutation } from 'common/services/useInvites'
+import { Req } from 'common/types/requests'
 
 interface Invite {
   temporaryId: string
-  emailAddress?: string
-  role?: string
+  emailAddress: string
+  role?: {
+    isDisabled: boolean
+    label: React.ReactNode
+    value: string
+  }
   groups?: number[]
 }
 
@@ -49,8 +54,10 @@ const CustomMultiValue = (props: MultiValueProps<GroupOption>) => {
 type GroupOption = { label: string; value: number }
 
 const InviteUsers: FC = () => {
+  const [createUserInvite, { isLoading }] = useCreateUserInviteMutation()
+
   const [invites, setInvites] = useState<Invite[]>([
-    { temporaryId: Utils.GUID() },
+    { emailAddress: '', temporaryId: Utils.GUID() },
   ])
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -102,9 +109,18 @@ const InviteUsers: FC = () => {
     setInvites(invites.filter((invite) => invite.temporaryId !== id))
   }
 
-  const close = (invites: Omit<Invite, 'temporaryId'>[]): void => {
-    AppActions.inviteUsers(invites)
-    closeModal()
+  const getPayload = (
+    invites: Omit<Invite, 'temporaryId'>[],
+    orgId: number,
+  ): Req['createUserInvite'] => {
+    return {
+      invites: invites.map((invite) => ({
+        email: invite.emailAddress,
+        permission_groups: invite.groups ?? [],
+        role: invite.role?.value ?? '',
+      })),
+      organisationId: orgId,
+    }
   }
 
   return (
@@ -114,7 +130,14 @@ const InviteUsers: FC = () => {
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              AppActions.inviteUsers(invites)
+              createUserInvite(getPayload(invites, orgId))
+                .then(() => {
+                  toast('Invite sent successfully')
+                })
+                .catch((error) => {
+                  toast('Error sending invite', 'error')
+                  console.error(error)
+                })
             }}
           >
             <div
@@ -249,10 +272,13 @@ const InviteUsers: FC = () => {
                   theme='outline'
                   size='small'
                   id='btn-add-invite'
-                  disabled={isSaving || !isValid()}
+                  disabled={isSaving || isLoading || !isValid()}
                   type='button'
                   onClick={() =>
-                    setInvites([...invites, { temporaryId: Utils.GUID() }])
+                    setInvites([
+                      ...invites,
+                      { emailAddress: '', temporaryId: Utils.GUID() },
+                    ])
                   }
                 >
                   <Row>
@@ -286,11 +312,7 @@ const InviteUsers: FC = () => {
               <Button
                 id='btn-send-invite'
                 disabled={isSaving || !isValid()}
-                onClick={() =>
-                  close(
-                    invites.map(({ temporaryId, ...rest }) => ({ ...rest })),
-                  )
-                }
+                onClick={() => closeModal()}
                 type='submit'
               >
                 {isSaving ? 'Sending' : 'Send Invitation'}
