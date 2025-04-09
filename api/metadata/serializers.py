@@ -38,9 +38,7 @@ class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # t
     class Meta:
         model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
-        extra_kwargs = {
-            "object_id": {"required": False, "allow_null": True}
-        }
+        extra_kwargs = {"object_id": {"required": False, "allow_null": True}}
 
 
 class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
