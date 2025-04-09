@@ -100,7 +100,7 @@ def test_delete_environment__calls_internal_methods_correctly(
     mocked_identity_wrapper = DynamoIdentityWrapper.return_value
 
     # When
-    delete_environment_from_dynamo(environment_api_key, environment_id)
+    delete_environment_from_dynamo(environment_api_key, environment_id)  # type: ignore[arg-type]
 
     # Then
     mocked_environment_wrapper.delete_environment.assert_called_once_with(

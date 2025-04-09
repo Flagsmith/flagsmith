@@ -202,6 +202,10 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [

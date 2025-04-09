@@ -15,7 +15,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity

@@ -224,6 +224,8 @@ the below variables will be ignored.
 - `ENABLE_API_USAGE_TRACKING`: Enable tracking of all API requests in Postgres / Influx. Default is True. Setting to
   False will mean that the Usage tab in the Organisation Settings will not show any data. Useful when using Postgres for
   analytics in high traffic environments to limit the size of database.
+- `PROMETHEUS_ENABLED`: Enables the Prometheus `/metrics` endpoint. Default is False.
+- `PROMETHEUS_HISTOGRAM_BUCKETS`: Allows to specify your bucket sizes for Prometheus histograms, e.g., `"0.5,0.6,1.0,Inf"`. Defaults to Python Prometheus client default histogram sizes.
 
 #### Security Environment Variables
 

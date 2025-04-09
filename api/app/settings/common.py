@@ -10,23 +10,26 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
-import importlib.util
+import importlib
 import json
 import os
 import warnings
 from datetime import datetime, time, timedelta
 
 import dj_database_url  # type: ignore[import-untyped]
+import django_stubs_ext
 import prometheus_client
 import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from app.routers import ReplicaReadStrategy
 from app.utils import get_numbered_env_vars_with_prefix
+
+django_stubs_ext.monkeypatch()
 
 env = Env()
 
@@ -69,6 +72,7 @@ INTERNAL_IPS = ["127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    "common.core",
     "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -279,6 +283,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -1351,5 +1356,10 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
 
-PROMETHEUS_ENABLED = True
-PROMETHEUS_HISTOGRAM_BUCKETS = prometheus_client.Histogram.DEFAULT_BUCKETS
+PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", False)
+PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
+    env.list(
+        "PROMETHEUS_HISTOGRAM_BUCKETS",
+        default=prometheus_client.Histogram.DEFAULT_BUCKETS,
+    )
+)

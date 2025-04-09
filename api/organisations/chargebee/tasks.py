@@ -1,4 +1,4 @@
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_task_handler,
 )
 
