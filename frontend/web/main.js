@@ -50,25 +50,25 @@ if (res && !isInvite && !isOauth) {
 function isPublicURL() {
   const pathname = document.location.pathname
 
-  if (
-    pathname === '/' ||
-    pathname.startsWith('/404') ||
-    pathname.startsWith('/home') ||
-    pathname.startsWith('/invite') ||
-    pathname.startsWith('/password-reset') ||
-    pathname.startsWith('/invite-link') ||
-    pathname.startsWith('/maintenance') ||
-    pathname.startsWith('/github-setup') ||
-    pathname.startsWith('/oauth') ||
-    pathname.startsWith('/register') ||
-    pathname.startsWith('/saml') ||
-    pathname.startsWith('/signup') ||
-    pathname.startsWith('/login')
-  ) {
-    return true
-  }
+  const publicPaths = [
+    '/',
+    '/404',
+    '/home',
+    '/invite',
+    '/password-reset',
+    '/invite-link',
+    '/maintenance',
+    '/github-setup',
+    '/oauth',
+    '/register',
+    '/saml',
+    '/signup',
+    '/login',
+  ]
 
-  return false
+  return publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  )
 }
 
 setTimeout(() => {
