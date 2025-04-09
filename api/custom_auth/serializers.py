@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueValidator
 
+from common.core.utils import is_saas
 from organisations.invites.models import Invite, InviteLink
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
@@ -52,13 +53,16 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         if not settings.COOKIE_AUTH_ENABLED:
             self.fields["key"] = serializers.SerializerMethodField()
 
+        if not is_saas():
+            self.fields["superuser"] = serializers.BooleanField(
+                write_only=True, required=False
+            )
+
     class Meta(UserCreateSerializer.Meta):  # type: ignore[misc]
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
             "marketing_consent_given",
             "uuid",
-            "is_superuser",
-            "is_staff",
         )
         read_only_fields = ("is_active", "uuid")
         write_only_fields = ("sign_up_type",)
@@ -77,11 +81,11 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
         email = attrs.get("email")
-        if attrs.get("is_superuser") or attrs.get("is_staff"):
+        if attrs.get("superuser"):
             if FFAdminUser.objects.exists():
                 raise serializers.ValidationError(
                     {
-                        "is_superuser": (
+                        "superuser": (
                             "A superuser can only be created through this  "
                             "endpoint if no other users exist."
                         )
