@@ -38,6 +38,9 @@ class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # t
     class Meta:
         model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
+        extra_kwargs = {
+            "object_id": {"required": False, "allow_null": True}
+        }
 
 
 class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
@@ -47,9 +50,11 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         model = MetadataModelField
         fields = ("id", "field", "content_type", "is_required_for")
 
-    def validate(self, data):  # type: ignore[no-untyped-def]
+    def validate(self, data: dict) -> type[MetadataModelField]:
         data = super().validate(data)
         for requirement in data.get("is_required_for", []):
+            if not requirement.get("object_id"):
+                continue
             org_id = (
                 requirement["content_type"]
                 .model_class()
