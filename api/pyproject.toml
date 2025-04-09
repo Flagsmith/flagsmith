@@ -123,7 +123,7 @@ django-admin-sso = "~5.2.0"
 drf-yasg = "~1.21.6"
 django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
-environs = "~9.2.0"
+environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
@@ -154,11 +154,12 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.3.2" }
-flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
+flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.3.3" }
+flagsmith-common = "^1.5.2"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
 structlog = "^24.4.0"
+prometheus-client = "^0.21.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -182,7 +183,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.7" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.8" }
 
 [tool.poetry.group.licensing]
 optional = true

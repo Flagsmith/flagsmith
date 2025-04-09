@@ -141,7 +141,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
 
 
 @override_settings(  # type: ignore[misc]
-    DJOSER=ChainMap(
+    DJOSER=ChainMap(  # type: ignore[misc]
         {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
         settings.DJOSER,
     )
@@ -489,7 +489,7 @@ def test_throttle_login_workflows(
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
-    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )
@@ -531,7 +531,7 @@ def test_throttle_signup(
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
-    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )

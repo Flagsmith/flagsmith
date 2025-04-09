@@ -14,7 +14,8 @@ def get_service():  # type: ignore[no-untyped-def]
     Get the google service object to use to query the API
     """
     credentials = service_account.Credentials.from_service_account_info(  # type: ignore[no-untyped-call]
-        json.loads(settings.GOOGLE_SERVICE_ACCOUNT), scopes=GA_SCOPES
+        json.loads(settings.GOOGLE_SERVICE_ACCOUNT),  # type: ignore[arg-type]
+        scopes=GA_SCOPES,
     )
 
     # Build the service object.

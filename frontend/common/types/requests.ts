@@ -58,8 +58,10 @@ export type RegisterRequest = {
   email: string
   first_name: string
   last_name: string
-  marketing_consent_given: boolean
   password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
 }
 export type Req = {
   getSegments: PagedRequest<{
@@ -190,6 +192,7 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
+    multivariate_feature_state_values: MultivariateOption[] | null
     feature_segment: {
       segment: number
     }

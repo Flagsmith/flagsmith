@@ -1,7 +1,7 @@
 import logging
 
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
-from common.segments.serializers import (  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
+from common.segments.serializers import (
     SegmentSerializer,
 )
 from django.utils.decorators import method_decorator

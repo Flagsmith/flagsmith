@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.169.0](https://github.com/Flagsmith/flagsmith/compare/v2.168.1...v2.169.0) (2025-03-31)
+
+
+### Features
+
+* Each replica database URL can now be configured with an individual environment variable, using `REPLICA_DATABASE_URL_0`, `REPLICA_DATABASE_URL_1`, etc ([#5222](https://github.com/Flagsmith/flagsmith/issues/5222)) ([b704d1c](https://github.com/Flagsmith/flagsmith/commit/b704d1c9232f47331171203b822f5c8547d19624))
+
+
+### Bug Fixes
+
+* **billing:** Organisation overage compared to other organisations' overages when trying to charge for overages ([#5262](https://github.com/Flagsmith/flagsmith/issues/5262)) ([ef75ea8](https://github.com/Flagsmith/flagsmith/commit/ef75ea824eca0708cc18354b074a70cb4de10135))
+* Syntax error in NodeJS "Try it" code snippets ([#5252](https://github.com/Flagsmith/flagsmith/issues/5252)) ([31ffb7a](https://github.com/Flagsmith/flagsmith/commit/31ffb7a0cf6c08ea460f8eb1ab460200126b1bf2))
+
+
+### Dependency Updates
+
+* Bump flagsmith-common from 1.4.2 to 1.5.2, flagsmith-task-processor from 1.3.2 to 1.3.3, workflows-logic from 2.7.7 to 2.7.8, environs from 9.2.0 to 14.1.1 ([#5248](https://github.com/Flagsmith/flagsmith/issues/5248)) ([3059eeb](https://github.com/Flagsmith/flagsmith/commit/3059eeb940702b855a44c535f0933bb6f1eefbec))
+
+## [2.168.1](https://github.com/Flagsmith/flagsmith/compare/v2.168.0...v2.168.1) (2025-03-25)
+
+
+### Bug Fixes
+
+* format-create-segment-errors-from-payload ([#5082](https://github.com/Flagsmith/flagsmith/issues/5082)) ([e8c3803](https://github.com/Flagsmith/flagsmith/commit/e8c3803d1421afc1d1055430520ac21387ac2ab1))
+
 ## [2.168.0](https://github.com/Flagsmith/flagsmith/compare/v2.167.1...v2.168.0) (2025-03-25)
 
 

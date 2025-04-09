@@ -5,12 +5,13 @@ from unittest.mock import MagicMock
 
 import boto3
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
+    MANAGE_SEGMENT_OVERRIDES,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -771,6 +772,11 @@ def view_project_permission(db):  # type: ignore[no-untyped-def]
 @pytest.fixture()
 def create_project_permission(db):  # type: ignore[no-untyped-def]
     return PermissionModel.objects.get(key=CREATE_PROJECT)
+
+
+@pytest.fixture()
+def manage_segment_overrides_permission(db: None) -> PermissionModel:
+    return PermissionModel.objects.get(key=MANAGE_SEGMENT_OVERRIDES)
 
 
 @pytest.fixture()
