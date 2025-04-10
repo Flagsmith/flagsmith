@@ -52,7 +52,7 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         for requirement in data.get("is_required_for", []):
             model_type = requirement["content_type"].model
             if model_type == "organisation":
-                org_id = requirement["object_id"] 
+                org_id = requirement["object_id"]
             else:
                 org_id = (
                     requirement["content_type"]
