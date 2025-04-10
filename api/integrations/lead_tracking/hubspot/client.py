@@ -15,6 +15,7 @@ from hubspot.crm.contacts import (  # type: ignore[import-untyped]
 )
 
 from integrations.lead_tracking.hubspot.constants import (
+    HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
     HUBSPOT_FORM_ID,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
@@ -111,7 +112,11 @@ class HubspotClient:
             "lastname": user.last_name,
             "hs_marketable_status": user.marketing_consent_given,
         }
+        self._create_contact(properties, hubspot_company_id)
 
+    def _create_contact(
+        self, properties: dict[str, str], hubspot_company_id: str
+    ) -> dict:
         response = self.client.crm.contacts.basic_api.create(
             simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
                 properties=properties,
@@ -128,7 +133,18 @@ class HubspotClient:
                 ],
             )
         )
-        return response.to_dict()  # type: ignore[no-any-return]
+        return response.to_dict()
+
+    def create_self_hosted_contanct(
+        self, email: str, first_name: str, last_name: str, hubspot_company_id: str
+    ) -> None:
+        properties = {
+            "email": email,
+            "firstname": first_name,
+            "lastname": last_name,
+            "api_lead_source": HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
+        }
+        self._create_contact(properties, hubspot_company_id)
 
     def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
         """

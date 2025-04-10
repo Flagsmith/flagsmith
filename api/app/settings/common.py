@@ -122,6 +122,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
