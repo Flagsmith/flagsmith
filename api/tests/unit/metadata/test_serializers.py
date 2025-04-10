@@ -8,7 +8,6 @@ from metadata.models import (
     FIELD_VALUE_MAX_LENGTH,
     MetadataField,
     MetadataModelField,
-    MetadataModelFieldRequirement
 )
 
 from metadata.serializers import (
