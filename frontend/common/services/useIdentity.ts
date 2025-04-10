@@ -141,7 +141,7 @@ export const identityService = service
             query.environmentId
           }/${Utils.getIdentitiesEndpoint()}/${
             query.data.identity_uuid || query.data.id
-          }`,
+          }/`,
         }),
       }),
       // END OF ENDPOINTS
