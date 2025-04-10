@@ -1,5 +1,5 @@
 import pytest
-from typing import Any, List, Dict, Tuple, Optional, Union, Literal
+from typing import Any, Dict
 from common.metadata.serializers import (
     MetadataSerializer,
 )
