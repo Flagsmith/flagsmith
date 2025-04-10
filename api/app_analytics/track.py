@@ -36,11 +36,6 @@ def track_request_googleanalytics_async(request):  # type: ignore[no-untyped-def
     return track_request_googleanalytics(request)  # type: ignore[no-untyped-call]
 
 
-@postpone
-def track_request_influxdb_async(request):  # type: ignore[no-untyped-def]
-    return track_request_influxdb(request)  # type: ignore[no-untyped-call]
-
-
 def get_resource_from_uri(request_uri):  # type: ignore[no-untyped-def]
     """
     Split the uri so we can determine the resource that is being requested
@@ -71,7 +66,7 @@ def track_request_googleanalytics(request):  # type: ignore[no-untyped-def]
     resource = get_resource_from_uri(request.path)  # type: ignore[no-untyped-call]
 
     if resource in TRACKED_RESOURCE_ACTIONS:
-        environment = Environment.get_from_cache(  # type: ignore[no-untyped-call]
+        environment = Environment.get_from_cache(
             request.headers.get("X-Environment-Key")
         )
         if environment is None:
@@ -96,18 +91,18 @@ def track_event(category, action, label="", value=""):  # type: ignore[no-untype
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=data)
 
 
-def track_request_influxdb(request):  # type: ignore[no-untyped-def]
+def track_request_influxdb(
+    resource: str,
+    host: str,
+    environment: "Environment",
+    count: int = 1,
+) -> None:
     """
     Sends API event data to InfluxDB
 
     :param request: (HttpRequest) the request being made
     """
-    resource = get_resource_from_uri(request.path)  # type: ignore[no-untyped-call]
-
     if resource and resource in TRACKED_RESOURCE_ACTIONS:
-        environment = Environment.get_from_cache(  # type: ignore[no-untyped-call]
-            request.headers.get("X-Environment-Key")
-        )
         if environment is None:
             return
 
@@ -119,12 +114,12 @@ def track_request_influxdb(request):  # type: ignore[no-untyped-def]
             "project_id": environment.project_id,
             "environment": environment.name,
             "environment_id": environment.id,
-            "host": request.get_host(),
+            "host": host,
         }
 
         influxdb = InfluxDBWrapper("api_call")  # type: ignore[no-untyped-call]
-        influxdb.add_data_point("request_count", 1, tags=tags)  # type: ignore[no-untyped-call]
-        influxdb.write()  # type: ignore[no-untyped-call]
+        influxdb.add_data_point("request_count", count, tags=tags)
+        influxdb.write()
 
 
 def track_feature_evaluation_influxdb(
@@ -139,10 +134,13 @@ def track_feature_evaluation_influxdb(
     influxdb = InfluxDBWrapper("feature_evaluation")  # type: ignore[no-untyped-call]
 
     for feature_name, evaluation_count in feature_evaluations.items():
-        tags = {"feature_id": feature_name, "environment_id": environment_id}
-        influxdb.add_data_point("request_count", evaluation_count, tags=tags)  # type: ignore[no-untyped-call]
+        tags: dict[str, str | int] = {
+            "feature_id": feature_name,
+            "environment_id": environment_id,
+        }
+        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
 
-    influxdb.write()  # type: ignore[no-untyped-call]
+    influxdb.write()
 
 
 def track_feature_evaluation_influxdb_v2(
@@ -163,6 +161,6 @@ def track_feature_evaluation_influxdb_v2(
         # Note that "feature_id" is a misnamed as it's actually to
         # the name of the feature. This was to match existing behavior.
         tags = {"feature_id": feature_name, "environment_id": environment_id}
-        influxdb.add_data_point("request_count", evaluation_count, tags=tags)  # type: ignore[no-untyped-call]
+        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
 
-    influxdb.write()  # type: ignore[no-untyped-call]
+    influxdb.write()

@@ -15,12 +15,16 @@ from app_analytics.models import (
     APIUsageRaw,
     FeatureEvaluationBucket,
     FeatureEvaluationRaw,
+    Resource,
 )
 from app_analytics.track import (
     track_feature_evaluation_influxdb as track_feature_evaluation_influxdb_service,
 )
 from app_analytics.track import (
     track_feature_evaluation_influxdb_v2 as track_feature_evaluation_influxdb_v2_service,
+)
+from app_analytics.track import (
+    track_request_influxdb,
 )
 from environments.models import Environment
 
@@ -104,16 +108,27 @@ def track_feature_evaluation(
 
 
 @register_task_handler()
-def track_request(resource: int, host: str, environment_key: str, count: int = 1):  # type: ignore[no-untyped-def]
-    environment = Environment.get_from_cache(environment_key)  # type: ignore[no-untyped-call]
-    if environment is None:
-        return
-    APIUsageRaw.objects.create(
-        environment_id=environment.id,
-        resource=resource,
-        host=host,
-        count=count,
-    )
+def track_request(
+    resource: str,
+    host: str,
+    environment_key: str,
+    count: int = 1,
+) -> None:
+    if environment := Environment.get_from_cache(environment_key):
+        if settings.USE_POSTGRES_FOR_ANALYTICS:
+            APIUsageRaw.objects.create(
+                resource=Resource.get_from_resource_name(resource),
+                host=host,
+                environment_id=environment.id,
+                count=count,
+            )
+        elif settings.INFLUXDB_TOKEN:
+            track_request_influxdb(
+                resource=resource,
+                host=host,
+                environment=environment,
+                count=count,
+            )
 
 
 track_feature_evaluation_influxdb = register_task_handler()(

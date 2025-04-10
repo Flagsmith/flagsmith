@@ -203,10 +203,10 @@ def test_environment_get_from_cache_stores_environment_in_cache_on_success(
     mock_cache.get.return_value = None
 
     # When
-    environment = Environment.get_from_cache(environment.api_key)  # type: ignore[no-untyped-call]
+    cached_environment = Environment.get_from_cache(environment.api_key)
 
     # Then
-    assert environment == environment
+    assert cached_environment == environment
     mock_cache.set.assert_called_with(environment.api_key, environment, timeout=60)
 
 
@@ -217,7 +217,7 @@ def test_environment_get_from_cache_returns_None_if_no_matching_environment(
     api_key = "no-matching-env"
 
     # When
-    env = Environment.get_from_cache(api_key)  # type: ignore[no-untyped-call]
+    env = Environment.get_from_cache(api_key)
 
     # Then
     assert env is None
@@ -230,7 +230,7 @@ def test_environment_get_from_cache_accepts_environment_api_key_model_key(
     api_key = EnvironmentAPIKey.objects.create(name="Some key", environment=environment)
 
     # When
-    environment_from_cache = Environment.get_from_cache(api_key=api_key.key)  # type: ignore[no-untyped-call]
+    environment_from_cache = Environment.get_from_cache(api_key=api_key.key)
 
     # Then
     assert environment_from_cache == environment
@@ -240,7 +240,7 @@ def test_environment_get_from_cache_with_null_environment_key_returns_null(
     environment: Environment,
 ) -> None:
     # When
-    environment2 = Environment.get_from_cache(None)  # type: ignore[no-untyped-call]
+    environment2 = Environment.get_from_cache(None)
 
     # Then
     assert environment2 is None
@@ -258,7 +258,7 @@ def test_environment_get_from_cache_does_not_hit_database_if_api_key_in_bad_env_
 
     # When
     with django_assert_num_queries(1):
-        [Environment.get_from_cache(api_key) for _ in range(10)]  # type: ignore[no-untyped-call]
+        [Environment.get_from_cache(api_key) for _ in range(10)]
 
 
 def test_environment_api_key_model_is_valid_is_true_for_non_expired_active_key(  # type: ignore[no-untyped-def]
@@ -324,9 +324,9 @@ def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cach
 
     # When
     retrieved_environments = [
-        Environment.get_from_cache(environment.api_key),  # type: ignore[no-untyped-call]
+        Environment.get_from_cache(environment.api_key),
         *[
-            Environment.get_from_cache(environment_api_key.key)  # type: ignore[no-untyped-call]
+            Environment.get_from_cache(environment_api_key.key)
             for environment_api_key in environment_api_keys
         ],
     ]
@@ -342,7 +342,7 @@ def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(  # ty
     environment, environment_api_key, mocker
 ):
     # When
-    returned_environment = Environment.get_from_cache(environment_api_key.key)  # type: ignore[no-untyped-call]
+    returned_environment = Environment.get_from_cache(environment_api_key.key)
 
     # Then
     assert returned_environment == environment

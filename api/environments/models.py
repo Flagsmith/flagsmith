@@ -213,36 +213,41 @@ class Environment(
         ).get(api_key=environment_key)
 
     @classmethod
-    def get_from_cache(cls, api_key):  # type: ignore[no-untyped-def]
-        try:
-            if not api_key:
-                logger.warning("Requested environment with null api_key.")
-                return None
+    def get_from_cache(cls, api_key: str | None) -> "Environment | None":
+        if not api_key:
+            logger.warning("Requested environment with null api_key.")
+            return None
 
-            if cls.is_bad_key(api_key):
-                return None
+        if cls.is_bad_key(api_key):
+            return None
 
-            environment = environment_cache.get(api_key)
-            if not environment:
-                select_related_args = (
-                    "project",
-                    "project__organisation",
-                    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
-                )
-                base_qs = cls.objects.select_related(*select_related_args).defer(
-                    "description"
-                )
-                qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
-                qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
+        environment: "Environment" = environment_cache.get(api_key)
+        if not environment:
+            select_related_args = (
+                "project",
+                "project__organisation",
+                *IDENTITY_INTEGRATIONS_RELATION_NAMES,
+            )
+            base_qs = cls.objects.select_related(*select_related_args).defer(
+                "description"
+            )
+            qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
+            qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
 
+            try:
                 environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
+            except cls.DoesNotExist:
+                cls.set_bad_key(api_key)
+                logger.info("Environment with api_key %s does not exist" % api_key)
+                return None
+            else:
                 environment_cache.set(
-                    api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
+                    api_key,
+                    environment,
+                    timeout=settings.ENVIRONMENT_CACHE_SECONDS,
                 )
-            return environment
-        except cls.DoesNotExist:
-            cls.set_bad_key(api_key)
-            logger.info("Environment with api_key %s does not exist" % api_key)
+
+        return environment
 
     @classmethod
     def write_environments_to_dynamodb(

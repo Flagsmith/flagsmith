@@ -14,7 +14,7 @@ def test_api_usage_cache(
     # Given
     settings.PG_API_USAGE_CACHE_SECONDS = 60
 
-    cache = APIUsageCache()  # type: ignore[no-untyped-call]
+    cache = APIUsageCache()
     now = timezone.now()
     mocked_track_request_task = mocker.patch("app_analytics.cache.track_request")
     host = "host"
@@ -25,8 +25,16 @@ def test_api_usage_cache(
         # Make some tracking requests
         for _ in range(10):
             for resource in Resource:
-                cache.track_request(resource, host, environment_key_1)
-                cache.track_request(resource, host, environment_key_2)
+                cache.track_request(
+                    Resource.get_lowercased_name(resource),
+                    host,
+                    environment_key_1,
+                )
+                cache.track_request(
+                    Resource.get_lowercased_name(resource),
+                    host,
+                    environment_key_2,
+                )
 
         # make sure track_request task was not called
         assert not mocked_track_request_task.called
@@ -36,7 +44,7 @@ def test_api_usage_cache(
 
         # let's track another request(to trigger flush)
         cache.track_request(
-            Resource.FLAGS,
+            "flags",
             host,
             environment_key_1,
         )
@@ -71,7 +79,7 @@ def test_api_usage_cache(
 
         # and track another request
         cache.track_request(
-            Resource.FLAGS,
+            "flags",
             host,
             environment_key_1,
         )

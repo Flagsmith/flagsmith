@@ -155,7 +155,8 @@ def test_track_request(environment):  # type: ignore[no-untyped-def]
     # Given
     host = "testserver"
     environment_key = environment.api_key
-    resource = Resource.FLAGS
+    resource = "flags"
+    expected_resource = Resource.FLAGS
 
     # When
     track_request(resource, host, environment_key)
@@ -163,7 +164,7 @@ def test_track_request(environment):  # type: ignore[no-untyped-def]
     # Then
     assert (
         APIUsageRaw.objects.filter(
-            resource=resource, host=host, environment_id=environment.id
+            resource=expected_resource, host=host, environment_id=environment.id
         ).count()
         == 1
     )
