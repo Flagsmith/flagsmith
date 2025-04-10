@@ -2,10 +2,11 @@ import logging
 import math
 from datetime import timedelta
 
+import chargebee
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.mail import send_mail
-from django.db.models import F, Max, Q
+from django.db.models import Max, Q
 from django.utils import timezone
 from task_processor.decorators import (
     register_recurring_task,
@@ -156,18 +157,6 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
     # Get the period where we're interested in any new API usage
     # notifications for the relevant billing period (ie, this month).
     api_usage_notified_at = now - relativedelta(months=1)
-
-    # Since we're only interested in monthly billed accounts, set a wide
-    # threshold to catch as many billing periods that could be roughly
-    # considered to be a "monthly" subscription, while still ruling out
-    # non-monthly subscriptions.
-    month_window_start = timedelta(days=25)
-    month_window_end = timedelta(days=35)
-
-    # Only apply charges to ongoing subscriptions that are close to
-    # being charged due to being at the end of the billing term.
-    closing_billing_term = now + timedelta(hours=1)
-
     organisation_ids = set(
         OrganisationAPIUsageNotification.objects.filter(
             notified_at__gte=api_usage_notified_at,
@@ -177,19 +166,24 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
 
     flagsmith_client = get_client("local", local_eval=True)
 
+    # TODO:
+    #  - can we use a chargebee webhook instead of all of this logic?
+    #  - should we look at https://apidocs.chargebee.com/docs/api/events?lang=python#pending_invoice_created and use
+    #    webhooks instead of all of this?
+
+    subscriptions = chargebee.Subscription.list(
+        chargebee.Subscription.ListParams(
+            next_billing_at=chargebee.Filters.StringFilter(
+                AFTER=now + timedelta(hours=1)
+            ),
+            # TODO: do we filter on plans that are monthly billing cycles here?
+        )
+    )
+
     for organisation in (
         Organisation.objects.filter(
             id__in=organisation_ids,
-            subscription_information_cache__current_billing_term_ends_at__lte=closing_billing_term,
-            subscription_information_cache__current_billing_term_ends_at__gte=now,
-            subscription_information_cache__current_billing_term_starts_at__lte=F(
-                "subscription_information_cache__current_billing_term_ends_at"
-            )
-            - month_window_start,
-            subscription_information_cache__current_billing_term_starts_at__gte=F(
-                "subscription_information_cache__current_billing_term_ends_at"
-            )
-            - month_window_end,
+            subscription__subscription_id__in=[s.id for s in subscriptions],
         )
         .exclude(
             Q(subscription__plan=FREE_PLAN_ID)
