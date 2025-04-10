@@ -2,19 +2,19 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_task_handler,
 )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def write_environments_to_dynamodb(project_id: int) -> None:
     from environments.models import Environment
 
     Environment.write_environment_documents(project_id=project_id)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def migrate_project_environments_to_v2(project_id: int) -> None:
     from environments.dynamodb.services import migrate_environments_to_v2
     from projects.models import Project
@@ -33,7 +33,7 @@ def migrate_project_environments_to_v2(project_id: int) -> None:
             project.save()
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def handle_cascade_delete(project_id: int) -> None:
     """
     Due to the combination of soft deletes and audit log functionality,

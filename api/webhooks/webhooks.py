@@ -11,7 +11,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils import timezone
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
