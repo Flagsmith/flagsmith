@@ -1,20 +1,17 @@
-import pytest
 from typing import Any, Dict
+
+import pytest
 from common.metadata.serializers import (
     MetadataSerializer,
 )
+from django.contrib.contenttypes.models import ContentType
 
 from metadata.models import (
     FIELD_VALUE_MAX_LENGTH,
     MetadataField,
     MetadataModelField,
 )
-
-from metadata.serializers import (
-    MetaDataModelFieldSerializer
-)
-
-from django.contrib.contenttypes.models import ContentType
+from metadata.serializers import MetaDataModelFieldSerializer
 from organisations.models import Organisation
 from projects.models import Project
 
@@ -38,11 +35,11 @@ from projects.models import Project
     ],
 )
 def test_metadata_serializer_validate_validates_field_value_type_correctly(
-    organisation: Organisation, 
-    environment_content_type: ContentType, 
-    field_type: str, 
-    field_value: str, 
-    expected_is_valid: bool
+    organisation: Organisation,
+    environment_content_type: ContentType,
+    field_type: str,
+    field_value: str,
+    expected_is_valid: bool,
 ) -> None:
     # Given
     field = MetadataField.objects.create(
@@ -62,20 +59,20 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
 
 
 def test_metadata_model_field_serializer_validate_requirement_content_type_is_org(
-    a_metadata_field: MetadataField, 
-    feature_content_type: ContentType, 
-    organisation_content_type: ContentType
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    organisation_content_type: ContentType,
 ) -> None:
     # Given
     data: Dict[str, Any] = {
-        "field": a_metadata_field.id, 
+        "field": a_metadata_field.id,
         "content_type": feature_content_type.id,
         "is_required_for": [
             {
                 "content_type": organisation_content_type.id,
                 "object_id": a_metadata_field.organisation.id,
             }
-        ]
+        ],
     }
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
@@ -83,22 +80,23 @@ def test_metadata_model_field_serializer_validate_requirement_content_type_is_or
     # Then
     assert serializer.is_valid() is True
 
+
 def test_metadata_model_field_serializer_validate_requirement_content_type_is_project(
-    a_metadata_field: MetadataField, 
-    feature_content_type: ContentType, 
-    project_content_type: ContentType, 
-    project: Project
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project_content_type: ContentType,
+    project: Project,
 ) -> None:
     # Given
     data: Dict[str, Any] = {
-        "field": a_metadata_field.id, 
+        "field": a_metadata_field.id,
         "content_type": feature_content_type.id,
         "is_required_for": [
             {
                 "content_type": project_content_type.id,
                 "object_id": project.id,
             }
-        ]
+        ],
     }
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
@@ -106,21 +104,22 @@ def test_metadata_model_field_serializer_validate_requirement_content_type_is_pr
     # Then
     assert serializer.is_valid() is True
 
+
 def test_metadata_model_field_serializer_error_with_content_type_project_and_org_id(
-    a_metadata_field: MetadataField, 
-    feature_content_type: ContentType, 
-    project_content_type: ContentType
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project_content_type: ContentType,
 ) -> None:
     # Given
     data: Dict[str, Any] = {
-        "field": a_metadata_field.id, 
+        "field": a_metadata_field.id,
         "content_type": feature_content_type.id,
         "is_required_for": [
             {
                 "content_type": project_content_type.id,
                 "object_id": 99999,
             }
-        ]
+        ],
     }
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
@@ -128,24 +127,27 @@ def test_metadata_model_field_serializer_error_with_content_type_project_and_org
     # Then
     assert serializer.is_valid() is False
     assert "non_field_errors" in serializer.errors
-    assert serializer.errors["non_field_errors"][0] == "The requirement organisation does not match the field organisation"
+    assert (
+        serializer.errors["non_field_errors"][0]
+        == "The requirement organisation does not match the field organisation"
+    )
 
 
 def test_metadata_model_field_serializer_error_with_content_type_org_and_wrong_id(
-    a_metadata_field: MetadataField, 
-    feature_content_type: ContentType, 
-    organisation_content_type: ContentType
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    organisation_content_type: ContentType,
 ) -> None:
     # Given
     data: Dict[str, Any] = {
-        "field": a_metadata_field.id, 
+        "field": a_metadata_field.id,
         "content_type": feature_content_type.id,
         "is_required_for": [
             {
                 "content_type": organisation_content_type.id,
                 "object_id": 99999,
             }
-        ]
+        ],
     }
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
@@ -153,7 +155,11 @@ def test_metadata_model_field_serializer_error_with_content_type_org_and_wrong_i
     # Then
     assert serializer.is_valid() is False
     assert "non_field_errors" in serializer.errors
-    assert serializer.errors["non_field_errors"][0] == "The requirement organisation does not match the field organisation"
+    assert (
+        serializer.errors["non_field_errors"][0]
+        == "The requirement organisation does not match the field organisation"
+    )
+
 
 def test_metadata_serializer_validate_use_org_id_for_content_type_org(
     a_metadata_field: MetadataField,
@@ -169,11 +175,12 @@ def test_metadata_serializer_validate_use_org_id_for_content_type_org(
                 "content_type": organisation_content_type.id,
                 "object_id": a_metadata_field.organisation.id,
             }
-        ]
+        ],
     }
     serializer = MetaDataModelFieldSerializer(data=data)
     result: bool = serializer.is_valid()
     assert result is True
+
 
 def test_metadata_serializer_validate_use_project_id_for_content_type_project(
     a_metadata_field: MetadataField,
@@ -190,11 +197,12 @@ def test_metadata_serializer_validate_use_project_id_for_content_type_project(
                 "content_type": project_content_type.id,
                 "object_id": project.id,
             }
-        ]
+        ],
     }
     serializer = MetaDataModelFieldSerializer(data=data)
     result: bool = serializer.is_valid()
     assert result is True
+
 
 def test_metadata_model_field_serializer_fail_with_content_type_project_and_org_id(
     a_metadata_field: MetadataField,
@@ -210,10 +218,13 @@ def test_metadata_model_field_serializer_fail_with_content_type_project_and_org_
                 "content_type": project_content_type.id,
                 "object_id": 99999,
             }
-        ]
+        ],
     }
     serializer = MetaDataModelFieldSerializer(data=data)
     result: bool = serializer.is_valid()
     assert result is False
     assert "non_field_errors" in serializer.errors
-    assert serializer.errors["non_field_errors"][0] == "The requirement organisation does not match the field organisation"
+    assert (
+        serializer.errors["non_field_errors"][0]
+        == "The requirement organisation does not match the field organisation"
+    )
