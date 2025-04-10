@@ -82,7 +82,6 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[
     )
 
 
-@mock.patch("app_analytics.track.InfluxDBWrapper")
 def test_track_request_sends_host_data_to_influxdb(
     mocker: MockerFixture,
 ) -> None:
