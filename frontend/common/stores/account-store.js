@@ -246,22 +246,13 @@ const controller = {
     }
     return controller.getOrganisations()
   },
-  register: ({
-    email,
-    first_name,
-    last_name,
-    marketing_consent_given,
-    password,
-  }) => {
+  register: (user) => {
     store.saving()
+
     data
       .post(`${Project.api}auth/users/`, {
-        email,
-        first_name,
-        invite_hash: API.getInvite() || undefined,
-        last_name,
-        marketing_consent_given,
-        password,
+        ...user,
+        invite_hash: API.getInvite(),
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
       })
