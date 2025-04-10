@@ -38,9 +38,6 @@ class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # t
     class Meta:
         model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
-        extra_kwargs = {
-            "object_id": {"required": False, "allow_null": True}
-        }
 
 
 class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
@@ -53,14 +50,16 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
     def validate(self, data: dict) -> type[MetadataModelField]:
         data = super().validate(data)
         for requirement in data.get("is_required_for", []):
-            if not requirement.get("object_id"):
-                continue
-            org_id = (
-                requirement["content_type"]
-                .model_class()
-                .objects.get(id=requirement["object_id"])
-                .organisation_id
-            )
+            model_type = requirement["content_type"].model
+            if model_type == "organisation":
+                org_id = requirement["object_id"] 
+            else:
+                org_id = (
+                    requirement["content_type"]
+                    .model_class()
+                    .objects.get(id=requirement["object_id"])
+                    .organisation_id
+                )
             if org_id != data["field"].organisation_id:
                 raise serializers.ValidationError(
                     "The requirement organisation does not match the field organisation"

@@ -90,7 +90,7 @@ class MetadataModelFieldRequirement(AbstractBaseExportableModel):
     """
 
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = GenericObjectID(null=True)
+    object_id = GenericObjectID()
     content_object = GenericForeignKey("content_type", "object_id")
     model_field = models.ForeignKey(
         MetadataModelField, on_delete=models.CASCADE, related_name="is_required_for"
