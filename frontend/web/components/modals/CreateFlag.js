@@ -336,7 +336,7 @@ const CreateFlag = class extends Component {
             enabled: default_enabled,
             feature_state_value: hasMultivariate
               ? this.props.environmentFlag.feature_state_value
-              : initial_value,
+              : this.cleanInputValue(initial_value),
             multivariate_options: this.state.identityVariations,
           }),
           projectFlag,
@@ -352,7 +352,7 @@ const CreateFlag = class extends Component {
           {
             default_enabled,
             description,
-            initial_value,
+            initial_value: this.cleanInputValue(initial_value),
             is_archived,
             is_server_key_only,
             metadata:
@@ -439,6 +439,12 @@ const CreateFlag = class extends Component {
       featureError = ''
     }
     return { featureError, featureWarning }
+  }
+  cleanInputValue = (value) => {
+    if (value && typeof value === 'string') {
+      return value.trim()
+    }
+    return value
   }
   drawChart = (data) => {
     return data?.length ? (
