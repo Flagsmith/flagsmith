@@ -1,18 +1,14 @@
 import typing
-from unittest.mock import MagicMock
 
 import pytest
-from django.core.cache import BaseCache
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pytest_django.fixtures import SettingsWrapper
-from pytest_mock import MockerFixture
 
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
     DynamoIdentityWrapper,
 )
-from environments.enums import EnvironmentDocumentCacheMode
 from environments.models import Environment
 from util.mappers import (
     map_environment_to_environment_document,
@@ -112,23 +108,3 @@ def dynamo_environment_wrapper(
     wrapper = DynamoEnvironmentWrapper()
     wrapper.table_name = flagsmith_environment_table.name
     return wrapper
-
-
-@pytest.fixture()
-def persistent_environment_document_cache(
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    environment: Environment,
-) -> MagicMock:
-    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
-
-    mock_environment_document_cache: MagicMock = mocker.MagicMock(spec=BaseCache)
-    mocker.patch(
-        "environments.models.environment_document_cache",
-        mock_environment_document_cache,
-    )
-    mock_environment_document_cache.get.return_value = (
-        map_environment_to_environment_document(environment)
-    )
-
-    return mock_environment_document_cache

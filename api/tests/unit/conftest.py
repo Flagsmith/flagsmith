@@ -1,11 +1,18 @@
-import pytest
+from unittest.mock import MagicMock
 
+import pytest
+from django.core.cache import BaseCache
+from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
+
+from environments.enums import EnvironmentDocumentCacheMode
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
 from users.models import FFAdminUser
+from util.mappers import map_environment_to_environment_document
 
 
 @pytest.fixture()
@@ -200,3 +207,23 @@ def project_two_feature(project_two: Project) -> Feature:
     return Feature.objects.create(  # type: ignore[no-any-return]
         name="project_two_feature", project=project_two, initial_value="initial_value"
     )
+
+
+@pytest.fixture()
+def persistent_environment_document_cache(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    environment: Environment,
+) -> MagicMock:
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+
+    mock_environment_document_cache: MagicMock = mocker.MagicMock(spec=BaseCache)
+    mocker.patch(
+        "environments.models.environment_document_cache",
+        mock_environment_document_cache,
+    )
+    mock_environment_document_cache.get.return_value = (
+        map_environment_to_environment_document(environment)
+    )
+
+    return mock_environment_document_cache

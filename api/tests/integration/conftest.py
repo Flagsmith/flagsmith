@@ -1,16 +1,22 @@
 import json
 import uuid
+from unittest.mock import MagicMock
 
 import pytest
+from django.core.cache import BaseCache
 from django.test import Client as DjangoClient
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from environments.enums import EnvironmentDocumentCacheMode
+from environments.models import Environment
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
+from util.mappers import map_environment_to_environment_document
 
 
 @pytest.fixture()
@@ -524,3 +530,26 @@ def identity_featurestate(admin_client, environment, feature, identity):  # type
         url, data=json.dumps(data), content_type="application/json"
     )
     return response.json()["id"]
+
+
+@pytest.fixture()
+def persistent_environment_document_cache(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    environment: int,
+) -> MagicMock:
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+
+    mock_environment_document_cache: MagicMock = mocker.MagicMock(spec=BaseCache)
+    mocker.patch(
+        "environments.models.environment_document_cache",
+        mock_environment_document_cache,
+    )
+
+    # TODO: this somewhat breaks the integration test format by accessing the DB.
+    #  Should we instead use an actual cache here instead?
+    mock_environment_document_cache.get.return_value = (
+        map_environment_to_environment_document(Environment.objects.get(pk=environment))
+    )
+
+    return mock_environment_document_cache
