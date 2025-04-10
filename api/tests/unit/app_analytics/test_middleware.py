@@ -4,23 +4,22 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from app_analytics.middleware import APIUsageMiddleware
-from app_analytics.models import Resource
 
 
 @pytest.mark.parametrize(
-    "path, enum_resource_value",
+    "path, resource_name",
     [
-        ("/api/v1/flags", Resource.FLAGS),
-        ("/api/v1/traits", Resource.TRAITS),
-        ("/api/v1/identities", Resource.IDENTITIES),
-        ("/api/v1/environment-document", Resource.ENVIRONMENT_DOCUMENT),
+        ("/api/v1/flags", "flags"),
+        ("/api/v1/traits", "traits"),
+        ("/api/v1/identities", "identities"),
+        ("/api/v1/environment-document", "environment-document"),
     ],
 )
 def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     rf: RequestFactory,
     mocker: MockerFixture,
     path: str,
-    enum_resource_value: int,
+    resource_name: str,
     settings: SettingsWrapper,
 ) -> None:
     # Given
@@ -41,24 +40,26 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
 
     # Then
     mocked_api_usage_cache.track_request.assert_called_once_with(
-        resource=enum_resource_value, host="testserver", environment_key=environment_key
+        resource=resource_name,
+        host="testserver",
+        environment_key=environment_key,
     )
 
 
 @pytest.mark.parametrize(
-    "path, enum_resource_value",
+    "path, resource_name",
     [
-        ("/api/v1/flags", Resource.FLAGS),
-        ("/api/v1/traits", Resource.TRAITS),
-        ("/api/v1/identities", Resource.IDENTITIES),
-        ("/api/v1/environment-document", Resource.ENVIRONMENT_DOCUMENT),
+        ("/api/v1/flags", "flags"),
+        ("/api/v1/traits", "traits"),
+        ("/api/v1/identities", "identities"),
+        ("/api/v1/environment-document", "environment-document"),
     ],
 )
 def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     rf: RequestFactory,
     mocker: MockerFixture,
     path: str,
-    enum_resource_value: int,
+    resource_name: str,
     settings: SettingsWrapper,
 ) -> None:
     # Given
@@ -78,7 +79,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     # Then
     mocked_track_request.delay.assert_called_once_with(
         kwargs={
-            "resource": enum_resource_value,
+            "resource": resource_name,
             "environment_key": environment_key,
             "host": "testserver",
         }

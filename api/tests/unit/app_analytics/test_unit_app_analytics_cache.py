@@ -55,7 +55,7 @@ def test_api_usage_cache(
             expected_calls.append(
                 mocker.call(
                     kwargs={
-                        "resource": resource,
+                        "resource": Resource.get_lowercased_name(resource),
                         "host": host,
                         "environment_key": environment_key_1,
                         "count": 11 if resource == Resource.FLAGS else 10,
@@ -65,7 +65,7 @@ def test_api_usage_cache(
             expected_calls.append(
                 mocker.call(
                     kwargs={
-                        "resource": resource,
+                        "resource": Resource.get_lowercased_name(resource),
                         "host": host,
                         "environment_key": environment_key_2,
                         "count": 10,
