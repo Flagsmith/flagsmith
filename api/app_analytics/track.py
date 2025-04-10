@@ -36,12 +36,12 @@ def track_request_googleanalytics_async(request):  # type: ignore[no-untyped-def
     return track_request_googleanalytics(request)  # type: ignore[no-untyped-call]
 
 
-def get_resource_from_uri(request_uri):  # type: ignore[no-untyped-def]
+def get_resource_from_uri(request_uri: str) -> str | None:
     """
     Split the uri so we can determine the resource that is being requested
     (note that because it starts with a /, the first item in the list will be a blank string)
 
-    :param request: (HttpRequest) the request being made
+    :param request_uri: (str) django.http.HttpRequest.path
     """
     split_uri = request_uri.split("/")[1:]
     if not (len(split_uri) >= 3 and split_uri[0] == "api"):
@@ -63,7 +63,7 @@ def track_request_googleanalytics(request):  # type: ignore[no-untyped-def]
     # send pageview request
     requests.post(GOOGLE_ANALYTICS_COLLECT_URL, data=pageview_data)
 
-    resource = get_resource_from_uri(request.path)  # type: ignore[no-untyped-call]
+    resource = get_resource_from_uri(request.path)
 
     if resource in TRACKED_RESOURCE_ACTIONS:
         environment = Environment.get_from_cache(

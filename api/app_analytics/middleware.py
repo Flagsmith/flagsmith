@@ -1,4 +1,7 @@
+from typing import Callable
+
 from django.conf import settings
+from django.http import HttpRequest, HttpResponse
 
 from app_analytics.cache import APIUsageCache
 from app_analytics.tasks import track_request
@@ -26,16 +29,22 @@ class GoogleAnalyticsMiddleware:
 
 
 class APIUsageMiddleware:
-    def __init__(self, get_response):  # type: ignore[no-untyped-def]
+    def __init__(
+        self,
+        get_response: Callable[[HttpRequest], HttpResponse],
+    ) -> None:
         self.get_response = get_response
 
-    def __call__(self, request):  # type: ignore[no-untyped-def]
-        resource = get_resource_from_uri(request.path)  # type: ignore[no-untyped-call]
-        if resource in TRACKED_RESOURCE_ACTIONS:
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        environment_key = request.headers.get("X-Environment-Key")
+        if environment_key and (
+            (resource := get_resource_from_uri(request.path))
+            in TRACKED_RESOURCE_ACTIONS
+        ):
             kwargs = {
                 "resource": resource,
                 "host": request.get_host(),
-                "environment_key": request.headers.get("X-Environment-Key"),
+                "environment_key": environment_key,
             }
             if settings.USE_CACHE_FOR_USAGE_DATA:
                 api_usage_cache.track_request(**kwargs)

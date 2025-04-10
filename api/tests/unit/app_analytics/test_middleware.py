@@ -34,7 +34,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     )
 
     mocked_get_response = mocker.MagicMock()
-    middleware = APIUsageMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
+    middleware = APIUsageMiddleware(mocked_get_response)
 
     # When
     middleware(request)
@@ -70,7 +70,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     mocked_track_request = mocker.patch("app_analytics.middleware.track_request")
 
     mocked_get_response = mocker.MagicMock()
-    middleware = APIUsageMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
+    middleware = APIUsageMiddleware(mocked_get_response)
 
     # When
     middleware(request)
@@ -98,7 +98,7 @@ def test_APIUsageMiddleware_avoids_calling_track_request_if_resoure_is_not_track
     mocked_track_request = mocker.patch("app_analytics.middleware.track_request")
 
     mocked_get_response = mocker.MagicMock()
-    middleware = APIUsageMiddleware(mocked_get_response)  # type: ignore[no-untyped-call]
+    middleware = APIUsageMiddleware(mocked_get_response)
 
     # When
     middleware(request)
