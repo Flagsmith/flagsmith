@@ -407,6 +407,56 @@ def test_set_sdk_analytics_flags_without_identifier(
     assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
+@pytest.mark.skipif(
+    "analytics" not in settings.DATABASES,
+    reason="Skip test if analytics DB is not configured",
+)
+@pytest.mark.django_db(databases=["default", "analytics"])
+def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
+    api_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.INFLUXDB_TOKEN = "test-token"
+    influx_db_wrapper_mock = mocker.patch(
+        "app_analytics.track.InfluxDBWrapper",
+        autospec=True,
+    ).return_value
+
+    url = reverse("api-v2:analytics-flags")
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    feature_request_count = 2
+
+    data = {
+        "evaluations": [
+            {
+                "feature_name": feature.name,
+                "identity_identifier": identity.identifier,
+                "count": feature_request_count,
+                "enabled_when_evaluated": True,
+            }
+        ]
+    }
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    influx_db_wrapper_mock.add_data_point.assert_called_once_with(
+        "request_count",
+        feature_request_count,
+        tags={"feature_id": feature.name, "environment_id": environment.id},
+    )
+    influx_db_wrapper_mock.write.assert_called_once()
+
+
 def test_sdk_analytics_flags_v1(
     api_client: APIClient,
     environment: Environment,
