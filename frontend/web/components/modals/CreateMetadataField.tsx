@@ -143,6 +143,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
           ? ([
               {
                 content_type: metadataContentType.id,
+                object_id: parseInt(organisationId),
               } as isRequiredFor,
             ] as isRequiredFor[])
           : [],

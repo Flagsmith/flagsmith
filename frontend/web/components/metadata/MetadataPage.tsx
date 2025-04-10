@@ -49,7 +49,7 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
           ...item1,
           content_type_fields: matchingItems2,
         }
-      })
+      })?.sort((a, b) => a.id - b.id)
     }
     return null
   }, [metadataFieldList, MetadataModelFieldList])
@@ -64,7 +64,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
       <CreateMetadataField
         onComplete={metadataCreatedToast}
         organisationId={organisationId}
-        projectId={projectId}
         isEdit={false}
       />,
       'side-modal create-feature-modal',
@@ -81,7 +80,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId, projectId }) => {
         onComplete={() => {
           toast('Custom Field Updated')
         }}
-        projectId={projectId}
         organisationId={organisationId}
       />,
       'side-modal create-feature-modal',
