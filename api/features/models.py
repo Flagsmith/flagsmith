@@ -720,7 +720,7 @@ class FeatureState(
         )
         return self.get_feature_state_value_by_hash_key(identity_hash_key)  # type: ignore[arg-type]
 
-    def get_feature_state_value_defaults(self) -> dict:  # type: ignore[type-arg]
+    def get_feature_state_value_defaults(self) -> dict[str, typing.Any]:
         if (
             self.feature.initial_value is None
             or self.feature.project.prevent_flag_defaults
@@ -728,14 +728,14 @@ class FeatureState(
             return {}
 
         value = self.feature.initial_value
-        type = get_value_type(value)
+        type_ = get_value_type(value)
         parse_func = {
             BOOLEAN: get_boolean_from_string,
             INTEGER: get_integer_from_string,
-        }.get(type, lambda v: v)
-        key_name = self.get_feature_state_key_name(type)
+        }.get(type_, lambda v: v)
+        key_name = self.get_feature_state_key_name(type_)
 
-        return {"type": type, key_name: parse_func(value)}  # type: ignore[no-untyped-call]
+        return {"type": type_, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
         self, identity_hash_key: str
