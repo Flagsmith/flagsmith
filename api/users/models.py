@@ -131,6 +131,15 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def __str__(self):  # type: ignore[no-untyped-def]
         return self.email
 
+    @property
+    def superuser(self) -> bool:
+        return self.is_staff and self.is_superuser
+
+    @superuser.setter
+    def superuser(self, value: bool) -> None:
+        self.is_staff = value
+        self.is_superuser = value
+
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def schedule_hubspot_tracking(self) -> None:
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
