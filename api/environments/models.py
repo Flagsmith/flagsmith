@@ -432,7 +432,6 @@ class Environment(
             environment_document_cache.set(api_key, environment_document)
 
         flagsmith_environment_document_cache_results_total.labels(
-            api_key=api_key,
             result=CACHE_HIT if cache_hit else CACHE_MISS,
         ).inc()
 
