@@ -426,16 +426,11 @@ cache will be cleared automatically by certain actions in the platform when the 
 
 ### Environment document caching
 
-When configuring the environment document caching, there are 2 options: persistent or time-based. The time-based cache
-will only expire after a configurable period. This can be used when there is no specific requirement on how long a 
-change should take to be seen in your clients that are requesting flags. This option can be used with all cache 
-backends, including those without a centralised storage mechanism. The persistent cache makes use of an automated
-process to rebuild the cache whenever a change is made.
-
-The cache option is based on the `CACHE_ENVIRONMENT_DOCUMENT_MODE` environment variable. This should be set to either
-`"EXPIRING"` or `"PERSISTENT"`. The rest of the configuration options are detailed below. 
-
-#### Persistent cache
+When configuring the environment document caching, there are 2 options: persistent or expiring. The expiring cache
+will expire after a configurable period. The benefit of this option is that it can be used with all cache 
+backends, including those without a centralised storage mechanism. Bear in mind that this will mean, however, that 
+changes will take up to the configured timeout to be reflected in your Flagsmith clients. The persistent cache instead 
+makes use of an automated process to rebuild the cache whenever a change is made.
 
 :::warning
 
@@ -444,19 +439,43 @@ e.g. LocMemCache.
 
 :::
 
-| Environment Variable         | Description                                                                                                                    | Example value                                          | Default                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
-| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
-| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-documents`                         |
+:::info
+
+When using a persistent cache, a change can take a few seconds to update the cache. This can also be optimised by 
+increasing the performance of your task processor. 
+
+:::
 
 
-#### Time-based cache
+| Environment Variable         | Description                                                                                                                                                                                      | Example value                                          | Default                                       |
+| ---------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------|
+| `CACHE_ENVIRONMENT_DOCUMENT_MODE` | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                            | `EXPIRING`                                     |
+| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                   | `60`                                                   | `0` ( = don't cache)                          |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                   | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
+| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                                       | `127.0.0.1:11211`                                      | `environment-documents`                       |
 
-| Environment Variable         | Description                                                                                                                    | Example value                                          | Default                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |-----------------------------------------------|
-| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for                                                                                 | `60`                                                   | `0` ( = don't cache)                          |
-| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
-| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-documents`                       |
+
+#### Example 1. Expiring local memory cache with 60 second timeout
+
+The following environment variables provide an example for specifying a cache local to each API instance that 
+expires after 60 seconds. This can be useful in deployments with just a few environments, where there is flexibility 
+on how long a change to the flags should take to propagate to the clients. 
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS: "60"
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND:  "django.core.cache.backends.locmem.LocMemCache"
+```
+
+#### Example 2. Persistent redis cache
+
+The following environment variables provide an example for specifying a cache, stored in redis, that is automatically
+updated whenever a flag is changed. 
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_MODE: "PERSISTENT"
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND: "django_redis.cache.RedisCache"
+CACHE_ENVIRONMENT_DOCUMENT_LOCATION: "redis://127.0.0.1:6379/1"
+```
 
 ## Unified Front End and Back End Build
 
