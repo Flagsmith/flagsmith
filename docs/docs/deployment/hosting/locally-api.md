@@ -447,12 +447,14 @@ increasing the performance of your task processor.
 :::
 
 
-| Environment Variable         | Description                                                                                                                                                                                      | Example value                                          | Default                                       |
-| ---------------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------|
-| `CACHE_ENVIRONMENT_DOCUMENT_MODE` | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                            | `EXPIRING`                                     |
-| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                   | `60`                                                   | `0` ( = don't cache)                          |
-| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                   | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
-| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                                       | `127.0.0.1:11211`                                      | `environment-documents`                       |
+| Environment Variable                  | Description                                                                                                                                                                                       | Example value                                          | Default                                       |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------|
+| `CACHE_ENVIRONMENT_DOCUMENT_MODE`     | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                           | `EXPIRING`                                    |
+| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                    | `60`                                                   | `0` ( = don't cache)                          |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                    | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
+| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                                        | `127.0.0.1:11211`                                      | `environment-documents`                       |
+| `CACHE_ENVIRONMENT_DOCUMENT_OPTIONS`  | JSON object representing any additional options required by the specific cache backend. See [here](https://docs.djangoproject.com/en/4.2/topics/cache/#cache-arguments) for further information.  | `{"PASSWORD": "securepassword"}`                       | {}                                            |
+
 
 
 #### Example 1. Expiring local memory cache with 60 second timeout
@@ -475,6 +477,7 @@ updated whenever a flag is changed.
 CACHE_ENVIRONMENT_DOCUMENT_MODE: "PERSISTENT"
 CACHE_ENVIRONMENT_DOCUMENT_BACKEND: "django_redis.cache.RedisCache"
 CACHE_ENVIRONMENT_DOCUMENT_LOCATION: "redis://127.0.0.1:6379/1"
+CACHE_ENVIRONMENT_DOCUMENT_OPTIONS: "{\"PASSWORD\": \"myredispassword\"}"
 ```
 
 ## Unified Front End and Back End Build
