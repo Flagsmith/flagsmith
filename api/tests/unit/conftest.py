@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+import prometheus_client
 import pytest
 from django.core.cache import BaseCache
 from pytest_django.fixtures import SettingsWrapper
@@ -211,9 +212,7 @@ def project_two_feature(project_two: Project) -> Feature:
 
 @pytest.fixture()
 def persistent_environment_document_cache(
-    settings: SettingsWrapper,
-    mocker: MockerFixture,
-    environment: Environment,
+    settings: SettingsWrapper, mocker: MockerFixture
 ) -> MagicMock:
     settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
 
@@ -222,8 +221,23 @@ def persistent_environment_document_cache(
         "environments.models.environment_document_cache",
         mock_environment_document_cache,
     )
-    mock_environment_document_cache.get.return_value = (
+    mock_environment_document_cache.get.return_value = None
+
+    return mock_environment_document_cache
+
+
+@pytest.fixture()
+def populate_environment_document_cache(
+    persistent_environment_document_cache: MagicMock, environment: Environment
+) -> None:
+    persistent_environment_document_cache.get.return_value = (
         map_environment_to_environment_document(environment)
     )
 
-    return mock_environment_document_cache
+
+@pytest.fixture()
+def mock_environment_document_cache_metric(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "environments.models.flagsmith_environment_document_cache_result",
+        spec=prometheus_client.Counter,
+    )

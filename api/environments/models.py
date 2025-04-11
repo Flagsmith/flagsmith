@@ -41,6 +41,11 @@ from environments.dynamodb import (
 from environments.enums import EnvironmentDocumentCacheMode
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
+from environments.metrics import (
+    CACHE_HIT,
+    CACHE_MISS,
+    flagsmith_environment_document_cache_result,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
@@ -422,9 +427,15 @@ class Environment(
         api_key: str,
     ) -> dict[str, typing.Any]:
         environment_document = environment_document_cache.get(api_key)
-        if not environment_document:
+        if not (cache_hit := environment_document is not None):
             environment_document = cls._get_environment_document_from_db(api_key)
             environment_document_cache.set(api_key, environment_document)
+
+        flagsmith_environment_document_cache_result.labels(
+            api_key=api_key,
+            result=CACHE_HIT if cache_hit else CACHE_MISS,
+        ).inc()
+
         return environment_document  # type: ignore[no-any-return]
 
     @classmethod

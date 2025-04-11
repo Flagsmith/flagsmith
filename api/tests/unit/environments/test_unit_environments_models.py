@@ -17,6 +17,7 @@ from audit.related_object_type import RelatedObjectType
 from core.constants import STRING
 from core.request_origin import RequestOrigin
 from environments.identities.models import Identity
+from environments.metrics import CACHE_HIT, CACHE_MISS
 from environments.models import (
     Environment,
     EnvironmentAPIKey,
@@ -1053,3 +1054,34 @@ def test_change_api_key_updates_environment_document_cache(
     persistent_environment_document_cache.set_many.assert_called_once_with(
         {new_api_key: map_environment_to_environment_document(environment)}
     )
+
+
+def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+    populate_environment_document_cache: None,
+    mock_environment_document_cache_metric: MagicMock,
+) -> None:
+    # When
+    Environment.get_environment_document(environment.api_key)
+
+    # Then
+    mock_environment_document_cache_metric.labels.assert_called_once_with(
+        api_key=environment.api_key, result=CACHE_HIT
+    )
+    mock_environment_document_cache_metric.labels.return_value.inc.assert_called_once()
+
+
+def test_get_environment_document_from_cache_triggers_correct_metrics__cache_miss(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+    mock_environment_document_cache_metric: MagicMock,
+) -> None:
+    # Given & When
+    Environment.get_environment_document(environment.api_key)
+
+    # Then
+    mock_environment_document_cache_metric.labels.assert_called_once_with(
+        api_key=environment.api_key, result=CACHE_MISS
+    )
+    mock_environment_document_cache_metric.labels.return_value.inc.assert_called_once()
