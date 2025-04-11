@@ -407,11 +407,6 @@ def test_set_sdk_analytics_flags_without_identifier(
     assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics DB is not configured",
-)
-@pytest.mark.django_db(databases=["default", "analytics"])
 def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
     api_client: APIClient,
     environment: Environment,
