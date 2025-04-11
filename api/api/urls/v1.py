@@ -56,7 +56,7 @@ urlpatterns = [
         feature_health_webhook,
         name="feature-health-webhook",
     ),
-    re_path(r"^onboarding/", include("onboarding.urls")),
+    re_path(r"^onboarding/", include("onboarding.urls", namespace="onboarding")),
     # Client SDK urls
     re_path(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     re_path(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),

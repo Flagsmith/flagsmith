@@ -2,21 +2,23 @@ from common.core.utils import is_oss
 from django.urls import path
 
 from onboarding.views import (
-    receive_support_request_from_self_hosted_view,
+    ReceiveSupportRequestFromSelfHosted,
     send_onboarding_request_to_saas_flagsmith_view,
 )
 
+app_name = "onboarding"
+
 urlpatterns = [
     path(
-        "onboarding/request/receive/",
-        receive_support_request_from_self_hosted_view,
+        "request/receive/",
+        ReceiveSupportRequestFromSelfHosted.as_view(),
         name="receive-onboarding-request",
     ),
 ]
 if is_oss:
     urlpatterns.append(
         path(
-            "onboarding/request/send/",
+            "request/send/",
             send_onboarding_request_to_saas_flagsmith_view,
             name="send-onboarding-request",
         ),
