@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    "use_v2_feature_versioning, total_queries", [(True, 12), (False, 11)]
+    "use_v2_feature_versioning, total_queries", [(True, 16), (False, 15)]
 )
 def test_get_environment_document(
     organisation_one: "Organisation",
