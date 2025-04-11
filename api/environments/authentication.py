@@ -25,7 +25,7 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
         if not (api_key and api_key.startswith(self.required_key_prefix)):
             raise AuthenticationFailed("Invalid or missing Environment key")
 
-        environment = Environment.get_from_cache(api_key)  # type: ignore[no-untyped-call]
+        environment = Environment.get_from_cache(api_key)
         if not environment:
             raise AuthenticationFailed("Invalid or missing Environment Key")
 

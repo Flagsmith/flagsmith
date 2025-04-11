@@ -22,5 +22,5 @@ class TelemetrySerializer(serializers.Serializer):  # type: ignore[type-arg]
                 **self.validated_data,
                 "ip_address": get_ip_address_from_request(self.context["request"]),  # type: ignore[no-untyped-call]
             }
-            influxdb.add_data_point("heartbeat", 1, tags=tags)  # type: ignore[no-untyped-call]
-            influxdb.write()  # type: ignore[no-untyped-call]
+            influxdb.add_data_point("heartbeat", 1, tags=tags)
+            influxdb.write()
