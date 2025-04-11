@@ -238,6 +238,6 @@ def populate_environment_document_cache(
 @pytest.fixture()
 def mock_environment_document_cache_metric(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "environments.models.flagsmith_environment_document_cache_result",
+        "environments.models.flagsmith_environment_document_cache_results_total",
         spec=prometheus_client.Counter,
     )
