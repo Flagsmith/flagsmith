@@ -405,6 +405,7 @@ class Environment(
                         "feature",
                         "feature_state_value",
                         "identity",
+                        "environment_feature_version",
                         "identity__environment",
                     ).prefetch_related(
                         Prefetch(
