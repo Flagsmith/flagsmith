@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import MagicMock, Mock
 
 import pytest
+from common.test_tools import AssertMetricFixture
 from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
@@ -17,6 +18,7 @@ from audit.related_object_type import RelatedObjectType
 from core.constants import STRING
 from core.request_origin import RequestOrigin
 from environments.identities.models import Identity
+from environments.metrics import CACHE_HIT, CACHE_MISS
 from environments.models import (
     Environment,
     EnvironmentAPIKey,
@@ -441,7 +443,7 @@ def test_write_environments_to_dynamodb_with_environment(  # type: ignore[no-unt
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(
+    Environment.write_environment_documents(
         environment_id=dynamo_enabled_project_environment_one.id
     )
 
@@ -465,7 +467,7 @@ def test_write_environments_to_dynamodb_project(  # type: ignore[no-untyped-def]
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     args, kwargs = mock_dynamo_env_wrapper.write_environments.call_args
@@ -485,7 +487,7 @@ def test_write_environments_to_dynamodb_with_environment_and_project(  # type: i
     mock_dynamo_env_wrapper.reset_mock()
 
     # When
-    Environment.write_environments_to_dynamodb(
+    Environment.write_environment_documents(
         environment_id=dynamo_enabled_project_environment_one.id
     )
 
@@ -512,7 +514,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__call_
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     args, kwargs = mock_dynamo_env_v2_wrapper.write_environments.call_args
@@ -536,7 +538,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_migrated__wrapp
     dynamo_enabled_project.save()
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     mock_dynamo_env_v2_wrapper.write_environments.assert_not_called()
@@ -563,7 +565,7 @@ def test_write_environments_to_dynamodb__project_environments_v2_not_migrated__w
     mock_dynamo_env_v2_wrapper.is_enabled = True
 
     # When
-    Environment.write_environments_to_dynamodb(project_id=dynamo_enabled_project.id)
+    Environment.write_environment_documents(project_id=dynamo_enabled_project.id)
 
     # Then
     mock_dynamo_env_v2_wrapper.write_environments.assert_not_called()
@@ -1020,4 +1022,73 @@ def test_environment_clone_async(
             "source_environment_id": environment.id,
             "clone_environment_id": cloned_environment.id,
         }
+    )
+
+
+def test_delete_environment_removes_environment_document_cache(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+) -> None:
+    # When
+    environment.delete()
+
+    # Then
+    persistent_environment_document_cache.delete.assert_called_once_with(
+        environment.api_key
+    )
+
+
+def test_change_api_key_updates_environment_document_cache(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+) -> None:
+    # Given
+    old_api_key = copy(environment.api_key)
+    new_api_key = "new-key"
+
+    # When
+    environment.api_key = new_api_key
+    environment.save()
+
+    # Then
+    persistent_environment_document_cache.delete.assert_called_once_with(old_api_key)
+    persistent_environment_document_cache.set_many.assert_called_once_with(
+        {new_api_key: map_environment_to_environment_document(environment)}
+    )
+
+
+def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+    populate_environment_document_cache: None,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # When
+    Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert_metric(
+        name="flagsmith_environment_document_cache_queries_total",
+        labels={
+            "result": CACHE_HIT,
+        },
+        value=1.0,
+    )
+
+
+def test_get_environment_document_from_cache_triggers_correct_metrics__cache_miss(
+    environment: Environment,
+    persistent_environment_document_cache: MagicMock,
+    assert_metric: AssertMetricFixture,
+) -> None:
+    # Given & When
+    Environment.get_environment_document(environment.api_key)
+
+    # Then
+    assert_metric(
+        name="flagsmith_environment_document_cache_queries_total",
+        labels={
+            "result": CACHE_MISS,
+        },
+        value=1.0,
     )

@@ -19,7 +19,7 @@ from sse import (  # type: ignore[attr-defined]
 
 @register_task_handler(priority=TaskPriority.HIGH)
 def rebuild_environment_document(environment_id: int) -> None:
-    Environment.write_environments_to_dynamodb(environment_id=environment_id)
+    Environment.write_environment_documents(environment_id=environment_id)
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
@@ -27,7 +27,7 @@ def process_environment_update(audit_log_id: int):  # type: ignore[no-untyped-de
     audit_log = AuditLog.objects.get(id=audit_log_id)
 
     # Send environment document to dynamodb
-    Environment.write_environments_to_dynamodb(
+    Environment.write_environment_documents(
         environment_id=audit_log.environment_id, project_id=audit_log.project_id
     )
 

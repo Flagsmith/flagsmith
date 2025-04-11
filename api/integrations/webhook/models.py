@@ -21,4 +21,4 @@ class WebhookConfiguration(
     @hook(AFTER_SAVE)
     @hook(AFTER_DELETE)
     def write_environment_to_dynamodb(self):  # type: ignore[no-untyped-def]
-        Environment.write_environments_to_dynamodb(environment_id=self.environment_id)
+        Environment.write_environment_documents(environment_id=self.environment_id)
