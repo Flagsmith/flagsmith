@@ -11,7 +11,7 @@ from task_processor.decorators import (
 def write_environments_to_dynamodb(project_id: int) -> None:
     from environments.models import Environment
 
-    Environment.write_environments_to_dynamodb(project_id=project_id)
+    Environment.write_environment_documents(project_id=project_id)
 
 
 @register_task_handler()

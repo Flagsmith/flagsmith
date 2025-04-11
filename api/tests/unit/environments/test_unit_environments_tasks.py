@@ -14,15 +14,15 @@ def test_rebuild_environment_document(
     mocker: MockerFixture,
 ) -> None:
     # Given
-    mock_write_environments_to_dynamodb = mocker.patch(
-        "environments.tasks.Environment.write_environments_to_dynamodb",
+    mock_write_environment_documents = mocker.patch(
+        "environments.tasks.Environment.write_environment_documents",
     )
 
     # When
     rebuild_environment_document(environment_id=environment.id)
 
     # Then
-    mock_write_environments_to_dynamodb.assert_called_once_with(
+    mock_write_environment_documents.assert_called_once_with(
         environment_id=environment.id
     )
 
@@ -48,7 +48,7 @@ def test_process_environment_update_with_environment_audit_log(environment, mock
     process_environment_update(audit_log_id=audit_log.id)
 
     # Then
-    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+    mock_environment_model_class.write_environment_documents.assert_called_once_with(
         environment_id=environment.id, project_id=environment.project.id
     )
     mock_send_environment_update_message_for_environment.assert_called_once_with(
@@ -76,7 +76,7 @@ def test_process_environment_update_with_project_audit_log(environment, mocker):
     process_environment_update(audit_log_id=audit_log.id)
 
     # Then
-    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+    mock_environment_model_class.write_environment_documents.assert_called_once_with(
         environment_id=None, project_id=environment.project.id
     )
     mock_send_environment_update_message_for_environment.assert_not_called()
