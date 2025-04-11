@@ -1,17 +1,21 @@
+from typing import TYPE_CHECKING, Any
+
 from djoser.serializers import (  # type: ignore[import-untyped]
     UserSerializer as DjoserUserSerializer,
 )
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotAuthenticated, ValidationError
 
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
-
-from .models import (
+from users.models import (
     FFAdminUser,
     UserPermissionGroup,
     UserPermissionGroupMembership,
 )
+
+if TYPE_CHECKING:
+    DjoserUserSerializer = DjoserUserSerializer[FFAdminUser]
 
 
 class UserIdSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -160,6 +164,12 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
             "date_joined",
             "uuid",
         )
+
+    def to_representation(self, instance: FFAdminUser) -> Any:
+        if not instance.is_authenticated:
+            raise NotAuthenticated("User is not authenticated.")
+
+        return super().to_representation(instance)
 
 
 class ListUsersQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
