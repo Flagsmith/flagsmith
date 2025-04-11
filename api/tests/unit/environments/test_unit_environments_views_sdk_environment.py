@@ -18,6 +18,7 @@ from features.models import (  # type: ignore[attr-defined]
     FeatureStateValue,
 )
 from features.multivariate.models import MultivariateFeatureOption
+from features.versioning.tasks import enable_v2_versioning
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
@@ -47,8 +48,10 @@ def test_get_environment_document(
     environment = Environment.objects.create(
         name="Test Environment",
         project=project,
-        use_v2_feature_versioning=use_v2_feature_versioning,
     )
+    if use_v2_feature_versioning:
+        enable_v2_versioning(environment.id)
+
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key.key)
