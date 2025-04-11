@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.171.1](https://github.com/Flagsmith/flagsmith/compare/v2.171.0...v2.171.1) (2025-04-11)
+
+
+### Bug Fixes
+
+* `RouteLoggerMiddleware` breaks threads accessing Django request object ([#5330](https://github.com/Flagsmith/flagsmith/issues/5330)) ([7064cef](https://github.com/Flagsmith/flagsmith/commit/7064cefc20bf82d82bbe46b3337722d122868499))
+
 ## [2.171.0](https://github.com/Flagsmith/flagsmith/compare/v2.170.0...v2.171.0) (2025-04-11)
 
 
