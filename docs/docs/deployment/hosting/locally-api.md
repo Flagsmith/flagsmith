@@ -385,6 +385,8 @@ The application makes use of caching in a couple of locations:
 4. Flags and Identities endpoint caching - the application provides the ability to cache the responses to the GET /flags
    and GET /identities endpoints. The application exposes the configuration to allow the caching to be handled in a
    manner chosen by the developer. The configuration options are explained in more detail below.
+5. Environment document - when making heavy use of the environment document, it is often wise to utilise caching to
+   reduce the load on the database. Details are provided below. 
 
 ### Flags & Identities endpoint caching
 
@@ -420,6 +422,41 @@ cache will be cleared automatically by certain actions in the platform when the 
 | `ENVIRONMENT_CACHE_SECONDS`  | Number of seconds to cache the environment for                                                                                 | `60`                                                   | `86400` ( = 24h)                              |
 | `ENVIRONMENT_CACHE_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
 | `ENVIRONMENT_CACHE_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-objects`                         |
+
+
+### Environment document caching
+
+When configuring the environment document caching, there are 2 options: persistent or time-based. The time-based cache
+will only expire after a configurable period. This can be used when there is no specific requirement on how long a 
+change should take to be seen in your clients that are requesting flags. This option can be used with all cache 
+backends, including those without a centralised storage mechanism. The persistent cache makes use of an automated
+process to rebuild the cache whenever a change is made.
+
+The cache option is based on the `CACHE_ENVIRONMENT_DOCUMENT_MODE` environment variable. This should be set to either
+`"EXPIRING"` or `"PERSISTENT"`. The rest of the configuration options are detailed below. 
+
+#### Persistent cache
+
+:::warning
+
+Persistent cache should only be used with cache backends that offer a centralised cache. It should not be used with 
+e.g. LocMemCache. 
+
+:::
+
+| Environment Variable         | Description                                                                                                                    | Example value                                          | Default                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------- |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
+| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-documents`                         |
+
+
+#### Time-based cache
+
+| Environment Variable         | Description                                                                                                                    | Example value                                          | Default                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |-----------------------------------------------|
+| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for                                                                                 | `60`                                                   | `0` ( = don't cache)                          |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
+| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-documents`                       |
 
 ## Unified Front End and Back End Build
 
