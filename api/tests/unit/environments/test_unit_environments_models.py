@@ -1068,7 +1068,7 @@ def test_get_environment_document_from_cache_triggers_correct_metrics__cache_hit
 
     # Then
     assert_metric(
-        name="flagsmith_environment_document_cache_results_total",
+        name="flagsmith_environment_document_cache_queries_total",
         labels={
             "result": CACHE_HIT,
         },
@@ -1086,7 +1086,7 @@ def test_get_environment_document_from_cache_triggers_correct_metrics__cache_mis
 
     # Then
     assert_metric(
-        name="flagsmith_environment_document_cache_results_total",
+        name="flagsmith_environment_document_cache_queries_total",
         labels={
             "result": CACHE_MISS,
         },

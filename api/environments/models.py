@@ -44,7 +44,7 @@ from environments.managers import EnvironmentManager
 from environments.metrics import (
     CACHE_HIT,
     CACHE_MISS,
-    flagsmith_environment_document_cache_results_total,
+    flagsmith_environment_document_cache_queries_total,
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
@@ -431,7 +431,7 @@ class Environment(
             environment_document = cls._get_environment_document_from_db(api_key)
             environment_document_cache.set(api_key, environment_document)
 
-        flagsmith_environment_document_cache_results_total.labels(
+        flagsmith_environment_document_cache_queries_total.labels(
             result=CACHE_HIT if cache_hit else CACHE_MISS,
         ).inc()
 
