@@ -53,6 +53,11 @@ type metadataFieldUpdatedSelectListType = MetadataModelField & {
   new: boolean
 }
 
+export enum MetadataContentType {
+  ORGANISATION = 'organisation',
+  PROJECT = 'project',
+}
+
 const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   id,
   isEdit,
@@ -86,10 +91,9 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const [updateMetadataModelField] = useUpdateMetadataModelFieldMutation()
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
-  const contentTypeKey = 'organisation'
   const metadataContentType: ContentType =
   supportedContentTypes &&
-  Utils.getContentType(supportedContentTypes, 'model', contentTypeKey)
+  Utils.getContentType(supportedContentTypes, 'model', MetadataContentType.ORGANISATION)
   
   useEffect(() => {
     if (data && !isLoading) {
