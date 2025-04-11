@@ -2,7 +2,11 @@ import logging
 
 from rest_framework.request import Request
 
-from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
+from integrations.lead_tracking.hubspot.client import HubspotClient
+from integrations.lead_tracking.hubspot.constants import (
+    HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
+    HUBSPOT_COOKIE_NAME,
+)
 from users.models import HubspotTracker
 
 logger = logging.getLogger(__name__)
@@ -35,3 +39,21 @@ def register_hubspot_tracker(request: Request) -> None:
     logger.info(
         f"Created HubspotTracker instance for user {request.user.id} with cookie {hubspot_cookie}"
     )
+
+
+def create_self_hosted_onboarding_lead(
+    email: str, organisation_name: str, first_name: str, last_name: str
+) -> None:
+    email_domain = email.split("@")[1]
+    hubspot_client = HubspotClient()
+    company = hubspot_client.get_company_by_domain(email_domain)
+    if not company:
+        company = hubspot_client.create_company(
+            name=organisation_name,
+            domain=email_domain,
+            active_subscription=HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
+        )
+
+    company_id = company["id"]
+
+    hubspot_client.create_self_hosted_contanct(email, first_name, last_name, company_id)
