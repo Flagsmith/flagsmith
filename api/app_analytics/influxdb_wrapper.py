@@ -53,7 +53,16 @@ class InfluxDBWrapper:
         self.records = []
         self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
 
-    def add_data_point(self, field_name, field_value, tags=None):  # type: ignore[no-untyped-def]
+    def add_data_point(
+        self,
+        field_name: str,
+        field_value: str | int | float,
+        tags: typing.Mapping[
+            str,
+            str | int | float,
+        ]
+        | None = None,
+    ) -> None:
         point = Point(self.name)
         point.field(field_name, field_value)
 
@@ -63,7 +72,7 @@ class InfluxDBWrapper:
 
         self.records.append(point)
 
-    def write(self):  # type: ignore[no-untyped-def]
+    def write(self) -> None:
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
         except (HTTPError, InfluxDBError) as e:

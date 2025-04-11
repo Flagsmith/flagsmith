@@ -349,13 +349,7 @@ FEATURE_EVALUATION_CACHE_SECONDS = env.int(
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 
 if ENABLE_API_USAGE_TRACKING:
-    # NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
-    # we need to support setting the influx configuration alongside using postgres for analytics.
-    if USE_POSTGRES_FOR_ANALYTICS:
-        MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
-    elif INFLUXDB_TOKEN:
-        MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
-
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list(
     "ALLOWED_ADMIN_IP_ADDRESSES",

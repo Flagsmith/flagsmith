@@ -12,12 +12,12 @@ from app_analytics.tasks import (
 
 
 class APIUsageCache:
-    def __init__(self):  # type: ignore[no-untyped-def]
-        self._cache = {}
+    def __init__(self) -> None:
+        self._cache: dict[tuple[str, str, str], int] = {}
         self._last_flushed_at = timezone.now()
         self._lock = Lock()
 
-    def _flush(self):  # type: ignore[no-untyped-def]
+    def _flush(self) -> None:
         for key, value in self._cache.items():
             track_request.delay(
                 kwargs={
@@ -31,7 +31,12 @@ class APIUsageCache:
         self._cache = {}
         self._last_flushed_at = timezone.now()
 
-    def track_request(self, resource: int, host: str, environment_key: str):  # type: ignore[no-untyped-def]
+    def track_request(
+        self,
+        resource: str,
+        host: str,
+        environment_key: str,
+    ) -> None:
         key = (resource, host, environment_key)
         with self._lock:
             if key not in self._cache:
@@ -41,7 +46,7 @@ class APIUsageCache:
             if (
                 timezone.now() - self._last_flushed_at
             ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
-                self._flush()  # type: ignore[no-untyped-call]
+                self._flush()
 
 
 class FeatureEvaluationCache:

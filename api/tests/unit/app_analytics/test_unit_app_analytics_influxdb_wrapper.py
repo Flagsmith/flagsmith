@@ -57,10 +57,10 @@ def mock_write_api(mock_influxdb_client: MagicMock) -> MagicMock:
 def test_write(mock_write_api: MagicMock) -> None:
     # Given
     influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
-    influxdb.add_data_point("field_name", "field_value")  # type: ignore[no-untyped-call]
+    influxdb.add_data_point("field_name", "field_value")
 
     # When
-    influxdb.write()  # type: ignore[no-untyped-call]
+    influxdb.write()
 
     # Then
     mock_write_api.write.assert_called()
@@ -76,10 +76,10 @@ def test_write_handles_errors(
     mock_write_api.write.side_effect = exception_class
 
     influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
-    influxdb.add_data_point("field_name", "field_value")  # type: ignore[no-untyped-call]
+    influxdb.add_data_point("field_name", "field_value")
 
     # When
-    influxdb.write()  # type: ignore[no-untyped-call]
+    influxdb.write()
 
     # Then
     # The write API was called
