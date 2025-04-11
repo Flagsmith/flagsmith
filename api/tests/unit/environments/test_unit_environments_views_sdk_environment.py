@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+import pytest
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from rest_framework import status
@@ -26,11 +27,16 @@ if TYPE_CHECKING:
     from organisations.models import Organisation
 
 
+@pytest.mark.parametrize(
+    "use_v2_feature_versioning, total_queries", [(True, 16), (False, 15)]
+)
 def test_get_environment_document(
     organisation_one: "Organisation",
     organisation_two: "Organisation",
     organisation_one_project_one: "Project",
     django_assert_num_queries: "DjangoAssertNumQueries",
+    use_v2_feature_versioning: bool,
+    total_queries: int,
 ) -> None:
     # Given
     project = organisation_one_project_one
@@ -38,7 +44,11 @@ def test_get_environment_document(
         name="standin_project", organisation=organisation_two
     )
 
-    environment = Environment.objects.create(name="Test Environment", project=project)
+    environment = Environment.objects.create(
+        name="Test Environment",
+        project=project,
+        use_v2_feature_versioning=use_v2_feature_versioning,
+    )
     api_key = EnvironmentAPIKey.objects.create(environment=environment)
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=api_key.key)
@@ -126,7 +136,7 @@ def test_get_environment_document(
     url = reverse("api-v1:environment-document")
 
     # When
-    with django_assert_num_queries(15):
+    with django_assert_num_queries(total_queries):
         response = client.get(url)
 
     # Then
