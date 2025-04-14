@@ -11,6 +11,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from flag_engine.segments.constants import ALL_RULE, EQUAL
 from moto import mock_s3  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import Table
+from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest_mock import MockerFixture
 
 from core.constants import STRING
@@ -597,3 +598,31 @@ def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-un
     # Then
     retrieved_object = s3_client.get_object(Bucket=bucket_name, Key=file_key)
     assert retrieved_object.get("ContentLength", 0) > 0
+
+
+def test_export_project_for_self_hosted_from_saas(
+    organisation: Organisation, mocker: MockerFixture, fs: FakeFilesystem
+) -> None:
+    # Given - dynamo db project
+    project_name = "test project"
+    project = Project.objects.create(
+        organisation=organisation, name=project_name, enable_dynamo_db=True
+    )
+    mocker.patch("import_export.export.is_saas", return_value=True)
+
+    # When - we export the data
+    data = export_projects(organisation.id)
+
+    # and delete the project
+    project.hard_delete()
+
+    # Next, let's load the data
+    file_path = f"/tmp/{uuid.uuid4()}.json"
+    fs.create_file(file_path, contents=json.dumps(data, cls=DjangoJSONEncoder))
+
+    call_command("loaddata", file_path, format="json")
+
+    # Then
+    assert (
+        Project.objects.filter(uuid=project.uuid, enable_dynamo_db=False).count() == 1
+    )
