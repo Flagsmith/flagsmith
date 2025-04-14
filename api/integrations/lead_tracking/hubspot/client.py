@@ -135,7 +135,7 @@ class HubspotClient:
         )
         return response.to_dict()  # type: ignore[no-any-return]
 
-    def create_self_hosted_contanct(
+    def create_self_hosted_contact(
         self, email: str, first_name: str, last_name: str, hubspot_company_id: str
     ) -> None:
         properties = {

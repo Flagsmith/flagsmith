@@ -151,7 +151,46 @@ def test_create_company_without_organisation_information(
     }
 
 
-def test_create_self_hosted_contanct(hubspot_client: HubspotClient) -> None:
+def test__create_contact(
+    hubspot_client: HubspotClient, admin_user: FFAdminUser
+) -> None:
+    # Given
+    # email = "user@flagsmith.com"
+    # first_name = "test"
+    # last_name = "user"
+
+    hubspot_company_id = "111"
+
+    properties = {
+        "email": admin_user.email,
+        "firstname": admin_user.first_name,
+        "lastname": admin_user.last_name,
+        "hs_marketable_status": admin_user.marketing_consent_given,
+    }
+
+    # When
+    hubspot_client.create_contact(admin_user, hubspot_company_id)
+
+    # Then
+    hubspot_client.client.crm.contacts.basic_api.create.assert_called_once_with(
+        simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
+            properties=properties,
+            associations=[
+                {
+                    "types": [
+                        {
+                            "associationCategory": "HUBSPOT_DEFINED",
+                            "associationTypeId": 1,
+                        }
+                    ],
+                    "to": {"id": hubspot_company_id},
+                }
+            ],
+        )
+    )
+
+
+def test__create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
     # Given
     email = "user@flagsmith.com"
     first_name = "test"
@@ -166,7 +205,7 @@ def test_create_self_hosted_contanct(hubspot_client: HubspotClient) -> None:
     }
 
     # When
-    hubspot_client.create_self_hosted_contanct(
+    hubspot_client.create_self_hosted_contact(
         email, first_name, last_name, hubspot_company_id
     )
 

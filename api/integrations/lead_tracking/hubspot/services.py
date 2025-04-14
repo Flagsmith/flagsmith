@@ -56,4 +56,4 @@ def create_self_hosted_onboarding_lead(
 
     company_id = company["id"]
 
-    hubspot_client.create_self_hosted_contanct(email, first_name, last_name, company_id)
+    hubspot_client.create_self_hosted_contact(email, first_name, last_name, company_id)

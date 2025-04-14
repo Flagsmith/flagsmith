@@ -35,7 +35,7 @@ def test_create_self_hosted_onboarding_lead_with_existing_company(
 
     mocked_hubspot_client().create_company.assert_not_called()
 
-    mocked_hubspot_client().create_self_hosted_contanct.assert_called_once_with(
+    mocked_hubspot_client().create_self_hosted_contact.assert_called_once_with(
         email, first_name, last_name, company_id
     )
 
@@ -72,6 +72,6 @@ def test_create_self_hosted_onboarding_lead_with_new_company(
         active_subscription=HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
     )
 
-    mocked_hubspot_client().create_self_hosted_contanct.assert_called_once_with(
+    mocked_hubspot_client().create_self_hosted_contact.assert_called_once_with(
         email, first_name, last_name, company_id
     )
