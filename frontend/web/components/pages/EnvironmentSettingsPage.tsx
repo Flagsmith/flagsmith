@@ -98,6 +98,8 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     if (env && currentEnv) {
       setCurrentEnv({
         ...currentEnv,
+        banner_colour: env.banner_colour,
+        banner_text: env.banner_text,
         description: env.description,
         name: env.name,
       })
