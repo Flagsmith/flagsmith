@@ -1,6 +1,9 @@
+from unittest.mock import MagicMock
+
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from requests.exceptions import RequestException
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -10,7 +13,7 @@ from users.models import FFAdminUser
 
 
 def test__send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
-    test_user_client: APIClient,
+    test_user_client: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -23,7 +26,7 @@ def test__send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
 
 
 def test__send_onboarding_request_to_saas_flagsmith_view_without_org(
-    db: None, admin_client_original: APIClient
+    db: None, admin_client_original: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -36,6 +39,36 @@ def test__send_onboarding_request_to_saas_flagsmith_view_without_org(
     assert (
         response.json()["error"]
         == "Please create an organisation before requesting support"
+    )
+
+
+def test__send_onboarding_request_to_saas_flagsmith_view_if_request_fails(
+    db: None,
+    admin_client_original: APIClient,
+    mocker: MockerFixture,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    is_oss: MagicMock,
+) -> None:
+    # Given
+    mocked_requests = mocker.patch("onboarding.views.requests")
+    url = reverse("api-v1:onboarding:send-onboarding-request")
+    mocked_requests.post.side_effect = RequestException("Failed to send request")
+
+    # When
+    response = admin_client_original.post(url)
+
+    # Then
+    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    mocked_requests.post.assert_called_once_with(
+        SEND_SUPPORT_REQUEST_URL,
+        data={
+            "first_name": admin_user.first_name,
+            "last_name": admin_user.last_name,
+            "email": admin_user.email,
+            "organisation_name": organisation.name,
+        },
+        timeout=30,
     )
 
 
