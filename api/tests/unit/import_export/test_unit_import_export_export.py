@@ -600,7 +600,7 @@ def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-un
     assert retrieved_object.get("ContentLength", 0) > 0
 
 
-def test_export_project_for_self_hosted_from_saas(
+def test_export_dynamo_project_from_saas(
     organisation: Organisation, mocker: MockerFixture, fs: FakeFilesystem
 ) -> None:
     # Given - dynamo db project

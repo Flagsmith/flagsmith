@@ -28,17 +28,10 @@ class Command(BaseCommand):
             type=str,
             help="S3 key to export to.",
         )
-        parser.add_argument(
-            "for-self-hosted",
-            type=bool,
-            default=True,
-            help="Indicates whether the dump is intended to be loaded on a self-hosted instance.",
-        )
 
     def handle(self, *args, **options):  # type: ignore[no-untyped-def]
         organisation_id = options["organisation-id"]
         bucket_name = options["bucket-name"]
-        for_self_hosted = options["for-self-hosted"]
         key = options["key"]
 
         logger.info(
@@ -48,4 +41,4 @@ class Command(BaseCommand):
             key,
         )
 
-        self.exporter.export_to_s3(organisation_id, bucket_name, key, for_self_hosted)
+        self.exporter.export_to_s3(organisation_id, bucket_name, key)

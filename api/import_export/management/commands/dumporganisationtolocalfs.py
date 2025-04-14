@@ -22,23 +22,13 @@ class Command(BaseCommand):
             help="Full path to file in which to write organisation data.",
         )
 
-        parser.add_argument(
-            "for-self-hosted",
-            type=bool,
-            default=True,
-            help="Indicates whether the dump is intended to be loaded on a self-hosted instance.",
-        )
-
     def handle(self, *args, **options):  # type: ignore[no-untyped-def]
         organisation_id = options["organisation-id"]
         file_location = options["file-location"]
-        for_self_hosted = options["for-self-hosted"]
 
         logger.info("Dumping organisation '%d' to '%s'", organisation_id, file_location)
 
         with open(file_location, "a+") as output_file:
             output_file.write(
-                json.dumps(
-                    full_export(organisation_id, for_self_hosted), cls=DjangoJSONEncoder
-                )
+                json.dumps(full_export(organisation_id), cls=DjangoJSONEncoder)
             )

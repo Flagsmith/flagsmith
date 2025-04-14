@@ -62,9 +62,8 @@ class S3OrganisationExporter:
         organisation_id: int,
         bucket_name: str,
         key: str,
-        for_self_hosted: bool = True,
     ) -> None:
-        data = full_export(organisation_id, for_self_hosted)
+        data = full_export(organisation_id)
         logger.debug("Got data export for organisation.")
 
         file = TemporaryFile()
@@ -76,12 +75,10 @@ class S3OrganisationExporter:
         logger.info("Finished writing data export to s3.")
 
 
-def full_export(
-    organisation_id: int, for_self_hosted: bool = True
-) -> typing.List[dict]:  # type: ignore[type-arg]
+def full_export(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     return [
         *export_organisation(organisation_id),
-        *export_projects(organisation_id, for_self_hosted),
+        *export_projects(organisation_id),
         *export_environments(organisation_id),
         *export_identities(organisation_id),
         *export_features(organisation_id),
@@ -119,14 +116,14 @@ def export_metadata(organisation_id: int) -> typing.List[dict]:  # type: ignore[
 
 
 def export_projects(
-    organisation_id: int, for_self_hosted: bool = True
+    organisation_id: int,
 ) -> typing.List[dict]:  # type: ignore[type-arg]
     default_filter = Q(project__organisation__id=organisation_id)
 
     exported_projects = _export_entities(
         _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
     )
-    if for_self_hosted and is_saas():
+    if is_saas():
         for project in exported_projects:
             project["fields"]["enable_dynamo_db"] = False
 
