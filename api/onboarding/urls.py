@@ -15,7 +15,7 @@ urlpatterns = [
         name="receive-onboarding-request",
     ),
 ]
-if is_oss:
+if is_oss():
     urlpatterns.append(
         path(
             "request/send/",

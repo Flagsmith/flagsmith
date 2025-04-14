@@ -2,7 +2,9 @@ import logging
 
 import pytest
 import responses
-from hubspot.crm.companies import SimplePublicObjectInputForCreate
+from hubspot.crm.companies import (  # type: ignore[import-untyped]
+    SimplePublicObjectInputForCreate,
+)
 from pytest_mock import MockerFixture
 from rest_framework import status
 

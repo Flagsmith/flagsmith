@@ -15,6 +15,7 @@ from integrations.lead_tracking.hubspot.services import (
     create_self_hosted_onboarding_lead,
 )
 from onboarding.serializers import SelfHostedOnboardingSupportSerializer
+from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ SEND_SUPPORT_REQUEST_URL = "https://api.flagsmith.com/api/v1/onboarding/request/
 
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
-def send_onboarding_request_to_saas_flagsmith_view(request: Request):
-    admin_user = request.user
+def send_onboarding_request_to_saas_flagsmith_view(request: Request) -> Response:
+    admin_user: FFAdminUser = request.user  # type: ignore[assignment]
     organisation = admin_user.organisations.first()
 
     if not organisation:
@@ -52,14 +53,14 @@ def send_onboarding_request_to_saas_flagsmith_view(request: Request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ReceiveSupportRequestFromSelfHosted(GenericAPIView):
+class ReceiveSupportRequestFromSelfHosted(GenericAPIView):  # type: ignore[type-arg]
     serializer_class = SelfHostedOnboardingSupportSerializer
     authentication_classes = ()
     permission_classes = ()
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "onboarding_request"
 
-    def post(self, request: Request):
+    def post(self, request: Request) -> Response:
         if not settings.HUBSPOT_ACCESS_TOKEN:
             return Response(
                 {"error": "HubSpot access token not configured"},

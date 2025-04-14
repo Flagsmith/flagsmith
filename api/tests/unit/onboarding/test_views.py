@@ -11,7 +11,7 @@ from users.models import FFAdminUser
 
 def test__send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
     test_user_client: APIClient,
-):
+) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
 
@@ -69,7 +69,7 @@ def test__send_onboarding_request_to_saas_flagsmith_view(
 
 def test__receive_support_request_from_self_hosted_view_without_hubspot_token(
     settings: SettingsWrapper, api_client: APIClient
-):
+) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = None
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["onboarding_request"] = "10/hour"
@@ -86,7 +86,7 @@ def test__receive_support_request_from_self_hosted_view_without_hubspot_token(
 
 def test__receive_support_request_from_self_hosted_view(
     settings: SettingsWrapper, api_client: APIClient, mocker: MockerFixture
-):
+) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["onboarding_request"] = "2/hour"
