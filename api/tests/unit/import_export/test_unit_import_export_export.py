@@ -600,7 +600,7 @@ def test_organisation_exporter_export_to_s3(organisation):  # type: ignore[no-un
     assert retrieved_object.get("ContentLength", 0) > 0
 
 
-def test_export_dynamo_project_from_saas(
+def test_export_dynamo_project(
     organisation: Organisation, mocker: MockerFixture, fs: FakeFilesystem
 ) -> None:
     # Given - dynamo db project
@@ -608,7 +608,6 @@ def test_export_dynamo_project_from_saas(
     project = Project.objects.create(
         organisation=organisation, name=project_name, enable_dynamo_db=True
     )
-    mocker.patch("import_export.export.is_saas", return_value=True)
 
     # When - we export the data
     data = export_projects(organisation.id)

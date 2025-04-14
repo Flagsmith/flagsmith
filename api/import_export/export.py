@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from tempfile import TemporaryFile
 
 import boto3
-from common.core.utils import is_saas
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F, Model, Q
@@ -123,9 +122,8 @@ def export_projects(
     exported_projects = _export_entities(
         _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
     )
-    if is_saas():
-        for project in exported_projects:
-            project["fields"]["enable_dynamo_db"] = False
+    for project in exported_projects:
+        project["fields"]["enable_dynamo_db"] = False
 
     return [
         *exported_projects,
