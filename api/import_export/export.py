@@ -56,7 +56,12 @@ class S3OrganisationExporter:
     def __init__(self, s3_client=None):  # type: ignore[no-untyped-def]
         self.s3_client = s3_client or boto3.client("s3")
 
-    def export_to_s3(self, organisation_id: int, bucket_name: str, key: str):  # type: ignore[no-untyped-def]
+    def export_to_s3(
+        self,
+        organisation_id: int,
+        bucket_name: str,
+        key: str,
+    ) -> None:
         data = full_export(organisation_id)
         logger.debug("Got data export for organisation.")
 
@@ -109,41 +114,52 @@ def export_metadata(organisation_id: int) -> typing.List[dict]:  # type: ignore[
     )
 
 
-def export_projects(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
+def export_projects(
+    organisation_id: int,
+) -> typing.List[dict]:  # type: ignore[type-arg]
     default_filter = Q(project__organisation__id=organisation_id)
 
-    return _export_entities(
+    exported_projects = _export_entities(
         _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
-        _EntityExportConfig(
-            Segment, Q(project__organisation__id=organisation_id, id=F("version_of"))
-        ),
-        _EntityExportConfig(
-            SegmentRule,
-            Q(
-                segment__project__organisation__id=organisation_id,
-                segment_id=F("segment__version_of"),
-            )
-            | Q(
-                rule__segment__project__organisation__id=organisation_id,
-                rule__segment_id=F("rule__segment__version_of"),
-            ),
-        ),
-        _EntityExportConfig(
-            Condition,
-            Q(
-                rule__segment__project__organisation__id=organisation_id,
-                rule__segment_id=F("rule__segment__version_of"),
-            )
-            | Q(
-                rule__rule__segment__project__organisation__id=organisation_id,
-                rule__rule__segment_id=F("rule__rule__segment__version_of"),
-            ),
-        ),
-        _EntityExportConfig(Tag, default_filter),
-        _EntityExportConfig(DataDogConfiguration, default_filter),
-        _EntityExportConfig(NewRelicConfiguration, default_filter),
-        _EntityExportConfig(SlackConfiguration, default_filter),
     )
+    for project in exported_projects:
+        project["fields"]["enable_dynamo_db"] = False
+
+    return [
+        *exported_projects,
+        *_export_entities(
+            _EntityExportConfig(
+                Segment,
+                Q(project__organisation__id=organisation_id, id=F("version_of")),
+            ),
+            _EntityExportConfig(
+                SegmentRule,
+                Q(
+                    segment__project__organisation__id=organisation_id,
+                    segment_id=F("segment__version_of"),
+                )
+                | Q(
+                    rule__segment__project__organisation__id=organisation_id,
+                    rule__segment_id=F("rule__segment__version_of"),
+                ),
+            ),
+            _EntityExportConfig(
+                Condition,
+                Q(
+                    rule__segment__project__organisation__id=organisation_id,
+                    rule__segment_id=F("rule__segment__version_of"),
+                )
+                | Q(
+                    rule__rule__segment__project__organisation__id=organisation_id,
+                    rule__rule__segment_id=F("rule__rule__segment__version_of"),
+                ),
+            ),
+            _EntityExportConfig(Tag, default_filter),
+            _EntityExportConfig(DataDogConfiguration, default_filter),
+            _EntityExportConfig(NewRelicConfiguration, default_filter),
+            _EntityExportConfig(SlackConfiguration, default_filter),
+        ),
+    ]
 
 
 def export_environments(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
