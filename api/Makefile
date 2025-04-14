@@ -96,7 +96,7 @@ django-collect-static:
 
 .PHONY: serve
 serve:
-	flagsmith start --reload api
+	poetry run flagsmith start --reload api
 		
 
 .PHONY: generate-ld-client-types
