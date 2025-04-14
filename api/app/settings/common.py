@@ -28,6 +28,7 @@ from task_processor.task_run_method import TaskRunMethod
 
 from app.routers import ReplicaReadStrategy
 from app.utils import get_numbered_env_vars_with_prefix
+from environments.enums import EnvironmentDocumentCacheMode
 
 django_stubs_ext.monkeypatch()
 
@@ -348,13 +349,7 @@ FEATURE_EVALUATION_CACHE_SECONDS = env.int(
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 
 if ENABLE_API_USAGE_TRACKING:
-    # NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
-    # we need to support setting the influx configuration alongside using postgres for analytics.
-    if USE_POSTGRES_FOR_ANALYTICS:
-        MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
-    elif INFLUXDB_TOKEN:
-        MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
-
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
 ALLOWED_ADMIN_IP_ADDRESSES = env.list(
     "ALLOWED_ADMIN_IP_ADDRESSES",
@@ -703,8 +698,30 @@ ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
     "django.core.cache.backends.locmem.LocMemCache",
 )
 
+CACHE_ENVIRONMENT_DOCUMENT_LOCATION = env(
+    "CACHE_ENVIRONMENT_DOCUMENT_LOCATION", default="environment-documents"
+)
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND = env(
+    "CACHE_ENVIRONMENT_DOCUMENT_BACKEND", "django.core.cache.backends.db.DatabaseCache"
+)
+CACHE_ENVIRONMENT_DOCUMENT_MODE = env.enum(
+    "CACHE_ENVIRONMENT_DOCUMENT_MODE",
+    enum=EnvironmentDocumentCacheMode,
+    default=EnvironmentDocumentCacheMode.EXPIRING.value,
+)
 CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
-ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
+CACHE_ENVIRONMENT_DOCUMENT_OPTIONS = env.json(
+    "CACHE_ENVIRONMENT_DOCUMENT_OPTIONS", default=None
+)
+
+if (
+    CACHE_ENVIRONMENT_DOCUMENT_MODE == EnvironmentDocumentCacheMode.PERSISTENT
+    and CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+):
+    warnings.warn(
+        "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
+        'since CACHE_ENVIRONMENT_DOCUMENT_MODE == "PERSISTENT"'
+    )  # pragma: no cover
 
 USER_THROTTLE_CACHE_NAME = "user-throttle"
 USER_THROTTLE_CACHE_BACKEND = env.str(
@@ -761,10 +778,16 @@ CACHES = {
         "LOCATION": CHARGEBEE_CACHE_LOCATION,
         "TIMEOUT": 12 * 60 * 60,  # 12 hours
     },
-    ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
-        "timeout": CACHE_ENVIRONMENT_DOCUMENT_SECONDS,
+    CACHE_ENVIRONMENT_DOCUMENT_LOCATION: {
+        "BACKEND": CACHE_ENVIRONMENT_DOCUMENT_BACKEND,
+        "LOCATION": CACHE_ENVIRONMENT_DOCUMENT_LOCATION,
+        "TIMEOUT": (
+            None
+            if CACHE_ENVIRONMENT_DOCUMENT_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+            else CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+        ),
+        "OPTIONS": CACHE_ENVIRONMENT_DOCUMENT_OPTIONS or {},
     },
     GET_FLAGS_ENDPOINT_CACHE_NAME: {
         "BACKEND": GET_FLAGS_ENDPOINT_CACHE_BACKEND,
