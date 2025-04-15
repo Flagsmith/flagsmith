@@ -292,7 +292,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                     to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                   >
                                     <span className='mr-2'>
-                                      <Icon name='rocket' fill='#9DA4AE' />
+                                      <Icon name='features' fill='#9DA4AE' />
                                     </span>
                                     Features
                                   </NavLink>
@@ -356,7 +356,11 @@ const HomeAside: FC<HomeAsideType> = ({
                                       exact
                                       to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
                                     >
-                                      <IonIcon className='mr-2' icon={flask} />
+                                      <IonIcon
+                                        color={'#9DA4AE'}
+                                        className='mr-2'
+                                        icon={flask}
+                                      />
                                       Split Tests
                                     </NavLink>
                                   )}
@@ -388,7 +392,6 @@ const HomeAside: FC<HomeAsideType> = ({
                   style={{ width: 280 }}
                   className='text-muted position-fixed bottom-0 p-2 fs-caption'
                 >
-                  <Resources />
                   <BuildVersion />
                 </div>
               </div>

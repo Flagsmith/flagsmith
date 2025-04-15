@@ -477,6 +477,34 @@ const App = class extends Component {
                                 </Row>
                                 <Row className='gap-3'>
                                   <NavLink
+                                    activeClassName='active'
+                                    to={'/getting-started'}
+                                    className='d-flex lh-1 align-items-center'
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='rocket'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    Getting Started
+                                  </NavLink>
+                                  <a
+                                    className='d-flex lh-1 align-items-center'
+                                    href={'https://docs.flagsmith.com'}
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='file-text'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    Docs
+                                  </a>
+                                  <NavLink
+                                    className='d-flex lh-1 align-items-center'
                                     id='account-settings-link'
                                     data-test='account-settings-link'
                                     activeClassName='active'
@@ -492,25 +520,6 @@ const App = class extends Component {
                                     Account
                                   </NavLink>
                                   <GithubStar />
-                                  <Tooltip
-                                    place='bottom'
-                                    title={
-                                      <Button
-                                        href='https://docs.flagsmith.com'
-                                        target='_blank'
-                                        className='btn btn-with-icon'
-                                        size='small'
-                                      >
-                                        <Icon
-                                          name='file-text'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </Button>
-                                    }
-                                  >
-                                    Docs
-                                  </Tooltip>
 
                                   <Headway className='cursor-pointer' />
                                   <Tooltip
