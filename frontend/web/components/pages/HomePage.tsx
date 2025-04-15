@@ -41,7 +41,9 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
 
-  const { data: version } = useGetBuildVersionQuery({})
+  const { data: version, isLoading: versionLoading } = useGetBuildVersionQuery(
+    {},
+  )
 
   // Note that we are explicitly setting marketing consent to true
   // here to reduce the complexity of the change. This is due to
@@ -176,10 +178,18 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
     'disable_oauth_registration',
   )
   const oauthClasses = 'col-12 col-xl-4'
-  const [onboarding, setOnboarding] = useState(true)
-
+  const onboarding =
+    !versionLoading && version?.backend?.self_hosted_data?.has_users === false
   if (onboarding) {
     return <OnboardingPage />
+  }
+
+  if (versionLoading) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
   }
 
   if ((!isSignup || !disableOauthRegister) && !disableSignup) {

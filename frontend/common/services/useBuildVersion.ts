@@ -17,7 +17,7 @@ export const buildVersionService = service
             baseQuery(
               `${new URL('/version/', Project.api.replace('api/v1/', ''))}`,
             ),
-            baseQuery(`${Project.api.replace('api/v1/', '')}version`),
+            baseQuery(`${Project.api.replace('api/v1/', '')}version/`),
           ])
 
           if (backendRes.error) {

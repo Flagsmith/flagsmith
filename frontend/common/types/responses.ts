@@ -700,16 +700,16 @@ export type Version = {
     ci_commit_sha?: string
     image_tag?: string
   }
-  'self_hosted_data'?: {
-    'has_users': boolean
-    'has_logins': boolean
-  }
   backend: {
     ci_commit_sha: string
     image_tag: string
     has_email_provider: boolean
     is_enterprise: boolean
     is_saas: boolean
+    'self_hosted_data'?: {
+      'has_users': boolean
+      'has_logins': boolean
+    }
   }
 }
 
