@@ -1,5 +1,37 @@
 # Changelog
 
+## [2.171.0](https://github.com/Flagsmith/flagsmith/compare/v2.170.0...v2.171.0) (2025-04-11)
+
+
+### Features
+
+* add permanent environment document cache ([#5187](https://github.com/Flagsmith/flagsmith/issues/5187)) ([08e88c3](https://github.com/Flagsmith/flagsmith/commit/08e88c34abc8fb04621e933015c94c46ebd8f256))
+* **superuser:** Allow super user creation using signup endpoint ([#5266](https://github.com/Flagsmith/flagsmith/issues/5266)) ([86098a6](https://github.com/Flagsmith/flagsmith/commit/86098a6eef48e402a5d319bc8afa8c01ebae650d))
+
+
+### Bug Fixes
+
+* Handles trailing space in flag value ([#5324](https://github.com/Flagsmith/flagsmith/issues/5324)) ([de1c66a](https://github.com/Flagsmith/flagsmith/commit/de1c66a69058935f07eff0ff34207f7a50ef09e5))
+* **n+1:** fix environment-document n+1 for env_feature_version ([#5332](https://github.com/Flagsmith/flagsmith/issues/5332)) ([8b4be6c](https://github.com/Flagsmith/flagsmith/commit/8b4be6c5cc20701c7b63acdbea7dbbce03591dfb))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* fix task definition args ([#5322](https://github.com/Flagsmith/flagsmith/issues/5322)) ([f681759](https://github.com/Flagsmith/flagsmith/commit/f681759d731fbb273d02ef24e1e8deb1fdb812f5))
+
+## [2.170.0](https://github.com/Flagsmith/flagsmith/compare/v2.169.2...v2.170.0) (2025-04-09)
+
+
+### Features
+
+* Initial Prometheus support ([#5254](https://github.com/Flagsmith/flagsmith/issues/5254)) ([3a98aca](https://github.com/Flagsmith/flagsmith/commit/3a98aca251260b04e23ab8d4097a92e40b383161))
+
+
+### Bug Fixes
+
+* Dashboard alias not updating in safari ([#5310](https://github.com/Flagsmith/flagsmith/issues/5310)) ([42590ae](https://github.com/Flagsmith/flagsmith/commit/42590aedc330dbb37a387d19c128bf8088e20eec))
+* Feature value overflowing container ([#5295](https://github.com/Flagsmith/flagsmith/issues/5295)) ([a0589eb](https://github.com/Flagsmith/flagsmith/commit/a0589ebc9bdfe3ff6ed1b95407013c2c07f9c90b))
+
 ## [2.169.2](https://github.com/Flagsmith/flagsmith/compare/v2.169.1...v2.169.2) (2025-04-08)
 
 
