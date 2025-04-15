@@ -63,11 +63,19 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
     [
         ("organisation", True, None, False),
         ("project", True, None, False),
-        ("project", False, 
-         "The requirement organisation does not match the field organisation", True),
-        ("organisation", False,
-         "The requirement organisation does not match the field organisation", True),
-    ]
+        (
+            "project",
+            False,
+            "The requirement organisation does not match the field organisation",
+            True,
+        ),
+        (
+            "organisation",
+            False,
+            "The requirement organisation does not match the field organisation",
+            True,
+        ),
+    ],
 )
 def test_metadata_model_field_serializer_validation(
     a_metadata_field: MetadataField,
@@ -80,15 +88,19 @@ def test_metadata_model_field_serializer_validation(
     error_message: str | None,
     use_invalid_id: bool,
 ) -> None:
-    content_type = organisation_content_type if content_type_target == "organisation" else project_content_type
-    
+    content_type = (
+        organisation_content_type
+        if content_type_target == "organisation"
+        else project_content_type
+    )
+
     if use_invalid_id:
         object_id = 99999
     elif content_type_target == "organisation":
         object_id = a_metadata_field.organisation.id
     elif content_type_target == "project":
         object_id = project.id
-    
+
     # Given
     data: Dict[str, Any] = {
         "field": a_metadata_field.id,
@@ -100,11 +112,11 @@ def test_metadata_model_field_serializer_validation(
             }
         ],
     }
-    
+
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
     result = serializer.is_valid()
-    
+
     # Then
     assert result is expected_is_valid
     if not expected_is_valid:
@@ -120,8 +132,7 @@ def test_metadata_model_field_serializer_with_empty_is_required_for(
     data: Dict[str, Any] = {
         "field": a_metadata_field.id,
         "content_type": feature_content_type.id,
-        "is_required_for": [
-        ],
+        "is_required_for": [],
     }
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
