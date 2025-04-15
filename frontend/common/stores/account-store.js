@@ -268,15 +268,15 @@ const controller = {
           )
         }
 
-        if (user.superuser) {
-          // Creating a superuser will update the version endpoint
-          getBuildVersion(getStore(), {}, { forceRefetch: true })
-        }
-
         if (organisation_name) {
-          await controller.createOrganisation(organisation_name)
+          await controller.createOrganisation(organisation_name, true)
         }
         await controller.onLogin()
+
+        if (user.superuser) {
+          // Creating a superuser will update the version endpoint
+          await getBuildVersion(getStore(), {}, { forceRefetch: true })
+        }
         store.isSaving = false
       })
       .catch((e) => API.ajaxHandler(store, e))
