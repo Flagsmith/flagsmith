@@ -444,7 +444,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
             <>
               <DirtyFormModal />
               <PageTitle title='Settings' />
-              {Math.random()}
               {isLoading && (
                 <div className='centered-container'>
                   <Loader />
@@ -588,10 +587,10 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                                   </div>
                                 </div>
                               }
-                              // disabled={
-                              //   currentEnv?.use_v2_feature_versioning ||
-                              //   currentEnv?.enabledFeatureVersioning
-                              // }
+                              disabled={
+                                currentEnv?.use_v2_feature_versioning ||
+                                currentEnv?.enabledFeatureVersioning
+                              }
                               data-test={
                                 currentEnv?.use_v2_feature_versioning
                                   ? 'feature-versioning-enabled'
