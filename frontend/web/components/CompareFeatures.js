@@ -147,6 +147,13 @@ class CompareEnvironments extends Component {
                             toggleFlag={toggleFlag}
                             removeFlag={removeFlag}
                             projectFlag={this.state.flag}
+                            onCloseEditModal={() => {
+                              this.context.router.history.replace({
+                                pathname:
+                                  this.context.router.history.location.pathname,
+                                search: '?tab=feature-values',
+                              })
+                            }}
                           />
                         </Row>
                       )}
