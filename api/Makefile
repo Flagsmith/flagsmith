@@ -21,7 +21,7 @@ install-pip:
 
 .PHONY: install-poetry
 install-poetry:
-	python -m pip install poetry==${POETRY_VERSION}
+	curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_VERSION}
 
 .PHONY: install-packages
 install-packages:
