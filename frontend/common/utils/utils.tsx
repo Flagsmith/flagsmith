@@ -78,8 +78,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       total += variation
         ? variation.percentage_allocation
         : typeof v.default_percentage_allocation === 'number'
-          ? v.default_percentage_allocation
-          : (v as any).percentage_allocation
+        ? v.default_percentage_allocation
+        : (v as any).percentage_allocation
       return null
     })
     return 100 - total
@@ -190,10 +190,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   ) {
     const findAppended = `${value}`.includes(':')
       ? (conditions || []).find((v) => {
-        const split = value.split(':')
-        const targetKey = `:${split[split.length - 1]}`
-        return v.value === operator + targetKey
-      })
+          const split = value.split(':')
+          const targetKey = `:${split[split.length - 1]}`
+          return v.value === operator + targetKey
+        })
       : false
     if (findAppended) return findAppended
 
@@ -204,10 +204,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
    */
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
-  },
-
-  getApproveChangeRequestPermission() {
-    return 'APPROVE_CHANGE_REQUEST'
   },
   getContentType(contentTypes: ContentType[], model: string, type: string) {
     return contentTypes.find((c: ContentType) => c[model] === type) || null

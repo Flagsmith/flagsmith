@@ -1,4 +1,4 @@
-import React, { ComponentProps, FC, useEffect, useMemo, useState } from 'react'
+import React, { ComponentProps, FC, useEffect, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
@@ -356,7 +356,11 @@ const HomeAside: FC<HomeAsideType> = ({
                                       exact
                                       to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
                                     >
-                                      <IonIcon className='mr-2' icon={flask} />
+                                      <IonIcon
+                                        className='mr-2'
+                                        icon={flask}
+                                        color={'#9DA4AE'}
+                                      />
                                       Split Tests
                                     </NavLink>
                                   )}

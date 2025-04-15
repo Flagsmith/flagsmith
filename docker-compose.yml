@@ -41,6 +41,7 @@ services:
 
       # Enable Task Processor
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
+      PROMETHEUS_ENABLED: 'true'
 
       # Uncomment if you want to enable Google OAuth. Note this does not turn Google OAuth on. You still need to use
       # Flagsmith on Flagsmith to enable it - https://docs.flagsmith.com/deployment/#oauth_google
@@ -63,11 +64,15 @@ services:
 
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
   # in the application environment
-  flagsmith_processor:
+  flagsmith-task-processor:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'
+      DJANGO_ALLOWED_HOSTS: '*'
+      PROMETHEUS_ENABLED: 'true'
+    ports:
+      - 8001:8000
     depends_on:
       - flagsmith
     command: run-task-processor
