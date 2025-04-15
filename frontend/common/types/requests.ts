@@ -644,5 +644,6 @@ export type Req = {
     organisation_name: string
   }
   getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
   // END OF TYPES
 }

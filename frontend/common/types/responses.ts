@@ -903,5 +903,6 @@ export type Res = {
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
+  onboardingSupportOptIn: { id: string }
   // END OF TYPES
 }

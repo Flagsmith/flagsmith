@@ -10,6 +10,7 @@ import Project from 'common/project'
 import { getStore } from 'common/store'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
+import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
 
 const controller = {
   acceptInvite: (id) => {
@@ -250,7 +251,7 @@ const controller = {
     }
     return controller.getOrganisations()
   },
-  register: ({ organisation_name, ...user }) => {
+  register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
     data
       .post(`${Project.api}auth/users/`, {
@@ -267,7 +268,9 @@ const controller = {
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
           )
         }
-
+        if (contact_consent_given) {
+          await createOnboardingSupportOptIn(getStore(), {})
+        }
         if (organisation_name) {
           await controller.createOrganisation(organisation_name, true)
         }
