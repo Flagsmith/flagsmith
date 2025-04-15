@@ -1170,6 +1170,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                             const matchingPermissions = permissions?.find(
                               (v) => v.user.id === id,
                             )
+                            debugger
 
                             return (
                               <Row
@@ -1205,7 +1206,8 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                   ) : (
                                     <div onClick={onClick}>
                                       {!matchingPermissions?.permissions
-                                        ?.length ? (
+                                        ?.length &&
+                                      !matchingPermissions?.admin ? (
                                         <Tooltip
                                           title={
                                             <div className='text-body gap-1 align-items-center d-flex'>
@@ -1225,12 +1227,21 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                         </Tooltip>
                                       ) : (
                                         <PermissionsSummaryList
-                                          permissions={matchingPermissions.permissions.map(
-                                            (v) => ({
-                                              permission_key: v,
-                                              tags: [],
-                                            }),
-                                          )}
+                                          permissions={
+                                            matchingPermissions.admin
+                                              ? [
+                                                  {
+                                                    permission_key: `${level} Administrator`,
+                                                    tags: [],
+                                                  },
+                                                ]
+                                              : matchingPermissions.permissions.map(
+                                                  (v) => ({
+                                                    permission_key: v,
+                                                    tags: [],
+                                                  }),
+                                                )
+                                          }
                                         />
                                       )}
                                     </div>
