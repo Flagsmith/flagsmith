@@ -181,15 +181,24 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     getEnvironment()
   }, [getEnvironment])
 
+  // This watches exclusively the update of use_v2_feature_versioning that is done async
   useEffect(() => {
     if (isFetchingEnvironment || !env?.id) {
       return
     }
+
     if (
       environmentData?.use_v2_feature_versioning &&
       !currentEnv?.use_v2_feature_versioning
     ) {
-      AppActions.editEnv(environmentData)
+      setCurrentEnv((currentEnvState) => {
+        AppActions.editEnv(environmentData)
+        return {
+          ...currentEnvState,
+          ...environmentData,
+          use_v2_feature_versioning: environmentData?.use_v2_feature_versioning,
+        }
+      })
     }
   }, [
     env?.id,
@@ -197,7 +206,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     environmentData,
     isSuccessEnvironment,
     currentEnv?.use_v2_feature_versioning,
-  ])
+    ])
 
   const onSave = () => {
     toast('Environment Saved')
@@ -435,6 +444,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
             <>
               <DirtyFormModal />
               <PageTitle title='Settings' />
+              {Math.random()}
               {isLoading && (
                 <div className='centered-container'>
                   <Loader />
@@ -578,10 +588,10 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                                   </div>
                                 </div>
                               }
-                              disabled={
-                                currentEnv?.use_v2_feature_versioning ||
-                                currentEnv?.enabledFeatureVersioning
-                              }
+                              // disabled={
+                              //   currentEnv?.use_v2_feature_versioning ||
+                              //   currentEnv?.enabledFeatureVersioning
+                              // }
                               data-test={
                                 currentEnv?.use_v2_feature_versioning
                                   ? 'feature-versioning-enabled'
