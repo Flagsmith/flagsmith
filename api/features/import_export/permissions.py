@@ -1,4 +1,4 @@
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request

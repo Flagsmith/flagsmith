@@ -340,8 +340,8 @@ Override just the default API URI with your own:
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
     Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
-    Flagsmith.shared.baseURL = "https://<your-self-hosted-api>/api/v1/"
-    Flagsmith.eventSourceBaseURL = "https://<your-self-hosted-api>/api/v1/"
+    Flagsmith.shared.baseURL = "https://flagsmith.example.com/api/v1/"
+    Flagsmith.eventSourceBaseURL = "https://realtime.flagsmith.example.com/"
     // The rest of your launch method code
 }
 ```

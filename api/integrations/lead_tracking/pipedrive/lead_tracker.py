@@ -102,7 +102,7 @@ class PipedriveLeadTracker(LeadTracker):
     @staticmethod
     def get_label_ids_for_user(user: FFAdminUser) -> typing.List[str]:
         if any(org.is_paid for org in user.organisations.all()):
-            return [settings.PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID]
+            return [settings.PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID]  # type: ignore[list-item]
         return []
 
     def _get_org_by_domain(self, domain: str) -> PipedriveOrganization:
@@ -132,6 +132,6 @@ class PipedriveLeadTracker(LeadTracker):
 
     def _get_client(self) -> PipedriveAPIClient:
         return PipedriveAPIClient(
-            api_token=settings.PIPEDRIVE_API_TOKEN,
+            api_token=settings.PIPEDRIVE_API_TOKEN,  # type: ignore[arg-type]
             base_url=settings.PIPEDRIVE_BASE_API_URL,
         )

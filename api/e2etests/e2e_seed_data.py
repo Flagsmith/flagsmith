@@ -1,9 +1,9 @@
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
     CREATE_FEATURE,
     VIEW_AUDIT_LOG,

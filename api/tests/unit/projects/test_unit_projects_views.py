@@ -2,7 +2,7 @@ import json
 from datetime import timedelta
 
 import pytest
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
     CREATE_FEATURE,
     TAG_SUPPORTED_PERMISSIONS,
@@ -15,7 +15,7 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from environments.dynamodb.types import ProjectIdentityMigrationStatus
 from environments.identities.models import Identity
@@ -177,7 +177,7 @@ def test_can_list_project_permission(client: APIClient, project: Project) -> Non
     # Then
     assert response.status_code == status.HTTP_200_OK
     # Hard code how many permissions we expect there to be.
-    assert len(response.json()) == 9
+    assert len(response.json()) == 10
 
     returned_supported_permissions = [
         permission["key"]

@@ -5,7 +5,7 @@ from typing import Optional, Union
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
@@ -25,7 +25,7 @@ from .models import (
 )
 
 
-@register_recurring_task(  # type: ignore[misc]
+@register_recurring_task(
     run_every=timedelta(hours=12),
 )
 def clear_stale_feature_imports_and_exports() -> None:
@@ -34,7 +34,7 @@ def clear_stale_feature_imports_and_exports() -> None:
     FeatureImport.objects.filter(created_at__lt=two_weeks_ago).delete()
 
 
-@register_recurring_task(  # type: ignore[misc]
+@register_recurring_task(
     run_every=timedelta(minutes=10),
 )
 def retire_stalled_feature_imports_and_exports() -> None:
@@ -113,7 +113,7 @@ def _export_features_for_environment(
     feature_export.save()
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def export_features_for_environment(
     feature_export_id: int, tag_ids: Optional[list[int]] = None
 ) -> None:
@@ -127,7 +127,7 @@ def export_features_for_environment(
         raise
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def import_features_for_environment(feature_import_id: int) -> None:
     feature_import = FeatureImport.objects.get(id=feature_import_id)
     try:
@@ -266,14 +266,14 @@ def _create_flagsmith_on_flagsmith_feature_export():  # type: ignore[no-untyped-
     environment_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
     tag_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
 
-    feature_export = FeatureExport.objects.create(
+    feature_export = FeatureExport.objects.create(  # type: ignore[misc]
         environment_id=environment_id,
         status=PROCESSING,
     )
 
     export_features_for_environment(
         feature_export_id=feature_export.id,
-        tag_ids=[tag_id],
+        tag_ids=[tag_id],  # type: ignore[list-item]
     )
 
     feature_export.refresh_from_db()

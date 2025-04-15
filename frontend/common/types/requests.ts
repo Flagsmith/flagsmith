@@ -178,6 +178,7 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
+    multivariate_feature_state_values: MultivariateOption[] | null
     feature_segment: {
       segment: number
     }
@@ -188,6 +189,25 @@ export type Req = {
     organisation_id: number
     description: string | null
     name: string
+  }
+  getUserInvites: {
+    organisationId: number
+  }
+  createUserInvite: {
+    organisationId: number
+    invites: {
+      email: string
+      role: string
+      permission_groups: number[]
+    }[]
+  }
+  deleteUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  resendUserInvite: {
+    organisationId: number
+    inviteId: number
   }
   getRole: { organisation_id: string; role_id: number }
   updateRole: {

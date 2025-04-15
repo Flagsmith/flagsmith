@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_recurring_task,
 )
 

@@ -1,7 +1,7 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.11.2
+    rev: v0.11.5
     hooks:
       # Run the linter.
       - id: ruff
@@ -37,7 +37,7 @@ repos:
         types: [python]
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 2.1.1
+    rev: 2.1.2
     hooks:
       - id: poetry-check
         args: ["-C", "api"]

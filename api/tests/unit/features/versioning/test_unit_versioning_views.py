@@ -3,11 +3,11 @@ import typing
 from datetime import datetime, timedelta
 
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.urls import reverse
 from django.utils import timezone
 from freezegun import freeze_time

@@ -7,9 +7,7 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 2.0.1
-
-GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
+POETRY_VERSION ?= 2.1.1
 
 SAML_REVISION ?= v1.6.4
 RBAC_REVISION ?= v0.11.2
@@ -98,10 +96,8 @@ django-collect-static:
 
 .PHONY: serve
 serve:
-	poetry run gunicorn --bind 0.0.0.0:8000 \
-		--logger-class ${GUNICORN_LOGGER_CLASS} \
-		--reload \
-		app.wsgi
+	flagsmith start --reload api
+		
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:

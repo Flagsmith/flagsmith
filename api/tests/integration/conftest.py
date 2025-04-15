@@ -2,13 +2,17 @@ import json
 import uuid
 
 import pytest
+from django.core.cache import BaseCache
+from django.core.cache.backends.locmem import LocMemCache
 from django.test import Client as DjangoClient
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from app.utils import create_hash
+from environments.enums import EnvironmentDocumentCacheMode
 from organisations.models import Organisation
 from tests.integration.helpers import create_mv_option_with_api
 
@@ -524,3 +528,15 @@ def identity_featurestate(admin_client, environment, feature, identity):  # type
         url, data=json.dumps(data), content_type="application/json"
     )
     return response.json()["id"]
+
+
+@pytest.fixture()
+def persistent_environment_document_cache(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    environment: int,
+) -> BaseCache:
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+    cache = LocMemCache(name="environment_document", params={})
+    mocker.patch("environments.models.environment_document_cache", cache)
+    return cache
