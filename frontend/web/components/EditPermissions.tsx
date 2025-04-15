@@ -1218,10 +1218,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                             </div>
                                           }
                                         >
-                                          This user has no permissions assigned
+                                          {`This user has no permissions assigned
                                           directly, but they may belong to a
                                           group that has permissions on this
-                                          {level}.
+                                          ${level}.`}
                                         </Tooltip>
                                       ) : (
                                         <PermissionsSummaryList
