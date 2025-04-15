@@ -9,18 +9,20 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 
 from integrations.lead_tracking.hubspot.services import (
     create_self_hosted_onboarding_lead,
 )
 from onboarding.serializers import SelfHostedOnboardingSupportSerializer
+from onboarding.throttling import OnboardingRequestThrottle
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
 
 
-SEND_SUPPORT_REQUEST_URL = "https://api.flagsmith.com/api/v1/onboarding/request/send/"
+SEND_SUPPORT_REQUEST_URL = (
+    "https://api.flagsmith.com/api/v1/onboarding/request/receive/"
+)
 
 
 @api_view(["POST"])
@@ -57,8 +59,7 @@ class ReceiveSupportRequestFromSelfHosted(GenericAPIView):  # type: ignore[type-
     serializer_class = SelfHostedOnboardingSupportSerializer
     authentication_classes = ()
     permission_classes = ()
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "onboarding_request"
+    throttle_classes = [OnboardingRequestThrottle]
 
     def post(self, request: Request) -> Response:
         if not settings.HUBSPOT_ACCESS_TOKEN:

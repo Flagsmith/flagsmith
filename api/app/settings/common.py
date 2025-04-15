@@ -258,7 +258,6 @@ elif "DJANGO_DB_NAME" in os.environ:
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
-ONBOARDING_REQUEST_THROTTLE_RATE = env("ONBOARDING_REQUEST_THROTTLE_RATE", "10/hour")
 DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -277,7 +276,6 @@ REST_FRAMEWORK = {
         "mfa_code": "5/min",
         "invite": "10/min",
         "user": USER_THROTTLE_RATE,
-        "onboarding_request": ONBOARDING_REQUEST_THROTTLE_RATE,
     },
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_RENDERER_CLASSES": [
@@ -718,6 +716,18 @@ USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
+ONBOARDING_REQUEST_THROTTLE_CACHE_NAME = "onboarding-request-throttle"
+ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND",
+    "django.core.cache.backends.db.DatabaseCache",
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION", "onboarding-request-throttle"
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS", default={}
+)
+
 # Using Redis for cache
 # To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
 # and set the cache location to the redis url
@@ -786,6 +796,14 @@ CACHES = {
         "BACKEND": USER_THROTTLE_CACHE_BACKEND,
         "LOCATION": USER_THROTTLE_CACHE_LOCATION,
         "OPTIONS": USER_THROTTLE_CACHE_OPTIONS,
+    },
+    ONBOARDING_REQUEST_THROTTLE_CACHE_NAME: {
+        "BACKEND": ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND,
+        "LOCATION": ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION,
+        "OPTIONS": ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS,
+        "TIMEOUT": None,
+        "MAX_ENTRIES": 10000,
+        "KEY_PREFIX": "onboarding-req",
     },
 }
 

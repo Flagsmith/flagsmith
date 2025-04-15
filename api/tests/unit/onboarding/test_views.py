@@ -100,12 +100,11 @@ def test__send_onboarding_request_to_saas_flagsmith_view(
     )
 
 
-def test__receive_support_request_from_self_hosted_view_without_hubspot_token(
-    settings: SettingsWrapper, api_client: APIClient
+def test_receive_support_request_from_self_hosted_view_without_hubspot_token(
+    settings: SettingsWrapper, api_client: APIClient, db: None
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = None
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["onboarding_request"] = "10/hour"
 
     url = reverse("api-v1:onboarding:receive-onboarding-request")
 
@@ -117,12 +116,11 @@ def test__receive_support_request_from_self_hosted_view_without_hubspot_token(
     assert response.json()["error"] == "HubSpot access token not configured"
 
 
-def test__receive_support_request_from_self_hosted_view(
-    settings: SettingsWrapper, api_client: APIClient, mocker: MockerFixture
+def test_receive_support_request_from_self_hosted_view(
+    settings: SettingsWrapper, api_client: APIClient, mocker: MockerFixture, db: None
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
-    settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["onboarding_request"] = "2/hour"
 
     mocked_create_self_hosted_onboarding_lead = mocker.patch(
         "onboarding.views.create_self_hosted_onboarding_lead"
@@ -138,11 +136,41 @@ def test__receive_support_request_from_self_hosted_view(
 
     # When
     response = api_client.post(url, data=data)
-    assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Then
-    # Next request should be throttled
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    mocked_create_self_hosted_onboarding_lead.assert_called_once_with(**data)
+
+
+def test_receive_support_request_throttling(
+    settings: SettingsWrapper, api_client: APIClient, mocker: MockerFixture, db: None
+) -> None:
+    # Given
+    settings.HUBSPOT_ACCESS_TOKEN = "some-token"
+    mocker.patch("onboarding.views.create_self_hosted_onboarding_lead")
+
+    data = {
+        "organisation_name": "org-1",
+        "first_name": "user",
+        "last_name": "test",
+        "email": "user@flagsmith.com",
+    }
+    url = reverse("api-v1:onboarding:receive-onboarding-request")
+
+    # When
+    mocker.patch(
+        "onboarding.throttling.get_ip_address_from_request",
+        side_effect=["127.0.0.1", "127.0.0.1", "127.0.0.2"],
+    )
+
+    # Then - first request should work
+    response = api_client.post(url, data=data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    # Second request should be throttled(because of the same ip)
     response = api_client.post(url, data=data)
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
-    mocked_create_self_hosted_onboarding_lead.assert_called_once_with(**data)
+    # Third request should work(because of different ip)
+    response = api_client.post(url, data=data)
+    assert response.status_code == status.HTTP_204_NO_CONTENT

@@ -14,7 +14,7 @@ class AdminWhitelistMiddleware:
 
     def __call__(self, request):  # type: ignore[no-untyped-def]
         if request.path.startswith("/admin"):
-            ip = get_ip_address_from_request(request)  # type: ignore[no-untyped-call]
+            ip = get_ip_address_from_request(request)
             if (
                 settings.ALLOWED_ADMIN_IP_ADDRESSES
                 and ip not in settings.ALLOWED_ADMIN_IP_ADDRESSES
