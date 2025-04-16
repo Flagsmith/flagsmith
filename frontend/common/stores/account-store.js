@@ -253,7 +253,7 @@ const controller = {
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-    data
+    return data
       .post(`${Project.api}auth/users/`, {
         ...user,
         invite_hash: API.getInvite() || undefined,
