@@ -20,8 +20,7 @@ type OnboardingPageProps = {
 }
 
 interface StepProps {
-  value: number
-  setValue: (v: number) => void
+  currentStep: number
   step: number
   children: React.ReactNode
   completedTitle: React.ReactNode
@@ -34,16 +33,15 @@ interface StepProps {
 const Step: FC<StepProps> = ({
   children,
   completedTitle,
+  currentStep,
   description,
   isValid,
   onSubmit,
-  setValue,
   step,
   title,
-  value,
 }) => {
-  const isComplete = value > step
-  const isActive = value === step
+  const isComplete = currentStep > step
+  const isActive = currentStep === step
   const numberStyle = {
     alignItems: 'center',
     borderRadius: '50%',
@@ -169,8 +167,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
                   </div>
                   <Step
                     step={1}
-                    value={step}
-                    setValue={setStep}
+                    currentStep={step}
                     title='Your account'
                     description='This account will be set as the superuser for the Django Admin. You will be able to set up SSO and OAuth for your team members.'
                     completedTitle={`Hey, ${onboarding.first_name}!`}
@@ -264,8 +261,7 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
                   </Step>
                   <Step
                     step={2}
-                    value={step}
-                    setValue={setStep}
+                    currentStep={step}
                     title='Your organisation'
                     description='Organisations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.'
                     completedTitle={`Creating the organisation ${onboarding.organisation_name}`}
