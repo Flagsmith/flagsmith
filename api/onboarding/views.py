@@ -1,8 +1,6 @@
 import logging
 
-import requests
 from django.conf import settings
-from requests.exceptions import RequestException
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import GenericAPIView
@@ -14,15 +12,11 @@ from integrations.lead_tracking.hubspot.services import (
     create_self_hosted_onboarding_lead,
 )
 from onboarding.serializers import SelfHostedOnboardingSupportSerializer
+from onboarding.tasks import send_onboarding_request_to_saas_flagsmith
 from onboarding.throttling import OnboardingRequestThrottle
 from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
-
-
-SEND_SUPPORT_REQUEST_URL = (
-    "https://api.flagsmith.com/api/v1/onboarding/request/receive/"
-)
 
 
 @api_view(["POST"])
@@ -36,22 +30,14 @@ def send_onboarding_request_to_saas_flagsmith_view(request: Request) -> Response
             {"error": "Please create an organisation before requesting support"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    data = {
-        "first_name": admin_user.first_name,
-        "last_name": admin_user.last_name,
-        "email": admin_user.email,
-        "organisation_name": organisation.name,
-    }
-    try:
-        response = requests.post(SEND_SUPPORT_REQUEST_URL, data=data, timeout=30)
-        response.raise_for_status()
-    except RequestException as e:
-        logger.error("Failed to send support request to flagsmith: %s", e)
-        return Response(
-            {"error": "Failed to send support request."},
-            status=status.HTTP_502_BAD_GATEWAY,
-        )
-
+    send_onboarding_request_to_saas_flagsmith.delay(
+        kwargs={
+            "first_name": admin_user.first_name,
+            "last_name": admin_user.last_name,
+            "email": admin_user.email,
+            "organisation_name": organisation.name,
+        }
+    )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
