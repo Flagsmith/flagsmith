@@ -614,6 +614,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
                                     canEdit={AccountStore.isAdmin()}
+                                    canInspectPermissions={AccountStore.isAdmin()}
+                                    onInspectPermissions={() => {}}
                                   />
                                 </div>
                               </Row>

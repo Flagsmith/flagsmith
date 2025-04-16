@@ -6,8 +6,9 @@ import Button from './base/forms/Button'
 import Icon from './Icon'
 import ActionButton from './ActionButton'
 
-interface FeatureActionProps {
+interface UserActionProps {
   canRemove: boolean
+  canInspectPermissions: boolean
   onRemove: () => void
   onEdit: () => void
   canEdit: boolean
@@ -20,6 +21,7 @@ type ActionDropdownProps = {
   isOpen: boolean
   canEdit?: boolean
   canRemove?: boolean
+  canInspectPermissions?: boolean
   btnRef: React.RefObject<HTMLDivElement>
   onAction: (action: ActionType) => void
   onOutsideClick: () => void
@@ -41,6 +43,7 @@ function calculateListPosition(
 const ActionDropdown = ({
   btnRef,
   canEdit,
+  canInspectPermissions,
   canRemove,
   isOpen,
   onAction,
@@ -64,7 +67,7 @@ const ActionDropdown = ({
 
   return createPortal(
     <div ref={dropDownRef} className='feature-action__list'>
-      {true && (
+      {!!canInspectPermissions && (
         <div
           className='feature-action__item'
           onClick={(e) => {
@@ -106,8 +109,9 @@ const ActionDropdown = ({
   )
 }
 
-export const FeatureAction: FC<FeatureActionProps> = ({
+export const UserAction: FC<UserActionProps> = ({
   canEdit,
+  canInspectPermissions,
   canRemove,
   onEdit,
   onInspectPermissions,
@@ -171,6 +175,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
         isOpen={isOpen}
         canEdit={canEdit}
         canRemove={canRemove}
+        canInspectPermissions={canInspectPermissions}
         btnRef={btnRef}
         onAction={handleActionClick}
         onOutsideClick={handleOutsideClick}
@@ -179,4 +184,4 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   )
 }
 
-export default FeatureAction
+export default UserAction

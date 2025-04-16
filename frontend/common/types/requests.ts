@@ -646,5 +646,14 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: string
+  }
+  getUserPermissions: {
+    projectId?: string
+    userId: number | undefined
+    level: PermissionLevel
+  }
   // END OF TYPES
 }
