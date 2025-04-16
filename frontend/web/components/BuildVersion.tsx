@@ -10,10 +10,10 @@ type BuildVersionType = {}
 
 const BuildVersion: FC<BuildVersionType> = ({}) => {
   const { data: version } = useGetBuildVersionQuery({})
-  console.log(version)
+
   return (
     <>
-      {version?.tag?.toLowerCase() !== defaultVersionTag?.toLowerCase() && (
+      {version?.tag && version?.tag?.toLowerCase() !== defaultVersionTag?.toLowerCase() && (
         <Tooltip
           title={
             <span>
@@ -29,7 +29,7 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
               ? `Frontend SHA: ${version?.frontend_sha}`
               : ''
           }${
-            version?.backend_sha !== defaultVersionTag
+            version?.backend_sha?.toLowerCase() !== defaultVersionTag?.toLowerCase()
               ? `${
                   version?.frontend_sha !== defaultVersionTag ? '<br/>' : ''
                 }Backend SHA: ${version?.backend_sha}`
