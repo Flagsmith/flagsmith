@@ -389,8 +389,8 @@ const HomeAside: FC<HomeAsideType> = ({
                   />
                 </div>
                 <div
-                  style={{ width: 280 }}
-                  className='text-muted position-fixed bottom-0 p-2 fs-caption'
+                  style={{ width: 260 }}
+                  className='text-muted position-fixed bottom-0 p-2 fs-caption d-flex flex-column gap-4'
                 >
                   <Resources />
                   <BuildVersion />
