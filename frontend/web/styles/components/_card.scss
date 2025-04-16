@@ -7,8 +7,8 @@
 .dark {
   .card {
     &.shadow {
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.16) !important;
     }
   }
 }
