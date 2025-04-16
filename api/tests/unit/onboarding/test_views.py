@@ -36,7 +36,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view_without_org(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert (
-        response.json()["error"]
+        response.json()["message"]
         == "Please create an organisation before requesting support"
     )
 
@@ -85,7 +85,7 @@ def test_receive_support_request_from_self_hosted_view_without_hubspot_token(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "HubSpot access token not configured"
+    assert response.json()["message"] == "HubSpot access token not configured"
 
 
 def test_receive_support_request_from_self_hosted_view(

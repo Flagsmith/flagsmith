@@ -26,7 +26,7 @@ def test_create_self_hosted_onboarding_lead_with_existing_company(
     mocked_hubspot_client().get_company_by_domain.return_value = {"id": company_id}
 
     # When
-    create_self_hosted_onboarding_lead(email, organisation_name, first_name, last_name)
+    create_self_hosted_onboarding_lead(email, first_name, last_name, organisation_name)
 
     # Then
     mocked_hubspot_client().get_company_by_domain.assert_called_once_with(
@@ -59,7 +59,7 @@ def test_create_self_hosted_onboarding_lead_with_new_company(
     mocked_hubspot_client().create_company.return_value = {"id": company_id}
 
     # When
-    create_self_hosted_onboarding_lead(email, organisation_name, first_name, last_name)
+    create_self_hosted_onboarding_lead(email, first_name, last_name, organisation_name)
 
     # Then
     mocked_hubspot_client().get_company_by_domain.assert_called_once_with(
