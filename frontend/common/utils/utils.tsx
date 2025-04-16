@@ -603,62 +603,58 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   setupCrisp() {
-    if (typeof $crisp === 'undefined') {
+    const user = AccountStore.model as AccountModel
+    if (typeof $crisp === 'undefined' || !user) {
       return
     }
-    if (AccountStore.getUser()) {
+    $crisp.push([
+      'set',
+      'session:data',
+      [[['hosting', Utils.isSaas() ? 'SaaS' : 'Self-Hosted']]],
+    ])
+    const organisation = AccountStore.getOrganisation() as Organisation
+    const formatOrganisation = (o: Organisation) => {
+      const plan = AccountStore.getActiveOrgPlan()
+      return `${o.name} (${plan}) #${o.id}`
+    }
+    const otherOrgs = user?.organisations.filter(
+      (v) => v.id !== organisation?.id,
+    )
+    if (window.$crisp) {
+      $crisp.push(['set', 'user:email', user.email])
       $crisp.push([
         'set',
-        'session:data',
-        [[['hosting', Utils.isSaas() ? 'SaaS' : 'Self-Hosted']]],
+        'user:nickname',
+        `${user.first_name} ${user.last_name}`,
       ])
-    }
-    const user = AccountStore.model as AccountModel
-    const organisation = AccountStore.getOrganisation() as Organisation
-    if (user) {
-      const formatOrganisation = (o: Organisation) => {
-        const plan = AccountStore.getActiveOrgPlan()
-        return `${o.name} (${plan}) #${o.id}`
-      }
-      const otherOrgs = user?.organisations.filter(
-        (v) => v.id !== organisation?.id,
-      )
-      if (window.$crisp) {
-        $crisp.push(['set', 'user:email', user.email])
-        $crisp.push([
-          'set',
-          'user:nickname',
-          `${user.first_name} ${user.last_name}`,
-        ])
-        if (otherOrgs.length) {
-          $crisp.push([
-            'set',
-            'session:data',
-            [[['other-orgs', `${otherOrgs?.length} other organisations`]]],
-          ])
-        }
+      if (otherOrgs.length) {
         $crisp.push([
           'set',
           'session:data',
+          [[['other-orgs', `${otherOrgs?.length} other organisations`]]],
+        ])
+      }
+      $crisp.push([
+        'set',
+        'session:data',
+        [
           [
+            ['user-id', `${user.id}`],
             [
-              ['user-id', `${user.id}`],
-              [
-                'date-joined',
-                `${moment(user.date_joined).format('Do MMM YYYY')}`,
-              ],
+              'date-joined',
+              `${moment(user.date_joined).format('Do MMM YYYY')}`,
             ],
           ],
+        ],
+      ])
+      if (organisation) {
+        $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
+        console.log(user, organisation)
+        $crisp.push([
+          'set',
+          'session:data',
+          [[['seats', organisation.num_seats]]],
         ])
-        if (organisation) {
-          $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
-          console.log(user, organisation)
-          $crisp.push([
-            'set',
-            'session:data',
-            [[['seats', organisation.num_seats]]],
-          ])
-        }
       }
     }
   },
