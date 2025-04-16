@@ -14,6 +14,7 @@ import InfoMessage from 'components/InfoMessage'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import ErrorMessage from 'components/ErrorMessage'
 import AccountProvider from 'common/providers/AccountProvider'
+import classNames from 'classnames'
 
 type OnboardingPageProps = {
   onComplete?: () => void
@@ -63,13 +64,10 @@ const Step: FC<StepProps> = ({
       }`}
     >
       <div
-        className={`${numberClassName} ${
-          isComplete
-            ? ''
-            : isActive
-            ? 'bg-white bg-body text-primary fw-semibold'
-            : 'bg-white bg-light200'
-        }`}
+        className={classNames(numberClassName, {
+          'bg-white bg-body text-primary fw-semibold': !isComplete && isActive,
+          'bg-white bg-light200': !isComplete && !isActive,
+        })}
         style={{
           ...numberStyle,
           ...(isComplete
