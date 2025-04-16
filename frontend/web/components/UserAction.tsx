@@ -11,9 +11,10 @@ interface FeatureActionProps {
   onRemove: () => void
   onEdit: () => void
   canEdit: boolean
+  onInspectPermissions?: () => void
 }
 
-type ActionType = 'edit' | 'remove'
+type ActionType = 'edit' | 'remove' | 'inspect'
 
 type ActionDropdownProps = {
   isOpen: boolean
@@ -63,6 +64,18 @@ const ActionDropdown = ({
 
   return createPortal(
     <div ref={dropDownRef} className='feature-action__list'>
+      {true && (
+        <div
+          className='feature-action__item'
+          onClick={(e) => {
+            e.stopPropagation()
+            onAction('inspect')
+          }}
+        >
+          <Icon name='search' width={18} fill='#9DA4AE' />
+          <span>Inspect permissions</span>
+        </div>
+      )}
       {!!canEdit && (
         <div
           className='feature-action__item'
@@ -97,6 +110,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   canEdit,
   canRemove,
   onEdit,
+  onInspectPermissions,
   onRemove,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -116,10 +130,12 @@ export const FeatureAction: FC<FeatureActionProps> = ({
         onEdit()
       } else if (action === 'remove') {
         onRemove()
+      } else if (action === 'inspect') {
+        onInspectPermissions?.()
       }
       close()
     },
-    [close, onRemove, onEdit],
+    [close, onRemove, onEdit, onInspectPermissions],
   )
 
   if (!canEdit && !!canRemove) {
