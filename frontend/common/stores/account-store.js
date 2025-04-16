@@ -10,6 +10,7 @@ import Project from 'common/project'
 import { getStore } from 'common/store'
 import { service } from 'common/service'
 import { getBuildVersion } from 'common/services/useBuildVersion'
+import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
 
 const controller = {
   acceptInvite: (id) => {
@@ -250,9 +251,9 @@ const controller = {
     }
     return controller.getOrganisations()
   },
-  register: ({ organisation_name, ...user }) => {
+  register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-    data
+    return data
       .post(`${Project.api}auth/users/`, {
         ...user,
         invite_hash: API.getInvite() || undefined,
@@ -267,17 +268,19 @@ const controller = {
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
           )
         }
+        if (contact_consent_given) {
+          await createOnboardingSupportOptIn(getStore(), {})
+        }
+        if (organisation_name) {
+          await controller.createOrganisation(organisation_name, true)
+        }
+        store.isSaving = false
+        await controller.onLogin()
 
         if (user.superuser) {
           // Creating a superuser will update the version endpoint
-          getBuildVersion(getStore(), {}, { forceRefetch: true })
+          await getBuildVersion(getStore(), {}, { forceRefetch: true })
         }
-
-        if (organisation_name) {
-          await controller.createOrganisation(organisation_name)
-        }
-        await controller.onLogin()
-        store.isSaving = false
       })
       .catch((e) => API.ajaxHandler(store, e))
   },

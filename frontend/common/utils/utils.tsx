@@ -78,8 +78,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       total += variation
         ? variation.percentage_allocation
         : typeof v.default_percentage_allocation === 'number'
-          ? v.default_percentage_allocation
-          : (v as any).percentage_allocation
+        ? v.default_percentage_allocation
+        : (v as any).percentage_allocation
       return null
     })
     return 100 - total
@@ -190,10 +190,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   ) {
     const findAppended = `${value}`.includes(':')
       ? (conditions || []).find((v) => {
-        const split = value.split(':')
-        const targetKey = `:${split[split.length - 1]}`
-        return v.value === operator + targetKey
-      })
+          const split = value.split(':')
+          const targetKey = `:${split[split.length - 1]}`
+          return v.value === operator + targetKey
+        })
       : false
     if (findAppended) return findAppended
 
@@ -204,10 +204,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
    */
   flagsmithFeatureExists(flag: string) {
     return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
-  },
-
-  getApproveChangeRequestPermission() {
-    return 'APPROVE_CHANGE_REQUEST'
   },
   getContentType(contentTypes: ContentType[], model: string, type: string) {
     return contentTypes.find((c: ContentType) => c[model] === type) || null
@@ -607,65 +603,58 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   setupCrisp() {
-    if (typeof $crisp !== 'undefined') {
-      if (AccountStore.getUser()) {
+    const user = AccountStore.model as AccountModel
+    if (typeof $crisp === 'undefined' || !user) {
+      return
+    }
+    $crisp.push([
+      'set',
+      'session:data',
+      [[['hosting', Utils.isSaas() ? 'SaaS' : 'Self-Hosted']]],
+    ])
+    const organisation = AccountStore.getOrganisation() as Organisation
+    const formatOrganisation = (o: Organisation) => {
+      const plan = AccountStore.getActiveOrgPlan()
+      return `${o.name} (${plan}) #${o.id}`
+    }
+    const otherOrgs = user?.organisations.filter(
+      (v) => v.id !== organisation?.id,
+    )
+    if (window.$crisp) {
+      $crisp.push(['set', 'user:email', user.email])
+      $crisp.push([
+        'set',
+        'user:nickname',
+        `${user.first_name} ${user.last_name}`,
+      ])
+      if (otherOrgs.length) {
         $crisp.push([
           'set',
           'session:data',
-          [[['hosting', Utils.isSaas() ? 'SaaS' : 'Self-Hosted']]],
+          [[['other-orgs', `${otherOrgs?.length} other organisations`]]],
         ])
       }
-      const user = AccountStore.model as AccountModel
-      const organisation = AccountStore.getOrganisation() as Organisation
-      if (user) {
-        const formatOrganisation = (o: Organisation) => {
-          const plan = AccountStore.getActiveOrgPlan()
-          return `${o.name} (${plan}) #${o.id}`
-        }
-        const otherOrgs = user?.organisations.filter(
-          (v) => v.id !== organisation?.id,
-        )
-        if (window.$crisp) {
-          $crisp.push(['set', 'user:email', user.email])
-          $crisp.push([
-            'set',
-            'user:nickname',
-            `${user.first_name} ${user.last_name}`,
-          ])
-          if (otherOrgs.length) {
-            $crisp.push([
-              'set',
-              'session:data',
-              [[['other-orgs', `${otherOrgs?.length} other organisations`]]],
-            ])
-          }
-          $crisp.push([
-            'set',
-            'session:data',
+      $crisp.push([
+        'set',
+        'session:data',
+        [
+          [
+            ['user-id', `${user.id}`],
             [
-              [
-                ['user-id', `${user.id}`],
-                [
-                  'date-joined',
-                  `${moment(user.date_joined).format('Do MMM YYYY')}`,
-                ],
-              ],
+              'date-joined',
+              `${moment(user.date_joined).format('Do MMM YYYY')}`,
             ],
-          ])
-          if (organisation) {
-            $crisp.push([
-              'set',
-              'user:company',
-              formatOrganisation(organisation),
-            ])
-            console.log(user, organisation)
-            $crisp.push([
-              'set',
-              'session:data',
-              [[['seats', organisation.num_seats]]],
-            ])
-          }
-        }
+          ],
+        ],
+      ])
+      if (organisation) {
+        $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
+        console.log(user, organisation)
+        $crisp.push([
+          'set',
+          'session:data',
+          [[['seats', organisation.num_seats]]],
+        ])
       }
     }
   },

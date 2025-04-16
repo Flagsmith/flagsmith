@@ -332,7 +332,7 @@ const UserPage: FC<UserPageType> = (props) => {
                           }
                         />
                         {showAliases && (
-                          <h6>
+                          <h6 className='d-flex align-items-center gap-1'>
                             <Tooltip
                               title={
                                 <span className='user-select-none'>

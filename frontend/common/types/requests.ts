@@ -204,6 +204,25 @@ export type Req = {
     description: string | null
     name: string
   }
+  getUserInvites: {
+    organisationId: number
+  }
+  createUserInvite: {
+    organisationId: number
+    invites: {
+      email: string
+      role: string
+      permission_groups: number[]
+    }[]
+  }
+  deleteUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  resendUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
   getRole: { organisation_id: string; role_id: number }
   updateRole: {
     organisation_id: number
@@ -623,7 +642,9 @@ export type Req = {
     password: string
     contact_consent_given: boolean
     organisation_name: string
+    superuser: boolean
   }
   getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
   // END OF TYPES
 }
