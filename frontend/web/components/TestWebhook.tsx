@@ -6,9 +6,10 @@ import data from 'common/data/base/_data'
 import Button from './base/forms/Button'
 
 type TestWebhookType = {
-  webhook: string | undefined
+  webhookUrl: string | undefined
   json: string
   secret: string | undefined
+  environmentId: string
 }
 
 // from https://stackoverflow.com/questions/24834812/space-in-between-json-stringify-output
@@ -52,7 +53,12 @@ const signPayload = async (body: string, secret: string): Promise<string> => {
     .join('')
 }
 
-const TestWebhook: FC<TestWebhookType> = ({ json, secret, webhook }) => {
+const TestWebhook: FC<TestWebhookType> = ({
+  json,
+  secret,
+  webhookUrl: webhook,
+}) => {
+  const [testWebhook, { isLoading, isError }] = useTestWebhookMutation()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -95,9 +101,15 @@ const TestWebhook: FC<TestWebhookType> = ({ json, secret, webhook }) => {
         type='button'
         id='try-it-btn'
         disabled={loading || !webhook}
-        onClick={submit}
+        // onClick={submit}
+        onClick={() =>
+          testWebhook({
+            environmentId: '1',
+            url: webhook,
+            body: JSON.parse(json),
+          })
+        }
         theme='secondary'
-        size='small'
       >
         Test your webhook
       </Button>

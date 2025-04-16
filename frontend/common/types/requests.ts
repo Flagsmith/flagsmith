@@ -621,5 +621,14 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
+  testWebhook: {
+    environmentId: string
+    url: string
+    secret?: string
+    body: {
+      event: string
+      data: Record<string, unknown>
+    }
+  }
   // END OF TYPES
 }

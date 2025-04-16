@@ -42,7 +42,6 @@ const CreateWebhook = class extends Component {
         this.setState({ error: true, isSaving: false })
       })
   }
-
   render() {
     const {
       props: { isEdit },
@@ -60,6 +59,7 @@ const CreateWebhook = class extends Component {
               }}
             >
               <Row space>
+                {JSON.stringify(project.environments)}
                 <Flex className='mb-4'>
                   <div>
                     <label>*URL (Expects a 200 response from POST)</label>
@@ -138,7 +138,7 @@ const CreateWebhook = class extends Component {
                   <div className='justify-content-end flex-row'>
                     <TestWebhook
                       json={Constants.exampleWebhook}
-                      webhook={this.state.url}
+                      webhookUrl={this.state.url}
                       secret={this.state.secret}
                     />
                     {isEdit ? (

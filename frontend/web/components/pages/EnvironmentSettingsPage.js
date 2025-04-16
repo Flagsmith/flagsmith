@@ -3,6 +3,7 @@ import ConfirmRemoveEnvironment from 'components/modals/ConfirmRemoveEnvironment
 import ProjectStore from 'common/stores/project-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CreateWebhookModal from 'components/modals/CreateWebhook'
+import CreateWebhookNew from 'components/modals/CreateWebhook'
 import ConfirmRemoveWebhook from 'components/modals/ConfirmRemoveWebhook'
 import ConfirmToggleEnvFeature from 'components/modals/ConfirmToggleEnvFeature'
 import EditPermissions from 'components/EditPermissions'

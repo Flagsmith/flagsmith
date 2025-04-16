@@ -32,6 +32,16 @@ export const webhookService = service
         }),
       }),
 
+      testWebhook: builder.mutation<void, Req['testWebhook']>({
+        query: (query) => ({
+          body: {
+            ...query.body,
+          },
+          method: 'POST',
+          url: `environments/${query.environmentId}/webhooks/test/`,
+        }),
+      }),
+
       updateWebhook: builder.mutation<Res['webhook'], Req['updateWebhook']>({
         invalidatesTags: [{ id: 'LIST', type: 'Webhooks' }],
         query: ({ environmentId, ...rest }) => ({
