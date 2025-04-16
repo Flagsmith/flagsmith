@@ -26,12 +26,12 @@ def test_api_usage_cache(
         for _ in range(10):
             for resource in Resource:
                 cache.track_request(
-                    Resource.get_lowercased_name(resource),
+                    resource,
                     host,
                     environment_key_1,
                 )
                 cache.track_request(
-                    Resource.get_lowercased_name(resource),
+                    resource,
                     host,
                     environment_key_2,
                 )
@@ -44,7 +44,7 @@ def test_api_usage_cache(
 
         # let's track another request(to trigger flush)
         cache.track_request(
-            "flags",
+            Resource.FLAGS,
             host,
             environment_key_1,
         )
@@ -55,7 +55,7 @@ def test_api_usage_cache(
             expected_calls.append(
                 mocker.call(
                     kwargs={
-                        "resource": Resource.get_lowercased_name(resource),
+                        "resource": resource.value,
                         "host": host,
                         "environment_key": environment_key_1,
                         "count": 11 if resource == Resource.FLAGS else 10,
@@ -65,7 +65,7 @@ def test_api_usage_cache(
             expected_calls.append(
                 mocker.call(
                     kwargs={
-                        "resource": Resource.get_lowercased_name(resource),
+                        "resource": resource.value,
                         "host": host,
                         "environment_key": environment_key_2,
                         "count": 10,
@@ -79,7 +79,7 @@ def test_api_usage_cache(
 
         # and track another request
         cache.track_request(
-            "flags",
+            Resource.FLAGS,
             host,
             environment_key_1,
         )

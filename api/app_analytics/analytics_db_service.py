@@ -135,15 +135,16 @@ def get_usage_data_from_local_db(
         .annotate(count=Sum("total_count"))
     )
     data_by_day = {}
-    for row in qs:
+    for row in qs:  # TODO Write proper mappers for this?
         day = row["created_at__date"]
         if day not in data_by_day:
             data_by_day[day] = UsageData(day=day)
-        setattr(
-            data_by_day[day],
-            Resource.get_lowercased_name(row["resource"]),
-            row["count"],
-        )
+        if column_name := Resource(row["resource"]).column_name:
+            setattr(
+                data_by_day[day],
+                column_name,
+                row["count"],
+            )
 
     return data_by_day.values()  # type: ignore[return-value]
 

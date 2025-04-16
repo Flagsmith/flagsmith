@@ -109,15 +109,16 @@ def track_feature_evaluation(
 
 @register_task_handler()
 def track_request(
-    resource: str,
+    resource: int,
     host: str,
     environment_key: str,
     count: int = 1,
 ) -> None:
     if environment := Environment.get_from_cache(environment_key):
+        resource = Resource(resource)
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             APIUsageRaw.objects.create(
-                resource=Resource.get_from_resource_name(resource),
+                resource=resource,
                 host=host,
                 environment_id=environment.id,
                 count=count,

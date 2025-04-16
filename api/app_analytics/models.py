@@ -15,20 +15,41 @@ class Resource(models.IntegerChoices):
     TRAITS = 3
     ENVIRONMENT_DOCUMENT = 4
 
-    @classmethod
-    def get_lowercased_name(cls, resource: int) -> str:
-        member = next(filter(lambda member: member.value == resource, cls), None)
-        if not member:
-            raise ValueError(f"Invalid resource: {resource}")
+    @property
+    def is_tracked(self) -> bool:
+        return self in {
+            self.FLAGS,
+            self.IDENTITIES,
+            self.TRAITS,
+            self.ENVIRONMENT_DOCUMENT,
+        }
 
-        return member.name.lower()
+    @property
+    def resource_name(self) -> str | None:
+        return {
+            self.FLAGS: "flags",
+            self.IDENTITIES: "identities",
+            self.TRAITS: "traits",
+            self.ENVIRONMENT_DOCUMENT: "environment-document",
+        }.get(self)
+
+    @property
+    def column_name(self) -> str | None:
+        return {
+            self.FLAGS: "flags",
+            self.IDENTITIES: "identities",
+            self.TRAITS: "traits",
+            self.ENVIRONMENT_DOCUMENT: "environment_document",
+        }.get(self)
 
     @classmethod
-    def get_from_resource_name(cls, resource: str) -> int:
-        try:
-            return getattr(cls, resource.upper().replace("-", "_")).value  # type: ignore[no-any-return]
-        except (KeyError, AttributeError) as err:
-            raise ValueError(f"Invalid resource: {resource}") from err
+    def get_from_name(cls, resource_name: str) -> "Resource | None":
+        return {
+            "flags": cls.FLAGS,
+            "identities": cls.IDENTITIES,
+            "traits": cls.TRAITS,
+            "environment-document": cls.ENVIRONMENT_DOCUMENT,
+        }.get(resource_name)
 
 
 class APIUsageRaw(models.Model):
