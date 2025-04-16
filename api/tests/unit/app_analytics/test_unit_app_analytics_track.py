@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 from pytest_mock import MockerFixture
 
+from app_analytics.models import Resource
 from app_analytics.track import (
     track_feature_evaluation_influxdb,
     track_request_googleanalytics,
@@ -67,7 +68,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[
 
     # When
     track_request_influxdb(
-        resource=expected_resource,
+        resource=Resource.get_from_name(expected_resource),
         host="testserver",
         environment=mock_environment,
     )
@@ -94,7 +95,7 @@ def test_track_request_sends_host_data_to_influxdb(
 
     # When
     track_request_influxdb(
-        resource="flags",
+        resource=Resource.FLAGS,
         host="testserver",
         environment=mock_environment,
     )
@@ -104,27 +105,6 @@ def test_track_request_sends_host_data_to_influxdb(
         mock_influxdb.return_value.add_data_point.call_args_list[0][1]["tags"]["host"]
         == "testserver"
     )
-
-
-def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
-    mocker: MockerFixture,
-) -> None:
-    """
-    Verify that the correct number of calls are made to InfluxDB for the various uris.
-    """
-    # Given
-    mock_influxdb = mocker.patch("app_analytics.track.InfluxDBWrapper")
-    mock_environment = mocker.MagicMock()
-
-    # When
-    track_request_influxdb(
-        resource="health",
-        host="testserver",
-        environment=mock_environment,
-    )
-
-    # Then
-    mock_influxdb.return_value.assert_not_called()
 
 
 def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:

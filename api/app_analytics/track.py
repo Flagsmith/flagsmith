@@ -9,6 +9,7 @@ from six.moves.urllib.parse import (  # type: ignore[import-untyped]
 )
 
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
+from app_analytics.models import Resource
 from environments.models import Environment
 from util.util import postpone
 
@@ -24,10 +25,10 @@ DEFAULT_DATA = "v=1&tid=" + settings.GOOGLE_ANALYTICS_KEY
 # dictionary of resources to their corresponding actions
 # when tracking events in GA / Influx
 TRACKED_RESOURCE_ACTIONS = {
-    "flags": "flags",
-    "identities": "identity_flags",
-    "traits": "traits",
-    "environment-document": "environment_document",
+    Resource.FLAGS: "flags",
+    Resource.IDENTITIES: "identity_flags",
+    Resource.TRAITS: "traits",
+    Resource.ENVIRONMENT_DOCUMENT: "environment_document",
 }
 
 
@@ -36,7 +37,7 @@ def track_request_googleanalytics_async(request):  # type: ignore[no-untyped-def
     return track_request_googleanalytics(request)  # type: ignore[no-untyped-call]
 
 
-def get_resource_from_uri(request_uri: str) -> str | None:
+def get_resource_from_uri(request_uri: str) -> Resource | None:
     """
     Split the uri so we can determine the resource that is being requested
     (note that because it starts with a /, the first item in the list will be a blank string)
@@ -50,7 +51,7 @@ def get_resource_from_uri(request_uri: str) -> str | None:
         return None
 
     # uri will be in the form /api/v1/<resource>/...
-    return split_uri[2]
+    return Resource.get_from_name(split_uri[2])
 
 
 def track_request_googleanalytics(request):  # type: ignore[no-untyped-def]
@@ -65,7 +66,7 @@ def track_request_googleanalytics(request):  # type: ignore[no-untyped-def]
 
     resource = get_resource_from_uri(request.path)
 
-    if resource in TRACKED_RESOURCE_ACTIONS:
+    if resource and resource.is_tracked:
         environment = Environment.get_from_cache(
             request.headers.get("X-Environment-Key")
         )
@@ -92,7 +93,7 @@ def track_event(category, action, label="", value=""):  # type: ignore[no-untype
 
 
 def track_request_influxdb(
-    resource: str,
+    resource: Resource | None,
     host: str,
     environment: "Environment",
     count: int = 1,
@@ -102,12 +103,12 @@ def track_request_influxdb(
 
     :param request: (HttpRequest) the request being made
     """
-    if resource and resource in TRACKED_RESOURCE_ACTIONS:
+    if resource and resource.is_tracked:
         if environment is None:
             return
 
         tags = {
-            "resource": resource,
+            "resource": resource.resource_name,
             "organisation": environment.project.organisation.get_unique_slug(),
             "organisation_id": environment.project.organisation_id,
             "project": environment.project.name,
