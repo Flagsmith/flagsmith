@@ -840,10 +840,12 @@ def test_handle_api_usage_notifications_missing_info_cache(
     ]
 
 
+@pytest.mark.parametrize("plan", ("scale-up", "scale-up-v2", "scale-up-v3"))
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_charge_for_api_call_count_overages_scale_up(
     organisation: Organisation,
     mocker: MockerFixture,
+    plan: str,
 ) -> None:
     # Given
     now = timezone.now()
@@ -857,7 +859,7 @@ def test_charge_for_api_call_count_overages_scale_up(
         current_billing_term_ends_at=now + timedelta(minutes=30),
     )
     organisation.subscription.subscription_id = "fancy_sub_id23"
-    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.plan = plan
     organisation.subscription.save()
 
     # In order to cover an edge case found in production use, we make the
@@ -1363,8 +1365,10 @@ def test_charge_for_api_call_count_overages_non_standard(
     # Then
     mock_chargebee_update.assert_not_called()
     assert inspecting_handler.messages == [  # type: ignore[attr-defined]
-        f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
-        f"for organisation {organisation.id}"
+        "Unknown subscription plan when trying to bill for overages "
+        f"organisation.id={organisation.id} "
+        f"organisation.name='{organisation.name}' "
+        "organisation.subscription.plan='nonstandard-v2'"
     ]
 
     assert OrganisationAPIBilling.objects.count() == 0

@@ -36,11 +36,8 @@ from .constants import (
     API_USAGE_GRACE_PERIOD,
 )
 from .subscriptions.constants import (
-    SCALE_UP,
-    SCALE_UP_V2,
-    STARTUP,
-    STARTUP_V2,
     SubscriptionCacheEntity,
+    SubscriptionPlanFamily,
 )
 from .task_helpers import (
     handle_api_usage_notification_for_organisation,
@@ -243,22 +240,23 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         try:
-            if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-                add_100k_api_calls_scale_up(
-                    organisation.subscription.subscription_id,
-                    math.ceil(api_overage / 100_000),
-                )
-            elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-                add_100k_api_calls_start_up(
-                    organisation.subscription.subscription_id,
-                    math.ceil(api_overage / 100_000),
-                )
-            else:
-                logger.error(
-                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
-                    f"for organisation {organisation.id}"
-                )
-                continue
+            match organisation.subscription.subscription_plan_family:
+                case SubscriptionPlanFamily.START_UP:
+                    add_100k_api_calls_start_up(
+                        organisation.subscription.subscription_id,
+                        math.ceil(api_overage / 100_000),
+                    )
+                case SubscriptionPlanFamily.SCALE_UP:
+                    add_100k_api_calls_scale_up(
+                        organisation.subscription.subscription_id,
+                        math.ceil(api_overage / 100_000),
+                    )
+                case _:
+                    logger.error(
+                        "Unknown subscription plan when trying to bill for overages"
+                        f" {organisation.id=} {organisation.name=} {organisation.subscription.plan=}"
+                    )
+                    continue
         except Exception:
             logger.error(
                 f"Unable to charge organisation {organisation.id} due to billing error",
