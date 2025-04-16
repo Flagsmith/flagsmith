@@ -2,7 +2,6 @@ import AccountStore from 'common/stores/account-store'
 import ProjectStore from 'common/stores/project-store'
 import Project from 'common/project'
 import {
-  AccountModel,
   ContentType,
   FeatureState,
   FeatureStateValue,
@@ -14,7 +13,6 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
-  User,
   PConfidence,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
@@ -25,9 +23,6 @@ import WarningMessage from 'components/WarningMessage'
 import Constants from 'common/constants'
 import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
-import { selectBuildVersion } from 'common/services/useBuildVersion'
-import { getStore } from 'common/store'
-import format from './format'
 
 const semver = require('semver')
 
@@ -299,6 +294,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'identities'
   },
+
   getIntegrationData() {
     return Utils.getFlagsmithJSONValue(
       'integration_data',
@@ -313,7 +309,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -375,7 +370,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
-
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -415,6 +409,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -534,9 +529,9 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-  //todo: Remove when migrating to RTK
-  isEnterpriseImage: () =>
-    selectBuildVersion(getStore().getState())?.backend.is_enterprise,
+  hasEmailProvider: () =>
+    global.flagsmithVersion?.backend?.has_email_provider ?? false,
+  isEnterpriseImage: () => global.flagsmithVersion?.backend.is_enterprise,
   isMigrating() {
     const model = ProjectStore.model as null | ProjectType
     if (
@@ -547,11 +542,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-  isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
+  isSaas: () => global.flagsmithVersion?.backend?.is_saas,
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
-
   isValidURL(value: any) {
     const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
     return regex.test(value)
@@ -577,10 +571,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   openChat() {
+    // @ts-ignore
     if (typeof $crisp !== 'undefined') {
+      // @ts-ignore
       $crisp.push(['do', 'chat:open'])
     }
-    Utils.setupCrisp()
+    // @ts-ignore
+    if (window.zE) {
+      // @ts-ignore
+      zE('messenger', 'open')
+    }
   },
 
   removeElementFromArray(array: any[], index: number) {
@@ -600,63 +600,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return ''
     }
     return `${value}`
-  },
-
-  setupCrisp() {
-    const user = AccountStore.model as AccountModel
-    if (typeof $crisp === 'undefined' || !user) {
-      return
-    }
-    $crisp.push([
-      'set',
-      'session:data',
-      [[['hosting', Utils.isSaas() ? 'SaaS' : 'Self-Hosted']]],
-    ])
-    const organisation = AccountStore.getOrganisation() as Organisation
-    const formatOrganisation = (o: Organisation) => {
-      const plan = AccountStore.getActiveOrgPlan()
-      return `${o.name} (${plan}) #${o.id}`
-    }
-    const otherOrgs = user?.organisations.filter(
-      (v) => v.id !== organisation?.id,
-    )
-    if (window.$crisp) {
-      $crisp.push(['set', 'user:email', user.email])
-      $crisp.push([
-        'set',
-        'user:nickname',
-        `${user.first_name} ${user.last_name}`,
-      ])
-      if (otherOrgs.length) {
-        $crisp.push([
-          'set',
-          'session:data',
-          [[['other-orgs', `${otherOrgs?.length} other organisations`]]],
-        ])
-      }
-      $crisp.push([
-        'set',
-        'session:data',
-        [
-          [
-            ['user-id', `${user.id}`],
-            [
-              'date-joined',
-              `${moment(user.date_joined).format('Do MMM YYYY')}`,
-            ],
-          ],
-        ],
-      ])
-      if (organisation) {
-        $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
-        console.log(user, organisation)
-        $crisp.push([
-          'set',
-          'session:data',
-          [[['seats', organisation.num_seats]]],
-        ])
-      }
-    }
   },
 
   tagDisabled: (tag: Tag | undefined) => {

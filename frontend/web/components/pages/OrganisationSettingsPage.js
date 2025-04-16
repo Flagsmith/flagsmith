@@ -182,7 +182,6 @@ const OrganisationSettingsPage = class extends Component {
                   const { chargebee_email } = subscriptionMeta || {}
 
                   const displayedTabs = []
-                  //todo: replace with RTK when this is a functional component
                   const isEnterprise = Utils.isEnterpriseImage()
                   if (
                     AccountStore.getUser() &&

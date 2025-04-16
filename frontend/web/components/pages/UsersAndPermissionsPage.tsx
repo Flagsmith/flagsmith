@@ -39,7 +39,6 @@ import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
-import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import {
   useDeleteUserInviteMutation,
   useGetUserInvitesQuery,
@@ -85,9 +84,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
-  const { data: version } = useGetBuildVersionQuery({})
-
-  const hasEmailProvider = version?.backend?.has_email_provider ?? false
+  const hasEmailProvider = Utils.hasEmailProvider()
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',

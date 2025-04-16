@@ -3,7 +3,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
-import OnboardingPage from './OnboardingPage'
 
 class CreateOrganisationPage extends Component {
   static displayName = 'CreateOrganisastionPage'
@@ -20,7 +19,7 @@ class CreateOrganisationPage extends Component {
   componentDidMount = () => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
     this.focusTimeout = setTimeout(() => {
-      this.input?.focus()
+      this.input.focus()
       this.focusTimeout = null
     }, 500)
   }
