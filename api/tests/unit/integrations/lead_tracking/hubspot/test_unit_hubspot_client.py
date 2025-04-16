@@ -151,14 +151,8 @@ def test_create_company_without_organisation_information(
     }
 
 
-def test__create_contact(
-    hubspot_client: HubspotClient, admin_user: FFAdminUser
-) -> None:
+def test_create_contact(hubspot_client: HubspotClient, admin_user: FFAdminUser) -> None:
     # Given
-    # email = "user@flagsmith.com"
-    # first_name = "test"
-    # last_name = "user"
-
     hubspot_company_id = "111"
 
     properties = {
@@ -190,7 +184,7 @@ def test__create_contact(
     )
 
 
-def test__create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
+def test_create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
     # Given
     email = "user@flagsmith.com"
     first_name = "test"

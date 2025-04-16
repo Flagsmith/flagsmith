@@ -1,4 +1,4 @@
-from common.core.utils import is_oss
+from common.core.utils import is_oss, is_saas
 from django.urls import path
 
 from onboarding.views import (
@@ -7,14 +7,16 @@ from onboarding.views import (
 )
 
 app_name = "onboarding"
+urlpatterns = []
+if is_saas():
+    urlpatterns.append(
+        path(
+            "request/receive/",
+            ReceiveSupportRequestFromSelfHosted.as_view(),
+            name="receive-onboarding-request",
+        )
+    )
 
-urlpatterns = [
-    path(
-        "request/receive/",
-        ReceiveSupportRequestFromSelfHosted.as_view(),
-        name="receive-onboarding-request",
-    ),
-]
 if is_oss():
     urlpatterns.append(
         path(

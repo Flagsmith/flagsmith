@@ -12,7 +12,7 @@ from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
-def test__send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
+def test_send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
     test_user_client: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
@@ -25,8 +25,8 @@ def test__send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test__send_onboarding_request_to_saas_flagsmith_view_without_org(
-    db: None, admin_client_original: APIClient, is_oss: MagicMock
+def test_send_onboarding_request_to_saas_flagsmith_view_without_org(
+    admin_client_original: APIClient, is_oss: MagicMock
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -42,8 +42,7 @@ def test__send_onboarding_request_to_saas_flagsmith_view_without_org(
     )
 
 
-def test__send_onboarding_request_to_saas_flagsmith_view_if_request_fails(
-    db: None,
+def test_send_onboarding_request_to_saas_flagsmith_view_if_request_fails(
     admin_client_original: APIClient,
     mocker: MockerFixture,
     organisation: Organisation,
@@ -72,12 +71,12 @@ def test__send_onboarding_request_to_saas_flagsmith_view_if_request_fails(
     )
 
 
-def test__send_onboarding_request_to_saas_flagsmith_view(
-    db: None,
+def test_send_onboarding_request_to_saas_flagsmith_view(
     admin_client_original: APIClient,
     mocker: MockerFixture,
     organisation: Organisation,
     admin_user: FFAdminUser,
+    is_oss: MagicMock,
 ) -> None:
     # Given
     mocked_requests = mocker.patch("onboarding.views.requests")
@@ -101,7 +100,10 @@ def test__send_onboarding_request_to_saas_flagsmith_view(
 
 
 def test_receive_support_request_from_self_hosted_view_without_hubspot_token(
-    settings: SettingsWrapper, api_client: APIClient, db: None
+    settings: SettingsWrapper,
+    api_client: APIClient,
+    db: None,
+    is_saas: MagicMock,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = None
@@ -117,7 +119,11 @@ def test_receive_support_request_from_self_hosted_view_without_hubspot_token(
 
 
 def test_receive_support_request_from_self_hosted_view(
-    settings: SettingsWrapper, api_client: APIClient, mocker: MockerFixture, db: None
+    settings: SettingsWrapper,
+    api_client: APIClient,
+    mocker: MockerFixture,
+    db: None,
+    is_saas: None,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
@@ -143,7 +149,11 @@ def test_receive_support_request_from_self_hosted_view(
 
 
 def test_receive_support_request_throttling(
-    settings: SettingsWrapper, api_client: APIClient, mocker: MockerFixture, db: None
+    settings: SettingsWrapper,
+    api_client: APIClient,
+    mocker: MockerFixture,
+    db: None,
+    is_saas: MagicMock,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
