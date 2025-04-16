@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
@@ -732,6 +733,18 @@ USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
+ONBOARDING_REQUEST_THROTTLE_CACHE_NAME = "onboarding-request-throttle"
+ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND",
+    "django.core.cache.backends.db.DatabaseCache",
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION", "onboarding-request-throttle"
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS", default={}
+)
+
 # Using Redis for cache
 # To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
 # and set the cache location to the redis url
@@ -806,6 +819,14 @@ CACHES = {
         "BACKEND": USER_THROTTLE_CACHE_BACKEND,
         "LOCATION": USER_THROTTLE_CACHE_LOCATION,
         "OPTIONS": USER_THROTTLE_CACHE_OPTIONS,
+    },
+    ONBOARDING_REQUEST_THROTTLE_CACHE_NAME: {
+        "BACKEND": ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND,
+        "LOCATION": ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION,
+        "OPTIONS": ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS,
+        "TIMEOUT": None,
+        "MAX_ENTRIES": 10000,
+        "KEY_PREFIX": "onboarding-req",
     },
 }
 

@@ -62,3 +62,20 @@ def track_hubspot_lead_without_organisation(user_id: int) -> None:
         return
 
     track_hubspot_lead(user.id)
+
+
+@register_task_handler()
+def create_self_hosted_onboarding_lead_task(
+    email: str, first_name: str, last_name: str, organisation_name: str
+) -> None:
+    # Avoid circular imports.
+    from integrations.lead_tracking.hubspot.services import (
+        create_self_hosted_onboarding_lead,
+    )
+
+    create_self_hosted_onboarding_lead(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        organisation_name=organisation_name,
+    )

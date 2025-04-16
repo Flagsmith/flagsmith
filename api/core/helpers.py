@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from django.conf import settings
 from django.contrib.sites import models as sites_models
@@ -34,7 +35,7 @@ def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
     return f"{scheme}://{domain}"
 
 
-def get_ip_address_from_request(request):  # type: ignore[no-untyped-def]
+def get_ip_address_from_request(request: Request) -> Any | None:
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     return (
         x_forwarded_for.split(",")[0]
