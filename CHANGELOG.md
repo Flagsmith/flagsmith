@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.172.1](https://github.com/Flagsmith/flagsmith/compare/v2.172.0...v2.172.1) (2025-04-16)
+
+
+### Bug Fixes
+
+* `track_request` task not backwards compatible ([#5346](https://github.com/Flagsmith/flagsmith/issues/5346)) ([c7584d7](https://github.com/Flagsmith/flagsmith/commit/c7584d7c0fd72a997356678c098837272b02ae61))
+* Resources margin ([#5345](https://github.com/Flagsmith/flagsmith/issues/5345)) ([269833a](https://github.com/Flagsmith/flagsmith/commit/269833a0fd51744c74de8133e1b051dbef113e74))
+
+
+### Dependency Updates
+
+* Bump flagsmith-common from 1.8.0 to 1.9.0 ([#5344](https://github.com/Flagsmith/flagsmith/issues/5344)) ([e1187db](https://github.com/Flagsmith/flagsmith/commit/e1187db253db7dda4145045e8bdd2d018b286b48))
+* bump http-proxy-middleware from 2.0.7 to 2.0.9 in /docs ([#5349](https://github.com/Flagsmith/flagsmith/issues/5349)) ([7911691](https://github.com/Flagsmith/flagsmith/commit/7911691657a82b7754011a85a98cc17b48018dcc))
+
 ## [2.172.0](https://github.com/Flagsmith/flagsmith/compare/v2.171.0...v2.172.0) (2025-04-16)
 
 
