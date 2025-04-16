@@ -9,6 +9,8 @@ import { sortBy } from 'lodash'
 import Project from 'common/project'
 import { getStore } from 'common/store'
 import { service } from 'common/service'
+import { getBuildVersion } from 'common/services/useBuildVersion'
+import { createOnboardingSupportOptIn } from 'common/services/useOnboardingSupportOptIn'
 
 const controller = {
   acceptInvite: (id) => {
@@ -74,8 +76,8 @@ const controller = {
   createOrganisation: (name) => {
     store.saving()
     if (
-      !AccountStore.model.organisations ||
-      !AccountStore.model.organisations.length
+      !AccountStore.model?.organisations ||
+      !AccountStore.model?.organisations.length
     ) {
       API.trackEvent(Constants.events.CREATE_FIRST_ORGANISATION)
     }
@@ -91,31 +93,34 @@ const controller = {
       API.postEvent(`${name}`)
     }
 
-    data
+    return data
       .post(`${Project.api}organisations/`, {
         hubspotutk: API.getCookie('hubspotutk'),
         name,
       })
-      .then((res) => {
-        store.model.organisations = store.model.organisations.concat([
-          { ...res, role: 'ADMIN' },
-        ])
-        AsyncStorage.setItem('user', JSON.stringify(store.model))
-        store.savedId = res.id
-        store.saved()
-
-        const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
-        const sendRelayEvent =
-          Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+      .then(async (res) => {
+        if (store.model) {
+          store.model.organisations = store.model.organisations.concat([
+            { ...res, role: 'ADMIN' },
+          ])
+          store.organisation =
+            store.model.organisations[store.model.organisations.length - 1]
+          AsyncStorage.setItem('user', JSON.stringify(store.model))
+          store.savedId = res.id
+          store.saved()
+          const relayEventKey = Utils.getFlagsmithValue('relay_events_key')
+          const sendRelayEvent =
+            Utils.getFlagsmithHasFeature('relay_events_key') && !!relayEventKey
+          if (sendRelayEvent) {
+            dataRelay.sendEvent(AccountStore.getUser(), {
+              apiKey: relayEventKey,
+            })
+          }
+        }
 
         if (Project.linkedinConversionId) {
           window.lintrk?.('track', {
             conversion_id: Project.linkedinConversionId,
-          })
-        }
-        if (sendRelayEvent) {
-          dataRelay.sendEvent(AccountStore.getUser(), {
-            apiKey: relayEventKey,
           })
         }
       })
@@ -246,26 +251,16 @@ const controller = {
     }
     return controller.getOrganisations()
   },
-  register: ({
-    email,
-    first_name,
-    last_name,
-    marketing_consent_given,
-    password,
-  }) => {
+  register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
-    data
+    return data
       .post(`${Project.api}auth/users/`, {
-        email,
-        first_name,
+        ...user,
         invite_hash: API.getInvite() || undefined,
-        last_name,
-        marketing_consent_given,
-        password,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
       })
-      .then((res) => {
+      .then(async (res) => {
         data.setToken(Project.cookieAuthEnabled ? 'true' : res.key)
         API.trackEvent(Constants.events.REGISTER)
         if (API.getReferrer()) {
@@ -273,9 +268,19 @@ const controller = {
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
           )
         }
-
+        if (contact_consent_given) {
+          await createOnboardingSupportOptIn(getStore(), {})
+        }
+        if (organisation_name) {
+          await controller.createOrganisation(organisation_name, true)
+        }
         store.isSaving = false
-        return controller.onLogin()
+        await controller.onLogin()
+
+        if (user.superuser) {
+          // Creating a superuser will update the version endpoint
+          await getBuildVersion(getStore(), {}, { forceRefetch: true })
+        }
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
