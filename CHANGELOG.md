@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.172.0](https://github.com/Flagsmith/flagsmith/compare/v2.171.0...v2.172.0) (2025-04-16)
+
+
+### Features
+
+* **onboarding:** Add API to support onboarding support request ([#5331](https://github.com/Flagsmith/flagsmith/issues/5331)) ([651ce59](https://github.com/Flagsmith/flagsmith/commit/651ce590f6dff2b9c149d328ba69a1ccf6c623bc))
+* self hosted onboarding ([#5057](https://github.com/Flagsmith/flagsmith/issues/5057)) ([52cf21b](https://github.com/Flagsmith/flagsmith/commit/52cf21bec5ca9919dea3b1e84e4e210523a9a30f))
+
+
+### Bug Fixes
+
+* `RouteLoggerMiddleware` breaks threads accessing Django request object ([#5330](https://github.com/Flagsmith/flagsmith/issues/5330)) ([7064cef](https://github.com/Flagsmith/flagsmith/commit/7064cefc20bf82d82bbe46b3337722d122868499))
+* **billing:** Overages billing skipping `scale-up-v3` plan ([#5342](https://github.com/Flagsmith/flagsmith/issues/5342)) ([65d835b](https://github.com/Flagsmith/flagsmith/commit/65d835b6fc36a402f193212d866b9efbdf448b90))
+* **docker-compose:** drop superuser creation for onboarding flow ([#5340](https://github.com/Flagsmith/flagsmith/issues/5340)) ([ad14a9c](https://github.com/Flagsmith/flagsmith/commit/ad14a9c8d4974551d948f3b804a980a295e45eee))
+* Fix undesired navigation when closing edit feature modal ([#5328](https://github.com/Flagsmith/flagsmith/issues/5328)) ([57eb364](https://github.com/Flagsmith/flagsmith/commit/57eb364986f2821c795dfcd66ee93d866cb3d5d8))
+* import from saas to self-hosted ([#5336](https://github.com/Flagsmith/flagsmith/issues/5336)) ([620afe9](https://github.com/Flagsmith/flagsmith/commit/620afe9d512128c91b9caacd096d4816a358f64c))
+
 ## [2.171.0](https://github.com/Flagsmith/flagsmith/compare/v2.170.0...v2.171.0) (2025-04-11)
 
 
