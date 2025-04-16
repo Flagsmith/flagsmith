@@ -19,7 +19,7 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
   }, [])
   return (
     <div className='text-muted position-fixed bottom-0 p-2 fs-caption'>
-      {version?.tag !== 'Unknown' && (
+      {version?.tag?.toLowerCase() !== 'unknown' && (
         <Tooltip
           html
           title={
@@ -32,13 +32,15 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
           }
         >
           {`${
-            version?.frontend_sha !== 'Unknown'
+            version?.frontend_sha?.toLowerCase() !== 'unknown'
               ? `Frontend SHA: ${version?.frontend_sha}`
               : ''
           }${
-            version?.backend_sha !== 'Unknown'
+            version?.backend_sha?.toLowerCase() !== 'unknown'
               ? `${
-                  version?.frontend_sha !== 'Unknown' ? '<br/>' : ''
+                  version?.frontend_sha?.toLowerCase() !== 'unknown'
+                    ? '<br/>'
+                    : ''
                 }Backend SHA: ${version?.backend_sha}`
               : ''
           }`}
