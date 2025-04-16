@@ -642,6 +642,7 @@ export type Req = {
     password: string
     contact_consent_given: boolean
     organisation_name: string
+    superuser: boolean
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
