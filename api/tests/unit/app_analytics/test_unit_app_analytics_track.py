@@ -107,6 +107,27 @@ def test_track_request_sends_host_data_to_influxdb(
     )
 
 
+def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
+    mocker: MockerFixture,
+) -> None:
+    """
+    Verify that the correct number of calls are made to InfluxDB for the various uris.
+    """
+    # Given
+    mock_influxdb = mocker.patch("app_analytics.track.InfluxDBWrapper")
+    mock_environment = mocker.MagicMock()
+
+    # When
+    track_request_influxdb(
+        resource=None,
+        host="testserver",
+        environment=mock_environment,
+    )
+
+    # Then
+    mock_influxdb.return_value.assert_not_called()
+
+
 def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
     # Given
     mock_influxdb_wrapper = mock.MagicMock()
