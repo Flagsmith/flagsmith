@@ -272,6 +272,25 @@ export type UserPermission = {
   role?: number
 }
 
+export type DerivedPermission = {
+  admin: boolean
+  permissions: {
+    is_directly_granted: boolean
+    permission_key: string
+    tags: number[]
+  }[]
+}
+
+export type UserPermissions = {
+  admin: boolean
+  permissions: {
+    is_directly_granted: boolean
+    permission_key: string
+    tags: number[]
+    derived_from: DerivedPermission
+  }[]
+}
+
 export type RolePermission = Omit<UserPermission, 'permissions'> & {
   permissions: { permission_key: string; tags: number[] }[]
 }
@@ -910,5 +929,6 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  userPermissions: UserPermissions
   // END OF TYPES
 }
