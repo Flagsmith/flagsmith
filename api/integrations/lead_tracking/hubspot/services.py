@@ -42,7 +42,7 @@ def register_hubspot_tracker(request: Request) -> None:
 
 
 def create_self_hosted_onboarding_lead(
-    email: str, organisation_name: str, first_name: str, last_name: str
+    email: str, first_name: str, last_name: str, organisation_name: str
 ) -> None:
     email_domain = email.split("@")[1]
     hubspot_client = HubspotClient()

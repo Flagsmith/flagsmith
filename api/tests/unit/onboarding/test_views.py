@@ -99,7 +99,7 @@ def test_receive_support_request_from_self_hosted_view(
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
 
     mocked_create_self_hosted_onboarding_lead = mocker.patch(
-        "onboarding.views.create_self_hosted_onboarding_lead"
+        "integrations.lead_tracking.hubspot.services.create_self_hosted_onboarding_lead"
     )
 
     data = {
@@ -127,7 +127,9 @@ def test_receive_support_request_throttling(
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
-    mocker.patch("onboarding.views.create_self_hosted_onboarding_lead")
+    mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_self_hosted_onboarding_lead"
+    )
 
     data = {
         "organisation_name": "org-1",

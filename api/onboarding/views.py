@@ -8,11 +8,11 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from integrations.lead_tracking.hubspot.services import (
-    create_self_hosted_onboarding_lead,
+from integrations.lead_tracking.hubspot.tasks import (
+    create_self_hosted_onboarding_lead_task,
 )
 from onboarding.serializers import SelfHostedOnboardingSupportSerializer
-from onboarding.tasks import send_onboarding_request_to_saas_flagsmith
+from onboarding.tasks import send_onboarding_request_to_saas_flagsmith_task
 from onboarding.throttling import OnboardingRequestThrottle
 from users.models import FFAdminUser
 
@@ -30,7 +30,7 @@ def send_onboarding_request_to_saas_flagsmith_view(request: Request) -> Response
             {"error": "Please create an organisation before requesting support"},
             status=status.HTTP_400_BAD_REQUEST,
         )
-    send_onboarding_request_to_saas_flagsmith.delay(
+    send_onboarding_request_to_saas_flagsmith_task.delay(
         kwargs={
             "first_name": admin_user.first_name,
             "last_name": admin_user.last_name,
@@ -56,5 +56,5 @@ class ReceiveSupportRequestFromSelfHosted(GenericAPIView):  # type: ignore[type-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        create_self_hosted_onboarding_lead(**serializer.data)
+        create_self_hosted_onboarding_lead_task.delay(kwargs=serializer.data)
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -7,7 +7,7 @@ SEND_SUPPORT_REQUEST_URL = (
 
 
 @register_task_handler()
-def send_onboarding_request_to_saas_flagsmith(
+def send_onboarding_request_to_saas_flagsmith_task(
     first_name: str, last_name: str, email: str, organisation_name: str
 ) -> None:
     data = {
