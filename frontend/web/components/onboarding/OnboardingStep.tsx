@@ -37,10 +37,22 @@ const Step: FC<StepProps> = ({
 
   return (
     <Card
-      contentClassName={isActive || isComplete ? 'bg-white' : 'bg-light200'}
-      className={`rounded col-8 offset-2 position-relative border-1 px-2 ${
-        isActive || isComplete ? 'bg-white' : 'bg-light200'
-      }`}
+      contentClassName={classNames({
+        'bg-light200': !(isActive || isComplete),
+        'bg-white': isActive || isComplete,
+      })}
+      className={classNames(
+        'rounded',
+        'col-8',
+        'offset-2',
+        'position-relative',
+        'border-1',
+        'px-2',
+        {
+          'bg-light200': !(isActive || isComplete),
+          'bg-white': isActive || isComplete,
+        },
+      )}
     >
       <div
         className={classNames(numberClassName, {
@@ -67,8 +79,12 @@ const Step: FC<StepProps> = ({
       </div>
 
       {isActive && description && <p className='text-muted'>{description}</p>}
-      {isActive && <hr />}
-      {isActive && children}
+      {isActive && (
+        <>
+          <hr />
+          {children}
+        </>
+      )}
     </Card>
   )
 }
