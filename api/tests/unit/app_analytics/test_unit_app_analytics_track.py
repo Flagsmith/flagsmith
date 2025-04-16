@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 from pytest_mock import MockerFixture
 
+from app_analytics.models import Resource
 from app_analytics.track import (
     track_feature_evaluation_influxdb,
     track_request_googleanalytics,
@@ -67,7 +68,7 @@ def test_track_request_sends_data_to_influxdb_for_tracked_uris(  # type: ignore[
 
     # When
     track_request_influxdb(
-        resource=expected_resource,
+        resource=Resource.get_from_name(expected_resource),
         host="testserver",
         environment=mock_environment,
     )
@@ -94,7 +95,7 @@ def test_track_request_sends_host_data_to_influxdb(
 
     # When
     track_request_influxdb(
-        resource="flags",
+        resource=Resource.FLAGS,
         host="testserver",
         environment=mock_environment,
     )
@@ -118,7 +119,7 @@ def test_track_request_does_not_send_data_to_influxdb_for_not_tracked_uris(
 
     # When
     track_request_influxdb(
-        resource="health",
+        resource=None,
         host="testserver",
         environment=mock_environment,
     )
