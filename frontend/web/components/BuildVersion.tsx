@@ -1,7 +1,10 @@
 import { FC } from 'react'
 import { IonIcon } from '@ionic/react'
 import { pricetag } from 'ionicons/icons'
-import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import {
+  defaultVersionTag,
+  useGetBuildVersionQuery,
+} from 'common/services/useBuildVersion'
 
 type BuildVersionType = {}
 
@@ -9,7 +12,7 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
   const { data: version } = useGetBuildVersionQuery({})
   return (
     <>
-      {version?.tag !== 'Unknown' && (
+      {version?.tag !== defaultVersionTag && (
         <Tooltip
           title={
             <span>
@@ -21,13 +24,13 @@ const BuildVersion: FC<BuildVersionType> = ({}) => {
           }
         >
           {`${
-            version?.frontend_sha !== 'Unknown'
+            version?.frontend_sha !== defaultVersionTag
               ? `Frontend SHA: ${version?.frontend_sha}`
               : ''
           }${
-            version?.backend_sha !== 'Unknown'
+            version?.backend_sha !== defaultVersionTag
               ? `${
-                  version?.frontend_sha !== 'Unknown' ? '<br/>' : ''
+                  version?.frontend_sha !== defaultVersionTag ? '<br/>' : ''
                 }Backend SHA: ${version?.backend_sha}`
               : ''
           }`}

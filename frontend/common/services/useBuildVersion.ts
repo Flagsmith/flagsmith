@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import { Version } from 'common/types/responses'
 import Project from 'common/project'
 import { StoreStateType } from 'common/store'
-
+export const defaultVersionTag = 'Unknown'
 export const buildVersionService = service
   .enhanceEndpoints({ addTagTypes: ['BuildVersion'] })
   .injectEndpoints({
@@ -29,9 +29,9 @@ export const buildVersionService = service
             (backendRes.data as Version['backend']) ||
             ({} as Version['backend'])
 
-          const tag = backend?.image_tag || 'Unknown'
-          const backend_sha = backend?.ci_commit_sha || 'Unknown'
-          const frontend_sha = frontend?.ci_commit_sha || 'Unknown'
+          const tag = backend?.image_tag || defaultVersionTag
+          const backend_sha = backend?.ci_commit_sha || defaultVersionTag
+          const frontend_sha = frontend?.ci_commit_sha || defaultVersionTag
 
           const result: Version = {
             backend,
