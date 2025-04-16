@@ -25,7 +25,7 @@ export default class SuccessMessage extends PureComponent {
           <Icon fill='#27AB95' name='checkmark-circle' />
         </span>
         <div className={titleDescClass}>
-          <div className='title'>{this.props.title || 'SUCCESS'}</div>
+          <div className='' style={{ fontWeight: 'semi-bold' }}>{this.props.title || 'SUCCESS'}</div>
           {this.props.children}
         </div>
         {this.props.url && (
