@@ -61,7 +61,8 @@ export async function getBuildVersion(
 }
 // END OF FUNCTION_EXPORTS
 
-export const selectBuildVersion = (state: StoreStateType) => state.buildVersion
+export const selectBuildVersion = (state: StoreStateType) =>
+  buildVersionService.endpoints.getBuildVersion.select({})(state)?.data
 
 export const {
   useGetBuildVersionQuery,
