@@ -138,6 +138,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
                 json={Constants.exampleWebhook}
                 webhookUrl={url}
                 secret={secret}
+                environmentId={environmentId}
               />
               {isEdit ? (
                 <Button

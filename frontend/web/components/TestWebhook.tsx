@@ -4,6 +4,7 @@ import ErrorMessage from './ErrorMessage'
 import SuccessMessage from './SuccessMessage'
 import data from 'common/data/base/_data'
 import Button from './base/forms/Button'
+import { useTestWebhookMutation } from 'common/services/useWebhooks'
 
 type TestWebhookType = {
   webhookUrl: string | undefined
@@ -57,6 +58,7 @@ const TestWebhook: FC<TestWebhookType> = ({
   json,
   secret,
   webhookUrl: webhook,
+  environmentId,
 }) => {
   const [testWebhook, { isLoading, isError }] = useTestWebhookMutation()
   const [error, setError] = useState<string | null>(null)
@@ -104,7 +106,7 @@ const TestWebhook: FC<TestWebhookType> = ({
         // onClick={submit}
         onClick={() =>
           testWebhook({
-            environmentId: '1',
+            environmentId: environmentId,
             url: webhook,
             body: JSON.parse(json),
           })

@@ -103,6 +103,7 @@ export const {
   useDeleteWebhookMutation,
   useGetWebhooksQuery,
   useUpdateWebhookMutation,
+  useTestWebhookMutation,
 } = webhookService
 
 /* Usage examples:

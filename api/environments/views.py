@@ -305,10 +305,22 @@ class WebhookViewSet(
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
-    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
+    permission_classes = [IsAuthenticated, NestedEnvironmentPermissions(            action_permission_map={
+                "list": VIEW_ENVIRONMENT,
+                "test": VIEW_ENVIRONMENT,
+                "retrieve": VIEW_ENVIRONMENT,
+            })]
     model_class = Webhook  # type: ignore[assignment]
 
     webhook_type = WebhookType.ENVIRONMENT  # type: ignore[assignment]
+
+    @swagger_auto_schema(responses={200: ""})
+    @action(detail=False, methods=["POST"], url_path="test")
+    def test(self, request: Request, environment_api_key: str) -> Response:
+        print("Request data:", request.data)
+        print("Request query params:", request.query_params)
+        print("URL params - environment_api_key:", environment_api_key)
+        return Response(status=status.HTTP_200_OK)
 
 
 class EnvironmentAPIKeyViewSet(
