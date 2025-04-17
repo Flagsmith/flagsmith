@@ -1,0 +1,5 @@
+#!/bin/sh
+#
+# Runs any command from within an application container.
+# If no command is given, it runs the application's default command.
+docker compose -f docker/new/docker-compose.yml run --rm $([ $# -eq 0 ] && echo --service-ports --use-aliases) api "$@"
