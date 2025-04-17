@@ -21,7 +21,7 @@ x-app: &app
 services:
   api:
     <<: *app
-    command: sh -c 'cd api; flagsmith migrate && flagsmith start --reload api'
+    command: sh -c 'flagsmith migrate && flagsmith start --reload api'
     ports:
       - 8000:8000
 
