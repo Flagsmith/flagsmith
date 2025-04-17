@@ -1,6 +1,6 @@
 import React, { FC, forwardRef, useCallback, useEffect, useState } from 'react'
-import { find } from 'lodash'
-import { close as closeIcon } from 'ionicons/icons'
+import { find, sortBy } from 'lodash'
+import { close as closeIcon, informationCircle } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import _data from 'common/data/base/_data'
 import {
@@ -65,8 +65,11 @@ import PlanBasedAccess from './PlanBasedAccess'
 import { useGetTagsQuery } from 'common/services/useTag'
 import { components } from 'react-select'
 import { SingleValueProps } from 'react-select/lib/components/SingleValue'
-import Utils from 'common/utils/utils'
 import AddEditTags from './tags/AddEditTags'
+import PermissionsSummaryList, {
+  PermissionSummaryItem,
+} from './PermissionsSummaryList'
+import Tooltip from './Tooltip'
 
 const Project = require('common/project')
 
@@ -1132,7 +1135,17 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                           id='org-members-list'
                           title='Users'
                           className='panel--transparent'
-                          items={users}
+                          items={sortBy(users, (user) =>
+                            user.role === 'ADMIN'
+                              ? `0${user.first_name}`
+                              : permissions?.find(
+                                  (permission) =>
+                                    permission.user.id === user.id &&
+                                    permission.permissions?.length,
+                                )
+                              ? `1${user.first_name}`
+                              : `2${user.first_name}`,
+                          )}
                           itemHeight={64}
                           header={
                             <Row className='table-header'>
@@ -1157,6 +1170,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                             const matchingPermissions = permissions?.find(
                               (v) => v.user.id === id,
                             )
+                            debugger
 
                             return (
                               <Row
@@ -1176,29 +1190,63 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                     {email}
                                   </div>
                                 </Flex>
-                                {role === 'ADMIN' ? (
-                                  <Flex className='table-column fs-small lh-sm'>
-                                    <Tooltip
-                                      title={'Organisation Administrator'}
-                                    >
-                                      {
-                                        'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
-                                      }
-                                    </Tooltip>
-                                  </Flex>
-                                ) : (
-                                  <Flex
-                                    onClick={onClick}
-                                    className='table-column fs-small lh-sm'
-                                  >
-                                    {matchingPermissions &&
-                                    matchingPermissions.admin
-                                      ? `${Format.camelCase(
-                                          level,
-                                        )} Administrator`
-                                      : 'Regular User'}
-                                  </Flex>
-                                )}
+                                <div className='d-flex  gap-2 table-column fs-small'>
+                                  {role === 'ADMIN' ? (
+                                    <div className=''>
+                                      <Tooltip
+                                        title={
+                                          <PermissionSummaryItem isAdmin />
+                                        }
+                                      >
+                                        {
+                                          'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                        }
+                                      </Tooltip>
+                                    </div>
+                                  ) : (
+                                    <div onClick={onClick}>
+                                      {!matchingPermissions?.permissions
+                                        ?.length &&
+                                      !matchingPermissions?.admin ? (
+                                        <Tooltip
+                                          title={
+                                            <div className='text-body gap-1 align-items-center d-flex'>
+                                              No User-level Permissions{' '}
+                                              <span className='lh-1'>
+                                                <IonIcon
+                                                  icon={informationCircle}
+                                                />
+                                              </span>
+                                            </div>
+                                          }
+                                        >
+                                          {`This user has no permissions assigned
+                                          directly, but they may belong to a
+                                          group that has permissions on this
+                                          ${level}.`}
+                                        </Tooltip>
+                                      ) : (
+                                        <PermissionsSummaryList
+                                          permissions={
+                                            matchingPermissions.admin
+                                              ? [
+                                                  {
+                                                    permission_key: `${level} Administrator`,
+                                                    tags: [],
+                                                  },
+                                                ]
+                                              : matchingPermissions.permissions.map(
+                                                  (v) => ({
+                                                    permission_key: v,
+                                                    tags: [],
+                                                  }),
+                                                )
+                                          }
+                                        />
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
                                 <div
                                   style={{ width: '80px' }}
                                   className='text-center'
