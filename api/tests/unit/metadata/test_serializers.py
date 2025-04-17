@@ -1,7 +1,6 @@
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 import pytest
-from typing import Callable
 from common.metadata.serializers import (
     MetadataSerializer,
 )
