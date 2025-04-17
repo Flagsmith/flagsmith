@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 import pytest
+from typing import Callable
 from common.metadata.serializers import (
     MetadataSerializer,
 )
@@ -78,7 +79,7 @@ def test_metadata_model_field_serializer_validation(
     project_content_type: ContentType,
     expected_is_valid: bool,
     error_message: str | None,
-    get_object_id: callable,
+    get_object_id: Callable[..., int],
 ) -> None:
     content_type = organisation_content_type if content_type_target == "organisation" else project_content_type
     object_id = get_object_id(project=project, metadata_field=a_metadata_field)
