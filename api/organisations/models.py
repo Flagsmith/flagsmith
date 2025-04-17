@@ -259,7 +259,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def can_auto_upgrade_seats(self) -> bool:
-        return self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        return (
+            is_saas()
+            and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        )
 
     @property
     def is_free_plan(self) -> bool:

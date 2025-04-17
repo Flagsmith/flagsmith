@@ -303,6 +303,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     )
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "invite_object, url",
     [

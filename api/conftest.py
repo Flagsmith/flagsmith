@@ -4,6 +4,7 @@ import typing
 from unittest.mock import MagicMock
 
 import boto3
+import django
 import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
@@ -19,6 +20,8 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pyfakefs.fake_filesystem import FakeFilesystem
+from pyfakefs.fake_filesystem_unittest import Patcher
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
@@ -131,6 +134,17 @@ def pytest_configure(config: pytest.Config) -> None:
                 interactive=False,
                 parallel=config.option.numprocesses,
             )
+
+
+@pytest.fixture
+def fs() -> typing.Generator[FakeFilesystem | None, None, None]:
+    app_path = os.path.dirname(os.path.abspath(__file__))
+    django_path = os.path.dirname(os.path.abspath(django.__file__))
+
+    with Patcher() as patcher:
+        if fs := patcher.fs:
+            fs.add_real_paths([app_path, django_path])
+        yield fs
 
 
 @pytest.fixture(scope="session")
