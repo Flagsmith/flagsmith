@@ -61,13 +61,26 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
 @pytest.mark.parametrize(
     "content_type_target,expected_is_valid,error_message,get_object_id",
     [
-        ("organisation", True, None, lambda  **kwargs: kwargs["metadata_field"].organisation.id),
+        (
+            "organisation",
+            True,
+            None,
+            lambda **kwargs: kwargs["metadata_field"].organisation.id,
+        ),
         ("project", True, None, lambda **kwargs: kwargs["project"].id),
-        ("project", False, 
-         "The requirement organisation does not match the field organisation", lambda **kwargs: kwargs["metadata_field"].organisation.id),
-        ("organisation", False,
-         "The requirement organisation does not match the field organisation", lambda **kwargs: kwargs["project"].id),
-    ]
+        (
+            "project",
+            False,
+            "The requirement organisation does not match the field organisation",
+            lambda **kwargs: kwargs["metadata_field"].organisation.id,
+        ),
+        (
+            "organisation",
+            False,
+            "The requirement organisation does not match the field organisation",
+            lambda **kwargs: kwargs["project"].id,
+        ),
+    ],
 )
 def test_metadata_model_field_serializer_validation(
     a_metadata_field: MetadataField,
@@ -80,9 +93,13 @@ def test_metadata_model_field_serializer_validation(
     error_message: str | None,
     get_object_id: callable,
 ) -> None:
-    content_type = organisation_content_type if content_type_target == "organisation" else project_content_type
+    content_type = (
+        organisation_content_type
+        if content_type_target == "organisation"
+        else project_content_type
+    )
     object_id = get_object_id(project=project, metadata_field=a_metadata_field)
-    
+
     # Given
     data: Dict[str, Any] = {
         "field": a_metadata_field.id,
@@ -122,6 +139,7 @@ def test_metadata_model_field_serializer_with_empty_is_required_for(
     # Then
     assert result is True
 
+
 def test_metadata_model_field_serializer_validation_invalid_content_type(
     a_metadata_field: MetadataField,
     feature_content_type: ContentType,
@@ -129,7 +147,7 @@ def test_metadata_model_field_serializer_validation_invalid_content_type(
     segment_content_type: ContentType,
 ) -> None:
     object_id = project.id
-    
+
     # Given
     data: Dict[str, Any] = {
         "field": a_metadata_field.id,
@@ -149,4 +167,7 @@ def test_metadata_model_field_serializer_validation_invalid_content_type(
     # Then
     assert result is False
     assert "non_field_errors" in serializer.errors
-    assert serializer.errors["non_field_errors"][0] == "The requirement content type must be project or organisation"
+    assert (
+        serializer.errors["non_field_errors"][0]
+        == "The requirement content type must be project or organisation"
+    )
