@@ -1,10 +1,11 @@
+import importlib
+import inspect
 import logging
 import os
 import typing
 from unittest.mock import MagicMock
 
 import boto3
-import django
 import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
@@ -139,11 +140,18 @@ def pytest_configure(config: pytest.Config) -> None:
 @pytest.fixture
 def fs() -> typing.Generator[FakeFilesystem | None, None, None]:
     app_path = os.path.dirname(os.path.abspath(__file__))
-    django_path = os.path.dirname(os.path.abspath(django.__file__))
+    real_paths = [app_path]
+
+    for module_name in (
+        "django",
+        "tzdata",
+    ):
+        module_file = inspect.getfile(importlib.import_module(module_name))
+        real_paths.append(os.path.dirname(os.path.abspath(module_file)))
 
     with Patcher() as patcher:
         if fs := patcher.fs:
-            fs.add_real_paths([app_path, django_path])
+            fs.add_real_paths(real_paths)
         yield fs
 
 

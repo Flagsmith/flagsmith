@@ -13,7 +13,7 @@ from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
-from users.models import HubspotTracker, UserPermissionGroup
+from users.models import FFAdminUser, HubspotTracker, UserPermissionGroup
 
 
 def test_create_invite_link(
@@ -183,13 +183,18 @@ def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-de
         invite.refresh_from_db()
 
 
-def test_create_invite_with_permission_groups(  # type: ignore[no-untyped-def]
-    admin_client, organisation, user_permission_group, admin_user, subscription
-):
+@pytest.mark.saas_mode
+def test_create_invite_with_permission_groups(
+    admin_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    admin_user: FFAdminUser,
+    chargebee_subscription: Subscription,
+) -> None:
     # Given
     # update subscription to add another seat
-    subscription.max_seats = 2
-    subscription.save()
+    chargebee_subscription.max_seats = 2
+    chargebee_subscription.save()
 
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
@@ -203,7 +208,7 @@ def test_create_invite_with_permission_groups(  # type: ignore[no-untyped-def]
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
     # and
     invite = Invite.objects.get(email=email)
     assert invite.permission_groups.first() == user_permission_group
