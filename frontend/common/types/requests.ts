@@ -49,6 +49,20 @@ export type CreateVersionFeatureState = {
   sha: string
   featureState: FeatureState
 }
+
+export type LoginRequest = {
+  email: string
+  password: string
+}
+export type RegisterRequest = {
+  email: string
+  first_name: string
+  last_name: string
+  password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
+}
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -189,6 +203,25 @@ export type Req = {
     organisation_id: number
     description: string | null
     name: string
+  }
+  getUserInvites: {
+    organisationId: number
+  }
+  createUserInvite: {
+    organisationId: number
+    invites: {
+      email: string
+      role: string
+      permission_groups: number[]
+    }[]
+  }
+  deleteUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  resendUserInvite: {
+    organisationId: number
+    inviteId: number
   }
   getRole: { organisation_id: string; role_id: number }
   updateRole: {
@@ -602,5 +635,16 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
+  createOnboarding: {
+    first_name: string
+    last_name: string
+    email: string
+    password: string
+    contact_consent_given: boolean
+    organisation_name: string
+    superuser: boolean
+  }
+  getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
   // END OF TYPES
 }

@@ -264,12 +264,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       link,
     })
   },
-  inviteUsers(invites) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.INVITE_USERS,
-      invites,
-    })
-  },
   migrateProject(projectId) {
     Dispatcher.handleViewAction({
       actionType: Actions.MIGRATE_PROJECT,

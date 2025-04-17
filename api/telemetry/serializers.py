@@ -20,7 +20,7 @@ class TelemetrySerializer(serializers.Serializer):  # type: ignore[type-arg]
             influxdb = InfluxDBWrapper("self_hosted_telemetry")  # type: ignore[no-untyped-call]
             tags = {
                 **self.validated_data,
-                "ip_address": get_ip_address_from_request(self.context["request"]),  # type: ignore[no-untyped-call]
+                "ip_address": get_ip_address_from_request(self.context["request"]),
             }
-            influxdb.add_data_point("heartbeat", 1, tags=tags)  # type: ignore[no-untyped-call]
-            influxdb.write()  # type: ignore[no-untyped-call]
+            influxdb.add_data_point("heartbeat", 1, tags=tags)
+            influxdb.write()

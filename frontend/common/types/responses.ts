@@ -235,11 +235,10 @@ export type githubIntegration = {
 export type User = {
   id: number
   email: string
-  last_login?: string
   first_name: string
   last_name: string
-  role: 'ADMIN' | 'USER'
-  date_joined: string
+  last_login: string
+  uuid: string
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -486,7 +485,7 @@ export type Invite = {
   email: string
   date_created: string
   invited_by: User
-  link: string
+  link?: string
   permission_groups: number[]
 }
 
@@ -692,6 +691,27 @@ export type HealthProvider = {
   webhook_url: number
 }
 
+export type Version = {
+  tag: string
+  backend_sha: string
+  frontend_sha: string
+  frontend: {
+    ci_commit_sha?: string
+    image_tag?: string
+  }
+  backend: {
+    ci_commit_sha: string
+    image_tag: string
+    has_email_provider: boolean
+    is_enterprise: boolean
+    is_saas: boolean
+    'self_hosted_data'?: {
+      'has_users': boolean
+      'has_logins': boolean
+    }
+  }
+}
+
 export type PConfidence =
   | 'VERY_LOW'
   | 'LOW'
@@ -735,6 +755,10 @@ export type Webhook = {
   enabled: boolean
   created_at: string
   updated_at: string
+}
+
+export type AccountModel = User & {
+  organisations: Organisation[]
 }
 
 export type IdentityTrait = {
@@ -787,6 +811,8 @@ export type Res = {
   groupAdmin: { id: string }
   groups: PagedResponse<UserGroup>
   group: UserGroup
+  userInvites: PagedResponse<Invite>
+  createdUserInvite: Invite[]
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
     id: number
@@ -877,5 +903,6 @@ export type Res = {
   identityTraits: IdentityTrait[]
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
+  onboardingSupportOptIn: { id: string }
   // END OF TYPES
 }

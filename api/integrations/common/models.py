@@ -35,7 +35,7 @@ class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):  # ty
                 self.__class__.__name__,
             )
             return
-        Environment.write_environments_to_dynamodb(environment_id=self.environment_id)
+        Environment.write_environment_documents(environment_id=self.environment_id)
 
     @hook(AFTER_UPDATE)
     def clear_environment_cache(self):  # type: ignore[no-untyped-def]
