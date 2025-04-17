@@ -94,11 +94,11 @@ def test_metadata_model_field_serializer_validation(
             }
         ],
     }
-    
+
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
     result = serializer.is_valid()
-    
+
     # Then
     assert result is expected_is_valid
     if not expected_is_valid:
@@ -114,11 +114,39 @@ def test_metadata_model_field_serializer_with_empty_is_required_for(
     data: Dict[str, Any] = {
         "field": a_metadata_field.id,
         "content_type": feature_content_type.id,
-        "is_required_for": [
-        ],
+        "is_required_for": [],
     }
     # When
     serializer = MetaDataModelFieldSerializer(data=data)
     result: bool = serializer.is_valid()
     # Then
     assert result is True
+
+def test_metadata_model_field_serializer_validation_invalid_content_type(
+    a_metadata_field: MetadataField,
+    feature_content_type: ContentType,
+    project: Project,
+    segment_content_type: ContentType,
+) -> None:
+    object_id = project.id
+    
+    # Given
+    data: Dict[str, Any] = {
+        "field": a_metadata_field.id,
+        "content_type": feature_content_type.id,
+        "is_required_for": [
+            {
+                "content_type": segment_content_type.id,
+                "object_id": object_id,
+            }
+        ],
+    }
+
+    # When
+    serializer = MetaDataModelFieldSerializer(data=data)
+    result = serializer.is_valid()
+
+    # Then
+    assert result is False
+    assert "non_field_errors" in serializer.errors
+    assert serializer.errors["non_field_errors"][0] == "The requirement content type must be project or organisation"

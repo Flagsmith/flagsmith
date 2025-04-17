@@ -56,7 +56,7 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
             model_type = requirement["content_type"].model
             if model_type == "organisation":
                 org_id = requirement["object_id"]
-            else:
+            elif model_type == "project":
                 try:
                     org_id = (
                         requirement["content_type"]
@@ -68,6 +68,10 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
                     raise serializers.ValidationError(
                         "The requirement organisation does not match the field organisation"
                     )
+            else:
+                raise serializers.ValidationError(
+                    "The requirement content type must be project or organisation"
+                )
             if org_id != data["field"].organisation_id:
                 raise serializers.ValidationError(
                     "The requirement organisation does not match the field organisation"
