@@ -20,13 +20,13 @@ def get_value_type(value: str) -> str:
 
 
 def is_32_bit_integer(value: str) -> bool:
-    return is_integer(value, max_value=MAX_32_BIT_INTEGER)
+    return is_integer(value, max_abs_value=MAX_32_BIT_INTEGER)
 
 
-def is_integer(value: str, max_value: int = sys.maxsize) -> bool:
+def is_integer(value: str, max_abs_value: int = sys.maxsize) -> bool:
     try:
         int_value = int(value)
-        return int_value < max_value
+        return abs(int_value) < max_abs_value
     except ValueError:
         return False
 

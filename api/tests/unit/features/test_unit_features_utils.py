@@ -10,6 +10,7 @@ from features.value_types import BOOLEAN, INTEGER, STRING
     (
         ("1", INTEGER),
         (f"{MAX_32_BIT_INTEGER + 1}", STRING),
+        (f"{-MAX_32_BIT_INTEGER - 1}", STRING),
         ("a string", STRING),
         ("True", BOOLEAN),
         ("true", BOOLEAN),
