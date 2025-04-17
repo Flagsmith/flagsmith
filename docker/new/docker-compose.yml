@@ -1,0 +1,42 @@
+# Reusable app definition
+x-app: &app
+  image: ${DOCKER_IMAGE:-local/flagsmith/flagsmith}:${DOCKER_TAG:-latest}
+  build:
+    context: ../../
+    dockerfile: api/Dockerfile
+    args:
+      POETRY_VERSION_CONSTRAINT: ==2.1.2
+      INSTALL_DEV_DEPENDENCIES: true
+  depends_on:
+    database:
+      condition: service_healthy
+  environment:
+    DEBUG: true
+    DATABASE_URL: postgres://postgres@database:5432/postgres
+    DJANGO_SETTINGS_MODULE: app.settings.local
+  volumes:
+    - ../../.local/pypoetry:/root/.config/poetry:rw  # Poetry local cache
+    - ../../:/opt/app:rw,cached  # Application directory
+
+services:
+  api:
+    <<: *app
+    command: sh -c 'cd api; flagsmith migrate && flagsmith start --reload api'
+    ports:
+      - 8000:8000
+
+  # TODO
+  # task-processor:
+  #   <<: *app
+  #   command: ...
+
+  database:
+    image: postgres:15.5-alpine
+    volumes:
+      - ../../.local/database:/var/lib/postgresql/data:rw,cached
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: pg_isready -Upostgres
+      interval: 1s
+      timeout: 30s
