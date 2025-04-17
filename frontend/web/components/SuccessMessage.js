@@ -20,7 +20,7 @@ export default class SuccessMessage extends PureComponent {
       : ''
 
     return (
-      <div className={infoMessageClass}>
+      <div className={infoMessageClass} style={{ ...this.props.successStyles, }}>
         <span className={`icon-alert ${this.props.infoMessageClass} info-icon`}>
           <Icon fill='#27AB95' name='checkmark-circle' />
         </span>

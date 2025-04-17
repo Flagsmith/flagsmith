@@ -1,15 +1,18 @@
 import hashlib
 import hmac
 import json
-from typing import Type
+from typing import Type, Any
 from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
 import responses
-from pytest_django.fixtures import SettingsWrapper
+from core.signing import sign_payload
 from pytest_mock import MockerFixture
 from requests.exceptions import ConnectionError, Timeout
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient
 
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from environments.models import Environment, Webhook
@@ -25,9 +28,12 @@ from webhooks.webhooks import (
     call_integration_webhook,
     call_organisation_webhooks,
     call_webhook_with_failure_mail_after_retries,
+    send_test_request_to_webhook,
     trigger_sample_webhook,
 )
 
+from pytest_django.fixtures import SettingsWrapper
+from django.core.serializers.json import DjangoJSONEncoder
 
 @mock.patch("webhooks.webhooks.requests")
 def test_webhooks_requests_made_to_all_urls_for_environment(
@@ -345,3 +351,86 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
     # we don't get a result from the function (as expected), and no exception is
     # raised
     assert result is None
+
+@pytest.mark.parametrize("external_api_response_status, external_api_error_text, expected_final_status", [(200, "", 200), (400, "wrong-payload", 502), (401, "invalid-signature", 502), (500, "internal-server-error", 502)])
+def test_send_test_request_to_webhook_returns_correct_response(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    environment: Environment,
+    external_api_response_status: int,
+    expected_final_status: int,
+    external_api_error_text: str,
+) -> None:
+    # Given
+    webhook_url = "http://test.webhook.com"
+    mock_response = MagicMock()
+    mock_response.status_code = external_api_response_status
+    mock_response.text = external_api_error_text
+    mock_send_test = mocker.patch("webhooks.webhooks.send_test_request_to_webhook", return_value=mock_response)
+    
+    url = reverse(
+        "api-v1:environments:environment-webhooks-test",
+        args=[environment.api_key],
+    )
+
+    data = {
+        "webhookUrl": webhook_url,
+        "secret": "some-secret",
+        "payload": {"test": "data"}
+    }
+
+    # When
+    response = admin_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    assert response.status_code == expected_final_status
+    mock_send_test.assert_called_once_with(webhook_url, "some-secret", {"test": "data"})
+    if expected_final_status == 200:
+        assert response.json() == {
+            "detail": "Webhook test successful. Response status: 200"
+        }
+    else:
+        assert response.json() == {
+            "detail": f"Webhook returned error status: {external_api_response_status}, {external_api_error_text}"
+        }
+
+@pytest.mark.parametrize("payload, secret, should_have_signature", [({"test": "data"}, "some-secret", True), ({"test": "data"}, "some-other-secret", True), ({"test": "data"}, "", False)])
+def test_send_test_request_to_webhook_returns_has_correct_payload(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    environment: Environment,
+    should_have_signature: bool,
+    payload: dict[str, Any],
+    secret: str
+) -> None:
+    # Given
+    webhook_url = "http://test.webhook.com"
+    mock_post = mocker.patch("requests.post")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_post.return_value = mock_response
+        
+    url = reverse(
+        "api-v1:environments:environment-webhooks-test",
+        args=[environment.api_key],
+    )
+
+    data = {
+        "webhookUrl": webhook_url,
+        "secret": secret,
+        "payload": payload
+    }
+
+    expected_signature = sign_payload(json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder), secret)
+    # When
+    response = admin_client.post(url, data=json.dumps(data), content_type="application/json")
+
+    # Then
+    mock_post.assert_called_once()
+    call_kwargs = mock_post.call_args.kwargs
+    if should_have_signature:
+        assert FLAGSMITH_SIGNATURE_HEADER in call_kwargs["headers"]
+        assert call_kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER] == expected_signature
+    else:
+        assert FLAGSMITH_SIGNATURE_HEADER not in call_kwargs["headers"]
+    assert response.status_code == 200

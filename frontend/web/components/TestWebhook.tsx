@@ -5,7 +5,7 @@ import SuccessMessage from './SuccessMessage'
 import data from 'common/data/base/_data'
 import Button from './base/forms/Button'
 import { useTestWebhookMutation } from 'common/services/useWebhooks'
-
+import Utils from 'common/utils/utils'
 type TestWebhookType = {
   webhookUrl: string | undefined
   json: string
@@ -55,16 +55,16 @@ const signPayload = async (body: string, secret: string): Promise<string> => {
 }
 
 const TestWebhook: FC<TestWebhookType> = ({
+  environmentId,
   json,
   secret,
-  webhookUrl: webhook,
-  environmentId,
+  webhookUrl,
 }) => {
-  const [testWebhook, { isLoading, isError }] = useTestWebhookMutation()
+  const [testWebhook, { error: backendError, isLoading, isSuccess: isBackendSuccess }] = useTestWebhookMutation()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-
+  const isBackendTestEnabled = Utils.getFlagsmithHasFeature('test_webhook_backend')
   const submit = () => {
     setError(null)
     setLoading(true)
@@ -74,7 +74,7 @@ const TestWebhook: FC<TestWebhookType> = ({
         'X-Flagsmith-Signature': sign,
       }
       data
-        .post(webhook, JSON.parse(json), headers)
+        .post(webhookUrl, JSON.parse(json), headers)
         .then(() => {
           setLoading(false)
           setSuccess(true)
@@ -93,29 +93,44 @@ const TestWebhook: FC<TestWebhookType> = ({
         })
     })
   }
+
+  const webhookError = !isBackendTestEnabled ? backendError?.data?.detail : error
+  const webhookLoading = !isBackendTestEnabled ? isLoading : loading
+  const webhookSuccess = !isBackendTestEnabled ? isBackendSuccess : success
   return (
-    <div>
-      {error && <ErrorMessage error={error} />}
-      {success && (
-        <SuccessMessage message='Your API returned with a successful 200 response.' />
+    <>
+    {webhookError && <ErrorMessage error={webhookError} errorStyles={{ marginBottom: '0' }}/>}
+      {webhookSuccess && (
+        <div style={{ maxWidth: 'fit-content' }}>
+          <SuccessMessage message='Your API returned with a successful 200 response.' successStyles={{ marginBottom: '0', width: 'fit-content !important' }}/>
+        </div>
       )}
+      <div>
       <Button
         type='button'
         id='try-it-btn'
-        disabled={loading || !webhook}
-        // onClick={submit}
-        onClick={() =>
-          testWebhook({
-            environmentId: environmentId,
-            url: webhook,
-            body: JSON.parse(json),
-          })
-        }
+        disabled={webhookLoading || !webhookUrl}
+        onClick={() =>{
+          if (!webhookUrl) {
+            return
+          }
+          if (!isBackendTestEnabled) {
+            testWebhook({
+              body: JSON.parse(json),
+              environmentId,
+              secret: secret ?? undefined,
+              webhookUrl,
+            })
+          } else {
+            submit()
+          }
+        }}
         theme='secondary'
       >
         Test your webhook
       </Button>
     </div>
+    </>
   )
 }
 

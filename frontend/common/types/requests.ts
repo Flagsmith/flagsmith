@@ -623,7 +623,7 @@ export type Req = {
   }>
   testWebhook: {
     environmentId: string
-    url: string
+    webhookUrl: string
     secret?: string
     body: {
       event: string
