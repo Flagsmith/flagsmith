@@ -59,14 +59,14 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
 
 
 @pytest.mark.parametrize(
-    "content_type_target,expected_is_valid,error_message,use_invalid_id",
+    "content_type_target,expected_is_valid,error_message,get_object_id",
     [
-        ("organisation", True, None, False),
-        ("project", True, None, False),
+        ("organisation", True, None, lambda  **kwargs: kwargs["metadata_field"].organisation.id),
+        ("project", True, None, lambda **kwargs: kwargs["project"].id),
         ("project", False, 
-         "The requirement organisation does not match the field organisation", True),
+         "The requirement organisation does not match the field organisation", lambda **kwargs: kwargs["metadata_field"].organisation.id),
         ("organisation", False,
-         "The requirement organisation does not match the field organisation", True),
+         "The requirement organisation does not match the field organisation", lambda **kwargs: kwargs["project"].id),
     ]
 )
 def test_metadata_model_field_serializer_validation(
@@ -78,16 +78,10 @@ def test_metadata_model_field_serializer_validation(
     project_content_type: ContentType,
     expected_is_valid: bool,
     error_message: str | None,
-    use_invalid_id: bool,
+    get_object_id: callable,
 ) -> None:
     content_type = organisation_content_type if content_type_target == "organisation" else project_content_type
-    
-    if use_invalid_id:
-        object_id = 99999
-    elif content_type_target == "organisation":
-        object_id = a_metadata_field.organisation.id
-    elif content_type_target == "project":
-        object_id = project.id
+    object_id = get_object_id(project=project, metadata_field=a_metadata_field)
     
     # Given
     data: Dict[str, Any] = {
