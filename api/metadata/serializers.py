@@ -1,4 +1,7 @@
+from typing import Any
+
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from util.drf_writable_nested.serializers import (
@@ -47,15 +50,28 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         model = MetadataModelField
         fields = ("id", "field", "content_type", "is_required_for")
 
-    def validate(self, data):  # type: ignore[no-untyped-def]
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
         data = super().validate(data)
         for requirement in data.get("is_required_for", []):
-            org_id = (
-                requirement["content_type"]
-                .model_class()
-                .objects.get(id=requirement["object_id"])
-                .organisation_id
-            )
+            model_type = requirement["content_type"].model
+            if model_type == "organisation":
+                org_id = requirement["object_id"]
+            elif model_type == "project":
+                try:
+                    org_id = (
+                        requirement["content_type"]
+                        .model_class()
+                        .objects.get(id=requirement["object_id"])
+                        .organisation_id
+                    )
+                except ObjectDoesNotExist:
+                    raise serializers.ValidationError(
+                        "The requirement organisation does not match the field organisation"
+                    )
+            else:
+                raise serializers.ValidationError(
+                    "The requirement content type must be project or organisation"
+                )
             if org_id != data["field"].organisation_id:
                 raise serializers.ValidationError(
                     "The requirement organisation does not match the field organisation"
