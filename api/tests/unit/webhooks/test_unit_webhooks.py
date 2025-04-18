@@ -485,3 +485,31 @@ def test_send_test_request_to_webhook_handles_request_exception(
     assert response.json() == {
         "detail": "Could not connect to webhook URL: Connection refused"
     }
+
+@pytest.mark.parametrize("webhook_url,payload", [("test-webhook-url", {}), ("", {"test": "data"}), ("", {})])
+def test_should_return_BadRequest_when_payload_is_missing(
+    admin_client: APIClient,
+    organisation: Organisation,
+    webhook_url: str,
+    payload: dict[str, Any],
+) -> None:
+    # Given
+    url = reverse("api-v1:webhooks:webhooks-test")
+    data = {
+        "webhookUrl": webhook_url,
+        "secret": "some-secret",
+        "scope": {"type": "organisation", "id": organisation.id},
+        "payload": payload,
+    }
+    
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+    
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": "payload, and webhookUrl are required"
+    }
+    

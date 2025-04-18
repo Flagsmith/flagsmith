@@ -23,18 +23,11 @@ class TriggerSampleWebhookPermission(BasePermission):
 
 
 def is_organisation_admin(organisation_pk, request):  # type: ignore[no-untyped-def]
-    try:
-        return organisation_pk and request.user.is_organisation_admin(
-            Organisation.objects.get(pk=organisation_pk)
-        )
-    except Organisation.DoesNotExist:
-        return False
-
+    return organisation_pk and request.user.is_organisation_admin(
+        Organisation.objects.get(pk=organisation_pk)
+    )
 
 def is_environment_admin(environment_api_key, request):  # type: ignore[no-untyped-def]
-    try:
-        return environment_api_key and request.user.is_environment_admin(
-            Environment.objects.get(api_key=environment_api_key)
-        )
-    except Environment.DoesNotExist:
-        return False
+    return environment_api_key and request.user.is_environment_admin(
+        Environment.objects.get(api_key=environment_api_key)
+    )
