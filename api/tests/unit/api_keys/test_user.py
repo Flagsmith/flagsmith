@@ -7,7 +7,8 @@ from environments.permissions.models import EnvironmentPermissionModel
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import OrganisationPermissionModel
 from projects.models import ProjectPermissionModel
-
+from environments.models import Environment
+from users.models import FFAdminUser
 
 def test_is_authenticated(master_api_key_object):  # type: ignore[no-untyped-def]
     # Given
@@ -299,6 +300,26 @@ def test_get_permitted_environments(  # type: ignore[no-untyped-def]
         else:
             assert environments.count() == 1
             assert environments.first() == expected_environment
+
+
+def test_is_environment_returns_false_admin_with_no_environment(
+    # master_api_key_object: MasterAPIKey,
+    environment: Environment,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(email="test123@test.com")
+    # Then
+    assert user.is_environment_admin(environment) is False
+
+
+def test_is_organisation_returns_false_admin_with_no_organisation(
+    master_api_key_object: MasterAPIKey,
+) -> None:
+    # Given
+    user = APIKeyUser(master_api_key_object)
+
+    # Then
+    assert user.is_organisation_admin(123) is False
 
 
 def test_is_organisation_admin_for_admin_key(
