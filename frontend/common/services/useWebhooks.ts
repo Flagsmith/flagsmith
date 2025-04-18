@@ -36,7 +36,6 @@ export const webhookService = service
         query: (query) => {
           return ({
           body: {
-            payload: { ...query.body },
             scope: query.scope,
             secret: query.secret,
             webhookUrl: query.webhookUrl,

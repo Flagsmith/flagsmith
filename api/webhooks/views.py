@@ -19,32 +19,36 @@ class WebhookViewSet(viewsets.ViewSet):
         secret: str | None = request.data.get(
             "secret",
         )
+        scope: dict[str, Any] = request.data.get("scope", {})
         payload: dict[str, Any] | None = request.data.get("payload", {})
         webhook_url: str = request.data.get("webhookUrl", "")
-        if not all([payload, webhook_url]):
+        if not webhook_url:
             return Response(
-                {"detail": "payload, and webhookUrl are required"},
+                {"detail": "webhookUrl is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
             assert isinstance(webhook_url, str)
             assert isinstance(payload, dict)
-            response = send_test_request_to_webhook(webhook_url, secret, payload)
-            if response.status_code >= 400:
+            response = send_test_request_to_webhook(webhook_url, secret, scope.get("type"))
+            if response.status_code != 200:
                 return Response(
                     {
-                        "detail": f"Webhook returned error status: {response.status_code}{', ' + response.text if response.text else ''}"
+                        "detail": "Webhook returned error status",
+                        "body": response.text,
+                        "code": response.status_code,
                     },
-                    status=status.HTTP_502_BAD_GATEWAY,
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             return Response(
                 {
-                    "detail": f"Webhook test successful. Response status: {response.status_code}"
+                    "detail": "Webhook test successful",
+                    "code": response.status_code,
                 },
                 status=status.HTTP_200_OK,
             )
         except requests.exceptions.RequestException as e:
             return Response(
                 {"detail": f"Could not connect to webhook URL: {e}"},
-                status=status.HTTP_502_BAD_GATEWAY,
+                status=status.HTTP_400_BAD_REQUEST,
             )

@@ -27,6 +27,7 @@ def is_organisation_admin(organisation_pk, request):  # type: ignore[no-untyped-
         Organisation.objects.get(pk=organisation_pk)
     )
 
+
 def is_environment_admin(environment_api_key, request):  # type: ignore[no-untyped-def]
     return environment_api_key and request.user.is_environment_admin(
         Environment.objects.get(api_key=environment_api_key)

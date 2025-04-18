@@ -119,7 +119,6 @@ const TestWebhook: FC<TestWebhookType> = ({
           }
           if (isBackendTestEnabled) {
             testWebhook({
-              body: JSON.parse(json),
               scope,
               secret: secret ?? undefined,
               webhookUrl,

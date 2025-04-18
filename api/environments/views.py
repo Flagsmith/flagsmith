@@ -1,5 +1,5 @@
 import logging
-from typing import Protocol, Type, TypeVar, cast, runtime_checkable
+from typing import Protocol, Type, TypeVar, cast
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
@@ -60,7 +60,6 @@ from .serializers import (
 T = TypeVar("T", bound=Model)
 
 
-@runtime_checkable
 class HasObjects(Protocol[T]):
     objects: Manager[T]
 

@@ -2,7 +2,7 @@ import enum
 import json
 import logging
 import typing
-from typing import Any, Type, Union
+from typing import Type, Union
 
 import backoff
 import requests
@@ -303,9 +303,15 @@ def _get_failure_email_template_data(  # type: ignore[no-untyped-def]
 
 
 def send_test_request_to_webhook(
-    url: str, secret: str | None, payload: dict[str, Any]
+    url: str, secret: str | None, scope: str
 ) -> requests.models.Response:
-    json_data = json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder)
+    testData = environment_webhook_data if scope == "environment" else organisation_webhook_data
+
+    json_data = json.dumps(
+        testData,
+        sort_keys=True,
+        cls=DjangoJSONEncoder,
+    )
     headers = {"content-type": "application/json"}
     if secret:
         signed_payload = sign_payload(json_data, secret)

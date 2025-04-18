@@ -357,9 +357,9 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
     "external_api_response_status, external_api_error_text, expected_final_status",
     [
         (200, "", 200),
-        (400, "wrong-payload", 502),
-        (401, "invalid-signature", 502),
-        (500, "internal-server-error", 502),
+        (400, "wrong-payload", 400),
+        (401, "invalid-signature", 400),
+        (500, "internal-server-error",400),
     ],
 )
 def test_send_test_request_to_webhook_returns_correct_response(
@@ -383,7 +383,6 @@ def test_send_test_request_to_webhook_returns_correct_response(
     data = {
         "webhookUrl": webhook_url,
         "secret": "some-secret",
-        "payload": {"test": "data"},
         "scope": {"type": "organisation", "id": organisation.id},
     }
 
@@ -397,27 +396,29 @@ def test_send_test_request_to_webhook_returns_correct_response(
     mock_post.assert_called_once()
     if expected_final_status == 200:
         assert response.json() == {
-            "detail": "Webhook test successful. Response status: 200"
+            "detail": "Webhook test successful",
+            "code": 200
         }
     else:
         assert response.json() == {
-            "detail": f"Webhook returned error status: {external_api_response_status}, {external_api_error_text}"
+            "detail": "Webhook returned error status",
+            "code": external_api_response_status,
+            "body": external_api_error_text,
         }
 
 
 @pytest.mark.parametrize(
-    "payload, secret, should_have_signature",
+    "secret, should_have_signature",
     [
-        ({"test": "data"}, "some-secret", True),
-        ({"test": "data"}, "some-other-secret", True),
-        ({"test": "data"}, "", False),
+        ("some-secret", True),
+        ("some-other-secret", True),
+        ("", False),
     ],
 )
 def test_send_test_request_to_webhook_returns_has_correct_payload(
     mocker: MockerFixture,
     admin_client: APIClient,
     should_have_signature: bool,
-    payload: dict[str, Any],
     environment: Environment,
     secret: str,
 ) -> None:
@@ -433,12 +434,11 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     data = {
         "webhookUrl": webhook_url,
         "secret": secret,
-        "payload": payload,
         "scope": {"type": "environment", "id": environment.api_key},
     }
 
     expected_signature = sign_payload(
-        json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder), secret
+        json.dumps(environment_webhook_data, sort_keys=True, cls=DjangoJSONEncoder), secret
     )
     # When
     response = admin_client.post(
@@ -470,7 +470,6 @@ def test_send_test_request_to_webhook_handles_request_exception(
     data = {
         "webhookUrl": webhook_url,
         "secret": "some-secret",
-        "payload": {"test": "data"},
         "scope": {"type": "organisation", "id": organisation.id},
     }
 
@@ -480,35 +479,28 @@ def test_send_test_request_to_webhook_handles_request_exception(
     )
 
     # Then
-    assert response.status_code == status.HTTP_502_BAD_GATEWAY
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
         "detail": "Could not connect to webhook URL: Connection refused"
     }
 
-@pytest.mark.parametrize("webhook_url,payload", [("test-webhook-url", {}), ("", {"test": "data"}), ("", {})])
-def test_should_return_BadRequest_when_payload_is_missing(
+
+def test_should_return_bad_request_when_webhook_url_is_missing(
     admin_client: APIClient,
     organisation: Organisation,
-    webhook_url: str,
-    payload: dict[str, Any],
 ) -> None:
     # Given
     url = reverse("api-v1:webhooks:webhooks-test")
     data = {
-        "webhookUrl": webhook_url,
+        "webhookUrl": "",
         "secret": "some-secret",
         "scope": {"type": "organisation", "id": organisation.id},
-        "payload": payload,
     }
-    
     # When
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
-    
+
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {
-        "detail": "payload, and webhookUrl are required"
-    }
-    
+    assert response.json() == {"detail": "webhookUrl is required"}
