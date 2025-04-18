@@ -6,10 +6,10 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
-import responses
 import requests
 from rest_framework import status
 from core.signing import sign_payload
+import responses
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
@@ -454,7 +454,8 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     else:
         assert FLAGSMITH_SIGNATURE_HEADER not in call_kwargs["headers"]
     assert response.status_code == 200
-    
+
+
 def test_send_test_request_to_webhook_handles_request_exception(
     mocker: MockerFixture,
     admin_client: APIClient,
@@ -464,24 +465,20 @@ def test_send_test_request_to_webhook_handles_request_exception(
     webhook_url = "http://test.webhook.com"
     mock_post = mocker.patch("requests.post")
     mock_post.side_effect = requests.exceptions.RequestException("Connection refused")
-    
-        
-    url = reverse(
-        "api-v1:webhooks:webhooks-test"
-    )
+
+    url = reverse("api-v1:webhooks:webhooks-test")
 
     data = {
         "webhookUrl": webhook_url,
         "secret": "some-secret",
         "payload": {"test": "data"},
-        "scope": {
-            "type": "organisation",
-            "id": organisation.id
-        }
+        "scope": {"type": "organisation", "id": organisation.id},
     }
 
     # When
-    response = admin_client.post(url, data=json.dumps(data), content_type="application/json")
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_502_BAD_GATEWAY

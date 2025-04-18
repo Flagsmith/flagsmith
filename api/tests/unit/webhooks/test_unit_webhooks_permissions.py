@@ -4,7 +4,6 @@ from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import OrganisationRole
 from webhooks.permissions import TriggerSampleWebhookPermission
 
-
 # def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]
 #     organisation, django_user_model, rf
 # ):
@@ -90,16 +89,10 @@ def test_has_permission_ignores_payload_scope_if_not_webhook_test(  # type: igno
         "webhookUrl": "http://test.webhook.com",
         "secret": "some-secret",
         "payload": {"test": "data"},
-        "scope": {
-            "type": "organisation",
-            "id": organisation.id
-        }
+        "scope": {"type": "organisation", "id": organisation.id},
     }
 
-    mock_view = mock.MagicMock(
-        basename="environments-webhooks",
-        kwargs={}
-    )
+    mock_view = mock.MagicMock(basename="environments-webhooks", kwargs={})
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
@@ -134,6 +127,7 @@ def test_has_permission_ignores_payload_scope_if_not_webhook_test(  # type: igno
 #     # Then
 #     assert permission_class.has_permission(mock_request, mock_view) is True  # type: ignore[no-untyped-call]
 
+
 def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_admin(  # type: ignore[no-untyped-def]
     environment, django_user_model, rf
 ):
@@ -148,17 +142,10 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_
         "webhookUrl": "http://test.webhook.com",
         "secret": "some-secret",
         "payload": {"test": "data"},
-        "scope": {
-            "type": "environment",
-            "id": environment.api_key
-        }
+        "scope": {"type": "environment", "id": environment.api_key},
     }
 
-    mock_view = mock.MagicMock(
-        basename="webhooks",
-        action="test",
-        kwargs={}
-    )
+    mock_view = mock.MagicMock(basename="webhooks", action="test", kwargs={})
     permission_class = TriggerSampleWebhookPermission()
 
     # Then

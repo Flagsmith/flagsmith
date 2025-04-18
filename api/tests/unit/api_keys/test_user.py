@@ -3,12 +3,13 @@ from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
 from api_keys.models import MasterAPIKey
 from api_keys.user import APIKeyUser
+from environments.models import Environment
 from environments.permissions.models import EnvironmentPermissionModel
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import OrganisationPermissionModel
 from projects.models import ProjectPermissionModel
-from environments.models import Environment
 from users.models import FFAdminUser
+
 
 def test_is_authenticated(master_api_key_object):  # type: ignore[no-untyped-def]
     # Given
