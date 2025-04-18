@@ -172,6 +172,14 @@
                     "value": "False"
                 },
                 {
+                    "name": "USE_CACHE_FOR_USAGE_DATA",
+                    "value": "True"
+                },
+                {
+                    "name": "API_USAGE_CACHE_SECONDS",
+                    "value": "300"
+                },
+                {
                     "name": "INFLUXDB_ORG",
                     "value": "ben.rometsch@bullet-train.io"
                 },

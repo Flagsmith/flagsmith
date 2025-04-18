@@ -12,7 +12,7 @@ def test_api_usage_cache(
     settings: SettingsWrapper,
 ) -> None:
     # Given
-    settings.PG_API_USAGE_CACHE_SECONDS = 60
+    settings.API_USAGE_CACHE_SECONDS = 60
 
     cache = APIUsageCache()
     now = timezone.now()
@@ -40,7 +40,7 @@ def test_api_usage_cache(
         assert not mocked_track_request_task.called
 
         # Now, let's move the time forward
-        frozen_time.tick(settings.PG_API_USAGE_CACHE_SECONDS + 1)  # type: ignore[arg-type]
+        frozen_time.tick(settings.API_USAGE_CACHE_SECONDS + 1)  # type: ignore[arg-type]
 
         # let's track another request(to trigger flush)
         cache.track_request(

@@ -46,7 +46,7 @@ class APIUsageCache:
                 self._cache[key] += 1
             if (
                 timezone.now() - self._last_flushed_at
-            ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
+            ).seconds > settings.API_USAGE_CACHE_SECONDS:
                 self._flush()
 
 
