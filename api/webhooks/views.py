@@ -1,3 +1,4 @@
+from typing import Any
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -13,15 +14,17 @@ class WebhookViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["POST"])
     def test(self, request: Request) -> Response:
-        secret = request.data.get("secret")
-        payload = request.data.get("payload")
-        webhook_url = request.data.get("webhookUrl")
+        secret: str | None = request.data.get("secret",) 
+        payload: dict[str, Any] | None = request.data.get("payload", {}) 
+        webhook_url: str = request.data.get("webhookUrl", "") 
         if not all([payload, webhook_url]):
             return Response(
                 {"detail": "payload, and webhookUrl are required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
+            assert isinstance(webhook_url, str)
+            assert isinstance(payload, dict)
             response = send_test_request_to_webhook(webhook_url, secret, payload)
             if response.status_code >= 400:
                 return Response(

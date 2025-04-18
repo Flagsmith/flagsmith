@@ -301,7 +301,7 @@ def _get_failure_email_template_data(  # type: ignore[no-untyped-def]
 
     return data
 
-def send_test_request_to_webhook(url: str, secret: str, payload: dict[str, Any]) -> requests.models.Response:
+def send_test_request_to_webhook(url: str, secret: str | None, payload: dict[str, Any]) -> requests.models.Response:
     json_data = json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder)
     headers = {"content-type": "application/json"}
     if secret:
