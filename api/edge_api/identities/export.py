@@ -10,6 +10,7 @@ from edge_api.identities.models import EdgeIdentity
 from environments.identities.traits.models import Trait
 from features.models import Feature, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
+from features.value_types import ValueType
 
 EXPORT_EDGE_IDENTITY_PAGINATION_LIMIT = 20000
 
@@ -185,15 +186,16 @@ def export_featurestate_value(
         if featurestate_value.as_tuple().exponent == 0:
             featurestate_value = int(featurestate_value)
 
-    fsv_data = FeatureState().generate_feature_state_value_data(featurestate_value)  # type: ignore[no-untyped-call]
-    fsv_data.pop("feature_state")
+    value_type = ValueType.from_any(featurestate_value)
+    value_key_name = FeatureState.get_feature_state_key_name(value_type)
 
     return {
         "model": "features.featurestatevalue",
         "fields": {
             "uuid": uuid.uuid4(),
             "feature_state": [featurestate_uuid],
-            **fsv_data,
+            "type": value_type.value,
+            value_key_name: featurestate_value,
         },
     }
 
