@@ -340,8 +340,14 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
-USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
-PG_API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=True)
+
+API_USAGE_CACHE_SECONDS = env.int("API_USAGE_CACHE_SECONDS", default=0)
+
+if not API_USAGE_CACHE_SECONDS:
+    # Fallback to the old variable name, which is deprecated
+    # and will be removed in the future.
+    API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
 
 FEATURE_EVALUATION_CACHE_SECONDS = env.int(
     "FEATURE_EVALUATION_CACHE_SECONDS", default=60

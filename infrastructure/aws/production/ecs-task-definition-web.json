@@ -160,6 +160,14 @@
                     "value": "300"
                 },
                 {
+                    "name": "USE_CACHE_FOR_USAGE_DATA",
+                    "value": "True"
+                },
+                {
+                    "name": "API_USAGE_CACHE_SECONDS",
+                    "value": "300"
+                },
+                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 },
