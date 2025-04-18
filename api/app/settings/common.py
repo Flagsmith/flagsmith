@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
@@ -339,8 +340,14 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
-USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
-PG_API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=True)
+
+API_USAGE_CACHE_SECONDS = env.int("API_USAGE_CACHE_SECONDS", default=0)
+
+if not API_USAGE_CACHE_SECONDS:
+    # Fallback to the old variable name, which is deprecated
+    # and will be removed in the future.
+    API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
 
 FEATURE_EVALUATION_CACHE_SECONDS = env.int(
     "FEATURE_EVALUATION_CACHE_SECONDS", default=60
@@ -732,6 +739,18 @@ USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
     "USER_THROTTLE_CACHE_OPTIONS", default={}
 )
 
+ONBOARDING_REQUEST_THROTTLE_CACHE_NAME = "onboarding-request-throttle"
+ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND",
+    "django.core.cache.backends.db.DatabaseCache",
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION", "onboarding-request-throttle"
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS", default={}
+)
+
 # Using Redis for cache
 # To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
 # and set the cache location to the redis url
@@ -806,6 +825,14 @@ CACHES = {
         "BACKEND": USER_THROTTLE_CACHE_BACKEND,
         "LOCATION": USER_THROTTLE_CACHE_LOCATION,
         "OPTIONS": USER_THROTTLE_CACHE_OPTIONS,
+    },
+    ONBOARDING_REQUEST_THROTTLE_CACHE_NAME: {
+        "BACKEND": ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND,
+        "LOCATION": ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION,
+        "OPTIONS": ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS,
+        "TIMEOUT": None,
+        "MAX_ENTRIES": 10000,
+        "KEY_PREFIX": "onboarding-req",
     },
 }
 

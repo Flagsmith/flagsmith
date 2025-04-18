@@ -49,6 +49,20 @@ export type CreateVersionFeatureState = {
   sha: string
   featureState: FeatureState
 }
+
+export type LoginRequest = {
+  email: string
+  password: string
+}
+export type RegisterRequest = {
+  email: string
+  first_name: string
+  last_name: string
+  password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
+}
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -633,5 +647,16 @@ export type Req = {
       id: string
     }
   }
+  createOnboarding: {
+    first_name: string
+    last_name: string
+    email: string
+    password: string
+    contact_consent_given: boolean
+    organisation_name: string
+    superuser: boolean
+  }
+  getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
   // END OF TYPES
 }
