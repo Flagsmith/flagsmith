@@ -7,14 +7,13 @@ from unittest.mock import MagicMock
 
 import pytest
 import requests
-from rest_framework import status
-from core.signing import sign_payload
 import responses
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from requests.exceptions import ConnectionError, Timeout
+from rest_framework import status
 from rest_framework.test import APIClient
 
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
