@@ -628,6 +628,10 @@ export type Req = {
       event: string
       data: Record<string, unknown>
     }
+    scope: {
+      type: 'environment' | 'organisation'
+      id: string
+    }
   }
   // END OF TYPES
 }

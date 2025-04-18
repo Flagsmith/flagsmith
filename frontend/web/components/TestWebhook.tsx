@@ -10,6 +10,10 @@ type TestWebhookType = {
   webhookUrl: string | undefined
   json: string
   secret: string | undefined
+  scope: {
+    type: 'environment' | 'organisation'
+    id: string
+  }
 }
 
 // from https://stackoverflow.com/questions/24834812/space-in-between-json-stringify-output
@@ -55,6 +59,7 @@ const signPayload = async (body: string, secret: string): Promise<string> => {
 
 const TestWebhook: FC<TestWebhookType> = ({
   json,
+  scope,
   secret,
   webhookUrl,
 }) => {
@@ -115,6 +120,7 @@ const TestWebhook: FC<TestWebhookType> = ({
           if (isBackendTestEnabled) {
             testWebhook({
               body: JSON.parse(json),
+              scope,
               secret: secret ?? undefined,
               webhookUrl,
             })

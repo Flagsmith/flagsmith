@@ -8,9 +8,10 @@ from rest_framework import status
 import requests
 
 from .webhooks import send_test_request_to_webhook
+from .permissions import TriggerSampleWebhookPermission
 
 class WebhookViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, TriggerSampleWebhookPermission]
 
     @action(detail=False, methods=["POST"])
     def test(self, request: Request) -> Response:

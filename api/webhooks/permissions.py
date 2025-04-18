@@ -10,16 +10,31 @@ class TriggerSampleWebhookPermission(BasePermission):
             organisation_pk = view.kwargs.get("organisation_pk")
             return is_organisation_admin(organisation_pk, request)  # type: ignore[no-untyped-call]
         environment_api_key = view.kwargs.get("environment_api_key")
-        return is_environment_admin(environment_api_key, request)  # type: ignore[no-untyped-call]
+        if environment_api_key:
+            return is_environment_admin(environment_api_key, request)  # type: ignore[no-untyped-call]
+    
+        payloadScope = request.data.get("scope")
+        if payloadScope:
+            if payloadScope.get("type") == "environment":
+                return is_environment_admin(payloadScope.get("id"), request)  # type: ignore[no-untyped-call]
+            elif payloadScope.get("type") == "organisation":
+                return is_organisation_admin(payloadScope.get("id"), request)  # type: ignore[no-untyped-call]
+        return False
 
 
 def is_organisation_admin(organisation_pk, request):  # type: ignore[no-untyped-def]
-    return organisation_pk and request.user.is_organisation_admin(
-        Organisation.objects.get(pk=organisation_pk)
-    )
+    try:
+        return organisation_pk and request.user.is_organisation_admin(
+            Organisation.objects.get(pk=organisation_pk)
+        )
+    except Organisation.DoesNotExist:
+        return False
 
 
 def is_environment_admin(environment_api_key, request):  # type: ignore[no-untyped-def]
-    return environment_api_key and request.user.is_environment_admin(
-        Environment.objects.get(api_key=environment_api_key)
-    )
+    try:
+        return environment_api_key and request.user.is_environment_admin(
+            Environment.objects.get(api_key=environment_api_key)
+        )
+    except Environment.DoesNotExist:
+        return False

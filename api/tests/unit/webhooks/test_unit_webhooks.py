@@ -358,6 +358,7 @@ def test_send_test_request_to_webhook_returns_correct_response(
     external_api_response_status: int,
     expected_final_status: int,
     external_api_error_text: str,
+    organisation: Organisation,
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
@@ -374,7 +375,11 @@ def test_send_test_request_to_webhook_returns_correct_response(
     data = {
         "webhookUrl": webhook_url,
         "secret": "some-secret",
-        "payload": {"test": "data"}
+        "payload": {"test": "data"},
+        "scope": {
+            "type": "organisation",
+            "id": organisation.id
+        }
     }
 
     # When
@@ -398,6 +403,7 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     admin_client: APIClient,
     should_have_signature: bool,
     payload: dict[str, Any],
+    environment: Environment, 
     secret: str
 ) -> None:
     # Given
@@ -414,7 +420,11 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     data = {
         "webhookUrl": webhook_url,
         "secret": secret,
-        "payload": payload
+        "payload": payload,
+        "scope": {
+            "type": "environment",
+            "id": environment.api_key
+        }
     }
 
     expected_signature = sign_payload(json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder), secret)

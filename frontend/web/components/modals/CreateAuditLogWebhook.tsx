@@ -142,6 +142,10 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
                 json={Constants.exampleAuditWebhook}
                 webhookUrl={url}
                 secret={secret}
+                scope={{
+                  id: organisationId,
+                  type: 'organisation',
+                }}
               />
               {isEdit ? (
                 <Button
