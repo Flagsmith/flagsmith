@@ -32,6 +32,19 @@ export const webhookService = service
         }),
       }),
 
+      testWebhook: builder.mutation<void, Req['testWebhook']>({
+        query: (query) => {
+          return ({
+          body: {
+            scope: query.scope,
+            secret: query.secret,
+            webhookUrl: query.webhookUrl,
+          },
+          method: 'POST',
+          url: `webhooks/test/`,
+        })},
+      }),
+
       updateWebhook: builder.mutation<Res['webhook'], Req['updateWebhook']>({
         invalidatesTags: [{ id: 'LIST', type: 'Webhooks' }],
         query: ({ environmentId, ...rest }) => ({
@@ -92,6 +105,7 @@ export const {
   useCreateWebhookMutation,
   useDeleteWebhookMutation,
   useGetWebhooksQuery,
+  useTestWebhookMutation,
   useUpdateWebhookMutation,
 } = webhookService
 

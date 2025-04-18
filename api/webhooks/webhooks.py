@@ -300,3 +300,25 @@ def _get_failure_email_template_data(  # type: ignore[no-untyped-def]
         data["environment_name"] = webhook.environment.name  # type: ignore[union-attr]
 
     return data
+
+
+def send_test_request_to_webhook(
+    url: str, secret: str | None, scope: str
+) -> requests.models.Response:
+    testData = (
+        environment_webhook_data
+        if scope == "environment"
+        else organisation_webhook_data
+    )
+
+    json_data = json.dumps(
+        testData,
+        sort_keys=True,
+        cls=DjangoJSONEncoder,
+    )
+    headers = {"content-type": "application/json"}
+    if secret:
+        signed_payload = sign_payload(json_data, secret)
+        headers.update({FLAGSMITH_SIGNATURE_HEADER: signed_payload})
+    res = requests.post(url, data=json_data, headers=headers, timeout=10)
+    return res

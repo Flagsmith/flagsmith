@@ -7,11 +7,11 @@ from rest_framework.response import Response
 
 from .permissions import TriggerSampleWebhookPermission
 from .serializers import WebhookURLSerializer
-from .webhooks import get_webhook_model, trigger_sample_webhook
+from .webhooks import WebhookType, get_webhook_model, trigger_sample_webhook
 
 
 class TriggerSampleWebhookMixin:
-    webhook_type = None
+    webhook_type: WebhookType | None = None
 
     @action(
         detail=False,
