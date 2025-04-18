@@ -12,7 +12,7 @@ class TriggerSampleWebhookPermission(BasePermission):
         environment_api_key = view.kwargs.get("environment_api_key")
         if environment_api_key:
             return is_environment_admin(environment_api_key, request)  # type: ignore[no-untyped-call]
-    
+
         payloadScope = request.data.get("scope")
         if payloadScope:
             if payloadScope.get("type") == "environment":
