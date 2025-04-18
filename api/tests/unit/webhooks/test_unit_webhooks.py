@@ -366,7 +366,6 @@ def test_send_test_request_to_webhook_returns_correct_response(
     mock_response = MagicMock()
     mock_response.status_code = external_api_response_status
     mock_response.text = external_api_error_text
-    # mock_send_test = mocker.patch("webhooks.webhooks.send_test_request_to_webhook", return_value=mock_response)
     mock_post.return_value = mock_response
     
     url = reverse(
@@ -424,7 +423,6 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     response = admin_client.post(url, data=json.dumps(data), content_type="application/json")
 
     # Then
-    # mock_post.assert_called_once()
     call_kwargs = mock_post.call_args.kwargs
     if should_have_signature:
         assert FLAGSMITH_SIGNATURE_HEADER in call_kwargs["headers"]

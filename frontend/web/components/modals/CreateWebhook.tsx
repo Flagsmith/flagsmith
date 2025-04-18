@@ -28,7 +28,7 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
   const [enabled, setEnabled] = useState(
     isEdit ? webhook?.enabled ?? true : true,
   )
-  //   To replace with loading RTK
+
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState(false)
   const [secret, setSecret] = useState(isEdit ? webhook?.secret : '')
