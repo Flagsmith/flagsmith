@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 import responses
 import requests
+from rest_framework import status
 from core.signing import sign_payload
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
