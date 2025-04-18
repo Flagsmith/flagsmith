@@ -1,5 +1,4 @@
 import json
-import typing
 from datetime import timedelta
 
 import pytest
@@ -14,7 +13,7 @@ from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
-from users.models import FFAdminUser, HubspotTracker
+from users.models import FFAdminUser, HubspotTracker, UserPermissionGroup
 
 
 def test_create_invite_link(
@@ -184,13 +183,18 @@ def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-de
         invite.refresh_from_db()
 
 
-def test_create_invite_with_permission_groups(  # type: ignore[no-untyped-def]
-    admin_client, organisation, user_permission_group, admin_user, subscription
-):
+@pytest.mark.saas_mode
+def test_create_invite_with_permission_groups(
+    admin_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    admin_user: FFAdminUser,
+    chargebee_subscription: Subscription,
+) -> None:
     # Given
     # update subscription to add another seat
-    subscription.max_seats = 2
-    subscription.save()
+    chargebee_subscription.max_seats = 2
+    chargebee_subscription.save()
 
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
@@ -204,23 +208,19 @@ def test_create_invite_with_permission_groups(  # type: ignore[no-untyped-def]
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
     # and
     invite = Invite.objects.get(email=email)
     assert invite.permission_groups.first() == user_permission_group
     assert invite.invited_by == admin_user
 
 
-def test_create_invite_returns_400_if_seats_are_over(  # type: ignore[no-untyped-def]
-    admin_client,
-    organisation,
-    user_permission_group,
-    admin_user,
-    subscription,
-    settings,
-):
+def test_create_invite_returns_400_if_seats_are_over(
+    admin_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+) -> None:
     # Given
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
         args=[organisation.pk],
@@ -288,18 +288,14 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_exceeds_plan_limit(  # type: ignore[no-untyped-def]
-    test_user_client,
-    organisation,
-    admin_user,
-    invite_object,
-    url,
-    subscription,
-    settings,
-):
+def test_join_organisation_returns_400_if_exceeds_plan_limit(
+    test_user_client: APIClient,
+    invite_object: Invite | InviteLink,
+    url: str,
+    settings: SettingsWrapper,
+) -> None:
     # Given
     settings.ENABLE_CHARGEBEE = True
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(url, args=[invite_object.hash])
     # When
     response = test_user_client.post(url)
@@ -312,6 +308,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(  # type: ignore[no
     )
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "invite_object, url",
     [
@@ -319,19 +316,16 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(  # type: ignore[no
         (lazy_fixture("invite_link"), "api-v1:users:user-join-organisation-link"),
     ],
 )
-def test_join_organisation_returns_400_if_payment_fails(  # type: ignore[no-untyped-def]
+def test_join_organisation_returns_400_if_payment_fails(
     test_user_client: APIClient,
-    organisation: Organisation,
-    admin_user: FFAdminUser,
-    invite_object: typing.Union[Invite, InviteLink],
+    invite_object: Invite | InviteLink,
     url: str,
     subscription: Subscription,
     settings: SettingsWrapper,
     mocker: MockerFixture,
-):
+) -> None:
     # Given
     settings.ENABLE_CHARGEBEE = True
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
 
     url = reverse(url, args=[invite_object.hash])
 

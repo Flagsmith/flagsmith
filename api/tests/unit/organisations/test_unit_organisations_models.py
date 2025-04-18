@@ -168,11 +168,13 @@ def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admi
     mocked_get_subscription_metadata.assert_not_called()
 
 
-def test_organisation_is_auto_seat_upgrade_available(organisation, settings):  # type: ignore[no-untyped-def]
+@pytest.mark.saas_mode
+def test_organisation_is_auto_seat_upgrade_available(
+    organisation: Organisation,
+) -> None:
     # Given
     plan = "Scale-Up"
     subscription_id = "subscription-id"
-    settings.AUTO_SEAT_UPGRADE_PLANS = [plan]
 
     Subscription.objects.filter(organisation=organisation).update(
         subscription_id=subscription_id, plan=plan
@@ -413,12 +415,11 @@ def test_organisation_get_subscription_metadata_for_self_hosted_open_source(
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
 
 
-def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(  # type: ignore[no-untyped-def]  # noqa: E501
-    mocker, settings
-):
+@pytest.mark.saas_mode
+def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(  # noqa: E501
+    mocker: MockerFixture,
+) -> None:
     # Given
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
-
     subscription_id = "subscription-id"
     subscription = Subscription(subscription_id=subscription_id, plan="scale-up")
 
@@ -432,12 +433,10 @@ def test_organisation_subscription_add_single_seat_calls_correct_chargebee_metho
     mocked_add_single_seat.assert_called_once_with(subscription_id)
 
 
-def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(  # type: ignore[no-untyped-def]  # noqa: E501
-    mocker, settings
-):
+def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(  # noqa: E501
+    mocker: MockerFixture,
+) -> None:
     # Given
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
-
     subscription_id = "subscription-id"
     subscription = Subscription(
         subscription_id=subscription_id, plan="not-a-scale-up-plan"
