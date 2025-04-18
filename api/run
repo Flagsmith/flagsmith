@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Runs any command from within an `api` container.
+# If no command is given, it runs the application's default command.
+
+# NOTE: This script is intended as a one-command option to run Flagsmith code
+# with no previous setup except from installing Docker.
+
+# Requirements:
+# - Docker
+
+# Examples:
+# - `./run` — runs pending migrations and starts the API HTTP server in dev mode.
+# - `./run bash` — starts a bash shell in the API container.
+# - `./run python manage.py makemigrations` — runs the command in the API container.
+# - `./run flagsmith createsuperuser` — the Flagsmith CLI should be there too!
+# - `./run pytest --sw --pdb tests/unit/test_my_feature.py` — you get it.
+
+SCRIPT=$(readlink -f "$0")
+SCRIPT_DIR=$(dirname "$SCRIPT")
+ROOT_DIR=$(cd "$SCRIPT_DIR/.."; pwd -P)
+PWD=$(pwd -P)
+WORKING_DIR=$(echo "$PWD" | sed "s|$ROOT_DIR||")
+
+docker compose -f "${ROOT_DIR}/docker/new/docker-compose.yml" run --rm \
+    $([ $# -eq 0 ] && echo --service-ports --use-aliases) \
+    $([ -n "${WORKING_DIR}" ] && echo --workdir /opt/app${WORKING_DIR}) \
+    api "$@"
