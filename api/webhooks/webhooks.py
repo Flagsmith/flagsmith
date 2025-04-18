@@ -305,7 +305,11 @@ def _get_failure_email_template_data(  # type: ignore[no-untyped-def]
 def send_test_request_to_webhook(
     url: str, secret: str | None, scope: str
 ) -> requests.models.Response:
-    testData = environment_webhook_data if scope == "environment" else organisation_webhook_data
+    testData = (
+        environment_webhook_data
+        if scope == "environment"
+        else organisation_webhook_data
+    )
 
     json_data = json.dumps(
         testData,

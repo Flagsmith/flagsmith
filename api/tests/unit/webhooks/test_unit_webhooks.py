@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import json
-from typing import Any, Type
+from typing import Type
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -359,7 +359,7 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
         (200, "", 200),
         (400, "wrong-payload", 400),
         (401, "invalid-signature", 400),
-        (500, "internal-server-error",400),
+        (500, "internal-server-error", 400),
     ],
 )
 def test_send_test_request_to_webhook_returns_correct_response(
@@ -395,10 +395,7 @@ def test_send_test_request_to_webhook_returns_correct_response(
     assert response.status_code == expected_final_status
     mock_post.assert_called_once()
     if expected_final_status == 200:
-        assert response.json() == {
-            "detail": "Webhook test successful",
-            "code": 200
-        }
+        assert response.json() == {"detail": "Webhook test successful", "code": 200}
     else:
         assert response.json() == {
             "detail": "Webhook returned error status",
@@ -438,7 +435,8 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     }
 
     expected_signature = sign_payload(
-        json.dumps(environment_webhook_data, sort_keys=True, cls=DjangoJSONEncoder), secret
+        json.dumps(environment_webhook_data, sort_keys=True, cls=DjangoJSONEncoder),
+        secret,
     )
     # When
     response = admin_client.post(

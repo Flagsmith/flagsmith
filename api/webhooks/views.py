@@ -30,7 +30,9 @@ class WebhookViewSet(viewsets.ViewSet):
         try:
             assert isinstance(webhook_url, str)
             assert isinstance(payload, dict)
-            response = send_test_request_to_webhook(webhook_url, secret, scope.get("type"))
+            response = send_test_request_to_webhook(
+                webhook_url, secret, scope.get("type")
+            )
             if response.status_code != 200:
                 return Response(
                     {
