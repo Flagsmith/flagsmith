@@ -622,7 +622,6 @@ export type Req = {
     conversion_event_type_id: string
   }>
   testWebhook: {
-    environmentId: string
     webhookUrl: string
     secret?: string
     body: {

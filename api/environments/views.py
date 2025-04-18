@@ -1,7 +1,5 @@
 import logging
-import requests
-from django.core.serializers.json import DjangoJSONEncoder
-from rest_framework.permissions import BasePermission
+
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
@@ -36,7 +34,8 @@ from permissions.serializers import (
 )
 from projects.models import Project
 from webhooks.mixins import TriggerSampleWebhookMixin
-from webhooks.webhooks import (WebhookType, send_test_request_to_webhook)
+from webhooks.webhooks import WebhookType
+
 from .identities.traits.models import Trait
 from .identities.traits.serializers import (
     DeleteAllTraitKeysSerializer,
@@ -278,8 +277,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
 
 class NestedEnvironmentViewSet(viewsets.GenericViewSet):  # type: ignore[type-arg]
-    model_class: type[Webhook] | None = None
-    webhook_type: WebhookType | None = None
+    model_class = None
+    webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         return self.model_class.objects.filter(  # type: ignore[attr-defined]
@@ -308,49 +307,7 @@ class WebhookViewSet(
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
     model_class: type[Webhook] = Webhook
-
     webhook_type: WebhookType = WebhookType.ENVIRONMENT
-
-    def get_permissions(self) -> list[BasePermission]:
-        return [
-            IsAuthenticated(),
-            NestedEnvironmentPermissions(
-                action_permission_map={
-                    "list": VIEW_ENVIRONMENT,
-                    "test": VIEW_ENVIRONMENT,
-                    "retrieve": VIEW_ENVIRONMENT,
-                }
-            ),
-        ]
-
-    @swagger_auto_schema(responses={200: ""})
-    @action(detail=False, methods=["POST"], url_path="test")
-    def test(self, request: Request, environment_api_key: str) -> Response:
-        secret = request.data.get("secret")
-        payload = request.data.get("payload")
-        webhook_url = request.data.get("webhookUrl")
-        if not all([payload, webhook_url]):
-            return Response(
-                {"detail": "payload, and webhookUrl are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            response = send_test_request_to_webhook(webhook_url, secret, payload)
-            if response.status_code >= 400:
-                return Response(
-                    {"detail": f"Webhook returned error status: {response.status_code}, {response.text}"},
-                    status=status.HTTP_502_BAD_GATEWAY,
-                )
-            return Response(
-                {"detail": f"Webhook test successful. Response status: {response.status_code}"},
-                status=status.HTTP_200_OK,
-            )
-        except requests.exceptions.RequestException as e:
-            return Response(
-                {"detail": f"Could not connect to webhook URL: {e}"},
-                status=status.HTTP_502_BAD_GATEWAY,
-            )
-
 
 class EnvironmentAPIKeyViewSet(
     NestedEnvironmentViewSet,
@@ -362,4 +319,4 @@ class EnvironmentAPIKeyViewSet(
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
-    model_class: type[EnvironmentAPIKey] = EnvironmentAPIKey 
+    model_class: type[EnvironmentAPIKey] = EnvironmentAPIKey

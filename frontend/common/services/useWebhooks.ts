@@ -41,7 +41,7 @@ export const webhookService = service
             webhookUrl: query.webhookUrl,
           },
           method: 'POST',
-          url: `environments/${query.environmentId}/webhooks/test/`,
+          url: `webhooks/test/`,
         })},
       }),
 
@@ -105,8 +105,8 @@ export const {
   useCreateWebhookMutation,
   useDeleteWebhookMutation,
   useGetWebhooksQuery,
-  useUpdateWebhookMutation,
   useTestWebhookMutation,
+  useUpdateWebhookMutation,
 } = webhookService
 
 /* Usage examples:

@@ -137,7 +137,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
                 <strong>{AccountStore.getOrganisation().name}</strong>
               </p>
             </div>
-            <div className='justify-content-end flex-row'>
+            <div className='justify-content-end flex-row gap-3'>
               <TestWebhook
                 json={Constants.exampleAuditWebhook}
                 webhookUrl={url}
@@ -145,7 +145,6 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               />
               {isEdit ? (
                 <Button
-                  className='ml-3'
                   type='submit'
                   data-test='update-feature-btn'
                   id='update-feature-btn'
@@ -156,7 +155,6 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
                 </Button>
               ) : (
                 <Button
-                  className='ml-3'
                   type='submit'
                   disabled={isSaving || !url}
                   size='small'
