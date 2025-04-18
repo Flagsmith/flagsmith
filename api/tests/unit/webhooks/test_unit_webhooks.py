@@ -28,7 +28,6 @@ from webhooks.webhooks import (
     call_integration_webhook,
     call_organisation_webhooks,
     call_webhook_with_failure_mail_after_retries,
-    send_test_request_to_webhook,
     trigger_sample_webhook,
 )
 
