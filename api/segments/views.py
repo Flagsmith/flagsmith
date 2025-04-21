@@ -136,8 +136,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = CloneSegmentSerializer(data=request.data, context={"source_segment": self.get_object()})
         serializer.is_valid(raise_exception=True)
         clone = serializer.save()
-        serializedResponse = SegmentSerializer(clone).data
-        return Response(serializedResponse, status=status.HTTP_201_CREATED)
+        return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
 @swagger_auto_schema(responses={200: SegmentSerializer()}, method="get")
