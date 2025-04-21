@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.173.0](https://github.com/Flagsmith/flagsmith/compare/v2.172.1...v2.173.0) (2025-04-18)
+
+
+### Features
+
+* **billing:** Remove `AUTO_SEAT_UPGRADE_PLANS` setting ([#5343](https://github.com/Flagsmith/flagsmith/issues/5343)) ([de92415](https://github.com/Flagsmith/flagsmith/commit/de92415af5b853cf4550c57afd7a297c98372691))
+* MetadataModelRequirement can accept organization as content-type ([#5325](https://github.com/Flagsmith/flagsmith/issues/5325)) ([9974494](https://github.com/Flagsmith/flagsmith/commit/99744945e879189288023f8a9dd60ac6c2e5d45a))
+
+
+### Bug Fixes
+
+* compare-sha-tags-in-lowercase ([#5350](https://github.com/Flagsmith/flagsmith/issues/5350)) ([e97bd90](https://github.com/Flagsmith/flagsmith/commit/e97bd90e89cf064f885ad03ce1e4e1aef21ee6d6))
+* enable usage cache by default ([#5356](https://github.com/Flagsmith/flagsmith/issues/5356)) ([fdebe4f](https://github.com/Flagsmith/flagsmith/commit/fdebe4fcc6e76bdd8ffd9d2117f098f0e586598a))
+* Selecting build version data from RTK ([#5352](https://github.com/Flagsmith/flagsmith/issues/5352)) ([0dcca20](https://github.com/Flagsmith/flagsmith/commit/0dcca206d150103b57163f86213fca0f0cc80614))
+
+
+### Dependency Updates
+
+* bump @babel/runtime from 7.25.6 to 7.27.0 in /frontend ([#5335](https://github.com/Flagsmith/flagsmith/issues/5335)) ([9777dd1](https://github.com/Flagsmith/flagsmith/commit/9777dd1fc4263ae65cb114733d251748b3f73fc2))
+* bump http-proxy-middleware from 2.0.7 to 2.0.9 in /frontend ([#5348](https://github.com/Flagsmith/flagsmith/issues/5348)) ([9f30775](https://github.com/Flagsmith/flagsmith/commit/9f30775cd177bcecf4ec553f086e6584411eb7d3))
+
 ## [2.172.1](https://github.com/Flagsmith/flagsmith/compare/v2.172.0...v2.172.1) (2025-04-16)
 
 
