@@ -14,9 +14,7 @@ export const buildVersionService = service
         queryFn: async (args, _, _2, baseQuery) => {
           // Fire both requests concurrently
           const [frontendRes, backendRes] = await Promise.all([
-            baseQuery(
-              `${new URL('/version/', Project.api.replace('api/v1/', ''))}`,
-            ),
+            baseQuery(`/version`),
             baseQuery(`${Project.api.replace('api/v1/', '')}version/`),
           ])
 
