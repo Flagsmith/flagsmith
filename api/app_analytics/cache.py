@@ -20,7 +20,7 @@ class APIUsageCache:
 
     def _flush(self) -> None:
         for key, value in self._cache.items():
-            track_request.delay(
+            track_request.run_in_thread(
                 kwargs={
                     "resource": key[0].value,
                     "host": key[1],
