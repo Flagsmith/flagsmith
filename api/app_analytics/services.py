@@ -20,7 +20,7 @@ def track_usage_by_resource_host_and_environment(
                 environment_key=environment_key,
             )
         else:
-            track_request.delay(
+            track_request.run_in_thread(
                 kwargs={
                     "resource": resource.value,
                     "host": host,

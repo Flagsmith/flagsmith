@@ -72,7 +72,7 @@ def test_api_usage_cache(
                     }
                 )
             )
-        mocked_track_request_task.delay.assert_has_calls(expected_calls)
+        mocked_track_request_task.run_in_thread.assert_has_calls(expected_calls)
 
         # Next, let's reset the mock
         mocked_track_request_task.reset_mock()

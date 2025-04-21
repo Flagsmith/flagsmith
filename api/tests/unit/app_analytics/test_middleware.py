@@ -78,7 +78,7 @@ def test_api_usage_middleware__no_cache__calls_expected(
     middleware(request)
 
     # Then
-    mocked_track_request.delay.assert_called_once_with(
+    mocked_track_request.run_in_thread.assert_called_once_with(
         kwargs={
             "resource": Resource.get_from_name(resource_name),
             "environment_key": environment_key,
