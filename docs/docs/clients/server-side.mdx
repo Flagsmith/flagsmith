@@ -1564,12 +1564,14 @@ client := flagsmith.NewClient(os.Getenv("FLAGSMITH_SERVER_SIDE_ENVIRONMENT_KEY")
 
         // WithRestyClient allows you to provide a custom resty client for making HTTP requests.
         // This gives you more control over the HTTP client configuration.
-        // If provided along with a http client, the resty client will take priority.
+        // Only one of resty or HTTP custom client can be provided
+        // Can not be used simultaneously with Client related options (WithRequestTimeout, WithRetries, WithCustomHeaders, WithProxy)
         flagsmith.WithRestyClient(restyClient)
 
         // WithHTTPClient allows you to provide a custom http client for making HTTP requests.
         // This is useful when you need to customize the underlying HTTP client behavior.
-        // If provided along with a resty client, the resty client will take priority.
+        // Only one of resty or HTTP custom client can be provided
+        // Can not be used simultaneously with Client related options (WithRequestTimeout, WithRetries, WithCustomHeaders, WithProxy)
         flagsmith.WithHTTPClient(httpClient)
 )
 ```
