@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Runs any command from within an `api` container.
 # If no command is given, it runs the application's default command.
@@ -15,14 +16,22 @@
 # - `./run python manage.py makemigrations` — runs the command in the API container.
 # - `./run flagsmith createsuperuser` — the Flagsmith CLI should be there too!
 # - `./run pytest --sw --pdb tests/unit/test_my_feature.py` — you get it.
-
 SCRIPT=$(readlink -f "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT")
 ROOT_DIR=$(cd "$SCRIPT_DIR/.."; pwd -P)
-PWD=$(pwd -P)
-WORKING_DIR=$(echo "$PWD" | sed "s|$ROOT_DIR||")
 
-docker compose -f "${ROOT_DIR}/docker/new/docker-compose.yml" run --rm \
-    $([ $# -eq 0 ] && echo --service-ports --use-aliases) \
-    $([ -n "${WORKING_DIR}" ] && echo --workdir /opt/app${WORKING_DIR}) \
-    api "$@"
+opts="--rm"
+
+if [ $# -eq 0 ]; then
+    # Run default command, i.e. API server
+    opts="$opts --service-ports --use-aliases --workdir /opt/app/api"
+else
+    PWD=$(pwd -P)
+    WORKING_DIR=$(echo "$PWD" | sed "s|$ROOT_DIR||")
+    if [ -n "${WORKING_DIR}" ]; then
+        opts="$opts --workdir /opt/app${WORKING_DIR}"
+    fi
+fi
+
+set -x
+docker compose -f "${ROOT_DIR}/docker/new/docker-compose.yml" run $opts api "$@"
