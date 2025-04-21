@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.173.1](https://github.com/Flagsmith/flagsmith/compare/v2.173.0...v2.173.1) (2025-04-21)
+
+
+### Bug Fixes
+
+* Task processor overload when handling high volume SDK traffic ([#5358](https://github.com/Flagsmith/flagsmith/issues/5358)) ([4b0ae75](https://github.com/Flagsmith/flagsmith/commit/4b0ae75a4b60952e87a6e0a7b28e6826f9b71aaf))
+
 ## [2.173.0](https://github.com/Flagsmith/flagsmith/compare/v2.172.1...v2.173.0) (2025-04-18)
 
 
