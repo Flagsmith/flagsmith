@@ -20,35 +20,36 @@ class WebhookViewSet(viewsets.ViewSet):
             "secret",
         )
         scope: dict[str, Any] = request.data.get("scope", {})
-        payload: dict[str, Any] | None = request.data.get("payload", {})
         webhook_url: str = request.data.get("webhookUrl", "")
-        if not webhook_url:
+        scopeType: str = scope.get("type", "")
+        if not all([webhook_url, scopeType]):
             return Response(
                 {"detail": "webhookUrl is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            assert isinstance(webhook_url, str)
-            assert isinstance(payload, dict)
-            response = send_test_request_to_webhook(webhook_url, secret, scope.get("type"))
+            response = send_test_request_to_webhook(webhook_url, secret, scopeType)
             if response.status_code != 200:
                 return Response(
                     {
                         "detail": "Webhook returned error status",
                         "body": response.text,
-                        "code": response.status_code,
+                        "status": response.status_code,
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             return Response(
                 {
                     "detail": "Webhook test successful",
-                    "code": response.status_code,
+                    "status": response.status_code,
                 },
                 status=status.HTTP_200_OK,
             )
         except requests.exceptions.RequestException as e:
             return Response(
-                {"detail": f"Could not connect to webhook URL: {e}"},
+                {
+                    "detail": "Could not connect to webhook URL",
+                    "body": str(e),
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )

@@ -397,12 +397,12 @@ def test_send_test_request_to_webhook_returns_correct_response(
     if expected_final_status == 200:
         assert response.json() == {
             "detail": "Webhook test successful",
-            "code": 200
+            "status": 200
         }
     else:
         assert response.json() == {
             "detail": "Webhook returned error status",
-            "code": external_api_response_status,
+            "status": external_api_response_status,
             "body": external_api_error_text,
         }
 
@@ -481,7 +481,8 @@ def test_send_test_request_to_webhook_handles_request_exception(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "detail": "Could not connect to webhook URL: Connection refused"
+        "detail": "Could not connect to webhook URL",
+        "body": "Connection refused",
     }
 
 

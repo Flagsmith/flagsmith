@@ -97,7 +97,8 @@ const TestWebhook: FC<TestWebhookType> = ({
     })
   }
 
-  const webhookError = isBackendTestEnabled ? backendError?.data?.detail : error
+  // TODO: Clean this nested ternary when flag is removed
+  const webhookError = isBackendTestEnabled ? backendError ? `${backendError?.data?.detail} (${backendError?.data?.status}) - ${backendError?.data?.body}` : error : error
   const webhookLoading = isBackendTestEnabled ? isLoading : loading
   const webhookSuccess = isBackendTestEnabled ? isBackendSuccess : success
   return (

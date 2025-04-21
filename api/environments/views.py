@@ -1,10 +1,11 @@
 import logging
-from typing import Protocol, Type, TypeVar, cast
+from typing import Protocol, Generic, Type, TypeVar, cast
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
+from django.db import models
 from django.db.models import Count, Manager, Model, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]
@@ -59,11 +60,9 @@ from .serializers import (
 
 T = TypeVar("T", bound=Model)
 
-
-class HasObjects(Protocol[T]):
+class HasObjects(Generic[T]):
     objects: Manager[T]
-
-
+    
 logger = logging.getLogger(__name__)
 
 
@@ -285,12 +284,13 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-class NestedEnvironmentViewSet(viewsets.GenericViewSet[T]):
-    model_class: Type[HasObjects[T]]
+class NestedEnvironmentViewSet(Generic[T], viewsets.GenericViewSet[T]):
+    model_class: Type[T]
     webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self) -> QuerySet[T]:
-        return self.model_class.objects.filter(
+        model_cls = cast(HasObjects[T], self.model_class)
+        return model_cls.objects.filter(
             environment__api_key=self.kwargs.get("environment_api_key")
         )
 
@@ -318,7 +318,7 @@ class WebhookViewSet(
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-    model_class = cast(type[HasObjects[Webhook]], Webhook)
+    model_class: Type[Webhook] = Webhook
     webhook_type: WebhookType = WebhookType.ENVIRONMENT
 
 
@@ -332,4 +332,4 @@ class EnvironmentAPIKeyViewSet(
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
-    model_class: type[HasObjects[EnvironmentAPIKey]] = EnvironmentAPIKey
+    model_class: Type[EnvironmentAPIKey] = EnvironmentAPIKey
