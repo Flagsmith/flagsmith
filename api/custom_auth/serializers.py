@@ -1,5 +1,6 @@
 from typing import Any
 
+from common.core.utils import is_saas
 from django.conf import settings
 from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyped]
 from rest_framework import serializers
@@ -52,6 +53,11 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         if not settings.COOKIE_AUTH_ENABLED:
             self.fields["key"] = serializers.SerializerMethodField()
 
+        if not is_saas():
+            self.fields["superuser"] = serializers.BooleanField(
+                write_only=True, required=False
+            )
+
     class Meta(UserCreateSerializer.Meta):  # type: ignore[misc]
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
@@ -75,6 +81,17 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
     def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
         email = attrs.get("email")
+        if attrs.get("superuser"):
+            if FFAdminUser.objects.exists():
+                raise serializers.ValidationError(
+                    {
+                        "superuser": (
+                            "A superuser can only be created through this  "
+                            "endpoint if no other users exist."
+                        )
+                    }
+                )
+
         if settings.AUTH_CONTROLLER_INSTALLED:
             from auth_controller.controller import (  # type: ignore[import-not-found,import-untyped,unused-ignore]
                 is_authentication_method_valid,

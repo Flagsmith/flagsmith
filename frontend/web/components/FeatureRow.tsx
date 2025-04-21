@@ -51,6 +51,7 @@ interface FeatureRowProps {
   hideAudit?: boolean
   hideRemove?: boolean
   history?: RouterChildContext['router']['history']
+  onCloseEditModal?: () => void
 }
 
 const width = [220, 70, 55, 70, 450]
@@ -67,6 +68,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
   hideRemove = false,
   history,
   index,
+  onCloseEditModal,
   permission,
   projectFlag,
   projectId,
@@ -197,6 +199,10 @@ const FeatureRow: FC<FeatureRowProps> = ({
       />,
       'side-modal create-feature-modal',
       () => {
+        if (onCloseEditModal) {
+          return onCloseEditModal()
+        }
+
         history.replace({
           pathname: document.location.pathname,
           search: '',

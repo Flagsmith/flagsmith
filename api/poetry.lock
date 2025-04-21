@@ -161,7 +161,7 @@ version = "2.2.1"
 description = "Function decoration for backoff and retry"
 optional = false
 python-versions = ">=3.7,<4.0"
-groups = ["main"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "backoff-2.2.1-py3-none-any.whl", hash = "sha256:63579f9a0628e06278f7e47b7d7d5b6ce20dc65c5e96a6f3ca99a6adca0396e8"},
     {file = "backoff-2.2.1.tar.gz", hash = "sha256:03f829f5bb1923180821643f8753b0502c3b682293992485b0eef2807afa5cba"},
@@ -1335,7 +1335,7 @@ version = "3.18.2"
 description = "Run checks on services like databases, queue servers, celery processes, etc."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "django_health_check-3.18.2-py2.py3-none-any.whl", hash = "sha256:16f9c9186236cbc2858fa0d0ecc3566ba2ad2b72683e5678d0d58eb9e8bbba1a"},
     {file = "django_health_check-3.18.2.tar.gz", hash = "sha256:21235120f8d756fa75ba430d0b0dbb04620fbd7bfac92ed6a0b911915ba38918"},
@@ -1520,7 +1520,7 @@ version = "5.1.3"
 description = "Mypy stubs for Django"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "django_stubs-5.1.3-py3-none-any.whl", hash = "sha256:716758ced158b439213062e52de6df3cff7c586f9f9ad7ab59210efbea5dfe78"},
     {file = "django_stubs-5.1.3.tar.gz", hash = "sha256:8c230bc5bebee6da282ba8a27ad1503c84a0c4cd2f46e63d149e76d2a63e639a"},
@@ -1544,7 +1544,7 @@ version = "5.1.3"
 description = "Monkey-patching and extensions for django-stubs"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "django_stubs_ext-5.1.3-py3-none-any.whl", hash = "sha256:64561fbc53e963cc1eed2c8eb27e18b8e48dcb90771205180fe29fc8a59e55fd"},
     {file = "django_stubs_ext-5.1.3.tar.gz", hash = "sha256:3e60f82337f0d40a362f349bf15539144b96e4ceb4dbd0239be1cd71f6a74ad0"},
@@ -1587,7 +1587,7 @@ version = "3.15.2"
 description = "Web APIs for Django, made easy."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "djangorestframework-3.15.2-py3-none-any.whl", hash = "sha256:2b8871b062ba1aefc2de01f773875441a961fefbf79f5eed1e32b2f096944b20"},
     {file = "djangorestframework-3.15.2.tar.gz", hash = "sha256:36fe88cd2d6c6bec23dca9804bab2ba5517a8bb9d8f47ebc68981b56840107ad"},
@@ -1634,7 +1634,7 @@ version = "0.1.2"
 description = "Recursive Serialization for Django REST framework"
 optional = false
 python-versions = "*"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "djangorestframework-recursive-0.1.2.tar.gz", hash = "sha256:f8fc2d677ccb32fe53ec4153a45f66c822d0ce444824cba56edc76ca89b704ae"},
     {file = "djangorestframework_recursive-0.1.2-py2.py3-none-any.whl", hash = "sha256:e4e51b26b7ee3c9f9b838885d638b91293e7c66e85b5955f278a6e10eb34ce7c"},
@@ -1758,21 +1758,21 @@ version = "0.6.4"
 description = "Writable nested helpers for django-rest-framework's serializers"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "drf_writable_nested-0.6.4-py3-none-any.whl", hash = "sha256:e3224edcaaf86cc43a1e0d8e2f39aed42e651b45ab0106dadf02f07af3806626"},
 ]
 
 [[package]]
 name = "drf-yasg"
-version = "1.21.7"
+version = "1.21.10"
 description = "Automated generation of real Swagger/OpenAPI 2.0 schemas from Django Rest Framework code."
 optional = false
 python-versions = ">=3.6"
-groups = ["main"]
+groups = ["main", "dev", "workflows"]
 files = [
-    {file = "drf-yasg-1.21.7.tar.gz", hash = "sha256:4c3b93068b3dfca6969ab111155e4dd6f7b2d680b98778de8fd460b7837bdb0d"},
-    {file = "drf_yasg-1.21.7-py3-none-any.whl", hash = "sha256:f85642072c35e684356475781b7ecf5d218fff2c6185c040664dd49f0a4be181"},
+    {file = "drf-yasg-1.21.10.tar.gz", hash = "sha256:f86d50faee3c31fcec4545985a871f832366c7fb5b77b62c48089d56ecf4f8d4"},
+    {file = "drf_yasg-1.21.10-py3-none-any.whl", hash = "sha256:4d832e108dfe38e365101c36123576b498487d33bf27d57d6a37efb4cc773438"},
 ]
 
 [package.dependencies]
@@ -1825,7 +1825,7 @@ version = "14.1.1"
 description = "simplified environment variable parsing"
 optional = false
 python-versions = ">=3.9"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "environs-14.1.1-py3-none-any.whl", hash = "sha256:45bc56f1d53bbc59d8dd69bba97377dd88ec28b8229d81cedbd455b21789445b"},
     {file = "environs-14.1.1.tar.gz", hash = "sha256:03db7ee2d50ec697b68814cd175a3a05a7c7954804e4e419ca8b570dc5a835cf"},
@@ -1927,26 +1927,34 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "1.5.2"
+version = "1.9.0"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
-    {file = "flagsmith_common-1.5.2-py3-none-any.whl", hash = "sha256:1c99fc8b174e5ee2891d432e472ac1510be0b2ee184084dc846e76a03d2b6ca2"},
-    {file = "flagsmith_common-1.5.2.tar.gz", hash = "sha256:a24d499582607f2da35168a55fb8b69d1e19445a0840235953d59e0a4c98517a"},
+    {file = "flagsmith_common-1.9.0-py3-none-any.whl", hash = "sha256:fa7f6f16691b3c7f81d25ab4c5e240cd1273ea670d3d2cb8ba81705c0e118707"},
+    {file = "flagsmith_common-1.9.0.tar.gz", hash = "sha256:4a88df78aef0ca9a0b826502792382e2d710aa0f256fd955955157f43e546e95"},
 ]
 
 [package.dependencies]
-django = "<5"
+backoff = ">=2.2.1,<3.0.0"
+django = ">4,<5"
 django-health-check = "*"
 djangorestframework = "*"
 djangorestframework-recursive = "*"
 drf-writable-nested = "*"
+drf-yasg = ">=1.21.10,<2.0.0"
 environs = "<15"
 flagsmith-flag-engine = "*"
 gunicorn = ">=19.1"
 prometheus-client = ">=0.0.16"
+psycopg2-binary = ">=2.9,<3"
+pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
+simplejson = ">=3,<4"
+
+[package.extras]
+test-tools = ["pyfakefs (>=5,<6)"]
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -1954,7 +1962,7 @@ version = "5.3.0"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "flagsmith-flag-engine-5.3.0.tar.gz", hash = "sha256:87007f6a312cf11b2c201acd54b30f17de8aa039c3c56af431f1ed3c743fa84c"},
 ]
@@ -1982,32 +1990,6 @@ type = "git"
 url = "https://github.com/flagsmith/flagsmith-ldap"
 reference = "v0.1.1"
 resolved_reference = "d7cf0dd9e306a529498839c3f7a1d7c652093228"
-
-[[package]]
-name = "flagsmith-task-processor"
-version = "1.0.0"
-description = "Task Processor plugin for Flagsmith application."
-optional = false
-python-versions = ">=3.10,<4.0"
-groups = ["main"]
-files = []
-develop = false
-
-[package.dependencies]
-backoff = "~2.2.1"
-dj-database-url = "~0.5.0"
-django-health-check = "~3.18.2"
-drf-yasg = "~1.21.6"
-environs = "*"
-gunicorn = "*"
-psycopg2-binary = "~2.9.5"
-simplejson = "~3.19.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/Flagsmith/flagsmith-task-processor"
-reference = "v1.3.3"
-resolved_reference = "c2aaff26ec0c412c8c593d27231fd4ea4faccaa8"
 
 [[package]]
 name = "freezegun"
@@ -2461,7 +2443,7 @@ version = "23.0.0"
 description = "WSGI HTTP Server for UNIX"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "gunicorn-23.0.0-py3-none-any.whl", hash = "sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d"},
     {file = "gunicorn-23.0.0.tar.gz", hash = "sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec"},
@@ -2562,7 +2544,7 @@ version = "0.5.1"
 description = "A port of Ruby on Rails inflector to Python"
 optional = false
 python-versions = ">=3.5"
-groups = ["main"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "inflection-0.5.1-py2.py3-none-any.whl", hash = "sha256:f38b2b640938a4f35ade69ac3d053042959b62a0f1076a5bbaa1b9526605a8a2"},
     {file = "inflection-0.5.1.tar.gz", hash = "sha256:1a29730d366e996aaacffb2f1f1cb9593dc38e2ddd30c91250c6dde09ea9b417"},
@@ -2824,7 +2806,7 @@ version = "3.20.1"
 description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "marshmallow-3.20.1-py3-none-any.whl", hash = "sha256:684939db93e80ad3561392f47be0230743131560a41c5110684c16e21ade0a5c"},
     {file = "marshmallow-3.20.1.tar.gz", hash = "sha256:5d2371bbe42000f2b3fb5eaa065224df7d8f8597bc19a1bbfa5bfe7fba8da889"},
@@ -3275,7 +3257,7 @@ version = "0.21.1"
 description = "Python client for the Prometheus monitoring system."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "prometheus_client-0.21.1-py3-none-any.whl", hash = "sha256:594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301"},
     {file = "prometheus_client-0.21.1.tar.gz", hash = "sha256:252505a722ac04b0456be05c05f75f45d760c2911ffc45f2a06bcaed9f3ae3fb"},
@@ -3340,7 +3322,7 @@ version = "2.9.9"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
 optional = false
 python-versions = ">=3.7"
-groups = ["main"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "psycopg2-binary-2.9.9.tar.gz", hash = "sha256:7f01846810177d829c7692f1f5ada8096762d9172af1b1a28d4ab5b77c923c1c"},
     {file = "psycopg2_binary-2.9.9-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c2470da5418b76232f02a2fcd2229537bb2d5a7096674ce61859c3229f2eb202"},
@@ -3496,7 +3478,7 @@ version = "0.5.4"
 description = "Collections of pydantic models"
 optional = false
 python-versions = "*"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "pydantic-collections-0.5.4.tar.gz", hash = "sha256:5bce65519456b4829f918c2456d58aac3620a866603461a702aafffe08845966"},
     {file = "pydantic_collections-0.5.4-py3-none-any.whl", hash = "sha256:5d107170c89fb17de229f5e8c4b4355af27594444fd0f93086048ccafa69238b"},
@@ -4022,7 +4004,7 @@ version = "0.21.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
     {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
@@ -4080,7 +4062,7 @@ version = "2023.4"
 description = "World timezone definitions, modern and historical"
 optional = false
 python-versions = "*"
-groups = ["main", "saml"]
+groups = ["main", "dev", "saml", "workflows"]
 files = [
     {file = "pytz-2023.4-py2.py3-none-any.whl", hash = "sha256:f90ef520d95e7c46951105338d918664ebfd6f1d995bd7d153127ce90efafa6a"},
     {file = "pytz-2023.4.tar.gz", hash = "sha256:31d4583c4ed539cd037956140d695e42c033a19e984bfce9964a3f7d59bc2b40"},
@@ -4117,7 +4099,7 @@ version = "6.0.1"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.6"
-groups = ["main", "dev"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:d858aa552c999bc8a8d57426ed01e40bef403cd8ccdd0fc5f6f04a00414cac2a"},
     {file = "PyYAML-6.0.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fd66fc5d0da6d9815ba2cebeb4205f95818ff4b79c3ebe268e75d961704af52f"},
@@ -4413,7 +4395,7 @@ version = "3.0.2"
 description = "Python helper for Semantic Versioning (https://semver.org)"
 optional = false
 python-versions = ">=3.7"
-groups = ["main", "workflows"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "semver-3.0.2-py3-none-any.whl", hash = "sha256:b1ea4686fe70b981f85359eda33199d60c53964284e0cfb4977d243e37cf4bf4"},
     {file = "semver-3.0.2.tar.gz", hash = "sha256:6253adb39c70f6e51afed2fa7152bcd414c411286088fb4b9effb133885ab4cc"},
@@ -4533,7 +4515,7 @@ version = "3.19.1"
 description = "Simple, fast, extensible JSON encoder/decoder for Python"
 optional = false
 python-versions = ">=2.5, !=3.0.*, !=3.1.*, !=3.2.*"
-groups = ["main"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "simplejson-3.19.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:412e58997a30c5deb8cab5858b8e2e5b40ca007079f7010ee74565cc13d19665"},
     {file = "simplejson-3.19.1-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:e765b1f47293dedf77946f0427e03ee45def2862edacd8868c6cf9ab97c8afbd"},
@@ -4873,7 +4855,7 @@ version = "6.0.12.20241230"
 description = "Typing stubs for PyYAML"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev"]
+groups = ["main", "dev"]
 files = [
     {file = "types_PyYAML-6.0.12.20241230-py3-none-any.whl", hash = "sha256:fa4d32565219b68e6dee5f67534c722e53c00d1cfc09c435ef04d7353e1e96e6"},
     {file = "types_pyyaml-6.0.12.20241230.tar.gz", hash = "sha256:7f07622dbd34bb9c8b264fe860a17e0efcad00d50b5f27e93984909d9363498c"},
@@ -4960,7 +4942,7 @@ version = "3.0.1"
 description = "URI templates"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-groups = ["main"]
+groups = ["main", "dev", "workflows"]
 files = [
     {file = "uritemplate-3.0.1-py2.py3-none-any.whl", hash = "sha256:07620c3f3f8eed1f12600845892b0e036a2420acf513c53f7de0abd911a5894f"},
     {file = "uritemplate-3.0.1.tar.gz", hash = "sha256:5af8ad10cec94f215e3f48112de2022e1d5a37ed427fbd88652fa908f2ab7cae"},
@@ -5213,4 +5195,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "ebd0216a0c486e3251081146995a6fffb3cdc7687d7b08e41441ba18223cdc13"
+content-hash = "91e438de299540b972d062997669891705c4207e07ad8b95bde67db733f33f3e"
