@@ -1,11 +1,10 @@
 import logging
-from typing import Protocol, Generic, Type, TypeVar, cast
+from typing import Generic, Type, TypeVar, cast
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from django.db import models
 from django.db.models import Count, Manager, Model, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]
@@ -60,9 +59,11 @@ from .serializers import (
 
 T = TypeVar("T", bound=Model)
 
+
 class HasObjects(Generic[T]):
     objects: Manager[T]
-    
+
+
 logger = logging.getLogger(__name__)
 
 
