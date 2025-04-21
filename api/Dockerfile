@@ -13,11 +13,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Install Python packages
 WORKDIR /tmp
-ARG POETRY_VERSION_CONSTRAINT
+ARG POETRY_VERSION
 ARG INSTALL_DEV_DEPENDENCIES
 COPY api/pyproject.toml api/poetry.lock ./
 RUN \
-    pip install -q poetry${POETRY_VERSION_CONSTRAINT:-} &&\
+    pip install -q poetry==${POETRY_VERSION:-} &&\
     poetry config virtualenvs.create false &&\
     poetry config cache-dir /var/cache/pypoetry &&\
     ###

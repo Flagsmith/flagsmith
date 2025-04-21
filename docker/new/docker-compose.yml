@@ -5,7 +5,7 @@ x-app: &app
     context: ../../
     dockerfile: api/Dockerfile
     args:
-      POETRY_VERSION_CONSTRAINT: ==2.1.2
+      POETRY_VERSION: 2.1.1
       INSTALL_DEV_DEPENDENCIES: true
   depends_on:
     database:
