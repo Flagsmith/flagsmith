@@ -44,9 +44,9 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .models import Feature, FeatureState
+from .models import Feature, FeatureState, Metadata
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
-
+from django.contrib.contenttypes.models import ContentType
 
 class FeatureStateSerializerSmall(serializers.ModelSerializer):  # type: ignore[type-arg]
     feature_state_value = serializers.SerializerMethodField()
@@ -343,7 +343,23 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
             raise serializers.ValidationError(
                 "Unable to retrieve project for metadata validation."
             )
+    def update(self, instance: Feature, validated_data: dict[str, typing.Any]) -> Feature:
+        metadata_items = validated_data.pop("metadata", [])
 
+        feature = super().update(instance, validated_data)
+
+        featureContentType = ContentType.objects.get_for_model(instance)
+
+        for metadata in metadata_items:
+            Metadata.objects.update_or_create(
+                content_type=featureContentType,
+                object_id=instance.pk,
+                model_field=metadata["model_field"],
+                defaults={"field_value": metadata["field_value"]},
+            )
+
+        return feature
+            
 
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
@@ -371,6 +387,7 @@ class UpdateFeatureSerializer(ListFeatureSerializer):
             "initial_value",
             "name",
         )
+    
 
 
 class FeatureSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
