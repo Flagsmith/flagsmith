@@ -4,11 +4,11 @@ from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.models import Metadata
-from django.contrib.contenttypes.models import ContentType
 from features.serializers import FeatureStateSerializerFull
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
@@ -98,8 +98,10 @@ class EnvironmentSerializerWithMetadata(
         raise serializers.ValidationError(
             "Unable to retrieve project for metadata validation."
         )
-    
-    def update(self, instance: Environment, validated_data: dict[str, typing.Any]) -> Environment:
+
+    def update(
+        self, instance: Environment, validated_data: dict[str, typing.Any]
+    ) -> Environment:
         metadata_items = validated_data.pop("metadata", [])
         environment = super().update(instance, validated_data)
 
