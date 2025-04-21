@@ -147,6 +147,38 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
+    def clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
+        cloned_rules = []
+        for rule in self.rules.all():
+            cloned_rule = rule.deep_clone(cloned_segment)
+            cloned_rules.append(cloned_rule)
+        cloned_segment.refresh_from_db()
+        assert (
+            len(self.rules.all())
+            == len(cloned_rules)
+            == len(cloned_segment.rules.all())
+        ), "Mismatch during rules creation"
+
+        return cloned_rules
+
+
+    def clone(self, name: str) -> "Segment":
+        cloned_segment = Segment(
+            name=name,
+            version_of=None,
+            uuid=uuid.uuid4(),
+            description=self.description,
+            change_request=self.change_request,
+            project=self.project,
+            feature=self.feature,
+            # metadata=self.metadata.all(),
+        )
+        cloned_segment.save()
+        self.clone_segment_rules(cloned_segment)
+        
+        
+        return cloned_segment
+
     def shallow_clone(
         self,
         name: str,
@@ -177,18 +209,7 @@ class Segment(
         self.version += 1  # type: ignore[operator]
         self.save_without_historical_record()
 
-        cloned_rules = []
-        for rule in self.rules.all():
-            cloned_rule = rule.deep_clone(cloned_segment)
-            cloned_rules.append(cloned_rule)
-
-        cloned_segment.refresh_from_db()
-
-        assert (
-            len(self.rules.all())
-            == len(cloned_rules)
-            == len(cloned_segment.rules.all())
-        ), "Mismatch during rules creation"
+        self.clone_segment_rules(cloned_segment)
 
         return cloned_segment
 
