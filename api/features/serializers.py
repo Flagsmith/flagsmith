@@ -13,7 +13,7 @@ from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
-from django.contrib.contenttypes.models import ContentType
+
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
@@ -36,6 +36,7 @@ from users.serializers import (
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
+from django.db import models
 
 from .constants import INTERSECTION, UNION
 from .feature_segments.limits import (
@@ -45,7 +46,7 @@ from .feature_segments.limits import (
 from .feature_segments.serializers import (
     CustomCreateSegmentOverrideFeatureSegmentSerializer,
 )
-from .models import Feature, FeatureState, Metadata
+from .models import Feature, FeatureState
 from .multivariate.serializers import NestedMultivariateFeatureOptionSerializer
 
 
@@ -346,22 +347,13 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
             )
 
     def update(
-        self, instance: Feature, validated_data: dict[str, typing.Any]
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
     ) -> Feature:
         metadata_items = validated_data.pop("metadata", [])
-
-        feature = super().update(instance, validated_data)
-
-        featureContentType = ContentType.objects.get_for_model(instance)
-
-        for metadata in metadata_items:
-            Metadata.objects.update_or_create(
-                content_type=featureContentType,
-                object_id=instance.pk,
-                model_field=metadata["model_field"],
-                defaults={"field_value": metadata["field_value"]},
-            )
-
+        feature = super().update(instance, validated_data) # type: ignore[no-untyped-call]
+        self.update_metadata(feature, metadata_items)
+        feature.refresh_from_db()
+        assert isinstance(feature, Feature)
         return feature
 
 

@@ -4,11 +4,10 @@ from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
-from django.contrib.contenttypes.models import ContentType
+
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
-from features.models import Metadata
 from features.serializers import FeatureStateSerializerFull
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
@@ -19,7 +18,7 @@ from projects.serializers import ProjectListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-
+from django.db import models
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     feature_states = FeatureStateSerializerFull(many=True)
@@ -100,21 +99,13 @@ class EnvironmentSerializerWithMetadata(
         )
 
     def update(
-        self, instance: Environment, validated_data: dict[str, typing.Any]
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
     ) -> Environment:
         metadata_items = validated_data.pop("metadata", [])
         environment = super().update(instance, validated_data)
-
-        environmentContentType = ContentType.objects.get_for_model(instance)
-
-        for metadata in metadata_items:
-            Metadata.objects.update_or_create(
-                content_type=environmentContentType,
-                object_id=instance.pk,
-                model_field=metadata["model_field"],
-                defaults={"field_value": metadata["field_value"]},
-            )
-
+        self.update_metadata(environment, metadata_items) # type: ignore[no-untyped-call]
+        environment.refresh_from_db()
+        assert isinstance(environment, Environment)
         return environment
 
 
