@@ -102,7 +102,7 @@ class EnvironmentSerializerWithMetadata(
         self, instance: models.Model, validated_data: dict[str, typing.Any]
     ) -> Environment:
         metadata_items = validated_data.pop("metadata", [])
-        environment = super().update(instance, validated_data) # type: ignore[no-untyped-call]
+        environment = super().update(instance, validated_data)  # type: ignore[no-untyped-call]
         self.update_metadata(environment, metadata_items)
         environment.refresh_from_db()
         assert isinstance(environment, Environment)
