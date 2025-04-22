@@ -4,7 +4,7 @@ from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
-
+from django.db import models
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -18,7 +18,7 @@ from projects.serializers import ProjectListSerializer
 from util.drf_writable_nested.serializers import (
     DeleteBeforeUpdateWritableNestedModelSerializer,
 )
-from django.db import models
+
 
 class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     feature_states = FeatureStateSerializerFull(many=True)
