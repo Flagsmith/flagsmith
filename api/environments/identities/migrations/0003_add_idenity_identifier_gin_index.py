@@ -16,6 +16,8 @@ _create_index_reverse_sql = (
 
 
 class Migration(migrations.Migration):
+    atomic = False
+
     dependencies = [
         ("identities", "0002_alter_identity_index_together"),
     ]
