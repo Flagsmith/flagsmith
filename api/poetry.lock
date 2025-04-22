@@ -1927,13 +1927,15 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "1.9.0"
+version = "1.10.0"
 description = "Flagsmith's common library"
 optional = false
-python-versions = ">=3.11,<4.0"
+python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "workflows"]
-files = []
-develop = false
+files = [
+    {file = "flagsmith_common-1.10.0-py3-none-any.whl", hash = "sha256:e5c8b593abe3ba9c7bc46d956808bf823aac6c9e500f9ce39af2b36bd76aab25"},
+    {file = "flagsmith_common-1.10.0.tar.gz", hash = "sha256:22f4ef2217b08c3bfa0a8560a976beb11a8d71688b39b3c35140763ae67fb38d"},
+]
 
 [package.dependencies]
 backoff = ">=2.2.1,<3.0.0"
@@ -1953,12 +1955,6 @@ simplejson = ">=3,<4"
 
 [package.extras]
 test-tools = ["pyfakefs (>=5,<6)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/flagsmith/flagsmith-common"
-reference = "feat/log-wsgi-extras"
-resolved_reference = "fa50d5d50354001ba5f4ae300750ae39740b436f"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5199,4 +5195,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "f9e998206f814ebc591ccb0573f0475c8d9286a5cb9605570bd25b8a2577ff86"
+content-hash = "f92dd08337ac31a1af87d371d6e4cb65e753b9e6f98ba9941c39fe9d6f497a35"
