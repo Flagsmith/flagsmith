@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.174.0](https://github.com/Flagsmith/flagsmith/compare/v2.173.1...v2.174.0) (2025-04-22)
+
+
+### Features
+
+* Log environment IDs in SDK endpoints ([#5365](https://github.com/Flagsmith/flagsmith/issues/5365)) ([ea21668](https://github.com/Flagsmith/flagsmith/commit/ea216686a069aea2084e9e9bfdab04375f1b4038))
+
+
+### Bug Fixes
+
+* version endpoint ([#5357](https://github.com/Flagsmith/flagsmith/issues/5357)) ([8eb48c0](https://github.com/Flagsmith/flagsmith/commit/8eb48c06ea466f88a432de3b977218c18bd1fb99))
+
 ## [2.173.1](https://github.com/Flagsmith/flagsmith/compare/v2.173.0...v2.173.1) (2025-04-21)
 
 
