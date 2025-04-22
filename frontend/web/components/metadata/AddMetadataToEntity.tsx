@@ -100,7 +100,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
       onChange?.(metadataParsed as CustomMetadataField[])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metadataFieldsAssociatedtoEntity])
+  }, [metadataFieldsAssociatedtoEntity, entityId])
 
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
 
@@ -208,6 +208,11 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     metadataModelFieldListLoaded,
     projectFeatureDataLoaded,
     projectFeatureData,
+    entityId,
+    envData,
+    envDataLoaded,
+    segmentData,
+    segmentDataLoaded,
   ])
   return (
     <>
@@ -300,7 +305,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 }
 
 type MetadataRowType = {
-  metadata: CustomMetadata
+  metadata: CustomMetadataField
   getMetadataValue?: (metadata: CustomMetadata) => void
   entity: string
 }
@@ -309,22 +314,21 @@ const MetadataRow: FC<MetadataRowType> = ({
   getMetadataValue,
   metadata,
 }) => {
-  const [metadataValue, setMetadataValue] = useState<string | boolean>(() => {
-    if (metadata?.type === 'bool') {
-      return metadata?.field_value === 'true' ? true : false
-    } else {
-      return metadata?.field_value !== undefined ? metadata?.field_value : ''
-    }
-  })
-  const saveMetadata = () => {
+  const [metadataValueChanged, setMetadataValueChanged] =
+    useState<boolean>(false)
+    const metadataValue =
+      metadata?.type === 'bool'
+        ? metadata?.field_value === 'true'
+        : metadata?.field_value || ''
+      
+  const handleChange = (newMetadataValue: string | boolean) => {
     setMetadataValueChanged(false)
     const updatedMetadataObject = { ...metadata }
     updatedMetadataObject.field_value =
-      metadata?.type === 'bool' ? `${!metadataValue}` : `${metadataValue}`
+      metadata?.type === 'bool' ? `${!newMetadataValue}` : `${newMetadataValue}`
     getMetadataValue?.(updatedMetadataObject as CustomMetadata)
   }
-  const [metadataValueChanged, setMetadataValueChanged] =
-    useState<boolean>(false)
+
   return (
     <Row className='space list-item clickable py-2'>
       {metadataValueChanged && entity !== 'segment' && (
@@ -333,14 +337,13 @@ const MetadataRow: FC<MetadataRowType> = ({
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
-      {metadata?.type === 'bool' ? (
+     {metadata?.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
-            checked={!!metadataValue}
+            checked={metadataValue === true || metadataValue === 'true'}
             onChange={() => {
-              setMetadataValue(!metadataValue)
               setMetadataValueChanged(true)
-              saveMetadata()
+              handleChange(!metadataValue)
             }}
           />
         </Flex>
@@ -348,7 +351,6 @@ const MetadataRow: FC<MetadataRowType> = ({
         <Flex className='flex-row mt-1' style={{ minWidth: '300px' }}>
           <InputGroup
             textarea={metadata?.type === 'multiline_str'}
-            onBlur={saveMetadata}
             value={metadataValue}
             inputProps={{
               style: {
@@ -358,9 +360,9 @@ const MetadataRow: FC<MetadataRowType> = ({
             }}
             noMargin
             isValid={Utils.validateMetadataType(metadata?.type, metadataValue)}
-            onChange={(e: InputEvent) => {
-              setMetadataValue(Utils.safeParseEventValue(e))
+            onChange={(e: InputEvent) =>{
               setMetadataValueChanged(true)
+              handleChange(Utils.safeParseEventValue(e))
             }}
             type='text'
           />
