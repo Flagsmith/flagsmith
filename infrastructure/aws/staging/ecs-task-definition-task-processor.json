@@ -6,7 +6,26 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "command": ["run-task-processor"],
+            "command": [
+                "run-task-processor"
+            ],
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "python scripts/healthcheck.py"
+                ],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {

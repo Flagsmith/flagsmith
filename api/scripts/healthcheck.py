@@ -1,25 +1,31 @@
-import logging
-import sys
+import argparse
+import socket
 
-import requests
-
-HEALTH_LIVENESS_URL = "http://localhost:8000/health/liveness"
-
-
-logger = logging.getLogger(__name__)
+parser = argparse.ArgumentParser(
+    description="Check if the API is running and accessible.",
+)
+parser.add_argument(
+    "--port",
+    "-p",
+    type=int,
+    default=8000,
+    help="Port to check the API on (default: 8000)",
+)
+parser.add_argument(
+    "--timeout",
+    "-t",
+    type=int,
+    default=1,
+    help="Socket timeout for the connection attempt in seconds (default: 1)",
+)
 
 
 def main() -> None:
-    logger.warning(
-        f"This healthcheck, invoked by {' '.join(sys.argv)}, is deprecated. "
-        f"Use the `{HEALTH_LIVENESS_URL}` endpoint instead."
-    )
-    status_code = requests.get(HEALTH_LIVENESS_URL).status_code
-
-    if status_code != 200:
-        logger.error(f"Health check failed with status {status_code}")
-
-    sys.exit(0 if 200 >= status_code < 300 else 1)
+    args = parser.parse_args()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(args.timeout)
+    sock.connect(("localhost", args.port))
+    sock.close()
 
 
 if __name__ == "__main__":
