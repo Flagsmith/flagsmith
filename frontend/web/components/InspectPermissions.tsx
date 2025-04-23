@@ -1,7 +1,6 @@
-import React, { FC, Ref, useEffect, useMemo, useState } from 'react'
-import { EditPermissionsModal } from './EditPermissions'
+import React, { FC, Ref, useMemo, useState } from 'react'
 import {
-  Environment,
+  AvailablePermission,
   Project,
   Role,
   User,
@@ -11,11 +10,19 @@ import Tabs from './base/forms/Tabs'
 import TabItem from './base/forms/TabItem'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
-import RolePermissionsList from './RolePermissionsList'
 import ProjectFilter from './ProjectFilter'
 import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
-import WarningMessage from './WarningMessage'
+import { PermissionLevel } from 'common/types/requests'
+import { useGetUserPermissionsQuery } from 'common/services/useUserPermissions'
+import Icon from './Icon'
+import PanelSearch from './PanelSearch'
+import Format from 'common/utils/format'
+
+import { PermissionRow } from './PermissionRow'
+import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
+
+import BooleanDotIndicator from './BooleanDotIndicator'
 
 type InspectPermissionsType = {
   orgId?: number
@@ -28,32 +35,298 @@ type InspectPermissionsType = {
   tabRef?: Ref<any>
 }
 
+const Permissions = ({
+  level,
+  levelId,
+  projectId,
+  userId,
+}: {
+  level: PermissionLevel
+  levelId: string
+  userId?: number
+  projectId?: number
+  className?: string
+}) => {
+  const { data: userPermissions, isLoading: isLoadingPermissions } =
+    useGetUserPermissionsQuery(
+      { id: levelId, level, userId: userId },
+      { skip: !level || !levelId || !userId },
+    )
+
+  const { data: permissions } = useGetAvailablePermissionsQuery({ level })
+
+  if (
+    !userPermissions ||
+    !userPermissions.permissions ||
+    !permissions ||
+    isLoadingPermissions
+  ) {
+    return (
+      <div className='modal-body text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  const isAdmin = userPermissions.admin
+  const saving = false
+  const tagBasedPermissions = false
+
+  const selectPermissions = () => {}
+  const setValueChanged = () => {}
+  const togglePermission = () => {}
+
+  return (
+    <PlanBasedAccess className='px-4 pt-4' feature={'RBAC'} theme={'page'}>
+      <div>
+        {level !== 'organisation' && (
+          <div className='my-2'>
+            <Row>
+              <Flex>
+                <div className='font-weight-medium text-dark mb-1'>
+                  Administrator
+                </div>
+              </Flex>
+              <div className='mr-3'>
+                <BooleanDotIndicator enabled={isAdmin} />
+              </div>
+            </Row>
+          </div>
+        )}
+        <PanelSearch
+          filterRow={(item: AvailablePermission, search: string) => {
+            const name = Format.enumeration.get(item.key).toLowerCase()
+            return name.includes(search?.toLowerCase() || '')
+          }}
+          title='Permissions'
+          className='no-pad mb-2 overflow-visible'
+          items={permissions}
+          renderRow={(p) => (
+            <PermissionRow
+              key={p.key}
+              permission={p}
+              level={level}
+              projectId={projectId}
+              entityPermissions={userPermissions}
+              isAdmin={isAdmin}
+              isSaving={saving}
+              isTagBasedPermissions={tagBasedPermissions}
+              onValueChanged={setValueChanged}
+              onSelectPermissions={selectPermissions}
+              onTogglePermission={togglePermission}
+              isDebug
+            />
+          )}
+        />
+      </div>
+    </PlanBasedAccess>
+  )
+}
+
+const EnvironmentPermissions = ({
+  projectId,
+  searchEnvironment = '',
+  userId,
+}: {
+  userId?: number
+  projectId?: string
+  searchEnvironment?: string
+}) => {
+  const projectData: Project[] = OrganisationStore.getProjects()
+  const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
+
+  const environments = useMemo(() => {
+    if (!projectData || !projectId) {
+      return
+    }
+    return projectData.find((p) => p.id === parseInt(projectId))?.environments
+  }, [projectData, projectId])
+
+  const toggleExpand = async (id: string | number) => {
+    setExpandedItems((prevExpanded) =>
+      prevExpanded.includes(id)
+        ? prevExpanded.filter((item) => item !== id)
+        : [...prevExpanded, id],
+    )
+  }
+
+  const filteredEnvironments = environments?.filter((v) => {
+    const search = searchEnvironment?.toLowerCase()
+    if (!search) return true
+    return `${v.name}`.toLowerCase().includes(search)
+  })
+
+  const level = 'environment'
+
+  return (
+    <>
+      <PanelSearch
+        header={
+          <Row className='table-header'>
+            <Flex className='px-3'>Name</Flex>
+          </Row>
+        }
+        className='no-pad'
+        items={filteredEnvironments}
+        renderRow={(env, index) => (
+          <div
+            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
+            data-test={`permissions-${env.name.toLowerCase()}`}
+            key={env.id}
+          >
+            <Row
+              className='px-3 flex-fill align-items-center user-select-none clickable'
+              key={index}
+              onClick={() => toggleExpand(env.id)}
+            >
+              <Flex>
+                <div className={'list-item-subtitle'}>
+                  <strong>{env.name}</strong>{' '}
+                </div>
+              </Flex>
+              <div>
+                <Icon
+                  fill={'#9DA4AE'}
+                  name={
+                    expandedItems.includes(env.id)
+                      ? 'chevron-down'
+                      : 'chevron-right'
+                  }
+                />
+              </div>
+            </Row>
+            <div>
+              {expandedItems.includes(env.id) && (
+                <div className='modal-body px-3'>
+                  <Permissions
+                    level={level}
+                    levelId={String(env.id)}
+                    userId={userId}
+                    projectId={parseInt(projectId ?? '')}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      />
+    </>
+  )
+}
+
+const ProjectPermissions = ({ userId }: { userId?: number }) => {
+  const projectData: Project[] = OrganisationStore.getProjects()
+  const [searchProject, setSearchProject] = useState<string>('')
+  const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
+
+  const toggleExpand = async (id: string | number) => {
+    setExpandedItems((prevExpanded) =>
+      prevExpanded.includes(id)
+        ? prevExpanded.filter((item) => item !== id)
+        : [...prevExpanded, id],
+    )
+  }
+
+  const filteredProjects =
+    projectData &&
+    projectData?.filter((v) => {
+      const search = searchProject?.toLowerCase()
+      if (!search) return true
+      return `${v.name}`.toLowerCase().includes(search)
+    })
+
+  const level = 'project'
+
+  return (
+    <>
+      <Row className='justify-content-between'>
+        <h5 className='my-3'>Permissions</h5>
+        <Input
+          type='text'
+          className='ml-3='
+          value={searchProject}
+          onChange={(e: InputEvent) => {
+            setSearchProject(Utils.safeParseEventValue(e))
+          }}
+          size='small'
+          placeholder='Search Projects'
+          search
+        />
+      </Row>
+      <PanelSearch
+        header={
+          <Row className='table-header'>
+            <Flex className='px-3'>Name</Flex>
+          </Row>
+        }
+        className='no-pad'
+        items={filteredProjects}
+        renderRow={(project, index) => (
+          <div
+            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
+            data-test={`permissions-${project.name.toLowerCase()}`}
+            key={project.id}
+          >
+            <Row
+              className='px-3 flex-fill align-items-center user-select-none clickable'
+              key={index}
+              onClick={() => toggleExpand(project.id)}
+            >
+              <Flex>
+                <div className={'list-item-subtitle'}>
+                  <strong>{project.name}</strong>{' '}
+                </div>
+              </Flex>
+              <div>
+                <Icon
+                  fill={'#9DA4AE'}
+                  name={
+                    expandedItems.includes(project.id)
+                      ? 'chevron-down'
+                      : 'chevron-right'
+                  }
+                />
+              </div>
+            </Row>
+            <div>
+              {expandedItems.includes(project.id) && (
+                <div className='modal-body px-3'>
+                  <Permissions
+                    level={level}
+                    levelId={String(project.id)}
+                    userId={userId}
+                    projectId={project.id}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      />
+    </>
+  )
+}
+
 const InspectPermissions: FC<InspectPermissionsType> = ({
-  group,
   onChange,
   orgId,
-  role,
-  tabRef,
   uncontrolled,
   user,
   value,
 }) => {
-  const [searchProject, setSearchProject] = useState<string>('')
   const [searchEnv, setSearchEnv] = useState<string>('')
   const projectData: Project[] = OrganisationStore.getProjects()
   const [project, setProject] = useState<string>('')
-  const [environments, setEnvironments] = useState<Environment[]>([])
 
-  const environment = useMemo(() => {
+  const environments = useMemo(() => {
     if (!project || !projectData) {
-      return
+      return null
     }
-
     return projectData.find((p) => p.id === parseInt(project))?.environments
   }, [project, projectData])
 
   if (!orgId) {
-    return
+    return null
   }
 
   return (
@@ -69,44 +342,19 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           tabLabel={<Row className='justify-content-center'>Organisation</Row>}
           data-test='organisation-permissions-tab'
         >
-          <EditPermissionsModal
-            id={orgId}
-            group={group}
-            isGroup={!!group}
-            user={user}
-            className='mt-2'
-            level={'organisation'}
-            role={role}
-          />
+          <div className='my-3'>
+            <Permissions
+              level='organisation'
+              levelId={String(orgId)}
+              userId={user?.id}
+            />
+          </div>
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Project</Row>}
           data-test='project-permissions-tab'
         >
-          <Row className='justify-content-between'>
-            <h5 className='my-3'>Permissions</h5>
-            <Input
-              type='text'
-              className='ml-3'
-              value={searchProject}
-              onChange={(e: InputEvent) =>
-                setSearchProject(Utils.safeParseEventValue(e))
-              }
-              size='small'
-              placeholder='Search Projects'
-              search
-            />
-          </Row>
-          <RolePermissionsList
-            user={user}
-            group={group}
-            orgId={orgId}
-            filter={searchProject}
-            mainItems={projectData.map((v) => ({ ...v, projectId: v.id }))}
-            role={role}
-            level={'project'}
-            ref={tabRef}
-          />
+          <ProjectPermissions userId={user?.id} />
         </TabItem>
         <TabItem
           tabLabel={<Row className='justify-content-center'>Environment</Row>}
@@ -134,29 +382,14 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
             />
           </div>
           <div className='mt-2'>
-            {environments.length > 0 && (
-              <RolePermissionsList
-                user={user}
-                orgId={orgId}
-                group={group}
-                filter={searchEnv}
-                mainItems={(environments || [])?.map((v) => {
-                  return {
-                    id: role ? v.id : v.api_key,
-                    name: v.name,
-                    parentId: v.project,
-                  }
-                })}
-                role={role}
-                level={'environment'}
-                ref={tabRef}
+            {environments?.length !== 0 && (
+              <EnvironmentPermissions
+                userId={user?.id}
+                projectId={project}
+                searchEnvironment={searchEnv}
               />
             )}
           </div>
-          <p className='text-right mt-5 text-dark'>
-            This will edit the permissions for{' '}
-            <strong>the {group?.name} group</strong>.
-          </p>
         </TabItem>
       </Tabs>
     </PlanBasedAccess>

@@ -651,7 +651,7 @@ export type Req = {
     userId: string
   }
   getUserPermissions: {
-    projectId?: string
+    id?: string
     userId: number | undefined
     level: PermissionLevel
   }
