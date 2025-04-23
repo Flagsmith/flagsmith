@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from typing import Any, cast
 from segments.models import Segment
+from common.segments.serializers import SegmentSerializer
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -20,7 +21,7 @@ class SegmentListQuerySerializer(serializers.Serializer):  # type: ignore[type-a
     )
     include_feature_specific = serializers.BooleanField(required=False, default=True)
 
-class CloneSegmentSerializer(SegmentSerializerBasic):
+class CloneSegmentSerializer(SegmentSerializer):
     class Meta:
         model = Segment
         fields = ("name", )
