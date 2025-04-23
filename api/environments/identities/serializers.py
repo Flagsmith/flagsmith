@@ -114,7 +114,8 @@ class IdentityAllFeatureStatesSerializer(serializers.Serializer):  # type: ignor
         identity = self.context["identity"]
         environment_api_key = self.context["environment_api_key"]
 
-        environment = Environment.get_from_cache(environment_api_key)  # type: ignore[no-untyped-call]
+        environment = Environment.get_from_cache(environment_api_key)
+        assert environment
         hash_key = identity.get_hash_key(
             environment.use_identity_composite_key_for_hashing
         )

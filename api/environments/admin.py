@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 
 from .models import Environment, Webhook
 from .tasks import rebuild_environment_document
@@ -30,6 +32,8 @@ class EnvironmentAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     inlines = (WebhookInline,)
 
     @admin.action(description="Rebuild selected environment documents")
-    def rebuild_environments(self, request, queryset):  # type: ignore[no-untyped-def]
+    def rebuild_environments(
+        self, request: HttpRequest, queryset: QuerySet[Environment]
+    ) -> None:
         for environment in queryset:
             rebuild_environment_document.delay(args=(environment.id,))

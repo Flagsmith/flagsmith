@@ -1,3 +1,5 @@
+import importlib
+import inspect
 import logging
 import os
 import typing
@@ -19,12 +21,14 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pyfakefs.fake_filesystem import FakeFilesystem
+from pyfakefs.fake_filesystem_unittest import Patcher
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 from urllib3 import BaseHTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id  # type: ignore[import-untyped]
@@ -131,6 +135,24 @@ def pytest_configure(config: pytest.Config) -> None:
                 interactive=False,
                 parallel=config.option.numprocesses,
             )
+
+
+@pytest.fixture
+def fs() -> typing.Generator[FakeFilesystem | None, None, None]:
+    app_path = os.path.dirname(os.path.abspath(__file__))
+    real_paths = [app_path]
+
+    for module_name in (
+        "django",
+        "tzdata",
+    ):
+        module_file = inspect.getfile(importlib.import_module(module_name))
+        real_paths.append(os.path.dirname(os.path.abspath(module_file)))
+
+    with Patcher() as patcher:
+        if fs := patcher.fs:
+            fs.add_real_paths(real_paths)
+        yield fs
 
 
 @pytest.fixture(scope="session")
