@@ -38,7 +38,7 @@ def test_api_version_is_added_to_success_response_headers(
 
     response = client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert response.headers["X-Flagsmith-Version"] == expected_version
+    assert response.headers["Flagsmith-Version"] == expected_version
 
 
 @pytest.mark.parametrize(
@@ -66,4 +66,4 @@ def test_api_version_is_added_to_error_response_headers(
 
     response = client.get(url)
     assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.headers["X-Flagsmith-Version"] == expected_version
+    assert response.headers["Flagsmith-Version"] == expected_version
