@@ -273,22 +273,25 @@ export type UserPermission = {
 }
 
 export type DerivedPermission = {
-  admin: boolean
-  permissions: {
-    is_directly_granted: boolean
-    permission_key: string
-    tags: number[]
+  groups: {
+    name: string
+    id: number
+  }[]
+  roles: {
+    name: string
+    id: number
   }[]
 }
 
+export type Permission = {
+  is_directly_granted: boolean
+  permission_key: string
+  tags: number[]
+  derived_from: DerivedPermission
+}
 export type UserPermissions = {
   admin: boolean
-  permissions: {
-    is_directly_granted: boolean
-    permission_key: string
-    tags: number[]
-    derived_from: DerivedPermission
-  }[]
+  permissions: Permission[]
 }
 
 export type RolePermission = Omit<UserPermission, 'permissions'> & {

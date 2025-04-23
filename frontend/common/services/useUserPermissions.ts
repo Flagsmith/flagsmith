@@ -16,7 +16,7 @@ export const userPermissionsService = service
         //   url: `${query.level}s/${query.projectId}/user-permissions/${query.userId}/`,
         // }),
         // TODO: Remove this once the API is implemented
-        queryFn: async ({ level, projectId, userId }) => {
+        queryFn: async ({ id, level, userId }) => {
           if (level === 'project') {
             return {
               data: {
@@ -57,7 +57,7 @@ export const userPermissionsService = service
                         },
                       ],
                     },
-                    is_directly_granted: true,
+                    is_directly_granted: false,
                     permission_key: 'VIEW_PROJECT',
                     tags: [],
                   },
@@ -72,17 +72,7 @@ export const userPermissionsService = service
                 admin: false,
                 permissions: [
                   {
-                    derived_from: {
-                      roles: [
-                        {
-                          'description': 'role_1',
-                          'id': 227,
-                          'name': 'role1',
-                          'organisation': 5692,
-                          tags: [],
-                        },
-                      ],
-                    },
+                    derived_from: undefined,
                     is_directly_granted: true,
                     permission_key: 'MANAGE_USERS',
                     tags: [],
@@ -125,7 +115,7 @@ export const userPermissionsService = service
                         },
                       ],
                     },
-                    is_directly_granted: true,
+                    is_directly_granted: false,
                     permission_key: 'VIEW_ENVIRONMENT',
                     tags: [],
                   },
@@ -141,8 +131,14 @@ export const userPermissionsService = service
                         },
                       ],
                     },
-                    is_directly_granted: true,
+                    is_directly_granted: false,
                     permission_key: 'MANAGE_IDENTITIES',
+                    tags: [],
+                  },
+                  {
+                    derived_from: undefined,
+                    is_directly_granted: true,
+                    permission_key: 'CREATE_CHANGE_REQUEST',
                     tags: [],
                   },
                 ],
