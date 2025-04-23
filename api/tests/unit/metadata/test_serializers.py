@@ -72,13 +72,13 @@ def test_metadata_serializer_validate_validates_field_value_type_correctly(
             "project",
             False,
             "The requirement organisation does not match the field organisation",
-            lambda **kwargs: kwargs["metadata_field"].organisation.id,
+            lambda **kwargs: 9999,
         ),
         (
             "organisation",
             False,
             "The requirement organisation does not match the field organisation",
-            lambda **kwargs: kwargs["project"].id,
+            lambda **kwargs: 9999,
         ),
     ],
 )
@@ -99,7 +99,7 @@ def test_metadata_model_field_serializer_validation(
         else project_content_type
     )
     object_id = get_object_id(project=project, metadata_field=a_metadata_field)
-
+    print(f"Metadata field org_id: {a_metadata_field.organisation.id}")
     # Given
     data: Dict[str, Any] = {
         "field": a_metadata_field.id,
