@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from environments.identities.models import Identity
@@ -8,7 +10,13 @@ from integrations.heap.models import HeapConfiguration
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "initial_value,expected_property_value",
+    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+)
 def test_heap_when_generate_user_data_with_correct_values_then_success(
+    initial_value: typing.Any,
+    expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,
     feature_state_with_value: FeatureState,
@@ -31,7 +39,7 @@ def test_heap_when_generate_user_data_with_correct_values_then_success(
         "event": "Flagsmith Feature Flags",
         "properties": {
             feature_state.feature.name: feature_state.enabled,
-            feature_state_with_value.feature.name: "foo",  # hardcoded here from the feature_state_with_value fixture
+            feature_state_with_value.feature.name: expected_property_value,
         },
     }
     assert expected_user_data == user_data
