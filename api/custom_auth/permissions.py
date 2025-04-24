@@ -10,7 +10,7 @@ class CurrentUser(IsAuthenticated):
     """
 
     def has_permission(self, request, view):  # type: ignore[no-untyped-def]
-        return view.action == "me"
+        return super().has_permission(request, view) and view.action == "me"
 
     def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         return obj.id == request.user.id

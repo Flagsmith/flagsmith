@@ -165,12 +165,6 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
             "uuid",
         )
 
-    def to_representation(self, instance: FFAdminUser) -> Any:
-        if not instance.is_authenticated:
-            raise NotAuthenticated("User is not authenticated.")
-
-        return super().to_representation(instance)
-
 
 class ListUsersQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     exclude_current = serializers.BooleanField(default=False)
