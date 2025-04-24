@@ -408,9 +408,9 @@ def test_save_environment_clears_environment_cache(mocker, project):  # type: ig
     environment.save()
 
     # Then
-    mock_calls = mock_environment_cache.delete.mock_calls
+    mock_calls = mock_environment_cache.delete_many.mock_calls
     assert len(mock_calls) == 2
-    assert mock_calls[0][1][0] == mock_calls[1][1][0] == old_key
+    assert mock_calls[0][1][0] == mock_calls[1][1][0] == [old_key]
 
 
 @pytest.mark.parametrize(
