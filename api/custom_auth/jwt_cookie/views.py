@@ -30,9 +30,7 @@ class JWTTokenLogoutView(TokenDestroyView):  # type: ignore[misc]
 
 class JWTCookieTokenRefreshView(TokenRefreshView):
     def post(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        raw_refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)
-
-        if not raw_refresh_token:
+        if not (raw_refresh_token := request.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)):
             raise InvalidToken("No valid refresh token found in cookie")
 
         serializer = self.get_serializer(data={"refresh": raw_refresh_token})
