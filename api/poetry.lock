@@ -1948,7 +1948,6 @@ flagsmith-flag-engine = "*"
 gunicorn = ">=19.1"
 prometheus-client = ">=0.0.16"
 psycopg2-binary = ">=2.9,<3"
-pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
 requests = "*"
 simplejson = ">=3,<4"
 
@@ -1958,8 +1957,8 @@ test-tools = ["pyfakefs (>=5,<6)"]
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-common"
-reference = "ff53ad7cf4babe551cf3f2d911cd576bfaff2822"
-resolved_reference = "ff53ad7cf4babe551cf3f2d911cd576bfaff2822"
+reference = "feat/flagsmith-healthcheck"
+resolved_reference = "467f30d71af762313f67b8d0c8bb3e590e8857f9"
 
 [[package]]
 name = "flagsmith-flag-engine"
