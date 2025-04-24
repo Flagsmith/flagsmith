@@ -201,8 +201,6 @@ def test_environment_document_caching(
     last_modified = response1.headers["Last-Modified"]
     assert last_modified == http_date(environment.updated_at.timestamp())
 
-    print(f"{last_modified=}")
-
     # When - second request with If-Modified-Since header
     client.credentials(
         HTTP_X_ENVIRONMENT_KEY=api_key,
