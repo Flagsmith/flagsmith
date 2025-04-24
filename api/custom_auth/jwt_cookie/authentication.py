@@ -18,8 +18,6 @@ class JWTCookieAuthentication(JWTAuthentication):
         return f'Cookie realm="{self.www_authenticate_realm}"'
 
     def authenticate(self, request: Request) -> tuple[AuthUser, Token] | None:
-        raw_access_token = request.COOKIES.get(ACCESS_TOKEN_COOKIE_KEY)
-        raw_refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)
 
         if raw_access_token := request.COOKIES.get(ACCESS_TOKEN_COOKIE_KEY):
             try:
