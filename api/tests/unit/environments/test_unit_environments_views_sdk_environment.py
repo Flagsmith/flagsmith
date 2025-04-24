@@ -198,25 +198,28 @@ def test_environment_document_caching(
 
     # Then - first request should return 200 and include Last-Modified header
     assert response1.status_code == status.HTTP_200_OK
-    assert response1.headers["Last-Modified"] == http_date(
-        environment.updated_at.timestamp()
-    )
+    last_modified = response1.headers["Last-Modified"]
+    assert last_modified == http_date(environment.updated_at.timestamp())
+
+    print(f"{last_modified=}")
 
     # When - second request with If-Modified-Since header
     client.credentials(
         HTTP_X_ENVIRONMENT_KEY=api_key,
-        HTTP_IF_MODIFIED_SINCE=http_date(environment.updated_at.timestamp()),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
     )
     response2 = client.get(url)
 
     # Then - second request should return 304 Not Modified
     assert response2.status_code == status.HTTP_304_NOT_MODIFIED
 
+    # sleep for 1s since If-Modified-Since is only accurate to the nearest second
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/If-Modified-Since
+    time.sleep(1)
+
     # When - environment is updated
     environment.updated_at = timezone.now()
     environment.save()
-
-    time.sleep(0.1)
 
     # Then - request with same If-Modified-Since header should return 200
     response3 = client.get(url)
