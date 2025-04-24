@@ -1,7 +1,9 @@
+import time
 from typing import TYPE_CHECKING
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import http_date
 from flag_engine.segments.constants import EQUAL
 from rest_framework import status
@@ -211,9 +213,10 @@ def test_environment_document_caching(
     assert response2.status_code == status.HTTP_304_NOT_MODIFIED
 
     # When - environment is updated
-    environment.clear_environment_cache()
-    environment.name = "Updated"
+    environment.updated_at = timezone.now()
     environment.save()
+
+    time.sleep(0.1)
 
     # Then - request with same If-Modified-Since header should return 200
     response3 = client.get(url)
