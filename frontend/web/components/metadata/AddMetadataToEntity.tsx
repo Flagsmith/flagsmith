@@ -340,7 +340,7 @@ const MetadataRow: FC<MetadataRowType> = ({
      {metadata?.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
-            checked={metadataValue === true || metadataValue === 'true'}
+            checked={[true, 'true'].includes(metadataValue}
             onChange={() => {
               setMetadataValueChanged(true)
               handleChange(!metadataValue)
