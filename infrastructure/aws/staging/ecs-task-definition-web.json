@@ -164,12 +164,16 @@
                     "value": "True"
                 },
                 {
-                    "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up,scale-up-v2,scale-up-annual-v2,scale-up-24-months-v2"
-                },
-                {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "False"
+                },
+                {
+                    "name": "USE_CACHE_FOR_USAGE_DATA",
+                    "value": "True"
+                },
+                {
+                    "name": "API_USAGE_CACHE_SECONDS",
+                    "value": "300"
                 },
                 {
                     "name": "INFLUXDB_ORG",
@@ -202,6 +206,10 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [

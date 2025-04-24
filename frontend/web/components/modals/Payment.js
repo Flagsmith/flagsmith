@@ -14,7 +14,7 @@ import BlockedOrgInfo from 'components/BlockedOrgInfo'
 
 const PaymentButton = (props) => {
   const activeSubscription = AccountStore.getOrganisationPlan(
-    AccountStore.getOrganisation().id,
+    AccountStore.getOrganisation()?.id,
   )
 
   if (activeSubscription) {
@@ -417,7 +417,12 @@ const Payment = class extends Component {
 }
 
 Payment.propTypes = {}
-export const onPaymentLoad = () => {
+export const onPaymentLoad = ({ errored }) => {
+  if (errored) {
+    // TODO: no error details are available https://github.com/dozoisch/react-async-script/issues/58
+    console.error('failed to load chargebee')
+    return
+  }
   if (!Project.chargebee?.site) {
     return
   }

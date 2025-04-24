@@ -5,6 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
+from pytest_mock import MockerFixture
 
 from app_analytics.models import (
     APIUsageBucket,
@@ -20,6 +21,7 @@ from app_analytics.tasks import (
     track_feature_evaluation,
     track_request,
 )
+from environments.models import Environment
 
 if "analytics" not in settings.DATABASES:
     pytest.skip(
@@ -151,8 +153,12 @@ def test_populate_api_usage_bucket(  # type: ignore[no-untyped-def]
 
 
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_track_request(environment):  # type: ignore[no-untyped-def]
+def test_track_request__postgres__inserts_expected(
+    settings: SettingsWrapper,
+    environment: Environment,
+) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
     host = "testserver"
     environment_key = environment.api_key
     resource = Resource.FLAGS
@@ -166,6 +172,33 @@ def test_track_request(environment):  # type: ignore[no-untyped-def]
             resource=resource, host=host, environment_id=environment.id
         ).count()
         == 1
+    )
+
+
+def test_track_request__influx__calls_expected(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    settings.INFLUXDB_TOKEN = "test_token"
+    track_request_influxdb_mock = mocker.patch(
+        "app_analytics.tasks.track_request_influxdb",
+        autospec=True,
+    )
+    host = "testserver"
+    environment_key = environment.api_key
+    resource = Resource.FLAGS
+
+    # When
+    track_request(resource, host, environment_key)
+
+    # Then
+    track_request_influxdb_mock.assert_called_once_with(
+        resource=resource,
+        host=host,
+        environment=environment,
+        count=1,
     )
 
 

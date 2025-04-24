@@ -32,15 +32,14 @@ services:
 
       ENVIRONMENT: production # set to 'production' in production.
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
-      ALLOW_ADMIN_INITIATION_VIA_CLI: 'true' # Change this in production
       FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
       DJANGO_SECRET_KEY: secret # Change this in production
-      ENABLE_ADMIN_ACCESS_USER_PASS: 'true'
       # PREVENT_SIGNUP: 'true' # Uncomment to prevent additional signups
       # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true'
 
       # Enable Task Processor
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
+      PROMETHEUS_ENABLED: 'true'
 
       # Uncomment if you want to enable Google OAuth. Note this does not turn Google OAuth on. You still need to use
       # Flagsmith on Flagsmith to enable it - https://docs.flagsmith.com/deployment/#oauth_google
@@ -63,11 +62,15 @@ services:
 
   # The flagsmith_processor service is only needed if TASK_RUN_METHOD set to TASK_PROCESSOR
   # in the application environment
-  flagsmith_processor:
+  flagsmith-task-processor:
     image: docker.flagsmith.com/flagsmith/flagsmith:latest
     environment:
       DATABASE_URL: postgresql://postgres:password@postgres:5432/flagsmith
       USE_POSTGRES_FOR_ANALYTICS: 'true'
+      DJANGO_ALLOWED_HOSTS: '*'
+      PROMETHEUS_ENABLED: 'true'
+    ports:
+      - 8001:8000
     depends_on:
       - flagsmith
     command: run-task-processor

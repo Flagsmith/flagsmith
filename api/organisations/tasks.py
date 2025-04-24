@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import F, Max, Q
 from django.utils import timezone
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_recurring_task,
     register_task_handler,
 )
@@ -36,11 +36,8 @@ from .constants import (
     API_USAGE_GRACE_PERIOD,
 )
 from .subscriptions.constants import (
-    SCALE_UP,
-    SCALE_UP_V2,
-    STARTUP,
-    STARTUP_V2,
     SubscriptionCacheEntity,
+    SubscriptionPlanFamily,
 )
 from .task_helpers import (
     handle_api_usage_notification_for_organisation,
@@ -50,7 +47,7 @@ from .task_helpers import (
 logger = logging.getLogger(__name__)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def send_org_over_limit_alert(organisation_id: int) -> None:
     organisation = Organisation.objects.get(id=organisation_id)
 
@@ -67,7 +64,7 @@ def send_org_over_limit_alert(organisation_id: int) -> None:
     )
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def send_org_subscription_cancelled_alert(
     organisation_name: str,
     formatted_cancellation_date: str,
@@ -99,14 +96,14 @@ def update_organisation_subscription_information_influx_cache():  # type: ignore
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
         (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
     )
 
 
-@register_recurring_task(  # type: ignore[misc]
+@register_recurring_task(
     run_every=timedelta(hours=12),
 )
 def finish_subscription_cancellation() -> None:
@@ -211,7 +208,10 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id)
+        api_usage = get_current_api_usage(
+            organisation_id=organisation.id,
+            date_start=subscription_cache.current_billing_term_starts_at,
+        )
 
         # Grace period for organisations < 200% of usage.
         if (
@@ -228,7 +228,8 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         api_billings = OrganisationAPIBilling.objects.filter(
-            billed_at__gte=subscription_cache.current_billing_term_starts_at
+            organisation=organisation,
+            billed_at__gte=subscription_cache.current_billing_term_starts_at,
         )
         previous_api_overage = sum([ap.api_overage for ap in api_billings])
 
@@ -239,22 +240,23 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
             continue
 
         try:
-            if organisation.subscription.plan in {SCALE_UP, SCALE_UP_V2}:
-                add_100k_api_calls_scale_up(
-                    organisation.subscription.subscription_id,
-                    math.ceil(api_overage / 100_000),
-                )
-            elif organisation.subscription.plan in {STARTUP, STARTUP_V2}:
-                add_100k_api_calls_start_up(
-                    organisation.subscription.subscription_id,
-                    math.ceil(api_overage / 100_000),
-                )
-            else:
-                logger.error(
-                    f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
-                    f"for organisation {organisation.id}"
-                )
-                continue
+            match organisation.subscription.subscription_plan_family:
+                case SubscriptionPlanFamily.START_UP:
+                    add_100k_api_calls_start_up(
+                        organisation.subscription.subscription_id,
+                        math.ceil(api_overage / 100_000),
+                    )
+                case SubscriptionPlanFamily.SCALE_UP:
+                    add_100k_api_calls_scale_up(
+                        organisation.subscription.subscription_id,
+                        math.ceil(api_overage / 100_000),
+                    )
+                case _:
+                    logger.error(
+                        "Unknown subscription plan when trying to bill for overages"
+                        f" {organisation.id=} {organisation.name=} {organisation.subscription.plan=}"
+                    )
+                    continue
         except Exception:
             logger.error(
                 f"Unable to charge organisation {organisation.id} due to billing error",
@@ -342,7 +344,10 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
         OrganisationBreachedGracePeriod.objects.get_or_create(organisation=organisation)
 
         subscription_cache = organisation.subscription_information_cache
-        api_usage = get_current_api_usage(organisation.id)
+        api_usage = get_current_api_usage(
+            organisation_id=organisation.id,
+            date_start=now - timedelta(days=30),
+        )
         if api_usage / subscription_cache.allowed_30d_api_calls < 1.0:
             logger.info(
                 f"API use for organisation {organisation.id} has fallen to below limit, so not restricting use."

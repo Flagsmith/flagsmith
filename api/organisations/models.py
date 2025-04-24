@@ -138,10 +138,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         self.save()
 
     def is_auto_seat_upgrade_available(self) -> bool:
-        return (
-            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
-            and self.subscription.can_auto_upgrade_seats
-        )
+        return self.subscription.can_auto_upgrade_seats
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):  # type: ignore[no-untyped-def]
@@ -262,7 +259,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def can_auto_upgrade_seats(self) -> bool:
-        return self.plan in settings.AUTO_SEAT_UPGRADE_PLANS
+        return (
+            is_saas()
+            and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        )
 
     @property
     def is_free_plan(self) -> bool:

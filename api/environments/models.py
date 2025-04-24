@@ -38,20 +38,29 @@ from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoEnvironmentWrapper,
 )
+from environments.enums import EnvironmentDocumentCacheMode
 from environments.exceptions import EnvironmentHeaderNotPresentError
 from environments.managers import EnvironmentManager
+from environments.metrics import (
+    CACHE_HIT,
+    CACHE_MISS,
+    flagsmith_environment_document_cache_queries_total,
+)
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
-from util.mappers import map_environment_to_sdk_document
+from util.mappers import (
+    map_environment_to_environment_document,
+    map_environment_to_sdk_document,
+)
 from webhooks.models import AbstractBaseExportableWebhookModel
 
 logger = logging.getLogger(__name__)
 
 environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
-environment_document_cache = caches[settings.ENVIRONMENT_DOCUMENT_CACHE_LOCATION]
+environment_document_cache = caches[settings.CACHE_ENVIRONMENT_DOCUMENT_LOCATION]
 environment_segments_cache = caches[settings.ENVIRONMENT_SEGMENTS_CACHE_NAME]
 bad_environments_cache = caches[settings.BAD_ENVIRONMENTS_CACHE_LOCATION]
 
@@ -149,21 +158,35 @@ class Environment(
     class Meta:
         ordering = ["id"]
 
-    @hook(AFTER_CREATE)
-    def create_feature_states(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_CREATE)  # type: ignore[misc]
+    def create_feature_states(self) -> None:
         FeatureState.create_initial_feature_states_for_environment(environment=self)
 
-    @hook(AFTER_UPDATE)
-    def clear_environment_cache(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_UPDATE)  # type: ignore[misc]
+    def clear_environment_cache(self) -> None:
         # TODO: this could rebuild the cache itself (using an async task)
         environment_cache.delete(self.initial_value("api_key"))
 
-    @hook(AFTER_DELETE)
-    def delete_from_dynamo(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_UPDATE, when="api_key", has_changed=True)  # type: ignore[misc]
+    def update_environment_document_cache(self) -> None:
+        environment_document_cache.delete(self.initial_value("api_key"))
+        self.write_environment_documents(self.id)
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def delete_from_dynamo(self) -> None:
         if self.project.enable_dynamo_db and environment_wrapper.is_enabled:
             from environments.tasks import delete_environment_from_dynamo
 
             delete_environment_from_dynamo.delay(args=(self.api_key, self.id))
+
+    @hook(AFTER_DELETE)  # type: ignore[misc]
+    def delete_environment_document_from_cache(self) -> None:
+        if (
+            settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+            or settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
+        ):
+            environment_document_cache.delete(self.api_key)
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
@@ -213,39 +236,44 @@ class Environment(
         ).get(api_key=environment_key)
 
     @classmethod
-    def get_from_cache(cls, api_key):  # type: ignore[no-untyped-def]
-        try:
-            if not api_key:
-                logger.warning("Requested environment with null api_key.")
-                return None
+    def get_from_cache(cls, api_key: str | None) -> "Environment | None":
+        if not api_key:
+            logger.warning("Requested environment with null api_key.")
+            return None
 
-            if cls.is_bad_key(api_key):
-                return None
+        if cls.is_bad_key(api_key):
+            return None
 
-            environment = environment_cache.get(api_key)
-            if not environment:
-                select_related_args = (
-                    "project",
-                    "project__organisation",
-                    *IDENTITY_INTEGRATIONS_RELATION_NAMES,
-                )
-                base_qs = cls.objects.select_related(*select_related_args).defer(
-                    "description"
-                )
-                qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
-                qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
+        environment: "Environment" = environment_cache.get(api_key)
+        if not environment:
+            select_related_args = (
+                "project",
+                "project__organisation",
+                *IDENTITY_INTEGRATIONS_RELATION_NAMES,
+            )
+            base_qs = cls.objects.select_related(*select_related_args).defer(
+                "description"
+            )
+            qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
+            qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
 
+            try:
                 environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
+            except cls.DoesNotExist:
+                cls.set_bad_key(api_key)
+                logger.info("Environment with api_key %s does not exist" % api_key)
+                return None
+            else:
                 environment_cache.set(
-                    api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
+                    api_key,
+                    environment,
+                    timeout=settings.ENVIRONMENT_CACHE_SECONDS,
                 )
-            return environment
-        except cls.DoesNotExist:
-            cls.set_bad_key(api_key)
-            logger.info("Environment with api_key %s does not exist" % api_key)
+
+        return environment
 
     @classmethod
-    def write_environments_to_dynamodb(
+    def write_environment_documents(
         cls,
         environment_id: int = None,  # type: ignore[assignment]
         project_id: int = None,  # type: ignore[assignment]
@@ -281,17 +309,31 @@ class Environment(
         # project (which should always be the case). Since we're working with fairly
         # small querysets here, this shouldn't have a noticeable impact on performance.
         project: Project | None = getattr(environments[0], "project", None)
-        for environment in environments[1:]:
-            if not environment.project == project:
-                raise RuntimeError("Environments must all belong to the same project.")
-
-        if not all([project, project.enable_dynamo_db, environment_wrapper.is_enabled]):  # type: ignore[union-attr]
+        if project is None:  # pragma: no cover
             return
 
-        environment_wrapper.write_environments(environments)
+        for environment in environments[1:]:
+            if not environment.project == project:  # pragma: no cover
+                raise RuntimeError("Environments must all belong to the same project.")
 
-        if project.edge_v2_environments_migrated and environment_v2_wrapper.is_enabled:  # type: ignore[union-attr]
-            environment_v2_wrapper.write_environments(environments)
+        if project.enable_dynamo_db and environment_wrapper.is_enabled:
+            environment_wrapper.write_environments(environments)
+
+            if (
+                project.edge_v2_environments_migrated
+                and environment_v2_wrapper.is_enabled
+            ):
+                environment_v2_wrapper.write_environments(environments)
+        elif (
+            settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+        ):
+            environment_document_cache.set_many(
+                {
+                    e.api_key: map_environment_to_environment_document(e)
+                    for e in environments
+                }
+            )
 
     def get_feature_state(
         self,
@@ -364,7 +406,11 @@ class Environment(
         cls,
         api_key: str,
     ) -> dict[str, typing.Any]:
-        if settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0:
+        if (
+            settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
+            or settings.CACHE_ENVIRONMENT_DOCUMENT_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+        ):
             return cls._get_environment_document_from_cache(api_key)
         return cls._get_environment_document_from_db(api_key)
 
@@ -386,9 +432,14 @@ class Environment(
         api_key: str,
     ) -> dict[str, typing.Any]:
         environment_document = environment_document_cache.get(api_key)
-        if not environment_document:
+        if not (cache_hit := environment_document is not None):
             environment_document = cls._get_environment_document_from_db(api_key)
             environment_document_cache.set(api_key, environment_document)
+
+        flagsmith_environment_document_cache_queries_total.labels(
+            result=CACHE_HIT if cache_hit else CACHE_MISS,
+        ).inc()
+
         return environment_document  # type: ignore[no-any-return]
 
     @classmethod
@@ -405,6 +456,7 @@ class Environment(
                         "feature",
                         "feature_state_value",
                         "identity",
+                        "environment_feature_version",
                         "identity__environment",
                     ).prefetch_related(
                         Prefetch(

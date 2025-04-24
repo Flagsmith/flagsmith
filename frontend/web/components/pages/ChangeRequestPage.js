@@ -332,7 +332,8 @@ const ChangeRequestsPage = class extends Component {
     return (
       <Permission
         level='environment'
-        permission={Utils.getApproveChangeRequestPermission(true)}
+        permission={'APPROVE_CHANGE_REQUEST'}
+        tags={projectFlag?.tags}
         id={this.props.match.params.environmentId}
       >
         {({ permission: approvePermission }) => (

@@ -264,6 +264,9 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             <Button
               theme='primary'
               className='mt-2'
+              disabled={
+                !metadataFieldsAssociatedtoEntity?.length || !metadataChanged
+              }
               onClick={() => {
                 updateEnvironment({
                   body: {
