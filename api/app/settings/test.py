@@ -1,8 +1,6 @@
 from app.settings.common import *  # noqa
 from app.settings.common import REST_FRAMEWORK
 
-ENVIRONMENT_CACHE_SECONDS = 0
-
 # We dont want to track tests
 ENABLE_TELEMETRY = False
 MAX_PROJECTS_IN_FREE_PLAN = 10

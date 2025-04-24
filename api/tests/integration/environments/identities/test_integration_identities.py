@@ -211,8 +211,8 @@ def test_get_feature_states_for_identity_only_makes_one_query_to_get_mv_feature_
         variant_2_value,
     )
 
-    # Then the same number of queries are made
-    with django_assert_num_queries(6):
+    # Then one fewer db queries are made (since the environment is now cached)
+    with django_assert_num_queries(5):
         second_identity_response = sdk_client.get(url)
 
     # Finally, we check that the requests were successful and we got the correct number

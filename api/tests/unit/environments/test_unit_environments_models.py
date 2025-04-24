@@ -11,7 +11,6 @@ from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.asserts import assertQuerysetEqual as assert_queryset_equal
-from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from audit.models import AuditLog
@@ -201,7 +200,6 @@ def test_environment_clone_clones_multivariate_feature_state_values(
 def test_environment_get_from_cache_stores_environment_in_cache_on_success(
     mock_cache: MagicMock,
     environment: Environment,
-    settings: SettingsWrapper,
 ) -> None:
     # Given
     mock_cache.get.return_value = None
@@ -211,9 +209,7 @@ def test_environment_get_from_cache_stores_environment_in_cache_on_success(
 
     # Then
     assert cached_environment == environment
-    mock_cache.set.assert_called_with(
-        environment.api_key, environment, timeout=settings.ENVIRONMENT_CACHE_SECONDS
-    )
+    mock_cache.set.assert_called_with(environment.api_key, environment, timeout=60)
 
 
 def test_environment_get_from_cache_returns_None_if_no_matching_environment(
@@ -344,14 +340,9 @@ def test_existence_of_multiple_environment_api_keys_does_not_break_get_from_cach
     )
 
 
-def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(
-    environment: Environment,
-    environment_api_key: EnvironmentAPIKey,
-    settings: SettingsWrapper,
-) -> None:
-    # Given
-    settings.ENVIRONMENT_CACHE_SECONDS = 60
-
+def test_get_from_cache_sets_the_cache_correctly_with_environment_api_key(  # type: ignore[no-untyped-def]
+    environment, environment_api_key, mocker
+):
     # When
     returned_environment = Environment.get_from_cache(environment_api_key.key)
 
