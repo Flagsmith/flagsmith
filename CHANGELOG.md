@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.175.0](https://github.com/Flagsmith/flagsmith/compare/v2.174.0...v2.175.0) (2025-04-23)
+
+
+### Features
+
+* MetadataModelRequirement uses organisation ID as objectID  (✅ relies on [#5325](https://github.com/Flagsmith/flagsmith/issues/5325) - deployed) ([#5326](https://github.com/Flagsmith/flagsmith/issues/5326)) ([8dc92c3](https://github.com/Flagsmith/flagsmith/commit/8dc92c3ef9ede001377a3c8ee9a6d10794f08824))
+* unsaved warning modal in environment settings ([#5337](https://github.com/Flagsmith/flagsmith/issues/5337)) ([dbf8d6c](https://github.com/Flagsmith/flagsmith/commit/dbf8d6c568ad67164e3e708a0fa82c40a97591f9))
+
+
+### Bug Fixes
+
+* order of onboarding requests ([#5376](https://github.com/Flagsmith/flagsmith/issues/5376)) ([2650e1d](https://github.com/Flagsmith/flagsmith/commit/2650e1d08441370ccc1d644b7e9f61aa5fd9770f))
+* public urls ([#5319](https://github.com/Flagsmith/flagsmith/issues/5319)) ([4c5043d](https://github.com/Flagsmith/flagsmith/commit/4c5043dd3b7b1b0a5524ed452a577af84b100046))
+
 ## [2.174.0](https://github.com/Flagsmith/flagsmith/compare/v2.173.1...v2.174.0) (2025-04-22)
 
 
