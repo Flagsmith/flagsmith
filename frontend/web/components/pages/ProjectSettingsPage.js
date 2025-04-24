@@ -613,15 +613,14 @@ const ProjectSettingsPage = class extends Component {
                       <WarningMessage
                         warningMessage={
                           <span>
-                            This tab is now located in the Organisation Settings
-                            page.{' '}
+                            Custom fields have been moved to {' '}
                             <a
                               href={`/organisation/${
                                 AccountStore.getOrganisation()?.id
                               }/settings?tab=custom-fields`}
                               rel='noreferrer'
                             >
-                              Click here to go there
+                              Organisation Settings
                             </a>
                             .
                           </span>
