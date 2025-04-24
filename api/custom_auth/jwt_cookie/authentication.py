@@ -30,7 +30,7 @@ class JWTCookieAuthentication(JWTAuthentication):
             except (InvalidToken, TokenError, AuthenticationFailed):
                 pass
 
-        if raw_refresh_token:
+        if raw_refresh_token := request.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY):
             try:
                 validated_refresh_token = self.get_validated_token(raw_refresh_token)  # type: ignore[arg-type]
                 return self.get_user(validated_refresh_token), validated_refresh_token  # type: ignore[return-value]
