@@ -392,14 +392,10 @@ def test_change_request_audit_logs_does_not_update_updated_at(environment):  # t
 
 def test_save_environment_clears_environment_cache(mocker, project):  # type: ignore[no-untyped-def]
     # Given
-    mock_environment_cache = mocker.patch("environments.models.environment_cache")
+    mock_environment_cache = mocker.patch("environments.tasks.environment_cache")
     environment = Environment.objects.create(name="test environment", project=project)
 
-    # perform an update of the name to verify basic functionality
-    environment.name = "updated"
-    environment.save()
-
-    # and update the api key to verify that the original api key is used to clear cache
+    # update the api key to verify that the original api key is used to clear cache
     old_key = copy(environment.api_key)
     new_key = "some-new-key"
     environment.api_key = new_key
@@ -409,8 +405,8 @@ def test_save_environment_clears_environment_cache(mocker, project):  # type: ig
 
     # Then
     mock_calls = mock_environment_cache.delete.mock_calls
-    assert len(mock_calls) == 2
-    assert mock_calls[0][1][0] == mock_calls[1][1][0] == old_key
+    assert len(mock_calls) == 1
+    assert mock_calls[0][1][0] == old_key
 
 
 @pytest.mark.parametrize(

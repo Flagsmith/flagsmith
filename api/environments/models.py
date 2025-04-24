@@ -164,8 +164,11 @@ class Environment(
 
     @hook(AFTER_UPDATE)  # type: ignore[misc]
     def clear_environment_cache(self) -> None:
-        # TODO: this could rebuild the cache itself (using an async task)
-        environment_cache.delete(self.initial_value("api_key"))
+        from environments.tasks import update_environment_caches
+
+        update_environment_caches.delay(
+            kwargs={"environment_api_key": self.initial_value("api_key")}
+        )
 
     @hook(AFTER_UPDATE, when="api_key", has_changed=True)  # type: ignore[misc]
     def update_environment_document_cache(self) -> None:
@@ -246,19 +249,8 @@ class Environment(
 
         environment: "Environment" = environment_cache.get(api_key)
         if not environment:
-            select_related_args = (
-                "project",
-                "project__organisation",
-                *IDENTITY_INTEGRATIONS_RELATION_NAMES,
-            )
-            base_qs = cls.objects.select_related(*select_related_args).defer(
-                "description"
-            )
-            qs_for_embedded_api_key = base_qs.filter(api_key=api_key)
-            qs_for_fk_api_key = base_qs.filter(api_keys__key=api_key)
-
             try:
-                environment = qs_for_embedded_api_key.union(qs_for_fk_api_key).get()
+                environment = cls.objects.get_for_cache(api_key)
             except cls.DoesNotExist:
                 cls.set_bad_key(api_key)
                 logger.info("Environment with api_key %s does not exist" % api_key)

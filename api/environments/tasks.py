@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.cache import caches
 from task_processor.decorators import (
     register_task_handler,
 )
@@ -16,10 +18,34 @@ from sse import (  # type: ignore[attr-defined]
     send_environment_update_message_for_project,
 )
 
+environment_cache = caches[settings.ENVIRONMENT_CACHE_NAME]
+
 
 @register_task_handler(priority=TaskPriority.HIGH)
 def rebuild_environment_document(environment_id: int) -> None:
     Environment.write_environment_documents(environment_id=environment_id)
+
+
+@register_task_handler(priority=TaskPriority.HIGH)
+def update_environment_caches(environment_api_key: str) -> None:
+    try:
+        environment = Environment.objects.get_for_cache(api_key=environment_api_key)
+
+        # only rebuild the caches for those that previously existed to avoid
+        # unnecessarily caching data for unused keys.
+        cached_environments_by_api_key = environment_cache.get_many(
+            [eak.key for eak in environment.api_keys.all()]
+        )
+        environment_cache.set_many(
+            {
+                environment.api_key: environment,
+                **{key: environment for key in cached_environments_by_api_key},
+            }
+        )
+    except Environment.DoesNotExist:
+        # unfortunately, since the EnvironmentAPIKey model is not soft-deleted
+        # we cannot clear those caches here and instead rely on the cache timeout
+        environment_cache.delete(environment_api_key)
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
