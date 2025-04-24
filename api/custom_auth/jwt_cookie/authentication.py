@@ -18,7 +18,6 @@ class JWTCookieAuthentication(JWTAuthentication):
         return f'Cookie realm="{self.www_authenticate_realm}"'
 
     def authenticate(self, request: Request) -> tuple[AuthUser, Token] | None:
-
         if raw_access_token := request.COOKIES.get(ACCESS_TOKEN_COOKIE_KEY):
             try:
                 # TODO https://github.com/jazzband/djangorestframework-simplejwt/pull/889
