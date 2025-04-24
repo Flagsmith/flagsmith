@@ -2,7 +2,7 @@ import argparse
 import socket
 
 parser = argparse.ArgumentParser(
-    description="Check if the API is running and accessible.",
+    description="Check if the API is able to accept local TCP connections.",
 )
 parser.add_argument(
     "--port",
