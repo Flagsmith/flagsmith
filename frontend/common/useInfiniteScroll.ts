@@ -12,7 +12,7 @@ const useInfiniteScroll = <
 >(
   useGetDataListQuery: UseQuery<QueryDefinition<REQ, any, any, RES>>,
   queryParameters: REQ,
-  throttle = 100,
+  throttle = 500,
   queryOptions?: SubscriptionOptions & {
     skip?: boolean
     refetchOnMountOrArgChange?: boolean | number

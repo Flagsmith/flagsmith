@@ -11,7 +11,7 @@ export default function useSearchThrottle(
   const searchItems = useThrottle((search: string) => {
     setSearch(search)
     cb?.()
-  }, 100)
+  }, 500)
   useEffect(() => {
     if (firstRender.current && !searchInput) {
       firstRender.current = false
@@ -26,5 +26,5 @@ export default function useSearchThrottle(
 /* Usage example:
 const searchItems =  useThrottle((search:string) => {
   doThing()
-}, 100)
+}, 500)
 */
