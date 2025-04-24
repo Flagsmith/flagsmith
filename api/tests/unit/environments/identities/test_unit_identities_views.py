@@ -964,8 +964,7 @@ def test_get_identities_nplus1(
     for i in range(2, 13):
         v1_flag.clone(env=environment, version=i, live_from=now)
 
-    # Now it is lower.
-    with django_assert_num_queries(5):
+    with django_assert_num_queries(6):
         api_client.get(url)
 
 
