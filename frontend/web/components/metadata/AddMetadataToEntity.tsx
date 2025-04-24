@@ -249,11 +249,11 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
               No custom fields configured for {entity}s. Add custom fields in
               your{' '}
               <a
-                href={`/project/${projectId}/settings?tab=custom-fields`}
+                href={`/organisation/${organisationId}/settings?tab=custom-fields`}
                 target='_blank'
                 rel='noreferrer'
               >
-                Project Settings
+                Organisation Settings
               </a>
               .
             </FormGroup>

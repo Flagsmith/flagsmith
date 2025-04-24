@@ -94,7 +94,7 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
   const metadataContentType: ContentType =
   supportedContentTypes &&
   Utils.getContentType(supportedContentTypes, 'model', MetadataContentType.ORGANISATION)
-  
+
   useEffect(() => {
     if (data && !isLoading) {
       setName(data.name)
