@@ -21,7 +21,7 @@ class JWTCookieAuthentication(JWTAuthentication):
         raw_access_token = request.COOKIES.get(ACCESS_TOKEN_COOKIE_KEY)
         raw_refresh_token = request.COOKIES.get(REFRESH_TOKEN_COOKIE_KEY)
 
-        if raw_access_token:
+        if raw_access_token := request.COOKIES.get(ACCESS_TOKEN_COOKIE_KEY):
             try:
                 # TODO https://github.com/jazzband/djangorestframework-simplejwt/pull/889
                 validated_access_token = self.get_validated_token(raw_access_token)  # type: ignore[arg-type]
