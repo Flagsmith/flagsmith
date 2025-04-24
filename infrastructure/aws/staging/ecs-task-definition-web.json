@@ -20,7 +20,7 @@
             "healthCheck": {
                 "command": [
                     "CMD-SHELL",
-                    "python scripts/healthcheck.py"
+                    "flagsmith healthcheck tcp"
                 ],
                 "interval": 10,
                 "timeout": 2,
