@@ -1590,22 +1590,22 @@ def test_clone_segment(
     assert cloned_metadata.id != metadata.id
 
 
-# def test_clone_segment_without_name_should_fail(
-#     project: Project,
-#     admin_client: APIClient,
-#     segment: Segment,
-# ) -> None:
-#     # Given
-#     url = reverse(
-#         "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
-#     )
-#     data = {
-#         "name": "",
-#     }
-#     # When
-#     response = admin_client.post(
-#         url, data=json.dumps(data), content_type="application/json"
-#     )
+def test_clone_segment_without_name_should_fail(
+    project: Project,
+    admin_client: APIClient,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
+    )
+    data = {
+        "name": "",
+    }
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
-#     # Then
-#     assert response.status_code == status.HTTP_400_BAD_REQUEST
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
