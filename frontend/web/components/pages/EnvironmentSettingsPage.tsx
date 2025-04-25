@@ -188,7 +188,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     }
 
     if (
-      environmentData?.use_v2_feature_versioning &&
+      environmentData?.use_v2_feature_versioning && !!currentEnv &&
       !currentEnv?.use_v2_feature_versioning
     ) {
       setCurrentEnv((currentEnvState) => {
@@ -205,6 +205,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     isFetchingEnvironment,
     environmentData,
     isSuccessEnvironment,
+    currentEnv,
     currentEnv?.use_v2_feature_versioning,
     ])
 
@@ -270,7 +271,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       return
     }
     const editedEnv = { ...currentEnv, ...newEnv }
-
+    
     AppActions.editEnv(
       Object.assign({}, currentEnv, {
         allow_client_traits: !!editedEnv?.allow_client_traits,
@@ -651,9 +652,10 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                               {
                                 minimum_change_request_approvals: value
                                   ? 0
-                                  : undefined,
+                                  : null,
                               },
                               true,
+                              true
                             )
                           }
                         />
