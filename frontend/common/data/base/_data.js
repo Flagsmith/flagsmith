@@ -1,4 +1,6 @@
 import Project from 'common/project'
+import TokenManager from 'common/auth/TokenManager'
+
 const getQueryString = (params) => {
   const esc = encodeURIComponent
   return Object.keys(params)
@@ -78,7 +80,6 @@ module.exports = {
     return this._request('delete', url, data, headers)
   },
   fetchWithInterceptor(url, options) {
-    const originalFetch = fetch
     const isExternal = !url.startsWith(Project.api)
     const excludedUrls = [
       `${Project.api}auth/token/refresh/`,
@@ -87,16 +88,16 @@ module.exports = {
     const isExcluded = excludedUrls.includes(url)
     const isCookieAuthEnabled = Project.cookieAuthEnabled
 
-    return originalFetch(url, options).then((response) => {
+    return fetch(url, options).then((response) => {
       if (
         isCookieAuthEnabled &&
         response.status === 401 &&
         !isExternal &&
         !isExcluded
       ) {
-        return this.post(`${Project.api}auth/token/refresh/`)
+        return TokenManager.refreshJWTToken(fetch)
           .then(() => {
-            return originalFetch(url, options)
+            return fetch(url, options)
           })
           .catch((error) => {
             AppActions.setUser(null)

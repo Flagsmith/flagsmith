@@ -10,6 +10,7 @@ import {
 } from '@reduxjs/toolkit/dist/query/fetchBaseQuery'
 import { CreateApiOptions } from '@reduxjs/toolkit/dist/query/createApi'
 import { StoreStateType } from './store'
+import TokenManager from './auth/TokenManager'
 
 const Project = require('./project')
 const _data = require('./data/base/_data.js')
@@ -21,24 +22,6 @@ const excludedEndpoints = [
   'createResendConfirmationEmail',
   'createForgotPassword',
 ]
-
-const refreshAccessToken = async () => {
-  try {
-    const response = await fetch(`${Project.api}auth/token/refresh/`, {
-      credentials: 'include',
-      method: 'POST',
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to refresh token')
-    }
-
-    return
-  } catch (error) {
-    console.error('Token refresh failed', error)
-    throw error
-  }
-}
 
 export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
   const baseQuery = fetchBaseQuery({
@@ -72,7 +55,7 @@ export const baseApiOptions = (queryArgs?: Partial<FetchBaseQueryArgs>) => {
       result.error &&
       result.error.status === 401
     ) {
-      await refreshAccessToken()
+      await TokenManager.refreshJWTToken()
       return baseQuery(args, api, extraOptions)
     }
     return result

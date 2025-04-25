@@ -49,7 +49,7 @@ class JWTCookieTokenRefreshView(TokenRefreshView):
 
         response.set_cookie(
             REFRESH_TOKEN_COOKIE_KEY,
-            str(serializer.validated_data["refresh"])
+            str(serializer.validated_data["refresh"]),
             httponly=True,
             secure=settings.USE_SECURE_COOKIES,
             samesite=settings.COOKIE_SAME_SITE,
