@@ -34,7 +34,7 @@ const ConfirmCloneSegment: FC<ConfirmCloneSegmentType> = ({
           className='mb-0'
           inputProps={{
             className: 'full-width',
-            name: 'confirm-segment-name',
+            name: 'clone-segment-name',
           }}
           value={segmentCloneName}
           title='New Segment Name*'
