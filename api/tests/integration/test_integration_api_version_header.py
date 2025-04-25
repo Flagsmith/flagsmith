@@ -15,7 +15,7 @@ def clear_lru_caches() -> None:
     "url",
     [
         "/robots.txt",
-        # TODO: Add other GET-only URLs
+        "/api/v1/auth/users/me/",
     ],
 )
 @pytest.mark.parametrize(
@@ -27,7 +27,7 @@ def clear_lru_caches() -> None:
     ],
 )
 def test_api_version_is_added_to_success_response_headers(
-    client: APIClient,
+    admin_client: APIClient,
     expected_version: str,
     fs: FakeFilesystem,
     url: str,
@@ -35,17 +35,11 @@ def test_api_version_is_added_to_success_response_headers(
 ) -> None:
     fs.create_file(".versions.json", contents=version_file_contents)
 
-    response = client.get(url)
+    response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
     assert response.headers["Flagsmith-Version"] == expected_version
 
 
-@pytest.mark.parametrize(
-    "url",
-    [
-        "/wat",
-    ],
-)
 @pytest.mark.parametrize(
     "version_file_contents, expected_version",
     [
@@ -58,11 +52,10 @@ def test_api_version_is_added_to_error_response_headers(
     client: APIClient,
     expected_version: str,
     fs: FakeFilesystem,
-    url: str,
     version_file_contents: str,
 ) -> None:
     fs.create_file(".versions.json", contents=version_file_contents)
 
-    response = client.get(url)
+    response = client.get("/wat")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.headers["Flagsmith-Version"] == expected_version
