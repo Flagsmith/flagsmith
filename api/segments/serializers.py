@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from typing import Any, cast
+
 from segments.models import Segment
-from common.segments.serializers import SegmentSerializer
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
@@ -20,21 +19,3 @@ class SegmentListQuerySerializer(serializers.Serializer):  # type: ignore[type-a
         help_text="Optionally provide the id of an identity to get only the segments they match",
     )
     include_feature_specific = serializers.BooleanField(required=False, default=True)
-
-class CloneSegmentSerializer(SegmentSerializer):
-    class Meta:
-        model = Segment
-        fields = ("name", )
-
-    def validate(self, attrs: dict[str, Any]) -> dict[str,Any]:
-        if not attrs.get("name"):
-            raise serializers.ValidationError("Name is required to clone a segment")
-        return attrs
-
-    def create(self, validated_data: dict[str, Any]) -> Segment: 
-        name = validated_data.get("name")
-        source_segment = self.context.get("source_segment")
-        assert source_segment is not None, "Source segment is required to clone a segment"
-        return cast(Segment, source_segment.clone(
-            name
-        ))

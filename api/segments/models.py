@@ -14,7 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 from flag_engine.segments import constants
-from django.contrib.contenttypes.models import ContentType
+
 from audit.constants import (
     SEGMENT_CREATED_MESSAGE,
     SEGMENT_DELETED_MESSAGE,
@@ -147,50 +147,6 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
-    def clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
-        cloned_rules = []
-        for rule in self.rules.all():
-            cloned_rule = rule.deep_clone(cloned_segment)
-            cloned_rules.append(cloned_rule)
-        cloned_segment.refresh_from_db()
-        assert (
-            len(self.rules.all())
-            == len(cloned_rules)
-            == len(cloned_segment.rules.all())
-        ), "Mismatch during rules creation"
-
-        return cloned_rules
-
-    def clone_segment_metadata(self, cloned_segment: "Segment") -> list["Metadata"]:
-        cloned_metadata = []
-        for metadata in self.metadata.all():
-            cloned_metadata.append(metadata.deep_clone_for_new_entity(cloned_segment, ContentType.objects.get_for_model(cloned_segment)))
-        cloned_segment.refresh_from_db()
-        assert (
-            len(self.metadata.all())
-            == len(cloned_metadata)
-            == len(cloned_segment.metadata.all())
-        ), "Mismatch during metadata creation"
-
-        return cloned_metadata
-
-
-    def clone(self, name: str) -> "Segment":
-        cloned_segment = Segment(
-            name=name,
-            version_of=None,
-            uuid=uuid.uuid4(),
-            description=self.description,
-            change_request=self.change_request,
-            project=self.project,
-            feature=self.feature,
-        )
-        cloned_segment.save()
-        self.clone_segment_rules(cloned_segment)
-        self.clone_segment_metadata(cloned_segment)
-        cloned_segment.refresh_from_db()
-        return cloned_segment
-
     def shallow_clone(
         self,
         name: str,
@@ -221,7 +177,18 @@ class Segment(
         self.version += 1  # type: ignore[operator]
         self.save_without_historical_record()
 
-        self.clone_segment_rules(cloned_segment)
+        cloned_rules = []
+        for rule in self.rules.all():
+            cloned_rule = rule.deep_clone(cloned_segment)
+            cloned_rules.append(cloned_rule)
+
+        cloned_segment.refresh_from_db()
+
+        assert (
+            len(self.rules.all())
+            == len(cloned_rules)
+            == len(cloned_segment.rules.all())
+        ), "Mismatch during rules creation"
 
         return cloned_segment
 
