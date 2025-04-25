@@ -853,9 +853,7 @@ SIMPLE_JWT = {
         hours=env.int("COOKIE_AUTH_JWT_REFRESH_TOKEN_LIFETIME", default=24)
     ),
     "SIGNING_KEY": env.str("COOKIE_AUTH_JWT_SIGNING_KEY", default=SECRET_KEY),
-    "ROTATE_REFRESH_TOKENS": env.bool(
-        "COOKIE_AUTH_JWT_ROTATE_REFRESH_TOKENS", default=False
-    ),
+    "ROTATE_REFRESH_TOKENS": True,
 }
 
 # Github OAuth credentials
