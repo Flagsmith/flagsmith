@@ -1506,6 +1506,7 @@ def test_clone_segment(
     project: Project,
     admin_client: APIClient,
     source_segment: Segment,
+    required_a_segment_metadata_field: MetadataModelField,
 ) -> None:
     # Given
     url = reverse(
@@ -1515,22 +1516,32 @@ def test_clone_segment(
     data = {
         "name": new_segment_name,
     }
+    # Preparing the rules
     segment_rule = SegmentRule.objects.create(
-        segment=source_segment,  # attach to source_segment instead of using fixture
+        segment=source_segment,
         type=SegmentRule.ALL_RULE,
     )
-
     sub_rule = SegmentRule.objects.create(
         rule=segment_rule,
         type=SegmentRule.ALL_RULE,
     )
 
+    # Preparing the conditions
     created_condition = Condition.objects.create(
         rule=sub_rule,
         property="foo",
         operator=EQUAL,
         value="bar",
         created_with_segment=False,
+    )
+
+    # Preparing the metadata
+    segment_content_type = ContentType.objects.get_for_model(source_segment)
+    metadata = Metadata.objects.create(
+        object_id=source_segment.id,
+        content_type=segment_content_type,
+        model_field=required_a_segment_metadata_field,
+        field_value="test-clone-segment-metadata"
     )
 
     # When
@@ -1571,3 +1582,29 @@ def test_clone_segment(
     assert cloned_condition.property == created_condition.property
     assert cloned_condition.operator == created_condition.operator
     assert cloned_condition.value == created_condition.value
+    
+    # Testing cloning of metadata
+    cloned_metadata = cloned_segment.metadata.first()
+    assert cloned_metadata.model_field == metadata.model_field
+    assert cloned_metadata.field_value == metadata.field_value
+    assert cloned_metadata.id != metadata.id
+
+# def test_clone_segment_without_name_should_fail(
+#     project: Project,
+#     admin_client: APIClient,
+#     segment: Segment,
+# ) -> None:
+#     # Given
+#     url = reverse(
+#         "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
+#     )
+#     data = {
+#         "name": "",
+#     }
+#     # When
+#     response = admin_client.post(
+#         url, data=json.dumps(data), content_type="application/json"
+#     )
+
+#     # Then
+#     assert response.status_code == status.HTTP_400_BAD_REQUEST
