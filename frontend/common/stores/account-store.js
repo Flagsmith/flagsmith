@@ -268,13 +268,14 @@ const controller = {
             Constants.events.REFERRER_REGISTERED(API.getReferrer().utm_source),
           )
         }
-        if (contact_consent_given) {
-          await createOnboardingSupportOptIn(getStore(), {})
-        }
         if (organisation_name) {
           await controller.createOrganisation(organisation_name, true)
         }
         store.isSaving = false
+
+        if (contact_consent_given) {
+          await createOnboardingSupportOptIn(getStore(), {})
+        }
         await controller.onLogin()
 
         if (user.superuser) {

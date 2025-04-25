@@ -20,7 +20,7 @@ class APIUsageCache:
 
     def _flush(self) -> None:
         for key, value in self._cache.items():
-            track_request.delay(
+            track_request.run_in_thread(
                 kwargs={
                     "resource": key[0].value,
                     "host": key[1],
@@ -46,7 +46,7 @@ class APIUsageCache:
                 self._cache[key] += 1
             if (
                 timezone.now() - self._last_flushed_at
-            ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
+            ).seconds > settings.API_USAGE_CACHE_SECONDS:
                 self._flush()
 
 
