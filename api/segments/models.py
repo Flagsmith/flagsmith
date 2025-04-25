@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -14,7 +15,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     hook,
 )
 from flag_engine.segments import constants
-from django.contrib.contenttypes.models import ContentType
+
 from audit.constants import (
     SEGMENT_CREATED_MESSAGE,
     SEGMENT_DELETED_MESSAGE,
@@ -164,7 +165,11 @@ class Segment(
     def clone_segment_metadata(self, cloned_segment: "Segment") -> list["Metadata"]:
         cloned_metadata = []
         for metadata in self.metadata.all():
-            cloned_metadata.append(metadata.deep_clone_for_new_entity(cloned_segment, ContentType.objects.get_for_model(cloned_segment)))
+            cloned_metadata.append(
+                metadata.deep_clone_for_new_entity(
+                    cloned_segment, ContentType.objects.get_for_model(cloned_segment)
+                )
+            )
         cloned_segment.refresh_from_db()
         assert (
             len(self.metadata.all())
@@ -173,7 +178,6 @@ class Segment(
         ), "Mismatch during metadata creation"
 
         return cloned_metadata
-
 
     def clone(self, name: str) -> "Segment":
         cloned_segment = Segment(

@@ -1500,7 +1500,7 @@ def test_include_feature_specific_query_filter__false(
     [
         (lazy_fixture("segment")),
         (lazy_fixture("feature_specific_segment")),
-    ]
+    ],
 )
 def test_clone_segment(
     project: Project,
@@ -1509,8 +1509,7 @@ def test_clone_segment(
 ) -> None:
     # Given
     url = reverse(
-        "api-v1:projects:project-segments-clone",
-        args=[project.id, source_segment.id]
+        "api-v1:projects:project-segments-clone", args=[project.id, source_segment.id]
     )
     new_segment_name = "cloned_segment"
     data = {
@@ -1520,12 +1519,12 @@ def test_clone_segment(
         segment=source_segment,  # attach to source_segment instead of using fixture
         type=SegmentRule.ALL_RULE,
     )
-    
+
     sub_rule = SegmentRule.objects.create(
         rule=segment_rule,
         type=SegmentRule.ALL_RULE,
     )
-    
+
     created_condition = Condition.objects.create(
         rule=sub_rule,
         property="foo",
@@ -1536,19 +1535,17 @@ def test_clone_segment(
 
     # When
     response = admin_client.post(
-        url,
-        data=json.dumps(data),
-        content_type="application/json"
+        url, data=json.dumps(data), content_type="application/json"
     )
 
     # Then
     assert response.status_code == status.HTTP_201_CREATED
-    
+
     response_data = response.json()
     assert response_data["name"] == new_segment_name
     assert response_data["project"] == project.id
     assert response_data["id"] != source_segment.id
-    
+
     # Testing cloned segment main attributes
     cloned_segment = Segment.objects.get(id=response_data["id"])
     assert cloned_segment.name == new_segment_name
@@ -1564,14 +1561,13 @@ def test_clone_segment(
 
     cloned_top_rule = cloned_segment.rules.first()
     cloned_sub_rule = cloned_top_rule.rules.first()
-    
+
     assert cloned_top_rule.type == segment_rule.type
     assert cloned_sub_rule.type == segment_rule.type
 
     # Testing cloning of sub-rules conditions
     cloned_condition = cloned_sub_rule.conditions.first()
-    
+
     assert cloned_condition.property == created_condition.property
     assert cloned_condition.operator == created_condition.operator
     assert cloned_condition.value == created_condition.value
-
