@@ -43,7 +43,7 @@ class JWTCookieTokenRefreshView(TokenRefreshView):
             str(serializer.validated_data["access"]),
             httponly=True,
             secure=settings.USE_SECURE_COOKIES,
-            samesite=settings.COOKIE_SAME_SITE,
+            samesite=settings.COOKIE_SAME_SITE,  # type: ignore[arg-type]
             max_age=int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds()),
         )
 
@@ -52,7 +52,7 @@ class JWTCookieTokenRefreshView(TokenRefreshView):
             str(serializer.validated_data["refresh"]),
             httponly=True,
             secure=settings.USE_SECURE_COOKIES,
-            samesite=settings.COOKIE_SAME_SITE,
+            samesite=settings.COOKIE_SAME_SITE,  # type: ignore[arg-type]
             max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
         )
 

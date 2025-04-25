@@ -25,7 +25,7 @@ def authorise_response(user: FFAdminUser, response: Response) -> Response:
         str(refresh_token),
         httponly=True,
         secure=settings.USE_SECURE_COOKIES,
-        samesite=settings.COOKIE_SAME_SITE,
+        samesite=settings.COOKIE_SAME_SITE, # type: ignore[arg-type]
         max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
     )
     return response
