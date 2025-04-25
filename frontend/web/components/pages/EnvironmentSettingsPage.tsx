@@ -187,9 +187,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       return
     }
 
-    if (
-      environmentData?.use_v2_feature_versioning && !!currentEnv &&
+    const isEnvDataVersioningEnabled = environmentData?.use_v2_feature_versioning
+    const isCurrentEnvVersioningDisabled = !!currentEnv &&
       !currentEnv?.use_v2_feature_versioning
+    if (
+      isEnvDataVersioningEnabled &&
+      isCurrentEnvVersioningDisabled
     ) {
       setCurrentEnv((currentEnvState) => {
         AppActions.editEnv(environmentData)
