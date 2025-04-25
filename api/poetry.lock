@@ -1948,7 +1948,6 @@ flagsmith-flag-engine = "*"
 gunicorn = ">=19.1"
 prometheus-client = ">=0.0.16"
 psycopg2-binary = ">=2.9,<3"
-pyfakefs = {version = ">=5,<6", optional = true, markers = "extra == \"test-tools\""}
 requests = "*"
 simplejson = ">=3,<4"
 
@@ -1958,8 +1957,8 @@ test-tools = ["pyfakefs (>=5,<6)"]
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-common"
-reference = "feat/docgen-metrics"
-resolved_reference = "8a1a26abaaaf04eab84230cf788876f0fdf28876"
+reference = "95b57e305e4b841b7d2265f57be367334f4d874f"
+resolved_reference = "95b57e305e4b841b7d2265f57be367334f4d874f"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5200,4 +5199,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "6304a3f1d8d6d07f4fd327af7195a69f86e83d6a1717bda511c4b13d428b0e79"
+content-hash = "50e389f1a0d40df465d0931dfafe9d794da85f41724bccf57b0f245036fb8c39"
