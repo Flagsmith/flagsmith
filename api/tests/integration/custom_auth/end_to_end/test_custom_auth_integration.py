@@ -431,7 +431,9 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_jwt_token_logout_view_handles_missing_refresh_token(admin_client: APIClient) -> None:
+def test_jwt_token_logout_view_handles_missing_refresh_token(
+    admin_client: APIClient,
+) -> None:
     # Given
     logout_url = reverse("api-v1:custom_auth:jwt-logout")
 
@@ -447,7 +449,9 @@ def test_jwt_token_logout_view_handles_missing_refresh_token(admin_client: APICl
 
 
 @override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
-def test_jwt_cookie_token_refresh_view_raises_invalid_token_if_no_cookie(admin_client: APIClient) -> None:
+def test_jwt_cookie_token_refresh_view_raises_invalid_token_if_no_cookie(
+    admin_client: APIClient,
+) -> None:
     # Given
     refresh_url = reverse("api-v1:custom_auth:token-refresh")
 
