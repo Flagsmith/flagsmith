@@ -180,7 +180,7 @@ def test_get_environment_document_fails_with_invalid_key(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_environment_document_caching(
+def test_environment_document_if_modified_since(
     organisation_one: "Organisation",
     organisation_one_project_one: "Project",
 ) -> None:
