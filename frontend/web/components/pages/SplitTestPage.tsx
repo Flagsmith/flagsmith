@@ -14,7 +14,7 @@ import { useGetConversionEventsQuery } from 'common/services/useConversionEvent'
 import InfoMessage from 'components/InfoMessage'
 import PanelSearch from 'components/PanelSearch'
 import ErrorMessage from 'components/ErrorMessage'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import { useGetSplitTestQuery } from 'common/services/useSplitTest'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronForward } from 'ionicons/icons'
@@ -38,7 +38,7 @@ const innerWidths = [200, 150, 150]
 const SplitTestPage: FC<AuditLogType> = (props) => {
   const projectId = props.match.params.projectId
   const environmentId = props.match.params.environmentId
-  const { search, searchInput, setSearchInput } = useSearchThrottle()
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
   const [conversion_event_type_id, setConversionEvent] = useState<
     number | null
   >(null)

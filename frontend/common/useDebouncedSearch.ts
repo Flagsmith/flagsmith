@@ -1,27 +1,24 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import useDebounce from './useDebounce'
 
-export default function useDebouncedSearch(
-  defaultValue?: string,
-  cb?: () => void,
-) {
-  const firstRender = useRef(true)
-  const [search, setSearch] = useState(defaultValue || '')
-  const [searchInput, setSearchInput] = useState(search)
-  const searchItems = useDebounce((search: string) => {
-    setSearch(search)
-    cb?.()
+export default function useDebouncedSearch(initialValue = '') {
+  const [searchInput, setSearchInput] = useState(initialValue)
+  const [search, setSearch] = useState(initialValue)
+
+  const debouncedSearch = useDebounce((value: string) => {
+    setSearch(value)
   }, 500)
-  useEffect(() => {
-    if (firstRender.current && !searchInput) {
-      firstRender.current = false
-      return
-    }
-    firstRender.current = false
-    searchItems(searchInput)
-    //eslint-disable-next-line
-    }, [searchInput]);
-  return { search, searchInput, setSearchInput }
+
+  const handleSearchInput = (value: string) => {
+    setSearchInput(value)
+    debouncedSearch(value)
+  }
+
+  return {
+    search,
+    searchInput,
+    setSearchInput: handleSearchInput
+  }
 }
 /* Usage example:
 const searchItems = useDebounce((search:string) => {

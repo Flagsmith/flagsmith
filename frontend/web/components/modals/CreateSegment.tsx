@@ -8,7 +8,6 @@ import React, {
 } from 'react'
 
 import Constants from 'common/constants'
-import useSearchThrottle from 'common/useSearchThrottle'
 import AccountStore from 'common/stores/account-store'
 import {
   EdgePagedResponse,
@@ -45,6 +44,7 @@ import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedCon
 import { setInterceptClose } from './base/ModalDefault'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 
 type PageType = {
   number: number
@@ -602,16 +602,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     pages: undefined,
   })
 
-  const { search, searchInput, setSearchInput } = useSearchThrottle(
-    Utils.fromParam().search,
-    () => {
-      setPage({
-        number: 1,
-        pageType: undefined,
-        pages: undefined,
-      })
-    },
-  )
+  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
 
   useEffect(() => {
     if (segmentData) {
