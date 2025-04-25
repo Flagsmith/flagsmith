@@ -1564,7 +1564,7 @@ def test_clone_segment(
     assert cloned_segment.description == source_segment.description
     assert cloned_segment.version == 1
     assert cloned_segment.version_of_id == cloned_segment.id
-    assert cloned_segment.change_request == None
+    assert cloned_segment.change_request is None
     assert cloned_segment.feature_id == source_segment.feature_id
 
     # Testing cloning of rules
