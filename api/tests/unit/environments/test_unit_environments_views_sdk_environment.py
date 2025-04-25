@@ -210,6 +210,7 @@ def test_environment_document_if_modified_since(
 
     # Then - second request should return 304 Not Modified
     assert response2.status_code == status.HTTP_304_NOT_MODIFIED
+    assert len(response2.content) == 0
 
     # sleep for 1s since If-Modified-Since is only accurate to the nearest second
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/If-Modified-Since
@@ -225,3 +226,14 @@ def test_environment_document_if_modified_since(
     assert response3.headers["Last-Modified"] == http_date(
         environment.updated_at.timestamp()
     )
+
+    # When - request without If-Modified-Since header
+    client.credentials(
+        HTTP_X_ENVIRONMENT_KEY=api_key,
+        HTTP_IF_MODIFIED_SINCE="",
+    )
+    response4 = client.get(url)
+
+    # Then - actual environment is returned with a 200
+    assert response4.status_code == status.HTTP_200_OK
+    assert len(response4.content) > 0
