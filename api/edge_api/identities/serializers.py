@@ -24,7 +24,6 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.serializers import (  # type: ignore[attr-defined]
     FeatureStateValueSerializer,
 )
-from features.value_types import ValueType
 from util.mappers import (
     map_engine_identity_to_identity_document,
     map_feature_to_engine,
@@ -131,9 +130,9 @@ class FeatureStateValueEdgeIdentityField(serializers.Field):  # type: ignore[typ
         return instance
 
     def to_internal_value(self, data):  # type: ignore[no-untyped-def]
-        fsv_type = ValueType.from_any(data, exclude_types=[ValueType.FLOAT])
+        fsv_type = FeatureState.get_feature_state_value_type(data)
         feature_state_value_dict = {
-            "type": fsv_type.value,
+            "type": fsv_type,
             FeatureState.get_feature_state_key_name(fsv_type): data,
         }
         fs_value_serializer = FeatureStateValueSerializer(data=feature_state_value_dict)

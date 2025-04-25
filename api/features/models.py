@@ -63,11 +63,16 @@ from features.managers import (
     FeatureStateValueManager,
 )
 from features.multivariate.models import MultivariateFeatureStateValue
-from features.value_types import (
-    FEATURE_STATE_VALUE_TYPES,
-    ValueType,
+from features.utils import (
     get_boolean_from_string,
     get_integer_from_string,
+    get_value_type,
+)
+from features.value_types import (
+    BOOLEAN,
+    FEATURE_STATE_VALUE_TYPES,
+    INTEGER,
+    STRING,
 )
 from features.versioning.models import EnvironmentFeatureVersion
 from integrations.github.constants import GitHubEventType
@@ -675,9 +680,7 @@ class FeatureState(
 
         return clone
 
-    def generate_feature_state_value_data(
-        self, value: typing.Any
-    ) -> dict[str, typing.Any]:
+    def generate_feature_state_value_data(self, value):  # type: ignore[no-untyped-def]
         """
         Takes the value of a feature state to generate a feature state value and returns dictionary
         to use for passing into feature state value serializer
@@ -685,7 +688,7 @@ class FeatureState(
         :param value: feature state value of variable type
         :return: dictionary to pass directly into feature state value serializer
         """
-        fsv_type = ValueType.from_any(value, exclude_types=[ValueType.FLOAT])
+        fsv_type = self.get_feature_state_value_type(value)
         return {
             "type": fsv_type,
             "feature_state": self.id,
@@ -725,14 +728,14 @@ class FeatureState(
             return {}
 
         value = self.feature.initial_value
-        type_ = ValueType.from_string(value)
+        type_ = get_value_type(value)
         parse_func = {
-            ValueType.BOOLEAN: get_boolean_from_string,
-            ValueType.INTEGER: get_integer_from_string,
+            BOOLEAN: get_boolean_from_string,
+            INTEGER: get_integer_from_string,
         }.get(type_, lambda v: v)
         key_name = self.get_feature_state_key_name(type_)
 
-        return {"type": type_.value, key_name: parse_func(value)}
+        return {"type": type_, key_name: parse_func(value)}
 
     def get_multivariate_feature_state_value(
         self, identity_hash_key: str
@@ -832,12 +835,20 @@ class FeatureState(
             MultivariateFeatureStateValue.objects.bulk_create(mv_feature_state_values)
 
     @staticmethod
-    def get_feature_state_key_name(fsv_type: ValueType) -> str:
-        return {
-            ValueType.INTEGER: "integer_value",
-            ValueType.BOOLEAN: "boolean_value",
-            ValueType.STRING: "string_value",
-        }[fsv_type]
+    def get_feature_state_key_name(fsv_type) -> str:  # type: ignore[no-untyped-def]
+        return {  # type: ignore[return-value]
+            INTEGER: "integer_value",
+            BOOLEAN: "boolean_value",
+            STRING: "string_value",
+        }.get(fsv_type)
+
+    @staticmethod
+    def get_feature_state_value_type(value) -> str:  # type: ignore[no-untyped-def]
+        fsv_type = type(value).__name__
+        accepted_types = (STRING, INTEGER, BOOLEAN)
+
+        # Default to string if not an anticipate type value to keep backwards compatibility.
+        return fsv_type if fsv_type in accepted_types else STRING
 
     @classmethod
     def create_initial_feature_states_for_environment(
