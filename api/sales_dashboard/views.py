@@ -5,7 +5,7 @@ import re2 as re  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import Count, F, Q, Value
+from django.db.models import Count, F, Func, Q, Value
 from django.db.models.functions import Greatest
 from django.http import (
     HttpRequest,
@@ -66,6 +66,17 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
     paginate_by = OBJECTS_PER_PAGE
     template_name = "sales_dashboard/home.html"
 
+    _annotations = {
+        "num_projects": Count("projects", distinct=True),
+        "num_users": Count("users", distinct=True),
+        "num_features": Count("projects__features", distinct=True),
+        "overage": Greatest(
+            Value(0),
+            F("subscription_information_cache__api_calls_30d")
+            - F("subscription_information_cache__allowed_30d_api_calls"),
+        ),
+    }
+
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if self.request.GET.get("include_deleted") == "on" or self.request.GET.get(
             "search"
@@ -73,17 +84,6 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
             queryset = Organisation.objects.all_with_deleted()
         else:
             queryset = Organisation.objects.all()
-
-        queryset = queryset.annotate(
-            num_projects=Count("projects", distinct=True),
-            num_users=Count("users", distinct=True),
-            num_features=Count("projects__features", distinct=True),
-            overage=Greatest(
-                Value(0),
-                F("subscription_information_cache__api_calls_30d")
-                - F("subscription_information_cache__allowed_30d_api_calls"),
-            ),
-        ).select_related("subscription", "subscription_information_cache")
 
         if search_term := self.request.GET.get("search"):
             queryset = queryset.filter(self._build_search_query(search_term))
@@ -93,6 +93,12 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
             queryset = queryset.filter(subscription__plan__icontains=filter_plan)
 
         sort_field = self.request.GET.get("sort_field") or DEFAULT_ORGANISATION_SORT
+
+        # in order to reduce the load on the database / query time, only annotate the
+        # queryset before pagination with any annotation needed for sorting
+        if required_sort_annotation := self._annotations.get(sort_field):
+            queryset = queryset.annotate(**{sort_field: required_sort_annotation})
+
         sort_direction = (
             self.request.GET.get("sort_direction")
             or DEFAULT_ORGANISATION_SORT_DIRECTION
@@ -103,14 +109,24 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
             else queryset.order_by(F(sort_field).desc(nulls_last=True))
         )
 
-        return queryset
+        return queryset.select_related("subscription", "subscription_information_cache")
 
     def get_context_data(self, **kwargs):  # type: ignore[no-untyped-def]
         data = super().get_context_data(**kwargs)
 
+        sort_field = self.request.GET.get("sort_field")
+
+        # in order to reduce load on the database / query time, we only annotate the queryset
+        # after pagination with any annotations that weren't already needed for sorting
+        queryset = data["object_list"]
+        queryset = queryset.annotate(
+            **{k: v for k, v in self._annotations.items() if k != sort_field}
+        )
+        data["object_list"] = queryset
+
         data["search"] = self.request.GET.get("search", "")
         data["filter_plan"] = self.request.GET.get("filter_plan")
-        data["sort_field"] = self.request.GET.get("sort_field")
+        data["sort_field"] = sort_field
         data["sort_direction"] = self.request.GET.get("sort_direction")
         data["include_deleted"] = self.request.GET.get("include_deleted", "off") == "on"
 
@@ -158,6 +174,9 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
                 | Q(name__icontains=search_term)
                 | Q(subscription__subscription_id__iexact=search_term)
             )
+
+    def _get_pre_sort_annotation(self, sort_field: str) -> Func | None:
+        return self._annotations.get(sort_field)
 
 
 @staff_member_required
