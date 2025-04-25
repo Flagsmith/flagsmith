@@ -1,9 +1,8 @@
 import pytest
+from common.core.utils import get_file_contents, get_versions_from_manifest
 from pyfakefs.fake_filesystem import FakeFilesystem
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from common.core.utils import get_file_contents, get_versions_from_manifest
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +23,7 @@ def clear_lru_caches() -> None:
     [
         ('{".": "v1.2.3"}', "v1.2.3"),
         ('{"foo": "bar"}', "unknown"),
-        ('', "unknown"),
+        ("", "unknown"),
     ],
 )
 def test_api_version_is_added_to_success_response_headers(
@@ -52,7 +51,7 @@ def test_api_version_is_added_to_success_response_headers(
     [
         ('{".": "v1.2.3"}', "v1.2.3"),
         ('{"foo": "bar"}', "unknown"),
-        ('', "unknown"),
+        ("", "unknown"),
     ],
 )
 def test_api_version_is_added_to_error_response_headers(
