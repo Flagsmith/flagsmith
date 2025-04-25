@@ -1930,12 +1930,10 @@ name = "flagsmith-common"
 version = "1.11.0"
 description = "Flagsmith's common library"
 optional = false
-python-versions = "<4.0,>=3.11"
+python-versions = ">=3.11,<4.0"
 groups = ["main", "dev", "workflows"]
-files = [
-    {file = "flagsmith_common-1.11.0-py3-none-any.whl", hash = "sha256:ba91e69152a3a3b9eecd3ca3f73939561356badb68776aa4d7a615187a41349f"},
-    {file = "flagsmith_common-1.11.0.tar.gz", hash = "sha256:0aeda071e7a93e57a864c0c31481c988b068714380cfdd5ea4b647b2bfe782a3"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 backoff = ">=2.2.1,<3.0.0"
@@ -1956,6 +1954,12 @@ simplejson = ">=3,<4"
 
 [package.extras]
 test-tools = ["pyfakefs (>=5,<6)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/flagsmith/flagsmith-common"
+reference = "feat/docgen-metrics"
+resolved_reference = "8a1a26abaaaf04eab84230cf788876f0fdf28876"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5196,4 +5200,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "003044b80789fa08dbaed58b48f7720c8347c6f38b7b18be8d4b2a2f6cc404f8"
+content-hash = "6304a3f1d8d6d07f4fd327af7195a69f86e83d6a1717bda511c4b13d428b0e79"
