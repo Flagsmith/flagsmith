@@ -1,5 +1,4 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
-import classNames from 'classnames'
 
 import useOutsideClick from 'common/useOutsideClick'
 import Utils from 'common/utils/utils'
@@ -104,6 +103,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
             }}
             entity='feature'
             index={featureIndex}
+            action='copy'
           />
           {!hideAudit && (
             <ActionItem
@@ -114,6 +114,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
               }}
               entity='feature'
               index={featureIndex}
+              action='audit'
             />
           )}
           {!hideHistory && (
@@ -125,6 +126,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
               }}
               entity='feature'
               index={featureIndex}
+              action='history'
             />
           )}
           {!hideRemove && (
@@ -146,6 +148,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                         handleActionClick={() => {
                           handleActionClick('remove')
                         }}
+                        action='remove'
                         entity='feature'
                         index={featureIndex}
                         disabled={

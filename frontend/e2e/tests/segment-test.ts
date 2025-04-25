@@ -25,15 +25,15 @@ import {
   viewFeature,
   waitAndRefresh,
   waitForElementVisible,
-  createOrganisationAndProject,
-} from '../helpers.cafe';
+  cloneSegment,
+  isElementExists,
+} from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
 
 export const testSegment1 = async () => {
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
-
   log('Create Feature')
 
   await createRemoteConfig(0, 'mv_flag', 'big', null, null, [
@@ -125,9 +125,17 @@ export const testSegment1 = async () => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
+  const isCloneSegmentEnabled = await isElementExists('segment-action-0')
+  if (isCloneSegmentEnabled) {
+    log('Clone segment')
+    await gotoSegments()
+    await cloneSegment(0, '0cloned-segment')
+    await deleteSegment(0, '0cloned-segment', !isCloneSegmentEnabled)
+  }
+
   log('Delete segment')
   await gotoSegments()
-  await deleteSegment(0, '18_or_19')
+  await deleteSegment(0, '18_or_19', !isCloneSegmentEnabled)
   await gotoFeatures()
   await deleteFeature(0, 'mv_flag')
 }

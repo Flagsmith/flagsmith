@@ -57,6 +57,7 @@ const SegmentAction: FC<SegmentActionProps> = ({
               entity='segment'
               index={index}
               disabled={isCloneDisabled}
+              action='clone'
             />
           )}
           <ActionItem
@@ -68,6 +69,7 @@ const SegmentAction: FC<SegmentActionProps> = ({
             entity='segment'
             index={index}
             disabled={isRemoveDisabled}
+            action='remove'
           />
         </div>
       )}
