@@ -33,7 +33,7 @@ repos:
         language: system
         entry: make -C api generate-docs
         pass_filenames: false
-        types: [python]
+        types: [python,toml]
       - id: python-typecheck
         name: python-typecheck
         language: system
