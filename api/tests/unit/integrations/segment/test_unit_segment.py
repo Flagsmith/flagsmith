@@ -25,11 +25,11 @@ def test_segment_initialized_correctly():  # type: ignore[no-untyped-def]
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "initial_value,expected_property_value",
+    "feature_state_with_value,expected_property_value",
     [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+    indirect=["feature_state_with_value"],
 )
 def test_segment_when_generate_user_data_with_correct_values_then_success(
-    initial_value: typing.Any,
     expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,
