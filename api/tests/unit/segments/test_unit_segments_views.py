@@ -1541,7 +1541,7 @@ def test_clone_segment(
         object_id=source_segment.id,
         content_type=segment_content_type,
         model_field=required_a_segment_metadata_field,
-        field_value="test-clone-segment-metadata"
+        field_value="test-clone-segment-metadata",
     )
 
     # When
@@ -1582,12 +1582,13 @@ def test_clone_segment(
     assert cloned_condition.property == created_condition.property
     assert cloned_condition.operator == created_condition.operator
     assert cloned_condition.value == created_condition.value
-    
+
     # Testing cloning of metadata
     cloned_metadata = cloned_segment.metadata.first()
     assert cloned_metadata.model_field == metadata.model_field
     assert cloned_metadata.field_value == metadata.field_value
     assert cloned_metadata.id != metadata.id
+
 
 # def test_clone_segment_without_name_should_fail(
 #     project: Project,
