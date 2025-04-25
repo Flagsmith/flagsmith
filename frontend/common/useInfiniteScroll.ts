@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { PagedRequest } from './types/requests'
 import { PagedResponse } from './types/responses'
 import { QueryDefinition } from '@reduxjs/toolkit/query'
-import useThrottle from './useThrottle'
+import useDebounce from './useDebounce'
 import { SubscriptionOptions } from '@reduxjs/toolkit/src/query/core/apiState'
 
 const useInfiniteScroll = <
@@ -54,7 +54,7 @@ const useInfiniteScroll = <
         [queryResponse?.data]
   )
 
-  const searchItems = useThrottle((search: string) => {
+  const searchItems = useDebounce((search: string) => {
     if (q !== search) {
       setLoadingCombinedData(true)
     }
