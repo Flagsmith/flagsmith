@@ -119,7 +119,7 @@ FROM wolfi-base AS api-runtime
 
 # Install Python and make it available to venv entrypoints
 ARG PYTHON_VERSION
-RUN apk add curl python-${PYTHON_VERSION} && \
+RUN apk add python-${PYTHON_VERSION} && \
   mkdir /build/ && ln -s /usr/local/ /build/.venv
 
 WORKDIR /app
@@ -140,7 +140,7 @@ ENTRYPOINT ["/app/scripts/run-docker.sh"]
 CMD ["migrate-and-serve"]
 
 HEALTHCHECK --interval=2s --timeout=2s --retries=3 --start-period=20s \
-  CMD curl -f http://localhost:8000/health/liveness || exit 1
+  CMD flagsmith healthcheck tcp
 
 # * api-runtime-private [api-runtime]
 FROM api-runtime AS api-runtime-private
