@@ -1,3 +1,4 @@
+from typing import cast
 from urllib.parse import urlparse
 
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -30,41 +31,46 @@ class FieldType(models.TextChoices):
 class MetadataField(AbstractBaseExportableModel):
     """This model represents a metadata field(specific to an organisation) that can be attached to any model"""
 
-    name = models.CharField(max_length=255)
-    type = models.CharField(
+    id: models.AutoField[int, int]
+    name: models.CharField[str, str] = models.CharField(max_length=255)
+    type: models.CharField[str, str] = models.CharField(
         max_length=255, choices=FieldType.choices, default=FieldType.STRING
     )
-    description = models.TextField(blank=True, null=True)
-    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
+    description: models.TextField[str | None, str | None] = models.TextField(
+        blank=True, null=True
+    )
+    organisation: models.ForeignKey[Organisation, Organisation] = models.ForeignKey(
+        Organisation, on_delete=models.CASCADE
+    )
 
     def is_field_value_valid(self, field_value: str) -> bool:
         if len(field_value) > FIELD_VALUE_MAX_LENGTH:
             return False
-        return self.__getattribute__(f"validate_{self.type}")(field_value)  # type: ignore[no-any-return]
+        return cast(bool, self.__getattribute__(f"validate_{self.type}")(field_value))
 
-    def validate_int(self, field_value: str):  # type: ignore[no-untyped-def]
+    def validate_int(self, field_value: str) -> bool:
         try:
             int(field_value)
         except ValueError:
             return False
         return True
 
-    def validate_bool(self, field_value: str):  # type: ignore[no-untyped-def]
+    def validate_bool(self, field_value: str) -> bool:
         if field_value.lower() in ["true", "false"]:
             return True
         return False
 
-    def validate_url(self, field_value: str):  # type: ignore[no-untyped-def]
+    def validate_url(self, field_value: str) -> bool:
         try:
             result = urlparse(field_value)
             return all([result.scheme, result.netloc])
         except ValueError:
             return False
 
-    def validate_str(self, field_value: str):  # type: ignore[no-untyped-def]
+    def validate_str(self, field_value: str) -> bool:
         return True
 
-    def validate_multiline_str(self, field_value: str):  # type: ignore[no-untyped-def]
+    def validate_multiline_str(self, field_value: str) -> bool:
         return True
 
     class Meta:
@@ -115,10 +121,24 @@ class Metadata(AbstractBaseExportableModel):
     class Meta:
         unique_together = ("model_field", "content_type", "object_id")
 
+<<<<<<< HEAD
     def deep_clone_for_new_entity(self, cloned_entity: models.Model, content_type: ContentType) -> "Metadata":
         return Metadata.objects.create(
             model_field=self.model_field,
             content_type=content_type,
             object_id=cloned_entity.pk,
             field_value=self.field_value,
+=======
+    def deep_clone_for_new_entity(
+        self, cloned_entity: models.Model, content_type: ContentType
+    ) -> "Metadata":
+        return cast(
+            Metadata,
+            Metadata.objects.create(
+                model_field=self.model_field,
+                content_type=content_type,
+                object_id=cloned_entity.pk,
+                field_value=self.field_value,
+            ),
+>>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
         )

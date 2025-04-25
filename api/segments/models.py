@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -164,7 +165,15 @@ class Segment(
     def clone_segment_metadata(self, cloned_segment: "Segment") -> list["Metadata"]:
         cloned_metadata = []
         for metadata in self.metadata.all():
+<<<<<<< HEAD
             cloned_metadata.append(metadata.deep_clone_for_new_entity(cloned_segment, ContentType.objects.get_for_model(cloned_segment)))
+=======
+            cloned_metadata.append(
+                metadata.deep_clone_for_new_entity(
+                    cloned_segment, ContentType.objects.get_for_model(cloned_segment)
+                )
+            )
+>>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
         cloned_segment.refresh_from_db()
         assert (
             len(self.metadata.all())
@@ -174,7 +183,10 @@ class Segment(
 
         return cloned_metadata
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
     def clone(self, name: str) -> "Segment":
         cloned_segment = Segment(
             name=name,
