@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from djoser.serializers import (  # type: ignore[import-untyped]
     UserSerializer as DjoserUserSerializer,
 )
 from rest_framework import serializers
-from rest_framework.exceptions import NotAuthenticated, ValidationError
+from rest_framework.exceptions import ValidationError
 
 from organisations.models import Organisation
 from organisations.serializers import UserOrganisationSerializer
