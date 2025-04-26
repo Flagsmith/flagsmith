@@ -1957,8 +1957,8 @@ test-tools = ["pyfakefs (>=5,<6)"]
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-common"
-reference = "95b57e305e4b841b7d2265f57be367334f4d874f"
-resolved_reference = "95b57e305e4b841b7d2265f57be367334f4d874f"
+reference = "a139d3746a0fdeff7443c06cea4ff3d2cdcbdc5e"
+resolved_reference = "a139d3746a0fdeff7443c06cea4ff3d2cdcbdc5e"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5199,4 +5199,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "50e389f1a0d40df465d0931dfafe9d794da85f41724bccf57b0f245036fb8c39"
+content-hash = "eec012ac6d55d3b4530336642c91b9a5b304751cf835ba1fbfc84c23173b6725"

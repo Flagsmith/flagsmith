@@ -160,7 +160,7 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-common = { git = "https://github.com/flagsmith/flagsmith-common", rev = "95b57e305e4b841b7d2265f57be367334f4d874f" }
+flagsmith-common = { git = "https://github.com/flagsmith/flagsmith-common", rev = "a139d3746a0fdeff7443c06cea4ff3d2cdcbdc5e" }
 django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
