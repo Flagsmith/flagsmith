@@ -1609,4 +1609,3 @@ def test_clone_segment_without_name_should_fail(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-
