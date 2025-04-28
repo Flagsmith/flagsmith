@@ -46,3 +46,35 @@ class UserObjectPermissionsSerializer(serializers.Serializer):  # type: ignore[t
     permissions = serializers.ListField(child=serializers.CharField())
     admin = serializers.BooleanField()
     tag_based_permissions = TagBasedPermissionSerializer(many=True)
+
+
+class GroupSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class PermissionRoleSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    tags = serializers.ListField(child=serializers.IntegerField(), default=list)
+
+
+class DerivedFromSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    groups = GroupSerializer(many=True)
+    roles = PermissionRoleSerializer(many=True)
+
+
+class BaseDetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    is_directly_granted = serializers.BooleanField()
+    derived_from = DerivedFromSerializer()
+
+
+class DetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    permission_key = serializers.CharField()
+    is_directly_granted = serializers.BooleanField()
+    derived_from = DerivedFromSerializer()
+
+
+class UserDetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    admin = serializers.BooleanField()
+    permissions = DetailedPermissionsSerializer(many=True)

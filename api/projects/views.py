@@ -23,6 +23,7 @@ from environments.serializers import EnvironmentSerializerLight
 from permissions.permissions_calculator import get_project_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
+    UserDetailedPermissionsSerializer,
     UserObjectPermissionsSerializer,
 )
 from projects.exceptions import (
@@ -140,6 +141,27 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                 context={"tag_supported_permissions": TAG_SUPPORTED_PERMISSIONS},
             ).data
         )
+
+    @swagger_auto_schema(
+        responses={200: UserDetailedPermissionsSerializer},
+    )
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
+        url_name="user-detailed-permissions",
+    )
+    def detailed_permissions(
+        self, request: Request, pk: int = None, user_id: int = None
+    ) -> Response:
+        user_id = int(user_id)
+        # TODO: permission checks
+        project = self.get_object()
+        permission_data = get_project_permission_data(project.id, user_id)
+        serializer = UserDetailedPermissionsSerializer(
+            permission_data.to_detailed_permissions_data()
+        )
+        return Response(serializer.data)
 
     @swagger_auto_schema(responses={200: UserObjectPermissionsSerializer()})  # type: ignore[misc]
     @action(

@@ -56,6 +56,13 @@ class GroupData:
 
 
 @dataclass
+class RoleData:
+    id: int
+    name: str
+    tags: typing.List[int]
+
+
+@dataclass
 class _GroupPermissionBase:
     group: GroupData
 
@@ -68,6 +75,25 @@ class UserPermissionData(_PermissionDataBase):
 @dataclass
 class GroupPermissionData(_PermissionDataBase, _GroupPermissionBase):
     pass
+
+
+@dataclass
+class PermissionDerivedFromData:
+    groups: typing.List[GroupData] = field(default_factory=list)
+    roles: typing.List[RoleData] = field(default_factory=list)
+
+
+@dataclass
+class DetailedPermissionsData:
+    permission_key: str
+    is_directly_granted: bool
+    derived_from: PermissionDerivedFromData
+
+
+@dataclass
+class UserDetailedPermissionsData:
+    admin: bool
+    permissions: typing.List[DetailedPermissionsData]
 
 
 @dataclass
@@ -126,6 +152,43 @@ class PermissionData:
             for role_permission in self.roles
             if role_permission.role.tags
         ]
+
+    def to_detailed_permissions_data(self) -> UserDetailedPermissionsData:
+        permission_map = {}
+
+        def add_permission(
+            perm_key: str,
+            group: typing.Optional[int],
+            role: typing.Optional[int],
+        ):
+            if perm_key not in permission_map:
+                permission_map[perm_key] = DetailedPermissionsData(
+                    permission_key=perm_key,
+                    is_directly_granted=group is None and role is None,
+                    derived_from=PermissionDerivedFromData(),
+                )
+            if group:
+                permission_map[perm_key].derived_from.groups.append(group)
+            if role:
+                permission_map[perm_key].derived_from.roles.append(role)
+
+        # Add user's direct permissions
+        for perm in self.user.permissions:
+            add_permission(perm, [], None)
+
+        # Add group permissions
+        for group in self.groups:
+            for perm in group.permissions:
+                add_permission(perm, group, None)
+
+        # Add role permissions
+        for role_permission in self.roles:
+            for perm in role_permission.permissions:
+                add_permission(perm, None, role_permission.role)
+
+        return UserDetailedPermissionsData(
+            admin=self.admin, permissions=list(permission_map.values())
+        )
 
 
 def get_project_permission_data(project_id: int, user_id: int) -> PermissionData:
