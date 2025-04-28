@@ -285,6 +285,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
