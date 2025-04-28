@@ -167,7 +167,7 @@ class Segment(
         for metadata in self.metadata.all():
             cloned_metadata.append(
                 metadata.deep_clone_for_new_entity(
-                    cloned_segment, ContentType.objects.get_for_model(cloned_segment)
+                    cloned_segment
                 )
             )
         cloned_segment.refresh_from_db()

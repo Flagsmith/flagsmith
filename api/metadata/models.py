@@ -122,8 +122,9 @@ class Metadata(AbstractBaseExportableModel):
         unique_together = ("model_field", "content_type", "object_id")
 
     def deep_clone_for_new_entity(
-        self, cloned_entity: models.Model, content_type: ContentType
+        self, cloned_entity: models.Model
     ) -> "Metadata":
+        content_type = ContentType.objects.get_for_model(cloned_entity)
         return cast(
             Metadata,
             Metadata.objects.create(
