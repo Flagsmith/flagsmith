@@ -7,11 +7,7 @@ from common.segments.serializers import (
 )
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
-<<<<<<< HEAD
-from rest_framework import viewsets, status
-=======
 from rest_framework import status, viewsets
->>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
@@ -34,12 +30,6 @@ from .serializers import (
     CloneSegmentSerializer,
     SegmentListQuerySerializer,
 )
-<<<<<<< HEAD
-
-from rest_framework.request import Request
-from typing import Any
-=======
->>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
 
 logger = logging.getLogger()
 
@@ -134,15 +124,11 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-<<<<<<< HEAD
-    @swagger_auto_schema(request_body=CloneSegmentSerializer, responses={201: SegmentSerializer()}, method="post") # type: ignore[misc]
-=======
     @swagger_auto_schema(
         request_body=CloneSegmentSerializer,
         responses={201: SegmentSerializer()},
         method="post",
     )  # type: ignore[misc]
->>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
     @action(
         detail=True,
         methods=["POST"],
@@ -150,13 +136,9 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer_class=CloneSegmentSerializer,
     )
     def clone(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-<<<<<<< HEAD
-        serializer = CloneSegmentSerializer(data=request.data, context={"source_segment": self.get_object()})
-=======
         serializer = CloneSegmentSerializer(
             data=request.data, context={"source_segment": self.get_object()}
         )
->>>>>>> d2a22560a4f99251b95ce402d2b5cc35c946c4cb
         serializer.is_valid(raise_exception=True)
         clone = serializer.save()
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
