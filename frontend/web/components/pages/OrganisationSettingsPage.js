@@ -18,9 +18,11 @@ import AccountProvider from 'common/providers/AccountProvider'
 import LicensingTabContent from 'components/LicensingTabContent'
 import Utils from 'common/utils/utils'
 import AuditLogWebhooks from 'components/modals/AuditLogWebhooks'
+import MetadataPage from 'components/metadata/MetadataPage'
 
 const SettingsTab = {
   'Billing': 'billing',
+  'CustomFields': 'custom-fields',
   'General': 'general',
   'Keys': 'keys',
   'Licensing': 'licensing',
@@ -193,6 +195,7 @@ const OrganisationSettingsPage = class extends Component {
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
                         isEnterprise ? SettingsTab.Licensing : null,
+                        SettingsTab.CustomFields,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
                         SettingsTab.SAML,
@@ -426,7 +429,13 @@ const OrganisationSettingsPage = class extends Component {
                             />
                           </TabItem>
                         )}
-
+                        {displayedTabs.includes(SettingsTab.CustomFields) && (
+                          <TabItem tabLabel='Custom Fields'>
+                            <MetadataPage
+                              organisationId={AccountStore.getOrganisation().id}
+                            />
+                          </TabItem>
+                        )}
                         {displayedTabs.includes(SettingsTab.Keys) && (
                           <TabItem tabLabel='API Keys'>
                             <AdminAPIKeys organisationId={organisation.id} />
