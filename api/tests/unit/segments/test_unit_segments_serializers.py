@@ -1,12 +1,12 @@
 from segments.serializers import CloneSegmentSerializer
-
+from rest_framework.exceptions import ValidationError, ErrorDetail
+import pytest
 
 def test_clone_segment_serializer_validation_without_name_should_fail() -> None:
     # Given
-    serializer = CloneSegmentSerializer(data={"name": ""})
+    serializer = CloneSegmentSerializer()
     # When
-    is_valid = serializer.is_valid()
-    errors = serializer.errors
+    with pytest.raises(ValidationError) as exception:
+        serializer.validate({"name": ""})
     # Then
-    assert not is_valid
-    assert errors == {"name": ["This field may not be blank."]}
+    assert exception.value.detail == [ErrorDetail(string="Name is required to clone a segment", code="invalid")]
