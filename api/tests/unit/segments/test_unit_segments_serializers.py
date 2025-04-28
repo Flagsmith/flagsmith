@@ -10,4 +10,3 @@ def test_clone_segment_serializer_validation_without_name_should_fail() -> None:
     # Then
     assert not is_valid
     assert errors == {"name": ["This field may not be blank."]}
-
