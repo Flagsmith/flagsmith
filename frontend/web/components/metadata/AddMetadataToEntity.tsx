@@ -100,7 +100,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
       onChange?.(metadataParsed as CustomMetadataField[])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metadataFieldsAssociatedtoEntity, entityId])
+  }, [metadataFieldsAssociatedtoEntity])
 
   const [metadataChanged, setMetadataChanged] = useState<boolean>(false)
 
