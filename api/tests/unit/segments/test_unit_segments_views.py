@@ -1596,7 +1596,7 @@ def test_clone_segment_without_name_should_fail(
         "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
     )
     data = {
-        "name": "",
+        "no-name": "",
     }
     # When
     response = admin_client.post(
