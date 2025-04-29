@@ -132,13 +132,12 @@ def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when
 
     environment.allow_client_traits = False
     environment.save()
-    
+
     mock_request = mocker.MagicMock()
     mock_request.environment = environment
-    
+
     serializer = IdentifyWithTraitsSerializer(
-        data=data,
-        context={"environment": environment, "request": mock_request}
+        data=data, context={"environment": environment, "request": mock_request}
     )
 
     # When
