@@ -37,7 +37,7 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
-import { plugin } from '@amplitude/plugin-session-replay-browser'
+import { getBuildVersion } from 'common/services/useBuildVersion'
 
 const App = class extends Component {
   static propTypes = {
@@ -106,6 +106,7 @@ const App = class extends Component {
       })
       amplitude.add(sessionReplayTracking)
     }
+    getBuildVersion(getStore(), {})
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
