@@ -67,7 +67,14 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
     template_name = "sales_dashboard/home.html"
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        queryset = Organisation.objects.annotate(
+        if self.request.GET.get("include_deleted") == "on" or self.request.GET.get(
+            "search"
+        ):
+            queryset = Organisation.objects.all_with_deleted()
+        else:
+            queryset = Organisation.objects.all()
+
+        queryset = queryset.annotate(
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
@@ -105,6 +112,7 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
+        data["include_deleted"] = self.request.GET.get("include_deleted", "off") == "on"
 
         # Use the most recent "influx_updated_at" in
         # OrganisationSubscriptionInformationCache object to determine
@@ -155,7 +163,8 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
 @staff_member_required
 def organisation_info(request: HttpRequest, organisation_id: int) -> HttpResponse:
     organisation = get_object_or_404(
-        Organisation.objects.select_related("subscription"), pk=organisation_id
+        Organisation.objects.all_with_deleted().select_related("subscription"),
+        pk=organisation_id,
     )
     template = loader.get_template("sales_dashboard/organisation.html")
     subscription_metadata = organisation.subscription.get_subscription_metadata()
