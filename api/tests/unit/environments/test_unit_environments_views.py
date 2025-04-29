@@ -431,32 +431,6 @@ def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(
     assert Webhook.objects.filter(id=webhook.id).exists()
 
 
-@mock.patch("webhooks.mixins.trigger_sample_webhook")
-def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
-    trigger_sample_webhook_mock: mock.MagicMock,
-    environment: Environment,
-    admin_client: APIClient,
-) -> None:
-    # Given
-    valid_webhook_url = "http://my.webhook.com/webhooks"
-    mocked_response = mock.MagicMock(status_code=200)
-    trigger_sample_webhook_mock.return_value = mocked_response
-    url = reverse(
-        "api-v1:environments:environment-webhooks-trigger-sample-webhook",
-        args=[environment.api_key],
-    )
-    data = {"url": valid_webhook_url}
-
-    # When
-    response = admin_client.post(url, data)
-
-    # Then
-    assert response.json()["message"] == "Request returned 200"
-    assert response.status_code == status.HTTP_200_OK
-    args, _ = trigger_sample_webhook_mock.call_args
-    assert args[0].url == valid_webhook_url
-
-
 def test_list_api_keys(
     environment: Environment,
     admin_client_new: APIClient,

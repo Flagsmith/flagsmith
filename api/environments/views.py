@@ -35,7 +35,6 @@ from permissions.serializers import (
     UserObjectPermissionsSerializer,
 )
 from projects.models import Project
-from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
@@ -314,7 +313,6 @@ class WebhookViewSet(
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None

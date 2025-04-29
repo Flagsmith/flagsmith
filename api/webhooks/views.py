@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .permissions import TriggerSampleWebhookPermission
 from .webhooks import send_test_request_to_webhook
-
+from webhooks.webhooks import WebhookType
 
 class WebhookViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, TriggerSampleWebhookPermission]
@@ -28,7 +28,12 @@ class WebhookViewSet(viewsets.ViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         try:
-            response = send_test_request_to_webhook(webhook_url, secret, scopeType)
+            webhook_type = (
+                WebhookType.ORGANISATION
+                if scopeType == "organisation"
+                else WebhookType.ENVIRONMENT
+            )
+            response = send_test_request_to_webhook(webhook_url, secret, webhook_type)
             if response.status_code != 200:
                 return Response(
                     {

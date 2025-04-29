@@ -20,10 +20,7 @@ from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
-from webhooks.sample_webhook_data import (
-    environment_webhook_data,
-    organisation_webhook_data,
-)
+
 from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
@@ -31,7 +28,7 @@ from webhooks.webhooks import (
     call_integration_webhook,
     call_organisation_webhooks,
     call_webhook_with_failure_mail_after_retries,
-    trigger_sample_webhook,
+    generate_environment_sample_webhook_data,
 )
 
 
@@ -84,31 +81,6 @@ def test_webhooks_request_not_made_to_disabled_webhook(
 
     # Then
     mock_requests.post.assert_not_called()
-
-
-@mock.patch("webhooks.webhooks.requests")
-def test_trigger_sample_webhook_makes_correct_post_request_for_environment(
-    mock_request: MagicMock,
-) -> None:
-    url = "http://test.test"
-    webhook = Webhook(url=url)
-    trigger_sample_webhook(webhook, WebhookType.ENVIRONMENT)
-    args, kwargs = mock_request.post.call_args
-    assert json.loads(kwargs["data"]) == environment_webhook_data
-    assert args[0] == url
-
-
-@mock.patch("webhooks.webhooks.requests")
-def test_trigger_sample_webhook_makes_correct_post_request_for_organisation(
-    mock_request: MagicMock,
-) -> None:
-    url = "http://test.test"
-    webhook = OrganisationWebhook(url=url)
-
-    trigger_sample_webhook(webhook, WebhookType.ORGANISATION)
-    args, kwargs = mock_request.post.call_args
-    assert json.loads(kwargs["data"]) == organisation_webhook_data
-    assert args[0] == url
 
 
 @mock.patch("webhooks.webhooks.WebhookSerializer")
@@ -435,7 +407,7 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     }
 
     expected_signature = sign_payload(
-        json.dumps(environment_webhook_data, sort_keys=True, cls=DjangoJSONEncoder),
+        json.dumps(generate_environment_sample_webhook_data(), sort_keys=True, cls=DjangoJSONEncoder),
         secret,
     )
     # When
