@@ -115,3 +115,34 @@ def test_identify_with_traits_serializer__transient__identity_and_traits_not_per
     # Then
     assert not Identity.objects.filter(identifier=identity_identifier).exists()
     assert not Trait.objects.filter(identity__identifier=identity_identifier).exists()
+
+
+def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when_persistence_not_allowed(
+    mocker: MockerFixture,
+    environment: Environment,
+) -> None:
+    # Given
+    data = {
+        "identifier": "test_user",
+        "traits": [
+            {"trait_key": "key1", "trait_value": "value1"},
+            {"trait_key": "key2", "trait_value": "value2"},
+        ],
+    }
+
+    environment.allow_client_traits = False
+    environment.save()
+
+    mock_request = mocker.MagicMock()
+    mock_request.environment = environment
+
+    serializer = IdentifyWithTraitsSerializer(
+        data=data, context={"environment": environment, "request": mock_request}
+    )
+
+    # When
+    serializer.is_valid()
+    validated_traits = serializer.validated_data.get("traits")
+
+    # Then
+    assert validated_traits == []
