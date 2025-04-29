@@ -859,6 +859,7 @@ def test_post_identities_returns_empty_traits_if_client_cannot_set_traits(
     assert response.json()["traits"] == []
     assert response.json()["identifier"] == identity.identifier
 
+
 def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(
     identity: Identity,
     environment: Environment,
