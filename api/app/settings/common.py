@@ -285,6 +285,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -572,6 +573,7 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
+ACCESS_LOG_EXTRA_ITEMS = env.list("ACCESS_LOG_EXTRA_ITEMS", subcast=str, default=[])
 LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
 if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
