@@ -1,7 +1,6 @@
-import importlib
-import inspect
 import logging
 import os
+import site
 import typing
 from unittest.mock import MagicMock
 
@@ -22,7 +21,6 @@ from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pyfakefs.fake_filesystem import FakeFilesystem
-from pyfakefs.fake_filesystem_unittest import Patcher
 from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
@@ -139,21 +137,19 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 @pytest.fixture
-def fs() -> typing.Generator[FakeFilesystem | None, None, None]:
+def fs(fs: FakeFilesystem) -> FakeFilesystem:
+    """
+    Provide a fake filesystem for tests
+
+    NOTE: Sometimes pyfakefs patching goes wonky, causing the fake file system
+    to be cached across tests. This can lead tests failing to access real files
+    even if they do not use this fixture. Because we can't fix this issue now,
+    it's safer to allow site-packages [read-only] access from tests.
+    """
     app_path = os.path.dirname(os.path.abspath(__file__))
-    real_paths = [app_path]
-
-    for module_name in (
-        "django",
-        "tzdata",
-    ):
-        module_file = inspect.getfile(importlib.import_module(module_name))
-        real_paths.append(os.path.dirname(os.path.abspath(module_file)))
-
-    with Patcher() as patcher:
-        if fs := patcher.fs:
-            fs.add_real_paths(real_paths)
-        yield fs
+    site_packages = site.getsitepackages()  # Allow files within dependencies
+    fs.add_real_paths([*site_packages, app_path])
+    return fs
 
 
 @pytest.fixture(scope="session")
