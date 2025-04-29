@@ -129,17 +129,16 @@ def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when
             {"trait_key": "key2", "trait_value": "value2"},
         ],
     }
-    
+
     # Set up environment to not allow trait persistence
     environment.allow_client_traits = False
     environment.save()
-    
+
     mock_request = mocker.MagicMock()
     mock_request.environment = environment
-    
+
     serializer = IdentifyWithTraitsSerializer(
-        data=data,
-        context={"environment": environment, "request": mock_request}
+        data=data, context={"environment": environment, "request": mock_request}
     )
 
     # When
