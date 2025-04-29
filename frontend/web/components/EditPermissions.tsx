@@ -1199,7 +1199,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                         }
                                       >
                                         {
-                                          'Organisation administrators have all permissions enabled.<br/>To change the role of this user, visit Organisation Settings.'
+                                          'Organisation administrators have all permissions enabled. To change the role of this user, visit Organisation Settings.'
                                         }
                                       </Tooltip>
                                     </div>
