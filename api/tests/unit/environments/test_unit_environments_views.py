@@ -843,6 +843,11 @@ def test_update_environment_metadata(  # type: ignore[no-untyped-def]
                 "field_value": updated_field_value,
                 "id": environment_metadata_a.id,
             },
+            {
+                "model_field": environment_metadata_b.model_field.id,
+                "field_value": "",
+                "id": environment_metadata_b.id,
+            },
         ],
     }
 
