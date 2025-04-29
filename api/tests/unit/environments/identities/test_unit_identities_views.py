@@ -832,11 +832,10 @@ def test_get_identities_calls_forward_identity_request_with_correct_arguments(
     assert kwargs["kwargs"]["query_params"] == {"identifier": identity.identifier}
 
 
-def test_post_identities_with_traits_fails_if_client_cannot_set_traits(
+def test_post_identities_returns_empty_traits_if_client_cannot_set_traits(
     identity: Identity,
     environment: Environment,
     api_client: APIClient,
-    feature: Feature,
 ) -> None:
     # Given
     url = reverse("api-v1:sdk-identities")
@@ -856,8 +855,9 @@ def test_post_identities_with_traits_fails_if_client_cannot_set_traits(
 
     # Then
     assert Trait.objects.count() == 0
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
-
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["traits"] == []
+    assert response.json()["identifier"] == identity.identifier
 
 def test_post_identities_with_traits_success_if_client_cannot_set_traits_server_key(
     identity: Identity,
