@@ -7,9 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from webhooks.webhooks import WebhookType
+
 from .permissions import TriggerSampleWebhookPermission
 from .webhooks import send_test_request_to_webhook
-from webhooks.webhooks import WebhookType
+
 
 class WebhookViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, TriggerSampleWebhookPermission]

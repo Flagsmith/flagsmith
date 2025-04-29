@@ -2,7 +2,8 @@ import enum
 import json
 import logging
 import typing
-from typing import Type, Union
+from datetime import datetime
+from typing import Any, Type, Union
 
 import backoff
 import requests
@@ -16,18 +17,16 @@ from task_processor.task_run_method import TaskRunMethod
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.models import Environment, Webhook
+from features.models import Feature
 from organisations.models import OrganisationWebhook
-from projects.models import Organisation  # type: ignore[attr-defined]
+from projects.models import (
+    Organisation,  # type: ignore[attr-defined]
+    Project,
+)
+from users.models import FFAdminUser
 
 from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
-
-from datetime import datetime
-from typing import Any
-from features.models import Feature
-from projects.models import Project
-from users.models import FFAdminUser
-from environments.models import Environment, Webhook
 
 if typing.TYPE_CHECKING:
     import environments  # noqa
@@ -310,18 +309,11 @@ def send_test_request_to_webhook(
     )
     return res
 
-def generate_environment_sample_webhook_data() -> dict[str, Any]:
-    project = Project(
-        id=1,
-        name="Test Project",
-        organisation_id=1
-    )
 
-    environment = Environment(
-        id=1,
-        name="Development",
-        project=project
-    )
+def generate_environment_sample_webhook_data() -> dict[str, Any]:
+    project = Project(id=1, name="Test Project", organisation_id=1)
+
+    environment = Environment(id=1, name="Development", project=project)
 
     feature = Feature(
         id=1,
@@ -331,7 +323,9 @@ def generate_environment_sample_webhook_data() -> dict[str, Any]:
         default_enabled=False,
         type="CONFIG",
         initial_value=None,
-        created_date=datetime.fromisoformat("2021-02-10T20:03:43.348556Z".replace('Z', '+00:00'))
+        created_date=datetime.fromisoformat(
+            "2021-02-10T20:03:43.348556Z".replace("Z", "+00:00")
+        ),
     )
 
     data = {
@@ -343,7 +337,7 @@ def generate_environment_sample_webhook_data() -> dict[str, Any]:
             enabled=True,
             value="feature_state_value",
             identity_id=1,
-            identity_identifier="test_identity"
+            identity_identifier="test_identity",
         ),
         "previous_state": Webhook.generate_webhook_feature_state_data(
             feature=feature,
@@ -351,27 +345,18 @@ def generate_environment_sample_webhook_data() -> dict[str, Any]:
             enabled=False,
             value="old_feature_state_value",
             identity_id=1,
-            identity_identifier="test_identity"
-        )
+            identity_identifier="test_identity",
+        ),
     }
 
-    return {
-        "data": data,
-        "event_type": WebhookEventType.FLAG_UPDATED.value
-    }
+    return {"data": data, "event_type": WebhookEventType.FLAG_UPDATED.value}
+
 
 def generate_organisation_sample_webhook_data() -> dict[str, Any]:
-    project = Project(
-        id=1,
-        name="Test Project",
-        organisation_id=1
-    )
+    project = Project(id=1, name="Test Project", organisation_id=1)
 
     author = FFAdminUser(
-        id=1,
-        email="user@domain.com",
-        first_name="Jane",
-        last_name="Doe"
+        id=1, email="user@domain.com", first_name="Jane", last_name="Doe"
     )
 
     data = {
@@ -387,13 +372,10 @@ def generate_organisation_sample_webhook_data() -> dict[str, Any]:
         "project": {
             "id": project.id,
             "name": project.name,
-            "organisation": project.organisation_id
+            "organisation": project.organisation_id,
         },
         "related_object_id": 1,
         "related_object_type": "FEATURE",
     }
 
-    return {
-        "data": data,
-        "event_type": WebhookEventType.AUDIT_LOG_CREATED.value
-    }
+    return {"data": data, "event_type": WebhookEventType.AUDIT_LOG_CREATED.value}

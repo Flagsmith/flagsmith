@@ -20,7 +20,6 @@ from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
-
 from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
@@ -407,7 +406,11 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     }
 
     expected_signature = sign_payload(
-        json.dumps(generate_environment_sample_webhook_data(), sort_keys=True, cls=DjangoJSONEncoder),
+        json.dumps(
+            generate_environment_sample_webhook_data(),
+            sort_keys=True,
+            cls=DjangoJSONEncoder,
+        ),
         secret,
     )
     # When

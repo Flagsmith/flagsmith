@@ -1,5 +1,4 @@
 import json
-from unittest import mock
 
 import pytest
 from common.environments.permissions import (
