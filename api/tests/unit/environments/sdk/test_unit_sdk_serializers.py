@@ -144,22 +144,27 @@ def test_identify_with_traits_serializer_validate_traits_returns_empty_list_when
     assert serializer.is_valid()
     validated_traits = serializer.validated_data.get("traits")
 
-    serializer.save() # type: ignore[no-untyped-call]
+    serializer.save()  # type: ignore[no-untyped-call]
     # Then
     assert validated_traits == []
 
     assert Identity.objects.filter(identifier="test_user").exists()
     assert not Trait.objects.filter(identity__identifier="test_user").exists()
-    
-    
+
+
 def test_identify_with_traits_serializer_does_not_erase_existing_traits_when_persistence_not_allowed(
     mocker: MockerFixture,
     environment: Environment,
 ) -> None:
     # Given
     identity = Identity.objects.create(environment=environment, identifier="new_user")
-    Trait.objects.create(identity=identity, trait_key="existing_key", string_value="existing_value", value_type="string")
-    
+    Trait.objects.create(
+        identity=identity,
+        trait_key="existing_key",
+        string_value="existing_value",
+        value_type="string",
+    )
+
     environment.allow_client_traits = False
     environment.save()
 
@@ -180,7 +185,7 @@ def test_identify_with_traits_serializer_does_not_erase_existing_traits_when_per
 
     # When
     assert serializer.is_valid()
-    serializer.save() # type: ignore[no-untyped-call]
+    serializer.save()  # type: ignore[no-untyped-call]
 
     # Then
     identity.refresh_from_db()
