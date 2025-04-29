@@ -60,4 +60,4 @@ def test_amplitude_configuration_update_clears_environment_cache(environment, mo
     amplitude_config.save()
 
     # Then
-    mock_environment_cache.delete.assert_called_once_with(environment.api_key)
+    mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])
