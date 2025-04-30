@@ -159,3 +159,67 @@ class AnalyticsRouter:
             if db != "default":
                 return db == "analytics"
         return None
+
+
+class TaskProcessorRouter:
+    """
+    Routing of database operations for task processor models
+
+    This router is used if TASK_PROCESSOR_DATABASE_* settings are defined.
+    """
+
+    route_app_labels = ["task_processor"]
+
+    def db_for_read(self, model, **hints):  # type: ignore[no-untyped-def]
+        """
+        If enabled, route "task_processor" models to the a se database
+        """
+        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+            return None
+
+        if model._meta.app_label in self.route_app_labels:
+            return "task_processor"
+
+        return None
+
+    def db_for_write(self, model, **hints):  # type: ignore[no-untyped-def]
+        """
+        Attempts to write task processor models go to 'task_processor' database.
+        """
+        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+            return None
+
+        if model._meta.app_label in self.route_app_labels:
+            return "task_processor"
+
+        return None
+
+    def allow_relation(self, obj1, obj2, **hints):  # type: ignore[no-untyped-def]
+        """
+        Relations between objects are allowed if both objects are
+        in the task processor database.
+        """
+        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+            return None
+
+        both_objects_from_task_processor = (
+            obj1._meta.app_label in self.route_app_labels
+            and obj2._meta.app_label in self.route_app_labels
+        )
+
+        if both_objects_from_task_processor:
+            return True
+
+        return None
+
+    def allow_migrate(self, db, app_label, model_name, **hints):  # type: ignore[no-untyped-def]
+        """
+        Make sure the task processor app only appears in the 'task_processor' database
+        """
+        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+            return None
+
+        if app_label in self.route_app_labels:
+            return db == "task_processor"
+
+        return None
