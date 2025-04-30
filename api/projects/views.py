@@ -11,7 +11,7 @@ from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -49,6 +49,7 @@ from projects.serializers import (
     ProjectRetrieveSerializer,
     ProjectUpdateSerializer,
 )
+from users.models import FFAdminUser
 
 
 @method_decorator(
@@ -92,7 +93,6 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Project.objects.none()
-
         queryset = self.request.user.get_permitted_projects(permission_key=VIEW_PROJECT)  # type: ignore[union-attr]
 
         organisation_id = self.request.query_params.get("organisation")
@@ -144,20 +144,27 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
     @swagger_auto_schema(
         responses={200: UserDetailedPermissionsSerializer},
-    )
+    )  # type: ignore[misc]
     @action(
         detail=True,
         methods=["GET"],
         url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
         url_name="user-detailed-permissions",
     )
-    def detailed_permissions(
-        self, request: Request, pk: int = None, user_id: int = None
-    ) -> Response:
-        user_id = int(user_id)
-        # TODO: permission checks
+    def detailed_permissions(self, request: Request, pk: str, user_id: str) -> Response:
         project = self.get_object()
-        permission_data = get_project_permission_data(project.id, user_id)
+        user = request.user
+        user_id_int = int(user_id)
+
+        if request.user.id != user_id_int:
+            if not request.user.is_project_admin(project):  # type: ignore[union-attr]
+                # Only project admin can get permissions of other users
+                raise PermissionDenied()
+
+            user = get_object_or_404(FFAdminUser, id=user_id_int)
+
+        permission_data = get_project_permission_data(project, user)  # type: ignore[arg-type]
+
         serializer = UserDetailedPermissionsSerializer(
             permission_data.to_detailed_permissions_data()
         )

@@ -50,6 +50,9 @@ from organisations.subscriptions.constants import (
 )
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
+from tests.types import (
+    WithOrganisationPermissionsCallable,
+)
 from users.models import (
     FFAdminUser,
     HubspotTracker,
@@ -2059,3 +2062,80 @@ def test_validation_error_if_non_numeric_organisation_id(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_organisation_user_can_get_their_detailed_permissions(
+    staff_client: APIClient,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+    organisation: Organisation,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:organisations:organisation-user-detailed-permissions",
+        args=[organisation.id, staff_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "CREATE_PROJECT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
+def test_organisation_user_can_not_get_detailed_permissions_of_other_user(
+    staff_client: APIClient,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:organisations:organisation-user-detailed-permissions",
+        args=[organisation.id, admin_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_organisation_admin_can_get_detailed_permissions_of_other_user(
+    admin_client: APIClient,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:organisations:organisation-user-detailed-permissions",
+        args=[organisation.id, staff_user.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "CREATE_PROJECT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]

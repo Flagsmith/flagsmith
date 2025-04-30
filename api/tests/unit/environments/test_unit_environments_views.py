@@ -296,6 +296,83 @@ def test_environment_user_can_get_their_permissions(
     assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
 
 
+def test_environment_user_can_get_their_detailed_permissions(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, staff_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "VIEW_ENVIRONMENT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
+def test_environment_user_can_not_get_detailed_permissions_of_other_user(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, admin_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_environment_admin_can_get_detailed_permissions_of_other_user(
+    admin_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, staff_user.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "VIEW_ENVIRONMENT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
 def test_can_create_webhook_for_an_environment(
     environment: Environment,
     admin_client_new: APIClient,

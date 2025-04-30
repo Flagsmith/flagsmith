@@ -29,7 +29,7 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
     from users.models import FFAdminUser
 
-
+# Some random comment
 UserPermissionType = typing.Union[
     UserProjectPermission, UserEnvironmentPermission, UserOrganisationPermission
 ]
@@ -158,13 +158,13 @@ class PermissionData:
 
         def add_permission(
             perm_key: str,
-            group: typing.Optional[int],
-            role: typing.Optional[int],
-        ):
+            group: typing.Optional[GroupData],
+            role: typing.Optional[RoleData],
+        ) -> None:
             if perm_key not in permission_map:
                 permission_map[perm_key] = DetailedPermissionsData(
                     permission_key=perm_key,
-                    is_directly_granted=group is None and role is None,
+                    is_directly_granted=bool(group is None and role is None),
                     derived_from=PermissionDerivedFromData(),
                 )
             if group:
@@ -173,18 +173,18 @@ class PermissionData:
                 permission_map[perm_key].derived_from.roles.append(role)
 
         # Add user's direct permissions
-        for perm in self.user.permissions:
-            add_permission(perm, [], None)
+        for permission_key in self.user.permissions:
+            add_permission(permission_key, None, None)
 
         # Add group permissions
-        for group in self.groups:
-            for perm in group.permissions:
-                add_permission(perm, group, None)
+        for group_permission in self.groups:
+            for permission_key in group_permission.permissions:
+                add_permission(permission_key, group_permission.group, None)
 
         # Add role permissions
         for role_permission in self.roles:
-            for perm in role_permission.permissions:
-                add_permission(perm, None, role_permission.role)
+            for permission_key in role_permission.permissions:
+                add_permission(permission_key, None, role_permission.role)
 
         return UserDetailedPermissionsData(
             admin=self.admin, permissions=list(permission_map.values())
