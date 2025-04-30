@@ -4,6 +4,7 @@ from environments.permissions.models import UserEnvironmentPermission
 from organisations.models import OrganisationRole
 from webhooks.permissions import TriggerSampleWebhookPermission
 
+
 def test_has_permission_returns_false_for_org_webhook_if_user_is_not_an_admin(  # type: ignore[no-untyped-def]
     organisation, django_user_model, rf
 ):
@@ -111,17 +112,10 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation
         "webhookUrl": "http://test.webhook.com",
         "secret": "some-secret",
         "payload": {"test": "data"},
-        "scope": {
-            "type": "organisation",
-            "id": organisation.id
-        }
+        "scope": {"type": "organisation", "id": organisation.id},
     }
 
-    mock_view = mock.MagicMock(
-        basename="webhooks",
-        action="test",
-        kwargs={}
-    )
+    mock_view = mock.MagicMock(basename="webhooks", action="test", kwargs={})
     permission_class = TriggerSampleWebhookPermission()
 
     # Then
