@@ -274,7 +274,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       return
     }
     const editedEnv = { ...currentEnv, ...newEnv }
-    
+
     AppActions.editEnv(
       Object.assign({}, currentEnv, {
         allow_client_traits: !!editedEnv?.allow_client_traits,
@@ -794,8 +794,8 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                           </div>
                           <div className='mt-4'>
                             <Setting
-                              title='Allow client SDKs to set user traits'
-                              description={`Disabling this option will prevent client SDKs from using the client key from setting traits.`}
+                              title='Persist traits when using client-side SDK keys'
+                              description={'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'}
                               checked={currentEnv?.allow_client_traits}
                               onChange={(value) => {
                                 updateCurrentEnv(
