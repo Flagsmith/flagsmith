@@ -19,11 +19,12 @@ from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from features.models import Feature
 from organisations.models import OrganisationWebhook
-from projects.models import (
-    Organisation,  # type: ignore[attr-defined]
+from projects.models import (  # type: ignore[attr-defined]
+    Organisation,
     Project,
 )
 from users.models import FFAdminUser
+
 
 from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
