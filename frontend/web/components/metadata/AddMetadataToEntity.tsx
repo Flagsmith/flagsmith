@@ -288,6 +288,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                 updateEnvironment({
                   body: {
                     metadata: metadataFieldsAssociatedtoEntity
+                      ?.filter((i) => i.metadataEntity)
                       ?.map((i) => {
                         const { field_value, ...rest } = i
                         return {
