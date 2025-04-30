@@ -1407,3 +1407,5 @@ PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
         default=prometheus_client.Histogram.DEFAULT_BUCKETS,
     )
 )
+
+DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)
