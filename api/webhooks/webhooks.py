@@ -25,7 +25,6 @@ from projects.models import (  # type: ignore[attr-defined]
 )
 from users.models import FFAdminUser
 
-
 from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
 
