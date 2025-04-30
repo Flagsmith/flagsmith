@@ -37,7 +37,7 @@ The Flagsmith API to set user traits, e.g. the `setTraits` method from the JavaS
 authentication or credentials. This means that users can change their own traits, which could be a security problem if
 you are using segments for authorisation or access control. If you must use segments for access control, make sure to
 disable the
-["Allow client SDKs to set user traits" option](system-administration/security.md#preventing-client-sdks-from-setting-traits)
+["Persist traits when using client-side SDK keys" option](system-administration/security.md#preventing-client-sdks-from-setting-traits)
 on every environment that needs it, and use server-side SDKs to set traits instead. You can still use client-side SDKs
 to read traits and flags derived from segments in this case.
 
