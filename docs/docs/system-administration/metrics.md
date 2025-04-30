@@ -4,7 +4,10 @@ title: Metrics
 
 ## Prometheus
 
-Flagsmith exports Prometheus metrics described below.
+To enable the Prometheus `/metrics` endpoint, set the `PROMETHEUS_ENABLED` environment variable to `true`. 
+
+The metrics provided by Flagsmith are described below.
+
 
 ### `flagsmith_build_info`
 
