@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+import pytz
 import re2 as re  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
@@ -309,7 +310,7 @@ class UsageReport(TemplateView):
             "total_environments": Environment.objects.all().count(),
             "total_features": Feature.objects.all().count(),
             "total_seats": FFAdminUser.objects.all().count(),
-            "report_date": timezone.now(),
+            "report_date": timezone.now().astimezone(pytz.UTC),
         }
         return context
 
