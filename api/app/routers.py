@@ -5,6 +5,7 @@ from enum import Enum
 from django.conf import settings
 from django.core.cache import cache
 from django.db import connections
+from django.db.models import Model
 
 from .exceptions import ImproperlyConfiguredError
 
@@ -170,11 +171,18 @@ class TaskProcessorRouter:
 
     route_app_labels = ["task_processor"]
 
-    def db_for_read(self, model, **hints):  # type: ignore[no-untyped-def]
+    @property
+    def is_enabled(self) -> bool:
+        return bool(
+            settings.TASK_PROCESSOR_DATABASE_URL
+            or settings.TASK_PROCESSOR_DATABASE_NAME
+        )
+
+    def db_for_read(self, model: type[Model], **hints: None) -> str | None:
         """
         If enabled, route "task_processor" models to the a se database
         """
-        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+        if not self.is_enabled:
             return None
 
         if model._meta.app_label in self.route_app_labels:
@@ -182,11 +190,11 @@ class TaskProcessorRouter:
 
         return None
 
-    def db_for_write(self, model, **hints):  # type: ignore[no-untyped-def]
+    def db_for_write(self, model: type[Model], **hints: None) -> str | None:
         """
         Attempts to write task processor models go to 'task_processor' database.
         """
-        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+        if not self.is_enabled:
             return None
 
         if model._meta.app_label in self.route_app_labels:
@@ -194,12 +202,12 @@ class TaskProcessorRouter:
 
         return None
 
-    def allow_relation(self, obj1, obj2, **hints):  # type: ignore[no-untyped-def]
+    def allow_relation(self, obj1: Model, obj2: Model, **hints: None) -> bool | None:
         """
         Relations between objects are allowed if both objects are
         in the task processor database.
         """
-        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+        if not self.is_enabled:
             return None
 
         both_objects_from_task_processor = (
@@ -212,11 +220,17 @@ class TaskProcessorRouter:
 
         return None
 
-    def allow_migrate(self, db, app_label, model_name, **hints):  # type: ignore[no-untyped-def]
+    def allow_migrate(
+        self,
+        db: str,
+        app_label: str,
+        model_name: str | None,
+        **hints: None,
+    ) -> bool | None:
         """
         Make sure the task processor app only appears in the 'task_processor' database
         """
-        if not settings.TASK_PROCESSOR_DATABASE_IS_ENABLED:
+        if not self.is_enabled:
             return None
 
         if app_label in self.route_app_labels:
