@@ -73,29 +73,17 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ matrix.api-image }}
-      concurrency: ${{ matrix.args.concurrency }}
-      tests: ${{ matrix.args.tests }}
+      concurrency: 16
     secrets:
       GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
 
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, ARM64-2c]
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         api-image:
           - ${{ needs.docker-build-api.outputs.image }}
           - ${{ needs.docker-build-private-cloud-api.outputs.image }}
-        args:
-          - tests: segment-part-1 environment
-            concurrency: 1
-          - tests: segment-part-2
-            concurrency: 1
-          - tests: segment-part-3 signup flag invite project
-            concurrency: 2
-          - tests: versioning
-            concurrency: 1
-          - tests: organisation-permission environment-permission project-permission roles
-            concurrency: 1
 
   # Publish to dockerhub
 
@@ -184,7 +172,7 @@ jobs:
 
   update-charts:
     needs: [docker-publish-api, docker-publish-frontend, docker-publish-unified]
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Checkout Target Charts Repository to update yaml
         uses: actions/checkout@v4
