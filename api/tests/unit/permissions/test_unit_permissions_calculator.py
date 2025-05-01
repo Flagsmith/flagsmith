@@ -306,12 +306,12 @@ def test_permission_data_to_detailed_permissions_data() -> None:
     group_one_permission_data = GroupPermissionData(
         admin=True,
         group=GroupData(id=1, name="group_one"),
-        permissions={CREATE_PROJECT, MANAGE_USER_GROUPS, VIEW_PROJECT},
+        permissions={CREATE_PROJECT, VIEW_PROJECT},
     )
     group_two_permission_data = GroupPermissionData(
         admin=True,
         group=GroupData(id=1, name="group_one"),
-        permissions={VIEW_PROJECT},
+        permissions={VIEW_PROJECT, MANAGE_USER_GROUPS},
     )
     # two roles with same permissions with different tags
     role_one_permission_data = RolePermissionData(
@@ -331,6 +331,43 @@ def test_permission_data_to_detailed_permissions_data() -> None:
         permissions={VIEW_PROJECT},
     )
 
+    expected_permissions = {
+        CREATE_PROJECT: {
+            "is_directly_granted": True,
+            "derived_from": {
+                "groups": [group_one_permission_data.group],
+                "roles": [],
+            },
+        },
+        VIEW_PROJECT: {
+            "is_directly_granted": False,
+            "derived_from": {
+                "groups": [
+                    group_one_permission_data.group,
+                    group_two_permission_data.group,
+                ],
+                "roles": [role_three_permission_data.role],
+            },
+        },
+        MANAGE_USER_GROUPS: {
+            "is_directly_granted": False,
+            "derived_from": {
+                "groups": [group_two_permission_data.group],
+                "roles": [],
+            },
+        },
+        DELETE_FEATURE: {
+            "is_directly_granted": False,
+            "derived_from": {
+                "groups": [],
+                "roles": [
+                    role_one_permission_data.role,
+                    role_two_permission_data.role,
+                ],
+            },
+        },
+    }
+
     # When
     detailed_permission_data = PermissionData(
         user=user_permission_data,
@@ -343,37 +380,12 @@ def test_permission_data_to_detailed_permissions_data() -> None:
     ).to_detailed_permissions_data()
 
     # Then
+    for permission in detailed_permission_data.permissions:
+        assert permission.permission_key in expected_permissions
+        expected = expected_permissions[permission.permission_key]
+        assert permission.is_directly_granted == expected["is_directly_granted"]
+        assert permission.derived_from.groups == expected["derived_from"]["groups"]  # type: ignore[index]
+        assert permission.derived_from.roles == expected["derived_from"]["roles"]  # type: ignore[index]
+
     assert detailed_permission_data.admin is True
     assert len(detailed_permission_data.permissions) == 4
-
-    assert detailed_permission_data.permissions[0].permission_key == CREATE_PROJECT
-    assert detailed_permission_data.permissions[0].is_directly_granted is True
-    assert detailed_permission_data.permissions[0].derived_from.groups == [
-        group_one_permission_data.group
-    ]
-    assert detailed_permission_data.permissions[0].derived_from.roles == []
-
-    assert detailed_permission_data.permissions[1].permission_key == MANAGE_USER_GROUPS
-    assert detailed_permission_data.permissions[1].is_directly_granted is False
-    assert detailed_permission_data.permissions[1].derived_from.groups == [
-        group_one_permission_data.group
-    ]
-    assert detailed_permission_data.permissions[1].derived_from.roles == []
-
-    assert detailed_permission_data.permissions[2].permission_key == VIEW_PROJECT
-    assert detailed_permission_data.permissions[2].is_directly_granted is False
-    assert detailed_permission_data.permissions[2].derived_from.groups == [
-        group_one_permission_data.group,
-        group_two_permission_data.group,
-    ]
-    assert detailed_permission_data.permissions[2].derived_from.roles == [
-        role_three_permission_data.role
-    ]
-
-    assert detailed_permission_data.permissions[3].permission_key == DELETE_FEATURE
-    assert detailed_permission_data.permissions[3].is_directly_granted is False
-    assert detailed_permission_data.permissions[3].derived_from.groups == []
-    assert detailed_permission_data.permissions[3].derived_from.roles == [
-        role_one_permission_data.role,
-        role_two_permission_data.role,
-    ]
