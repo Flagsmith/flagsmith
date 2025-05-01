@@ -10,7 +10,7 @@ on:
 jobs:
   permissions-check:
     name: Check actor permissions
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     outputs:
       can-write: ${{ steps.check.outputs.require-result }}
     steps:
@@ -23,7 +23,7 @@ jobs:
     if: needs.permissions-check.outputs.can-write == 'true'
     name: Add Conventional Commit labels
     needs: permissions-check
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pull-requests: write
     steps:
@@ -49,7 +49,7 @@ jobs:
     if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
     name: Prepare Docker report comment
     needs: permissions-check
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pull-requests: write
     steps:

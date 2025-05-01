@@ -16,7 +16,7 @@ on:
 
 jobs:
   run-e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4

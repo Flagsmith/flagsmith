@@ -184,7 +184,7 @@ jobs:
 
   update-charts:
     needs: [docker-publish-api, docker-publish-frontend, docker-publish-unified]
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Checkout Target Charts Repository to update yaml
         uses: actions/checkout@v4
