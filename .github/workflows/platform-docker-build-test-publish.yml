@@ -73,7 +73,7 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ matrix.api-image }}
-      concurrency: ${{ matrix.args.concurrency }}
+      concurrency: ${{ matrix.args.concurrency || 16 }}
       tests: ${{ matrix.args.tests }}
     secrets:
       GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,15 +87,10 @@ jobs:
           - ${{ needs.docker-build-private-cloud-api.outputs.image }}
         args:
           - tests: segment-part-1 environment
-            concurrency: 1
           - tests: segment-part-2
-            concurrency: 1
           - tests: segment-part-3 signup flag invite project
-            concurrency: 2
           - tests: versioning
-            concurrency: 1
           - tests: organisation-permission environment-permission project-permission roles
-            concurrency: 1
 
   # Publish to dockerhub
 
