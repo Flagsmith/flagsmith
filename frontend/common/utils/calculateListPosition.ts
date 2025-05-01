@@ -1,3 +1,4 @@
+// This function is used to calculate the position of a dropdown menu relative to his trigger button element
 export function calculateListPosition(
   btnEl: HTMLElement,
   listEl: HTMLElement,
