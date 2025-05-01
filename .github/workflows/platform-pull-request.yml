@@ -137,8 +137,17 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-api.outputs.image }}
-      concurrency: ${{ matrix.args.concurrency || 16 }}
-      tests: ${{ matrix.args.tests }}
+      concurrency: 16
+      tests: >-
+        segment-part-1 
+        segment-part-2
+        segment-part-3
+        environment
+        signup
+        flag
+        invite
+        project
+        versioning
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
@@ -146,11 +155,6 @@ jobs:
     strategy:
       matrix:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
-        args:
-          - tests: segment-part-1 environment
-          - tests: segment-part-2
-          - tests: segment-part-3 signup flag invite project
-          - tests: versioning
 
   run-e2e-tests-private-cloud:
     if: needs.permissions-check.outputs.can-write == 'true' && !cancelled()
@@ -160,8 +164,12 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
-      concurrency: ${{ matrix.args.concurrency || 16 }}
-      tests: ${{ matrix.args.tests }}
+      concurrency: 16
+      tests: >-
+        organisation-permission
+        environment-permission
+        project-permission
+        roles
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
@@ -169,5 +177,3 @@ jobs:
     strategy:
       matrix:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
-        args:
-          - tests: organisation-permission environment-permission project-permission roles
