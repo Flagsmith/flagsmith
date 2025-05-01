@@ -26,11 +26,10 @@ import {
   waitAndRefresh,
   waitForElementVisible,
   cloneSegment,
-  isElementExists,
 } from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
 
-export const testSegment1 = async () => {
+export const testSegment1 = async (flagsmith: any) => {
   log('Login')
   await login(E2E_USER, PASSWORD)
   await click('#project-select-1')
@@ -125,7 +124,7 @@ export const testSegment1 = async () => {
   await waitAndRefresh()
   await assertTextContent(byId('user-feature-value-0'), '"medium"')
 
-  const isCloneSegmentEnabled = await isElementExists('segment-action-0')
+  const isCloneSegmentEnabled = await flagsmith.hasFeature('clone_segment')
   if (isCloneSegmentEnabled) {
     log('Clone segment')
     await gotoSegments()

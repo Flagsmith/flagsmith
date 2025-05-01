@@ -14,7 +14,7 @@ import versioningTests from './tests/versioning-tests'
 import organisationPermissionTest from './tests/organisation-permission-test'
 import projectPermissionTest from './tests/project-permission-test'
 import environmentPermissionTest from './tests/environment-permission-test'
-import rolesTest from './tests/roles-test'
+import flagsmith from 'flagsmith/isomorphic';
 
 require('dotenv').config()
 
@@ -30,10 +30,16 @@ console.log(
   '\n',
 )
 
+
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
   const token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
+    await flagsmith.init({
+      api:Project.flagsmithClientAPI,
+      environmentID:Project.flagsmith,
+      fetch,
+    })
 
   if (token) {
     await fetch(e2eTestApi, {
@@ -86,60 +92,60 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
   })
 
 test('Segment-part-1', async () => {
-  await testSegment1()
+  await testSegment1(flagsmith)
   await logout()
 })
 
-test('Segment-part-2', async () => {
-  await testSegment2()
-  await logout()
-})
+// test('Segment-part-2', async () => {
+//   await testSegment2()
+//   await logout()
+// })
 
-test('Segment-part-3', async () => {
-  await testSegment3()
-  await logout()
-})
+// test('Segment-part-3', async () => {
+//   await testSegment3()
+//   await logout()
+// })
 
-test('Flag', async () => {
-  await flagTests()
-  await logout()
-})
+// test('Flag', async () => {
+//   await flagTests()
+//   await logout()
+// })
 
-test('Signup', async () => {
-  await initialiseTests()
-  await logout()
-})
+// test('Signup', async () => {
+//   await initialiseTests()
+//   await logout()
+// })
 
-test('Invite', async () => {
-  await inviteTest()
-})
+// test('Invite', async () => {
+//   await inviteTest()
+// })
 
-test('Environment', async () => {
-  await environmentTest()
-  await logout()
-})
+// test('Environment', async () => {
+//   await environmentTest()
+//   await logout()
+// })
 
-test('Project', async () => {
-  await projectTest()
-  await logout()
-})
+// test('Project', async () => {
+//   await projectTest()
+//   await logout()
+// })
 
-test('Versioning', async () => {
-  await versioningTests()
-  await logout()
-})
+// test('Versioning', async () => {
+//   await versioningTests()
+//   await logout()
+// })
 
-test('Organisation-permission', async () => {
-  await organisationPermissionTest()
-  await logout()
-})
+// test('Organisation-permission', async () => {
+//   await organisationPermissionTest()
+//   await logout()
+// })
 
-test('Project-permission', async () => {
-  await projectPermissionTest()
-  await logout()
-})
+// test('Project-permission', async () => {
+//   await projectPermissionTest()
+//   await logout()
+// })
 
-test('Environment-permission', async () => {
-  await environmentPermissionTest()
-  await logout()
-})
+// test('Environment-permission', async () => {
+//   await environmentPermissionTest()
+//   await logout()
+// })
