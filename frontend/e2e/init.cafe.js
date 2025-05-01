@@ -96,56 +96,56 @@ test('Segment-part-1', async () => {
   await logout()
 })
 
-// test('Segment-part-2', async () => {
-//   await testSegment2()
-//   await logout()
-// })
+test('Segment-part-2', async () => {
+  await testSegment2()
+  await logout()
+})
 
-// test('Segment-part-3', async () => {
-//   await testSegment3()
-//   await logout()
-// })
+test('Segment-part-3', async () => {
+  await testSegment3()
+  await logout()
+})
 
-// test('Flag', async () => {
-//   await flagTests()
-//   await logout()
-// })
+test('Flag', async () => {
+  await flagTests()
+  await logout()
+})
 
-// test('Signup', async () => {
-//   await initialiseTests()
-//   await logout()
-// })
+test('Signup', async () => {
+  await initialiseTests()
+  await logout()
+})
 
-// test('Invite', async () => {
-//   await inviteTest()
-// })
+test('Invite', async () => {
+  await inviteTest()
+})
 
-// test('Environment', async () => {
-//   await environmentTest()
-//   await logout()
-// })
+test('Environment', async () => {
+  await environmentTest()
+  await logout()
+})
 
-// test('Project', async () => {
-//   await projectTest()
-//   await logout()
-// })
+test('Project', async () => {
+  await projectTest()
+  await logout()
+})
 
-// test('Versioning', async () => {
-//   await versioningTests()
-//   await logout()
-// })
+test('Versioning', async () => {
+  await versioningTests()
+  await logout()
+})
 
-// test('Organisation-permission', async () => {
-//   await organisationPermissionTest()
-//   await logout()
-// })
+test('Organisation-permission', async () => {
+  await organisationPermissionTest()
+  await logout()
+})
 
-// test('Project-permission', async () => {
-//   await projectPermissionTest()
-//   await logout()
-// })
+test('Project-permission', async () => {
+  await projectPermissionTest()
+  await logout()
+})
 
-// test('Environment-permission', async () => {
-//   await environmentPermissionTest()
-//   await logout()
-// })
+test('Environment-permission', async () => {
+  await environmentPermissionTest()
+  await logout()
+})
