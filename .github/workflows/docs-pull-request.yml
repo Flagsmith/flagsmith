@@ -13,7 +13,7 @@ defaults:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     name: Link Check Docs
 
     steps:

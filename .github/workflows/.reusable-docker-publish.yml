@@ -31,7 +31,7 @@ on:
 jobs:
   publish:
     name: Publish ${{ inputs.source-images }} to ${{ inputs.target-images }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
 
     permissions:
       contents: read

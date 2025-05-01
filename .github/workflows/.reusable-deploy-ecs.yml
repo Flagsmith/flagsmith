@@ -17,7 +17,7 @@ on:
 jobs:
   docker-build-saas-api:
     environment: ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     outputs:
       image-url: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.saas-image-name }}:${{ steps.meta.outputs.version }}
 
@@ -70,7 +70,7 @@ jobs:
   deploy:
     needs: docker-build-saas-api
     environment: ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Cloning repo
         uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
 
   run-tests:
     needs: deploy
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     name: Run E2E Tests
     environment: ${{ inputs.environment }}
     concurrency:

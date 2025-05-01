@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     environment: ${{ inputs.gh_environment }}
 
     permissions:

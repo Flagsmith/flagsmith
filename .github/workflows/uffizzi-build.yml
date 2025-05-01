@@ -10,7 +10,7 @@ on:
 jobs:
   build-flagsmith:
     name: Build and push `Flagsmith`
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
 
     permissions:
       id-token: write
@@ -50,7 +50,7 @@ jobs:
   render-compose-file:
     name: Render Docker Compose File
     # Pass output of this workflow to another triggered by `workflow_run` event.
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     needs:
       - build-flagsmith
     outputs:
@@ -76,7 +76,7 @@ jobs:
 
   delete-preview:
     name: Call for Preview Deletion
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     if: ${{ github.event.action == 'closed' }}
     steps:
       # If this PR is closing, we will not render a compose file nor pass it to the next workflow.

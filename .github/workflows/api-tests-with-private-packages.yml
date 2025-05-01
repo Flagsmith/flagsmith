@@ -13,7 +13,7 @@ defaults:
 jobs:
   test:
     if: ${{ github.event.label.name == 'api' }}
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     name: API Tests
 
     services:

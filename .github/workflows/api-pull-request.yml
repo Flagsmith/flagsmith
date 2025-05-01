@@ -22,7 +22,7 @@ env:
 
 jobs:
   test:
-    runs-on: General-Purpose-8c-Runner
+    runs-on: depot-ubuntu-latest-16
     name: API Unit Tests
 
     services:

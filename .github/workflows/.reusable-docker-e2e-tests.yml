@@ -24,9 +24,9 @@ on:
         default: 3
       runs-on:
         type: string
-        description: The runner label to use. Defaults to `ubuntu-latest`
+        description: The runner label to use. Defaults to `depot-ubuntu-latest`
         required: false
-        default: ubuntu-latest
+        default: depot-ubuntu-latest
     secrets:
       GCR_TOKEN:
         description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
