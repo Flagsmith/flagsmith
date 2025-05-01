@@ -64,6 +64,7 @@ import PlanBasedAccess from './PlanBasedAccess'
 import { PermissionRow } from './PermissionRow'
 import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
+import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 
 const Project = require('common/project')
 
@@ -138,7 +139,6 @@ const withAdminPermissions = (InnerComponent: any) => {
   return WrappedComponent
 }
 
-
 const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
   forwardRef((props: EditPermissionModalType) => {
     const {
@@ -176,8 +176,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       props.level === 'project'
         ? props.id
         : props.level === 'environment'
-        ? props.parentId
-        : undefined
+          ? props.parentId
+          : undefined
 
     const [permissionWasCreated, setPermissionWasCreated] =
       useState<boolean>(false)
@@ -259,8 +259,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       const foundPermission = isGroup
         ? findPermissionByGroup()
         : role
-        ? findPermissionByRole()
-        : findPermissionByUser()
+          ? findPermissionByRole()
+          : findPermissionByUser()
 
       const isProjectOrEnvironmentRole =
         role && (level === 'project' || level === 'environment')
@@ -465,6 +465,13 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     }, [])
 
     const admin = () => entityPermissions && entityPermissions.admin
+
+    const hasPermission = (key: string) => {
+      if (admin()) return true
+      return !!entityPermissions.permissions.find(
+        (permission) => permission.permission_key === key,
+      )
+    }
 
     const save = useCallback(() => {
       const entityId = entityPermissions.id ?? ''
@@ -838,15 +845,50 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   key={p.key}
                   permission={p}
                   level={level}
+                  hasPermission={hasPermission}
                   projectId={projectId}
                   entityPermissions={entityPermissions}
                   limitedPermissions={limitedPermissions}
                   isAdmin={isAdmin}
                   isSaving={saving}
                   isTagBasedPermissions={tagBasedPermissions}
-                  onValueChanged={setValueChanged}
+                  onValueChanged={(permissionKey: string, shouldToggle?: boolean) => {
+
+                    const levelUpperCase = level.toUpperCase()
+                    const viewPermission = `VIEW_${levelUpperCase}`
+                    const showRemoveViewPermissionModal = level !== 'organisation' &&
+                      permissionKey === viewPermission &&
+                      hasPermission(viewPermission) &&
+                      entityPermissions.permissions.length > 1
+
+                    if (
+                      showRemoveViewPermissionModal
+                    ) {
+                      return openModal2(
+                        `Remove View ${Utils.capitalize(
+                          level,
+                        )} Permission`,
+                        <RemoveViewPermissionModal
+                          level={level}
+                          onConfirm={() => {
+                            setValueChanged(true)
+                            togglePermission(permissionKey)
+                            closeModal2()
+                          }}
+                          onCancel={() => {
+                            closeModal2()
+                          }}
+                        />,
+                      )
+                    }
+
+                    setValueChanged(true)
+
+                    if (shouldToggle) {
+                      togglePermission(permissionKey)
+                    }
+                  }}
                   onSelectPermissions={selectPermissions}
-                  onTogglePermission={togglePermission}
                 />
               )}
             />
@@ -1086,9 +1128,8 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                               <Row
                                 onClick={onClick}
                                 space
-                                className={`list-item${
-                                  role === 'ADMIN' ? '' : ' clickable'
-                                }`}
+                                className={`list-item${role === 'ADMIN' ? '' : ' clickable'
+                                  }`}
                                 key={id}
                               >
                                 <Flex className='table-column px-3'>
@@ -1116,10 +1157,10 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
                                     className='table-column fs-small lh-sm'
                                   >
                                     {matchingPermissions &&
-                                    matchingPermissions.admin
+                                      matchingPermissions.admin
                                       ? `${Format.camelCase(
-                                          level,
-                                        )} Administrator`
+                                        level,
+                                      )} Administrator`
                                       : 'Regular User'}
                                   </Flex>
                                 )}

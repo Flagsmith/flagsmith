@@ -291,6 +291,8 @@ export type Permission = {
 }
 export type UserPermissions = {
   admin: boolean
+  is_directly_granted: boolean
+  derived_from: DerivedPermission
   permissions: Permission[]
 }
 

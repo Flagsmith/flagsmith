@@ -15,7 +15,6 @@ import OrganisationStore from 'common/stores/organisation-store'
 import PlanBasedAccess from './PlanBasedAccess'
 import { PermissionLevel } from 'common/types/requests'
 import { useGetUserPermissionsQuery } from 'common/services/useUserPermissions'
-import Icon from './Icon'
 import PanelSearch from './PanelSearch'
 import Format from 'common/utils/format'
 
@@ -23,6 +22,8 @@ import { PermissionRow } from './PermissionRow'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 
 import BooleanDotIndicator from './BooleanDotIndicator'
+import Icon from './Icon'
+import DerivedPermissionsList from './DerivedPermissionsList'
 
 type InspectPermissionsType = {
   orgId?: number
@@ -33,6 +34,17 @@ type InspectPermissionsType = {
   onChange?: (v: number) => void
   uncontrolled?: boolean
   tabRef?: Ref<any>
+}
+
+type ExpandablePermissionsListProps<T> = {
+  item: T
+  level: PermissionLevel
+  userId?: number
+  projectId?: number
+  getItemName: (item: T) => string
+  getItemId: (item: T) => string | number
+  getLevelId: (item: T) => string
+  showSearch?: boolean
 }
 
 const Permissions = ({
@@ -50,7 +62,7 @@ const Permissions = ({
   const { data: userPermissions, isLoading: isLoadingPermissions } =
     useGetUserPermissionsQuery(
       { id: levelId, level, userId: userId },
-      { skip: !level || !levelId || !userId },
+      { refetchOnMountOrArgChange: true, skip: !level || !levelId || !userId },
     )
 
   const { data: permissions } = useGetAvailablePermissionsQuery({ level })
@@ -69,57 +81,118 @@ const Permissions = ({
   }
 
   const isAdmin = userPermissions.admin
-  const saving = false
-  const tagBasedPermissions = false
-
-  const selectPermissions = () => {}
-  const setValueChanged = () => {}
-  const togglePermission = () => {}
+  const isDerivedAdmin =
+    userPermissions.admin && userPermissions.is_directly_granted === false
 
   return (
-    <PlanBasedAccess className='px-4 pt-4' feature={'RBAC'} theme={'page'}>
-      <div>
-        {level !== 'organisation' && (
-          <div className='my-2'>
-            <Row>
-              <Flex>
-                <div className='font-weight-medium text-dark mb-1'>
-                  Administrator
-                </div>
-              </Flex>
-              <div className='mr-3'>
-                <BooleanDotIndicator enabled={isAdmin} />
+    <div>
+      {level !== 'organisation' && (
+        <div className='my-2'>
+          <Row>
+            <Flex>
+              <div className='font-weight-medium text-dark mb-1'>
+                Administrator
               </div>
-            </Row>
+              {isDerivedAdmin && (
+                <div>
+                  <DerivedPermissionsList
+                    derivedPermissions={userPermissions.derived_from}
+                  />
+                </div>
+              )}
+            </Flex>
+            <div className='mr-3'>
+              <BooleanDotIndicator enabled={isAdmin} />
+            </div>
+          </Row>
+        </div>
+      )}
+      <PanelSearch
+        filterRow={(item: AvailablePermission, search: string) => {
+          const name = Format.enumeration.get(item.key).toLowerCase()
+          return name.includes(search?.toLowerCase() || '')
+        }}
+        title='Permissions'
+        className='no-pad mb-2 overflow-visible'
+        items={permissions}
+        renderRow={(p) => (
+          <PermissionRow
+            key={p.key}
+            permission={p}
+            level={level}
+            projectId={projectId}
+            entityPermissions={userPermissions}
+            isAdmin={isAdmin}
+            isTagBasedPermissions={false}
+            onValueChanged={() => {}}
+            onSelectPermissions={() => {}}
+            onTogglePermission={() => {}}
+            isDebug
+          />
+        )}
+      />
+    </div>
+  )
+}
+
+const ExpandablePermissionsList = <T,>({
+  getItemId,
+  getItemName,
+  getLevelId,
+  item,
+  level,
+  projectId,
+  userId,
+}: ExpandablePermissionsListProps<T>) => {
+  const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
+
+  const toggleExpand = async (id: string | number) => {
+    setExpandedItems((prevExpanded) =>
+      prevExpanded.includes(id)
+        ? prevExpanded.filter((item) => item !== id)
+        : [...prevExpanded, id],
+    )
+  }
+
+  return (
+    <div
+      className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
+      data-test={`permissions-${getItemName(item).toLowerCase()}`}
+      key={getItemId(item)}
+    >
+      <Row
+        className='px-3 flex-fill align-items-center user-select-none clickable'
+        onClick={() => toggleExpand(getItemId(item))}
+      >
+        <Flex>
+          <div className={'list-item-subtitle'}>
+            <strong>{getItemName(item)}</strong>{' '}
+          </div>
+        </Flex>
+        <div>
+          <Icon
+            fill={'#9DA4AE'}
+            name={
+              expandedItems.includes(getItemId(item))
+                ? 'chevron-down'
+                : 'chevron-right'
+            }
+          />
+        </div>
+      </Row>
+      <div>
+        {expandedItems.includes(getItemId(item)) && (
+          <div className='modal-body px-3'>
+            <Permissions
+              level={level}
+              levelId={getLevelId(item)}
+              userId={userId}
+              projectId={projectId}
+            />
           </div>
         )}
-        <PanelSearch
-          filterRow={(item: AvailablePermission, search: string) => {
-            const name = Format.enumeration.get(item.key).toLowerCase()
-            return name.includes(search?.toLowerCase() || '')
-          }}
-          title='Permissions'
-          className='no-pad mb-2 overflow-visible'
-          items={permissions}
-          renderRow={(p) => (
-            <PermissionRow
-              key={p.key}
-              permission={p}
-              level={level}
-              projectId={projectId}
-              entityPermissions={userPermissions}
-              isAdmin={isAdmin}
-              isSaving={saving}
-              isTagBasedPermissions={tagBasedPermissions}
-              onValueChanged={setValueChanged}
-              onSelectPermissions={selectPermissions}
-              onTogglePermission={togglePermission}
-              isDebug
-            />
-          )}
-        />
       </div>
-    </PlanBasedAccess>
+    </div>
   )
 }
 
@@ -133,7 +206,6 @@ const EnvironmentPermissions = ({
   searchEnvironment?: string
 }) => {
   const projectData: Project[] = OrganisationStore.getProjects()
-  const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
 
   const environments = useMemo(() => {
     if (!projectData || !projectId) {
@@ -142,21 +214,11 @@ const EnvironmentPermissions = ({
     return projectData.find((p) => p.id === parseInt(projectId))?.environments
   }, [projectData, projectId])
 
-  const toggleExpand = async (id: string | number) => {
-    setExpandedItems((prevExpanded) =>
-      prevExpanded.includes(id)
-        ? prevExpanded.filter((item) => item !== id)
-        : [...prevExpanded, id],
-    )
-  }
-
   const filteredEnvironments = environments?.filter((v) => {
     const search = searchEnvironment?.toLowerCase()
     if (!search) return true
     return `${v.name}`.toLowerCase().includes(search)
   })
-
-  const level = 'environment'
 
   return (
     <>
@@ -168,46 +230,17 @@ const EnvironmentPermissions = ({
         }
         className='no-pad'
         items={filteredEnvironments}
-        renderRow={(env, index) => (
-          <div
-            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
-            data-test={`permissions-${env.name.toLowerCase()}`}
+        renderRow={(env) => (
+          <ExpandablePermissionsList
             key={env.id}
-          >
-            <Row
-              className='px-3 flex-fill align-items-center user-select-none clickable'
-              key={index}
-              onClick={() => toggleExpand(env.id)}
-            >
-              <Flex>
-                <div className={'list-item-subtitle'}>
-                  <strong>{env.name}</strong>{' '}
-                </div>
-              </Flex>
-              <div>
-                <Icon
-                  fill={'#9DA4AE'}
-                  name={
-                    expandedItems.includes(env.id)
-                      ? 'chevron-down'
-                      : 'chevron-right'
-                  }
-                />
-              </div>
-            </Row>
-            <div>
-              {expandedItems.includes(env.id) && (
-                <div className='modal-body px-3'>
-                  <Permissions
-                    level={level}
-                    levelId={String(env.id)}
-                    userId={userId}
-                    projectId={parseInt(projectId ?? '')}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+            item={env}
+            level='environment'
+            userId={userId}
+            projectId={parseInt(projectId ?? '')}
+            getItemName={(env) => env.name}
+            getItemId={(env) => env.id}
+            getLevelId={(env) => env.api_key}
+          />
         )}
       />
     </>
@@ -217,15 +250,6 @@ const EnvironmentPermissions = ({
 const ProjectPermissions = ({ userId }: { userId?: number }) => {
   const projectData: Project[] = OrganisationStore.getProjects()
   const [searchProject, setSearchProject] = useState<string>('')
-  const [expandedItems, setExpandedItems] = useState<(string | number)[]>([])
-
-  const toggleExpand = async (id: string | number) => {
-    setExpandedItems((prevExpanded) =>
-      prevExpanded.includes(id)
-        ? prevExpanded.filter((item) => item !== id)
-        : [...prevExpanded, id],
-    )
-  }
 
   const filteredProjects =
     projectData &&
@@ -234,8 +258,6 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
       if (!search) return true
       return `${v.name}`.toLowerCase().includes(search)
     })
-
-  const level = 'project'
 
   return (
     <>
@@ -261,46 +283,17 @@ const ProjectPermissions = ({ userId }: { userId?: number }) => {
         }
         className='no-pad'
         items={filteredProjects}
-        renderRow={(project, index) => (
-          <div
-            className='list-item d-flex flex-column justify-content-center py-2 list-item-sm clickable'
-            data-test={`permissions-${project.name.toLowerCase()}`}
+        renderRow={(project) => (
+          <ExpandablePermissionsList
             key={project.id}
-          >
-            <Row
-              className='px-3 flex-fill align-items-center user-select-none clickable'
-              key={index}
-              onClick={() => toggleExpand(project.id)}
-            >
-              <Flex>
-                <div className={'list-item-subtitle'}>
-                  <strong>{project.name}</strong>{' '}
-                </div>
-              </Flex>
-              <div>
-                <Icon
-                  fill={'#9DA4AE'}
-                  name={
-                    expandedItems.includes(project.id)
-                      ? 'chevron-down'
-                      : 'chevron-right'
-                  }
-                />
-              </div>
-            </Row>
-            <div>
-              {expandedItems.includes(project.id) && (
-                <div className='modal-body px-3'>
-                  <Permissions
-                    level={level}
-                    levelId={String(project.id)}
-                    userId={userId}
-                    projectId={project.id}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+            item={project}
+            level='project'
+            userId={userId}
+            projectId={project.id}
+            getItemName={(project) => project.name}
+            getItemId={(project) => project.id}
+            getLevelId={(project) => String(project.id)}
+          />
         )}
       />
     </>
@@ -342,7 +335,7 @@ const InspectPermissions: FC<InspectPermissionsType> = ({
           tabLabel={<Row className='justify-content-center'>Organisation</Row>}
           data-test='organisation-permissions-tab'
         >
-          <div className='my-3'>
+          <div className='my-2'>
             <Permissions
               level='organisation'
               levelId={String(orgId)}

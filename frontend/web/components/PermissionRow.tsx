@@ -1,10 +1,7 @@
 import React from 'react'
-import Switch from './Switch'
-import Select, { components } from 'react-select'
 import AddEditTags from './tags/AddEditTags'
 import Format from 'common/utils/format'
-import Icon from './Icon'
-import { SingleValueProps } from 'react-select/lib/components/SingleValue'
+
 import {
   AvailablePermission,
   Permission,
@@ -12,70 +9,7 @@ import {
   UserPermissions,
 } from 'common/types/responses'
 import DerivedPermissionsList from './DerivedPermissionsList'
-import BooleanDotIndicator from './BooleanDotIndicator'
-import Utils from 'common/utils/utils'
-import Button from './base/forms/Button'
-
-const permissionOptions = [
-  { label: 'Granted', value: 'GRANTED' },
-  { label: 'Granted for tags', value: 'GRANTED_FOR_TAGS' },
-  { label: 'None', value: 'NONE' },
-]
-
-type RemoveViewPermissionModalProps = {
-  level: string
-  onConfirm: () => void
-  onCancel: () => void
-}
-
-const RemoveViewPermissionModal = ({
-  level,
-  onCancel,
-  onConfirm,
-}: RemoveViewPermissionModalProps) => {
-  return (
-    <div>
-      <div>
-        Removing <b>view {level} permission</b> will remove all other user
-        permissions for this {level}.
-      </div>
-      <div className='text-right mt-2'>
-        <Button
-          className='mr-2'
-          onClick={() => {
-            onCancel()
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          theme='danger'
-          onClick={() => {
-            onConfirm()
-          }}
-        >
-          Confirm
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-const SingleValue = (props: SingleValueProps<any>) => {
-  return (
-    <components.SingleValue {...props}>
-      <div className='d-flex gap-1 align-items-center'>
-        {props.data.value === 'GRANTED' && (
-          <Icon width={18} name='checkmark' fill='#27AB95' />
-        )}
-        {props.data.value === 'GRANTED_FOR_TAGS' && (
-          <Icon width={18} name='shield' fill='#ff9f43' />
-        )}
-        {props.children}
-      </div>
-    </components.SingleValue>
-  )
-}
+import PermissionControl from './PermissionControl'
 
 type EntityPermissions = Omit<
   RolePermission,
@@ -97,13 +31,13 @@ interface PermissionRowProps {
     type: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
     tags?: number[],
   ) => void
-  onTogglePermission: (key: string) => void
   limitedPermissions?: string[]
   isTagBasedPermissions?: boolean
-  isAdmin: boolean
-  isSaving: boolean
+  isAdmin?: boolean
+  isSaving?: boolean
   isDebug?: boolean
-  onValueChanged: (changed: boolean) => void
+  hasPermission: (key: string) => boolean
+  onValueChanged: (permissionKey: string, shouldToggle?: boolean) => void
 }
 
 export const PermissionRow: React.FC<PermissionRowProps> = ({
@@ -114,8 +48,8 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   isTagBasedPermissions,
   level,
   limitedPermissions = [],
+  hasPermission,
   onSelectPermissions,
-  onTogglePermission,
   onValueChanged,
   permission,
   projectId,
@@ -124,14 +58,6 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
     (e) => e.permission_key === permission.key,
   )
 
-  console.log(matchingPermission)
-
-  const hasPermission = (key: string) => {
-    if (isAdmin) return true
-    return entityPermissions.permissions.find(
-      (permission) => permission.permission_key === key,
-    )
-  }
 
   const getPermissionType = (key: string) => {
     if (isAdmin) return 'GRANTED'
@@ -157,9 +83,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
   const levelUpperCase = level.toUpperCase()
   const viewPermission = `VIEW_${levelUpperCase}`
-  const isPermissionDisabled =
-    requiresViewPermission(permission.key) &&
-    !hasPermission(viewPermission)
+
 
   const disabled =
     level !== 'organisation' &&
@@ -171,8 +95,6 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   )
 
   const permissionType = getPermissionType(permission.key)
-
-  const isPermissionEnabled = !!hasPermission(permission.key)
 
   return (
     <Row
@@ -189,7 +111,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
               projectId={`${projectId}`}
               value={permissionData?.tags || []}
               onChange={(v: number[]) => {
-                onValueChanged(true)
+                onValueChanged(permission.key, false)
                 onSelectPermissions(permission.key, 'GRANTED_FOR_TAGS', v)
               }}
             />
@@ -197,7 +119,6 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           {isDebug && (
             <div className='mt-2'>
               <DerivedPermissionsList
-                isAdmin={isAdmin}
                 derivedPermissions={
                   (matchingPermission as Permission)?.derived_from
                 }
@@ -205,80 +126,22 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
             </div>
           )}
         </Flex>
-        {isTagBasedPermissions ? (
-          <div className='ms-2' style={{ width: 200 }}>
-            <Select<{ value: string }>
-              value={permissionOptions.find((v) => v.value === permissionType)}
-              onChange={(selectedOption) => {
-                if (selectedOption && 'value' in selectedOption) {
-                  onValueChanged(true)
-                  onSelectPermissions(
-                    permission.key,
-                    selectedOption.value as
-                      | 'GRANTED'
-                      | 'GRANTED_FOR_TAGS'
-                      | 'NONE',
-                  )
-                }
-              }}
-              className='react-select select-sm'
-              disabled={disabled || isAdmin || isSaving}
-              options={
-                permission.supports_tag
-                  ? permissionOptions
-                  : permissionOptions.filter(
-                      (v) => v.value !== 'GRANTED_FOR_TAGS',
-                    )
-              }
-              components={{ SingleValue }}
-            />
-          </div>
-        ) : isDebug ? (
-          <Tooltip
-            title={<BooleanDotIndicator enabled={isPermissionEnabled} />}
-          >
-            {isPermissionEnabled &&
-            (matchingPermission as Permission)?.is_directly_granted === false
-              ? 'This permission is set by a group or a role'
-              : ''}
-          </Tooltip>
-        ) : (
-          <Switch
-          data-test={`permission-switch-${permission.key}`}
-          onChange={() => {
-            if (
-              level !== 'organisation' &&
-              permission.key === viewPermission &&
-              hasPermission(viewPermission) &&
-              entityPermissions.permissions.length > 1
-            ) {
-              return openModal2(
-                `Remove View ${Utils.capitalize(
-                  level,
-                )} Permission`,
-                <RemoveViewPermissionModal
-                  level={level}
-                  onConfirm={() => {
-                    onValueChanged(true)
-                    onTogglePermission(permission.key)
-                    closeModal2()
-                  }}
-                  onCancel={() => {
-                    closeModal2()
-                  }}
-                />,
-              )
-            }
-
-            onValueChanged(true)
-            onTogglePermission(permission.key)
-          }}
-          disabled={isPermissionDisabled || isAdmin || isSaving}
-          checked={
-            !isPermissionDisabled && hasPermission(permission.key)
-          }
+        <PermissionControl
+          isTagBasedPermissions={isTagBasedPermissions}
+          isDebug={isDebug}
+          disabled={disabled}
+          isAdmin={isAdmin}
+          isSaving={isSaving}
+          permissionType={permissionType}
+          permissionKey={permission.key}
+          isViewPermissionRequired={requiresViewPermission(permission.key)}
+          isViewPermissionAllowed={hasPermission(viewPermission)}
+          isPermissionEnabled={hasPermission(permission.key)}
+          matchingPermission={matchingPermission as Permission}
+          supportsTag={permission.supports_tag}
+          onValueChanged={onValueChanged}
+          onSelectPermissions={onSelectPermissions}
         />
-        )}
       </Row>
     </Row>
   )
