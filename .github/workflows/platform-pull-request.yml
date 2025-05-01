@@ -145,7 +145,7 @@ jobs:
 
     strategy:
       matrix:
-        runs-on: [depot-ubuntu-latest, depot-ubuntu-latest-arm]
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         args:
           - tests: segment-part-1 environment
             concurrency: 1
@@ -172,7 +172,7 @@ jobs:
 
     strategy:
       matrix:
-        runs-on: [depot-ubuntu-latest, depot-ubuntu-latest-arm]
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         args:
           - tests: organisation-permission environment-permission project-permission roles
             concurrency: 1

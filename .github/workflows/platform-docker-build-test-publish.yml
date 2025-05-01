@@ -81,7 +81,7 @@ jobs:
 
     strategy:
       matrix:
-        runs-on: [depot-ubuntu-latest, depot-ubuntu-latest-arm]
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         api-image:
           - ${{ needs.docker-build-api.outputs.image }}
           - ${{ needs.docker-build-private-cloud-api.outputs.image }}
