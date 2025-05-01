@@ -19,7 +19,6 @@ from projects.models import (
 
 from .permission_service import is_user_project_admin
 from .rbac_wrapper import (  # type: ignore[attr-defined]
-    RolePermissionData,
     get_roles_permission_data_for_environment,
     get_roles_permission_data_for_organisation,
     get_roles_permission_data_for_project,
@@ -43,7 +42,7 @@ GroupPermissionQs = QuerySet[
 ]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class _PermissionDataBase:
     admin: bool = False
     permissions: typing.Set[str] = field(default_factory=set)
@@ -59,7 +58,14 @@ class GroupData:
 class RoleData:
     id: int
     name: str
-    tags: typing.List[int]
+    tags: typing.Set[int]
+
+
+@dataclass
+class RolePermissionData(
+    _PermissionDataBase,
+):
+    role: RoleData
 
 
 @dataclass
@@ -104,9 +110,7 @@ class PermissionData:
 
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
-    roles: typing.List[  # type: ignore[valid-type]
-        "RolePermissionData" if "RolePermissionData" in globals() else typing.Any
-    ]
+    roles: typing.List[RolePermissionData]
     is_organisation_admin: bool = False
     admin_override: bool = False
 
@@ -157,20 +161,20 @@ class PermissionData:
         permission_map = {}
 
         def add_permission(
-            perm_key: str,
+            permission_key: str,
             group: typing.Optional[GroupData],
             role: typing.Optional[RoleData],
         ) -> None:
-            if perm_key not in permission_map:
-                permission_map[perm_key] = DetailedPermissionsData(
-                    permission_key=perm_key,
+            if permission_key not in permission_map:
+                permission_map[permission_key] = DetailedPermissionsData(
+                    permission_key=permission_key,
                     is_directly_granted=bool(group is None and role is None),
                     derived_from=PermissionDerivedFromData(),
                 )
             if group:
-                permission_map[perm_key].derived_from.groups.append(group)
+                permission_map[permission_key].derived_from.groups.append(group)
             if role:
-                permission_map[perm_key].derived_from.roles.append(role)
+                permission_map[permission_key].derived_from.roles.append(role)
 
         # Add user's direct permissions
         for permission_key in self.user.permissions:

@@ -3,10 +3,7 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import (
-    CREATE_ENVIRONMENT,
-    VIEW_PROJECT,
-)
+from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW_PROJECT
 
 from environments.permissions.models import (
     EnvironmentPermissionModel,
@@ -24,6 +21,12 @@ from organisations.permissions.permissions import (
     MANAGE_USER_GROUPS,
 )
 from permissions.permissions_calculator import (
+    GroupData,
+    GroupPermissionData,
+    PermissionData,
+    RoleData,
+    RolePermissionData,
+    UserPermissionData,
     get_environment_permission_data,
     get_organisation_permission_data,
     get_project_permission_data,
@@ -294,3 +297,83 @@ def test_organisation_permissions_calculator_get_permission_data(  # type: ignor
     # Then
     assert user_permission_data.admin == expected_admin
     assert user_permission_data.permissions == expected_permissions
+
+
+def test_permission_data_to_detailed_permissions_data() -> None:
+    # Given
+    user_permission_data = UserPermissionData(admin=True, permissions={CREATE_PROJECT})
+    # two groups with some overallping permissions
+    group_one_permission_data = GroupPermissionData(
+        admin=True,
+        group=GroupData(id=1, name="group_one"),
+        permissions={CREATE_PROJECT, MANAGE_USER_GROUPS, VIEW_PROJECT},
+    )
+    group_two_permission_data = GroupPermissionData(
+        admin=True,
+        group=GroupData(id=1, name="group_one"),
+        permissions={VIEW_PROJECT},
+    )
+    # two roles with same permissions with different tags
+    role_one_permission_data = RolePermissionData(
+        admin=True,
+        role=RoleData(id=1, name="role_one", tags={1, 2}),
+        permissions={DELETE_FEATURE},
+    )
+    role_two_permission_data = RolePermissionData(
+        admin=False,
+        role=RoleData(id=2, name="role_two", tags={3, 4}),
+        permissions={DELETE_FEATURE},
+    )
+    # third role without tags
+    role_three_permission_data = RolePermissionData(
+        admin=False,
+        role=RoleData(id=3, name="role_three", tags=set()),
+        permissions={VIEW_PROJECT},
+    )
+
+    # When
+    detailed_permission_data = PermissionData(
+        user=user_permission_data,
+        groups=[group_one_permission_data, group_two_permission_data],
+        roles=[
+            role_one_permission_data,
+            role_two_permission_data,
+            role_three_permission_data,
+        ],
+    ).to_detailed_permissions_data()
+
+    # Then
+    assert detailed_permission_data.admin is True
+    assert len(detailed_permission_data.permissions) == 4
+
+    assert detailed_permission_data.permissions[0].permission_key == CREATE_PROJECT
+    assert detailed_permission_data.permissions[0].is_directly_granted is True
+    assert detailed_permission_data.permissions[0].derived_from.groups == [
+        group_one_permission_data.group
+    ]
+    assert detailed_permission_data.permissions[0].derived_from.roles == []
+
+    assert detailed_permission_data.permissions[1].permission_key == MANAGE_USER_GROUPS
+    assert detailed_permission_data.permissions[1].is_directly_granted is False
+    assert detailed_permission_data.permissions[1].derived_from.groups == [
+        group_one_permission_data.group
+    ]
+    assert detailed_permission_data.permissions[1].derived_from.roles == []
+
+    assert detailed_permission_data.permissions[2].permission_key == VIEW_PROJECT
+    assert detailed_permission_data.permissions[2].is_directly_granted is False
+    assert detailed_permission_data.permissions[2].derived_from.groups == [
+        group_one_permission_data.group,
+        group_two_permission_data.group,
+    ]
+    assert detailed_permission_data.permissions[2].derived_from.roles == [
+        role_three_permission_data.role
+    ]
+
+    assert detailed_permission_data.permissions[3].permission_key == DELETE_FEATURE
+    assert detailed_permission_data.permissions[3].is_directly_granted is False
+    assert detailed_permission_data.permissions[3].derived_from.groups == []
+    assert detailed_permission_data.permissions[3].derived_from.roles == [
+        role_one_permission_data.role,
+        role_two_permission_data.role,
+    ]

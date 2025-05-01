@@ -13,13 +13,11 @@ if settings.IS_RBAC_INSTALLED:  # pragma: no cover
         get_role_permission_filter,
     )
     from rbac.permissions_calculator import (  # type: ignore[import-not-found,unused-ignore]
-        RolePermissionData,
         get_roles_permission_data_for_environment,
         get_roles_permission_data_for_organisation,
         get_roles_permission_data_for_project,
     )
 else:
-    RolePermissionData = []
 
     def get_roles_permission_data_for_organisation(*args, **kwargs):  # type: ignore[no-untyped-def]
         return []
