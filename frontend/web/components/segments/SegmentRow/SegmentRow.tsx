@@ -13,6 +13,7 @@ import { MutationTrigger } from '@reduxjs/toolkit/dist/query/react/buildHooks'
 import SegmentAction from './components/SegmentAction'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
+import { Req } from 'common/types/requests'
 
 interface SegmentRowProps {
   segment: Segment
@@ -20,11 +21,7 @@ interface SegmentRowProps {
   projectId: string
   router: RouterChildContext['router']
   removeSegment: MutationTrigger<
-    MutationDefinition<
-      {
-        projectId: number | string
-        id: number
-      },
+    MutationDefinition<Req['deleteSegment'],
       any,
       'Segment',
       Segment,
