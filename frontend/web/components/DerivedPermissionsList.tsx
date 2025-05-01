@@ -7,7 +7,6 @@ import { DerivedPermission } from 'common/types/responses'
 import Icon from './Icon'
 
 type DerivedPermissionsListType = {
-  isAdmin?: boolean
   derivedPermissions: DerivedPermission
   numberToTruncate?: number
 }
@@ -38,11 +37,10 @@ const DerivedTag = ({
 
 const DerivedPermissionsList: FC<DerivedPermissionsListType> = ({
   derivedPermissions,
-  isAdmin,
   numberToTruncate = 3,
 }) => {
   const { items, truncatedItems } = useMemo(() => {
-    if (isAdmin || !derivedPermissions) {
+    if (!derivedPermissions?.groups && !derivedPermissions?.roles) {
       return {
         items: [],
         truncatedItems: [],
@@ -70,13 +68,7 @@ const DerivedPermissionsList: FC<DerivedPermissionsListType> = ({
       items,
       truncatedItems: (derivedList || []).slice(numberToTruncate),
     }
-  }, [isAdmin, numberToTruncate, derivedPermissions])
-
-  console.log({
-    derivedPermissions,
-    items,
-    truncatedItems,
-  })
+  }, [numberToTruncate, derivedPermissions])
 
   if (!items?.length) return null
 
