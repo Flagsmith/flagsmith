@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Select, { components } from 'react-select'
 import Switch from './Switch'
 import Tooltip from './Tooltip'
@@ -33,13 +33,14 @@ interface PermissionControlProps {
   isDebug?: boolean
   disabled: boolean
   isAdmin?: boolean
+  isDerivedAdmin?: boolean
+  isDerivedPermission?: boolean
   isSaving?: boolean
   permissionType: string
   permissionKey: string
   isViewPermissionRequired?: boolean
   isViewPermissionAllowed?: boolean
   isPermissionEnabled: boolean
-  matchingPermission?: Permission
   supportsTag: boolean
   onValueChanged: (permissionKey: string, shouldToggle?: boolean) => void
   onSelectPermissions: (
@@ -52,18 +53,39 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
   disabled,
   isAdmin,
   isDebug = false,
+  isDerivedAdmin,
+  isDerivedPermission,
   isPermissionEnabled,
   isSaving,
   isTagBasedPermissions = false,
   isViewPermissionAllowed,
   isViewPermissionRequired,
-  matchingPermission,
   onSelectPermissions,
   onValueChanged,
   permissionKey,
   permissionType,
   supportsTag,
 }) => {
+  const tooltipText = useMemo(() => {
+    if (isAdmin && !isDerivedAdmin && !isDerivedPermission) {
+      return 'This permission comes from admin privileges'
+    }
+
+    if (isAdmin && !isDerivedAdmin && isDerivedPermission) {
+      return 'This permission comes from admin privileges and is inherited via a group and/or role.'
+    }
+
+    if (isAdmin && isDerivedAdmin) {
+      return 'This permission comes from admin privileges via a group and/or role.'
+    }
+
+    if (!isAdmin && isDerivedPermission) {
+      return 'This permission is inherited via a group and/or role.'
+    }
+
+    return ''
+  }, [isAdmin, isDerivedAdmin, isDerivedPermission])
+
   if (isTagBasedPermissions) {
     return (
       <div className='ms-2' style={{ width: 200 }}>
@@ -91,16 +113,13 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
     )
   }
 
-  if (isAdmin && isDebug)
-    return <BooleanDotIndicator enabled={isPermissionEnabled} />
+  //   if (isAdmin && isDebug)
+  //     return <BooleanDotIndicator enabled={isPermissionEnabled} />
 
   if (isDebug) {
     return (
       <Tooltip title={<BooleanDotIndicator enabled={isPermissionEnabled} />}>
-        {isPermissionEnabled &&
-        matchingPermission?.is_directly_granted === false
-          ? 'This permission is set by a group or a role'
-          : ''}
+        {tooltipText}
       </Tooltip>
     )
   }
