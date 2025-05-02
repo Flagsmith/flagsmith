@@ -3,6 +3,7 @@ import re
 from collections import ChainMap
 
 import pyotp
+import pytest
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
@@ -701,3 +702,31 @@ def test_cannot_create_superuser_if_any_user_exists(
         "A superuser can only be created through this  endpoint if no other users exist."
     ]
     assert FFAdminUser.objects.filter(email=email).exists() is False
+
+
+@pytest.mark.parametrize("marketing_consent_given", (None, True, False))
+def test_marketing_consent_given_defaults_to_false(
+    api_client: APIClient,
+    marketing_consent_given: bool | None,
+    db: None,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": "test@example.com",
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "marketing_consent_given": marketing_consent_given,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(register_data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["marketing_consent_given"] is True
