@@ -93,6 +93,14 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
   const permissionType = getPermissionType(permission.key)
 
+  const isDerivedAdmin =
+    isAdmin &&
+    (entityPermissions as UserPermissions)?.is_directly_granted === false
+  const showDerivedPermissions =
+    isDebug &&
+    !isDerivedAdmin &&
+    (matchingPermission as Permission)?.is_directly_granted === false
+
   return (
     <Row
       key={permission.key}
@@ -113,7 +121,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
               }}
             />
           )}
-          {isDebug && (
+          {showDerivedPermissions && (
             <div className='mt-2'>
               <DerivedPermissionsList
                 derivedPermissions={
@@ -132,7 +140,10 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           permissionType={permissionType}
           permissionKey={permission.key}
           isPermissionEnabled={!!hasPermission(permission.key)}
-          matchingPermission={matchingPermission as Permission}
+          isDerivedAdmin={isDerivedAdmin}
+          isDerivedPermission={
+            (matchingPermission as Permission)?.is_directly_granted === false
+          }
           supportsTag={permission.supports_tag}
           onValueChanged={onValueChanged}
           onSelectPermissions={onSelectPermissions}
