@@ -235,7 +235,7 @@ def test_create_lead_creates_person_if_none_found(db, mocker, settings):  # type
     )
     mock_pipedrive_client.create_organization.assert_not_called()
     mock_pipedrive_client.create_person.assert_called_once_with(
-        user.full_name, user.email, MarketingStatus.NO_CONSENT
+        user.full_name, user.email, MarketingStatus.SUBSCRIBED
     )
 
 
