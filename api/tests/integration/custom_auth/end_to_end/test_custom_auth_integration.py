@@ -704,7 +704,7 @@ def test_cannot_create_superuser_if_any_user_exists(
     assert FFAdminUser.objects.filter(email=email).exists() is False
 
 
-@pytest.mark.parametrize("marketing_consent_given", (None, True, False))
+@pytest.mark.parametrize("marketing_consent_given", [None, True, False])
 def test_marketing_consent_given_defaults_to_true(
     api_client: APIClient,
     marketing_consent_given: bool | None,
