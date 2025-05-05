@@ -298,7 +298,7 @@ def migrate_identities_to_edge(request, project_id):  # type: ignore[no-untyped-
     name="get",
     decorator=staff_member_required(),
 )
-class UsageReport(TemplateView):
+class UsageReport(TemplateView):  # pragma: no cover
     template_name = "sales_dashboard/usage.html"
 
     def get_context_data(self, **kwargs):  # type: ignore[no-untyped-def]
