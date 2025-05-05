@@ -137,17 +137,7 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-api.outputs.image }}
-      concurrency: 16
-      tests: >-
-        segment-part-1 
-        segment-part-2
-        segment-part-3
-        environment
-        signup
-        flag
-        invite
-        project
-        versioning
+      args: --test-meta category=oss
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
@@ -164,12 +154,7 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
-      concurrency: 16
-      tests: >-
-        organisation-permission
-        environment-permission
-        project-permission
-        roles
+      args: --test-meta category=enterprise
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}

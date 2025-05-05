@@ -2,7 +2,7 @@ const createTestCafe = require('testcafe');
 const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
-const _options = require("../.testcaferc")
+const _options = require("../.testcaferc.cjs")
 const upload = require('../bin/upload-file');
 const options = {
     ..._options,
@@ -20,15 +20,14 @@ createTestCafe()
     .then(async (tc) => {
         testcafe = tc;
         await new Promise((resolve) => {
-            process.env.PORT = 3000;
-            console.log(process.env.E2E_LOCAL)
-            if(process.env.E2E_LOCAL) {
-                resolve()
-            } else {
+            if (process.env.E2E_LOCAL) {
+                process.env.PORT = 3000;
                 server = fork('./api/index');
                 server.on('message', () => {
                     resolve();
                 });
+            } else {
+                resolve()
             }
         });
         const runner = testcafe.createRunner()
@@ -44,7 +43,7 @@ createTestCafe()
                 if (!args.length) {
                     return true
                 } else {
-                return args.includes(testName.toLowerCase())
+                    return args.includes(testName.toLowerCase())
                 }
             })
             .concurrency(parseInt(concurrentInstances))

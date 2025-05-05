@@ -4,7 +4,6 @@ import segmentTest from '../tests/segment-test';
 const logger = getLogger();
 
 fixture`Segments Tests`
-    .page`http://localhost:3000/`
     .requestHooks(logger);
 
 test('Segments Test', async () => {
