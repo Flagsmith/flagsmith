@@ -38,9 +38,9 @@ urlpatterns = [
         name="update_max_api_calls",
     ),
     path(
-        "email-usage/",
-        views.EmailUsage.as_view(),
-        name="email-usage",
+        "usage/",
+        views.UsageReport.as_view(),
+        name="usage",
     ),
     path(
         "organisations/<int:organisation_id>/download_org_data",
