@@ -1,10 +1,11 @@
 import logging
+from typing import Generic, Type, TypeVar, cast
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from django.db.models import Count, Q
+from django.db.models import Count, Manager, Model, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
@@ -15,6 +16,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
@@ -33,7 +35,6 @@ from permissions.serializers import (
     UserObjectPermissionsSerializer,
 )
 from projects.models import Project
-from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
@@ -54,6 +55,13 @@ from .serializers import (
     EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
+
+T = TypeVar("T", bound=Model)
+
+
+class HasObjects(Generic[T]):
+    objects: Manager[T]
+
 
 logger = logging.getLogger(__name__)
 
@@ -276,43 +284,45 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-class NestedEnvironmentViewSet(viewsets.GenericViewSet):  # type: ignore[type-arg]
-    model_class = None
+class NestedEnvironmentViewSet(Generic[T], viewsets.GenericViewSet[T]):
+    model_class: Type[T]
     webhook_type = WebhookType.ENVIRONMENT
 
-    def get_queryset(self):  # type: ignore[no-untyped-def]
-        return self.model_class.objects.filter(  # type: ignore[attr-defined]
+    def get_queryset(self) -> QuerySet[T]:
+        model_cls = cast(HasObjects[T], self.model_class)
+        return model_cls.objects.filter(
             environment__api_key=self.kwargs.get("environment_api_key")
         )
 
-    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
-        serializer.save(environment=self._get_environment())  # type: ignore[no-untyped-call]
+    def perform_create(self, serializer: BaseSerializer[T]) -> None:
+        serializer.save(environment=self._get_environment())
 
-    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
-        serializer.save(environment=self._get_environment())  # type: ignore[no-untyped-call]
+    def perform_update(self, serializer: BaseSerializer[T]) -> None:
+        serializer.save(environment=self._get_environment())
 
-    def _get_environment(self):  # type: ignore[no-untyped-def]
-        return Environment.objects.get(api_key=self.kwargs.get("environment_api_key"))
+    def _get_environment(self) -> Environment:
+        return cast(
+            Environment,
+            Environment.objects.get(api_key=self.kwargs.get("environment_api_key")),
+        )
 
 
 class WebhookViewSet(
-    NestedEnvironmentViewSet,
+    NestedEnvironmentViewSet[Webhook],
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-    model_class = Webhook  # type: ignore[assignment]
-
-    webhook_type = WebhookType.ENVIRONMENT  # type: ignore[assignment]
+    model_class: Type[Webhook] = Webhook
+    webhook_type: WebhookType = WebhookType.ENVIRONMENT
 
 
 class EnvironmentAPIKeyViewSet(
-    NestedEnvironmentViewSet,
+    NestedEnvironmentViewSet[EnvironmentAPIKey],
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -321,4 +331,4 @@ class EnvironmentAPIKeyViewSet(
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
-    model_class = EnvironmentAPIKey  # type: ignore[assignment]
+    model_class: Type[EnvironmentAPIKey] = EnvironmentAPIKey
