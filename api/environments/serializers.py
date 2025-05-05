@@ -1,5 +1,5 @@
 import typing
-
+from typing import cast
 from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
@@ -102,10 +102,9 @@ class EnvironmentSerializerWithMetadata(
         self, instance: models.Model, validated_data: dict[str, typing.Any]
     ) -> Environment:
         metadata_items = validated_data.pop("metadata", [])
-        environment = super().update(instance, validated_data)
+        environment = cast(Environment, super().update(instance, validated_data))
         self.update_metadata(environment, metadata_items)
         environment.refresh_from_db()
-        assert isinstance(environment, Environment)
         return environment
 
 

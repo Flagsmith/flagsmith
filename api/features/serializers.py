@@ -349,10 +349,9 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
         self, instance: models.Model, validated_data: dict[str, typing.Any]
     ) -> Feature:
         metadata_items = validated_data.pop("metadata", [])
-        feature = super().update(instance, validated_data)
+        feature = typing.cast(Feature, super().update(instance, validated_data))
         self.update_metadata(feature, metadata_items)
         feature.refresh_from_db()
-        assert isinstance(feature, Feature)
         return feature
 
 
