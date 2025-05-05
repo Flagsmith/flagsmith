@@ -18,12 +18,6 @@ Example applications for a variety of React, React Native and Next.js can be fou
 
 ### NPM
 
-:::tip
-
-We also have flagsmith-es if you'd prefer to use [ES](https://262.ecma-international.org/6.0/) modules.
-
-:::
-
 ```bash
 npm i flagsmith --save
 ```
