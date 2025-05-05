@@ -2,7 +2,7 @@ const createTestCafe = require('testcafe');
 const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
-const _options = require("../.testcaferc.cjs")
+const _options = require("../.testcaferc.js")
 const upload = require('../bin/upload-file');
 const options = {
     ..._options,
