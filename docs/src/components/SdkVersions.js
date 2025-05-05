@@ -26,6 +26,6 @@ export const SwiftPMVersion = ({ spec = '~3' }) => Version({ sdk: 'swiftpm', spe
 export const DotnetVersion = ({ spec = '~8' }) => Version({ sdk: 'dotnet', spec });
 export const ElixirVersion = ({ spec = '~2' }) => Version({ sdk: 'elixir', spec });
 export const RustVersion = ({ spec = '~2' }) => Version({ sdk: 'rust', spec });
-export const JsVersion = ({ spec = '~8' }) => Version({ sdk: 'js', spec });
+export const JsVersion = ({ spec = '~9' }) => Version({ sdk: 'js', spec });
 export const NodejsVersion = ({ spec } = { spec: '~6' }) => Version({ sdk: 'nodejs', spec });
 export const FlutterVersion = ({ spec = '~6' }) => Version({ sdk: 'flutter', spec });
