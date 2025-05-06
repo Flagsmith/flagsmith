@@ -638,7 +638,7 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
-  createOnboarding: {
+  register: {
     first_name: string
     last_name: string
     email: string

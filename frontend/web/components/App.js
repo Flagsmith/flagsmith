@@ -249,7 +249,14 @@ const App = class extends Component {
             return
           }
 
-          this.context.router.history.replace(Utils.getOrganisationHomePage())
+          if (
+            Utils.getFlagsmithHasFeature('welcome_page') &&
+            AccountStore.getUser()?.isGettingStarted
+          ) {
+            this.context.router.history.replace('/getting-started')
+          } else {
+            this.context.router.history.replace(Utils.getOrganisationHomePage())
+          }
         })
       }
     }
@@ -477,20 +484,25 @@ const App = class extends Component {
                                   )}
                                 </Row>
                                 <Row className='gap-3'>
-                                  <NavLink
-                                    activeClassName='active'
-                                    to={'/getting-started'}
-                                    className='d-flex lh-1 align-items-center'
-                                  >
-                                    <span className='mr-1'>
-                                      <Icon
-                                        name='rocket'
-                                        width={20}
-                                        fill='#9DA4AE'
-                                      />
-                                    </span>
-                                    Getting Started
-                                  </NavLink>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'welcome_page',
+                                  ) && (
+                                    <NavLink
+                                      activeClassName='active'
+                                      to={'/getting-started'}
+                                      className='d-flex lh-1 align-items-center'
+                                    >
+                                      <span className='mr-1'>
+                                        <Icon
+                                          name='rocket'
+                                          width={20}
+                                          fill='#9DA4AE'
+                                        />
+                                      </span>
+                                      Getting Started
+                                    </NavLink>
+                                  )}
+
                                   <a
                                     className='d-flex lh-1 align-items-center'
                                     href={'https://docs.flagsmith.com'}

@@ -172,7 +172,7 @@ const controller = {
       store.saved()
     })
   },
-  getOrganisations: () =>
+  getOrganisations: (isGettingStarted) =>
     Promise.all([
       data.get(`${Project.api}organisations/`),
       data.get(`${Project.api}auth/users/me/`),
@@ -181,6 +181,7 @@ const controller = {
       .then(([res, userRes, methods]) => {
         controller.setUser({
           ...userRes,
+          isGettingStarted,
           organisations: res.results,
           twoFactorConfirmed: !!methods.length,
           twoFactorEnabled: !!methods.length,
@@ -245,11 +246,8 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  onLogin: (skipCaching) => {
-    if (!skipCaching) {
-      API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
-    }
-    return controller.getOrganisations()
+  onLogin: (isGettingStarted) => {
+    return controller.getOrganisations(isGettingStarted)
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
@@ -276,7 +274,7 @@ const controller = {
         if (contact_consent_given) {
           await createOnboardingSupportOptIn(getStore(), {})
         }
-        await controller.onLogin()
+        await controller.onLogin(!API.getInvite())
 
         if (user.superuser) {
           // Creating a superuser will update the version endpoint

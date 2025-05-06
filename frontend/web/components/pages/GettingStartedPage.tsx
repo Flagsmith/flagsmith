@@ -13,6 +13,7 @@ import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import flagsmith from 'flagsmith'
 import Tooltip from 'components/Tooltip'
+import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 
 type ResourcesPageType = {}
 type GettingStartedItem = {
@@ -135,9 +136,13 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
       </div>
     </div>
   )
-
-  return data.disabledMessage ? (
-    <Tooltip title={inner}>{data.disabledMessage}</Tooltip>
+  if (data.disabledMessage) {
+    return <Tooltip title={inner}>{data.disabledMessage}</Tooltip>
+  }
+  return link?.startsWith('http') ? (
+    <a href={link} target={'_blank'} onClick={onCTAClick} rel='noreferrer'>
+      {inner}
+    </a>
   ) : (
     <Link onClick={onCTAClick} to={link}>
       {inner}
@@ -169,11 +174,17 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       skip: !project,
     },
   )
+  const { data: environments } = useGetEnvironmentsQuery(
+    { projectId: `${project}` },
+    {
+      skip: !project,
+    },
+  )
   const { data: segments } = useGetSegmentsQuery(
     { projectId: `${project}` },
     { skip: !project },
   )
-
+  const environment = environments?.results?.[0]?.api_key
   const items: GettingStartedItem[] = [
     {
       complete: !!projects?.length,
@@ -193,7 +204,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         ? 'You will need to create a project before creating your first feature'
         : null,
       duration: 1,
-      link: '/',
+      link: `/project/${project}/environment/${environment}/features`,
       title: 'Create a Feature',
     },
     {
@@ -206,7 +217,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         : null,
       duration: 1,
       icon: 'pie-chart',
-      link: '/',
+      link: `/project/${project}/segments`,
       title: 'Create a Segment',
     },
     {
@@ -218,7 +229,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         ? 'You will need to create a project before creating your first segment'
         : null,
       duration: 1,
-      link: '/',
+      link: 'https://docs.flagsmith.com/version-comparison',
+      persistId: 'version-comparison',
       title: 'Version comparison',
     },
     {
@@ -262,7 +274,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
           </Button>
           !
         </PageTitle>
-        <div className='row row-gap-4'>
+        <div className='row'>
           <div className='col-md-8'>
             <div className='card bg-card py-3 shadow rounded'>
               <h5 className='mb-3 px-3'>Getting Started</h5>
@@ -309,7 +321,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
                           <img
                             style={{
                               aspectRatio: '155 / 200',
-                              height: 200,
+                              height: 150,
                               objectFit: 'cover',
                               objectPosition: 'center',
                             }}

@@ -7,11 +7,11 @@ import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { Req } from 'common/types/requests'
 
 type OnboardingOrganisationFormProps = {
-  onboarding: Req['createOnboarding']
+  onboarding: Req['register']
   error: any
   isValid: boolean
   isSaving: boolean
-  setFieldValue: (key: keyof Req['createOnboarding'], value: any) => void
+  setFieldValue: (key: keyof Req['register'], value: any) => void
   onSubmit: () => void
   onBack: () => void
 }
