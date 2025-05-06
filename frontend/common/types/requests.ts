@@ -18,6 +18,9 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  TagStrategy,
+  FeatureSortField,
+  SortDirection,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -646,5 +649,13 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getFeatures: PagedRequest<{
+    environment?: string
+    is_archived?: boolean
+    tag_strategy: TagStrategy
+    sort_field?: FeatureSortField
+    sort_direction?: SortDirection
+    tags?: number[]
+  }>
   // END OF TYPES
 }

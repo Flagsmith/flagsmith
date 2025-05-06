@@ -1,38 +1,73 @@
-import React, { FC, ReactNode, useEffect } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import { IonIcon } from '@ionic/react'
-import { chatbox, chevronForward, time } from 'ionicons/icons'
+import { chevronForward } from 'ionicons/icons'
 import loadCrisp from 'common/loadCrisp'
 import Utils from 'common/utils/utils'
-
-type ResourcesPageType = {}
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Card from 'components/Card'
 import Icon from 'components/Icon'
 import { Link } from 'react-router-dom'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountStore from 'common/stores/account-store'
 import classNames from 'classnames'
+import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
+import { useGetSegmentsQuery } from 'common/services/useSegment'
+import flagsmith from 'flagsmith'
+import Tooltip from 'components/Tooltip'
+
+type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
   title: string
   description: string
   link: string
-  cta: string
+  cta?: string
   complete?: boolean
+  disabledMessage?: string | null
+  persistId?: string
 }
 type GettingStartedItemType = {
   data: GettingStartedItem
 }
 
 const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
-  const { complete, cta, description, duration, link, title } = data
+  //Immediate complete state rather than wait for traits to come back
+  const [localComplete, setLocalComplete] = useState(false)
+
+  const { complete: _complete, cta, description, duration, link, title } = data
+  const complete = data.persistId
+    ? localComplete || Utils.getFlagsmithTrait(data.persistId)
+    : _complete
+  useEffect(() => {
+    document.body.classList.add('full-screen')
+    return () => {
+      document.body.classList.remove('full-screen')
+    }
+  }, [])
+
+  const onCTAClick = () => {
+    if (data.persistId) {
+      setLocalComplete(true)
+      flagsmith.setTrait(data.persistId, Date.now())
+    }
+  }
+
+  const button = (
+    <Button
+      disabled={!!data.disabledMessage}
+      theme='text'
+      className='d-flex align-items-center gap-1'
+    >
+      {cta || 'Learn more'} <IonIcon icon={chevronForward} />
+    </Button>
+  )
+
   return (
     <div className='col-md-4 col-lg-2'>
       <div
-        className={classNames('card bg-card h-100 shadow rounded', {
-          'opacity-50': complete,
+        className={classNames('card h-100 shadow rounded', {
+          'bg-primary-opacity-5 opacity-75': complete,
         })}
       >
         <div className={classNames('p-3 d-flex h-100 flex-column mx-0')}>
@@ -44,23 +79,23 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
           </div>
           <h5
             style={{ height: 50 }}
-            className={`d-flex align-items-center gap-1 ${
-              complete ? 'text-success' : ''
-            }`}
+            className={`d-flex align-items-center gap-1`}
           >
             {title}
-            {complete && <Icon fill='#27ab95' name={'checkmark-circle'} />}
+            {complete && <Icon fill='#6837fc' name={'checkmark-circle'} />}
           </h5>
 
           <h6 className='fw-normal d-flex text-muted flex-1 mb-5'>
             {description}
           </h6>
           <div className='d-flex align-items-center justify-content-between'>
-            <Link to={link}>
-              <Button theme='text' className='d-flex align-items-center gap-1'>
-                {cta || 'Learn more'} <IonIcon icon={chevronForward} />
-              </Button>
-            </Link>
+            {data.disabledMessage ? (
+              <Tooltip title={button}>{data.disabledMessage}</Tooltip>
+            ) : (
+              <Link onClick={onCTAClick} to={link}>
+                {button}
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -74,55 +109,83 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     Utils.openChat()
   }
 
-  const {} = useGetProjectsQuery({
-    organisationId: AccountStore.getOrganisation()?.id,
-  })
-  const items = [
+  const organisationId = AccountStore.getOrganisation()?.id
+  const { data: projects } = useGetProjectsQuery(
     {
-      complete: true,
+      organisationId,
+    },
+    {
+      skip: !organisationId,
+    },
+  )
+  const project = projects?.[0]?.id
+  const { data: flags } = useGetProjectFlagsQuery(
+    {
+      project: `${project}`,
+    },
+    {
+      skip: !project,
+    },
+  )
+  const { data: segments } = useGetSegmentsQuery(
+    { projectId: `${project}` },
+    { skip: !project },
+  )
+
+  const items: GettingStartedItem[] = [
+    {
+      complete: !!projects?.length,
       cta: 'Create Project',
       description:
         'Projects let you create and manage a set of features and configure them between multiple app environments',
       duration: 1,
-      link: '/',
+      link: `/organisation/${organisationId}/projects`,
       title: 'Create a Project',
     },
     {
-      complete: true,
+      complete: !!flags?.results?.length,
       cta: 'Create Feature',
       description:
         'The first step to using feature flags is to create one in the features page',
+      disabledMessage: !project
+        ? 'You will need to create a project before creating your first feature'
+        : null,
       duration: 1,
       link: '/',
       title: 'Create a Feature',
     },
     {
-      complete: true,
+      complete: !!segments?.results?.length,
       cta: 'Create a Segment',
       description:
         'Once your features are setup you can target their rollout with segments',
+      disabledMessage: !project
+        ? 'You will need to create a project before creating your first segment'
+        : null,
       duration: 1,
       link: '/',
       title: 'Create a Segment',
     },
     {
-      complete: true,
       description: 'Everything you need to get up-and-running with Flagsmith',
       duration: 5,
-      link: '/',
+      link: 'https://docs.flagsmith.com/quickstart/',
+      persistId: 'quickstart',
       title: 'Quick Start Guide',
     },
     {
       description: "Familiarise yourself with Flagsmith's features",
       duration: 1,
-      link: '/',
+      link: 'https://docs.flagsmith.com/basic-features/',
+      persistId: 'basic-features',
       title: 'Feature Overview',
     },
     {
       cta: 'Explore integrations',
       description: "Familiarise yourself with Flagsmith's features",
       duration: 1,
-      link: '/',
+      link: 'https://docs.flagsmith.com/integrations/',
+      persistId: 'integrations',
       title: 'Integrations',
     },
   ]
@@ -144,8 +207,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         </PageTitle>
         <h5 className='mb-4 mt-5'>Getting Started</h5>
         <div className='row '>
-          {items.map((v) => (
-            <GettingStartedItem data={v} />
+          {items.map((v, i) => (
+            <GettingStartedItem key={i} data={v} />
           ))}
         </div>
         <h5 className='mb-4 mt-5'>Resources</h5>
@@ -201,8 +264,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
                   'eBook | Unlock Modern Software Development with Feature Flags',
                 url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
               },
-            ].map((v) => (
-              <div className='col-lg-4 h-100'>
+            ].map((v, i) => (
+              <div key={i} className='col-lg-4 h-100'>
                 <div className='card bg-card p-0 h-100 shadow rounded'>
                   <div className='row'>
                     <div className='col-md-5'>

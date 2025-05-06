@@ -242,3 +242,10 @@
         background-color: $bg-dark200;
     }
 }
+
+.full-screen {
+  .butter-bar {
+    display: none;
+  }
+  background-color: $bg-light200;
+}
