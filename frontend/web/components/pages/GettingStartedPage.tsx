@@ -1,8 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
-import { IonIcon } from '@ionic/react'
-import { chevronForward } from 'ionicons/icons'
 import loadCrisp from 'common/loadCrisp'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -31,6 +29,27 @@ type GettingStartedItem = {
 type GettingStartedItemType = {
   data: GettingStartedItem
 }
+
+const resources: {
+  description: string
+  image: string
+  title: string
+  url: string
+}[] = [
+  {
+    'description':
+      'A hands-on guide covering best practices, use cases and more.',
+    'image': '/static/images/welcome/featured1.png',
+    'title': 'eBook | Unlock Modern Software Development with Feature Flags',
+    url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
+  },
+  {
+    'description': 'Set yourself up for success with these best practices.',
+    'image': '/static/images/welcome/featured2.png',
+    'title': 'Blog Post | Feature Flag best practices',
+    url: 'https://www.flagsmith.com/blog/feature-flags-best-practices?utm_source=app',
+  },
+]
 
 const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   //Immediate complete state rather than wait for traits to come back
@@ -218,7 +237,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     },
     {
       cta: 'Explore integrations',
-      description: "Familiarise yourself with Flagsmith's features",
+      description:
+        "Integrate Flagsmith with Flagsmith's features your existing tech stack",
       duration: 1,
       icon: 'layers',
       link: 'https://docs.flagsmith.com/integrations/',
@@ -228,7 +248,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
   ]
   return (
     <div className='bg-light100 pb-5'>
-      <div className='container-fluid px-3'>
+      <div className='container-fluid mt-4 px-3'>
         <PageTitle title={'Welcome to Flagsmith'}>
           Here's all the useful links to get you started, if you have any
           questions{' '}
@@ -242,7 +262,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
           </Button>
           !
         </PageTitle>
-        <div className='row'>
+        <div className='row row-gap-4'>
           <div className='col-md-8'>
             <div className='card bg-card py-3 shadow rounded'>
               <h5 className='mb-3 px-3'>Getting Started</h5>
@@ -281,29 +301,18 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
               <h5 className='mb-3 px-3'>Resources</h5>
               <hr className='mt-0 py-0' />
               <div className='d-flex flex-column gap-4'>
-                {[
-                  {
-                    'description':
-                      'A hands-on guide covering best practices, use cases and more.',
-                    'image': '/static/images/welcome/featured1.png',
-                    'title':
-                      'eBook | Unlock Modern Software Development with Feature Flags',
-                    url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
-                  },
-                  {
-                    'description':
-                      'Set yourself up for success with these best practices.',
-                    'image': '/static/images/welcome/featured2.png',
-                    'title': 'Blog Post | Feature Flag best practices',
-                    url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
-                  },
-                ].map((v, i) => (
+                {resources.map((v, i) => (
                   <div key={i} className='col-lg-12 d-flex h-100'>
-                    <div className='card bg-card p-0 h-100 shadow rounded'>
+                    <div className='card bg-card p-0 h-100 border-1 rounded'>
                       <div className='d-flex align-items-center'>
                         <div>
                           <img
-                            style={{ height: 200 }}
+                            style={{
+                              aspectRatio: '155 / 200',
+                              height: 200,
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                            }}
                             className=' rounded'
                             src={v.image}
                           />

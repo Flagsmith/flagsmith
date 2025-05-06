@@ -373,7 +373,7 @@ const App = class extends Component {
                       />
                     )}
                     {user && (
-                      <div className='container mt-4'>
+                      <div className='container announcement-container mt-4'>
                         <div>
                           <Announcement />
                           <AnnouncementPerPage pathname={pathname} />
