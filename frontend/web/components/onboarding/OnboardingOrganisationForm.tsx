@@ -63,7 +63,7 @@ const OnboardingOrganisationForm: FC<OnboardingOrganisationFormProps> = ({
             </div>
           )}
           <ErrorMessage error={error} />
-          <div className='d-flex gap-2'>
+          <div className='d-flex mt-4 gap-2'>
             <Button className='px-4' onClick={onBack} theme='secondary'>
               Back
             </Button>

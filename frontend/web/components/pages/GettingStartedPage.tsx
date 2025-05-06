@@ -6,7 +6,7 @@ import { chevronForward } from 'ionicons/icons'
 import loadCrisp from 'common/loadCrisp'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon from 'components/Icon'
+import Icon, { IconName } from 'components/Icon'
 import { Link } from 'react-router-dom'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountStore from 'common/stores/account-store'
@@ -23,6 +23,7 @@ type GettingStartedItem = {
   description: string
   link: string
   cta?: string
+  icon?: IconName
   complete?: boolean
   disabledMessage?: string | null
   persistId?: string
@@ -47,59 +48,81 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   }, [])
 
   const onCTAClick = () => {
+    if (data.disabledMessage) {
+      return
+    }
     if (data.persistId) {
       setLocalComplete(true)
       flagsmith.setTrait(data.persistId, Date.now())
     }
   }
 
-  const button = (
-    <Button
-      disabled={!!data.disabledMessage}
-      theme='text'
-      className='d-flex align-items-center gap-1'
-    >
-      {cta || 'Learn more'} <IonIcon icon={chevronForward} />
-    </Button>
-  )
-
-  return (
-    <div className='col-md-4 col-lg-3'>
+  const inner = (
+    <div onClick={onCTAClick} className='col-md-12 cursor-pointer'>
       <div
-        className={classNames('card h-100 shadow rounded', {
-          'bg-primary-opacity-5 opacity-75': complete,
+        className={classNames('card h-100 bg-card border-1 rounded', {
+          'border-primary': complete,
         })}
       >
-        <div className={classNames('p-3 pt-1 d-flex h-100 flex-column mx-0')}>
-          <div className='d-flex justify-content-between mb-2 align-items-center'>
-            <h5 className={`d-flex align-items-center mb-0 gap-1`}>
-              {title}
-              {complete && <Icon fill='#6837fc' name={'checkmark-circle'} />}
-            </h5>
-
-            <div className='d-flex'>
-              <span className='chip chip-secondary d-flex gap-1  align-items-center lh-1 chip chip--xs'>
-                <Icon className='chip-svg-icon' width={14} name={'clock'} />
-                <span>{duration} Min</span>
-              </span>
-            </div>
-          </div>
-
-          <h6 className='fw-normal d-flex text-muted flex-1 mb-3'>
-            {description}
-          </h6>
-          <div className='d-flex align-items-center justify-content-between'>
-            {data.disabledMessage ? (
-              <Tooltip title={button}>{data.disabledMessage}</Tooltip>
-            ) : (
-              <Link onClick={onCTAClick} to={link}>
-                {button}
-              </Link>
+        <div
+          className={classNames('h-100', {
+            'bg-primary-opacity-5': complete,
+          })}
+        >
+          <div
+            className={classNames(
+              'p-3 fs-small pt-1 d-flex h-100 flex-column mx-0',
             )}
+          >
+            <div className='d-flex justify-content-between align-items-center'>
+              <div className='d-flex align-items-center gap-3'>
+                <div
+                  style={{ height: 34, width: 34 }}
+                  className={
+                    'd-flex rounded border-1 align-items-center justify-content-center'
+                  }
+                >
+                  {complete ? (
+                    <Icon fill='#6837fc' name={'checkmark-circle'} />
+                  ) : (
+                    <Icon
+                      name={data.icon || 'file-text'}
+                      className='text-body'
+                    />
+                  )}
+                </div>
+                <div>
+                  <span
+                    className={`d-flex fw-bold fs-small align-items-center mb-0 gap-1`}
+                  >
+                    {title}
+                  </span>
+
+                  <h6 className='fw-normal d-flex fs-small text-muted flex-1 mb-0'>
+                    {description}
+                  </h6>
+                </div>
+              </div>
+
+              <div className='d-flex'>
+                <span className='chip chip-secondary d-flex gap-1  align-items-center lh-1 chip chip--xs'>
+                  <Icon className='chip-svg-icon' width={14} name={'clock'} />
+                  <span>{duration} Min</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
+  )
+
+  return data.disabledMessage ? (
+    <Tooltip title={inner}>{data.disabledMessage}</Tooltip>
+  ) : (
+    <Link onClick={onCTAClick} to={link}>
+      {inner}
+    </Link>
   )
 }
 
@@ -163,6 +186,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         ? 'You will need to create a project before creating your first segment'
         : null,
       duration: 1,
+      icon: 'pie-chart',
       link: '/',
       title: 'Create a Segment',
     },
@@ -196,6 +220,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       cta: 'Explore integrations',
       description: "Familiarise yourself with Flagsmith's features",
       duration: 1,
+      icon: 'layers',
       link: 'https://docs.flagsmith.com/integrations/',
       persistId: 'integrations',
       title: 'Integrations',
@@ -217,20 +242,24 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
           </Button>
           !
         </PageTitle>
-        <h5 className='mb-4 mt-5'>Getting Started</h5>
-        <div className='row row-gap-4'>
-          {items.map((v, i) => (
-            <GettingStartedItem key={i} data={v} />
-          ))}
-        </div>
-        <h5 className='mb-4 mt-5'>Resources</h5>
-        <div className='row gap-4 '>
-          <div className='col-lg-2'>
-            <div className='card bg-card p-3  shadow rounded'>
-              <h6 className='d-flex gap-1 mb-3 align-items-center'>
-                Community Links
-              </h6>
-              <div className='d-flex flex-column align-items-start gap-2'>
+        <div className='row'>
+          <div className='col-md-8'>
+            <div className='card bg-card py-3 shadow rounded'>
+              <h5 className='mb-3 px-3'>Getting Started</h5>
+              <hr className='mt-0 py-0' />
+              <div className='row px-3 row-gap-4'>
+                {items.map((v, i) => (
+                  <GettingStartedItem key={i} data={v} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className='col-md-4'>
+            <div className='card bg-card h-100 py-3 shadow rounded'>
+              <h5 className='mb-3 px-3'>Community links</h5>
+              <hr className='mt-0 py-0' />
+              <div className='d-flex mb-3 flex-column align-items-start gap-2'>
                 <Button theme='text' href='https://github.com/flagsmith'>
                   <Icon name='link' />
                   Find us on GitHub
@@ -248,52 +277,59 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
                   Listen to our Podcast
                 </Button>
               </div>
-            </div>
-          </div>
-          <div className='col-lg-9 row row-gap-4'>
-            {[
-              {
-                'description':
-                  'A hands-on guide covering best practices, use cases and more.',
-                'image': '/static/images/welcome/featured1.png',
-                'title':
-                  'eBook | Unlock Modern Software Development with Feature Flags',
-                url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
-              },
-              {
-                'description':
-                  'Set yourself up for success with these best practices.',
-                'image': '/static/images/welcome/featured2.png',
-                'title': 'Blog Post | Feature Flag best practices',
-                url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
-              },
-            ].map((v, i) => (
-              <div key={i} className='col-lg-4 h-100'>
-                <div className='card bg-card p-0 h-100 shadow rounded'>
-                  <div className='row'>
-                    <div className='col-md-5'>
-                      <img className='img-fluid rounded' src={v.image} />
-                    </div>
-                    <div className='col-md-6 p-3'>
-                      <a
-                        href={v.url}
-                        target='_blank'
-                        className=''
-                        rel='noreferrer'
-                      >
-                        <h6 className={`d-flex align-items-center gap-1`}>
-                          {v.title}
-                        </h6>
+              <hr className='mt-0 py-0' />
+              <h5 className='mb-3 px-3'>Resources</h5>
+              <hr className='mt-0 py-0' />
+              <div className='d-flex flex-column gap-4'>
+                {[
+                  {
+                    'description':
+                      'A hands-on guide covering best practices, use cases and more.',
+                    'image': '/static/images/welcome/featured1.png',
+                    'title':
+                      'eBook | Unlock Modern Software Development with Feature Flags',
+                    url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
+                  },
+                  {
+                    'description':
+                      'Set yourself up for success with these best practices.',
+                    'image': '/static/images/welcome/featured2.png',
+                    'title': 'Blog Post | Feature Flag best practices',
+                    url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
+                  },
+                ].map((v, i) => (
+                  <div key={i} className='col-lg-12 d-flex h-100'>
+                    <div className='card bg-card p-0 h-100 shadow rounded'>
+                      <div className='d-flex align-items-center'>
+                        <div>
+                          <img
+                            style={{ height: 200 }}
+                            className=' rounded'
+                            src={v.image}
+                          />
+                        </div>
+                        <div className='me-5 h-100 d-flex flex-column justify-content-center p-3'>
+                          <a
+                            href={v.url}
+                            target='_blank'
+                            className=''
+                            rel='noreferrer'
+                          >
+                            <h6 className={`d-flex align-items-center gap-1`}>
+                              {v.title}
+                            </h6>
 
-                        <h6 className='fw-normal d-flex text-muted flex-1'>
-                          {v.description}
-                        </h6>
-                      </a>
+                            <h6 className='fw-normal d-flex text-muted flex-1'>
+                              {v.description}
+                            </h6>
+                          </a>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>

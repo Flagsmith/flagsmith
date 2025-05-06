@@ -234,6 +234,10 @@
     background-color: transparentize($primary, 0.95);
 }
 
+.border-primary {
+  border-color: $primary !important;
+}
+
 .bg-card {
     background-color: white;
 }
