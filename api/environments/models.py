@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Count
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -357,6 +357,35 @@ class Environment(
                 self.feature_states.filter(**filter_kwargs),
             )
         )
+
+    def get_metrics_payload(self) -> dict:
+        """
+        Returns total feature count and enabled-by-default feature count
+        scoped to this environment's project.
+        """
+        feature_metrics = FeatureState.objects.filter(
+            feature__project=self.project,
+            environment__id=self.id
+        ).aggregate(
+            total=Count("feature_id", distinct=True),
+            enabled=Count("feature_id", distinct=True, filter=Q(enabled=True)),
+            # segment_overrides=Count("feature_segment"),
+            # identity_overrides=Count("identity")
+        )
+
+        return {
+            "features": {
+                "total": feature_metrics["total"],
+                "enabled": feature_metrics["enabled"],
+            },
+            # "segment": {
+            #     "overrides": feature_metrics["segment_overrides"],
+            # },
+            # "identity": {
+            #     "overrides": feature_metrics["identity_overrides"],
+            # },
+        }
+
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:

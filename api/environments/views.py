@@ -15,7 +15,8 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-
+from metrics.views import BaseMetricsViewSet
+from metrics.serializers import EnvironmentMetricsSerializer
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -322,3 +323,19 @@ class EnvironmentAPIKeyViewSet(
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
     model_class = EnvironmentAPIKey  # type: ignore[assignment]
+
+
+class EnvironmentMetricsViewSet(NestedEnvironmentViewSet, BaseMetricsViewSet):
+    model_class = Environment
+    lookup_url_kwarg = "environment_api_key"
+    serializer_class = EnvironmentMetricsSerializer
+    
+    def get_metrics(self, environment: Environment):
+        return environment.get_metrics_payload()
+        
+    @swagger_auto_schema(
+        operation_description="Get metrics for this environment.",
+        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)}
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
