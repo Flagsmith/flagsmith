@@ -64,28 +64,28 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   )
 
   return (
-    <div className='col-md-4 col-lg-2'>
+    <div className='col-md-4 col-lg-3'>
       <div
         className={classNames('card h-100 shadow rounded', {
           'bg-primary-opacity-5 opacity-75': complete,
         })}
       >
-        <div className={classNames('p-3 d-flex h-100 flex-column mx-0')}>
-          <div className='d-flex mb-2'>
-            <span className='chip chip-secondary d-flex gap-1  align-items-center lh-1 chip chip--xs'>
-              <Icon className='chip-svg-icon' width={14} name={'clock'} />
-              <span>{duration} Min</span>
-            </span>
-          </div>
-          <h5
-            style={{ height: 50 }}
-            className={`d-flex align-items-center gap-1`}
-          >
-            {title}
-            {complete && <Icon fill='#6837fc' name={'checkmark-circle'} />}
-          </h5>
+        <div className={classNames('p-3 pt-1 d-flex h-100 flex-column mx-0')}>
+          <div className='d-flex justify-content-between mb-2 align-items-center'>
+            <h5 className={`d-flex align-items-center mb-0 gap-1`}>
+              {title}
+              {complete && <Icon fill='#6837fc' name={'checkmark-circle'} />}
+            </h5>
 
-          <h6 className='fw-normal d-flex text-muted flex-1 mb-5'>
+            <div className='d-flex'>
+              <span className='chip chip-secondary d-flex gap-1  align-items-center lh-1 chip chip--xs'>
+                <Icon className='chip-svg-icon' width={14} name={'clock'} />
+                <span>{duration} Min</span>
+              </span>
+            </div>
+          </div>
+
+          <h6 className='fw-normal d-flex text-muted flex-1 mb-3'>
             {description}
           </h6>
           <div className='d-flex align-items-center justify-content-between'>
@@ -167,6 +167,18 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       title: 'Create a Segment',
     },
     {
+      complete: !!segments?.results?.length,
+      cta: 'Create a Segment',
+      description:
+        'Once your features are setup you can target their rollout with segments',
+      disabledMessage: !project
+        ? 'You will need to create a project before creating your first segment'
+        : null,
+      duration: 1,
+      link: '/',
+      title: 'Version comparison',
+    },
+    {
       description: 'Everything you need to get up-and-running with Flagsmith',
       duration: 5,
       link: 'https://docs.flagsmith.com/quickstart/',
@@ -206,7 +218,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
           !
         </PageTitle>
         <h5 className='mb-4 mt-5'>Getting Started</h5>
-        <div className='row '>
+        <div className='row row-gap-4'>
           {items.map((v, i) => (
             <GettingStartedItem key={i} data={v} />
           ))}
@@ -238,11 +250,11 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
               </div>
             </div>
           </div>
-          <div className='col-lg-9 row'>
+          <div className='col-lg-9 row row-gap-4'>
             {[
               {
                 'description':
-                  'Set yourself up for success with these best practices.',
+                  'A hands-on guide covering best practices, use cases and more.',
                 'image': '/static/images/welcome/featured1.png',
                 'title':
                   'eBook | Unlock Modern Software Development with Feature Flags',
@@ -252,16 +264,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
                 'description':
                   'Set yourself up for success with these best practices.',
                 'image': '/static/images/welcome/featured2.png',
-                'title':
-                  'eBook | Unlock Modern Software Development with Feature Flags',
-                url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
-              },
-              {
-                'description':
-                  'Set yourself up for success with these best practices.',
-                'image': '/static/images/welcome/featured1.png',
-                'title':
-                  'eBook | Unlock Modern Software Development with Feature Flags',
+                'title': 'Blog Post | Feature Flag best practices',
                 url: 'https://www.flagsmith.com/ebook/flip-the-switch-on-modern-software-development-with-feature-flags?utm_source=app',
               },
             ].map((v, i) => (
