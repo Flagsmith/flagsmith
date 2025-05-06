@@ -1,7 +1,7 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.11.5
+    rev: v0.11.7
     hooks:
       # Run the linter.
       - id: ruff
@@ -28,6 +28,12 @@ repos:
         args:
           - --check
         types: [javascript, jsx, ts, tsx, markdown, mdx, html, css, json, yaml]
+      - id: generate-docs
+        name: generate-docs
+        language: system
+        entry: make -C api generate-docs
+        pass_filenames: false
+        types: [python,toml]
       - id: python-typecheck
         name: python-typecheck
         language: system
@@ -43,5 +49,5 @@ repos:
         args: ["-C", "api"]
 
 ci:
-  skip: [python-typecheck]
+  skip: [generate-docs, python-typecheck]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"

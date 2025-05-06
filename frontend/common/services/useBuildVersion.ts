@@ -1,9 +1,9 @@
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
-
 import { Version } from 'common/types/responses'
 import Project from 'common/project'
 import { StoreStateType } from 'common/store'
+import data from 'common/data/base/_data'
 export const defaultVersionTag = 'Unknown'
 export const buildVersionService = service
   .enhanceEndpoints({ addTagTypes: ['BuildVersion'] })
@@ -12,22 +12,14 @@ export const buildVersionService = service
       getBuildVersion: builder.query<Version, Req['getBuildVersion']>({
         providesTags: () => [{ id: 'BuildVersion', type: 'BuildVersion' }],
         queryFn: async (args, _, _2, baseQuery) => {
-          // Fire both requests concurrently
           const [frontendRes, backendRes] = await Promise.all([
-            baseQuery(
-              `${new URL('/version/', Project.api.replace('api/v1/', ''))}`,
-            ),
-            baseQuery(`${Project.api.replace('api/v1/', '')}version/`),
+            data.get(`/version/`).catch(() => ({})),
+            data.get(`${Project.api.replace('api/v1/', '')}version/`),
           ])
 
-          if (backendRes.error) {
-            return { error: backendRes.error }
-          }
-
-          const frontend = (frontendRes.data || {}) as Version['frontend']
+          const frontend = (frontendRes || {}) as Version['frontend']
           const backend =
-            (backendRes.data as Version['backend']) ||
-            ({} as Version['backend'])
+            (backendRes as Version['backend']) || ({} as Version['backend'])
 
           const tag = backend?.image_tag || defaultVersionTag
           const backend_sha = backend?.ci_commit_sha || defaultVersionTag
@@ -61,7 +53,8 @@ export async function getBuildVersion(
 }
 // END OF FUNCTION_EXPORTS
 
-export const selectBuildVersion = (state: StoreStateType) => state.buildVersion
+export const selectBuildVersion = (state: StoreStateType) =>
+  buildVersionService.endpoints.getBuildVersion.select({})(state)?.data
 
 export const {
   useGetBuildVersionQuery,

@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import ConfirmRemoveProject from 'components/modals/ConfirmRemoveProject'
 import ConfirmHideFlags from 'components/modals/ConfirmHideFlags'
-import MetadataPage from 'components/metadata/MetadataPage'
 import EditPermissions from 'components/EditPermissions'
 import Switch from 'components/Switch'
 import _data from 'common/data/base/_data'
@@ -25,6 +24,7 @@ import Setting from 'components/Setting'
 import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
 import EditHealthProvider from 'components/EditHealthProvider'
+import WarningMessage from 'components/WarningMessage'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -604,9 +604,27 @@ const ProjectSettingsPage = class extends Component {
                       />
                     </TabItem>
                     <TabItem tabLabel='Custom Fields'>
-                      <MetadataPage
-                        organisationId={AccountStore.getOrganisation().id}
-                        projectId={this.props.match.params.projectId}
+                      <Row space className='mb-2 mt-4'>
+                        <Row>
+                          <h5>Custom Fields</h5>
+                        </Row>
+                      </Row>
+
+                      <WarningMessage
+                        warningMessage={
+                          <span>
+                            Custom fields have been moved to{' '}
+                            <a
+                              href={`/organisation/${
+                                AccountStore.getOrganisation()?.id
+                              }/settings?tab=custom-fields`}
+                              rel='noreferrer'
+                            >
+                              Organisation Settings
+                            </a>
+                            .
+                          </span>
+                        }
                       />
                     </TabItem>
                     {!!ProjectStore.getEnvs()?.length && (

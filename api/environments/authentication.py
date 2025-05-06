@@ -1,3 +1,4 @@
+from common.gunicorn.utils import log_extra
 from django.conf import settings
 from django.core.cache import caches
 from rest_framework.authentication import BaseAuthentication
@@ -37,6 +38,11 @@ class EnvironmentKeyAuthentication(BaseAuthentication):
             RequestOrigin.SERVER
             if api_key.startswith(SERVER_API_KEY_PREFIX)
             else RequestOrigin.CLIENT
+        )
+        log_extra(
+            request=request,
+            key="environment_id",
+            value=environment.id,
         )
 
         # DRF authentication expects a two tuple to be returned containing User, auth

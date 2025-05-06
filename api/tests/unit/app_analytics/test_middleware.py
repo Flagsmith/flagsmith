@@ -4,6 +4,7 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from app_analytics.middleware import APIUsageMiddleware
+from app_analytics.models import Resource
 
 
 @pytest.mark.parametrize(
@@ -15,7 +16,7 @@ from app_analytics.middleware import APIUsageMiddleware
         ("/api/v1/environment-document", "environment-document"),
     ],
 )
-def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
+def test_api_usage_middleware__calls_expected(
     rf: RequestFactory,
     mocker: MockerFixture,
     path: str,
@@ -29,7 +30,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
     settings.USE_CACHE_FOR_USAGE_DATA = True
 
     mocked_api_usage_cache = mocker.patch(
-        "app_analytics.middleware.api_usage_cache", autospec=True
+        "app_analytics.services.api_usage_cache", autospec=True
     )
 
     mocked_get_response = mocker.MagicMock()
@@ -40,7 +41,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
 
     # Then
     mocked_api_usage_cache.track_request.assert_called_once_with(
-        resource=resource_name,
+        resource=Resource.get_from_name(resource_name),
         host="testserver",
         environment_key=environment_key,
     )
@@ -55,7 +56,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_with_cache(
         ("/api/v1/environment-document", "environment-document"),
     ],
 )
-def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
+def test_api_usage_middleware__no_cache__calls_expected(
     rf: RequestFactory,
     mocker: MockerFixture,
     path: str,
@@ -68,7 +69,7 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     request = rf.get(path, **headers)  # type: ignore[arg-type]
     settings.USE_CACHE_FOR_USAGE_DATA = False
 
-    mocked_track_request = mocker.patch("app_analytics.middleware.track_request")
+    mocked_track_request = mocker.patch("app_analytics.services.track_request")
 
     mocked_get_response = mocker.MagicMock()
     middleware = APIUsageMiddleware(mocked_get_response)
@@ -77,16 +78,16 @@ def test_APIUsageMiddleware_calls_track_request_correctly_without_cache(
     middleware(request)
 
     # Then
-    mocked_track_request.delay.assert_called_once_with(
+    mocked_track_request.run_in_thread.assert_called_once_with(
         kwargs={
-            "resource": resource_name,
+            "resource": Resource.get_from_name(resource_name),
             "environment_key": environment_key,
             "host": "testserver",
         }
     )
 
 
-def test_APIUsageMiddleware_avoids_calling_track_request_if_resoure_is_not_tracked(
+def test_api_usage_middleware__request_not_tracked__not_calls_expected(
     rf: RequestFactory, mocker: MockerFixture, settings: SettingsWrapper
 ) -> None:
     # Given
@@ -96,7 +97,7 @@ def test_APIUsageMiddleware_avoids_calling_track_request_if_resoure_is_not_track
     request = rf.get(path, **headers)  # type: ignore[arg-type]
     settings.USE_CACHE_FOR_USAGE_DATA = False
 
-    mocked_track_request = mocker.patch("app_analytics.middleware.track_request")
+    mocked_track_request = mocker.patch("app_analytics.services.track_request")
 
     mocked_get_response = mocker.MagicMock()
     middleware = APIUsageMiddleware(mocked_get_response)

@@ -79,7 +79,9 @@ const Tabs = class extends React.Component {
                     }
                     this.props.onChange?.(i)
                   }}
-                  className={`btn-tab ${isSelected ? ' tab-active' : ''}`}
+                  className={`btn-tab ${
+                    this.props.noFocus ? 'btn-no-focus' : ''
+                  } ${isSelected ? ' tab-active' : ''}`}
                 >
                   {child.props.tabLabel}
                 </Button>

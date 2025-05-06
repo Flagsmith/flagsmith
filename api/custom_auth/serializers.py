@@ -64,7 +64,7 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             "marketing_consent_given",
             "uuid",
         )
-        read_only_fields = ("is_active", "uuid")
+        read_only_fields = ("is_active", "uuid", "marketing_consent_given")
         write_only_fields = ("sign_up_type",)
         extra_kwargs = {
             "email": {

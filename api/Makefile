@@ -96,7 +96,7 @@ django-collect-static:
 
 .PHONY: serve
 serve:
-	flagsmith start --reload api
+	poetry run flagsmith start --reload api
 		
 
 .PHONY: generate-ld-client-types
@@ -140,3 +140,7 @@ integrate-private-tests:
 
 	git clone https://github.com/flagsmith/flagsmith-task-processor --depth 1 --branch ${TASK_PROCESSOR_REVISION} && mv ./flagsmith-task-processor/tests tests/task_processor_tests
 	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller ./flagsmith-task-processor
+
+.PHONY: generate-docs
+generate-docs:
+	poetry run flagsmith docgen metrics > ../docs/docs/system-administration/metrics.md

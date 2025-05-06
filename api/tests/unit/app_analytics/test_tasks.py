@@ -161,8 +161,7 @@ def test_track_request__postgres__inserts_expected(
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     host = "testserver"
     environment_key = environment.api_key
-    resource = "flags"
-    expected_resource = Resource.FLAGS
+    resource = Resource.FLAGS
 
     # When
     track_request(resource, host, environment_key)
@@ -170,7 +169,7 @@ def test_track_request__postgres__inserts_expected(
     # Then
     assert (
         APIUsageRaw.objects.filter(
-            resource=expected_resource, host=host, environment_id=environment.id
+            resource=resource, host=host, environment_id=environment.id
         ).count()
         == 1
     )
@@ -189,7 +188,7 @@ def test_track_request__influx__calls_expected(
     )
     host = "testserver"
     environment_key = environment.api_key
-    resource = "flags"
+    resource = Resource.FLAGS
 
     # When
     track_request(resource, host, environment_key)

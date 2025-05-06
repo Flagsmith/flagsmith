@@ -4,6 +4,7 @@ from threading import Lock
 from django.conf import settings
 from django.utils import timezone
 
+from app_analytics.models import Resource
 from app_analytics.tasks import (
     track_feature_evaluation,
     track_feature_evaluation_influxdb,
@@ -13,15 +14,15 @@ from app_analytics.tasks import (
 
 class APIUsageCache:
     def __init__(self) -> None:
-        self._cache: dict[tuple[str, str, str], int] = {}
+        self._cache: dict[tuple[Resource, str, str], int] = {}
         self._last_flushed_at = timezone.now()
         self._lock = Lock()
 
     def _flush(self) -> None:
         for key, value in self._cache.items():
-            track_request.delay(
+            track_request.run_in_thread(
                 kwargs={
-                    "resource": key[0],
+                    "resource": key[0].value,
                     "host": key[1],
                     "environment_key": key[2],
                     "count": value,
@@ -33,7 +34,7 @@ class APIUsageCache:
 
     def track_request(
         self,
-        resource: str,
+        resource: Resource,
         host: str,
         environment_key: str,
     ) -> None:
@@ -45,7 +46,7 @@ class APIUsageCache:
                 self._cache[key] += 1
             if (
                 timezone.now() - self._last_flushed_at
-            ).seconds > settings.PG_API_USAGE_CACHE_SECONDS:
+            ).seconds > settings.API_USAGE_CACHE_SECONDS:
                 self._flush()
 
 
