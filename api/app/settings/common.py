@@ -285,6 +285,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -1406,3 +1407,5 @@ PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
         default=prometheus_client.Histogram.DEFAULT_BUCKETS,
     )
 )
+
+DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)

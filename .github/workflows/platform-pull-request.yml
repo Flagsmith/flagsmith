@@ -10,7 +10,7 @@ on:
 jobs:
   permissions-check:
     name: Check actor permissions
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     outputs:
       can-write: ${{ steps.check.outputs.require-result }}
     steps:
@@ -23,7 +23,7 @@ jobs:
     if: needs.permissions-check.outputs.can-write == 'true'
     name: Add Conventional Commit labels
     needs: permissions-check
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pull-requests: write
     steps:
@@ -49,7 +49,7 @@ jobs:
     if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
     name: Prepare Docker report comment
     needs: permissions-check
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pull-requests: write
     steps:
@@ -137,24 +137,24 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-api.outputs.image }}
-      concurrency: ${{ matrix.args.concurrency }}
-      tests: ${{ matrix.args.tests }}
+      concurrency: 16
+      tests: >-
+        segment-part-1 
+        segment-part-2
+        segment-part-3
+        environment
+        signup
+        flag
+        invite
+        project
+        versioning
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, ARM64-2c]
-        args:
-          - tests: segment-part-1 environment
-            concurrency: 1
-          - tests: segment-part-2
-            concurrency: 1
-          - tests: segment-part-3 signup flag invite project
-            concurrency: 2
-          - tests: versioning
-            concurrency: 1
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
 
   run-e2e-tests-private-cloud:
     if: needs.permissions-check.outputs.can-write == 'true' && !cancelled()
@@ -164,15 +164,16 @@ jobs:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
-      concurrency: ${{ matrix.args.concurrency }}
-      tests: ${{ matrix.args.tests }}
+      concurrency: 16
+      tests: >-
+        organisation-permission
+        environment-permission
+        project-permission
+        roles
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, ARM64-2c]
-        args:
-          - tests: organisation-permission environment-permission project-permission roles
-            concurrency: 1
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]

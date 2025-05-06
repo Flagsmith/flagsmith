@@ -193,7 +193,5 @@ class IdentifyWithTraitsSerializer(
     def validate_traits(self, traits: typing.List[dict] = None):  # type: ignore[no-untyped-def,type-arg,assignment]
         request = self.context["request"]
         if traits and not request.environment.trait_persistence_allowed(request):
-            raise serializers.ValidationError(
-                "Setting traits not allowed with client key."
-            )
+            return []
         return traits
