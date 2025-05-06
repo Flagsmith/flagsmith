@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Prefetch, Q, Count
+from django.db.models import Prefetch, Q, Count, Max
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -363,28 +363,51 @@ class Environment(
         Returns total feature count and enabled-by-default feature count
         scoped to this environment's project.
         """
-        feature_metrics = FeatureState.objects.filter(
-            feature__project=self.project,
-            environment__id=self.id
-        ).aggregate(
-            total=Count("feature_id", distinct=True),
-            enabled=Count("feature_id", distinct=True, filter=Q(enabled=True)),
-            # segment_overrides=Count("feature_segment"),
-            # identity_overrides=Count("identity")
+        
+        latest_base_ids = (
+            FeatureState.objects
+            .filter(
+                environment=self,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            .values("feature_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+        
+        latest_segment_ids = (
+            FeatureState.objects
+            .filter(
+                environment=self,
+                identity__isnull=True,
+                feature_segment__isnull=False,
+            )
+            .values("feature_segment_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
         )
 
-        return {
+        latest_fs = FeatureState.objects.filter(id__in=latest_base_ids.union(latest_segment_ids))
+
+        metrics = {
             "features": {
-                "total": feature_metrics["total"],
-                "enabled": feature_metrics["enabled"],
+                "total": latest_fs.filter(feature_segment__isnull=True).count(),
+                "enabled": latest_fs.filter(feature_segment__isnull=True, enabled=True).count(),
             },
+            "segment": {
+                "overrides": latest_fs.filter(feature_segment__isnull=False, enabled=True).count(),
+            }
+        }
+
+        return metrics
             # "segment": {
             #     "overrides": feature_metrics["segment_overrides"],
             # },
             # "identity": {
             #     "overrides": feature_metrics["identity_overrides"],
             # },
-        }
+        # }
 
 
     @staticmethod

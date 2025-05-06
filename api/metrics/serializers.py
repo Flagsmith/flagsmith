@@ -13,4 +13,4 @@ class IdentityMetricsSerializer(serializers.Serializer):
 
 class EnvironmentMetricsSerializer(serializers.Serializer):
     features = FeaturesMetricsSerializer()
-    # segment = SegmentMetricsSerializer()
+    segment = SegmentMetricsSerializer()
