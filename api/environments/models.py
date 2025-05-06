@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Prefetch, Q, Count, Max
+from django.db.models import Prefetch, Q, Max, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -51,6 +51,9 @@ from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
+
+from metrics.types import EnvMetrics
+
 from util.mappers import (
     map_environment_to_environment_document,
     map_environment_to_sdk_document,
@@ -358,56 +361,90 @@ class Environment(
             )
         )
 
-    def get_metrics_payload(self) -> dict:
+
+    def get_metrics_payload(self, with_workflows: bool = False) -> dict:
         """
         Returns total feature count and enabled-by-default feature count
         scoped to this environment's project.
         """
-        
-        latest_base_ids = (
-            FeatureState.objects
-            .filter(
-                environment=self,
-                identity__isnull=True,
-                feature_segment__isnull=True,
-            )
-            .values("feature_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
-        )
-        
-        latest_segment_ids = (
-            FeatureState.objects
-            .filter(
-                environment=self,
-                identity__isnull=True,
-                feature_segment__isnull=False,
-            )
-            .values("feature_segment_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
-        )
 
-        latest_fs = FeatureState.objects.filter(id__in=latest_base_ids.union(latest_segment_ids))
-
-        metrics = {
-            "features": {
-                "total": latest_fs.filter(feature_segment__isnull=True).count(),
-                "enabled": latest_fs.filter(feature_segment__isnull=True, enabled=True).count(),
-            },
-            "segment": {
-                "overrides": latest_fs.filter(feature_segment__isnull=False, enabled=True).count(),
-            }
-        }
+        metrics = {}
+        live_feature_states_metrics = self._get_live_feature_states_metrics()
+        
+        metrics[EnvMetrics.FEATURES.value] = live_feature_states_metrics[EnvMetrics.FEATURES.value]
+        metrics[EnvMetrics.SEGMENTS.value] = live_feature_states_metrics[EnvMetrics.SEGMENTS.value]
+        
+        if with_workflows:
+            workflows_metrics = self._get_workflows_metrics()
+            metrics[EnvMetrics.CHANGE_REQUESTS.value] = workflows_metrics[EnvMetrics.CHANGE_REQUESTS.value]
+            metrics[EnvMetrics.SCHEDULED_CHANGES.value] = workflows_metrics[EnvMetrics.SCHEDULED_CHANGES.value]
 
         return metrics
-            # "segment": {
-            #     "overrides": feature_metrics["segment_overrides"],
-            # },
-            # "identity": {
-            #     "overrides": feature_metrics["identity_overrides"],
-            # },
-        # }
+
+
+    def _get_latest_feature_state_ids(self) -> QuerySet:
+        return FeatureState.objects.filter(
+            Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+            environment=self,
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        ).values("feature_id").annotate(latest_id=Max("id")).values_list("latest_id", flat=True)
+
+
+    def _get_latest_segment_state_ids(self) -> QuerySet:
+        segment_ids = FeatureSegment.objects.filter(environment=self) \
+            .values("feature_id", "segment_id") \
+            .annotate(latest_id=Max("id")) \
+            .values_list("latest_id", flat=True)
+
+        return FeatureState.objects.filter(
+            Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+            feature_segment_id__in=segment_ids,
+            identity_id__isnull=True,
+        ).values("feature_id", "feature_segment_id").annotate(latest_id=Max("id")).values_list("latest_id", flat=True)
+
+
+    def _get_live_feature_states_metrics(self) -> dict:
+        latest_states_by_ids = self._get_latest_feature_state_ids()
+        latest_segment_state_ids = self._get_latest_segment_state_ids()
+        live_feature_states = FeatureState.objects.filter(
+            id__in=latest_states_by_ids.union(latest_segment_state_ids)
+        )
+
+        return {
+            EnvMetrics.FEATURES.value: {
+                "total": live_feature_states.filter(feature_segment__isnull=True).count(),
+                "enabled": live_feature_states.filter(feature_segment__isnull=True, enabled=True).count(),
+            },
+            EnvMetrics.SEGMENTS.value: {
+               "overrides": live_feature_states.filter(feature_segment__isnull=False).count(),
+               "enabled": live_feature_states.filter(feature_segment__isnull=False, enabled=True).count(),
+            },
+        }
+
+    def _get_workflows_metrics(self) -> dict:
+        from features.workflows.core.models import ChangeRequest
+
+        open_change_requests = ChangeRequest.objects.filter(
+                environment=self,
+                committed_at__isnull=True,
+                deleted_at__isnull=True,
+            )
+                
+        scheduled_change_requests = FeatureState.objects.filter(
+            environment=self,
+            identity_id__isnull=True,
+            feature_segment__isnull=True,
+            live_from__gt=timezone.now(),
+        )
+        return {
+            EnvMetrics.CHANGE_REQUESTS.value: {
+                "open": open_change_requests.count(),
+            },
+            EnvMetrics.SCHEDULED_CHANGES.value: {
+                "total": scheduled_change_requests.count(),
+            }
+        }
 
 
     @staticmethod

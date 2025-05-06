@@ -7,10 +7,19 @@ class FeaturesMetricsSerializer(serializers.Serializer):
     
 class SegmentMetricsSerializer(serializers.Serializer):
     overrides = serializers.IntegerField()
+    enabled = serializers.IntegerField()
 
 class IdentityMetricsSerializer(serializers.Serializer):
     overrides = serializers.IntegerField()
 
+class ChangeRequestMetricsSerializer(serializers.Serializer):
+    open = serializers.IntegerField()
+
+class ScheduledChangeMetricsSerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+
 class EnvironmentMetricsSerializer(serializers.Serializer):
     features = FeaturesMetricsSerializer()
-    segment = SegmentMetricsSerializer()
+    segments = SegmentMetricsSerializer()
+    change_requests = ChangeRequestMetricsSerializer(required=False)
+    scheduled_changes = ScheduledChangeMetricsSerializer(required=False)
