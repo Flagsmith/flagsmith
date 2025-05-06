@@ -393,8 +393,7 @@ export type MultivariateOption = {
 
 export type FeatureType = 'STANDARD' | 'MULTIVARIATE'
 export type TagStrategy = 'INTERSECTION' | 'UNION'
-export type FeatureSortField = 'created_date' | 'name'
-export type SortDirection = 'ASC' | 'DESC'
+
 export type IdentityFeatureState = {
   feature: {
     id: number
@@ -911,6 +910,5 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
-  features: {}
   // END OF TYPES
 }
