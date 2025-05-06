@@ -331,8 +331,8 @@ class EnvironmentMetricsViewSet(NestedEnvironmentViewSet, BaseMetricsViewSet):
     serializer_class = EnvironmentMetricsSerializer
     
     def get_metrics(self, environment: Environment):
-        test = environment.get_metrics_payload(with_workflows=True)
-        return test
+        is_workflows_enabled = environment.change_requests_enabled
+        return environment.get_metrics_payload(with_workflows=is_workflows_enabled)
         
     @swagger_auto_schema(
         operation_description="Get metrics for this environment.",

@@ -160,7 +160,7 @@ class Environment(
 
     class Meta:
         ordering = ["id"]
-
+ 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def create_feature_states(self) -> None:
         FeatureState.create_initial_feature_states_for_environment(environment=self)
@@ -198,6 +198,11 @@ class Environment(
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return (self.api_key,)
+
+    @property
+    def change_requests_enabled(self) -> bool:
+        return self.minimum_change_request_approvals is not None and self.minimum_change_request_approvals > 0
+
 
     def clone(
         self,
@@ -471,6 +476,7 @@ class Environment(
             or getattr(request, "originated_from", RequestOrigin.CLIENT)
             == RequestOrigin.SERVER
         )
+        
 
     def get_segments_from_cache(self) -> typing.List[Segment]:
         """
