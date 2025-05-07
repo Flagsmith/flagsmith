@@ -2,7 +2,7 @@ const createTestCafe = require('testcafe');
 const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
-const _options = require("../.testcaferc.js")
+const _options = require("../.testcaferc")
 const upload = require('../bin/upload-file');
 const minimist = require('minimist');
 const options = {
@@ -51,13 +51,11 @@ createTestCafe()
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .concurrency(parseInt(concurrentInstances))
-            .filter((_testName, _fixtureName, _fixturePath, testMeta, fixtureMeta) => {
-                return metaConditions.some(({ key, value }) => {
-                    return (
-                        testMeta[key] === value || fixtureMeta[key] === value
-                    );
-                });
-            })
+            .filter((_, __, ___, testMeta, fixtureMeta) =>
+                 metaConditions.some(({ key, value }) =>
+                      testMeta[key] === value || fixtureMeta[key] === value
+                 )
+           )
             .run(options)
     })
     .then(async (v) => {
