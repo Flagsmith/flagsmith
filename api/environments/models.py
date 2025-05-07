@@ -2,7 +2,6 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
-from typing import Any, Mapping, cast
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -50,16 +49,11 @@ from environments.metrics import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
-from metrics.constants import (
-    CHANGE_REQUESTS_DEFINITION,
-    FEATURES_DEFINITION,
-    SCHEDULED_CHANGES_DEFINITION,
-    SEGMENTS_DEFINITION,
-)
-from metrics.metrics_service import build_metrics_section
-from metrics.types import EnvMetrics, EnvMetricsPayload, MetricDefinition
+from metrics.metrics_service import build_metrics
+from metrics.types import EnvMetricsEntities, EnvMetricsName, EnvMetricsPayload, MetricDefinition
 from projects.models import Project
 from segments.models import Segment
+from typing import Callable
 from util.mappers import (
     map_environment_to_environment_document,
     map_environment_to_sdk_document,
@@ -380,31 +374,19 @@ class Environment(
         scoped to this environment's project.
         """
 
-        live_fs_metrics = self._get_live_feature_states_metrics()
-
-        metrics: EnvMetricsPayload = {
-            EnvMetrics.FEATURES.value: build_metrics_section(
-                live_fs_metrics[EnvMetrics.FEATURES.value],
-                cast(Mapping[str, MetricDefinition], FEATURES_DEFINITION),
-            ),
-            EnvMetrics.SEGMENTS.value: build_metrics_section(
-                live_fs_metrics[EnvMetrics.SEGMENTS.value],
-                cast(Mapping[str, MetricDefinition], SEGMENTS_DEFINITION),
-            ),
+        qs_map: dict[EnvMetricsName, Callable[[], int]] = {
+            EnvMetricsName.TOTAL_FEATURES: lambda: self._get_main_feature_states_queryset().count(),
+            EnvMetricsName.ENABLED_FEATURES: lambda: self._get_main_feature_states_queryset().filter(enabled=True).count(),
+            EnvMetricsName.SEGMENT_OVERRIDES: lambda: self._get_segment_feature_states_queryset().count(),
         }
 
         if with_workflows:
-            workflows_metrics = self._get_workflows_metrics()
-            metrics[EnvMetrics.CHANGE_REQUESTS.value] = build_metrics_section(
-                workflows_metrics[EnvMetrics.CHANGE_REQUESTS.value],
-                cast(Mapping[str, MetricDefinition], CHANGE_REQUESTS_DEFINITION),
-            )
-            metrics[EnvMetrics.SCHEDULED_CHANGES.value] = build_metrics_section(
-                workflows_metrics[EnvMetrics.SCHEDULED_CHANGES.value],
-                cast(Mapping[str, MetricDefinition], SCHEDULED_CHANGES_DEFINITION),
-            )
-
-        return metrics
+            qs_map.update({
+                EnvMetricsName.OPEN_CHANGE_REQUESTS: lambda: self._get_open_change_requests_queryset().count(),
+                EnvMetricsName.TOTAL_SCHEDULED_CHANGES: lambda: self._get_scheduled_changes_queryset().count(),
+            })
+        
+        return build_metrics(qs_map)
 
     def _get_latest_feature_state_ids(self) -> QuerySet:
         return (
@@ -439,54 +421,32 @@ class Environment(
         )
 
     def _get_live_feature_states_queryset(self) -> QuerySet:
-        latest_ids = self._get_latest_feature_state_ids().union(self._get_latest_segment_state_ids())
+        latest_ids = self._get_latest_feature_state_ids()
         return FeatureState.objects.filter(id__in=latest_ids)
 
-    def _get_live_feature_states_metrics(self) -> dict[str, Any]:
-        live_feature_states_qs = self._get_live_feature_states_queryset()
+    def _get_main_feature_states_queryset(self) -> QuerySet:
+        return self._get_live_feature_states_queryset().filter(feature_segment__isnull=True, identity_id__isnull=True,)
 
-        return {
-            EnvMetrics.FEATURES.value: {
-                "total": live_feature_states_qs.filter(
-                    feature_segment__isnull=True
-                ).count(),
-                "enabled": live_feature_states_qs.filter(
-                    feature_segment__isnull=True, enabled=True
-                ).count(),
-            },
-            EnvMetrics.SEGMENTS.value: {
-                "overrides": live_feature_states_qs.filter(
-                    feature_segment__isnull=False
-                ).count(),
-                "enabled": live_feature_states_qs.filter(
-                    feature_segment__isnull=False, enabled=True
-                ).count(),
-            },
-        }
+    def _get_segment_feature_states_queryset(self) -> QuerySet:
+        latest_ids = self._get_latest_segment_state_ids()
+        return FeatureState.objects.filter(id__in=latest_ids).filter(feature_segment__isnull=False, identity_id__isnull=True,)
 
-    def _get_workflows_metrics(self) -> dict:
+
+    def _get_open_change_requests_queryset(self) -> QuerySet:
         from features.workflows.core.models import ChangeRequest
-
-        open_change_requests = ChangeRequest.objects.filter(
+        return ChangeRequest.objects.filter(
             environment=self,
             committed_at__isnull=True,
             deleted_at__isnull=True,
         )
 
-        scheduled_change_requests = FeatureState.objects.filter(
+    def _get_scheduled_changes_queryset(self) -> QuerySet:
+        return FeatureState.objects.filter(
             environment=self,
             identity_id__isnull=True,
             feature_segment__isnull=True,
             live_from__gt=timezone.now(),
         )
-        return {
-            EnvMetrics.CHANGE_REQUESTS.value: {
-                "total": open_change_requests.count(),
-            },
-            EnvMetrics.SCHEDULED_CHANGES.value: {
-                "total": scheduled_change_requests.count(),
-            },
-        }
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:

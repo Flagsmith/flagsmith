@@ -20,7 +20,7 @@ class BaseMetricsViewSet(ViewSet):
 
     def list(self, request, *args, **kwargs):
         obj = self.get_object()
-        data = self.get_metrics(obj)
-        serializer = self.serializer_class(data=data)
+        metrics = self.get_metrics(obj)
+        serializer = self.serializer_class(data={"metrics": metrics})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

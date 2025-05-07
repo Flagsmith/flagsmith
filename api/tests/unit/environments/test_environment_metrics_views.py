@@ -13,7 +13,7 @@ from users.models import FFAdminUser
 from environments.models import Environment
 from projects.models import Project
 from tests.types import WithEnvironmentPermissionsCallable
-from metrics.types import EnvMetrics
+from metrics.types import EnvMetricsName
 from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
@@ -34,10 +34,13 @@ def test_get_environment_metrics_without_workflows(
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
 
-    assert EnvMetrics.FEATURES.value in data
-    assert EnvMetrics.SEGMENTS.value in data
-    assert EnvMetrics.CHANGE_REQUESTS.value not in data
-    assert EnvMetrics.SCHEDULED_CHANGES.value not in data
+    assert "metrics" in data
+    names = [item["name"] for item in data["metrics"]]
+    assert "open_change_requests" not in names
+    assert "total_scheduled_changes" not in names
+    assert "total_features" in names
+    assert "enabled_features" in names
+    assert "segment_overrides" in names
 
 def test_get_environment_metrics_with_workflows(
     staff_client: APIClient,
@@ -56,11 +59,14 @@ def test_get_environment_metrics_with_workflows(
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-
-    assert EnvMetrics.CHANGE_REQUESTS.value in data
-    assert EnvMetrics.SCHEDULED_CHANGES.value in data
-    assert EnvMetrics.FEATURES.value in data
-    assert EnvMetrics.SEGMENTS.value in data
+    
+    assert "metrics" in data
+    names = [item["name"] for item in data["metrics"]]
+    assert "open_change_requests" in names
+    assert "total_scheduled_changes" in names
+    assert "total_features" in names
+    assert "enabled_features" in names
+    assert "segment_overrides" in names
 
 @pytest.mark.parametrize("total_features, feature_enabled_count,segment_overrides_count, change_request_count, scheduled_change_count", [
     (0, 0, 0, 0, 0),
@@ -80,67 +86,67 @@ def test_get_environment_metrics_correctly_computes_data(
     change_request_count: int,
     scheduled_change_count: int,
 ) -> None:
-    # Given
-    test_environment = Environment.objects.create(name="My environment", project=project)
+      # Given
+    env = Environment.objects.create(name="env", project=project)
     with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
-    
+
     features = []
     version = 0
     for i in range(total_features):
-        feature = Feature.objects.create(project=test_environment.project, name=f"Feature disabled {i}")
-        FeatureState.objects.update_or_create(feature=feature, environment=test_environment, identity=None, enabled=False, version=version)
-        features.append(feature)
-        version += 1
-    
-    for i in range(min(feature_enabled_count, total_features)):
-        targetFeature = features[i]
+        f = Feature.objects.create(project=project, name=f"f-{i}")
         FeatureState.objects.update_or_create(
-            feature=targetFeature, 
-            environment=test_environment, 
-            identity=None, 
-            enabled=True, 
-            version=version
+            feature=f, environment=env, identity=None, enabled=False, version=version
+        )
+        features.append(f)
+        version += 1
+
+    for i in range(min(feature_enabled_count, total_features)):
+        FeatureState.objects.update_or_create(
+            feature=features[i], environment=env, identity=None, enabled=True, version=version
         )
         version += 1
 
     for i in range(segment_overrides_count):
-        segment = Segment.objects.create(project=test_environment.project, name=f"Segment overrides {i}")
-        targetFeature = random.choice(features)
-        feature_segment = FeatureSegment.objects.create(feature=targetFeature, segment=segment, environment=test_environment)
-        FeatureState.objects.update_or_create(feature=targetFeature, environment=test_environment, feature_segment=feature_segment, identity=None, enabled=False, version=version)
+        segment = Segment.objects.create(project=project, name=f"s-{i}")
+        f = random.choice(features)
+        fs = FeatureSegment.objects.create(feature=f, segment=segment, environment=env)
+        FeatureState.objects.update_or_create(
+            feature=f, environment=env, feature_segment=fs, identity=None, enabled=False, version=version
+        )
         version += 1
 
     for i in range(change_request_count):
-        ChangeRequest.objects.create(environment=test_environment, title=f"Change request {i}", user_id=admin_user.id)
+        ChangeRequest.objects.create(environment=env, title=f"CR-{i}", user_id=admin_user.id)
         version += 1
+
     for i in range(scheduled_change_count):
-        FeatureState.objects.update_or_create(feature=random.choice(features), environment=test_environment, identity=None, enabled=True, live_from=timezone.now() + timedelta(days=5), version=version)
+        FeatureState.objects.update_or_create(
+            feature=random.choice(features),
+            environment=env,
+            identity=None,
+            enabled=True,
+            live_from=timezone.now() + timedelta(days=5),
+            version=version,
+        )
         version += 1
 
-    test_environment.minimum_change_request_approvals = 1
-    test_environment.save()
+    env.minimum_change_request_approvals = 1
+    env.save()
 
-    url = reverse("api-v1:environments:environment-metrics-list", args=[test_environment.api_key])
-    
+    url = reverse("api-v1:environments:environment-metrics-list", args=[env.api_key])
+
     # When
-    response = staff_client.get(url)
-    
+    res = staff_client.get(url)
+
     # Then
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    assert res.status_code == status.HTTP_200_OK
+    metrics = res.json()["metrics"]
 
-    assert len(data["features"]) == 2
-    assert data["features"][0]["title"] == "total_features"
-    assert data["features"][0]["value"] == total_features
-    assert data["features"][1]["title"] == "enabled_features"
-    assert data["features"][1]["value"] == min(feature_enabled_count, total_features)
-    
-    assert data["segments"][0]["title"] == "segment_overrides"
-    assert data["segments"][0]["value"] == segment_overrides_count
-    
-    assert data["change_requests"][0]["title"] == "open_change_requests"
-    assert data["change_requests"][0]["value"] == change_request_count
+    def get_metric_value(name: str) -> int:
+        return next((m["value"] for m in metrics if m["name"] == name), 0)
 
-    assert data["scheduled_changes"][0]["title"] == "total_scheduled_changes"
-    assert data["scheduled_changes"][0]["value"] == scheduled_change_count
-    
+    assert get_metric_value(EnvMetricsName.TOTAL_FEATURES.value) == total_features
+    assert get_metric_value(EnvMetricsName.ENABLED_FEATURES.value) == min(feature_enabled_count, total_features)
+    assert get_metric_value(EnvMetricsName.SEGMENT_OVERRIDES.value) == segment_overrides_count
+    assert get_metric_value(EnvMetricsName.OPEN_CHANGE_REQUESTS.value) == change_request_count
+    assert get_metric_value(EnvMetricsName.TOTAL_SCHEDULED_CHANGES.value) == scheduled_change_count

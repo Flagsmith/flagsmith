@@ -1,17 +1,23 @@
-from typing import Any, Dict, List, Mapping
-from metrics.types import MetricDefinition, MetricItemPayload
+from metrics.types import EnvMetricsPayload, EnvMetricsName
+from metrics.constants import ALL_METRIC_DEFINITIONS
+from typing import Callable
 
-def build_metrics_section(
-    data: Dict[str, Any],
-    definition: Mapping[str, MetricDefinition]
-) -> List[MetricItemPayload]:
-    section: List[MetricItemPayload] = []
-    for key, meta in definition.items():
-        if key not in data or meta.get("disabled", False) is True:
+def build_metrics(qs_map: dict[EnvMetricsName, Callable[[], int]]) -> EnvMetricsPayload:
+    metrics: EnvMetricsPayload = []
+
+    for definition in ALL_METRIC_DEFINITIONS:
+        if definition.get("disabled"):
             continue
-        section.append({
-            "title": meta.get("title", key),
-            "description": meta.get("description", key),
-            "value": data[key],
+
+        fn = qs_map.get(definition["name"])
+        if fn is None:
+            continue
+
+        metrics.append({
+            **definition,
+            "name": definition["name"].value,
+            "entity": definition["entity"].value,
+            "value": fn(),
         })
-    return section
+
+    return sorted(metrics, key=lambda m: m.get("rank", 0))
