@@ -21,11 +21,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
   const onSave = (id: number) => {
     AppActions.selectOrganisation(id)
     AppActions.getOrganisation(id)
-    if (Utils.getFlagsmithHasFeature('welcome-page')) {
-      router.history.push('/getting-started')
-    } else {
-      router.history.push(Utils.getOrganisationHomePage(id))
-    }
+    router.history.push(Utils.getOrganisationHomePage(id))
   }
   return (
     <AccountProvider onSave={onSave}>

@@ -39,6 +39,7 @@ const GithubStar: FC<GithubStarType> = ({}) => {
 
   return (
     <a
+      style={{ width: 90 }}
       target='_blank'
       href='https://github.com/flagsmith/flagsmith'
       className='btn btn-sm btn-with-icon text-body'
