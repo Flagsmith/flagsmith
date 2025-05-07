@@ -78,7 +78,7 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     )
   }
 }).page`${url}`
-  .beforeEach(async (t) => {
+  .beforeEach(async () => {
     await waitForReact()
   })
   .afterEach(async (t) => {
