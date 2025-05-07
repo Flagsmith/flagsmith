@@ -187,13 +187,11 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       return
     }
 
-    const isEnvDataVersioningEnabled = environmentData?.use_v2_feature_versioning
-    const isCurrentEnvVersioningDisabled = !!currentEnv &&
-      !currentEnv?.use_v2_feature_versioning
-    if (
-      isEnvDataVersioningEnabled &&
-      isCurrentEnvVersioningDisabled
-    ) {
+    const isEnvDataVersioningEnabled =
+      environmentData?.use_v2_feature_versioning
+    const isCurrentEnvVersioningDisabled =
+      !!currentEnv && !currentEnv?.use_v2_feature_versioning
+    if (isEnvDataVersioningEnabled && isCurrentEnvVersioningDisabled) {
       setCurrentEnv((currentEnvState) => {
         AppActions.editEnv(environmentData)
         return {
@@ -210,7 +208,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     isSuccessEnvironment,
     currentEnv,
     currentEnv?.use_v2_feature_versioning,
-    ])
+  ])
 
   const onSave = () => {
     toast('Environment Saved')
@@ -658,7 +656,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                                   : null,
                               },
                               true,
-                              true
+                              true,
                             )
                           }
                         />
@@ -795,7 +793,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                           <div className='mt-4'>
                             <Setting
                               title='Persist traits when using client-side SDK keys'
-                              description={'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'}
+                              description={
+                                'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'
+                              }
                               checked={currentEnv?.allow_client_traits}
                               onChange={(value) => {
                                 updateCurrentEnv(
