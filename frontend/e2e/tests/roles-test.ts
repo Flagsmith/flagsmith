@@ -24,7 +24,7 @@ export default async function () {
   await click('#project-select-6')
   await createFeature(0, 'test_feature', false)
   log('Go to Roles')
-  await click(byId('org-settings-link'))
+  await click(byId('organisation-link'))
   await click(byId('users-and-permissions'))
   await waitForElementVisible(byId('tab-item-roles'))
   log('Create Role')

@@ -16,7 +16,10 @@ export default async function () {
   log('Login')
   await login(E2E_USER, PASSWORD)
   log('Get Invite url')
-  await t.navigateTo('http://localhost:3000/organisation-settings')
+  await waitForElementVisible(byId('organisation-link'))
+  await click(byId('organisation-link'))
+  await waitForElementVisible(byId('org-settings-link'))
+  await click(byId('org-settings-link'))
   await Selector(byId('organisation-name')).value
   await click(byId('users-and-permissions'))
   const inviteLink = await Selector(byId('invite-link')).value
