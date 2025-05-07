@@ -9,8 +9,8 @@ The task processor can be run using the `flagsmith/flagsmith-api` image with a s
 pointed to the same database that the API container is using, or instead, [it can use a separate
 database](#running-the-processor-with-a-separate-database) as broker and result storage.
 
-To enable the API sending tasks to the processor, you must set the `TASK_RUN_METHOD` to `TASK_PROCESSOR` in the
-flagsmith container running the flagsmith application.
+To enable the API sending tasks to the processor, you must set the `TASK_RUN_METHOD` environment variable to
+`"TASK_PROCESSOR"` in the `flagsmith` container running the Flagsmith application.
 
 A basic docker-compose setup might look like:
 
