@@ -88,8 +88,8 @@ export default async function () {
   await login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
   await click('#project-select-0')
   await click(byId('feature-action-0'))
-  await waitForElementVisible(byId('remove-feature-btn-0'))
-  await Selector(byId('remove-feature-btn-0')).hasClass(
+  await waitForElementVisible(byId('feature-remove-0'))
+  await Selector(byId('feature-remove-0')).hasClass(
     'feature-action__item_disabled',
   )
   await logout()
@@ -101,8 +101,8 @@ export default async function () {
   await login(E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS, PASSWORD)
   await click('#project-select-0')
   await click(byId('feature-action-0'))
-  await waitForElementVisible(byId('remove-feature-btn-0'))
-  await t.expect(Selector(byId('remove-feature-btn-0')).hasClass('feature-action__item_disabled')).notOk();
+  await waitForElementVisible(byId('feature-remove-0'))
+  await t.expect(Selector(byId('feature-remove-0')).hasClass('feature-action__item_disabled')).notOk();
   await logout()
 
   log('User without MANAGE_SEGMENTS permissions cannot Manage Segments')
