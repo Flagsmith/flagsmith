@@ -33,7 +33,6 @@ interface PermissionControlProps {
   isDebug?: boolean
   disabled: boolean
   isAdmin?: boolean
-  isDerivedAdmin?: boolean
   isDerivedPermission?: boolean
   isSaving?: boolean
   permissionType: string
@@ -53,7 +52,6 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
   disabled,
   isAdmin,
   isDebug = false,
-  isDerivedAdmin,
   isDerivedPermission,
   isPermissionEnabled,
   isSaving,
@@ -67,16 +65,12 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
   supportsTag,
 }) => {
   const tooltipText = useMemo(() => {
-    if (isAdmin && !isDerivedAdmin && !isDerivedPermission) {
+    if (isAdmin && !isDerivedPermission) {
       return 'This permission comes from admin privileges'
     }
 
-    if (isAdmin && !isDerivedAdmin && isDerivedPermission) {
+    if (isAdmin && isDerivedPermission) {
       return 'This permission comes from admin privileges and is inherited via a group and/or role.'
-    }
-
-    if (isAdmin && isDerivedAdmin) {
-      return 'This permission comes from admin privileges via a group and/or role.'
     }
 
     if (!isAdmin && isDerivedPermission) {
@@ -84,7 +78,7 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
     }
 
     return ''
-  }, [isAdmin, isDerivedAdmin, isDerivedPermission])
+  }, [isAdmin, isDerivedPermission])
 
   if (isTagBasedPermissions) {
     return (

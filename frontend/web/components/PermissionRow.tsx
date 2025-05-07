@@ -96,18 +96,19 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
   const permissionType = getPermissionType(permission.key)
 
-  const isDerivedAdmin =
-    isAdmin &&
-    (entityPermissions as UserPermissions)?.is_directly_granted === false
   const showDerivedPermissions =
-    isDebug &&
-    !isDerivedAdmin &&
-    (matchingPermission as Permission)?.is_directly_granted === false
+    isDebug && (matchingPermission as Permission)?.is_directly_granted === false
+
+  const isRowDisabled = isAdmin && !isDebug
+  const defaultRowStyle = { cursor: 'default' }
+  const rowStyle = isRowDisabled
+    ? { opacity: 0.5, ...defaultRowStyle }
+    : defaultRowStyle
 
   return (
     <Row
       key={permission.key}
-      style={isAdmin && !isDebug ? { opacity: 0.5 } : undefined}
+      style={rowStyle}
       className='list-item list-item-sm px-3 py-2'
     >
       <Row space>
