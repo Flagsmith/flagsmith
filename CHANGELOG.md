@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.177.0](https://github.com/Flagsmith/flagsmith/compare/v2.176.2...v2.177.0) (2025-05-06)
+
+
+### Features
+
+* Render usage report in sales dashboard usage directly, without sending email ([#5407](https://github.com/Flagsmith/flagsmith/issues/5407)) ([3ad0124](https://github.com/Flagsmith/flagsmith/commit/3ad0124a0d42238e2edf951fc99330a0a4318263))
+
+
+### Bug Fixes
+
+* remove-pipedrive ([#5423](https://github.com/Flagsmith/flagsmith/issues/5423)) ([4bfae2e](https://github.com/Flagsmith/flagsmith/commit/4bfae2eb4bceacba2c1dca28a1c71582ab1b85a6))
+
+## [2.176.2](https://github.com/Flagsmith/flagsmith/compare/v2.176.1...v2.176.2) (2025-05-02)
+
+
+### Bug Fixes
+
+* marketing consent should default to True ([#5416](https://github.com/Flagsmith/flagsmith/issues/5416)) ([1d98d27](https://github.com/Flagsmith/flagsmith/commit/1d98d27103e7c32a8857ae1c2c6710544956c8d3))
+
 ## [2.176.1](https://github.com/Flagsmith/flagsmith/compare/v2.176.0...v2.176.1) (2025-05-01)
 
 

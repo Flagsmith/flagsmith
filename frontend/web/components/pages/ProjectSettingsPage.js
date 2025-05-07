@@ -613,7 +613,7 @@ const ProjectSettingsPage = class extends Component {
                       <WarningMessage
                         warningMessage={
                           <span>
-                            Custom fields have been moved to {' '}
+                            Custom fields have been moved to{' '}
                             <a
                               href={`/organisation/${
                                 AccountStore.getOrganisation()?.id
