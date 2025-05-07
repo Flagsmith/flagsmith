@@ -79,14 +79,16 @@ const Tabs = class extends React.Component {
                     }
                     this.props.onChange?.(i)
                   }}
-                  className={`btn-tab ${this.props.noFocus ? 'btn-no-focus' : ''} ${isSelected ? ' tab-active' : ''}`}
+                  className={`btn-tab ${
+                    this.props.noFocus ? 'btn-no-focus' : ''
+                  } ${isSelected ? ' tab-active' : ''}`}
                 >
                   {child.props.tabLabel}
                 </Button>
               )
             })}
         </div>
-        {this.props.theme === 'tab' && !hideNav && (  
+        {this.props.theme === 'tab' && !hideNav && (
           <ModalHR className='tab-nav-hr' />
         )}
         <div className='tabs-content'>
