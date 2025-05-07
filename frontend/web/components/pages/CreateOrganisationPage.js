@@ -34,7 +34,11 @@ class CreateOrganisationPage extends Component {
   onSave = (id) => {
     AppActions.selectOrganisation(id)
     API.setCookie('organisation', `${id}`)
-    this.context.router.history.push(Utils.getOrganisationHomePage(id))
+    if(Utils.getFlagsmithHasFeature("welcome_page")) {
+      this.context.router.history.push('/getting-started')
+    } else {
+      this.context.router.history.push(Utils.getOrganisationHomePage(id))
+    }
   }
 
   render() {
