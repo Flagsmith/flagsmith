@@ -72,8 +72,8 @@ jobs:
     with:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
-      api-image: ${{ matrix.api-image }}
-      concurrency: 16
+      api-image: ${{ matrix.args.api-image }}
+      args: ${{ matrix.args.args }}
     secrets:
       GCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
@@ -81,9 +81,11 @@ jobs:
     strategy:
       matrix:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
-        api-image:
-          - ${{ needs.docker-build-api.outputs.image }}
-          - ${{ needs.docker-build-private-cloud-api.outputs.image }}
+        args:
+          - api-image: ${{ needs.docker-build-api.outputs.image }}
+            args: --meta-filter category=oss
+          - api-image: ${{ needs.docker-build-private-cloud-api.outputs.image }}
+            args: --meta-filter category=oss,category=enterprise
 
   # Publish to dockerhub
 

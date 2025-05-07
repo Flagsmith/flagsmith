@@ -50,7 +50,7 @@ services:
       SLACK_TOKEN: ${SLACK_TOKEN}
       GITHUB_ACTION_URL: ${GITHUB_ACTION_URL}
     ports:
-      - 8080:8080
+      - 3000:3000
     depends_on:
       flagsmith-api:
         condition: service_healthy
