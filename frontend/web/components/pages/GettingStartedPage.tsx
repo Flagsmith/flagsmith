@@ -14,7 +14,7 @@ import { useGetSegmentsQuery } from 'common/services/useSegment'
 import flagsmith from 'flagsmith'
 import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-
+import API from 'project/api'
 type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
@@ -71,6 +71,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
     if (data.disabledMessage) {
       return
     }
+    API.trackEvent({ 'category': 'GettingStarted', 'event': data.persistId })
     if (data.persistId) {
       setLocalComplete(true)
       flagsmith.setTrait(data.persistId, Date.now())
