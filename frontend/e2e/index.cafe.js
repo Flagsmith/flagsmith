@@ -21,12 +21,12 @@ createTestCafe()
         testcafe = tc;
         await new Promise((resolve) => {
             if (process.env.E2E_LOCAL) {
-                process.env.PORT = 3000;
                 server = fork('./api/index');
                 server.on('message', () => {
                     resolve();
                 });
             } else {
+                process.env.PORT = 3000;
                 resolve()
             }
         });
