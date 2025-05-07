@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
@@ -15,7 +16,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from metrics.types import EnvMetricsPayload
 
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
@@ -29,6 +29,7 @@ from features.versioning.tasks import (
     enable_v2_versioning,
 )
 from metrics.serializers import EnvironmentMetricsSerializer
+from metrics.types import EnvMetricsPayload
 from metrics.views import BaseMetricsViewSet
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (

@@ -1,5 +1,4 @@
-from metrics.types import MetricDefinition, EnvMetricsEntities, EnvMetricsName
-
+from metrics.types import EnvMetricsEntities, EnvMetricsName, MetricDefinition
 
 TOTAL_FEATURES: MetricDefinition = {
     "name": EnvMetricsName.TOTAL_FEATURES,

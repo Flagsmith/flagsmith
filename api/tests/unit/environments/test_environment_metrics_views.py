@@ -1,22 +1,24 @@
-import pytest
 import random
 from datetime import timedelta
-from rest_framework import status
-from rest_framework.test import APIClient
-from django.urls import reverse
-from django.utils import timezone
 
-from features.models import Feature, FeatureState, FeatureSegment
-from segments.models import Segment
-from features.workflows.core.models import ChangeRequest
-from users.models import FFAdminUser
-from environments.models import Environment
-from projects.models import Project
-from tests.types import WithEnvironmentPermissionsCallable
-from metrics.types import EnvMetricsName
+import pytest
 from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
+from django.urls import reverse
+from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APIClient
+
+from environments.models import Environment
+from features.models import Feature, FeatureSegment, FeatureState
+from features.workflows.core.models import ChangeRequest
+from metrics.types import EnvMetricsName
+from projects.models import Project
+from segments.models import Segment
+from tests.types import WithEnvironmentPermissionsCallable
+from users.models import FFAdminUser
+
 
 def test_get_environment_metrics_without_workflows(
     staff_client: APIClient,
@@ -25,11 +27,13 @@ def test_get_environment_metrics_without_workflows(
 ) -> None:
     # Given
     with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
-    url = reverse("api-v1:environments:environment-metrics-list", args=[environment.api_key])
-    
+    url = reverse(
+        "api-v1:environments:environment-metrics-list", args=[environment.api_key]
+    )
+
     # When
     response = staff_client.get(url)
-    
+
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
@@ -42,6 +46,7 @@ def test_get_environment_metrics_without_workflows(
     assert "enabled_features" in names
     assert "segment_overrides" in names
 
+
 def test_get_environment_metrics_with_workflows(
     staff_client: APIClient,
     environment: Environment,
@@ -51,15 +56,17 @@ def test_get_environment_metrics_with_workflows(
     with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
     environment.minimum_change_request_approvals = 1
     environment.save()
-    url = reverse("api-v1:environments:environment-metrics-list", args=[environment.api_key])
-    
+    url = reverse(
+        "api-v1:environments:environment-metrics-list", args=[environment.api_key]
+    )
+
     # When
     response = staff_client.get(url)
-    
+
     # Then
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    
+
     assert "metrics" in data
     names = [item["name"] for item in data["metrics"]]
     assert "open_change_requests" in names
@@ -68,13 +75,17 @@ def test_get_environment_metrics_with_workflows(
     assert "enabled_features" in names
     assert "segment_overrides" in names
 
-@pytest.mark.parametrize("total_features, feature_enabled_count,segment_overrides_count, change_request_count, scheduled_change_count", [
-    (0, 0, 0, 0, 0),
-    (10, 4, 9, 4, 3),
-    (10, 10, 10, 10, 10),
-    (5, 10, 6, 3, 2),
-    (21, 14, 8, 13, 2)
-])
+
+@pytest.mark.parametrize(
+    "total_features, feature_enabled_count,segment_overrides_count, change_request_count, scheduled_change_count",
+    [
+        (0, 0, 0, 0, 0),
+        (10, 4, 9, 4, 3),
+        (10, 10, 10, 10, 10),
+        (5, 10, 6, 3, 2),
+        (21, 14, 8, 13, 2),
+    ],
+)
 def test_get_environment_metrics_correctly_computes_data(
     staff_client: APIClient,
     admin_user: FFAdminUser,
@@ -86,7 +97,7 @@ def test_get_environment_metrics_correctly_computes_data(
     change_request_count: int,
     scheduled_change_count: int,
 ) -> None:
-      # Given
+    # Given
     env = Environment.objects.create(name="env", project=project)
     with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
@@ -102,7 +113,11 @@ def test_get_environment_metrics_correctly_computes_data(
 
     for i in range(min(feature_enabled_count, total_features)):
         FeatureState.objects.update_or_create(
-            feature=features[i], environment=env, identity=None, enabled=True, version=version
+            feature=features[i],
+            environment=env,
+            identity=None,
+            enabled=True,
+            version=version,
         )
         version += 1
 
@@ -111,12 +126,19 @@ def test_get_environment_metrics_correctly_computes_data(
         f = random.choice(features)
         fs = FeatureSegment.objects.create(feature=f, segment=segment, environment=env)
         FeatureState.objects.update_or_create(
-            feature=f, environment=env, feature_segment=fs, identity=None, enabled=False, version=version
+            feature=f,
+            environment=env,
+            feature_segment=fs,
+            identity=None,
+            enabled=False,
+            version=version,
         )
         version += 1
 
     for i in range(change_request_count):
-        ChangeRequest.objects.create(environment=env, title=f"CR-{i}", user_id=admin_user.id)
+        ChangeRequest.objects.create(
+            environment=env, title=f"CR-{i}", user_id=admin_user.id
+        )
         version += 1
 
     for i in range(scheduled_change_count):
@@ -146,7 +168,18 @@ def test_get_environment_metrics_correctly_computes_data(
         return next((m["value"] for m in metrics if m["name"] == name), 0)
 
     assert get_metric_value(EnvMetricsName.TOTAL_FEATURES.value) == total_features
-    assert get_metric_value(EnvMetricsName.ENABLED_FEATURES.value) == min(feature_enabled_count, total_features)
-    assert get_metric_value(EnvMetricsName.SEGMENT_OVERRIDES.value) == segment_overrides_count
-    assert get_metric_value(EnvMetricsName.OPEN_CHANGE_REQUESTS.value) == change_request_count
-    assert get_metric_value(EnvMetricsName.TOTAL_SCHEDULED_CHANGES.value) == scheduled_change_count
+    assert get_metric_value(EnvMetricsName.ENABLED_FEATURES.value) == min(
+        feature_enabled_count, total_features
+    )
+    assert (
+        get_metric_value(EnvMetricsName.SEGMENT_OVERRIDES.value)
+        == segment_overrides_count
+    )
+    assert (
+        get_metric_value(EnvMetricsName.OPEN_CHANGE_REQUESTS.value)
+        == change_request_count
+    )
+    assert (
+        get_metric_value(EnvMetricsName.TOTAL_SCHEDULED_CHANGES.value)
+        == scheduled_change_count
+    )
