@@ -30,14 +30,15 @@ createTestCafe()
     .then(async (tc) => {
         testcafe = tc;
         await new Promise((resolve) => {
+            process.env.PORT = 3000;
+            console.log(process.env.E2E_LOCAL)
             if (process.env.E2E_LOCAL) {
+                resolve()
+            } else {
                 server = fork('./api/index');
                 server.on('message', () => {
                     resolve();
                 });
-            } else {
-                process.env.PORT = 3000;
-                resolve()
             }
         });
         const runner = testcafe.createRunner()
