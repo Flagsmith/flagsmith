@@ -247,6 +247,7 @@ const controller = {
       .catch((e) => API.ajaxHandler(store, e))
   },
   onLogin: (isGettingStarted) => {
+    API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
     return controller.getOrganisations(isGettingStarted)
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
