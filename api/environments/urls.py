@@ -1,5 +1,6 @@
 from django.urls import include, path, re_path
 from rest_framework_nested import routers  # type: ignore[import-untyped]
+
 from edge_api.identities.views import (
     EdgeIdentityFeatureStateViewSet,
     EdgeIdentityViewSet,
@@ -30,7 +31,12 @@ from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
 )
-from .views import EnvironmentAPIKeyViewSet, EnvironmentViewSet, WebhookViewSet, EnvironmentMetricsViewSet
+from .views import (
+    EnvironmentAPIKeyViewSet,
+    EnvironmentMetricsViewSet,
+    EnvironmentViewSet,
+    WebhookViewSet,
+)
 
 router = routers.DefaultRouter()
 router.register(r"", EnvironmentViewSet, basename="environment")

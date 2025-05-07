@@ -1,29 +1,40 @@
 from enum import Enum
-from typing import TypedDict, NotRequired
+from typing import List, NotRequired, TypedDict
 
 
-class FeatureMetrics(TypedDict):
-    total: int
-    enabled: int
+class MetricDefinition(TypedDict):
+    title: str
+    description: str
+    disabled: NotRequired[bool]
 
 
-class SegmentMetrics(TypedDict):
-    overrides: int
-    enabled: int
+class MetricItemPayload(MetricDefinition):
+    value: int
 
 
-class WorkflowsMetrics(TypedDict):
-    open: int
+class FeatureMetricsDefinition(TypedDict):
+    total: MetricDefinition
+    enabled: MetricDefinition
 
 
-class ScheduledMetrics(TypedDict):
-    total: int
+class SegmentMetricsDefinition(TypedDict):
+    overrides: MetricDefinition
+
+
+class WorkflowsMetricsDefinition(TypedDict):
+    total: MetricDefinition
+
+
+class ScheduledMetricsDefinition(TypedDict):
+    total: MetricDefinition
+
 
 class EnvMetricsPayload(TypedDict):
-    features: FeatureMetrics
-    segments: SegmentMetrics
-    change_requests: NotRequired[WorkflowsMetrics]
-    scheduled_changes: NotRequired[ScheduledMetrics]
+    features: List[MetricItemPayload]
+    segments: List[MetricItemPayload]
+    change_requests: NotRequired[List[MetricItemPayload]]
+    scheduled_changes: NotRequired[List[MetricItemPayload]]
+
 
 class EnvMetrics(Enum):
     FEATURES = "features"

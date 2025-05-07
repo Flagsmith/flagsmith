@@ -15,8 +15,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from metrics.views import BaseMetricsViewSet
-from metrics.serializers import EnvironmentMetricsSerializer
+
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -28,6 +27,8 @@ from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
 )
+from metrics.serializers import EnvironmentMetricsSerializer
+from metrics.views import BaseMetricsViewSet
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -329,14 +330,14 @@ class EnvironmentMetricsViewSet(NestedEnvironmentViewSet, BaseMetricsViewSet):
     model_class = Environment
     lookup_url_kwarg = "environment_api_key"
     serializer_class = EnvironmentMetricsSerializer
-    
+
     def get_metrics(self, environment: Environment):
         is_workflows_enabled = environment.change_requests_enabled
         return environment.get_metrics_payload(with_workflows=is_workflows_enabled)
-        
+
     @swagger_auto_schema(
         operation_description="Get metrics for this environment.",
-        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)}
+        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
