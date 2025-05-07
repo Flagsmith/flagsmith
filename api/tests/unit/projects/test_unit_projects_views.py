@@ -964,6 +964,8 @@ def test_project_user_can_get_their_detailed_permissions(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
     assert response.json()["permissions"] == [
         {
             "permission_key": "VIEW_PROJECT",
@@ -1013,6 +1015,8 @@ def test_project_admin_can_get_detailed_permissions_of_other_user(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
     assert response.json()["permissions"] == [
         {
             "permission_key": "VIEW_PROJECT",

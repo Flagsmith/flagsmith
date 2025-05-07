@@ -78,3 +78,5 @@ class DetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[typ
 class UserDetailedPermissionsSerializer(serializers.Serializer):  # type: ignore[type-arg]
     admin = serializers.BooleanField()
     permissions = DetailedPermissionsSerializer(many=True)
+    is_directly_granted = serializers.BooleanField()
+    derived_from = DerivedFromSerializer()

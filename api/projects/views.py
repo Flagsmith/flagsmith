@@ -185,7 +185,9 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                     "detail": "This endpoint can only be used with a user and not Master API Key"
                 },
             )
-        permission_data = get_project_permission_data(pk, user_id=request.user.id)
+
+        project = self.get_object()
+        permission_data = get_project_permission_data(project, user=request.user)  # type: ignore[arg-type]
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
@@ -265,8 +267,10 @@ class UserPermissionGroupProjectPermissionsViewSet(BaseProjectPermissionsViewSet
 @permission_classes([IsAuthenticated, IsProjectAdmin])
 def get_user_project_permissions(request, **kwargs):  # type: ignore[no-untyped-def]
     user_id = kwargs["user_pk"]
+    project = get_object_or_404(Project, pk=kwargs["project_pk"])
+    user = get_object_or_404(FFAdminUser, pk=user_id)
 
-    permission_data = get_project_permission_data(kwargs["project_pk"], user_id=user_id)
+    permission_data = get_project_permission_data(project, user=user)
     # TODO: expose `user` and `groups` attributes from user_permissions_data
     serializer = UserObjectPermissionsSerializer(instance=permission_data)
     return Response(serializer.data)

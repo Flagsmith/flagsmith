@@ -105,7 +105,7 @@ def test_project_permissions_calculator_get_permission_data(  # type: ignore[no-
         group_project_permission.permissions.add(project_permissions[permission_key])
 
     # When
-    user_permission_data = get_project_permission_data(project.id, user_id=user.id)
+    user_permission_data = get_project_permission_data(project, user=user)
 
     # Then
     assert user_permission_data.admin == expected_admin
@@ -378,7 +378,6 @@ def test_permission_data_to_detailed_permissions_data() -> None:
             role_three_permission_data,
         ],
     ).to_detailed_permissions_data()
-
     # Then
     for permission in detailed_permission_data.permissions:
         assert permission.permission_key in expected_permissions
@@ -389,3 +388,11 @@ def test_permission_data_to_detailed_permissions_data() -> None:
 
     assert detailed_permission_data.admin is True
     assert len(detailed_permission_data.permissions) == 4
+    assert detailed_permission_data.is_directly_granted is True
+    assert detailed_permission_data.derived_from.groups == [
+        group_one_permission_data.group,
+        group_two_permission_data.group,
+    ]
+    assert detailed_permission_data.derived_from.roles == [
+        role_one_permission_data.role
+    ]
