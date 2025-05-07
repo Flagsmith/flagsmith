@@ -1927,7 +1927,7 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "1.11.1"
+version = "1.12.1"
 description = "Flagsmith's common library"
 optional = false
 python-versions = ">=3.11,<4.0"
@@ -1948,6 +1948,7 @@ flagsmith-flag-engine = "*"
 gunicorn = ">=19.1"
 prometheus-client = ">=0.0.16"
 psycopg2-binary = ">=2.9,<3"
+pyfakefs = {version = ">=5,<6", optional = true}
 requests = "*"
 simplejson = ">=3,<4"
 
@@ -1958,6 +1959,7 @@ test-tools = ["pyfakefs (>=5,<6)"]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-common"
 reference = "fix/metadata-overriding-existing-record"
+resolved_reference = "e7945d1985ead380e545d6a59a1caa728a6d62a5"
 
 [[package]]
 name = "flagsmith-flag-engine"
@@ -5199,4 +5201,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "684e26d265d6159c663cdf45d6b92b8ea6020a4263c27c6fc5b4ae7c3736581c"
+content-hash = "80fa763bcb00c5197330dce56c3a490bba6ef9b61555cd8bb1fc59267db9a430"
