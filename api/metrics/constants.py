@@ -28,7 +28,7 @@ SEGMENT_OVERRIDES: MetricDefinition = {
 OPEN_CHANGE_REQUESTS: MetricDefinition = {
     "name": EnvMetricsName.OPEN_CHANGE_REQUESTS,
     "description": "Open change requests",
-    "entity": EnvMetricsEntities.CHANGE_REQUESTS,
+    "entity": EnvMetricsEntities.WORKFLOWS,
     "disabled": False,
     "rank": 4,
 }
@@ -36,7 +36,7 @@ OPEN_CHANGE_REQUESTS: MetricDefinition = {
 TOTAL_SCHEDULED_CHANGES: MetricDefinition = {
     "name": EnvMetricsName.TOTAL_SCHEDULED_CHANGES,
     "description": "Total scheduled changes",
-    "entity": EnvMetricsEntities.SCHEDULED_CHANGES,
+    "entity": EnvMetricsEntities.WORKFLOWS,
     "disabled": False,
     "rank": 5,
 }
