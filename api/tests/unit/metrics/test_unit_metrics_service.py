@@ -3,6 +3,7 @@ from metrics.metrics_service import build_metrics
 from metrics.types import EnvMetricsEntities, EnvMetricsName, MetricDefinition
 from typing import Callable
 
+
 @pytest.fixture
 def metrics_querysets() -> dict[EnvMetricsName, Callable[[], int]]:
     return {
@@ -10,6 +11,7 @@ def metrics_querysets() -> dict[EnvMetricsName, Callable[[], int]]:
         EnvMetricsName.ENABLED_FEATURES: lambda: 5,
         EnvMetricsName.SEGMENT_OVERRIDES: lambda: 15,
     }
+
 
 @pytest.fixture
 def metrics_definitions() -> list[MetricDefinition]:
@@ -24,7 +26,7 @@ def metrics_definitions() -> list[MetricDefinition]:
             "name": EnvMetricsName.SEGMENT_OVERRIDES,
             "description": "Segment overrides count",
             "entity": EnvMetricsEntities.SEGMENTS,
-            "disabled": True, 
+            "disabled": True,
             "rank": 3,
         },
         {
@@ -35,8 +37,15 @@ def metrics_definitions() -> list[MetricDefinition]:
         },
     ]
 
-def test_build_metrics_filters_and_formats(metrics_querysets, metrics_definitions, monkeypatch):
-    monkeypatch.setattr("metrics.metrics_service.ALL_METRIC_DEFINITIONS", metrics_definitions)
+
+def test_build_metrics_filters_and_formats(
+    metrics_querysets: dict[EnvMetricsName, Callable[[], int]],
+    metrics_definitions: list[MetricDefinition],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "metrics.metrics_service.ALL_METRIC_DEFINITIONS", metrics_definitions
+    )
 
     result = build_metrics(metrics_querysets)
 
