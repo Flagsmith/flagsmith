@@ -61,7 +61,6 @@ const CreateSegmentRulesTabForm: React.FC<CreateSegmentRulesTabFormProps> = ({
   setValueChanged,
   showDescriptions,
 }) => {
-
   const SEGMENT_ID_MAXLENGTH = Constants.forms.maxLength.SEGMENT_ID
   return (
     <form id='create-segment-modal' onSubmit={save}>

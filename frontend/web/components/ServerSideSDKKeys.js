@@ -12,8 +12,8 @@ import {
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
-import Button from 'components/base/forms/Button'
-import Tooltip from 'components/Tooltip'
+import Button from './base/forms/Button'
+import Tooltip from './Tooltip'
 
 class CreateServerSideKeyModal extends Component {
   state = {}

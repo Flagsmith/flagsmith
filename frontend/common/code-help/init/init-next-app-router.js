@@ -1,6 +1,6 @@
 import Constants from 'common/constants'
 module.exports = (
-  envId, 
+  envId,
   { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_CLIENT },
 ) => `// app/layout.tsx
 import React from "react";
@@ -17,7 +17,7 @@ export default async function RootLayout({
   Constants.isCustomFlagsmithUrl()
     ? `\n    api: "${Constants.getFlagsmithSDKUrl()}",\n`
     : ''
-  }  });
+}  });
   const serverState = flagsmith.getState();
 
   return (

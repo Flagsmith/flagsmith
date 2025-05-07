@@ -40,15 +40,17 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
 
   const mergeMetadata = useMemo(() => {
     if (metadataFieldList && MetadataModelFieldList) {
-      return metadataFieldList.results.map((item1) => {
-        const matchingItems2 = MetadataModelFieldList.results.filter(
-          (item2) => item2.field === item1.id,
-        )
-        return {
-          ...item1,
-          content_type_fields: matchingItems2,
-        }
-      })?.sort((a, b) => a.id - b.id)
+      return metadataFieldList.results
+        .map((item1) => {
+          const matchingItems2 = MetadataModelFieldList.results.filter(
+            (item2) => item2.field === item1.id,
+          )
+          return {
+            ...item1,
+            content_type_fields: matchingItems2,
+          }
+        })
+        ?.sort((a, b) => a.id - b.id)
     }
     return null
   }, [metadataFieldList, MetadataModelFieldList])
@@ -177,7 +179,6 @@ const MetadataPage: FC<MetadataPageType> = ({ organisationId }) => {
           }
         />
       </FormGroup>
-      
     </PlanBasedBanner>
   )
 }

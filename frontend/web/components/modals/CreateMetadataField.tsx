@@ -92,8 +92,12 @@ const CreateMetadataField: FC<CreateMetadataFieldType> = ({
 
   const [deleteMetadataModelField] = useDeleteMetadataModelFieldMutation()
   const metadataContentType: ContentType =
-  supportedContentTypes &&
-  Utils.getContentType(supportedContentTypes, 'model', MetadataContentType.ORGANISATION)
+    supportedContentTypes &&
+    Utils.getContentType(
+      supportedContentTypes,
+      'model',
+      MetadataContentType.ORGANISATION,
+    )
 
   useEffect(() => {
     if (data && !isLoading) {

@@ -73,13 +73,15 @@ type CreateSegmentType = {
   segment?: Segment
 }
 type CreateSegmentError = {
-  status: number,
+  status: number
   data: {
-    rules: [{
-      rules: Array<{
-        conditions: SegmentConditionsError[]
-      }>
-    }]
+    rules: [
+      {
+        rules: Array<{
+          conditions: SegmentConditionsError[]
+        }>
+      },
+    ]
   }
 }
 
@@ -351,9 +353,10 @@ const CreateSegment: FC<CreateSegmentType> = ({
                 >
                   <Flex className='and-divider__line' />
                   {Format.camelCase(
-                    `${displayIndex > 0 ? 'And ' : ''}${rule.type === 'ANY'
-                      ? 'Any of the following'
-                      : 'None of the following'
+                    `${displayIndex > 0 ? 'And ' : ''}${
+                      rule.type === 'ANY'
+                        ? 'Any of the following'
+                        : 'None of the following'
                     }`,
                   )}
                   <Flex className='and-divider__line' />
