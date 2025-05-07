@@ -1,7 +1,9 @@
+from typing import Callable
+
 import pytest
+
 from metrics.metrics_service import build_metrics
 from metrics.types import EnvMetricsEntities, EnvMetricsName, MetricDefinition
-from typing import Callable
 
 
 @pytest.fixture

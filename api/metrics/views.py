@@ -1,13 +1,15 @@
 from abc import abstractmethod
-from rest_framework.serializers import Serializer
+from typing import Any, Dict
+
 from django.db.models import Model
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from typing import Any, Dict
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import Serializer
 from rest_framework.viewsets import ViewSet
+
 from environments.models import Environment
 from metrics.types import EnvMetricsPayload
 

@@ -2,6 +2,7 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
+from typing import TYPE_CHECKING, Callable
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -56,13 +57,11 @@ from metrics.types import (
 )
 from projects.models import Project
 from segments.models import Segment
-from typing import Callable, TYPE_CHECKING
 from util.mappers import (
     map_environment_to_environment_document,
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
-
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
