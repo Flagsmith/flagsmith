@@ -102,7 +102,11 @@ const Permissions = ({
               )}
             </Flex>
             <div className='mr-3'>
-              <BooleanDotIndicator enabled={isAdmin} />
+              <Tooltip title={<BooleanDotIndicator enabled={isAdmin} />}>
+                {isDerivedAdmin
+                  ? 'This permission comes from admin privileges via a group and/or role.'
+                  : ''}
+              </Tooltip>
             </div>
           </Row>
         </div>
