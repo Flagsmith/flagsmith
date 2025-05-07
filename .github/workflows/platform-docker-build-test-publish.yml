@@ -83,9 +83,9 @@ jobs:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         args:
           - api-image: ${{ needs.docker-build-api.outputs.image }}
-            args: --test-meta category=oss
+            args: --meta-filter category=oss
           - api-image: ${{ needs.docker-build-private-cloud-api.outputs.image }}
-            args: --test-meta category=oss,category=enterprise
+            args: --meta-filter category=oss,category=enterprise
 
   # Publish to dockerhub
 

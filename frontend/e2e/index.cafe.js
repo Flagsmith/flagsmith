@@ -4,6 +4,7 @@ const path = require('path');
 const { fork } = require('child_process');
 const _options = require("../.testcaferc.js")
 const upload = require('../bin/upload-file');
+const minimist = require('minimist');
 const options = {
     ..._options,
     browsers: process.env.E2E_DEV ? ['firefox'] : ['firefox:headless'],
@@ -16,6 +17,15 @@ if (fs.existsSync(dir)) {
     fs.rmdirSync(dir, { recursive: true });
 }
 const start = Date.now().valueOf();
+// Parse CLI arg --meta-filter
+const args = minimist(process.argv.slice(2));
+const filterString = args['meta-filter']; // "type=smoke,priority=high"
+const metaConditions = (filterString || '')
+    .split(',')
+    .map(pair => {
+        const [key, value] = pair.split('=');
+        return { key, value };
+    });
 createTestCafe()
     .then(async (tc) => {
         testcafe = tc;
@@ -40,6 +50,13 @@ createTestCafe()
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
             .concurrency(parseInt(concurrentInstances))
+            .filter((_testName, _fixtureName, _fixturePath, testMeta, fixtureMeta) => {
+                return metaConditions.some(({ key, value }) => {
+                    return (
+                        testMeta[key] === value || fixtureMeta[key] === value
+                    );
+                });
+            })
             .run(options)
     })
     .then(async (v) => {
