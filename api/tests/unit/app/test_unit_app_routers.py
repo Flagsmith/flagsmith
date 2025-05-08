@@ -1,9 +1,13 @@
+import pytest
+from django.apps import apps
+from django.db.models import Model
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from app.routers import (
     PrimaryReplicaRouter,
     ReplicaReadStrategy,
+    TaskProcessorRouter,
     connection_check,
 )
 from users.models import FFAdminUser
@@ -194,3 +198,60 @@ def test_replica_router_db_no_replicas(
     conn_call_count = 0
     assert create_connection_patch.call_count == conn_call_count
     assert conn_patch.is_usable.call_count == conn_call_count
+
+
+@pytest.mark.parametrize(
+    "given_settings, expected",
+    [
+        ({"TASK_PROCESSOR_DATABASE_URL": "postgres://localhost:5432/db"}, True),
+        ({"TASK_PROCESSOR_DATABASE_URL": None}, False),
+        ({"TASK_PROCESSOR_DATABASE_NAME": "db"}, True),
+        ({"TASK_PROCESSOR_DATABASE_NAME": None}, False),
+    ],
+)
+def test_TaskProcessorRouter__checks_whether_is_enabled(
+    settings: SettingsWrapper,
+    given_settings: dict[str, None | str],
+    expected: bool,
+) -> None:
+    # Given
+    for key, value in given_settings.items():
+        setattr(settings, key, value)
+
+    # When
+    router = TaskProcessorRouter()
+
+    # Then
+    assert router.is_enabled is expected
+
+
+@pytest.mark.parametrize("model", apps.get_app_config("task_processor").get_models())
+def test_TaskProcessorRouter__enabled__routes_queries_to_task_processor_database(
+    mocker: MockerFixture,
+    model: type[Model],
+) -> None:
+    # Given
+    mocker.patch.object(TaskProcessorRouter, "is_enabled", new=True)
+
+    # When
+    router = TaskProcessorRouter()
+    result = router.db_for_read(model)
+
+    # Then
+    assert result == "task_processor"
+
+
+@pytest.mark.parametrize("model", apps.get_app_config("task_processor").get_models())
+def test_TaskProcessorRouter__disabled__routes_queries_to_default_database(
+    mocker: MockerFixture,
+    model: type[Model],
+) -> None:
+    # Given
+    mocker.patch.object(TaskProcessorRouter, "is_enabled", new=False)
+
+    # When
+    router = TaskProcessorRouter()
+    result = router.db_for_read(model)
+
+    # Then
+    assert result is None
