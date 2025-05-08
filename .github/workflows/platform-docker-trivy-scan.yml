@@ -113,3 +113,4 @@ jobs:
           trivy-password: ${{ secrets.GITHUB_TOKEN }}
           trivy-db-repository: ${{ env.TRIVY_DB_REPOSITORY }}
           trivy-java-db-repository: ${{ env.TRIVY_JAVA_DB_REPOSITORY }}
+          artifact-name: ${{ matrix.image-name }}-trivy-report.sarif
