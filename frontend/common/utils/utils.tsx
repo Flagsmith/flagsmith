@@ -109,6 +109,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
   },
 
+  capitalize(str: string) {
+    if (!str) return
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
@@ -132,7 +137,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (value > 0.002) return 'HIGH' as PConfidence
     return 'VERY_HIGH' as PConfidence
   },
-
   copyToClipboard: async (
     value: string,
     successMessage?: string,
