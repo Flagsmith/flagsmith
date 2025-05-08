@@ -63,7 +63,7 @@ exclude_also = [
 ]
 
 [tool.coverage.run]
-omit = ["scripts/*", "manage.py"]
+omit = ["scripts/*", "manage.py", "e2etests/*"]
 
 [tool.pytest.ini_options]
 addopts = [
