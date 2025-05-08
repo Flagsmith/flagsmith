@@ -24,12 +24,20 @@ SEGMENT_OVERRIDES: MetricDefinition = {
     "rank": 3,
 }
 
+IDENTITY_OVERRIDES: MetricDefinition = {
+    "name": EnvMetricsName.IDENTITY_OVERRIDES,
+    "description": "Identity Overrides",
+    "entity": EnvMetricsEntities.IDENTITIES,
+    "disabled": False,
+    "rank": 4,
+}
+
 OPEN_CHANGE_REQUESTS: MetricDefinition = {
     "name": EnvMetricsName.OPEN_CHANGE_REQUESTS,
     "description": "Open change requests",
     "entity": EnvMetricsEntities.WORKFLOWS,
     "disabled": False,
-    "rank": 4,
+    "rank": 5,
 }
 
 TOTAL_SCHEDULED_CHANGES: MetricDefinition = {
@@ -37,8 +45,9 @@ TOTAL_SCHEDULED_CHANGES: MetricDefinition = {
     "description": "Total scheduled changes",
     "entity": EnvMetricsEntities.WORKFLOWS,
     "disabled": False,
-    "rank": 5,
+    "rank": 6,
 }
+
 
 ALL_METRIC_DEFINITIONS: list[MetricDefinition] = [
     TOTAL_FEATURES,
@@ -46,4 +55,5 @@ ALL_METRIC_DEFINITIONS: list[MetricDefinition] = [
     SEGMENT_OVERRIDES,
     OPEN_CHANGE_REQUESTS,
     TOTAL_SCHEDULED_CHANGES,
+    IDENTITY_OVERRIDES,
 ]

@@ -380,20 +380,45 @@ class Environment(
         Returns total feature count and enabled-by-default feature count
         scoped to this environment's project.
         """
+        from edge_api.identities.models import EdgeIdentity
 
-        qs_map: dict[EnvMetricsName, Callable[[], int]] = {
-            EnvMetricsName.TOTAL_FEATURES: lambda: self._get_main_feature_states_queryset().count(),
-            EnvMetricsName.ENABLED_FEATURES: lambda: self._get_main_feature_states_queryset()
-            .filter(enabled=True)
-            .count(),
-            EnvMetricsName.SEGMENT_OVERRIDES: lambda: self._get_segment_feature_states_queryset().count(),
+        # Second optional callable is a function to override disabled
+        qs_map: dict[
+            EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
+        ] = {
+            EnvMetricsName.TOTAL_FEATURES: (
+                lambda: self._get_main_feature_states_queryset().count(),
+                None,
+            ),
+            EnvMetricsName.ENABLED_FEATURES: (
+                lambda: self._get_main_feature_states_queryset()
+                .filter(enabled=True)
+                .count(),
+                None,
+            ),
+            EnvMetricsName.SEGMENT_OVERRIDES: (
+                lambda: self._get_segment_feature_states_queryset().count(),
+                None,
+            ),
+            EnvMetricsName.IDENTITY_OVERRIDES: (
+                lambda: EdgeIdentity.dynamo_wrapper.get_identity_overrides_count_dynamo(
+                    self.api_key
+                ),
+                lambda: self.project.enable_dynamo_db,
+            ),
         }
 
         if with_workflows:
             qs_map.update(
                 {
-                    EnvMetricsName.OPEN_CHANGE_REQUESTS: lambda: self._get_open_change_requests_queryset().count(),
-                    EnvMetricsName.TOTAL_SCHEDULED_CHANGES: lambda: self._get_scheduled_changes_queryset().count(),
+                    EnvMetricsName.OPEN_CHANGE_REQUESTS: (
+                        lambda: self._get_open_change_requests_queryset().count(),
+                        None,
+                    ),
+                    EnvMetricsName.TOTAL_SCHEDULED_CHANGES: (
+                        lambda: self._get_scheduled_changes_queryset().count(),
+                        None,
+                    ),
                 }
             )
 

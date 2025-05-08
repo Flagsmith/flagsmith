@@ -6,6 +6,7 @@ class EnvMetricsEntities(Enum):
     FEATURES = "features"
     SEGMENTS = "segments"
     WORKFLOWS = "workflows"
+    IDENTITIES = "identities"
 
 
 class EnvMetricsName(Enum):
@@ -14,6 +15,7 @@ class EnvMetricsName(Enum):
     SEGMENT_OVERRIDES = "segment_overrides"
     OPEN_CHANGE_REQUESTS = "open_change_requests"
     TOTAL_SCHEDULED_CHANGES = "total_scheduled_changes"
+    IDENTITY_OVERRIDES = "identity_overrides"
 
 
 class MetricDefinition(TypedDict):

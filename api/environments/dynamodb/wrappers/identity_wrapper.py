@@ -193,3 +193,12 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
             return [segment.id for segment in segments]
 
         return []
+
+    def get_identity_overrides_count_dynamo(self, environment_api_key: str) -> int:
+        return sum(
+            len(identity["identity_features"])
+            for identity in self.iter_all_items_paginated(
+                environment_api_key=environment_api_key,
+                overrides_only=True,
+            )
+        )

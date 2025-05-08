@@ -7,7 +7,6 @@ class MetricItemSerializer(
     value = serializers.IntegerField()
     description = serializers.CharField()
     name = serializers.CharField()
-    disabled = serializers.BooleanField(default=False)
     entity = serializers.CharField()
     rank = serializers.IntegerField(required=False)
 

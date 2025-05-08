@@ -4,23 +4,33 @@ from metrics.constants import ALL_METRIC_DEFINITIONS
 from metrics.types import EnvMetricsName, EnvMetricsPayload
 
 
-def build_metrics(qs_map: dict[EnvMetricsName, Callable[[], int]]) -> EnvMetricsPayload:
+def build_metrics(
+    qs_map: dict[EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]],
+) -> EnvMetricsPayload:
     metrics: EnvMetricsPayload = []
 
     for definition in ALL_METRIC_DEFINITIONS:
-        if definition.get("disabled"):
+        name = definition["name"]
+        entity = definition["entity"]
+        base_disabled = definition.get("disabled", False)
+
+        if name not in qs_map:
             continue
 
-        fn = qs_map.get(definition["name"])
-        if fn is None:
+        count_fn, override_disabled_fn = qs_map[name]
+        is_disabled = base_disabled
+        if base_disabled and override_disabled_fn:
+            is_disabled = not override_disabled_fn()
+
+        if is_disabled:
             continue
 
         metrics.append(
             {
                 **definition,
-                "name": definition["name"].value,
-                "entity": definition["entity"].value,
-                "value": fn(),
+                "name": name.value,
+                "entity": entity.value,
+                "value": count_fn(),
             }
         )
 
