@@ -45,7 +45,7 @@ env:
 jobs:
   pull-trivy-db:
     name: Pull and republish Trivy databases
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
 
     permissions:
       packages: write
@@ -72,7 +72,7 @@ jobs:
 
   scan-images:
     name: Scan image
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     needs: pull-trivy-db
 
     permissions:
