@@ -1,6 +1,9 @@
 name: Update Trivy Database and Scan
 
 on:
+  push:
+    branches:
+      - ci/upload-trivy-sarif-artiact
   workflow_dispatch:
     inputs:
       registry-url:
@@ -101,7 +104,7 @@ jobs:
 
       - name: Scan ${{ matrix.image-name }}:main image
         id: trivy
-        uses: Flagsmith/actions/trivy-scan-image@v0.3.0
+        uses: Flagsmith/actions/trivy-scan-image@b88317a18754f7c6286d86eb50448c5225a366e0
         with:
           image-tag: ${{ env.REGISTRY_URL }}/flagsmith/${{ matrix.image-name }}:main
           category: ${{ matrix.image-name }}
