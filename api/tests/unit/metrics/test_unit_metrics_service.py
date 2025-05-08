@@ -7,11 +7,21 @@ from metrics.types import EnvMetricsEntities, EnvMetricsName, MetricDefinition
 
 
 @pytest.fixture
-def metrics_querysets() -> dict[EnvMetricsName, Callable[[], int]]:
+def metrics_querysets() -> dict[
+    EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
+]:
     return {
-        EnvMetricsName.TOTAL_FEATURES: lambda: 10,
-        EnvMetricsName.ENABLED_FEATURES: lambda: 5,
-        EnvMetricsName.SEGMENT_OVERRIDES: lambda: 15,
+        EnvMetricsName.TOTAL_FEATURES: (lambda: 10, None),
+        EnvMetricsName.ENABLED_FEATURES: (lambda: 5, None),
+        EnvMetricsName.SEGMENT_OVERRIDES: (lambda: 15, None),
+        EnvMetricsName.IDENTITY_OVERRIDES: (
+            lambda: 20,
+            lambda: False,
+        ),  # False should set disabled
+        EnvMetricsName.OPEN_CHANGE_REQUESTS: (
+            lambda: 20,
+            lambda: False,
+        ),  # Disabled True and lambda False should keep the definition disablement
     }
 
 
@@ -37,11 +47,27 @@ def metrics_definitions() -> list[MetricDefinition]:
             "entity": EnvMetricsEntities.FEATURES,
             "rank": 1,
         },
+        {
+            "name": EnvMetricsName.IDENTITY_OVERRIDES,
+            "description": "Identity overrides count",
+            "entity": EnvMetricsEntities.IDENTITIES,
+            "disabled": False,
+            "rank": 4,
+        },
+        {
+            "name": EnvMetricsName.OPEN_CHANGE_REQUESTS,
+            "description": "Open change requests count",
+            "entity": EnvMetricsEntities.WORKFLOWS,
+            "disabled": True,
+            "rank": 5,
+        },
     ]
 
 
 def test_build_metrics_filters_and_formats(
-    metrics_querysets: dict[EnvMetricsName, Callable[[], int]],
+    metrics_querysets: dict[
+        EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
+    ],
     metrics_definitions: list[MetricDefinition],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

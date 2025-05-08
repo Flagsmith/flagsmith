@@ -19,7 +19,7 @@ def build_metrics(
 
         count_fn, override_disabled_fn = qs_map[name]
         is_disabled = base_disabled
-        if base_disabled and override_disabled_fn:
+        if not base_disabled and override_disabled_fn is not None:
             is_disabled = not override_disabled_fn()
 
         if is_disabled:
