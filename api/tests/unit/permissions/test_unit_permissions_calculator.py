@@ -1,16 +1,20 @@
 import pytest
 from common.environments.permissions import (
+    CREATE_CHANGE_REQUEST,
+    MANAGE_IDENTITIES,
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_ENVIRONMENT, DELETE_FEATURE, VIEW_PROJECT
+from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
+from pytest_mock import MockerFixture
 
+from environments.models import Environment
 from environments.permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from organisations.models import OrganisationRole
+from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import (
     OrganisationPermissionModel,
     UserOrganisationPermission,
@@ -32,11 +36,12 @@ from permissions.permissions_calculator import (
     get_project_permission_data,
 )
 from projects.models import (
+    Project,
     ProjectPermissionModel,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
-from users.models import UserPermissionGroup
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 @pytest.mark.parametrize(
@@ -110,6 +115,27 @@ def test_project_permissions_calculator_get_permission_data(  # type: ignore[no-
     # Then
     assert user_permission_data.admin == expected_admin
     assert user_permission_data.permissions == expected_permissions
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == []
+    assert user_permission_data.inherited_admin_roles == []
+
+
+def test_project_permissions_calculator_get_permission_data_for_organisation_admin(
+    project: Project, organisation: Organisation, django_user_model: FFAdminUser
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+    # When
+    user_permission_data = get_project_permission_data(project, user=user)
+
+    # Then
+    assert user_permission_data.admin is True
+    assert user_permission_data.permissions == set()
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == []
+    assert user_permission_data.inherited_admin_roles == []
 
 
 @pytest.mark.parametrize(
@@ -207,11 +233,17 @@ def test_environment_permissions_calculator_get_permission_data(  # type: ignore
     # Then
     assert user_permission_data.admin == expected_admin
     assert user_permission_data.permissions == expected_permissions
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == []
+    assert user_permission_data.inherited_admin_roles == []
 
 
-def test_environment_permissions_calculator_returns_admin_for_project_admin(  # type: ignore[no-untyped-def]
-    environment, project, organisation, django_user_model
-):
+def test_environment_permissions_calculator_get_permission_data_for_direct_project_admin(
+    environment: Environment,
+    project: Project,
+    organisation: Organisation,
+    django_user_model: FFAdminUser,
+) -> None:
     # Given
     user = django_user_model.objects.create(email="test@example.com")
     user.add_organisation(organisation, OrganisationRole.USER)
@@ -225,6 +257,103 @@ def test_environment_permissions_calculator_returns_admin_for_project_admin(  # 
 
     # Then
     assert user_permission_data.admin is True
+
+
+def test_environment_permissions_calculator_get_permission_data_for_project_admin_through_group(
+    environment: Environment,
+    project: Project,
+    organisation: Organisation,
+    django_user_model: FFAdminUser,
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.USER)
+    group = UserPermissionGroup.objects.create(
+        name="Test Group", organisation=organisation
+    )
+    group.users.add(user)
+
+    UserPermissionGroupProjectPermission.objects.create(
+        group=group, project=project, admin=True
+    )
+    # When
+    user_permission_data = get_environment_permission_data(
+        environment=environment, user=user
+    )
+
+    # Then
+    assert user_permission_data.admin is True
+    assert user_permission_data.permissions == set()
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == [
+        GroupPermissionData(
+            group=GroupData(id=group.id, name=group.name), admin=True, permissions=set()
+        )
+    ]
+    assert user_permission_data.inherited_admin_roles == []
+
+
+def test_environment_permissions_calculator_get_permission_data_for_project_admin_through_role(
+    environment: Environment,
+    project: Project,
+    organisation: Organisation,
+    django_user_model: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.USER)
+
+    admin_role = RolePermissionData(
+        role=RoleData(id=1, name="Admin Role", tags=set()),
+        admin=True,
+        permissions=set(),
+    )
+    non_admin_role = RolePermissionData(
+        role=RoleData(id=2, name="View only Role", tags=set()),
+        admin=False,
+        permissions={VIEW_PROJECT},
+    )
+    mocker.patch(
+        "permissions.permissions_calculator.get_roles_permission_data_for_project",
+        return_value=[
+            non_admin_role,
+            admin_role,
+        ],
+    )
+    # When
+    user_permission_data = get_environment_permission_data(
+        environment=environment, user=user
+    )
+
+    # Then
+    assert user_permission_data.admin is True
+    assert user_permission_data.permissions == set()
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == []
+    assert user_permission_data.inherited_admin_roles == [admin_role]
+
+
+def test_environment_permissions_calculator_get_permission_data_for_organisation_admin(
+    environment: Environment,
+    organisation: Organisation,
+    django_user_model: FFAdminUser,
+) -> None:
+    # Given
+    user = django_user_model.objects.create(email="test@example.com")
+    user.add_organisation(organisation, OrganisationRole.ADMIN)
+
+    # When
+    user_permission_data = get_environment_permission_data(
+        environment=environment, user=user
+    )
+
+    # Then
+    assert user_permission_data.admin is True
+    assert user_permission_data.permissions == set()
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == []
+    assert user_permission_data.inherited_admin_roles == []
 
 
 @pytest.mark.parametrize(
@@ -297,49 +426,67 @@ def test_organisation_permissions_calculator_get_permission_data(  # type: ignor
     # Then
     assert user_permission_data.admin == expected_admin
     assert user_permission_data.permissions == expected_permissions
+    assert user_permission_data.admin_override is False
+    assert user_permission_data.inherited_admin_groups == []
+    assert user_permission_data.inherited_admin_roles == []
 
 
 def test_permission_data_to_detailed_permissions_data() -> None:
     # Given
-    user_permission_data = UserPermissionData(admin=True, permissions={CREATE_PROJECT})
+    user_permission_data = UserPermissionData(
+        admin=True, permissions={CREATE_CHANGE_REQUEST}
+    )
     # two groups with some overallping permissions
     group_one_permission_data = GroupPermissionData(
         admin=True,
         group=GroupData(id=1, name="group_one"),
-        permissions={CREATE_PROJECT, VIEW_PROJECT},
+        permissions={CREATE_CHANGE_REQUEST, VIEW_ENVIRONMENT},
     )
     group_two_permission_data = GroupPermissionData(
         admin=True,
-        group=GroupData(id=1, name="group_one"),
-        permissions={VIEW_PROJECT, MANAGE_USER_GROUPS},
+        group=GroupData(id=2, name="group_two"),
+        permissions={VIEW_ENVIRONMENT, MANAGE_IDENTITIES},
     )
+    # another inherited admin group
+    inherited_admin_group_permission_data = GroupPermissionData(
+        admin=True,
+        group=GroupData(id=3, name="group_three"),
+        permissions={MANAGE_IDENTITIES, VIEW_ENVIRONMENT},
+    )
+
     # two roles with same permissions with different tags
     role_one_permission_data = RolePermissionData(
         admin=True,
         role=RoleData(id=1, name="role_one", tags={1, 2}),
-        permissions={DELETE_FEATURE},
+        permissions={UPDATE_FEATURE_STATE},
     )
     role_two_permission_data = RolePermissionData(
         admin=False,
         role=RoleData(id=2, name="role_two", tags={3, 4}),
-        permissions={DELETE_FEATURE},
+        permissions={UPDATE_FEATURE_STATE},
     )
     # third role without tags
     role_three_permission_data = RolePermissionData(
         admin=False,
         role=RoleData(id=3, name="role_three", tags=set()),
-        permissions={VIEW_PROJECT},
+        permissions={VIEW_ENVIRONMENT},
+    )
+    # another inherited admin role
+    inherited_admin_role_permission_data = RolePermissionData(
+        admin=True,
+        role=RoleData(id=4, name="role_four", tags=set()),
+        permissions={MANAGE_IDENTITIES, VIEW_ENVIRONMENT},
     )
 
     expected_permissions = {
-        CREATE_PROJECT: {
+        CREATE_CHANGE_REQUEST: {
             "is_directly_granted": True,
             "derived_from": {
                 "groups": [group_one_permission_data.group],
                 "roles": [],
             },
         },
-        VIEW_PROJECT: {
+        VIEW_ENVIRONMENT: {
             "is_directly_granted": False,
             "derived_from": {
                 "groups": [
@@ -349,14 +496,14 @@ def test_permission_data_to_detailed_permissions_data() -> None:
                 "roles": [role_three_permission_data.role],
             },
         },
-        MANAGE_USER_GROUPS: {
+        MANAGE_IDENTITIES: {
             "is_directly_granted": False,
             "derived_from": {
                 "groups": [group_two_permission_data.group],
                 "roles": [],
             },
         },
-        DELETE_FEATURE: {
+        UPDATE_FEATURE_STATE: {
             "is_directly_granted": False,
             "derived_from": {
                 "groups": [],
@@ -372,6 +519,8 @@ def test_permission_data_to_detailed_permissions_data() -> None:
     detailed_permission_data = PermissionData(
         user=user_permission_data,
         groups=[group_one_permission_data, group_two_permission_data],
+        inherited_admin_groups=[inherited_admin_group_permission_data],
+        inherited_admin_roles=[inherited_admin_role_permission_data],
         roles=[
             role_one_permission_data,
             role_two_permission_data,
@@ -379,6 +528,8 @@ def test_permission_data_to_detailed_permissions_data() -> None:
         ],
     ).to_detailed_permissions_data()
     # Then
+
+    assert len(detailed_permission_data.permissions) == 4
     for permission in detailed_permission_data.permissions:
         assert permission.permission_key in expected_permissions
         expected = expected_permissions[permission.permission_key]
@@ -387,12 +538,14 @@ def test_permission_data_to_detailed_permissions_data() -> None:
         assert permission.derived_from.roles == expected["derived_from"]["roles"]  # type: ignore[index]
 
     assert detailed_permission_data.admin is True
-    assert len(detailed_permission_data.permissions) == 4
     assert detailed_permission_data.is_directly_granted is True
+
     assert detailed_permission_data.derived_from.groups == [
+        inherited_admin_group_permission_data.group,
         group_one_permission_data.group,
         group_two_permission_data.group,
     ]
     assert detailed_permission_data.derived_from.roles == [
-        role_one_permission_data.role
+        inherited_admin_role_permission_data.role,
+        role_one_permission_data.role,
     ]

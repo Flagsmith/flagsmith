@@ -28,7 +28,6 @@ if typing.TYPE_CHECKING:
     from environments.models import Environment
     from users.models import FFAdminUser
 
-# Some random comment
 UserPermissionType = typing.Union[
     UserProjectPermission, UserEnvironmentPermission, UserOrganisationPermission
 ]
@@ -168,7 +167,15 @@ class PermissionData:
     def to_detailed_permissions_data(self) -> UserDetailedPermissionsData:  # noqa: C901
         permission_map = {}
         is_admin_permission_directly_granted = False
-        admin_permission_derived_from = PermissionDerivedFromData()
+        admin_permission_derived_from = PermissionDerivedFromData(
+            groups=[
+                group_permission.group
+                for group_permission in self.inherited_admin_groups
+            ],
+            roles=[
+                role_permission.role for role_permission in self.inherited_admin_roles
+            ],
+        )
 
         def add_permission(
             permission_key: str,

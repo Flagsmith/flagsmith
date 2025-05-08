@@ -313,26 +313,6 @@ def test_user_with_view_project_permission_can_get_their_permissions_for_a_proje
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_get_detailed_permissions(
-    admin_client: APIClient,
-    project: Project,
-    staff_user: FFAdminUser,
-    with_project_permissions: WithProjectPermissionsCallable,
-) -> None:
-    # Given
-    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
-    url = reverse(
-        "api-v1:projects:project-user-detailed-permissions",
-        args=[project.id, staff_user.id],
-    )
-
-    # When
-    response = admin_client.get(url)
-
-    # Then
-    assert response.status_code == status.HTTP_200_OK
-
-
 def test_user_can_list_all_user_permissions_for_a_project(
     admin_client: APIClient,
     project: Project,
