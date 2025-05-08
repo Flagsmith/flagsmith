@@ -37,11 +37,6 @@ def delete_user_and_its_organisations(user_email: str) -> None:
     user: FFAdminUser | None = FFAdminUser.objects.filter(email=user_email).first()
 
     if user:
-        if settings.IS_RBAC_INSTALLED:
-            from rbac.models import Role  # type: ignore[import-not-found,unused-ignore]
-
-            for org in user.organisations.all():
-                Role.objects.filter(organisation=org).delete()
         user.organisations.all().delete()
         user.delete()
 
