@@ -150,11 +150,11 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                           <Link
                             key={id}
                             id={`project-select-${i}`}
-                            to={`/project/${id}/environment/${
-                              environments && environments[0]
-                                ? `${environments[0].api_key}/features`
-                                : 'create'
-                            }`}
+                            data-test={`project-${Utils.toKebabCase(name)}`}
+                            to={`/project/${id}/environment/${environments && environments[0]
+                              ? `${environments[0].api_key}/features`
+                              : 'create'
+                              }`}
                             className='clickable col-md-6 col-xl-3'
                             style={{ minWidth: '190px' }}
                           >
