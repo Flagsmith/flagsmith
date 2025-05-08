@@ -997,6 +997,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                                   onConfirm={() => {
                                     setValueChanged(true)
                                     togglePermission(p.key)
+                                    closeModal2()
                                   }}
                                   onCancel={() => {
                                     closeModal2()
