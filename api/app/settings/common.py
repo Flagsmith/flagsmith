@@ -285,6 +285,19 @@ if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no co
         }
     DATABASE_ROUTERS.insert(0, "app.routers.TaskProcessorRouter")
 
+    # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
+    _task_processor_databases = ["default", "task_processor"]
+else:
+    # Consume any remaining tasks from 'task_processor' after opting out from it
+    _task_processor_databases = ["task_processor", "default"]
+
+# Ultimately, allow the user to decide which databases to consume tasks from
+TASK_PROCESSOR_DATABASES = env.list(
+    "TASK_PROCESSOR_DATABASES",
+    subcast=str,
+    default=_task_processor_databases,
+)
+
 
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")

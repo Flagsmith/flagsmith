@@ -116,7 +116,15 @@ flagsmith_processor:
 ### Migrating from the Default Database (or back)
 
 After pointing the task processor to a different database, or back to the default database, the application will do its
-best effort to consume tasks from the previous storage, as to ensure no tasks are lost.
+best effort to consume any remaining tasks from the previous storage, as to ensure no tasks are lost.
+
+While this **default behavior** adds extra database operations that shouldn't impact most deployments, it can be
+disabled by setting the `TASK_PROCESSOR_DATABASES` environment variable accordingly:
+
+- `TASK_PROCESSOR_DATABASES=default` will only consume tasks from the default database.
+- `TASK_PROCESSOR_DATABASES=task_processor` will only consume tasks from the separate task processor database.
+
+By default, `TASK_PROCESSOR_DATABASES` is set to both databases, and the previous one takes precedence.
 
 All task processor data stored in the previous database **remains intact**, as updating settings will not automatically
 move the data between databases. Optionally, you may want to run the following command to migrate the data:
