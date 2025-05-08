@@ -1,9 +1,11 @@
 import typing
+from typing import cast
 
 from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.db import models
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -96,6 +98,15 @@ class EnvironmentSerializerWithMetadata(
         raise serializers.ValidationError(
             "Unable to retrieve project for metadata validation."
         )
+
+    def update(
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
+    ) -> Environment:
+        metadata_items = validated_data.pop("metadata", [])
+        environment = cast(Environment, super().update(instance, validated_data))
+        self.update_metadata(environment, metadata_items)
+        environment.refresh_from_db()
+        return environment
 
 
 class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadata):
