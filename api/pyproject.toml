@@ -99,7 +99,7 @@ enabled = true
 
 [tool.poetry.dependencies]
 python = ">3.11,<3.13"
-django = "~4.2.18"
+django = "~4.2.20"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
