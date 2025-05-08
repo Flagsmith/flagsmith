@@ -2,12 +2,13 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
+from typing import TYPE_CHECKING, Callable
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Prefetch, Q
+from django.db.models import Max, Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -49,6 +50,11 @@ from environments.metrics import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
+from metrics.metrics_service import build_metrics
+from metrics.types import (
+    EnvMetricsName,
+    EnvMetricsPayload,
+)
 from projects.models import Project
 from segments.models import Segment
 from util.mappers import (
@@ -56,6 +62,10 @@ from util.mappers import (
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
+
+if TYPE_CHECKING:
+    from features.workflows.core.models import ChangeRequest
+
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +205,13 @@ class Environment(
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return (self.api_key,)
+
+    @property
+    def change_requests_enabled(self) -> bool:
+        return (
+            self.minimum_change_request_approvals is not None
+            and self.minimum_change_request_approvals > 0
+        )
 
     def clone(
         self,
@@ -357,6 +374,130 @@ class Environment(
                 self.feature_states.filter(**filter_kwargs),
             )
         )
+
+    def get_metrics_payload(self, with_workflows: bool = False) -> EnvMetricsPayload:
+        """
+        Returns total feature count and enabled-by-default feature count
+        scoped to this environment's project.
+        """
+        from edge_api.identities.models import EdgeIdentity
+
+        # Second optional callable is a function to override disabled
+        qs_map: dict[
+            EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
+        ] = {
+            EnvMetricsName.TOTAL_FEATURES: (
+                lambda: self._get_main_feature_states_queryset().count(),
+                None,
+            ),
+            EnvMetricsName.ENABLED_FEATURES: (
+                lambda: self._get_main_feature_states_queryset()
+                .filter(enabled=True)
+                .count(),
+                None,
+            ),
+            EnvMetricsName.SEGMENT_OVERRIDES: (
+                lambda: self._get_segment_feature_states_queryset().count(),
+                None,
+            ),
+            EnvMetricsName.IDENTITY_OVERRIDES: (
+                lambda: EdgeIdentity.dynamo_wrapper.get_identity_overrides_count_dynamo(
+                    self.api_key
+                ),
+                lambda: self.project.enable_dynamo_db,
+            ),
+        }
+
+        if with_workflows:
+            qs_map.update(
+                {
+                    EnvMetricsName.OPEN_CHANGE_REQUESTS: (
+                        lambda: self._get_open_change_requests_queryset().count(),
+                        None,
+                    ),
+                    EnvMetricsName.TOTAL_SCHEDULED_CHANGES: (
+                        lambda: self._get_scheduled_changes_queryset().count(),
+                        None,
+                    ),
+                }
+            )
+
+        return build_metrics(qs_map)
+
+    def _get_latest_feature_state_ids(self) -> list[int]:
+        return list(
+            FeatureState.objects.filter(
+                Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+                environment=self,
+                identity__isnull=True,
+                feature_segment__isnull=True,
+            )
+            .values("feature_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+
+    def _get_latest_segment_state_ids(self) -> list[int]:
+        segment_ids = (
+            FeatureSegment.objects.filter(environment=self)
+            .values("feature_id", "segment_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+
+        return list(
+            FeatureState.objects.filter(
+                Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+                feature_segment_id__in=segment_ids,
+                identity_id__isnull=True,
+            )
+            .values("feature_id", "feature_segment_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+
+    def _get_live_feature_states_queryset(self) -> QuerySet[FeatureState]:
+        latest_ids = self._get_latest_feature_state_ids()
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=latest_ids)
+        return result
+
+    def _get_main_feature_states_queryset(self) -> QuerySet[FeatureState]:
+        result: QuerySet[FeatureState] = (
+            self._get_live_feature_states_queryset().filter(
+                feature_segment__isnull=True,
+                identity_id__isnull=True,
+            )
+        )
+        return result
+
+    def _get_segment_feature_states_queryset(self) -> QuerySet[FeatureState]:
+        latest_ids = self._get_latest_segment_state_ids()
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(
+            id__in=latest_ids
+        ).filter(
+            feature_segment__isnull=False,
+            identity_id__isnull=True,
+        )
+        return result
+
+    def _get_open_change_requests_queryset(self) -> QuerySet["ChangeRequest"]:
+        from features.workflows.core.models import ChangeRequest
+
+        result: QuerySet["ChangeRequest"] = ChangeRequest.objects.filter(
+            environment=self,
+            committed_at__isnull=True,
+            deleted_at__isnull=True,
+        )
+        return result
+
+    def _get_scheduled_changes_queryset(self) -> QuerySet[FeatureState]:
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(
+            environment=self,
+            identity_id__isnull=True,
+            feature_segment__isnull=True,
+            live_from__gt=timezone.now(),
+        )
+        return result
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:
