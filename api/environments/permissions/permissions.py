@@ -53,7 +53,8 @@ class EnvironmentPermissions(IsAuthenticated):
             return request.user.has_environment_permission(VIEW_ENVIRONMENT, obj)
 
         return request.user.is_environment_admin(obj) or view.action in [
-            "user_permissions"
+            "user_permissions",
+            "detailed_permissions",
         ]
 
 
