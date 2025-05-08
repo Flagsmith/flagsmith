@@ -2,7 +2,7 @@ import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
 import TableFilter from './TableFilter'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 
 type TableFilterType = {
   value: {
@@ -34,15 +34,7 @@ const TableTagFilter: FC<TableFilterType> = ({
   onChange,
   value,
 }) => {
-  const { searchInput, setSearchInput } = useSearchThrottle(
-    value.valueSearch || '',
-    () => {
-      onChange({
-        enabled: value.enabled,
-        valueSearch: searchInput,
-      })
-    },
-  )
+  const { searchInput, setSearchInput } = useDebouncedSearch('')
 
   return (
     <div className={isLoading ? 'disabled' : ''}>

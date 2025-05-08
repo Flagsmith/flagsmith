@@ -2,7 +2,7 @@ import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we 
 import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Link, withRouter } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import Button from './base/forms/Button'
@@ -35,16 +35,7 @@ type AuditLogType = {
 const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(Utils.fromParam().page ?? 1)
-  const { search, searchInput, setSearchInput } = useSearchThrottle(
-    Utils.fromParam().search,
-    () => {
-      if (searchInput !== search) {
-        return setPage(1)
-      }
-
-      setPage(Utils.fromParam().page)
-    },
-  )
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
