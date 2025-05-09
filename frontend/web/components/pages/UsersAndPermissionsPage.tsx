@@ -45,7 +45,7 @@ import {
   useGetUserInvitesQuery,
   useResendUserInviteMutation,
 } from 'common/services/useInvites'
-import InspectPermissions from 'components/InspectPermissions'
+import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']

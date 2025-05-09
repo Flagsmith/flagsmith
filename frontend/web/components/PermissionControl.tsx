@@ -4,22 +4,28 @@ import Switch from './Switch'
 import Tooltip from './Tooltip'
 import BooleanDotIndicator from './BooleanDotIndicator'
 import Icon from './Icon'
-import { Permission } from 'common/types/responses'
+import { PermissionRoleType } from 'common/types/requests'
 
 const permissionOptions = [
-  { label: 'Granted', value: 'GRANTED' },
-  { label: 'Granted for tags', value: 'GRANTED_FOR_TAGS' },
-  { label: 'None', value: 'NONE' },
+  { label: 'Granted', value: PermissionRoleType.GRANTED },
+  { label: 'Granted for tags', value: PermissionRoleType.GRANTED_FOR_TAGS },
+  { label: 'None', value: PermissionRoleType.NONE },
 ]
+
+const ADMIN_PERMISSION_TEXT = 'This permission comes from admin privileges'
+const ADMIN_AND_DERIVED_PERMISSION_TEXT =
+  'This permission comes from admin privileges and is inherited via a group and/or role.'
+const DERIVED_PERMISSION_TEXT =
+  'This permission is inherited via a group and/or role.'
 
 const SingleValue = (props: any) => {
   return (
     <components.SingleValue {...props}>
       <div className='d-flex gap-1 align-items-center'>
-        {props.data.value === 'GRANTED' && (
+        {props.data.value === PermissionRoleType.GRANTED && (
           <Icon width={18} name='checkmark' fill='#27AB95' />
         )}
-        {props.data.value === 'GRANTED_FOR_TAGS' && (
+        {props.data.value === PermissionRoleType.GRANTED_FOR_TAGS && (
           <Icon width={18} name='shield' fill='#ff9f43' />
         )}
         {props.children}
@@ -35,7 +41,7 @@ interface PermissionControlProps {
   isAdmin?: boolean
   isDerivedPermission?: boolean
   isSaving?: boolean
-  permissionType: string
+  permissionRoleType: PermissionRoleType
   permissionKey: string
   isViewPermissionRequired?: boolean
   isViewPermissionAllowed?: boolean
@@ -44,7 +50,7 @@ interface PermissionControlProps {
   onValueChanged: (permissionKey: string, shouldToggle?: boolean) => void
   onSelectPermissions: (
     key: string,
-    type: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
+    type: PermissionRoleType,
   ) => void
 }
 
@@ -61,36 +67,30 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
   onSelectPermissions,
   onValueChanged,
   permissionKey,
-  permissionType,
+  permissionRoleType,
   supportsTag,
 }) => {
   const tooltipText = useMemo(() => {
-    if (isAdmin && !isDerivedPermission) {
-      return 'This permission comes from admin privileges'
+    if (isDerivedPermission) {
+      return isAdmin
+        ? ADMIN_AND_DERIVED_PERMISSION_TEXT
+        : DERIVED_PERMISSION_TEXT
     }
 
-    if (isAdmin && isDerivedPermission) {
-      return 'This permission comes from admin privileges and is inherited via a group and/or role.'
-    }
-
-    if (!isAdmin && isDerivedPermission) {
-      return 'This permission is inherited via a group and/or role.'
-    }
-
-    return ''
+    return isAdmin ? ADMIN_PERMISSION_TEXT : ''
   }, [isAdmin, isDerivedPermission])
 
   if (isTagBasedPermissions) {
     return (
       <div className='ms-2' style={{ width: 200 }}>
-        <Select<{ value: string }>
-          value={permissionOptions.find((v) => v.value === permissionType)}
+        <Select<{ value: PermissionRoleType }>
+          value={permissionOptions.find((v) => v.value === permissionRoleType)}
           onChange={(selectedOption) => {
             if (selectedOption && 'value' in selectedOption) {
               onValueChanged(permissionKey, false)
               onSelectPermissions(
                 permissionKey,
-                selectedOption.value as 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
+                selectedOption.value as PermissionRoleType,
               )
             }
           }}
@@ -99,16 +99,15 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
           options={
             supportsTag
               ? permissionOptions
-              : permissionOptions.filter((v) => v.value !== 'GRANTED_FOR_TAGS')
+              : permissionOptions.filter(
+                  (v) => v.value !== PermissionRoleType.GRANTED_FOR_TAGS,
+                )
           }
           components={{ SingleValue }}
         />
       </div>
     )
   }
-
-  //   if (isAdmin && isDebug)
-  //     return <BooleanDotIndicator enabled={isPermissionEnabled} />
 
   if (isDebug) {
     return (

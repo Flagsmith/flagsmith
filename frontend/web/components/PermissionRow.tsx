@@ -8,8 +8,9 @@ import {
   RolePermission,
   UserPermissions,
 } from 'common/types/responses'
-import DerivedPermissionsList from './DerivedPermissionsList'
+import DerivedPermissionsList from './derived-permissions/DerivedPermissionsList'
 import PermissionControl from './PermissionControl'
+import { PermissionRoleType } from 'common/types/requests'
 
 type EntityPermissions = Omit<
   RolePermission,
@@ -28,7 +29,7 @@ interface PermissionRowProps {
   entityPermissions: EntityPermissions | UserPermissions
   onSelectPermissions: (
     key: string,
-    type: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
+    type: PermissionRoleType,
     tags?: number[],
   ) => void
   limitedPermissions?: string[]
@@ -59,19 +60,19 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   )
 
 
-  const getPermissionType = (key: string) => {
-    if (isAdmin) return 'GRANTED'
+  const getPermissionRoleType = (key: string) => {
+    if (isAdmin) return PermissionRoleType.GRANTED
     const permission = entityPermissions.permissions.find(
       (v) => v.permission_key === key,
     )
 
-    if (!permission) return 'NONE'
+    if (!permission) return PermissionRoleType.NONE
 
     if (permission.tags?.length || limitedPermissions.includes(key)) {
-      return 'GRANTED_FOR_TAGS'
+      return PermissionRoleType.GRANTED_FOR_TAGS
     }
 
-    return 'GRANTED'
+    return PermissionRoleType.GRANTED
   }
 
   const requiresViewPermission = (permissionKey: string) => {
@@ -94,34 +95,31 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
     (v) => v.permission_key === permission.key,
   )
 
-  const permissionType = getPermissionType(permission.key)
+  const permissionRoleType = getPermissionRoleType(permission.key)
 
   const showDerivedPermissions =
     isDebug && (matchingPermission as Permission)?.is_directly_granted === false
 
   const isRowDisabled = isAdmin && !isDebug
-  const defaultRowStyle = { cursor: 'default' }
-  const rowStyle = isRowDisabled
-    ? { opacity: 0.5, ...defaultRowStyle }
-    : defaultRowStyle
+  const rowStyle = isRowDisabled ? { opacity: 0.5 } : {}
 
   return (
     <Row
       key={permission.key}
       style={rowStyle}
-      className='list-item list-item-sm px-3 py-2'
+      className='list-item list-item-sm px-3 py-2 cursor-default'
     >
       <Row space>
         <Flex>
           <strong>{Format.enumeration.get(permission.key)}</strong>
           <div className='list-item-subtitle'>{permission.description}</div>
-          {permissionType === 'GRANTED_FOR_TAGS' && (
+          {permissionRoleType === PermissionRoleType.GRANTED_FOR_TAGS && (
             <AddEditTags
               projectId={`${projectId}`}
               value={permissionData?.tags || []}
               onChange={(v: number[]) => {
                 onValueChanged(permission.key, false)
-                onSelectPermissions(permission.key, 'GRANTED_FOR_TAGS', v)
+                onSelectPermissions(permission.key, PermissionRoleType.GRANTED_FOR_TAGS, v)
               }}
             />
           )}
@@ -141,7 +139,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           disabled={disabled}
           isAdmin={isAdmin}
           isSaving={isSaving}
-          permissionType={permissionType}
+          permissionRoleType={permissionRoleType}
           permissionKey={permission.key}
           isViewPermissionRequired={requiresViewPermission(permission.key)}
           isViewPermissionAllowed={hasPermission(viewPermission)}
