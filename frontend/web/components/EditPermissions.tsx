@@ -22,7 +22,7 @@ import Switch from './Switch'
 import TabItem from './base/forms/TabItem'
 import Tabs from './base/forms/Tabs'
 import UserGroupList from './UserGroupList'
-import { PermissionLevel, Req } from 'common/types/requests'
+import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
@@ -232,21 +232,23 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       //eslint-disable-next-line
     }, [groupWithRolesDataSuccesfull])
 
-    const processResults = (results: (UserPermission | GroupPermission)[]) => {
+    const processResults = (
+      results: (UserPermission | GroupPermission)[] = [],
+    ) => {
       let foundPermission
       if (isGroup) {
         foundPermission = find(
-          results || [],
+          results,
           (r) => (r as GroupPermission).group.id === group?.id,
         )
       } else if (role) {
         foundPermission = find(
-          results || [],
+          results,
           (r) => (r as GroupPermission).role === role?.id,
         )
       } else {
         foundPermission = find(
-          results || [],
+          results,
           (r) => (r as UserPermission).user?.id === user?.id,
         )
       }
@@ -552,7 +554,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const selectPermissions = (
       key: string,
-      value: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
+      value: PermissionRoleType,
       tags: number[] = [],
     ) => {
       const updatedPermissions = [
@@ -563,7 +565,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       const updatedLimitedPermissions = limitedPermissions.filter(
         (v) => v !== key,
       )
-      if (value === 'NONE') {
+      if (value === PermissionRoleType.NONE) {
         setEntityPermissions({
           ...entityPermissions,
           permissions: updatedPermissions,
@@ -579,7 +581,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           ]),
         })
       }
-      if (value === 'GRANTED_FOR_TAGS') {
+      if (value === PermissionRoleType.GRANTED_FOR_TAGS) {
         setLimitedPermissions(updatedLimitedPermissions.concat([key]))
       } else {
         setLimitedPermissions(updatedLimitedPermissions)

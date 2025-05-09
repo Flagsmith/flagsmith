@@ -1,38 +1,13 @@
 import React, { FC, useMemo } from 'react'
 import { renderToString } from 'react-dom/server'
 
-import Tooltip from './Tooltip'
+import Tooltip from 'components/Tooltip'
 import { DerivedPermission } from 'common/types/responses'
-
-import Icon from './Icon'
+import DerivedTag from './DerivedTag'
 
 type DerivedPermissionsListType = {
   derivedPermissions: DerivedPermission
   numberToTruncate?: number
-}
-
-const DerivedTag = ({
-  name,
-  type,
-}: {
-  name: string
-  type: 'group' | 'role'
-}) => {
-  return (
-    <div className='chip me-2 chip--xs bg-primary text-white'>
-      <Row>
-        <div className='mr-1'>
-          <Icon
-            fill='white'
-            width={12}
-            height={12}
-            name={type === 'group' ? 'people' : 'award'}
-          />
-        </div>
-        <div>{name}</div>
-      </Row>
-    </div>
-  )
 }
 
 const DerivedPermissionsList: FC<DerivedPermissionsListType> = ({
@@ -98,4 +73,5 @@ const DerivedPermissionsList: FC<DerivedPermissionsListType> = ({
   )
 }
 
+export type { DerivedPermissionsListType }
 export default DerivedPermissionsList
