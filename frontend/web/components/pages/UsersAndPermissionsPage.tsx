@@ -45,6 +45,7 @@ import {
   useGetUserInvitesQuery,
   useResendUserInviteMutation,
 } from 'common/services/useInvites'
+import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -158,6 +159,29 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       'p-0 side-modal',
     )
   }
+
+  const inspectPermissions = (user: User, organisationId: number) => {
+    openModal(
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          <TabItem tabLabel='Permissions'>
+            <div className='pt-4'>
+              <InspectPermissions
+                uncontrolled
+                user={user}
+                orgId={organisationId}
+              />
+            </div>
+          </TabItem>
+        </Tabs>
+      </div>,
+      'p-0 side-modal',
+    )
+  }
+
   const formatLastLoggedIn = (last_login: string | undefined) => {
     if (!last_login) return 'Never'
 
@@ -614,6 +638,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
                                     canEdit={AccountStore.isAdmin()}
+                                    canInspectPermissions={AccountStore.isAdmin()}
+                                    onInspectPermissions={() => {
+                                      inspectPermissions(user, organisation.id)
+                                    }}
                                   />
                                 </div>
                               </Row>
