@@ -13,10 +13,12 @@ const permissionOptions = [
 ]
 
 const ADMIN_PERMISSION_TEXT = 'This permission comes from admin privileges'
-const ADMIN_AND_DERIVED_PERMISSION_TEXT =
-  'This permission comes from admin privileges and is inherited via a group and/or role.'
+const ADMIN_AND_DERIVED_PERMISSION_TEXT = `${ADMIN_PERMISSION_TEXT} and is inherited through a group and/or role.`
 const DERIVED_PERMISSION_TEXT =
   'This permission is inherited via a group and/or role.'
+const DIRECTLY_GRANTED_PERMISSION_TEXT =
+  'This permission is directly assigned to the user'
+const DIRECTLY_GRANTED_AND_DERIVED_PERMISSION_TEXT = `${DIRECTLY_GRANTED_PERMISSION_TEXT} and is also inherited through a group and/or role.`
 
 const SingleValue = (props: any) => {
   return (
@@ -39,7 +41,8 @@ interface PermissionControlProps {
   isDebug?: boolean
   disabled: boolean
   isAdmin?: boolean
-  isDerivedPermission?: boolean
+  isDirectlyGranted?: boolean
+  showDerivedPermission?: boolean
   isSaving?: boolean
   permissionRoleType: PermissionRoleType
   permissionKey: string
@@ -58,7 +61,7 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
   disabled,
   isAdmin,
   isDebug = false,
-  isDerivedPermission,
+  isDirectlyGranted,
   isPermissionEnabled,
   isSaving,
   isTagBasedPermissions = false,
@@ -68,17 +71,24 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
   onValueChanged,
   permissionKey,
   permissionRoleType,
+  showDerivedPermission,
   supportsTag,
 }) => {
   const tooltipText = useMemo(() => {
-    if (isDerivedPermission) {
-      return isAdmin
+    if (isAdmin) {
+      return showDerivedPermission
         ? ADMIN_AND_DERIVED_PERMISSION_TEXT
-        : DERIVED_PERMISSION_TEXT
+        : ADMIN_PERMISSION_TEXT
     }
 
-    return isAdmin ? ADMIN_PERMISSION_TEXT : ''
-  }, [isAdmin, isDerivedPermission])
+    if (isDirectlyGranted) {
+      return showDerivedPermission
+        ? DIRECTLY_GRANTED_AND_DERIVED_PERMISSION_TEXT
+        : DIRECTLY_GRANTED_PERMISSION_TEXT
+    }
+
+    return showDerivedPermission ? DERIVED_PERMISSION_TEXT : ''
+  }, [isAdmin, showDerivedPermission, isDirectlyGranted])
 
   if (isTagBasedPermissions) {
     return (

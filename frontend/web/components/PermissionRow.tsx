@@ -60,6 +60,13 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   )
 
 
+  const hasDerivedPermission = (entityPermissions: Permission) => {
+    return (
+      !!entityPermissions?.derived_from?.groups?.length ||
+      !!entityPermissions?.derived_from?.roles?.length
+    )
+  }
+
   const getPermissionRoleType = (key: string) => {
     if (isAdmin) return PermissionRoleType.GRANTED
     const permission = entityPermissions.permissions.find(
@@ -96,9 +103,11 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   )
 
   const permissionRoleType = getPermissionRoleType(permission.key)
-
   const showDerivedPermissions =
-    isDebug && (matchingPermission as Permission)?.is_directly_granted === false
+    isDebug && hasDerivedPermission(matchingPermission as Permission)
+
+  const isDirectlyGranted = (matchingPermission as Permission)
+    ?.is_directly_granted
 
   const isRowDisabled = isAdmin && !isDebug
   const rowStyle = isRowDisabled ? { opacity: 0.5 } : {}
@@ -144,6 +153,8 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           isViewPermissionRequired={requiresViewPermission(permission.key)}
           isViewPermissionAllowed={hasPermission(viewPermission)}
           isPermissionEnabled={hasPermission(permission.key)}
+          showDerivedPermission={showDerivedPermissions}
+          isDirectlyGranted={isDirectlyGranted}
           supportsTag={permission.supports_tag}
           onValueChanged={onValueChanged}
           onSelectPermissions={onSelectPermissions}
