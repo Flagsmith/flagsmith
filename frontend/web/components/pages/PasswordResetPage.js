@@ -3,10 +3,6 @@ import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
 
 const PasswordResetPage = class extends Component {
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   static displayName = 'PasswordResetPage'
 
   constructor(props, context) {
@@ -19,7 +15,7 @@ const PasswordResetPage = class extends Component {
   }
 
   onSave = () => {
-    this.context.router.history.replace('/login')
+    this.props.history.replace('/login')
     toast('Your password has been reset')
   }
 
@@ -113,6 +109,10 @@ const PasswordResetPage = class extends Component {
   }
 }
 
-PasswordResetPage.propTypes = {}
+PasswordResetPage.propTypes = {
+  history: RequiredObject,
+  location: RequiredObject,
+  match: RequiredObject,
+}
 
 module.exports = PasswordResetPage
