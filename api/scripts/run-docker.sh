@@ -86,6 +86,7 @@ elif [ "$1" = "run-task-processor" ]; then
 elif [ "$1" = "migrate-and-serve" ]; then
     migrate
     migrate_analytics_db
+    migrate_task_processor_db
     bootstrap
     serve
 else
