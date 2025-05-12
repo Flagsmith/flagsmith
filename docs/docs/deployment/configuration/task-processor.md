@@ -115,24 +115,32 @@ flagsmith_processor:
 
 ### Migrating from the Default Database (or back)
 
-After pointing the task processor to a different database, or back to the default database, the application will do its
-best effort to consume any remaining tasks from the previous storage, as to ensure no tasks are lost.
+As soon as the application starts with a separate task processor database, by default it will consume tasks from **both
+databases**, as to ensure that any remaining tasks in the default database are exhausted. This comes with a slight
+performance cost that **may impact your deployment**.
 
-The default behavior above is accomplised by consuming tasks from both databases — the previous one taking precedence.
-For example, if you have just configured the task processor to use a separate database, the task processor will first
-consume tasks from the default database as an attempt to exhaust any remaining tasks, and then will move onto the task
-processor database _on every iteration_.
+This _default behavior_ is intended to help migrating from a _single database_ to a _separate database_ setup, and is
+managed by the following setting:
 
-While this **default behavior** adds extra database operations that shouldn't impact most deployments, it can be
-disabled by setting the `TASK_PROCESSOR_DATABASES` environment variable accordingly:
+```yaml
+# First, fetch any remaining tasks from the default database, then move onto the task processor database.
+TASK_PROCESSOR_DATABASES: default,task_processor  # Default behavior when a separate database is used
+```
 
-- `TASK_PROCESSOR_DATABASES=task_processor` will only consume tasks from the separate task processor database.
-- `TASK_PROCESSOR_DATABASES=default` will only consume tasks from the default database used by the API.
+Once all tasks from the default database are consumed, it is recommended to update the `TASK_PROCESSOR_DATABASES`
+environment variable to only consume tasks from the task processor separate database:
 
-All task processor data stored in the previous database **remains intact**, as updating settings will not automatically
-move the data between databases. If you have any reason to move historical task processor data from one database to
-another, you can do so using Django's `loaddata` and `dumpdata` commands. This is a manual process, and you should
-ensure that the task processor is **not running while you do this**, as it may interfere with the data and/or tasks.
+```yaml
+# Only consume tasks from the task processor database.
+TASK_PROCESSOR_DATABASES: task_processor
+```
+
+The above setting is also recommended for new deployments starting with a separate database layout, since there will be
+no pending tasks in the default database to consume.
+
+Optionally, or if you have any reason to move historical task processor data from one database to another, you can do
+so using Django's `loaddata` and `dumpdata` commands. This is a manual process, and you should ensure that the task
+processor is **not running while you do this**, as it may interfere with the data and/or tasks.
 
 Assuming the above Docker Compose setup as example:
 

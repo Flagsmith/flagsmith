@@ -288,8 +288,7 @@ if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no co
     # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
     _task_processor_databases = ["default", "task_processor"]
 else:
-    # Consume any remaining tasks from 'task_processor' after opting out from it
-    _task_processor_databases = ["task_processor", "default"]
+    _task_processor_databases = ["default"]
 
 # Ultimately, allow the user to decide which databases to consume tasks from
 TASK_PROCESSOR_DATABASES = env.list(
