@@ -1,6 +1,5 @@
-// TODO: migrate to useRouter with next version
 import { FC } from 'react'
-import { RouterChildContext, withRouter } from 'react-router'
+import { useHistory } from 'react-router'
 
 import { useHasPermission } from 'common/providers/Permission'
 
@@ -15,12 +14,12 @@ import SegmentAction from './components/SegmentAction'
 import ConfirmCloneSegment from 'components/modals/ConfirmCloneSegment'
 import { useCloneSegmentMutation } from 'common/services/useSegment'
 import { Req } from 'common/types/requests'
+import Button from 'components/base/forms/Button'
 
 interface SegmentRowProps {
   segment: Segment
   index: number
   projectId: string
-  router: RouterChildContext['router']
   removeSegment: MutationTrigger<
     MutationDefinition<Req['deleteSegment'], any, 'Segment', Segment, 'service'>
   >
@@ -30,9 +29,9 @@ export const SegmentRow: FC<SegmentRowProps> = ({
   index,
   projectId,
   removeSegment,
-  router,
   segment,
 }) => {
+  const history = useHistory()
   const { description, feature, id, name } = segment
 
   const { permission: manageSegmentsPermission } = useHasPermission({
@@ -109,7 +108,7 @@ export const SegmentRow: FC<SegmentRowProps> = ({
         onClick={
           manageSegmentsPermission
             ? () =>
-                router.history.push(
+                history.push(
                   `${document.location.pathname}?${Utils.toParam({
                     ...Utils.fromParam(),
                     id,
@@ -152,4 +151,5 @@ export const SegmentRow: FC<SegmentRowProps> = ({
   )
 }
 
-export default withRouter(SegmentRow as any)
+export type { SegmentRowProps }
+export default SegmentRow

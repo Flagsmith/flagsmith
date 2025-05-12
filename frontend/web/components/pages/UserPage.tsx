@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import { RouterChildContext } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router'
 import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
@@ -74,17 +74,13 @@ const valuesEqual = (actualValue: any, flagValue: any) => {
     flagValue == null || flagValue === '' || typeof flagValue === 'undefined'
   return nullFalseyA && nullFalseyB ? true : actualValue === flagValue
 }
-type UserPageType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-      id: string
-      identity: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
+  id: string
+  identity: string
 }
+
 type FeatureFilter = {
   group_owners: number[]
   is_archived: boolean
@@ -96,6 +92,7 @@ type FeatureFilter = {
   search: string | null
   sort: SortValue
 }
+
 const getFiltersFromParams = (params: Record<string, string | undefined>) =>
   ({
     group_owners:
@@ -127,11 +124,17 @@ const getFiltersFromParams = (params: Record<string, string | undefined>) =>
     value_search: params.value_search || '',
   } as FeatureFilter)
 
-const UserPage: FC<UserPageType> = (props) => {
+const UserPage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
+  const history = useHistory()
+
   const params = Utils.fromParam()
   const defaultState = getFiltersFromParams(params)
-  const { router } = props
-  const { environmentId, id, identity, projectId } = props.match.params
+
+  const environmentId = match?.params?.environmentId
+  const id = match?.params?.id
+  const identity = match?.params?.identity
+  const projectId = match?.params?.projectId
 
   const [filter, setFilter] = useState(defaultState)
   const [actualFlags, setActualFlags] =
@@ -239,11 +242,7 @@ const UserPage: FC<UserPageType> = (props) => {
     identityFlag: IdentityFeatureState,
     multivariate_feature_state_values: IdentityFeatureState['multivariate_feature_state_values'],
   ) => {
-    history.replaceState(
-      {},
-      '',
-      `${document.location.pathname}?flag=${projectFlag.name}`,
-    )
+    history.replace(`${document.location.pathname}?flag=${projectFlag.name}`)
     API.trackEvent(Constants.events.VIEW_USER_FEATURE)
     openModal(
       <span>
@@ -262,7 +261,7 @@ const UserPage: FC<UserPageType> = (props) => {
         </Row>
       </span>,
       <CreateFlagModal
-        history={router.history}
+        history={history}
         identity={id}
         identityName={decodeURIComponent(identity)}
         environmentId={environmentId}
@@ -276,7 +275,7 @@ const UserPage: FC<UserPageType> = (props) => {
       />,
       'side-modal create-feature-modal overflow-y-auto',
       () => {
-        history.replaceState({}, '', `${document.location.pathname}`)
+        history.replace(document.location.pathname)
       },
     )
   }
@@ -286,7 +285,7 @@ const UserPage: FC<UserPageType> = (props) => {
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
   const clearFilters = () => {
-    router.history.replace(`${document.location.pathname}`)
+    history.replace(`${document.location.pathname}`)
     setFilter(getFiltersFromParams({}))
   }
 
@@ -362,7 +361,7 @@ const UserPage: FC<UserPageType> = (props) => {
                             (identity && identity.identity.identifier) || id,
                             environmentId,
                             () => {
-                              router.history.replace(
+                              history.replace(
                                 `/project/${projectId}/environment/${environmentId}/users`,
                               )
                             },

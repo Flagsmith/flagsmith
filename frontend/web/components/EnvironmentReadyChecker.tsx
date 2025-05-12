@@ -1,27 +1,28 @@
-import { FC, useEffect, useState } from 'react'
+import { FC, PropsWithChildren, useEffect, useState } from 'react'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import { useRouteMatch } from 'react-router'
 
-type EnvironmentReadyCheckerType = {
-  match: {
-    params: {
-      environmentId?: string
-    }
-  }
+interface RouteParams {
+  environmentId?: string
 }
 
-const EnvironmentReadyChecker: FC<EnvironmentReadyCheckerType> = ({
+type EnvironmentReadyCheckerType = {
+  children: React.ReactNode
+}
+
+const EnvironmentReadyChecker = ({
   children,
-  match,
-}) => {
+}: PropsWithChildren<EnvironmentReadyCheckerType>) => {
+  const match = useRouteMatch<RouteParams>()
   const [environmentCreated, setEnvironmentCreated] = useState(false)
 
   const { data, isLoading } = useGetEnvironmentQuery(
     {
-      id: match.params.environmentId,
+      id: match?.params?.environmentId || '',
     },
     {
       pollingInterval: 1000,
-      skip: !match.params.environmentId || environmentCreated,
+      skip: !match?.params?.environmentId || environmentCreated,
     },
   )
   useEffect(() => {
