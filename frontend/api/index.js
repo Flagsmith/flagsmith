@@ -3,11 +3,9 @@ const fs = require('fs')
 const exphbs = require('express-handlebars')
 const express = require('express')
 const bodyParser = require('body-parser')
-const pipedrive = require('pipedrive')
 const spm = require('./middleware/single-page-middleware')
 const path = require('path')
 const app = express()
-const dataRelay = require('data-relay/node')
 
 const SLACK_TOKEN = process.env.SLACK_TOKEN
 const slackClient = SLACK_TOKEN && require('./slack-client')
@@ -16,14 +14,6 @@ const postToSlack = process.env.VERCEL_ENV === 'production'
 
 const isDev = process.env.NODE_ENV !== 'production'
 const port = process.env.PORT || 8080
-
-// Setup Pipedrive Client
-const pipedriveDefaultClient = new pipedrive.ApiClient()
-const pipedrivePersonsApi = new pipedrive.PersonsApi(pipedriveDefaultClient)
-const pipedriveLeadsApi = new pipedrive.LeadsApi(pipedriveDefaultClient)
-const pipedriveNotesApi = new pipedrive.NotesApi(pipedriveDefaultClient)
-const pipedriveApiToken = pipedriveDefaultClient.authentications.api_key
-pipedriveApiToken.apiKey = process.env.PIPEDRIVE_API_KEY
 
 app.get('/config/project-overrides', (req, res) => {
   const getVariable = ({ name, value }) => {
@@ -279,7 +269,7 @@ app.get('/version', (req, res) => {
   }
 
   try {
-    releasePleaseManifest = JSON.parse(
+    let releasePleaseManifest = JSON.parse(
       fs.readFileSync('./.versions.json', 'utf8'),
     )
     res.send({
@@ -344,107 +334,10 @@ app.post('/api/event', (req, res) => {
 
 app.post('/api/webflow/webhook', (req, res) => {
   if (req.body.name === 'Contact Form') {
-    // Post to Pipedrive
-    if (postToSlack) {
-      console.log('Contact Us Form - Creating Pipedrive Lead')
-
-      const newPerson = pipedrive.NewPerson.constructFromObject({
-        email: [
-          {
-            primary: 'true',
-            value: req.body.data.email,
-          },
-        ],
-        name: req.body.data.name,
-        phone: [
-          {
-            label: 'work',
-            primary: 'true',
-            value: req.body.data.phone,
-          },
-        ],
-      })
-
-      console.log('Contact Us Form - Person Created')
-
-      pipedrivePersonsApi.addPerson(newPerson).then(
-        (personData) => {
-          console.log(
-            `pipedrivePersonsApi called successfully. Returned data: ${personData}`,
-          )
-
-          const newLead = pipedrive.AddLeadRequest.constructFromObject({
-            f001193d9249bb49d631d7c2c516ab72f9ebd204: 'Website Contact Us Form',
-            person_id: personData.data.id,
-            title: `${personData.data.primary_email}`,
-          })
-
-          console.log('Adding Lead.')
-          pipedriveLeadsApi.addLead(newLead).then(
-            (leadData) => {
-              console.log(
-                `pipedriveLeadsApi called successfully. Returned data: ${leadData}`,
-              )
-
-              const newNote = pipedrive.AddNoteRequest.constructFromObject({
-                content: `From Website Contact Us Form: ${
-                  req.body.data.message != null
-                    ? req.body.data.message
-                    : 'No note supplied'
-                }`,
-                lead_id: leadData.data.id,
-              })
-
-              console.log('Adding Note.')
-              pipedriveNotesApi.addNote(newNote).then(
-                async (noteData) => {
-                  console.log(
-                    `pipedriveNotesApi called successfully. Returned data: ${noteData}`,
-                  )
-                  //todo: Tidy up above with async calls and call destinations in parallel
-                  if (process.env.DATA_RELAY_API_KEY && postToSlack) {
-                    try {
-                      await dataRelay.sendEvent(req.body.data, {
-                        apiKey: process.env.DATA_RELAY_API_KEY,
-                      })
-                    } catch (e) {
-                      console.log(
-                        'Error sending Contact us form sent to Relay:\r\n',
-                        e,
-                        formMessage,
-                      )
-                    }
-                  }
-                  return res.status(200).json({})
-                },
-                (error) => {
-                  console.log('pipedriveNotesApi called error')
-                  return res.status(200).json({
-                    body: error,
-                  })
-                },
-              )
-            },
-            (error) => {
-              console.log('pipedriveLeadsApi called error')
-              return res.status(200).json({
-                body: error,
-              })
-            },
-          )
-        },
-        (error) => {
-          console.log('pipedrivePersonsApi called error. Returned data:')
-          return res.status(200).json({
-            body: error,
-          })
-        },
-      )
-    } else {
-      return res.status(200).json({})
-    }
+    // TODO: process contact form
+    return res.status(200).json({})
   } else if (req.body.name === 'Subscribe Form') {
-    console.log('Todo: process Subscribe form')
+    // TODO: process Subscribe form
     return res.status(200).json({})
   } else {
     return res.status(200).json({})

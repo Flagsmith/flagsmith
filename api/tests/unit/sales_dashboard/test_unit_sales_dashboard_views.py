@@ -219,32 +219,14 @@ def test_get_email_usage_fails_if_not_staff(
     user = FFAdminUser.objects.create(email="notastaffuser@example.com")
     client.force_login(user)
 
-    url = reverse("sales_dashboard:email-usage")
+    url = reverse("sales_dashboard:usage")
 
     # When
     response = client.get(url)
 
     # Then
     assert response.status_code == 302
-    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"  # type: ignore[attr-defined]
-
-
-def test_post_email_usage_fails_if_not_staff(
-    organisation: Organisation,
-    client: Client,
-) -> None:
-    # Given
-    user = FFAdminUser.objects.create(email="notastaffuser@example.com")
-    client.force_login(user)
-
-    url = reverse("sales_dashboard:email-usage")
-
-    # When
-    response = client.post(url)
-
-    # Then
-    assert response.status_code == 302
-    assert response.url == "/admin/login/?next=/sales-dashboard/email-usage/"  # type: ignore[attr-defined]
+    assert response.url == "/admin/login/?next=/sales-dashboard/usage/"  # type: ignore[attr-defined]
 
 
 def test_start_trial(

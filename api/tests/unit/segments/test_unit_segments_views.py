@@ -1110,6 +1110,69 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_update_segment_metadata_create_correct_number_of_metadata(
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    first_segment_data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+    second_segment_data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response_first = client.post(
+        url, data=json.dumps(first_segment_data), content_type="application/json"
+    )
+    response_second = client.post(
+        url, data=json.dumps(second_segment_data), content_type="application/json"
+    )
+    # Then
+    assert response_first.status_code == status.HTTP_201_CREATED
+    assert response_second.status_code == status.HTTP_201_CREATED
+    assert (
+        response_first.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+    assert (
+        response_second.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+
+    metadata = Metadata.objects.filter(
+        model_field=required_a_segment_metadata_field.id
+    ).all()
+    assert metadata.count() == 2
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_create_segment_with_required_metadata_returns_201(
     project: Project,
     client: APIClient,

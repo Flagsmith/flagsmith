@@ -13,6 +13,7 @@ from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
@@ -343,6 +344,15 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
             raise serializers.ValidationError(
                 "Unable to retrieve project for metadata validation."
             )
+
+    def update(
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
+    ) -> Feature:
+        metadata_items = validated_data.pop("metadata", [])
+        feature = typing.cast(Feature, super().update(instance, validated_data))
+        self.update_metadata(feature, metadata_items)
+        feature.refresh_from_db()
+        return feature
 
 
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
