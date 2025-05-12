@@ -283,7 +283,7 @@ if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no co
             "PORT": TASK_PROCESSOR_DATABASE_PORT,
             "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
         }
-    DATABASE_ROUTERS.insert(0, "app.routers.TaskProcessorRouter")
+    DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
 
     # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
     _task_processor_databases = ["default", "task_processor"]
