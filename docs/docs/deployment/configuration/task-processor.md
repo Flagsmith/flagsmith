@@ -118,31 +118,29 @@ flagsmith_processor:
 After pointing the task processor to a different database, or back to the default database, the application will do its
 best effort to consume any remaining tasks from the previous storage, as to ensure no tasks are lost.
 
+The default behavior above is accomplised by consuming tasks from both databases — the previous one taking precedence.
+For example, if you have just configured the task processor to use a separate database, the task processor will first
+consume tasks from the default database as an attempt to exhaust any remaining tasks, and then will move onto the task
+processor database _on every iteration_.
+
 While this **default behavior** adds extra database operations that shouldn't impact most deployments, it can be
 disabled by setting the `TASK_PROCESSOR_DATABASES` environment variable accordingly:
 
-- `TASK_PROCESSOR_DATABASES=default` will only consume tasks from the default database.
 - `TASK_PROCESSOR_DATABASES=task_processor` will only consume tasks from the separate task processor database.
-
-By default, `TASK_PROCESSOR_DATABASES` is set to both databases, and the previous one takes precedence.
+- `TASK_PROCESSOR_DATABASES=default` will only consume tasks from the default database used by the API.
 
 All task processor data stored in the previous database **remains intact**, as updating settings will not automatically
-move the data between databases. Optionally, you may want to run the following command to migrate the data:
+move the data between databases. If you have any reason to move historical task processor data from one database to
+another, you can do so using Django's `loaddata` and `dumpdata` commands. This is a manual process, and you should
+ensure that the task processor is **not running while you do this**, as it may interfere with the data and/or tasks.
+
+Assuming the above Docker Compose setup as example:
 
 ```bash
-docker-compose run flagsmith python manage.py move_task_processor_data --source-db default --target-db task_processor  # or vice versa
+# OPTIONAL if you need to move data from the default database to the task processor database
+docker-compose run flagsmith python manage.py dumpdata task_processor --database default --output task_processor.json.gz
+docker-compose run flagsmith python manage.py loaddata task_processor task_processor.json.gz --database task_processor
 ```
-
-Note that this command will attempt to **destroy** task processor data from the source database after copying it to the
-target database, which might fail if the application is running and updating task processor data at the same time. This
-behavior can be disabled by passing the `--no-destroy` flag to the command.
-
-```bash
-docker-compose run flagsmith python manage.py move_task_processor_data --source-db default --target-db task_processor --no-destroy  # or vice versa
-```
-
-This utility assumes that there is no other task processor data in the target database. It is expected to error out if
-any task processor data already exists in the target database.
 
 ## Monitoring
 
