@@ -396,7 +396,7 @@ class Environment(
                 )
             return _features_aggregation_result[key]
 
-        # Second optional callable is a function to override disabled
+        # Second optional callable is a function to override disabled - Initially to skip identity if not using edge
         qs_map: dict[
             EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
         ] = {
@@ -413,10 +413,14 @@ class Environment(
                 None,
             ),
             EnvMetricsName.IDENTITY_OVERRIDES: (
-                lambda: EdgeIdentity.dynamo_wrapper.get_identity_overrides_count_dynamo(
-                    self.api_key
-                ),
-                lambda: self.project.enable_dynamo_db,
+                (
+                    lambda: EdgeIdentity.dynamo_wrapper.get_identity_overrides_count_dynamo(
+                        self.api_key
+                    )
+                )
+                if self.project.enable_dynamo_db
+                else (lambda: self._get_identity_overrides_queryset().count()),
+                None,
             ),
         }
 
@@ -436,10 +440,22 @@ class Environment(
 
         return build_metrics(qs_map)
 
+    def _get_identity_overrides_queryset(
+        self, with_workflows: bool = False
+    ) -> QuerySet[FeatureState]:
+        ids = self._get_active_feature_states_ids(
+            with_workflows,
+            "identity_id",
+            {"identity__isnull": False, "feature_segment__isnull": True},
+        )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
     def _get_active_feature_states_ids(
         self,
         with_workflows: bool = False,
-        include_feature_segment: bool = False,
+        extra_group_by_fields: typing.Literal["feature_segment_id", "identity_id"]
+        | None = None,
         filter_kwargs: dict[str, typing.Any] | None = None,
     ) -> list[int]:
         base_qs = FeatureState.objects.filter(
@@ -460,8 +476,8 @@ class Environment(
                 )
             ).filter(has_uncommitted_cr=False)
         group_fields = ["feature_id"]
-        if include_feature_segment:
-            group_fields.append("feature_segment_id")
+        if extra_group_by_fields is not None:
+            group_fields.append(extra_group_by_fields)
 
         return list(
             base_qs.values(*group_fields)
@@ -474,7 +490,7 @@ class Environment(
     ) -> QuerySet[FeatureState]:
         ids = self._get_active_feature_states_ids(
             with_workflows,
-            False,
+            None,
             {"identity__isnull": True, "feature_segment__isnull": True},
         )
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
@@ -485,7 +501,7 @@ class Environment(
     ) -> QuerySet[FeatureState]:
         ids = self._get_active_feature_states_ids(
             with_workflows,
-            True,
+            "feature_segment_id",
             {"identity__isnull": True, "feature_segment__isnull": False},
         )
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
