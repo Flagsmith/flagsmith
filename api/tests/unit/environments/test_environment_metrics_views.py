@@ -1,5 +1,6 @@
 import random
 from datetime import timedelta
+from typing import Any
 
 import pytest
 from common.environments.permissions import (
@@ -7,9 +8,11 @@ from common.environments.permissions import (
 )
 from django.urls import reverse
 from django.utils import timezone
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.workflows.core.models import ChangeRequest
@@ -183,3 +186,53 @@ def test_get_environment_metrics_correctly_computes_data(
         get_metric_value(EnvMetricsName.TOTAL_SCHEDULED_CHANGES.value)
         == scheduled_change_count
     )
+
+
+@pytest.mark.parametrize(
+    "dynamo_db_enabled",
+    [
+        (True),
+        (False),
+    ],
+)
+def test_environment_metrics_uses_correct_identity_overrides_method(
+    staff_client: APIClient,
+    project: Project,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    dynamo_db_enabled: bool,
+    mocker: MockerFixture,
+    settings: Any,
+) -> None:
+    # Given
+    settings.EDGE_ENABLED = False
+    project.enable_dynamo_db = dynamo_db_enabled
+    project.save()
+    env = Environment.objects.create(name="env", project=project)
+
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+
+    mock_dynamo = mocker.patch.object(
+        EdgeIdentity.dynamo_wrapper,
+        "get_identity_overrides_count_dynamo",
+        return_value=5,
+    )
+    mock_queryset = mocker.patch.object(
+        Environment,
+        "_get_identity_overrides_queryset",
+        return_value=mocker.MagicMock(count=lambda: 5),
+    )
+
+    url = reverse("api-v1:environments:environment-metrics-list", args=[env.api_key])
+
+    # When
+    res = staff_client.get(url)
+
+    # Then
+    assert res.status_code == status.HTTP_200_OK
+
+    if dynamo_db_enabled:
+        mock_dynamo.assert_called_once_with(env.api_key)
+        mock_queryset.assert_not_called()
+    else:
+        mock_queryset.assert_called_once()
+        mock_dynamo.assert_not_called()
