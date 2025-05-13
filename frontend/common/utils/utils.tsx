@@ -78,8 +78,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       total += variation
         ? variation.percentage_allocation
         : typeof v.default_percentage_allocation === 'number'
-          ? v.default_percentage_allocation
-          : (v as any).percentage_allocation
+        ? v.default_percentage_allocation
+        : (v as any).percentage_allocation
       return null
     })
     return 100 - total
@@ -194,10 +194,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   ) {
     const findAppended = `${value}`.includes(':')
       ? (conditions || []).find((v) => {
-        const split = value.split(':')
-        const targetKey = `:${split[split.length - 1]}`
-        return v.value === operator + targetKey
-      })
+          const split = value.split(':')
+          const targetKey = `:${split[split.length - 1]}`
+          return v.value === operator + targetKey
+        })
       : false
     if (findAppended) return findAppended
 
@@ -667,6 +667,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
+  toKebabCase: (string: string) =>
+    string
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/[\s_]+/g, '-')
+      .toLowerCase(),
+
   validateMetadataType(type: string, value: any) {
     switch (type) {
       case 'int': {
@@ -682,11 +688,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return true
     }
   },
-
-  toKebabCase: (string: string) => string
-    .replace(/([a-z])([A-Z])/g, "$1-$2")
-    .replace(/[\s_]+/g, '-')
-    .toLowerCase(),
 
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
