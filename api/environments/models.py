@@ -2,7 +2,7 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Literal
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -454,8 +454,7 @@ class Environment(
     def _get_active_feature_states_ids(
         self,
         with_workflows: bool = False,
-        extra_group_by_fields: typing.Literal["feature_segment_id", "identity_id"]
-        | None = None,
+        extra_group_by_fields: Literal["identity_id"] | None = None,
         filter_kwargs: dict[str, typing.Any] | None = None,
     ) -> list[int]:
         base_qs = FeatureState.objects.filter(
@@ -481,8 +480,8 @@ class Environment(
 
         return list(
             base_qs.values(*group_fields)
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
+            .annotate(id=Max("id"))
+            .values_list("id", flat=True)
         )
 
     def _get_features_metrics_queryset(
@@ -496,14 +495,45 @@ class Environment(
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
         return result
 
+    def _get_latest_segment_state_ids_subquery(
+        self, with_workflows: bool = False
+    ) -> list[int]:
+        segment_ids = (
+            FeatureSegment.objects.filter(environment=self)
+            .values("feature_id", "segment_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+
+        fs_base_query = (
+            FeatureState.objects.filter(
+                Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+                feature_segment_id__in=segment_ids,
+                identity_id__isnull=True,
+            )
+            .values("feature_id", "feature_segment_id")
+            .annotate(latest_id=Max("id"))
+            .values_list("latest_id", flat=True)
+        )
+
+        if with_workflows:
+            from features.workflows.core.models import ChangeRequest
+
+            fs_base_query = fs_base_query.annotate(
+                has_uncommitted_cr=Exists(
+                    ChangeRequest.objects.filter(
+                        pk=OuterRef("change_request_id"),
+                        committed_at__isnull=True,
+                    )
+                )
+            ).filter(has_uncommitted_cr=False)
+
+        return list(fs_base_query)
+
     def _get_segment_metrics_queryset(
         self, with_workflows: bool = False
     ) -> QuerySet[FeatureState]:
-        ids = self._get_active_feature_states_ids(
-            with_workflows,
-            "feature_segment_id",
-            {"identity__isnull": True, "feature_segment__isnull": False},
-        )
+        ids = self._get_latest_segment_state_ids_subquery(with_workflows)
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
         return result
 
