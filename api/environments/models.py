@@ -439,6 +439,7 @@ class Environment(
     def _get_active_feature_states_ids(
         self,
         with_workflows: bool = False,
+        include_feature_segment: bool = False,
         filter_kwargs: dict[str, typing.Any] | None = None,
     ) -> list[int]:
         base_qs = FeatureState.objects.filter(
@@ -458,9 +459,12 @@ class Environment(
                     )
                 )
             ).filter(has_uncommitted_cr=False)
+        group_fields = ["feature_id"]
+        if include_feature_segment:
+            group_fields.append("feature_segment_id")
 
         return list(
-            base_qs.values("feature_id")
+            base_qs.values(*group_fields)
             .annotate(latest_id=Max("id"))
             .values_list("latest_id", flat=True)
         )
@@ -469,7 +473,9 @@ class Environment(
         self, with_workflows: bool = False
     ) -> QuerySet[FeatureState]:
         ids = self._get_active_feature_states_ids(
-            with_workflows, {"identity__isnull": True, "feature_segment__isnull": True}
+            with_workflows,
+            False,
+            {"identity__isnull": True, "feature_segment__isnull": True},
         )
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
         return result
@@ -478,7 +484,9 @@ class Environment(
         self, with_workflows: bool = False
     ) -> QuerySet[FeatureState]:
         ids = self._get_active_feature_states_ids(
-            with_workflows, {"identity__isnull": True, "feature_segment__isnull": False}
+            with_workflows,
+            True,
+            {"identity__isnull": True, "feature_segment__isnull": False},
         )
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
         return result
