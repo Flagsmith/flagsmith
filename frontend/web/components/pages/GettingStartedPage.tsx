@@ -225,10 +225,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       complete: !!segments?.results?.length,
       cta: 'Create a Segment',
       description:
-        'Once your features are setup you can target their rollout with segments',
-      disabledMessage: !project
-        ? 'You will need to create a project before creating your first segment'
-        : null,
+        "Compare Flagsmith's free open source and commercial features",
       duration: 1,
       link: 'https://docs.flagsmith.com/version-comparison',
       persistId: 'version-comparison',
