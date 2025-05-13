@@ -8,12 +8,17 @@ x-app: &app
       POETRY_VERSION: 2.1.1
       INSTALL_DEV_DEPENDENCIES: true
   depends_on:
-    database:
+    default-database:
+      condition: service_healthy
+    task-processor-database:
       condition: service_healthy
   environment:
+    # LOG_LEVEL: DEBUG
+    DATABASE_URL: postgres://postgres@default-database:5432/postgres
     DEBUG: true
-    DATABASE_URL: postgres://postgres@database:5432/postgres
     DJANGO_SETTINGS_MODULE: app.settings.local
+    TASK_PROCESSOR_DATABASE_URL: postgres://postgres@task-processor-database:5432/postgres
+    TASK_PROCESSOR_DATABASES: task_processor
   volumes:
     # - ?:/app:rw,cached  # Application directory
 
@@ -25,14 +30,25 @@ services:
       - 8000:8000
 
   # TODO
-  # task-processor:
-  #   <<: *app
-  #   command: ...
+  task-processor:
+    <<: *app
+    command: run-task-processor
 
-  database:
+  default-database:
     image: postgres:15.5-alpine
     volumes:
-      - ../../.local/database:/var/lib/postgresql/data:rw,cached
+      - ../../.local/default-database:/var/lib/postgresql/data:rw,cached
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: pg_isready -Upostgres
+      interval: 1s
+      timeout: 30s
+
+  task-processor-database:
+    image: postgres:15.5-alpine
+    volumes:
+      - ../../.local/task-processor-database:/var/lib/postgresql/data:rw,cached
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
