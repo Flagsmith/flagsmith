@@ -285,6 +285,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -340,8 +341,14 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
-USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
-PG_API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=True)
+
+API_USAGE_CACHE_SECONDS = env.int("API_USAGE_CACHE_SECONDS", default=0)
+
+if not API_USAGE_CACHE_SECONDS:
+    # Fallback to the old variable name, which is deprecated
+    # and will be removed in the future.
+    API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
 
 FEATURE_EVALUATION_CACHE_SECONDS = env.int(
     "FEATURE_EVALUATION_CACHE_SECONDS", default=60
@@ -566,6 +573,7 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
+ACCESS_LOG_EXTRA_ITEMS = env.list("ACCESS_LOG_EXTRA_ITEMS", subcast=str, default=[])
 LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
 if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
@@ -1187,14 +1195,6 @@ HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
 # hubspot without a Flagsmith organisation.
 CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
 
-# List of plan ids that support seat upgrades
-AUTO_SEAT_UPGRADE_PLANS = env.list(
-    "AUTO_SEAT_UPGRADE_PLANS",
-    subcast=str,
-    default=[],
-)
-
-
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
 
 # prevent django-softdelete from performing whole table deletes!
@@ -1407,3 +1407,5 @@ PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
         default=prometheus_client.Histogram.DEFAULT_BUCKETS,
     )
 )
+
+DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)

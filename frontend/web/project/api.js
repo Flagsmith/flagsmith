@@ -273,7 +273,10 @@ global.API = {
         if (plan && plan.includes('start-up')) {
           return planNames.startup
         }
-        if (global.flagsmithVersion?.backend.is_enterprise || (plan && plan.includes('enterprise'))) {
+        if (
+          global.flagsmithVersion?.backend.is_enterprise ||
+          (plan && plan.includes('enterprise'))
+        ) {
           return planNames.enterprise
         }
         return planNames.free

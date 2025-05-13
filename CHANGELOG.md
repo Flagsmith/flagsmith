@@ -1,5 +1,109 @@
 # Changelog
 
+## [2.177.0](https://github.com/Flagsmith/flagsmith/compare/v2.176.2...v2.177.0) (2025-05-06)
+
+
+### Features
+
+* Render usage report in sales dashboard usage directly, without sending email ([#5407](https://github.com/Flagsmith/flagsmith/issues/5407)) ([3ad0124](https://github.com/Flagsmith/flagsmith/commit/3ad0124a0d42238e2edf951fc99330a0a4318263))
+
+
+### Bug Fixes
+
+* remove-pipedrive ([#5423](https://github.com/Flagsmith/flagsmith/issues/5423)) ([4bfae2e](https://github.com/Flagsmith/flagsmith/commit/4bfae2eb4bceacba2c1dca28a1c71582ab1b85a6))
+
+## [2.176.2](https://github.com/Flagsmith/flagsmith/compare/v2.176.1...v2.176.2) (2025-05-02)
+
+
+### Bug Fixes
+
+* marketing consent should default to True ([#5416](https://github.com/Flagsmith/flagsmith/issues/5416)) ([1d98d27](https://github.com/Flagsmith/flagsmith/commit/1d98d27103e7c32a8857ae1c2c6710544956c8d3))
+
+## [2.176.1](https://github.com/Flagsmith/flagsmith/compare/v2.176.0...v2.176.1) (2025-05-01)
+
+
+### Bug Fixes
+
+* incorrect feature value passed in integrations ([#5389](https://github.com/Flagsmith/flagsmith/issues/5389)) ([7262990](https://github.com/Flagsmith/flagsmith/commit/72629904c3d4ec1652e271f45644b4f26e5c22ef))
+* return-empty-trait-list-if-persistence-not-allowed-from-sdk ([#5399](https://github.com/Flagsmith/flagsmith/issues/5399)) ([19cd637](https://github.com/Flagsmith/flagsmith/commit/19cd637e5b78bc7c8bbf7828e29848c382a543a4))
+* **self-hosted onboarding:** add hubspot access token to API instances ([#5410](https://github.com/Flagsmith/flagsmith/issues/5410)) ([0bf5197](https://github.com/Flagsmith/flagsmith/commit/0bf51971ff035f9b7e35171d56d68cc021a810a5))
+
+## [2.176.0](https://github.com/Flagsmith/flagsmith/compare/v2.175.0...v2.176.0) (2025-04-30)
+
+
+### Features
+
+* Add product version to API response headers ([#5366](https://github.com/Flagsmith/flagsmith/issues/5366)) ([0cfe793](https://github.com/Flagsmith/flagsmith/commit/0cfe793544fcaad4a8f3cb06cf5962fc50a9e4de))
+* If-Modified-Since for /environment-document ([#5283](https://github.com/Flagsmith/flagsmith/issues/5283)) ([8e8ff22](https://github.com/Flagsmith/flagsmith/commit/8e8ff2213defbfa82c889d89470ca6d7dc934fcc))
+* TCP health check integration + ECS health checks on staging ([#5377](https://github.com/Flagsmith/flagsmith/issues/5377)) ([d4b5d6a](https://github.com/Flagsmith/flagsmith/commit/d4b5d6a68383067f27655ac848890a924d311aee))
+
+
+### Bug Fixes
+
+* convert large integers to strings ([#5314](https://github.com/Flagsmith/flagsmith/issues/5314)) ([ee9335d](https://github.com/Flagsmith/flagsmith/commit/ee9335db5500209dd7a50d9ab56bb91aef0476a1))
+* Gets build version for validating org plan ([#5402](https://github.com/Flagsmith/flagsmith/issues/5402)) ([a41b878](https://github.com/Flagsmith/flagsmith/commit/a41b878ac1245bd5dc0e1176da5094639a3fb84b))
+* move custom fields to org settings ([#5163](https://github.com/Flagsmith/flagsmith/issues/5163)) ([ea4db70](https://github.com/Flagsmith/flagsmith/commit/ea4db704c9b5a9f18ca5b8b9087102ef80dcd7d3))
+* replaced-undefined-with-null-when-disabling-change-requests ([#5391](https://github.com/Flagsmith/flagsmith/issues/5391)) ([5066427](https://github.com/Flagsmith/flagsmith/commit/5066427e66e6a1d4a0457c2dbec4e53f56dbe3d2))
+
+
+### Dependency Updates
+
+* bump flagsmith-common from 1.10.0 to 1.11.0 ([d4b5d6a](https://github.com/Flagsmith/flagsmith/commit/d4b5d6a68383067f27655ac848890a924d311aee))
+
+## [2.175.0](https://github.com/Flagsmith/flagsmith/compare/v2.174.0...v2.175.0) (2025-04-23)
+
+
+### Features
+
+* MetadataModelRequirement uses organisation ID as objectID  (✅ relies on [#5325](https://github.com/Flagsmith/flagsmith/issues/5325) - deployed) ([#5326](https://github.com/Flagsmith/flagsmith/issues/5326)) ([8dc92c3](https://github.com/Flagsmith/flagsmith/commit/8dc92c3ef9ede001377a3c8ee9a6d10794f08824))
+* unsaved warning modal in environment settings ([#5337](https://github.com/Flagsmith/flagsmith/issues/5337)) ([dbf8d6c](https://github.com/Flagsmith/flagsmith/commit/dbf8d6c568ad67164e3e708a0fa82c40a97591f9))
+
+
+### Bug Fixes
+
+* order of onboarding requests ([#5376](https://github.com/Flagsmith/flagsmith/issues/5376)) ([2650e1d](https://github.com/Flagsmith/flagsmith/commit/2650e1d08441370ccc1d644b7e9f61aa5fd9770f))
+* public urls ([#5319](https://github.com/Flagsmith/flagsmith/issues/5319)) ([4c5043d](https://github.com/Flagsmith/flagsmith/commit/4c5043dd3b7b1b0a5524ed452a577af84b100046))
+
+## [2.174.0](https://github.com/Flagsmith/flagsmith/compare/v2.173.1...v2.174.0) (2025-04-22)
+
+
+### Features
+
+* Log environment IDs in SDK endpoints ([#5365](https://github.com/Flagsmith/flagsmith/issues/5365)) ([ea21668](https://github.com/Flagsmith/flagsmith/commit/ea216686a069aea2084e9e9bfdab04375f1b4038))
+
+
+### Bug Fixes
+
+* version endpoint ([#5357](https://github.com/Flagsmith/flagsmith/issues/5357)) ([8eb48c0](https://github.com/Flagsmith/flagsmith/commit/8eb48c06ea466f88a432de3b977218c18bd1fb99))
+
+## [2.173.1](https://github.com/Flagsmith/flagsmith/compare/v2.173.0...v2.173.1) (2025-04-21)
+
+
+### Bug Fixes
+
+* Task processor overload when handling high volume SDK traffic ([#5358](https://github.com/Flagsmith/flagsmith/issues/5358)) ([4b0ae75](https://github.com/Flagsmith/flagsmith/commit/4b0ae75a4b60952e87a6e0a7b28e6826f9b71aaf))
+
+## [2.173.0](https://github.com/Flagsmith/flagsmith/compare/v2.172.1...v2.173.0) (2025-04-18)
+
+
+### Features
+
+* **billing:** Remove `AUTO_SEAT_UPGRADE_PLANS` setting ([#5343](https://github.com/Flagsmith/flagsmith/issues/5343)) ([de92415](https://github.com/Flagsmith/flagsmith/commit/de92415af5b853cf4550c57afd7a297c98372691))
+* MetadataModelRequirement can accept organization as content-type ([#5325](https://github.com/Flagsmith/flagsmith/issues/5325)) ([9974494](https://github.com/Flagsmith/flagsmith/commit/99744945e879189288023f8a9dd60ac6c2e5d45a))
+
+
+### Bug Fixes
+
+* compare-sha-tags-in-lowercase ([#5350](https://github.com/Flagsmith/flagsmith/issues/5350)) ([e97bd90](https://github.com/Flagsmith/flagsmith/commit/e97bd90e89cf064f885ad03ce1e4e1aef21ee6d6))
+* enable usage cache by default ([#5356](https://github.com/Flagsmith/flagsmith/issues/5356)) ([fdebe4f](https://github.com/Flagsmith/flagsmith/commit/fdebe4fcc6e76bdd8ffd9d2117f098f0e586598a))
+* Selecting build version data from RTK ([#5352](https://github.com/Flagsmith/flagsmith/issues/5352)) ([0dcca20](https://github.com/Flagsmith/flagsmith/commit/0dcca206d150103b57163f86213fca0f0cc80614))
+
+
+### Dependency Updates
+
+* bump @babel/runtime from 7.25.6 to 7.27.0 in /frontend ([#5335](https://github.com/Flagsmith/flagsmith/issues/5335)) ([9777dd1](https://github.com/Flagsmith/flagsmith/commit/9777dd1fc4263ae65cb114733d251748b3f73fc2))
+* bump http-proxy-middleware from 2.0.7 to 2.0.9 in /frontend ([#5348](https://github.com/Flagsmith/flagsmith/issues/5348)) ([9f30775](https://github.com/Flagsmith/flagsmith/commit/9f30775cd177bcecf4ec553f086e6584411eb7d3))
+
 ## [2.172.1](https://github.com/Flagsmith/flagsmith/compare/v2.172.0...v2.172.1) (2025-04-16)
 
 

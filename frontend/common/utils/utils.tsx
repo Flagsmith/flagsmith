@@ -109,6 +109,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
   },
 
+  capitalize(str: string) {
+    if (!str) return ""
+    return str.charAt(0).toUpperCase() + str.slice(1)
+  },
+
   changeRequestsEnabled(value: number | null | undefined) {
     return typeof value === 'number'
   },
@@ -132,7 +137,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     if (value > 0.002) return 'HIGH' as PConfidence
     return 'VERY_HIGH' as PConfidence
   },
-
   copyToClipboard: async (
     value: string,
     successMessage?: string,
@@ -663,6 +667,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
+  toKebabCase: (string: string) =>
+    string
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/[\s_]+/g, '-')
+      .toLowerCase(),
+
   validateMetadataType(type: string, value: any) {
     switch (type) {
       case 'int': {
@@ -678,6 +688,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return true
     }
   },
+
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
     if (rule.delete) {

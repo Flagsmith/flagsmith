@@ -4,7 +4,7 @@ title: Architecture
 
 ## Self Hosted / On Prem
 
-![Image](/img/self-hosted-architecture.svg)
+![Image](/img/architecture.svg)
 
 ## SaaS
 

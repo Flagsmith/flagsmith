@@ -12,21 +12,21 @@ on:
         type: string
         description: Frontend Docker with E2E capabilities image to use, e.g., `ghcr.io/flagsmith/flagsmith-e2e:main`
         required: true
-      tests:
+      args:
         type: string
-        description: Space-delimited list of E2E tests to be executed
+        description: Additional arguments to testcafe
         required: false
         default: ''
       concurrency:
         type: number
         description: The concurrent number of browsers to be used on testing
         required: false
-        default: 3
+        default: 16
       runs-on:
         type: string
-        description: The runner label to use. Defaults to `ubuntu-latest`
+        description: The runner label to use. Defaults to `depot-ubuntu-latest`
         required: false
-        default: ubuntu-latest
+        default: depot-ubuntu-latest
     secrets:
       GCR_TOKEN:
         description: A token to use for logging into Github Container Registry. If not provided, login does not occur.
@@ -77,7 +77,7 @@ jobs:
           retry_on: error
           timeout_minutes: 20
         env:
-          opts: ${{ inputs.tests }}
+          opts: ${{ inputs.args }}
           API_IMAGE: ${{ inputs.api-image }}
           E2E_IMAGE: ${{ inputs.e2e-image }}
           E2E_CONCURRENCY: ${{ inputs.concurrency }}
