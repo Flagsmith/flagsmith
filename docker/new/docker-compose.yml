@@ -3,7 +3,7 @@ x-app: &app
   image: ${DOCKER_IMAGE:-local/flagsmith/flagsmith}:${DOCKER_TAG:-latest}
   build:
     context: ../../
-    dockerfile: api/Dockerfile
+    target: oss-unified
     args:
       POETRY_VERSION: 2.1.1
       INSTALL_DEV_DEPENDENCIES: true
@@ -15,13 +15,12 @@ x-app: &app
     DATABASE_URL: postgres://postgres@database:5432/postgres
     DJANGO_SETTINGS_MODULE: app.settings.local
   volumes:
-    - ../../.local/pypoetry:/root/.config/poetry:rw  # Poetry local cache
-    - ../../:/opt/app:rw,cached  # Application directory
+    # - ?:/app:rw,cached  # Application directory
 
 services:
   api:
     <<: *app
-    command: sh -c 'flagsmith migrate && flagsmith start --reload api'
+    command: migrate-and-serve
     ports:
       - 8000:8000
 
