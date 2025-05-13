@@ -1,5 +1,6 @@
 import random
 from datetime import timedelta
+from typing import Any
 
 import pytest
 from common.environments.permissions import (
@@ -7,9 +8,11 @@ from common.environments.permissions import (
 )
 from django.urls import reverse
 from django.utils import timezone
+from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
-from typing import Any
+
+from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
 from features.models import Feature, FeatureSegment, FeatureState
 from features.workflows.core.models import ChangeRequest
@@ -18,9 +21,6 @@ from projects.models import Project
 from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
-from edge_api.identities.models import EdgeIdentity
-from pytest_mock import MockerFixture
-from projects.models import EdgeV2MigrationStatus
 
 
 def test_get_environment_metrics_without_workflows(
