@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Max, Prefetch, Q, QuerySet, OuterRef, Exists
+from django.db.models import Exists, Max, OuterRef, Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
