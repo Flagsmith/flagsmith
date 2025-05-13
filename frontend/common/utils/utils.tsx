@@ -110,7 +110,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   capitalize(str: string) {
-    if (!str) return ""
+    if (!str) return ''
     return str.charAt(0).toUpperCase() + str.slice(1)
   },
 

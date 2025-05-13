@@ -910,5 +910,14 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  environmentMetrics: {
+    metrics: {
+      value: number
+      description: string
+      name: string
+      entity: 'features' | 'identities' | 'segments' | 'workflows'
+      rank: number
+    }[]
+  }
   // END OF TYPES
 }
