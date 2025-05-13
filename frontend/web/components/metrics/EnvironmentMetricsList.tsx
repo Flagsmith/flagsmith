@@ -24,29 +24,35 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
     }
   }, [forceRefetch, refetch])
 
+  if (!data || data.metrics.length === 0) {
+    return null
+  }
+
   return (
-    <AccordionCard title='Summary'>
-      <div className='flex gap-2 mt-4'>
-        <div
-          className='metrics-grid'
-          style={{
-            alignItems: 'stretch',
-            display: 'grid',
-            gridTemplateColumns: `repeat(${columns}, 1fr)`,
-            justifyContent: 'center',
-            rowGap: 12,
-          }}
-        >
-          {data?.metrics.map((metric) => (
-            <EnvironmentMetric
-              key={metric.name}
-              label={metric.description}
-              value={metric.value}
-            />
-          ))}
+    <div className='mb-3'>
+      <AccordionCard title='Summary'>
+        <div className='flex gap-2 mt-4'>
+          <div
+            className='metrics-grid'
+            style={{
+              alignItems: 'stretch',
+              display: 'grid',
+              gridTemplateColumns: `repeat(${columns}, 1fr)`,
+              justifyContent: 'center',
+              rowGap: 12,
+            }}
+          >
+            {data?.metrics.map((metric) => (
+              <EnvironmentMetric
+                key={metric.name}
+                label={metric.description}
+                value={metric.value}
+              />
+            ))}
+          </div>
         </div>
-      </div>
-    </AccordionCard>
+      </AccordionCard>
+    </div>
   )
 }
 
