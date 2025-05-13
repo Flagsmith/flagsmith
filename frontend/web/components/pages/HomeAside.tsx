@@ -160,7 +160,7 @@ const HomeAside: FC<HomeAsideType> = ({
     ? ChangeRequestStore.model[environmentId]
     : null
   const changeRequests = changeRequest?.count || 0
-  console.log(changeRequest)
+
   const scheduled =
     (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
   const onProjectSave = () => {
