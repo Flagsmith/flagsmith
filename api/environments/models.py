@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Max, Prefetch, Q, QuerySet
+from django.db.models import Exists, Max, OuterRef, Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -387,11 +387,15 @@ class Environment(
             EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
         ] = {
             EnvMetricsName.TOTAL_FEATURES: (
-                lambda: self._get_main_feature_states_queryset().count(),
+                lambda: self._get_main_feature_states_queryset(
+                    with_workflows=with_workflows
+                ).count(),
                 None,
             ),
             EnvMetricsName.ENABLED_FEATURES: (
-                lambda: self._get_main_feature_states_queryset()
+                lambda: self._get_main_feature_states_queryset(
+                    with_workflows=with_workflows
+                )
                 .filter(enabled=True)
                 .count(),
                 None,
@@ -424,15 +428,28 @@ class Environment(
 
         return build_metrics(qs_map)
 
-    def _get_latest_feature_state_ids(self) -> list[int]:
+    def _get_latest_feature_state_ids(self, with_workflows: bool = False) -> list[int]:
+        base_qs = FeatureState.objects.filter(
+            Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+            environment=self,
+            identity__isnull=True,
+            feature_segment__isnull=True,
+        )
+
+        if with_workflows:
+            from features.workflows.core.models import ChangeRequest
+
+            base_qs = base_qs.annotate(
+                has_uncommitted_cr=Exists(
+                    ChangeRequest.objects.filter(
+                        pk=OuterRef("change_request_id"),
+                        committed_at__isnull=True,
+                    )
+                )
+            ).filter(has_uncommitted_cr=False)
+
         return list(
-            FeatureState.objects.filter(
-                Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
-                environment=self,
-                identity__isnull=True,
-                feature_segment__isnull=True,
-            )
-            .values("feature_id")
+            base_qs.values("feature_id")
             .annotate(latest_id=Max("id"))
             .values_list("latest_id", flat=True)
         )
@@ -456,17 +473,21 @@ class Environment(
             .values_list("latest_id", flat=True)
         )
 
-    def _get_live_feature_states_queryset(self) -> QuerySet[FeatureState]:
-        latest_ids = self._get_latest_feature_state_ids()
+    def _get_live_feature_states_queryset(
+        self, with_workflows: bool = False
+    ) -> QuerySet[FeatureState]:
+        latest_ids = self._get_latest_feature_state_ids(with_workflows)
         result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=latest_ids)
         return result
 
-    def _get_main_feature_states_queryset(self) -> QuerySet[FeatureState]:
-        result: QuerySet[FeatureState] = (
-            self._get_live_feature_states_queryset().filter(
-                feature_segment__isnull=True,
-                identity_id__isnull=True,
-            )
+    def _get_main_feature_states_queryset(
+        self, with_workflows: bool = False
+    ) -> QuerySet[FeatureState]:
+        result: QuerySet[FeatureState] = self._get_live_feature_states_queryset(
+            with_workflows=with_workflows
+        ).filter(
+            feature_segment__isnull=True,
+            identity_id__isnull=True,
         )
         return result
 
