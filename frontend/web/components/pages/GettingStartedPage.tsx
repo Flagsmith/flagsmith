@@ -222,16 +222,6 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       title: 'Create a Segment',
     },
     {
-      complete: !!segments?.results?.length,
-      cta: 'Create a Segment',
-      description:
-        "Compare Flagsmith's free open source and commercial features",
-      duration: 1,
-      link: 'https://docs.flagsmith.com/version-comparison',
-      persistId: 'version-comparison',
-      title: 'Version comparison',
-    },
-    {
       description: 'Everything you need to get up-and-running with Flagsmith',
       duration: 5,
       link: 'https://docs.flagsmith.com/quickstart/',
@@ -254,6 +244,16 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       link: 'https://docs.flagsmith.com/integrations/',
       persistId: 'integrations',
       title: 'Integrations',
+    },
+    {
+      complete: !!segments?.results?.length,
+      cta: 'Create a Segment',
+      description:
+        "Compare Flagsmith's free open source and commercial features",
+      duration: 1,
+      link: 'https://docs.flagsmith.com/version-comparison',
+      persistId: 'version-comparison',
+      title: 'Version comparison',
     },
   ]
   return (
