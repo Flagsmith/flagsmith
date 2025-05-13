@@ -41,7 +41,7 @@ run_task_processor() {
     if [ -n "$ANALYTICS_DATABASE_URL" ] || [ -n "$DJANGO_DB_NAME_ANALYTICS" ]; then
         waitfordb --waitfor 30 --migrations --database analytics
     fi
-    if [ -n "$TASK_PROCESSOR_DATABASE_URL" || -n "$TASK_PROCESSOR_DATABASE_NAME" ]; then
+    if [ -n "$TASK_PROCESSOR_DATABASE_URL" ] || [ -n "$TASK_PROCESSOR_DATABASE_NAME" ]; then
         waitfordb --waitfor 30 --migrations --database task_processor
     fi
     exec flagsmith start \
