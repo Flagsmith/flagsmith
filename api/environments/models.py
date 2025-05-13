@@ -382,26 +382,34 @@ class Environment(
         """
         from edge_api.identities.models import EdgeIdentity
 
+        features_qs = self._get_features_metrics_queryset(with_workflows=with_workflows)
+
+        _features_aggregation_result: dict[str, int] = {}
+
+        # Closure to avoid recalculating twice the features metrics
+        def get_feature_agg(key: str) -> int:
+            nonlocal _features_aggregation_result
+            if not _features_aggregation_result:
+                _features_aggregation_result = features_qs.aggregate(
+                    total=models.Count("id"),
+                    enabled=models.Count("id", filter=Q(enabled=True)),
+                )
+            return _features_aggregation_result[key]
+
         # Second optional callable is a function to override disabled
         qs_map: dict[
             EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
         ] = {
             EnvMetricsName.TOTAL_FEATURES: (
-                lambda: self._get_main_feature_states_queryset(
-                    with_workflows=with_workflows
-                ).count(),
+                lambda: get_feature_agg("total"),
                 None,
             ),
             EnvMetricsName.ENABLED_FEATURES: (
-                lambda: self._get_main_feature_states_queryset(
-                    with_workflows=with_workflows
-                )
-                .filter(enabled=True)
-                .count(),
+                lambda: get_feature_agg("enabled"),
                 None,
             ),
             EnvMetricsName.SEGMENT_OVERRIDES: (
-                lambda: self._get_segment_feature_states_queryset().count(),
+                lambda: self._get_segment_metrics_queryset().count(),
                 None,
             ),
             EnvMetricsName.IDENTITY_OVERRIDES: (
@@ -416,11 +424,11 @@ class Environment(
             qs_map.update(
                 {
                     EnvMetricsName.OPEN_CHANGE_REQUESTS: (
-                        lambda: self._get_open_change_requests_queryset().count(),
+                        lambda: self._get_change_requests_metrics_queryset().count(),
                         None,
                     ),
                     EnvMetricsName.TOTAL_SCHEDULED_CHANGES: (
-                        lambda: self._get_scheduled_changes_queryset().count(),
+                        lambda: self._get_scheduled_metrics_queryset().count(),
                         None,
                     ),
                 }
@@ -428,12 +436,15 @@ class Environment(
 
         return build_metrics(qs_map)
 
-    def _get_latest_feature_state_ids(self, with_workflows: bool = False) -> list[int]:
+    def _get_active_feature_states_ids(
+        self,
+        with_workflows: bool = False,
+        filter_kwargs: dict[str, typing.Any] | None = None,
+    ) -> list[int]:
         base_qs = FeatureState.objects.filter(
             Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
             environment=self,
-            identity__isnull=True,
-            feature_segment__isnull=True,
+            **(filter_kwargs or {}),
         )
 
         if with_workflows:
@@ -454,54 +465,25 @@ class Environment(
             .values_list("latest_id", flat=True)
         )
 
-    def _get_latest_segment_state_ids(self) -> list[int]:
-        segment_ids = (
-            FeatureSegment.objects.filter(environment=self)
-            .values("feature_id", "segment_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
-        )
-
-        return list(
-            FeatureState.objects.filter(
-                Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
-                feature_segment_id__in=segment_ids,
-                identity_id__isnull=True,
-            )
-            .values("feature_id", "feature_segment_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
-        )
-
-    def _get_live_feature_states_queryset(
+    def _get_features_metrics_queryset(
         self, with_workflows: bool = False
     ) -> QuerySet[FeatureState]:
-        latest_ids = self._get_latest_feature_state_ids(with_workflows)
-        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=latest_ids)
+        ids = self._get_active_feature_states_ids(
+            with_workflows, {"identity__isnull": True, "feature_segment__isnull": True}
+        )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
         return result
 
-    def _get_main_feature_states_queryset(
+    def _get_segment_metrics_queryset(
         self, with_workflows: bool = False
     ) -> QuerySet[FeatureState]:
-        result: QuerySet[FeatureState] = self._get_live_feature_states_queryset(
-            with_workflows=with_workflows
-        ).filter(
-            feature_segment__isnull=True,
-            identity_id__isnull=True,
+        ids = self._get_active_feature_states_ids(
+            with_workflows, {"identity__isnull": True, "feature_segment__isnull": False}
         )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
         return result
 
-    def _get_segment_feature_states_queryset(self) -> QuerySet[FeatureState]:
-        latest_ids = self._get_latest_segment_state_ids()
-        result: QuerySet[FeatureState] = FeatureState.objects.filter(
-            id__in=latest_ids
-        ).filter(
-            feature_segment__isnull=False,
-            identity_id__isnull=True,
-        )
-        return result
-
-    def _get_open_change_requests_queryset(self) -> QuerySet["ChangeRequest"]:
+    def _get_change_requests_metrics_queryset(self) -> QuerySet["ChangeRequest"]:
         from features.workflows.core.models import ChangeRequest
 
         result: QuerySet["ChangeRequest"] = ChangeRequest.objects.filter(
@@ -511,7 +493,7 @@ class Environment(
         )
         return result
 
-    def _get_scheduled_changes_queryset(self) -> QuerySet[FeatureState]:
+    def _get_scheduled_metrics_queryset(self) -> QuerySet[FeatureState]:
         result: QuerySet[FeatureState] = FeatureState.objects.filter(
             environment=self,
             identity_id__isnull=True,
