@@ -409,7 +409,7 @@ class Environment(
                 None,
             ),
             EnvMetricsName.SEGMENT_OVERRIDES: (
-                lambda: self._get_segment_metrics_queryset().count(),
+                lambda: self._get_segment_metrics_queryset(with_workflows).count(),
                 None,
             ),
             EnvMetricsName.IDENTITY_OVERRIDES: (
