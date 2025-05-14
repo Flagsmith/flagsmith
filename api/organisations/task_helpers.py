@@ -128,7 +128,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
             return
 
         # Truncate to the closest active month to get start of current period.
-        month_delta = relativedelta(now, billing_starts_at).months
+        month_delta = _get_total_months(relativedelta(now, billing_starts_at))
         period_starts_at = relativedelta(months=month_delta) + billing_starts_at
 
         allowed_api_calls = subscription_cache.allowed_30d_api_calls
@@ -160,3 +160,7 @@ def handle_api_usage_notification_for_organisation(organisation: Organisation) -
         return
 
     _send_api_usage_notification(organisation, matched_threshold)
+
+
+def _get_total_months(rd: relativedelta) -> int:
+    return rd.months + rd.years * 12
