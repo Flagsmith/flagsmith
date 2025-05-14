@@ -165,66 +165,76 @@ class PermissionData:
         ]
 
     def to_detailed_permissions_data(self) -> UserDetailedPermissionsData:  # noqa: C901
-        permission_map = {}
-        is_admin_permission_directly_granted = False
-        admin_permission_derived_from = PermissionDerivedFromData(
-            groups=[
-                group_permission.group
-                for group_permission in self.inherited_admin_groups
-            ],
-            roles=[
-                role_permission.role for role_permission in self.inherited_admin_roles
-            ],
+        return _UserDetailedPermissionBuilder(self).build()
+
+
+class _UserDetailedPermissionBuilder:
+    def __init__(self, permission_data: PermissionData):
+        self.permission_data = permission_data
+        self.permission_map: dict[str, DetailedPermissionsData] = {}
+        self.is_direct_admin = False
+        self.admin_derived_from = PermissionDerivedFromData(
+            groups=[gp.group for gp in permission_data.inherited_admin_groups],
+            roles=[rp.role for rp in permission_data.inherited_admin_roles],
         )
 
-        def add_permission(
-            permission_key: str,
-            group: typing.Optional[GroupData],
-            role: typing.Optional[RoleData],
-        ) -> None:
-            if permission_key not in permission_map:
-                permission_map[permission_key] = DetailedPermissionsData(
-                    permission_key=permission_key,
-                    is_directly_granted=bool(group is None and role is None),
-                    derived_from=PermissionDerivedFromData(),
-                )
-            if group:
-                permission_map[permission_key].derived_from.groups.append(group)
-            if role:
-                permission_map[permission_key].derived_from.roles.append(role)
-
-        # Add user's direct permissions
-        for permission_key in self.user.permissions:
-            if self.user.admin:
-                is_admin_permission_directly_granted = True
-
-            add_permission(permission_key, None, None)
-
-        # Add group permissions
-        for group_permission in self.groups:
-            if group_permission.admin:
-                admin_permission_derived_from.groups.append(group_permission.group)
-
-            for permission_key in group_permission.permissions:
-                add_permission(permission_key, group_permission.group, None)
-
-        # Add role permissions
-        for role_permission in self.roles:
-            if role_permission.admin:
-                admin_permission_derived_from.roles.append(role_permission.role)
-
-            for permission_key in role_permission.permissions:
-                add_permission(permission_key, None, role_permission.role)
-
-        if self.is_organisation_admin or self.user.admin or self.admin_override:
-            is_admin_permission_directly_granted = True
+    def build(self) -> UserDetailedPermissionsData:
+        self._add_user_permissions()
+        self._add_group_permissions()
+        self._add_role_permissions()
+        self._check_is_direct_admin()
 
         return UserDetailedPermissionsData(
-            admin=self.admin,
-            is_directly_granted=is_admin_permission_directly_granted,
-            derived_from=admin_permission_derived_from,
-            permissions=list(permission_map.values()),
+            admin=self.permission_data.admin,
+            is_directly_granted=self.is_direct_admin,
+            derived_from=self.admin_derived_from,
+            permissions=list(self.permission_map.values()),
         )
+
+    def _add_permission(
+        self,
+        permission_key: str,
+        group: typing.Optional[GroupData] = None,
+        role: typing.Optional[RoleData] = None,
+    ) -> None:
+        if permission_key not in self.permission_map:
+            self.permission_map[permission_key] = DetailedPermissionsData(
+                permission_key=permission_key,
+                is_directly_granted=group is None and role is None,
+                derived_from=PermissionDerivedFromData(),
+            )
+        if group:
+            self.permission_map[permission_key].derived_from.groups.append(group)
+        if role:
+            self.permission_map[permission_key].derived_from.roles.append(role)
+
+    def _add_user_permissions(self) -> None:
+        for permission_key in self.permission_data.user.permissions:
+            if self.permission_data.user.admin:
+                self.is_direct_admin = True
+            self._add_permission(permission_key)
+
+    def _add_group_permissions(self) -> None:
+        for group_permission in self.permission_data.groups:
+            if group_permission.admin:
+                self.admin_derived_from.groups.append(group_permission.group)
+            for permission_key in group_permission.permissions:
+                self._add_permission(permission_key, group=group_permission.group)
+
+    def _add_role_permissions(self) -> None:
+        for role_permission in self.permission_data.roles:
+            if role_permission.admin:
+                self.admin_derived_from.roles.append(role_permission.role)
+            for permission_key in role_permission.permissions:
+                self._add_permission(permission_key, role=role_permission.role)
+
+    def _check_is_direct_admin(self) -> None:
+        if (
+            self.permission_data.is_organisation_admin
+            or self.permission_data.user.admin
+            or self.permission_data.admin_override
+        ):
+            self.is_direct_admin = True
 
 
 def get_organisation_permission_data(
