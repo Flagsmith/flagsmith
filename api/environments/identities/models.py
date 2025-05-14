@@ -1,14 +1,13 @@
 import typing
 from itertools import chain
 
-from django.contrib.postgres.indexes import OpClass
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.db.models.functions import Upper
 from django.utils import timezone
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
-from core.db import UnrestrictedGinIndex
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
 from environments.models import Environment
@@ -44,9 +43,9 @@ class Identity(models.Model):
         # we can provide them the SQL to add it manually in a small window of downtime.
         index_together = (("environment", "created_date"),)
         indexes = [
-            UnrestrictedGinIndex(
+            GinIndex(
                 OpClass(Upper("identifier"), name="gin_trgm_ops"),
-                name="environments_identity_identifier_gin_idx",
+                name="identity_identifier",
             ),
         ]
 
