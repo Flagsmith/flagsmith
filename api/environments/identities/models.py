@@ -3,7 +3,6 @@ from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from django.utils import timezone
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
 from environments.identities.managers import IdentityManager
@@ -12,6 +11,7 @@ from environments.models import Environment
 from environments.sdk.types import SDKTraitData
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
 from util.mappers.engine import (
     map_identity_to_engine,
@@ -81,6 +81,7 @@ class Identity(models.Model):
         else:
             # skip identity overrides for transient identities
             overridden_for_identity_query = Q()
+
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
             feature_segment__environment=self.environment,
@@ -94,58 +95,28 @@ class Identity(models.Model):
             | environment_default_query
         )
 
-        if self.environment.use_v2_feature_versioning:
-            full_query &= Q(
-                Q(identity=self)  # identity overrides are not versioned
-                | Q(
-                    environment_feature_version__live_from__isnull=False,
-                    environment_feature_version__live_from__lte=timezone.now(),
-                ),
-            )
-        else:
-            full_query &= Q(live_from__lte=timezone.now(), version__isnull=False)
-
         if additional_filters:
             full_query &= additional_filters
 
-        select_related_args = [
-            "environment",
-            "feature",
-            "feature_state_value",
-            "feature_segment",
-            "feature_segment__segment",
-            "identity",
-        ]
-
-        all_flags = (
-            FeatureState.objects.select_related(*select_related_args)
-            .prefetch_related(
+        all_flags = get_environment_flags_list(
+            environment=self.environment,
+            additional_filters=full_query,
+            additional_select_related_args=["feature_segment__segment", "identity"],
+            additional_prefetch_related_args=[
                 Prefetch(
                     "multivariate_feature_state_values",
                     queryset=MultivariateFeatureStateValue.objects.select_related(
                         "multivariate_feature_option"
                     ),
                 )
-            )
-            .filter(full_query)
+            ],
         )
-
-        # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
-        # for the given identity as the value.
-        identity_flags = {}
-        for flag in all_flags:
-            if flag.feature_id not in identity_flags:
-                identity_flags[flag.feature_id] = flag
-            else:
-                current_flag = identity_flags[flag.feature_id]
-                if flag > current_flag:
-                    identity_flags[flag.feature_id] = flag
 
         if self.environment.get_hide_disabled_flags() is True:
             # filter out any flags that are disabled
-            return [value for value in identity_flags.values() if value.enabled]
+            return [flag for flag in all_flags if flag.enabled]
 
-        return list(identity_flags.values())
+        return all_flags
 
     def get_overridden_feature_states(self) -> dict[int, FeatureState]:
         """
