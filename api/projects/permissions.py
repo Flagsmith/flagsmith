@@ -58,7 +58,7 @@ class ProjectPermissions(IsAuthenticated):
         ):
             return True
 
-        if view.action == "user_permissions":
+        if view.action in ["user_permissions", "detailed_permissions"]:
             return True
 
         return False
