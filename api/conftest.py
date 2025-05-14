@@ -148,7 +148,11 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
     """
     app_path = os.path.dirname(os.path.abspath(__file__))
     site_packages = site.getsitepackages()  # Allow files within dependencies
-    fs.add_real_paths([*site_packages, app_path])
+    paths_to_add = [app_path]
+    for site_package_path in site_packages:
+        if not site_package_path.startswith(app_path):
+            paths_to_add.append(site_package_path)
+    fs.add_real_paths(paths_to_add)
     return fs
 
 
