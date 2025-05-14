@@ -45,7 +45,7 @@ class Identity(models.Model):
         indexes = [
             GinIndex(
                 OpClass(Upper("identifier"), name="gin_trgm_ops"),
-                name="identity_identifier",
+                name="identity_identifier_idx",
             ),
         ]
 

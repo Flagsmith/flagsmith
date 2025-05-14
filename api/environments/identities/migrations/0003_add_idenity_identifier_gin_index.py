@@ -9,9 +9,9 @@ import django.db.models.functions.text
 from core.migration_helpers import PostgresOnlyRunSQL
 
 
-_create_index_sql = "CREATE INDEX CONCURRENTLY IF NOT EXISTS identity_identifier ON environments_identity USING GIN (UPPER(identifier) gin_trgm_ops);"
+_create_index_sql = "CREATE INDEX CONCURRENTLY IF NOT EXISTS identity_identifier_idx ON environments_identity USING GIN (UPPER(identifier) gin_trgm_ops);"
 _create_index_reverse_sql = (
-    "DROP INDEX CONCURRENTLY IF EXISTS identity_identifier;"
+    "DROP INDEX CONCURRENTLY IF EXISTS identity_identifier_idx;"
 )
 
 
@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                             django.db.models.functions.text.Upper("identifier"),
                             name="gin_trgm_ops",
                         ),
-                        name="identity_identifier",
+                        name="identity_identifier_idx",
                     ),
                 ),
             ],
