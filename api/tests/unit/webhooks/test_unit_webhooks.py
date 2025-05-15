@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import json
-from typing import Type
+from typing import Callable, Type
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -325,12 +325,39 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
 
 
 @pytest.mark.parametrize(
-    "external_api_response_status, external_api_error_text, expected_final_status",
+    "external_api_response_status, external_api_error_text, expected_final_status, expected_response_body",
     [
-        (200, "", 200),
-        (400, "wrong-payload", 400),
-        (401, "invalid-signature", 400),
-        (500, "internal-server-error", 400),
+        (200, "", 200, {"detail": "Webhook test successful", "status": 200}),
+        (
+            400,
+            "wrong-payload",
+            400,
+            {
+                "detail": "Webhook returned error status",
+                "status": 400,
+                "body": "wrong-payload",
+            },
+        ),
+        (
+            401,
+            "invalid-signature",
+            400,
+            {
+                "detail": "Webhook returned error status",
+                "status": 401,
+                "body": "invalid-signature",
+            },
+        ),
+        (
+            500,
+            "internal-server-error",
+            400,
+            {
+                "detail": "Webhook returned error status",
+                "status": 500,
+                "body": "internal-server-error",
+            },
+        ),
     ],
 )
 def test_send_test_request_to_webhook_returns_correct_response(
@@ -340,6 +367,7 @@ def test_send_test_request_to_webhook_returns_correct_response(
     expected_final_status: int,
     external_api_error_text: str,
     organisation: Organisation,
+    expected_response_body: dict[str, str | int],
 ) -> None:
     # Given
     webhook_url = "http://test.webhook.com"
@@ -365,28 +393,37 @@ def test_send_test_request_to_webhook_returns_correct_response(
     # Then
     assert response.status_code == expected_final_status
     mock_post.assert_called_once()
-    if expected_final_status == 200:
-        assert response.json() == {"detail": "Webhook test successful", "status": 200}
-    else:
-        assert response.json() == {
-            "detail": "Webhook returned error status",
-            "status": external_api_response_status,
-            "body": external_api_error_text,
-        }
+    assert response.json() == expected_response_body
 
 
 @pytest.mark.parametrize(
-    "secret, should_have_signature",
+    "secret, header_assertion",
     [
-        ("some-secret", True),
-        ("some-other-secret", True),
-        ("", False),
+        (
+            "some-secret",
+            lambda headers, expected_signature: (
+                FLAGSMITH_SIGNATURE_HEADER in headers
+                and headers[FLAGSMITH_SIGNATURE_HEADER] == expected_signature
+            ),
+        ),
+        (
+            "some-other-secret",
+            lambda headers, expected_signature: (
+                FLAGSMITH_SIGNATURE_HEADER in headers
+                and headers[FLAGSMITH_SIGNATURE_HEADER] == expected_signature
+            ),
+        ),
+        (
+            "",
+            lambda headers, expected_signature: FLAGSMITH_SIGNATURE_HEADER
+            not in headers,
+        ),
     ],
 )
 def test_send_test_request_to_webhook_returns_has_correct_payload(
     mocker: MockerFixture,
     admin_client: APIClient,
-    should_have_signature: bool,
+    header_assertion: Callable[[dict[str, str], str], bool],
     environment: Environment,
     secret: str,
 ) -> None:
@@ -420,11 +457,7 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
 
     # Then
     call_kwargs = mock_post.call_args.kwargs
-    if should_have_signature:
-        assert FLAGSMITH_SIGNATURE_HEADER in call_kwargs["headers"]
-        assert call_kwargs["headers"][FLAGSMITH_SIGNATURE_HEADER] == expected_signature
-    else:
-        assert FLAGSMITH_SIGNATURE_HEADER not in call_kwargs["headers"]
+    assert header_assertion(call_kwargs["headers"], expected_signature)
     assert response.status_code == 200
 
 
