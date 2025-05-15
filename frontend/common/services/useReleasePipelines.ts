@@ -7,6 +7,19 @@ export const releasePipelinesService = service
   .enhanceEndpoints({ addTagTypes: ['ReleasePipelines'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      addFeatureToReleasePipeline: builder.mutation<
+        Res['releasePipeline'],
+        Req['addFeatureToReleasePipeline']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+        query: (query: Req['addFeatureToReleasePipeline']) => ({
+          body: {
+            feature_id: query.featureId,
+          },
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/add-feature/`,
+        }),
+      }),
       createReleasePipeline: builder.mutation<
         Res['releasePipeline'],
         Req['createReleasePipeline']
@@ -31,32 +44,11 @@ export const releasePipelinesService = service
           }),
         },
       ),
-      getPipelineStage: builder.query<
-        Res['pipelineStage'],
-        Req['getPipelineStage']
-      >({
-        query: (query: Req['getPipelineStage']) => ({
-          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/stages/${query.stageId}/`,
-        }),
-      }),
-      getPipelineStages: builder.query<
-        Res['pipelineStages'],
-        Req['getPipelineStages']
-      >({
-        query: ({
-          pipelineId,
-          projectId,
-          ...rest
-        }: Req['getPipelineStages']) => ({
-          url: `projects/${projectId}/release-pipelines/${pipelineId}/stages/?${Utils.toParam(
-            rest,
-          )}`,
-        }),
-      }),
       getReleasePipeline: builder.query<
         Res['releasePipeline'],
         Req['getReleasePipeline']
       >({
+        providesTags: [{ type: 'ReleasePipelines' }],
         query: (query: Req['getReleasePipeline']) => ({
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/`,
         }),
@@ -70,6 +62,16 @@ export const releasePipelinesService = service
           url: `projects/${projectId}/release-pipelines/?${Utils.toParam(
             rest,
           )}`,
+        }),
+      }),
+      publishReleasePipeline: builder.mutation<
+        Res['pipelineStages'],
+        Req['publishReleasePipeline']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+        query: (query: Req['publishReleasePipeline']) => ({
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/publish-pipeline/`,
         }),
       }),
       // END OF ENDPOINTS
@@ -106,27 +108,15 @@ export async function createReleasePipeline(
   )
 }
 
-export async function getPipelineStages(
-  store: any,
-  data: Req['getPipelineStages'],
-  options?: Parameters<
-    typeof releasePipelinesService.endpoints.getPipelineStages.initiate
-  >[1],
-) {
-  return store.dispatch(
-    releasePipelinesService.endpoints.getPipelineStages.initiate(data, options),
-  )
-}
-
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useAddFeatureToReleasePipelineMutation,
   useCreateReleasePipelineMutation,
   useDeleteReleasePipelineMutation,
-  useGetPipelineStageQuery,
-  useGetPipelineStagesQuery,
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
+  usePublishReleasePipelineMutation,
   // END OF EXPORTS
 } = releasePipelinesService
 
