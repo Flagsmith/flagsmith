@@ -20,7 +20,6 @@ import {
   IdentityTrait,
   Onboarding,
   StageTrigger,
-  PipelineStatus,
   StageActionType,
 } from './responses'
 
@@ -713,6 +712,15 @@ export type Req = {
     stageId: number
   }
   deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
     projectId: number
     pipelineId: number
   }

@@ -7,6 +7,19 @@ export const releasePipelinesService = service
   .enhanceEndpoints({ addTagTypes: ['ReleasePipelines'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      addFeatureToReleasePipeline: builder.mutation<
+        Res['releasePipeline'],
+        Req['addFeatureToReleasePipeline']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+        query: (query: Req['addFeatureToReleasePipeline']) => ({
+          body: {
+            feature_id: query.featureId,
+          },
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/add-feature/`,
+        }),
+      }),
       createReleasePipeline: builder.mutation<
         Res['releasePipeline'],
         Req['createReleasePipeline']
@@ -72,6 +85,15 @@ export const releasePipelinesService = service
           )}`,
         }),
       }),
+      publishReleasePipeline: builder.mutation<
+        Res['pipelineStages'],
+        Req['publishReleasePipeline']
+      >({
+        query: (query: Req['publishReleasePipeline']) => ({
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/publish-pipeline/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -121,12 +143,14 @@ export async function getPipelineStages(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useAddFeatureToReleasePipelineMutation,
   useCreateReleasePipelineMutation,
   useDeleteReleasePipelineMutation,
   useGetPipelineStageQuery,
   useGetPipelineStagesQuery,
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
+  usePublishReleasePipelineMutation,
   // END OF EXPORTS
 } = releasePipelinesService
 
