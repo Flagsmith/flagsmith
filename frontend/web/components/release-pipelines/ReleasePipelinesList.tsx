@@ -94,9 +94,9 @@ const ReleasePipelinesList = ({
             <Row
               className='clickable flex-grow-1 p-3'
               onClick={() => {
-                // router.history.push(
-                //   `/project/${projectId}/release-pipelines/${id}`,
-                // )
+                router.history.push(
+                  `/project/${projectId}/release-pipelines/${id}`,
+                )
               }}
             >
               <span className='fw-bold'>{name}</span>
