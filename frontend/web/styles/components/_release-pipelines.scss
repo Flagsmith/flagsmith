@@ -1,0 +1,24 @@
+@import '../variables';
+
+
+
+.stage-line {
+    width: 100px;
+    margin-top: 40px;
+    margin-bottom: 40px;
+
+
+    .line-divider {
+        height: 3px;
+        border-bottom-width: 3px;
+        background-color: $hr-border-color;
+    }
+
+    .arrow-container {
+        overflow: hidden;
+        margin-right: -12px;
+        &__wrapper {
+            transform: translateX(-8px);
+        }
+    }
+}
