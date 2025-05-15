@@ -613,6 +613,23 @@ const App = class extends Component {
                               )
                             }
                           </Permission>
+                          <Permission
+                            level='project'
+                            permission='ADMIN'
+                            id={projectId}
+                          >
+                            {({ permission }) =>
+                              permission && (
+                                <NavSubLink
+                                  icon={<Icon name='flash' />}
+                                  id='release-pipelines-link'
+                                  to={`/project/${projectId}/release-pipelines`}
+                                >
+                                  Release Pipelines
+                                </NavSubLink>
+                              )
+                            }
+                          </Permission>
                         </>
                       ) : (
                         !!AccountStore.getOrganisation() && (
