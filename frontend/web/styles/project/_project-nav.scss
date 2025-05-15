@@ -13,6 +13,12 @@ nav a {
     font-weight: bold;
   }
 }
+.nav-sub-link-disabled {
+  cursor: not-allowed;
+  span {
+    opacity: 0.5;
+  }
+}
 .nav-sub-link {
   padding-bottom: 10px;
   color: $body-color;
@@ -24,7 +30,7 @@ nav a {
       background-color: $primary-alfa-8;
     }
   }
-  &:hover{
+  &:hover {
     svg {
       path {
         fill: $link-hover-color;
@@ -44,19 +50,21 @@ nav a {
     font-size: $font-size-base;
   }
   &.active {
-    border-bottom:2px solid $primary;
+    border-bottom: 2px solid $primary;
   }
 }
 .breadcrumb-link {
   padding: 4px 8px 4px 8px;
   border-radius: $border-radius;
-  &:hover,&.hovered {
+  &:hover,
+  &.hovered {
     color: $body-color;
     background-color: $primary-alfa-8;
   }
 }
 .dark {
-  .breadcrumb-link:hover, .breadcrumb-link.hovered {
+  .breadcrumb-link:hover,
+  .breadcrumb-link.hovered {
     color: $body-color-dark;
   }
   .nav-sub-link {
@@ -119,10 +127,11 @@ nav a {
   border: 1px solid $hr-border-color;
 }
 .border-right {
-  border-right:  1px solid $hr-border-color;
+  border-right: 1px solid $hr-border-color;
 }
 .collapsible__content {
-  svg, ion-icon {
+  svg,
+  ion-icon {
     text-align: center;
     width: 16px;
     height: 16px;
@@ -152,11 +161,11 @@ nav a {
     background-color: $primary-alfa-8;
   }
 }
-  .collapsible.active {
-    .collapsible-title {
-      pointer-events: none;
-    }
+.collapsible.active {
+  .collapsible-title {
+    pointer-events: none;
   }
+}
 .collapsible__content a {
   padding-left: 12px;
   padding-right: 4px;
