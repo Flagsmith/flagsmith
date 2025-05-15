@@ -110,7 +110,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   capitalize(str: string) {
-    if (!str) return ""
+    if (!str) return ''
     return str.charAt(0).toUpperCase() + str.slice(1)
   },
 
@@ -672,6 +672,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase(),
+
+  toSelectedValue: (
+    value: string,
+    options: { label: string; value: string }[],
+    defaultValue?: string,
+  ) => {
+    return options?.find((option) => option.value === value) ?? defaultValue
+  },
 
   validateMetadataType(type: string, value: any) {
     switch (type) {
