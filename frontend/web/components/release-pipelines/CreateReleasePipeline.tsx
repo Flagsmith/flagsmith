@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react'
+import CreatePipelineStage, { DraftStageType } from './CreatePipelineStage'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { PipelineStatus, ReleasePipeline } from 'common/types/responses'
+import {
+  PipelineStatus,
+  ReleasePipeline,
+  StageTriggerType,
+} from 'common/types/responses'
 import Icon from 'components/Icon'
-import { useCreateReleasePipelineMutation } from 'common/services/useReleasePipelines'
+import {
+  useCreatePipelineStagesMutation,
+  useCreateReleasePipelineMutation,
+} from 'common/services/useReleasePipelines'
 import { withRouter, RouteComponentProps } from 'react-router'
+import StageArrow from './StageArrow'
+import { StageActionRequest } from 'common/types/requests'
 
 type CreateReleasePipelineType = {
   projectId: string
@@ -17,6 +27,17 @@ type DraftPipelineType = Omit<
   ReleasePipeline,
   'id' | 'stages_count' | 'flags_count'
 >
+
+const blankStage: DraftStageType = {
+  actions: [],
+  environment: -1,
+  name: '',
+  order: 0,
+  trigger: {
+    trigger_body: null,
+    trigger_type: StageTriggerType.ON_ENTER,
+  },
+}
 
 function CreateReleasePipeline({
   history,
@@ -31,36 +52,79 @@ function CreateReleasePipeline({
     },
   ] = useCreateReleasePipelineMutation()
 
+  const [
+    createStages,
+    {
+      error: createStageError,
+      isLoading: isCreatingStage,
+      isSuccess: isCreatingStageSuccess,
+    },
+  ] = useCreatePipelineStagesMutation()
+
   const [pipelineData, setPipelineData] = useState<DraftPipelineType>({
     name: '',
     project: Number(projectId),
     status: PipelineStatus.DRAFT,
   })
 
+  const [stages, setStages] = useState<DraftStageType[]>([blankStage])
+
   const [isEditingName, setIsEditingName] = useState(
     !pipelineData?.name?.length,
   )
 
+  const [isStagesCreationSuccess, setStagesCreationSuccess] =
+    useState<boolean>(false)
+
   useEffect(() => {
-    if (isCreatingPipelineSuccess) {
+    if (isCreatingPipelineSuccess && isStagesCreationSuccess) {
       history.push(`/project/${projectId}/release-pipelines`)
     }
-  }, [isCreatingPipelineSuccess, history, projectId])
+  }, [isCreatingPipelineSuccess, isStagesCreationSuccess, history, projectId])
+
+  const handleOnChange = (newStageData: DraftStageType, index: number) => {
+    const updatedStages = stages.map((stage, i) =>
+      i === index ? newStageData : stage,
+    )
+    setStages(updatedStages)
+  }
 
   const validatePipelineData = () => {
     return pipelineData?.name !== ''
   }
 
   const handleSave = async () => {
+    setStagesCreationSuccess(false)
     try {
-      await createReleasePipeline({
+      const response = await createReleasePipeline({
         name: pipelineData.name,
         projectId: Number(projectId),
         status: PipelineStatus.DRAFT,
       })
+
+      if ('data' in response && response.data.id) {
+        const pipelineId = response.data.id
+        const stagesCreationPromises = stages.map((stage, index) => {
+          return createStages({
+            ...stage,
+            order: index,
+            pipeline: pipelineId,
+            project: Number(projectId),
+          })
+        })
+
+        await Promise.all(stagesCreationPromises)
+      }
+      setStagesCreationSuccess(true)
     } catch (error) {
+      console.error('erroroooo')
       toast('Error creating release pipeline', 'error')
     }
+  }
+
+  const handleRemoveStage = (index: number) => {
+    const newStages = stages.filter((_, i) => i !== index)
+    setStages(newStages)
   }
 
   return (
@@ -116,6 +180,39 @@ function CreateReleasePipeline({
           </Button>
         }
       />
+      <div className='px-2 pb-4 overflow-auto'>
+        <Row className='no-wrap'>
+          {stages?.map((stageData, index) => (
+            <Row key={index}>
+              <Row className='align-items-start no-wrap'>
+                <CreatePipelineStage
+                  stageData={stageData}
+                  onChange={(stageData: DraftStageType) =>
+                    handleOnChange(stageData, index)
+                  }
+                  projectId={projectId}
+                  showRemoveButton={index > 0}
+                  onRemove={() => handleRemoveStage(index)}
+                />
+                <div className='flex-1'>
+                  <StageArrow
+                    showAddStageButton={index === stages.length - 1}
+                    onAddStage={() =>
+                      setStages((prev) => prev.concat(blankStage))
+                    }
+                  />
+                  {index === stages.length - 1 && (
+                    <div className='m-auto p-2 border-1 rounded border-primary '>
+                      <Icon width={30} name='checkmark-circle' fill='#27AB95' />
+                      Launched
+                    </div>
+                  )}
+                </div>
+              </Row>
+            </Row>
+          ))}
+        </Row>
+      </div>
     </div>
   )
 }
