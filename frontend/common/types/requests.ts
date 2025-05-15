@@ -78,6 +78,16 @@ export interface StageActionRequest {
   action_body: { enabled: boolean; segment_id?: number }
 }
 
+export type PipelineStageRequest = {
+  name: string
+  project: number
+  environment: number
+  pipeline: number
+  order: number
+  trigger: StageTrigger
+  actions: StageActionRequest[]
+}
+
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -701,15 +711,7 @@ export type Req = {
     pipelineId: number
     stageId: number
   }
-  createPipelineStage: {
-    name: string
-    project: number
-    environment: number
-    pipeline: number
-    order: number
-    trigger: StageTrigger
-    actions: StageActionRequest[]
-  }
+  createPipelineStage: PipelineStageRequest
   deleteReleasePipeline: {
     projectId: number
     pipelineId: number
