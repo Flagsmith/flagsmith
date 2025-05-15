@@ -260,6 +260,10 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
+                },
+                {
+                    "name": "HUBSPOT_ACCESS_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
                 }
             ],
             "logConfiguration": {

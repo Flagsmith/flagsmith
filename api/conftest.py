@@ -21,6 +21,7 @@ from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pyfakefs.fake_filesystem import FakeFilesystem
+from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
@@ -147,7 +148,11 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
     """
     app_path = os.path.dirname(os.path.abspath(__file__))
     site_packages = site.getsitepackages()  # Allow files within dependencies
-    fs.add_real_paths([*site_packages, app_path])
+    paths_to_add = [app_path]
+    for site_package_path in site_packages:
+        if not site_package_path.startswith(app_path):
+            paths_to_add.append(site_package_path)
+    fs.add_real_paths(paths_to_add)
     return fs
 
 
@@ -586,10 +591,13 @@ def feature_state(feature: Feature, environment: Environment) -> FeatureState:
 
 
 @pytest.fixture()
-def feature_state_with_value(environment: Environment) -> FeatureState:
+def feature_state_with_value(
+    environment: Environment, request: FixtureRequest
+) -> FeatureState:
+    initial_value = getattr(request, "param", "foo")
     feature = Feature.objects.create(
         name="feature_with_value",
-        initial_value="foo",
+        initial_value=initial_value,
         default_enabled=True,
         project=environment.project,
     )

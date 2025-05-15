@@ -105,7 +105,8 @@ class OrganisationPermission(BasePermission):
 
     def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         return request.user.is_organisation_admin(obj) or (
-            view.action == "my_permissions" and request.user.belongs_to(obj)
+            view.action in ["my_permissions", "detailed_permissions"]
+            and request.user.belongs_to(obj)
         )
 
 

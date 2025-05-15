@@ -3,7 +3,7 @@ import { test, fixture } from 'testcafe'
 import { waitForReact } from 'testcafe-react-selectors'
 
 import Project from '../common/project'
-import { getLogger, logout, logResults } from './helpers.cafe'
+import { getLogger, log, logout, logResults } from './helpers.cafe'
 import environmentTest from './tests/environment-test'
 import inviteTest from './tests/invite-test'
 import projectTest from './tests/project-test'
@@ -82,64 +82,35 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     await waitForReact()
   })
   .afterEach(async (t) => {
+    if (t.test.meta.autoLogout) {
+      log('Log out')
+      await logout()
+    }
     await logResults(logger.requests, t)
   })
 
-test('Segment-part-1', async () => {
-  await testSegment1()
-  await logout()
-})
+test('Segment-part-1', testSegment1).meta({ autoLogout: true, category: 'oss' })
 
-test('Segment-part-2', async () => {
-  await testSegment2()
-  await logout()
-})
+test('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
 
-test('Segment-part-3', async () => {
-  await testSegment3()
-  await logout()
-})
+test('Segment-part-3', testSegment3).meta({ autoLogout: true, category: 'oss' })
 
-test('Flag', async () => {
-  await flagTests()
-  await logout()
-})
+test('Flag', flagTests).meta({ autoLogout: true, category: 'oss' })
 
-test('Signup', async () => {
-  await initialiseTests()
-  await logout()
-})
+test('Signup', initialiseTests).meta({ autoLogout: true, category: 'oss' })
 
-test('Invite', async () => {
-  await inviteTest()
-})
+test('Invite', inviteTest).meta({ category: 'oss' })
 
-test('Environment', async () => {
-  await environmentTest()
-  await logout()
-})
+test('Environment', environmentTest).meta({ autoLogout: true, category: 'oss' })
 
-test('Project', async () => {
-  await projectTest()
-  await logout()
-})
+test('Project', projectTest).meta({ autoLogout: true, category: 'oss' })
 
-test('Versioning', async () => {
-  await versioningTests()
-  await logout()
-})
+test('Versioning', versioningTests).meta({ autoLogout: true, category: 'oss' })
 
-test('Organisation-permission', async () => {
-  await organisationPermissionTest()
-  await logout()
-})
+test('Organisation-permission', organisationPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
 
-test('Project-permission', async () => {
-  await projectPermissionTest()
-  await logout()
-})
+test('Project-permission', projectPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
 
-test('Environment-permission', async () => {
-  await environmentPermissionTest()
-  await logout()
-})
+test('Environment-permission', environmentPermissionTest).meta({ autoLogout: true, category: 'enterprise' })
+
+test('Roles', rolesTest).meta({ autoLogout: true, category: 'enterprise' })

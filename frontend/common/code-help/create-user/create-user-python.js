@@ -2,7 +2,7 @@ import Constants from 'common/constants'
 
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT, USER_ID, TRAIT_NAME },
+  { FEATURE_NAME, FEATURE_NAME_ALT, TRAIT_NAME, USER_ID },
   userId,
 ) => `from flagsmith import Flagsmith
 

@@ -32,9 +32,11 @@ from features.versioning.tasks import (
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
+    UserDetailedPermissionsSerializer,
     UserObjectPermissionsSerializer,
 )
 from projects.models import Project
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
@@ -249,6 +251,35 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             environment=environment, user=request.user
         )
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        responses={200: UserDetailedPermissionsSerializer},
+    )  # type: ignore[misc]
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
+        url_name="user-detailed-permissions",
+    )
+    def detailed_permissions(
+        self, request: Request, api_key: str, user_id: str
+    ) -> Response:
+        environment = self.get_object()
+        user = request.user
+        user_id_int = int(user_id)
+
+        if request.user.id != user_id_int:
+            if not request.user.is_environment_admin(environment):  # type: ignore[union-attr]
+                # Only environment admin can get permissions of other users
+                raise PermissionDenied()
+
+            user = get_object_or_404(FFAdminUser, id=user_id_int)
+
+        permission_data = get_environment_permission_data(environment, user)  # type: ignore[arg-type]
+        serializer = UserDetailedPermissionsSerializer(
+            permission_data.to_detailed_permissions_data()
+        )
         return Response(serializer.data)
 
     @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})  # type: ignore[misc]
