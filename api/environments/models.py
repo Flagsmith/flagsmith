@@ -207,7 +207,7 @@ class Environment(
         return (self.api_key,)
 
     @property
-    def change_requests_enabled(self) -> bool:
+    def is_change_requests_enabled(self) -> bool:
         return (
             self.minimum_change_request_approvals is not None
             and self.minimum_change_request_approvals > 0
