@@ -17,7 +17,6 @@ import {
 } from 'common/services/useReleasePipelines'
 import { withRouter, RouteComponentProps } from 'react-router'
 import StageArrow from './StageArrow'
-import { StageActionRequest } from 'common/types/requests'
 
 type CreateReleasePipelineType = {
   projectId: string
