@@ -1,6 +1,6 @@
 import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
-import { useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
