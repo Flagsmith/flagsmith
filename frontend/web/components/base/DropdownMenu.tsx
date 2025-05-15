@@ -3,6 +3,7 @@ import Icon, { IconName } from 'components/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 import { createPortal } from 'react-dom'
+import { calculateListPosition } from 'common/utils/calculateListPosition'
 
 type MenuItem = {
   icon?: IconName
@@ -34,19 +35,6 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
   const btnRef = useRef<HTMLButtonElement>(null)
   const dropDownRef = useRef<HTMLDivElement>(null)
   useOutsideClick(dropDownRef, () => setIsOpen(false))
-
-  function calculateListPosition(
-    btnEl: HTMLElement,
-    listEl: HTMLElement,
-  ): { top: number; left: number } {
-    const listPosition = listEl.getBoundingClientRect()
-    const btnPosition = btnEl.getBoundingClientRect()
-    const pageTop = window.visualViewport?.pageTop ?? 0
-    return {
-      left: btnPosition.right - listPosition.width,
-      top: pageTop + btnPosition.bottom,
-    }
-  }
 
   useLayoutEffect(() => {
     if (!isOpen || !dropDownRef.current || !btnRef.current) return

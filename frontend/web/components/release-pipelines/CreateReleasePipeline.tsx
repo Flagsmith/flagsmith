@@ -8,6 +8,7 @@ import Utils from 'common/utils/utils'
 import {
   PipelineStatus,
   ReleasePipeline,
+  StageActionType,
   StageTriggerType,
 } from 'common/types/responses'
 import Icon from 'components/Icon'
@@ -17,7 +18,6 @@ import {
 } from 'common/services/useReleasePipelines'
 import { withRouter, RouteComponentProps } from 'react-router'
 import StageArrow from './StageArrow'
-import { StageActionRequest } from 'common/types/requests'
 
 type CreateReleasePipelineType = {
   projectId: string
@@ -47,19 +47,13 @@ function CreateReleasePipeline({
     createReleasePipeline,
     {
       error: createPipelineError,
+      isError: isCreatingPipelineError,
       isLoading: isCreatingPipeline,
       isSuccess: isCreatingPipelineSuccess,
     },
   ] = useCreateReleasePipelineMutation()
 
-  const [
-    createStages,
-    {
-      error: createStageError,
-      isLoading: isCreatingStage,
-      isSuccess: isCreatingStageSuccess,
-    },
-  ] = useCreatePipelineStagesMutation()
+  const [createStages] = useCreatePipelineStagesMutation()
 
   const [pipelineData, setPipelineData] = useState<DraftPipelineType>({
     name: '',
@@ -76,11 +70,30 @@ function CreateReleasePipeline({
   const [isStagesCreationSuccess, setStagesCreationSuccess] =
     useState<boolean>(false)
 
+  const handleSuccess = () => {
+    history.push(`/project/${projectId}/release-pipelines`)
+    toast('Release pipeline created successfully')
+  }
+
+  const isPipelineSuccess = isCreatingPipelineSuccess && !stages.length
+  const isStagesSuccess =
+    isCreatingPipelineSuccess && stages.length && isStagesCreationSuccess
+
   useEffect(() => {
-    if (isCreatingPipelineSuccess && isStagesCreationSuccess) {
-      history.push(`/project/${projectId}/release-pipelines`)
+    if (isPipelineSuccess || isStagesSuccess) {
+      return handleSuccess()
     }
-  }, [isCreatingPipelineSuccess, isStagesCreationSuccess, history, projectId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPipelineSuccess, isStagesSuccess])
+
+  useEffect(() => {
+    if (isCreatingPipelineError) {
+      toast(
+        createPipelineError?.data?.detail ?? 'Error creating release pipeline',
+        'error',
+      )
+    }
+  }, [isCreatingPipelineError, createPipelineError])
 
   const handleOnChange = (newStageData: DraftStageType, index: number) => {
     const updatedStages = stages.map((stage, i) =>
@@ -89,36 +102,60 @@ function CreateReleasePipeline({
     setStages(updatedStages)
   }
 
+  const validateStage = (stage: DraftStageType) => {
+    if (!stage.actions.length) {
+      return false
+    }
+
+    const segment = stage.actions.find(
+      (action) =>
+        action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
+    )
+    if (segment) {
+      return !!segment.action_body.segment_id
+    }
+
+    return !!stage.name.length
+  }
+
   const validatePipelineData = () => {
-    return pipelineData?.name !== ''
+    if (!pipelineData?.name.length) {
+      return false
+    }
+
+    return stages.every(validateStage)
   }
 
   const handleSave = async () => {
+    const response = await createReleasePipeline({
+      name: pipelineData.name,
+      projectId: Number(projectId),
+      status: PipelineStatus.DRAFT,
+    })
+
+    if (!stages.length) {
+      return
+    }
+
     setStagesCreationSuccess(false)
-    try {
-      const response = await createReleasePipeline({
-        name: pipelineData.name,
-        projectId: Number(projectId),
-        status: PipelineStatus.DRAFT,
+    if (response && 'data' in response && response.data.id) {
+      const pipelineId = response.data.id
+      const stagesCreationPromises = stages.map((stage, index) => {
+        return createStages({
+          ...stage,
+          order: index,
+          pipeline: pipelineId,
+          project: Number(projectId),
+        })
       })
 
-      if ('data' in response && response.data.id) {
-        const pipelineId = response.data.id
-        const stagesCreationPromises = stages.map((stage, index) => {
-          return createStages({
-            ...stage,
-            order: index,
-            pipeline: pipelineId,
-            project: Number(projectId),
-          })
-        })
-
+      setStagesCreationSuccess(false)
+      try {
         await Promise.all(stagesCreationPromises)
+        setStagesCreationSuccess(true)
+      } catch (error) {
+        toast('Error creating release stages', 'error')
       }
-      setStagesCreationSuccess(true)
-    } catch (error) {
-      console.error('erroroooo')
-      toast('Error creating release pipeline', 'error')
     }
   }
 

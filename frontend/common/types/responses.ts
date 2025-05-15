@@ -848,7 +848,7 @@ export interface StageActionResponse
   action_body: string
 }
 
-export type PipelineStage = {
+export interface PipelineStage {
   id: number
   name: string
   pipeline: number

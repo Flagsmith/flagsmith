@@ -202,6 +202,8 @@ const CreatePipelineStage = ({
           title='Flag Action'
           component={
             <Select
+              menuPortalTarget={document.body}
+              maxMenuHeight={120}
               value={selectedAction}
               options={getFlagActions(selectedTrigger?.value)}
               onChange={setSelectedAction}
@@ -215,6 +217,8 @@ const CreatePipelineStage = ({
             title='Segment'
             component={
               <Select
+                menuPortalTarget={document.body}
+                maxMenuHeight={120}
                 isDisabled={isSegmentsLoading}
                 isLoading={isSegmentsLoading}
                 value={Utils.toSelectedValue(selectedSegment, segmentOptions)}

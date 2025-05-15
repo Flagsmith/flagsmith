@@ -1,18 +1,14 @@
 import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
 import PanelSearch from 'components/PanelSearch'
 
-const NoReleasePipelines = ({
-  projectId,
-  router,
-}: {
-  router: RouterChildContext['router']
-  projectId: string
-}) => {
+const NoReleasePipelines = ({ projectId }: { projectId: string }) => {
+  const history = useHistory()
+
   return (
     <div style={{ marginTop: '8rem' }} className='text-center'>
       <div className='mb-3'>
@@ -25,9 +21,7 @@ const NoReleasePipelines = ({
       <Row className='align-items-center justify-content-center gap-3'>
         <Button
           onClick={() =>
-            router.history.push(
-              `/project/${projectId}/release-pipelines/create`,
-            )
+            history.push(`/project/${projectId}/release-pipelines/create`)
           }
         >
           Create Release Pipeline
@@ -42,7 +36,6 @@ type ReleasePipelinesListProps = {
   data: PagedResponse<ReleasePipeline> | undefined
   isLoading: boolean
   projectId: string
-  router: RouterChildContext['router']
   page: number
   pageSize: number
   onPageChange: (page: number) => void
@@ -55,9 +48,9 @@ const ReleasePipelinesList = ({
   page,
   pageSize,
   projectId,
-  router,
 }: ReleasePipelinesListProps) => {
   const [deleteReleasePipeline] = useDeleteReleasePipelineMutation()
+  const history = useHistory()
   const pipelinesList = data?.results
 
   if (isLoading) {
@@ -69,7 +62,7 @@ const ReleasePipelinesList = ({
   }
 
   if (!pipelinesList?.length) {
-    return <NoReleasePipelines router={router} projectId={projectId} />
+    return <NoReleasePipelines projectId={projectId} />
   }
 
   return (
@@ -94,16 +87,13 @@ const ReleasePipelinesList = ({
             <Row
               className='clickable flex-grow-1 p-3'
               onClick={() => {
-                // router.history.push(
-                //   `/project/${projectId}/release-pipelines/${id}`,
-                // )
+                history.push(`/project/${projectId}/release-pipelines/${id}`)
               }}
             >
               <span className='fw-bold'>{name}</span>
             </Row>
             <Row className='gap-5 p-3'>
               <div className='text-center'>
-                {/* TODO: Add stages count */}
                 <div className='fw-bold'>{stages_count ?? 0}</div>
                 <div>Stages</div>
               </div>
