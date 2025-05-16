@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.178.0](https://github.com/Flagsmith/flagsmith/compare/v2.177.1...v2.178.0) (2025-05-16)
+
+
+### Features
+
+* **5308:** Add endpoints to support permission debugging ([#5408](https://github.com/Flagsmith/flagsmith/issues/5408)) ([bdb9bc1](https://github.com/Flagsmith/flagsmith/commit/bdb9bc17e4c32a1b474dc24abd1f9ce088bc6e0f))
+* Add GIN index on `Identity.identifier` ([#5369](https://github.com/Flagsmith/flagsmith/issues/5369)) ([31bd046](https://github.com/Flagsmith/flagsmith/commit/31bd0465ec76009ad73a2d01683d969cf9632d4a))
+
+
+### Bug Fixes
+
+* metadata inputs not updating values ([f39d530](https://github.com/Flagsmith/flagsmith/commit/f39d5303625ad517142d03799e3111b62ae7ee3c))
+* **usage notifications:** handle plans with billing terms longer than 12 months ([#5415](https://github.com/Flagsmith/flagsmith/issues/5415)) ([3dffbab](https://github.com/Flagsmith/flagsmith/commit/3dffbab2991430f8d2024c497d1daab79462da20))
+
+
+### Dependency Updates
+
+* bump django from 4.2.18 to 4.2.21 in /api ([#5436](https://github.com/Flagsmith/flagsmith/issues/5436)) ([ee7ed37](https://github.com/Flagsmith/flagsmith/commit/ee7ed37efd754617e1666ef30d0c086d97a6975e))
+
 ## [2.177.1](https://github.com/Flagsmith/flagsmith/compare/v2.177.0...v2.177.1) (2025-05-14)
 
 
