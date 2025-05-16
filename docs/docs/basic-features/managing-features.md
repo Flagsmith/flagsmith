@@ -3,30 +3,33 @@ title: Managing Features
 description: Feature Flags allow you to ship code and features before they are finished.
 ---
 
-Flags in Flagsmith are _created and shared at a Project level_, but _overridden at an Environment level_. They can also
-be overridden on a [per Identity](/basic-features/managing-identities.md) or [per Segment](/basic-features/segments.md)
-basis.
+:::info Core Concepts
+Flags in Flagsmith follow two key principles:
+- They are **created and shared** at the Project level
+- They can be **overridden** at the Environment level, per Identity, or per Segment
+:::
 
-Flags within Flagsmith are a combination of both:
+## Flag Components
 
-- A Boolean value - the `Flag State`
+Each flag in Flagsmith consists of two main components:
 
-and then optionally:
+1. **Flag State** - A required Boolean value that determines if the flag is ON (true) or OFF (false)
 
-- A String/Integer/Boolean value - the `Flag Value`
+2. **Flag Value** (Optional) - Can be one of:
+   - A String/Integer/Boolean value
+   - A selected Multivariate value (String/Integer/Boolean)
 
-or
+You have the flexibility to use:
+- Just the Flag State (Boolean)
+- Just the Flag Value
+- Both Flag State and Flag Value together
 
-- A selected Multivariate String/Integer/Boolean - the `Flag Value`
+:::tip
+If you only need a simple ON/OFF toggle, you can use just the Flag State and ignore the Flag Value entirely.
+:::
 
-You are free to use either the `Flag State`, or the `Flag Value` or a combination of both `Flag State` and `Flag Value`
-within each flag. You don't have to provide or use a `Flag Value`. If you just want a boolean flag, you can just ignore
-the `Flag Value` altogether.
-
-:::important
-
-The maximum size of each String Value is **_20,000 bytes_**.
-
+:::caution Important Size Limit
+The maximum size for String Values is **20,000 bytes**. Plan your string content accordingly.
 :::
 
 ## Examples of Use
