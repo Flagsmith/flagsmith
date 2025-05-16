@@ -5,85 +5,137 @@ title: A/B Testing
 A/B testing enables you to experiment with design and functionality variants of your application. The data generated
 will allow you to make modifications to your app, safe in the knowledge that it will have a net positive effect.
 
-You can use Flagsmith to perform A/B Tests. Using a combination of
-[Multivariate Flags](/basic-features/managing-features.md#multi-variate-flags) and a 3rd party analytics tool like
-[Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/), you can easily perform complex A/B tests that
-will help improve your product.
+```mermaid
+flowchart LR
+    A[Bucketing Engine] -->|Sort users| B[Test Groups]
+    C[Analytics Platform] -->|Collect data| D[Results]
+    B -->|Track behavior| C
+```
 
-Running AB tests require two main components: a bucketing engine and an analytics platform. The bucketing engine is used
-to put users into a particular AB testing bucket. These buckets will control the specific user experience that is being
-tested. The analytics platform will receive a stream of event data derived from the behaviour of the user. Combining
-these two concepts allows you to deliver seamless AB test.
+You can use Flagsmith to perform A/B Tests using:
+- [Multivariate Flags](/basic-features/managing-features.md#multi-variate-flags) for user segmentation
+- Analytics tools like [Amplitude](https://amplitude.com/) or [Mixpanel](https://mixpanel.com/) for data collection
 
-We have [integrations](/integrations) with a number of analytics platforms. If we don't integrate with the platform you
-are using, you can still manually send the test data to the downstream platform manually.
+## Key Components
 
-## Overview - Testing a new Paypal button
+### 1. Bucketing Engine
+Controls which users see which variants by:
+- Segmenting users into test groups
+- Maintaining consistent experiences
+- Managing percentage splits
 
-For this example, lets assume we have an app that currently accepts Credit Card payments only. We have a hunch that we
-are losing out on potential customers that would like to pay with Paypal. We're going to test whether adding Paypal to
-the payment options increases our checkout rate.
+### 2. Analytics Platform
+Tracks the impact of changes through:
+- Event data collection
+- User behavior analysis
+- Conversion tracking
 
-We have a lot of users on our platform, so we don't want to run this test against our entire user-base. We want 90% of
-our users to be excluded from the test. Then for our test, 5% of our users will see the new Paypal button, and the
-remaining 5% will not see it. So we will have 3 buckets:
 
-1. Excluded (Control) Users
-2. Paypal Test Button Users
-3. Test users that don't see the Paypal Button
+## Example: Testing a Paypal Button
 
-Because Flagsmith Flags can contain both boolean states as well as multivariate flag values, we can make use of both. We
-will use the boolean flag state to control whether to run the test. Then, if the flag is `enabled`, check the
-Multivariate value. In this example, we will only show the Paypal button if the value is set to `show`.
+### Current Situation
+- App only accepts Credit Card payments
+- Hypothesis: Adding Paypal could increase conversions
+- Need to test with small user group first
+
+### Test Structure
+```mermaid
+pie title User Distribution
+    "Control Group (90%)" : 90
+    "Paypal Button (5%)" : 5
+    "No Button (5%)" : 5
+```
 
 ## Creating the Test
 
-In order to perform the A/B Test, we need to complete the following steps:
+### Step 1: Configure the Flag
 
-1. Create a new [Multivariate Flag](/basic-features/managing-features.md#multi-variate-flags) that will control which of
-   the 3 buckets the user is put into. We'll call this flag `paypal_button_test`. We will provide 3 variate options:
+1. Navigate to Features in your dashboard
+2. Click "Add Feature"
+3. Name it `paypal_button_test`
+4. Enable "Multivariate Options"
 
-   1. Control - 90% of users
-   2. Paypal Button - 5% of users
-   3. Test users that don't see the Paypal Button - 5% of users
 
-2. In our app, we want to [identify](/basic-features/managing-identities.md) each user before they start the checkout
-   process. All Flagsmith Multivariate flags need us to identify the user, so we can bucket them in a reproducible
-   manner.
-3. When we get to the checkout page, check the `value` of the `paypal_button_test` flag for that user. If it evaluates
-   to `show`, show the Paypal payment button. Otherwise, don't show the button.
-4. Send an event message to the analytics platform, adding the name/value pair of `paypal_button_test` and the value of
-   the flag; in this case it would be one of either `control`, `show` or `hide`.
-5. Deploy our app, enable the flag and watch the data come in to your analytics platform.
+:::tip
+Make sure to use a descriptive name that clearly indicates the test purpose
+:::
+### Step 2: Set Up Variants
 
-Here is what creating the Flag would look like.
+Configure the following options:
 
-![Image](/img/ab-test-paypal-example.png)
+| Variant Name | Description | Percentage |
+|--------------|-------------|------------|
+| control | Control group - no changes | 90% |
+| show | Show Paypal button | 5% |
+| hide | Hide Paypal button | 5% |
 
-## Evaluating the Test
+Here is what creating the Flag would look like:
+![Flag Creation](/img/ab-test-paypal-example.png)
 
-Once the test is set up, and the flag has been enabled, data will start streaming into the analytics platform. We can
-now evaluate the results of the tests based on the behavioral changes that the new button has created.
+### Step 3: Implement in Code
 
-## Anonymous/Unknown Identities
+```javascript
+// 1. Identify the user
+flagsmith.identify('user-123');
 
-To do A/B testing you need to use Identities. Without an Identity to key from, it's impossible for the platform to serve
-a consistent experience to your users.
+// 2. Get the flag value
+const paypalTest = await flagsmith.getValue('paypal_button_test');
 
-What if you want to run an A/B test in an area of your application where you don't know who your users are? For example
-on the homepage of your website? In this instance, you need to generate _Anonymous Identities_ values for your users. In
-this case we will generate a _GUID_ for each user.
+// 3. Apply the variant
+if (paypalTest === 'show') {
+    showPaypalButton();
+}
 
-A _GUID_ value is just a random string that has an extremely high likelihood of being unique. There's more info about
-generating GUID values [on Stack Overflow](https://stackoverflow.com/a/2117523).
+// 4. Track the event
+analytics.track('paypal_button_test', {
+    variant: paypalTest,
+    page: 'checkout'
+});
+```
 
-The general flow would be:
+:::note
+Always identify users before checking flag values to ensure consistent experiences
+:::
+### Step 4: Monitor Results
 
-1. A new browser visits your website homepage for the first time.
-2. You see that this is an anonymous user, so you generate a random _GUID_ for that user and assign it to them.
-3. You send that GUID along with an Identify call to Flagsmith. This will then segment that visitor.
-4. You add a cookie to the browser and store the GUID. That way, if the user returns to your page, they will still be in
-   the same segment.
+1. Deploy your changes
+2. Enable the flag in your environment
+3. Monitor analytics for:
+   - Conversion rates per variant
+   - Average order value
+   - Payment completion rates
 
-These techniques will be slightly different depending on what platform you are developing for, but the general concept
-will remain the same.
+
+## Testing Anonymous Users
+
+For users who aren't logged in:
+
+1. Generate a GUID on first visit
+```javascript
+const anonymousId = crypto.randomUUID();
+```
+
+2. Store in browser storage
+```javascript
+localStorage.setItem('visitor_id', anonymousId);
+```
+
+3. Identify with Flagsmith
+```javascript
+flagsmith.identify(anonymousId);
+```
+
+
+## Best Practices
+
+1. **Start Small**: Begin with a small percentage and gradually increase
+2. **Track Everything**: Log all relevant events and interactions
+3. **Be Patient**: Run tests long enough to gather significant data
+4. **Document Changes**: Keep track of all test parameters and changes
+
+:::warning **Remember**
+Always implement a fallback behavior in case flag evaluation fails
+:::
+:::tip
+Need help? Check our [support page](/support)
+:::
