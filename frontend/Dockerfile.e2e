@@ -10,6 +10,9 @@ COPY frontend/env/ ./env/
 ENV ENV=e2e
 RUN npm ci
 
+# Install Playwright browsers
+RUN npm run playwright:install
+
 COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
