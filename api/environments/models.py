@@ -62,7 +62,6 @@ from util.mappers import (
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
-from features.models import FeatureState
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
