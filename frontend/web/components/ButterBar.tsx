@@ -86,7 +86,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
   }
 
   return (
-    <>
+    <div className='announcement-container'>
       {Utils.getFlagsmithValue('butter_bar') &&
         !Utils.getFlagsmithHasFeature('read_only_mode') &&
         (!billingStatus || billingStatus === 'ACTIVE') && (
@@ -110,7 +110,7 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
             payment method to keep your subscription active.
           </div>
         )}
-    </>
+    </div>
   )
 }
 

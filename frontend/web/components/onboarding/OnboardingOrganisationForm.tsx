@@ -7,11 +7,11 @@ import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { Req } from 'common/types/requests'
 
 type OnboardingOrganisationFormProps = {
-  onboarding: Req['createOnboarding']
+  onboarding: Req['register']
   error: any
   isValid: boolean
   isSaving: boolean
-  setFieldValue: (key: keyof Req['createOnboarding'], value: any) => void
+  setFieldValue: (key: keyof Req['register'], value: any) => void
   onSubmit: () => void
   onBack: () => void
 }
@@ -63,7 +63,7 @@ const OnboardingOrganisationForm: FC<OnboardingOrganisationFormProps> = ({
             </div>
           )}
           <ErrorMessage error={error} />
-          <div className='d-flex gap-2'>
+          <div className='d-flex mt-4 gap-2'>
             <Button className='px-4' onClick={onBack} theme='secondary'>
               Back
             </Button>
