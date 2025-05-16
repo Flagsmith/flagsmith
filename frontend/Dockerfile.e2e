@@ -10,12 +10,12 @@ COPY frontend/env/ ./env/
 ENV ENV=e2e
 RUN npm ci
 
-# Install Playwright browsers
-RUN npm run playwright:install
-
 COPY frontend .
 COPY .release-please-manifest.json ./.versions.json
 RUN npm run env
+
+# Install Playwright browsers
+RUN npm run playwright:install
 
 ARG CI_COMMIT_SHA=dev
 RUN echo ${CI_COMMIT_SHA} > ./CI_COMMIT_SHA
