@@ -62,6 +62,7 @@ from util.mappers import (
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
+from features.models import FeatureState
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
@@ -457,8 +458,7 @@ class Environment(
         extra_group_by_fields: Literal["identity_id"] | None = None,
         filter_kwargs: dict[str, typing.Any] | None = None,
     ) -> list[int]:
-        base_qs = FeatureState.objects.filter(
-            Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+        base_qs = FeatureState.objects.get_live_feature_states(
             environment=self,
             **(filter_kwargs or {}),
         )
