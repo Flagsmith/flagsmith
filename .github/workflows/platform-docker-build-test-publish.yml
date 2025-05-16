@@ -97,7 +97,7 @@ jobs:
           - api-image: ${{ needs.docker-build-api.outputs.image }}
             args: --project=oss
           - api-image: ${{ needs.docker-build-private-cloud-api.outputs.image }}
-            args: --project=oss --category=enterprise
+            args: --project=oss --project=enterprise
 
   # Publish to dockerhub
 
