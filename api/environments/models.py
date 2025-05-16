@@ -207,7 +207,7 @@ class Environment(
         return (self.api_key,)
 
     @property
-    def change_requests_enabled(self) -> bool:
+    def is_change_requests_enabled(self) -> bool:
         return (
             self.minimum_change_request_approvals is not None
             and self.minimum_change_request_approvals > 0
@@ -409,7 +409,7 @@ class Environment(
                 None,
             ),
             EnvMetricsName.SEGMENT_OVERRIDES: (
-                lambda: self._get_segment_metrics_queryset().count(),
+                lambda: self._get_segment_metrics_queryset(with_workflows).count(),
                 None,
             ),
             EnvMetricsName.IDENTITY_OVERRIDES: (
@@ -457,8 +457,7 @@ class Environment(
         extra_group_by_fields: Literal["identity_id"] | None = None,
         filter_kwargs: dict[str, typing.Any] | None = None,
     ) -> list[int]:
-        base_qs = FeatureState.objects.filter(
-            Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
+        base_qs = FeatureState.objects.get_live_feature_states(
             environment=self,
             **(filter_kwargs or {}),
         )

@@ -18,7 +18,7 @@ ENABLED_FEATURES: MetricDefinition = {
 
 SEGMENT_OVERRIDES: MetricDefinition = {
     "name": EnvMetricsName.SEGMENT_OVERRIDES,
-    "description": "Segment Overrides",
+    "description": "Segment overrides",
     "entity": EnvMetricsEntities.SEGMENTS,
     "disabled": False,
     "rank": 3,
@@ -26,7 +26,7 @@ SEGMENT_OVERRIDES: MetricDefinition = {
 
 IDENTITY_OVERRIDES: MetricDefinition = {
     "name": EnvMetricsName.IDENTITY_OVERRIDES,
-    "description": "Identity Overrides",
+    "description": "Identity overrides",
     "entity": EnvMetricsEntities.IDENTITIES,
     "disabled": False,
     "rank": 4,
@@ -42,7 +42,7 @@ OPEN_CHANGE_REQUESTS: MetricDefinition = {
 
 TOTAL_SCHEDULED_CHANGES: MetricDefinition = {
     "name": EnvMetricsName.TOTAL_SCHEDULED_CHANGES,
-    "description": "Total scheduled changes",
+    "description": "Scheduled changes",
     "entity": EnvMetricsEntities.WORKFLOWS,
     "disabled": False,
     "rank": 6,
