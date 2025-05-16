@@ -3,7 +3,7 @@ import { RouterChildContext } from 'react-router'
 import { find, sortBy } from 'lodash'
 
 import Constants from 'common/constants'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Environment, Segment } from 'common/types/responses'
 import {
   useDeleteSegmentMutation,
@@ -45,7 +45,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   )?.api_key
   const params = Utils.fromParam()
   const id = params.id
-  const { search, searchInput, setSearchInput } = useSearchThrottle('')
+  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const [page, setPage] = useState(1)
   const [showFeatureSpecific, setShowFeatureSpecific] = useState(
     params.featureSpecific === 'true',
