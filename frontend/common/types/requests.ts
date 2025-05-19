@@ -646,5 +646,6 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getEnvironmentMetrics: { id: string }
   // END OF TYPES
 }

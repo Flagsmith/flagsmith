@@ -6,7 +6,7 @@ import { sanitize } from 'dompurify'
 import { createPortal } from 'react-dom'
 
 export type TooltipProps = {
-  title: ReactNode
+  title: ReactNode | React.ReactNode
   children: string | undefined | null
   place?: _TooltipProps['place']
   plainText?: boolean
