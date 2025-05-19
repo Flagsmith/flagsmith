@@ -1021,3 +1021,40 @@ def test_delete_organisation_with_committed_change_request(
 
     # Then
     assert organisation.deleted_at is not None
+
+
+def test_webhooks_is_triggered_when_commiting_a_change_request(
+    mocker: MockerFixture,
+    environment: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.workflows.core.models.trigger_feature_state_change_webhooks"
+    )
+    feature = Feature.objects.create(
+        name="test_feature_for_change_request", project=environment.project
+    )
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        enabled=True,
+        version=2,
+    )
+    change_request = ChangeRequest.objects.create(
+        environment=environment, title="Test Change Request", user=admin_user
+    )
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        change_request=change_request,
+        environment=feature_state.environment,
+        enabled=False,
+        version=None,
+    )
+
+    # When
+    change_request.commit(committed_by=admin_user)
+
+    # Then
+    assert change_request.is_committed is True
+    mock_trigger_feature_state_change_webhooks.assert_called_once()

@@ -6,6 +6,7 @@ from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
+from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -46,6 +47,7 @@ from features.workflows.core.exceptions import (
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
+from features.tasks import trigger_feature_state_change_webhooks
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -53,6 +55,10 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
+
+FeatureStateDiff = dict[
+    typing.Literal["new_feature_state", "previous_feature_state"], FeatureState
+]
 
 
 class ChangeRequest(  # type: ignore[django-manager-missing]
@@ -124,14 +130,58 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
 
         logger.debug("Committing change request #%d", self.id)
 
+        feature_states_to_notify = self._get_feature_states_to_notify()
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
         self._publish_segments()
+        for feature_state_diffs in feature_states_to_notify:
+            if feature_state_diffs["previous_feature_state"]:
+                trigger_feature_state_change_webhooks(
+                    instance=feature_state_diffs["new_feature_state"],
+                    previous_instance=feature_state_diffs[
+                        "previous_feature_state"
+                    ].history.first(),
+                )
 
         self.committed_at = timezone.now()
         self.committed_by = committed_by
         self.save()
+
+    def _get_feature_states_to_notify(
+        self,
+    ) -> list[FeatureStateDiff]:
+        feature_states_to_notify: list[FeatureStateDiff] = []
+
+        for feature_state in self.feature_states.all():
+            latest_live_fs = self._get_previous_version_instance(feature_state)
+            if latest_live_fs and latest_live_fs.version != feature_state.version:
+                feature_states_to_notify.append(
+                    {
+                        "new_feature_state": feature_state,
+                        "previous_feature_state": latest_live_fs,
+                    }
+                )
+
+        return feature_states_to_notify
+
+    def _get_previous_version_instance(
+        self, feature_state: FeatureState
+    ) -> FeatureState | None:
+        fs_live_version = (
+            FeatureState.objects.get_live_feature_states(
+                environment=feature_state.environment,
+                additional_filters=Q(
+                    feature_id=feature_state.feature_id,
+                    feature_segment_id=feature_state.feature_segment_id,
+                    identity_id=feature_state.identity_id,
+                ),
+            )
+            .order_by("-version")
+            .first()
+        )
+
+        return fs_live_version
 
     def _publish_feature_states(self) -> None:
         now = timezone.now()
@@ -140,7 +190,6 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
             for feature_state in feature_states:
                 if not feature_state.live_from or feature_state.live_from < now:
                     feature_state.live_from = now
-
                 feature_state.version = FeatureState.get_next_version_number(
                     environment_id=feature_state.environment_id,  # type: ignore[arg-type]
                     feature_id=feature_state.feature_id,

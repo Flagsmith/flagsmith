@@ -1135,3 +1135,34 @@ def test_webhooks_are_not_called_for_feature_state_with_environment_feature_vers
 
     # Then
     mock_trigger_feature_state_change_webhooks.assert_not_called()
+
+
+def test_webhooks_are_not_called_when_creating_a_change_request(
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_trigger_feature_state_change_webhooks = mocker.patch(
+        "features.signals.trigger_feature_state_change_webhooks"
+    )
+
+    change_request = ChangeRequest.objects.create(
+        environment=environment, title="Test Change Request", user=admin_user
+    )
+
+    # When
+    feature_state = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        enabled=False,
+        version=None,
+    )
+    feature_states = FeatureState.objects.filter(change_request=change_request)
+    # Then
+    assert feature_states.count() == 1
+    assert feature_state.change_request_id == change_request.id
+    assert feature_state.belongs_to_uncommited_change_request is True
+    mock_trigger_feature_state_change_webhooks.assert_not_called()

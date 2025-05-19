@@ -19,11 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 def trigger_feature_state_change_webhooks(  # type: ignore[no-untyped-def]
-    instance: FeatureState, event_type: WebhookEventType = WebhookEventType.FLAG_UPDATED
+    instance: FeatureState,
+    event_type: WebhookEventType = WebhookEventType.FLAG_UPDATED,
+    previous_instance: HistoricalFeatureState | None = None,
 ):
     assert event_type in [WebhookEventType.FLAG_UPDATED, WebhookEventType.FLAG_DELETED]
 
-    history_instance = instance.history.first()
+    history_instance = (
+        previous_instance if previous_instance else instance.history.first()
+    )
     timestamp = (
         history_instance.history_date.strftime(WEBHOOK_DATETIME_FORMAT)
         if history_instance and history_instance.history_date
