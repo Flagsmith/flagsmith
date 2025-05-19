@@ -147,10 +147,9 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
                     feature_segment_id=feature_state.feature_segment_id,  # type: ignore[arg-type]
                     identity_id=feature_state.identity_id,  # type: ignore[arg-type]
                 )
-
-            FeatureState.objects.bulk_update(
-                feature_states, fields=["live_from", "version"]
-            )
+        FeatureState.objects.bulk_update(
+            feature_states, fields=["live_from", "version"]
+        )
 
     def _publish_environment_feature_versions(
         self, published_by: "FFAdminUser"
