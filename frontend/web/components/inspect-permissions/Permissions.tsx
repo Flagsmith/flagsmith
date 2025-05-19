@@ -45,8 +45,24 @@ const Permissions = ({
   }
 
   const isAdmin = userPermissions.admin
+  const isDirectlyGrantedAdmin = userPermissions.is_directly_granted
   const isDerivedAdmin =
-    userPermissions.admin && userPermissions.is_directly_granted === false
+    userPermissions.derived_from?.groups.length > 0 ||
+    userPermissions.derived_from?.roles.length > 0
+
+  const getTooltipText = () => {
+    if (isDerivedAdmin && isAdmin && isDirectlyGrantedAdmin) {
+      return 'Admin privileges are directly granted and come from a group and/or role.'
+    }
+    if (isDerivedAdmin && isAdmin) {
+      return 'Admin privileges come from a group and/or role.'
+    }
+    if (isAdmin && isDirectlyGrantedAdmin) {
+      return 'Admin privileges directly granted.'
+    }
+
+    return ''
+  }
 
   return (
     <div>
@@ -67,9 +83,7 @@ const Permissions = ({
             </Flex>
             <div className='mr-3'>
               <Tooltip title={<BooleanDotIndicator enabled={isAdmin} />}>
-                {isDerivedAdmin
-                  ? 'This permission comes from admin privileges via a group and/or role.'
-                  : ''}
+                {getTooltipText()}
               </Tooltip>
             </div>
           </Row>
@@ -94,7 +108,6 @@ const Permissions = ({
             isTagBasedPermissions={false}
             onValueChanged={() => {}}
             onSelectPermissions={() => {}}
-            onTogglePermission={() => {}}
             isDebug
           />
         )}

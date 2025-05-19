@@ -37,7 +37,6 @@ interface PermissionRowProps {
   isAdmin?: boolean
   isSaving?: boolean
   isDebug?: boolean
-  hasPermission: (key: string) => boolean
   onValueChanged: (permissionKey: string, shouldToggle?: boolean) => void
 }
 
@@ -49,7 +48,6 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   isTagBasedPermissions,
   level,
   limitedPermissions = [],
-  hasPermission,
   onSelectPermissions,
   onValueChanged,
   permission,
@@ -59,11 +57,17 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
     (e) => e.permission_key === permission.key,
   )
 
-
   const hasDerivedPermission = (entityPermissions: Permission) => {
     return (
       !!entityPermissions?.derived_from?.groups?.length ||
       !!entityPermissions?.derived_from?.roles?.length
+    )
+  }
+
+  const hasPermission = (key: string) => {
+    if (isAdmin) return true
+    return !!entityPermissions.permissions.find(
+      (permission) => permission.permission_key === key,
     )
   }
 
@@ -91,7 +95,6 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
   const levelUpperCase = level.toUpperCase()
   const viewPermission = `VIEW_${levelUpperCase}`
-
 
   const disabled =
     level !== 'organisation' &&
@@ -128,7 +131,11 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
               value={permissionData?.tags || []}
               onChange={(v: number[]) => {
                 onValueChanged(permission.key, false)
-                onSelectPermissions(permission.key, PermissionRoleType.GRANTED_FOR_TAGS, v)
+                onSelectPermissions(
+                  permission.key,
+                  PermissionRoleType.GRANTED_FOR_TAGS,
+                  v,
+                )
               }}
             />
           )}
@@ -150,9 +157,9 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           isSaving={isSaving}
           permissionRoleType={permissionRoleType}
           permissionKey={permission.key}
+          isPermissionEnabled={hasPermission(permission.key)}
           isViewPermissionRequired={requiresViewPermission(permission.key)}
           isViewPermissionAllowed={hasPermission(viewPermission)}
-          isPermissionEnabled={hasPermission(permission.key)}
           showDerivedPermission={showDerivedPermissions}
           isDirectlyGranted={isDirectlyGranted}
           supportsTag={permission.supports_tag}
