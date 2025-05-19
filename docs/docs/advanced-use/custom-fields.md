@@ -2,96 +2,147 @@
 title: Custom Fields
 ---
 
-:::info
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-Custom fields are available on [Enterprise plans](/version-comparison.md#enterprise-benefits).
-
-Custom fields were introduced in Flagsmith [2.116.0](https://github.com/Flagsmith/flagsmith/releases/tag/v2.116.0).
-
+:::tip
+Custom fields are part of our [Enterprise plans](/version-comparison#enterprise-benefits).
 :::
 
-As your usage of feature flags grows, it helps to store additional information alongside different Flagsmith entities.
-For example, you might want to:
+## Overview
 
-- Relate every flag to a ticket in your issue tracker so that everyone knows what a flag does and what state of
-  development it is in.
-- Add a link from Flagsmith segments to the corresponding segments in your analytics platform.
-- Add a detailed description to your Flagsmith environments.
+Store additional information alongside Flagsmith entities to improve traceability and management. Common use cases:
 
-You can define **custom fields** that are shown when creating or modifying
-[**flags**](/basic-features/managing-features.md), [**segments**](/basic-features/segments.md) or
-[**environments**](/basic-features#environments). Custom fields are defined per
-[organisation](/basic-features#organisations).
+- Link flags to issue tracker tickets
+- Connect segments with analytics platform configurations
+- Add detailed environment descriptions
 
-The following screenshot shows a custom field named "Ticket URL" that is displayed to Flagsmith users when editing or
-creating a feature:
+Custom fields can be added to [flags](/basic-features/managing-features.md), [segments](/basic-features/segments.md), and [environments](/basic-features#environments).
 
-![](/img/metadata/metadata-example.png)
+## Field Types and Validation
+
+| Type | Description | Validation Rules | Example |
+|------|-------------|-----------------|----------|
+| String | Single line of text | Maximum 1000 characters | `"release-2.1"` |
+| Multi-line string | Multiple lines of text | Maximum 10000 characters | `"Detailed\ndescription"` |
+| Integer | Whole numbers | No decimal points | `42` |
+| Boolean | True/false values | Must be true/false | `true` |
+| URL | Valid web URLs | Must include scheme | `https://flagsmith.com` |
+
+:::caution URL Validation
+URLs require explicit schemes - `https://flagsmith.com` is valid, but `/example/foo` is not.
+Validation uses Python's [urlparse](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlparse).
+:::
 
 ## Permissions
 
-Defining custom fields requires administrator permissions for a given project.
+<details>
+<summary>Access Requirements</summary>
 
-Updating the values of custom fields requires edit permissions for the given entity.
+| Action | Required Permission |
+|--------|-------------------|
+| Define Fields | Administrator |
+| Update Values | Entity Edit Access |
 
-## Defining custom fields
+For a complete list of available permissions, see the [permissions reference](/system-administration/rbac#permissions-reference).
 
-Custom fields can be defined in **Organisation Settings > Custom Fields**.
 
-Custom fields have the following properties:
+</details>
 
-- **Name**: the visible name of the field as it will be presented to users.
-- **Description**: a short description of what the field is for. It is only shown when editing custom field definitions.
-- **Type**: validates this field's data when saving to be one of the following types:
-  - **String**: A single line of text.
-  - **Multi-line string**: One or more lines of text.
-  - **Integer**: Whole numbers without a decimal point.
-  - **Boolean**: A binary choice between true or false.
-  - **URL**: An absolute URL with an explicit scheme as defined by Python's
-    [urlparse](https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlparse) function. For example,
-    `https://flagsmith.com` is considered valid but `/example/foo` is not.
-- **Entities**: Which Flagsmith entities to display these fields for during creation or editing. The following options
-  are allowed:
-  - Features
-  - Segments
-  - Environments
-- **Required**: Lets you choose whether a field is required for each entity it is associated with. For example, you
-  could make a ticket URL required for features but optional for segments.
+## Managing Custom Fields
 
-## Modifying existing fields
+### Creating Fields
 
-Field data types are only validated when saving. Modifying existing field data types will not delete or modify existing
-data.
+1. Navigate to **Organisation Settings > Custom Fields**
+2. Configure field properties:
+   - Name (displayed to users)
+   - Description (field purpose)
+   - Type (from table above)
+   - Associated Entities
+   - Required/Optional status
 
-Changing an optional field into a required field will prevent you from creating or updating the relevant entities
-without providing a value for that field.
+### Entity Association
 
-Deleting custom fields will also delete all data associated with that field.
+Custom fields can be associated with:
 
-## Consuming custom fields
+<Tabs>
+<TabItem value="features" label="Features">
 
-Custom fields are mainly intended to be read by humans visiting the Flagsmith dashboard, typically for traceability or
-accountability purposes.
+- Link to issue trackers
+- Store product codes
+- Track release versions
 
-Custom field values associated with features belong to the features themselves, and not an environment's feature state;
-you cannot override custom field values in different environments, segments or identities. They are not returned to
-applications that consume flags.
+</TabItem>
+<TabItem value="segments" label="Segments">
 
-Custom field values are added directly to the `metadata` field of the entity they are defined in, which can be read
-using the [Flagsmith Admin API](/clients/rest#private-admin-api-endpoints). For example, to fetch a feature's custom
-fields, use the
-[endpoint to fetch a feature by ID](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_projects_features_read):
+- Analytics platform IDs
+- User cohort descriptions
+- Business unit associations
 
-```shell
+</TabItem>
+<TabItem value="environments" label="Environments">
+
+- Infrastructure details
+- Deployment regions
+- Support contact info
+
+</TabItem>
+</Tabs>
+
+### Field Requirements
+
+- Make fields required or optional per entity type
+- Example: Required for features, optional for segments
+- Enforced during creation/updates
+
+## API Integration
+
+:::info
+Custom fields are accessible through the [Flagsmith Admin API](/clients/rest#private-admin-api-endpoints)
+:::
+
+<details>
+<summary>Example API Responses</summary>
+
+```json
+{
+  "metadata": [
+    {
+      "id": 123,
+      "model_field": 128,
+      "field_value": "https://example.com/FOO-123"
+    }
+  ]
+}
+```
+
+See [API Documentation](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_projects_features_read) for complete details.
+</details>
+
+## Consuming Custom Fields
+
+Custom fields are primarily designed for human readability in the Flagsmith dashboard, typically serving traceability and accountability purposes.
+
+:::info Implementation Note
+Custom field values belong to the features themselves, not to environment feature states. You cannot override these values in different environments, segments, or identities.
+:::
+
+### API Access
+
+Custom fields are accessible through two main endpoints:
+
+<Tabs>
+<TabItem value="features" label="Feature Metadata">
+
+```bash
 curl "https://api.flagsmith.com/api/v1/projects/YOUR_PROJECT_ID/features/YOUR_FEATURE_ID/" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
-This returns information about the feature itself, including `metadata` which contains the custom field values:
+Response includes metadata with custom field values:
 
 ```json
 {
-  ...
   "metadata": [
     {
       "id": 123,
@@ -107,16 +158,15 @@ This returns information about the feature itself, including `metadata` which co
 }
 ```
 
-To fetch the field definitions themselves, use the
-[endpoint to fetch metadata model fields](https://api.flagsmith.com/api/v1/docs/#/api/api_v1_organisations_metadata-model-fields_list).
-For example:
+</TabItem>
+<TabItem value="definitions" label="Field Definitions">
 
-```shell
-curl "https://api.flagsmith.com/api/v1/organisations/YOUR_ORGANISATION_ID/metadata-model-fields/ \
+```bash
+curl "https://api.flagsmith.com/api/v1/organisations/YOUR_ORGANISATION_ID/metadata-model-fields/" \
   -H "Authorization: Api-Key YOUR_API_KEY"
 ```
 
-This returns the definition of each custom field:
+Response includes field definitions:
 
 ```json
 {
@@ -141,3 +191,18 @@ This returns the definition of each custom field:
  ]
 }
 ```
+
+</TabItem>
+</Tabs>
+
+:::caution
+Custom field values are not returned to applications that consume flags through the standard SDK endpoints.
+:::
+
+## Important Notes
+
+:::warning
+- Field data types are only validated on save
+- Type changes don't modify existing data
+- Deleting fields removes all associated data
+:::
