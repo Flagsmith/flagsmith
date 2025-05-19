@@ -1058,3 +1058,14 @@ def test_webhooks_is_triggered_when_commiting_a_change_request(
     # Then
     assert change_request.is_committed is True
     mock_trigger_feature_state_change_webhooks.assert_called_once()
+    call = mock_trigger_feature_state_change_webhooks.call_args
+    _, kwargs = call
+    assert kwargs["instance"].feature_id == feature_state.feature_id
+    assert kwargs["instance"].environment_id == feature_state.environment_id
+    assert kwargs["instance"].id == feature_state.id
+    assert kwargs["instance"].enabled is False
+    assert kwargs["previous_instance"].id != feature_state.id
+    assert kwargs["previous_instance"].version == 2
+    assert kwargs["previous_instance"].feature_id == feature_state.feature_id
+    assert kwargs["previous_instance"].environment_id == feature_state.environment_id
+    assert kwargs["previous_instance"].enabled is True
