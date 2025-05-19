@@ -39,6 +39,7 @@ from core.models import (
 )
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
+from features.tasks import trigger_feature_state_change_webhooks
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
@@ -47,7 +48,6 @@ from features.workflows.core.exceptions import (
     ChangeRequestDeletionError,
     ChangeRequestNotApprovedError,
 )
-from features.tasks import trigger_feature_state_change_webhooks
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
