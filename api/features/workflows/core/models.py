@@ -180,7 +180,7 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
                     identity_id=feature_state.identity_id,
                 ),
             )
-            .order_by("-version")
+            .order_by("-live_from")
             .first()
         )
 
