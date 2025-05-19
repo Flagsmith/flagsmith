@@ -1,7 +1,7 @@
 # Change Requests
 
 :::tip
-Change requests are part of our Scale-Up and Enterprise plans.
+Change requests are part of our [Scale-Up and Enterprise plans](/version-comparison).
 :::
 
 ## Overview
@@ -20,6 +20,8 @@ flowchart TB
 ```
 
 ## Required Permissions
+
+For a complete list of available permissions, see the [permissions reference](/system-administration/rbac#permissions-reference).
 
 | Action | Required Permission | Details |
 |--------|-------------------|----------|
@@ -73,24 +75,14 @@ Once approved:
 2. "Publish Change" button becomes available
 3. Changes apply immediately on publish
 
-## Quick Reference
 
-| Action | Requirements | Result |
-|--------|--------------|--------|
-| Create | Update Feature permission | New change request |
-| Review | Environment Write permission | Approval/rejection |
-| Publish | All required approvals | Flag value update |
 
-## Best Practices
-
+:::tip Best Practices
 - Use clear titles describing the change
 - Add detailed descriptions for complex changes
 - Assign multiple reviewers for critical environments
-- Enable audit logging for tracking
-- Review changes during off-peak hours
-- Test changes in staging first
-
-
+- Use [audit logging](/system-administration/audit-logs) for tracking
+:::
 
 :::warning
  Review your environment configuration before enabling Change Requests in Production
