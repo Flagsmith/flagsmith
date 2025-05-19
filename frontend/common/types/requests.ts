@@ -27,6 +27,11 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export enum PermissionRoleType {
+  GRANTED = 'GRANTED',
+  GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
+  NONE = 'NONE',
+}
 export const billingPeriods = [
   {
     label: 'Current billing period',
@@ -646,5 +651,14 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: string
+  }
+  getUserPermissions: {
+    id?: string
+    userId: number | undefined
+    level: PermissionLevel
+  }
   // END OF TYPES
 }
