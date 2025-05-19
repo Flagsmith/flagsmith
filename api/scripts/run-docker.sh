@@ -41,6 +41,9 @@ run_task_processor() {
     if [ -n "$ANALYTICS_DATABASE_URL" ] || [ -n "$DJANGO_DB_NAME_ANALYTICS" ]; then
         waitfordb --waitfor 30 --migrations --database analytics
     fi
+    if [ -n "$TASK_PROCESSOR_DATABASE_URL" ] || [ -n "$TASK_PROCESSOR_DATABASE_NAME" ]; then
+        waitfordb --waitfor 30 --migrations --database task_processor
+    fi
     exec flagsmith start \
              --bind 0.0.0.0:8000 \
              --access-logfile $ACCESS_LOG_LOCATION \
@@ -53,12 +56,16 @@ run_task_processor() {
 
 }
 migrate_analytics_db(){
-    # if `$ANALYTICS_DATABASE_URL` or DJANGO_DB_NAME_ANALYTICS is set
-    # run the migration command
     if [ -z "$ANALYTICS_DATABASE_URL" ] && [ -z "$DJANGO_DB_NAME_ANALYTICS" ]; then
         return 0
     fi
     python manage.py migrate --database analytics
+}
+migrate_task_processor_db(){
+    if [ -z "$TASK_PROCESSOR_DATABASE_URL" ] && [ -z "$TASK_PROCESSOR_DATABASE_NAME" ]; then
+        return 0
+    fi
+    python manage.py migrate --database task_processor
 }
 bootstrap(){
     python manage.py bootstrap
@@ -72,13 +79,18 @@ set -x
 if [ "$1" = "migrate" ]; then
     migrate
     migrate_analytics_db
+    migrate_task_processor_db
 elif [ "$1" = "serve" ]; then
     serve
 elif [ "$1" = "run-task-processor" ]; then
+    migrate
+    migrate_analytics_db
+    migrate_task_processor_db
     run_task_processor
 elif [ "$1" = "migrate-and-serve" ]; then
     migrate
     migrate_analytics_db
+    migrate_task_processor_db
     bootstrap
     serve
 else
