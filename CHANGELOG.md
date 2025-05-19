@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.177.1](https://github.com/Flagsmith/flagsmith/compare/v2.177.0...v2.177.1) (2025-05-14)
+
+
+### Bug Fixes
+
+* **e2e:** Incorrect project selected in RBAC E2E on staging ([#5433](https://github.com/Flagsmith/flagsmith/issues/5433)) ([c5a514d](https://github.com/Flagsmith/flagsmith/commit/c5a514ded1b7b19f7f7a5ad857e68d9d2fac81a2))
+* **e2e:** Missing RBAC tests ([#5419](https://github.com/Flagsmith/flagsmith/issues/5419)) ([0031301](https://github.com/Flagsmith/flagsmith/commit/003130144df562ec681bea470985b574acc0b86d))
+* lint ([#5427](https://github.com/Flagsmith/flagsmith/issues/5427)) ([7f0035e](https://github.com/Flagsmith/flagsmith/commit/7f0035e70b548414661c1230be9ab6057d3c454c))
+* metadata-feature-changes-erases-existing-value ([#5362](https://github.com/Flagsmith/flagsmith/issues/5362)) ([055644f](https://github.com/Flagsmith/flagsmith/commit/055644f8e46f8816407d95a63fda73963fc89810))
+* misc test fixes ([#5450](https://github.com/Flagsmith/flagsmith/issues/5450)) ([fd1e63c](https://github.com/Flagsmith/flagsmith/commit/fd1e63cab0e2ed50bdf951511c7ce3248297820f))
+* permissions not revoked after view project disabled ([#5438](https://github.com/Flagsmith/flagsmith/issues/5438)) ([2862e41](https://github.com/Flagsmith/flagsmith/commit/2862e41f7ddb44f30059790b6af67206d00172fc))
+* removed-node-sass-deprecated-package ([#5424](https://github.com/Flagsmith/flagsmith/issues/5424)) ([fd36ec3](https://github.com/Flagsmith/flagsmith/commit/fd36ec3cf4ce5f683121879f5e321ae75905dcf9))
+
+
+### Dependency Updates
+
+* bump jinja2 from 3.1.5 to 3.1.6 in /api ([#5435](https://github.com/Flagsmith/flagsmith/issues/5435)) ([4aa9e1b](https://github.com/Flagsmith/flagsmith/commit/4aa9e1b3116d617634773bdef6d8ce86c853a987))
+
 ## [2.177.0](https://github.com/Flagsmith/flagsmith/compare/v2.176.2...v2.177.0) (2025-05-06)
 
 
