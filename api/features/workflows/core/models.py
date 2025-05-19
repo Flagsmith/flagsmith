@@ -168,9 +168,7 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
     def _get_previous_version_instance(
         self, feature_state: FeatureState
     ) -> FeatureState | None:
-        if not feature_state.environment:
-            return None
-
+        assert feature_state.environment is not None
         fs_live_version = (
             FeatureState.objects.get_live_feature_states(
                 environment=feature_state.environment,
