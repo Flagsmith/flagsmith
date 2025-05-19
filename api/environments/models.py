@@ -384,28 +384,21 @@ class Environment(
 
         features_qs = self._get_features_metrics_queryset(with_workflows=with_workflows)
 
-        _features_aggregation_result: dict[str, int] = {}
-
-        # Closure to avoid recalculating twice the features metrics
-        def get_feature_agg(key: str) -> int:
-            nonlocal _features_aggregation_result
-            if not _features_aggregation_result:
-                _features_aggregation_result = features_qs.aggregate(
-                    total=models.Count("id"),
-                    enabled=models.Count("id", filter=Q(enabled=True)),
-                )
-            return _features_aggregation_result[key]
+        features_aggregation_result: dict[str, int] = features_qs.aggregate(
+            total=models.Count("id"),
+            enabled=models.Count("id", filter=Q(enabled=True)),
+        )
 
         # Second optional callable is a function to override disabled - Initially to skip identity if not using edge
         qs_map: dict[
             EnvMetricsName, tuple[Callable[[], int], Callable[[], bool] | None]
         ] = {
             EnvMetricsName.TOTAL_FEATURES: (
-                lambda: get_feature_agg("total"),
+                lambda: features_aggregation_result["total"],
                 None,
             ),
             EnvMetricsName.ENABLED_FEATURES: (
-                lambda: get_feature_agg("enabled"),
+                lambda: features_aggregation_result["enabled"],
                 None,
             ),
             EnvMetricsName.SEGMENT_OVERRIDES: (
