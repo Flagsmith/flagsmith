@@ -30,11 +30,12 @@ Because segments are driven by identity traits, your application must identify t
 for segment overrides to be applied. If your user is not identified, no overrides will be applied and all flags will be
 returned exactly how they are defined in the current environment.
 
-## Common Use Cases
+<details>
+<summary>Click to see common implementation scenarios</summary>
 
-Segments and segment overrides can be used to implement many scenarios:
+<Tabs>
+<TabItem value="testing" label="Testing in Production">
 
-### Testing in Production
 ```javascript
 // Set up internal user traits
 flagsmith.identify('user_123');
@@ -44,7 +45,15 @@ flagsmith.setTrait('department', 'engineering');
 // Segment Rule: email Contains @company.com AND department = engineering
 ```
 
-### Power Users
+Common uses:
+- Internal feature testing
+- Beta testing with employees
+- QA environment simulation
+
+</TabItem>
+
+<TabItem value="power" label="Power Users">
+
 ```javascript
 // Track user engagement
 flagsmith.setTrait('login_count', 50);
@@ -57,7 +66,15 @@ flagsmith.setTrait('days_since_signup', 30);
 // Rule 3: days_since_signup >= 14
 ```
 
-### Staged Rollouts
+Common uses:
+- Premium feature access
+- Early access programs
+- Targeted promotions
+
+</TabItem>
+
+<TabItem value="rollout" label="Staged Rollouts">
+
 ```javascript
 // Create segment with percentage split
 // Week 1: % Split = 10
@@ -65,6 +82,15 @@ flagsmith.setTrait('days_since_signup', 30);
 // Week 3: % Split = 50
 // Week 4: Remove segment override
 ```
+
+Common uses:
+- Gradual feature rollouts
+- Canary deployments
+- Load testing new features
+
+</TabItem>
+</Tabs>
+</details>
 
 ## Security and privacy
 
@@ -158,6 +184,9 @@ These string values evaluate to true:
 ## Rule Operators Reference
 
 ### Comparison Operators
+:::tip
+All rule operators are case-sensitive.
+:::
 | Operator | Description | Example |
 |----------|-------------|----------|
 | `Exactly Matches (=)` | Trait value equals rule value | `age = 21` |
@@ -173,16 +202,16 @@ These string values evaluate to true:
 | `Contains` | Rule value is substring of trait value | `email Contains @company.com` |
 | `Does not contain` | Rule value not substring of trait value | `plan Does not contain free` |
 | `Matches regex` | Trait matches regular expression | `email Matches .*@gmail\.com` |
-| `In` | Trait equals any value in comma-separated list | `country In US,UK,CA` |
+| `In` | [Trait equals any value in comma-separated list](segments?operators=in#operator-details) | `country In US,UK,CA` |
 
 ### Special Operators
 | Operator | Description | Example |
 |----------|-------------|----------|
-| `% Split` | Identity in percentage bucket | `% Split = 25` |
+| `% Split` | [Identity in percentage bucket](segments?operators=percent#operator-details) | `% Split = 25` |
 | `Is set` | Trait exists for identity | `premium_until Is set` |
 | `Is not set` | Trait doesn't exist for identity | `trial_ended Is not set` |
-| `SemVer` | Semantic version comparison | `version SemVer >= 2.1.0` |
-| `Modulo` | Remainder after division | `user_id % 2|0` |
+| `SemVer` | [Semantic version comparison](segments?operators=semver#operator-details) | `version SemVer >= 2.1.0` |
+| `Modulo` | [Remainder after division](segments?operators=modulo#operator-details) | `user_id % 2|0` |
 
 ### Operator Details
 
