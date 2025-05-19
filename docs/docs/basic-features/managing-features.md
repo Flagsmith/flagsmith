@@ -6,7 +6,7 @@ description: Feature Flags allow you to ship code and features before they are f
 :::info Core Concepts
 Flags in Flagsmith follow two key principles:
 - They are **created and shared** at the Project level
-- They can be **overridden** at the Environment level, per Identity, or per Segment
+- They are **overridden** at the Environment level, and can be further overridden per Identity, or per Segment
 :::
 
 ## Flag Components
