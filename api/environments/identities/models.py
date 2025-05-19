@@ -120,11 +120,22 @@ class Identity(models.Model):
             ],
         )
 
+        # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
+        # for the given identity as the value.
+        identity_flags = {}
+        for flag in all_flags:
+            if flag.feature_id not in identity_flags:
+                identity_flags[flag.feature_id] = flag
+            else:
+                current_flag = identity_flags[flag.feature_id]
+                if flag > current_flag:
+                    identity_flags[flag.feature_id] = flag
+
         if self.environment.get_hide_disabled_flags() is True:
             # filter out any flags that are disabled
-            return [flag for flag in all_flags if flag.enabled]
+            return [value for value in identity_flags.values() if value.enabled]
 
-        return all_flags
+        return list(identity_flags.values())
 
     def get_overridden_feature_states(self) -> dict[int, FeatureState]:
         """
