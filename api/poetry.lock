@@ -1994,6 +1994,25 @@ reference = "v0.1.1"
 resolved_reference = "d7cf0dd9e306a529498839c3f7a1d7c652093228"
 
 [[package]]
+name = "flagsmith-private"
+version = "0.1.0"
+description = "Flagsmith-private meta package"
+optional = false
+python-versions = ">=3.10"
+groups = ["release-pipelines"]
+files = []
+develop = false
+
+[package.dependencies]
+release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "feat/release-pipelines-logic", subdirectory = "flagsmith-release-pipelines-logic"}
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-private/"
+reference = "feat/release-pipelines-logic"
+resolved_reference = "de613e14e91f3ec49baf893133b8468ba13393bb"
+
+[[package]]
 name = "flagsmith-split-testing"
 version = "v0.1.3"
 description = "Split testing plugin for Flagsmith application."
@@ -4262,6 +4281,23 @@ hiredis = ["hiredis (>=1.0.0)"]
 ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
 
 [[package]]
+name = "release-pipelines-logic"
+version = "0.1.0"
+description = "Release pipelines logic plugin for Flagsmith application"
+optional = false
+python-versions = ">=3.10,<4.0"
+groups = ["release-pipelines"]
+files = []
+develop = false
+
+[package.source]
+type = "git"
+url = "https://github.com/Flagsmith/flagsmith-private/"
+reference = "feat/release-pipelines-logic"
+resolved_reference = "4fde5461096065ca5fa360c909b6f0b37990b918"
+subdirectory = "flagsmith-release-pipelines-logic"
+
+[[package]]
 name = "requests"
 version = "2.32.4"
 description = "Python HTTP for Humans."
@@ -5353,4 +5389,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "7e3ddff579a22aee98b12f5d76b547fc9a070ae336c4e9010bcebe3ed7d4fd7a"
+content-hash = "b0668bddd7371bb2bbe539f65a1697ee649c5cafce9a4f36455ce9c26a81bc38"
