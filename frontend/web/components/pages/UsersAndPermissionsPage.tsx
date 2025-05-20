@@ -240,6 +240,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const needsUpgradeForAdditionalSeats =
     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
     (!autoSeats && usedSeats)
+
+  const isInspectPermissionsEnabled = Utils.getFlagsmithHasFeature(
+    'inspect_permissions',
+  )
+
   return (
     <div className='app-container container'>
       <JSONReference
@@ -638,7 +643,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
                                     canEdit={AccountStore.isAdmin()}
-                                    canInspectPermissions={AccountStore.isAdmin()}
+                                    canInspectPermissions={
+                                      isInspectPermissionsEnabled &&
+                                      AccountStore.isAdmin()
+                                    }
                                     onInspectPermissions={() => {
                                       inspectPermissions(user, organisation.id)
                                     }}
