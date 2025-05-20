@@ -74,7 +74,7 @@ def test_release_pipeline_get_first_stage_returns_correct_stage(
     first_stage = release_pipeline.get_first_stage()
 
     # Then
-    assert first_stage.order == 0
+    assert first_stage.order == 0  # type: ignore[union-attr]
 
 
 def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(
@@ -103,7 +103,36 @@ def test_release_pipeline_get_last_stage_returns_correct_stage(
     last_stage = release_pipeline.get_last_stage()
 
     # Then
-    assert last_stage.order == 2
+    assert last_stage.order == 2  # type: ignore[union-attr]
+
+
+def test_release_pipeline_get_next_stage(
+    release_pipeline: ReleasePipeline, environment: Environment
+) -> None:
+    # Given
+    stage1 = PipelineStage.objects.create(
+        name="Stage 1",
+        pipeline=release_pipeline,
+        environment=environment,
+        order=0,
+    )
+    stage2 = PipelineStage.objects.create(
+        name="Stage 2",
+        pipeline=release_pipeline,
+        environment=environment,
+        order=1,
+    )
+    stage3 = PipelineStage.objects.create(
+        name="Stage 3",
+        pipeline=release_pipeline,
+        environment=environment,
+        order=2,
+    )
+
+    # Then
+    assert stage1.get_next_stage() == stage2
+    assert stage2.get_next_stage() == stage3
+    assert stage3.get_next_stage() is None
 
 
 def test_release_pipeline_get_create_log_message(

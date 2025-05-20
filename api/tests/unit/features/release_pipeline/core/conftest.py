@@ -8,7 +8,8 @@ from projects.models import Project
 
 @pytest.fixture()
 def release_pipeline(project: Project) -> ReleasePipeline:
-    return ReleasePipeline.objects.create(
+    release_pipeline = ReleasePipeline.objects.create(
         name="Test Pipeline",
         project=project,
     )
+    return release_pipeline  # type: ignore[no-any-return]

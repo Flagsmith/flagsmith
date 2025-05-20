@@ -139,7 +139,7 @@ class PipelineStageTrigger(models.Model):
         choices=StageTriggerType.choices,
         default=StageTriggerType.ON_ENTER,
     )
-    trigger_body = models.JSONField(null=True)  # Json field?
+    trigger_body = models.JSONField(null=True)
 
     stage = models.OneToOneField(
         PipelineStage,
