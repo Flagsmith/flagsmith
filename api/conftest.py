@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import site
@@ -18,7 +17,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
 from django.test.utils import setup_databases
-from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
@@ -27,7 +25,6 @@ from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
-from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 from task_processor.task_run_method import TaskRunMethod
@@ -86,8 +83,6 @@ from segments.services import SegmentCloneService
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
-    GetEnvironmentFlagsResponseJSONCallable,
-    GetIdentityFlagsResponseJSONCallable,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -570,13 +565,6 @@ def identity_matching_segment(project: Project, trait: Trait) -> Segment:
 @pytest.fixture()
 def api_client() -> APIClient:
     return APIClient()
-
-
-@pytest.fixture()
-def sdk_client(environment: Environment) -> APIClient:
-    client = APIClient()
-    client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
-    return client
 
 
 @pytest.fixture()
@@ -1277,46 +1265,3 @@ def set_github_webhook_secret() -> None:
     from django.conf import settings
 
     settings.GITHUB_WEBHOOK_SECRET = "secret-key"
-
-
-# TODO: move _flags_response_json to common?
-@pytest.fixture()
-def get_environment_flags_response_json(
-    sdk_client: APIClient,
-) -> GetEnvironmentFlagsResponseJSONCallable:
-    get_environment_flags_url = reverse("api-v1:flags")
-
-    def _get_environment_flags_response_json(num_expected_flags: int) -> typing.Dict:  # type: ignore[type-arg]
-        _response = sdk_client.get(get_environment_flags_url)
-        assert _response.status_code == status.HTTP_200_OK
-        _response_json = _response.json()
-        assert len(_response_json) == num_expected_flags
-        return _response_json  # type: ignore[no-any-return]
-
-    return _get_environment_flags_response_json
-
-
-@pytest.fixture()
-def get_identity_flags_response_json(
-    sdk_client: APIClient, identity: Identity
-) -> GetIdentityFlagsResponseJSONCallable:
-    identities_url = reverse("api-v1:sdk-identities")
-
-    def _get_identity_flags_response_json(  # type: ignore[no-untyped-def]
-        num_expected_flags: int, identifier: str = identity.identifier, **traits
-    ) -> typing.Dict:  # type: ignore[type-arg]
-        traits = traits or {}
-        data = {
-            "identifier": identifier,
-            "traits": [{"trait_key": k, "trait_value": v} for k, v in traits.items()],
-        }
-
-        _response = sdk_client.post(
-            identities_url, data=json.dumps(data), content_type="application/json"
-        )
-        assert _response.status_code == status.HTTP_200_OK
-        _response_json = _response.json()
-        assert len(_response_json["flags"]) == num_expected_flags
-        return _response_json  # type: ignore[no-any-return]
-
-    return _get_identity_flags_response_json  # type: ignore[return-value]
