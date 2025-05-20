@@ -166,6 +166,8 @@ tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
+# TODO: make this optional
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "feat/release-pipelines-logic" }
 
 [tool.poetry.group.auth-controller]
 optional = true

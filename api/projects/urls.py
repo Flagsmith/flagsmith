@@ -92,8 +92,6 @@ if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover
         workflow_views.ProjectChangeRequestViewSet,
         basename="project-change-requests",
     )
-
-
 nested_features_router = routers.NestedSimpleRouter(
     projects_router, r"features", lookup="feature"
 )
@@ -129,3 +127,27 @@ urlpatterns = [
         name="feature-imports",
     ),
 ]
+if settings.RELEASE_PIPELINES_LOGIC_INSTALLED:  # pragma: no cover
+    release_pipelines_views = importlib.import_module("release_pipelines_logic.views")
+    projects_router.register(
+        r"release-pipelines",
+        release_pipelines_views.ReleasePipelineViewSet,
+        basename="project-release-pipelines",
+    )
+    nested_pipelines_router = routers.NestedSimpleRouter(
+        projects_router,
+        r"release-pipelines",
+        lookup="release_pipeline",
+    )
+    nested_pipelines_router.register(
+        r"stages",
+        release_pipelines_views.PipelineStageViewSet,
+        basename="release-pipeline-stages",
+    )
+
+    urlpatterns.extend(
+        [
+            re_path(r"^", include(projects_router.urls)),
+            re_path(r"^", include(nested_pipelines_router.urls)),
+        ]
+    )
