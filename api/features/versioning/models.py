@@ -78,9 +78,15 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         null=True,
         blank=True,
     )
-
     change_request = models.ForeignKey(
         "workflows_core.ChangeRequest",
+        related_name="environment_feature_versions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    pipeline_stage = models.ForeignKey(
+        "release_pipelines_core.PipelineStage",
         related_name="environment_feature_versions",
         on_delete=models.CASCADE,
         null=True,
@@ -146,8 +152,8 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         live_from: datetime.datetime | None = None,
         persist: bool = True,
     ) -> None:
-        assert not (published_by and published_by_api_key), (
-            "Version must be published by either a user or a MasterAPIKey"
+        assert not (published_by and published_by_api_key and self.pipeline_stage), (
+            "Version must be published by either a user or a MasterAPIKey or pipeline"
         )
 
         now = timezone.now()
@@ -198,6 +204,7 @@ class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):  # type: ignore[m
     environment_feature_version = models.ForeignKey(  # type: ignore[var-annotated]
         "feature_versioning.EnvironmentFeatureVersion",
         on_delete=models.CASCADE,
+        related_name="version_change_sets",
         # Needs to be blank/nullable since change sets
         # associated with a change request do not yet
         # have a version
