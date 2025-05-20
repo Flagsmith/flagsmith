@@ -5,7 +5,6 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -148,7 +147,7 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
-    def clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
+    def _clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
         cloned_rules = []
         for rule in self.rules.all():
             cloned_rule = rule.deep_clone(cloned_segment)
@@ -162,14 +161,10 @@ class Segment(
 
         return cloned_rules
 
-    def clone_segment_metadata(self, cloned_segment: "Segment") -> list["Metadata"]:
+    def _clone_segment_metadata(self, cloned_segment: "Segment") -> list["Metadata"]:
         cloned_metadata = []
         for metadata in self.metadata.all():
-            cloned_metadata.append(
-                metadata.deep_clone_for_new_entity(
-                    cloned_segment
-                )
-            )
+            cloned_metadata.append(metadata.deep_clone_for_new_entity(cloned_segment))
         cloned_segment.refresh_from_db()
         assert (
             len(self.metadata.all())
@@ -190,8 +185,8 @@ class Segment(
             feature=self.feature,
         )
         cloned_segment.save()
-        self.clone_segment_rules(cloned_segment)
-        self.clone_segment_metadata(cloned_segment)
+        self._clone_segment_rules(cloned_segment)
+        self._clone_segment_metadata(cloned_segment)
         cloned_segment.refresh_from_db()
         return cloned_segment
 
@@ -225,7 +220,7 @@ class Segment(
         self.version += 1  # type: ignore[operator]
         self.save_without_historical_record()
 
-        self.clone_segment_rules(cloned_segment)
+        self._clone_segment_rules(cloned_segment)
 
         return cloned_segment
 

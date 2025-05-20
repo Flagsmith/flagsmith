@@ -136,11 +136,10 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         serializer_class=CloneSegmentSerializer,
     )
     def clone(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        serializer = CloneSegmentSerializer(
-            data=request.data, context={"source_segment": self.get_object()}
-        )
+        source_segment = self.get_object()
+        serializer = CloneSegmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        clone = serializer.save()
+        clone = source_segment.clone(serializer.validated_data["name"])
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
