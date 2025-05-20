@@ -568,6 +568,13 @@ def api_client():  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
+def sdk_client(environment: Environment) -> APIClient:
+    client = APIClient()
+    client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
+    return client
+
+
+@pytest.fixture()
 def feature(project: Project, environment: Environment) -> Feature:
     return Feature.objects.create(name="Test Feature1", project=project)  # type: ignore[no-any-return]
 
