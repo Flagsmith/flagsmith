@@ -18,6 +18,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 
+from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -45,7 +46,6 @@ from .identities.traits.serializers import (
     TraitKeysSerializer,
 )
 from .models import Environment, EnvironmentAPIKey, Webhook
-from core.models import AbstractBaseExportableModel
 from .permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
