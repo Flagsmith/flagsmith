@@ -5,7 +5,7 @@ from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from django.db.models import Count, Manager, Model, Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
@@ -45,6 +45,7 @@ from .identities.traits.serializers import (
     TraitKeysSerializer,
 )
 from .models import Environment, EnvironmentAPIKey, Webhook
+from core.models import AbstractBaseExportableModel
 from .permissions.models import (
     EnvironmentPermissionModel,
     UserEnvironmentPermission,
@@ -58,12 +59,7 @@ from .serializers import (
     WebhookSerializer,
 )
 
-T = TypeVar("T", bound=Model)
-
-
-class HasObjects(Generic[T]):
-    objects: Manager[T]
-
+T = TypeVar("T", bound=AbstractBaseExportableModel)
 
 logger = logging.getLogger(__name__)
 
@@ -320,8 +316,7 @@ class NestedEnvironmentViewSet(Generic[T], viewsets.GenericViewSet[T]):
     webhook_type = WebhookType.ENVIRONMENT
 
     def get_queryset(self) -> QuerySet[T]:
-        model_cls = cast(HasObjects[T], self.model_class)
-        return model_cls.objects.filter(
+        return self.model_class.objects.filter(
             environment__api_key=self.kwargs.get("environment_api_key")
         )
 
