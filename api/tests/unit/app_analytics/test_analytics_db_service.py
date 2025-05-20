@@ -1,8 +1,9 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from django.conf import settings
-from django.utils import timezone
+
+from django.utils import timezone as d_timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -35,8 +36,8 @@ from projects.models import Project
 def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCache:  # type: ignore[misc]
     yield OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        current_billing_term_starts_at=timezone.now() - timedelta(days=20),
-        current_billing_term_ends_at=timezone.now() + timedelta(days=10),
+        current_billing_term_starts_at=d_timezone.now() - timedelta(days=20),
+        current_billing_term_ends_at=d_timezone.now() + timedelta(days=10),
         api_calls_24h=2000,
         api_calls_7d=12000,
         api_calls_30d=38000,
@@ -52,7 +53,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
     environment_id = environment.id
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
@@ -122,7 +123,7 @@ def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-unty
 ):
     # Given
     environment_id = environment.id
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
     total_count = 10
@@ -165,7 +166,7 @@ def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-unty
 def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
@@ -222,7 +223,7 @@ def test_get_feature_evaluation_data_from_local_db(  # type: ignore[no-untyped-d
 ):
     environment_id = environment.id
     feature_name = feature.name
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
@@ -407,8 +408,8 @@ def test_get_usage_data_returns_30d_of_60d_when_unset_subscription_information_c
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 11, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 12, 1, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2022, 12, 31, 9, 9, 47, 325132, tzinfo=timezone.utc),
     )
 
 
@@ -434,8 +435,8 @@ def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_fo
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2023, 1, 1, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),
     )
 
 
