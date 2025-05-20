@@ -14,8 +14,8 @@ import {
   ProjectFlag,
   SegmentCondition,
   Tag,
-  User,
   PConfidence,
+  UserPermissions,
 } from 'common/types/responses'
 import flagsmith from 'flagsmith'
 import { ReactNode } from 'react'
@@ -537,6 +537,12 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
+  },
+  hasEntityPermission(key: string, entityPermissions: UserPermissions) {
+    if (entityPermissions?.admin) return true
+    return !!entityPermissions?.permissions?.find(
+      (permission) => permission.permission_key === key,
+    )
   },
   //todo: Remove when migrating to RTK
   isEnterpriseImage: () =>

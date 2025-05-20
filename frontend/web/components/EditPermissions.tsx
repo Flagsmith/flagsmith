@@ -22,7 +22,7 @@ import Switch from './Switch'
 import TabItem from './base/forms/TabItem'
 import Tabs from './base/forms/Tabs'
 import UserGroupList from './UserGroupList'
-import { PermissionLevel, Req } from 'common/types/requests'
+import { PermissionLevel, Req, PermissionRoleType } from 'common/types/requests'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon from './Icon'
@@ -61,29 +61,12 @@ import classNames from 'classnames'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
 import PlanBasedAccess from './PlanBasedAccess'
-import { components } from 'react-select'
-import { SingleValueProps } from 'react-select/lib/components/SingleValue'
-import AddEditTags from './tags/AddEditTags'
+import { PermissionRow } from './PermissionRow'
 import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
+import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 
 const Project = require('common/project')
-
-const SingleValue = (props: SingleValueProps<any>) => {
-  return (
-    <components.SingleValue {...props}>
-      <div className='d-flex gap-1 align-items-center'>
-        {props.data.value === 'GRANTED' && (
-          <Icon width={18} name='checkmark' fill='#27AB95' />
-        )}
-        {props.data.value === 'GRANTED_FOR_TAGS' && (
-          <Icon width={18} name='shield' fill='#ff9f43' />
-        )}
-        {props.children}
-      </div>
-    </components.SingleValue>
-  )
-}
 
 type EditPermissionModalType = {
   group?: UserGroupSummary
@@ -122,11 +105,7 @@ type EntityPermissions = Omit<
   user?: number
   tags?: number[]
 }
-const permissionOptions = [
-  { label: 'Granted', value: 'GRANTED' },
-  { label: 'Granted for tags', value: 'GRANTED_FOR_TAGS' },
-  { label: 'None', value: 'NONE' },
-]
+
 const withAdminPermissions = (InnerComponent: any) => {
   const WrappedComponent: FC<EditPermissionModalType> = (props) => {
     const { id, level } = props
@@ -158,45 +137,6 @@ const withAdminPermissions = (InnerComponent: any) => {
     return <InnerComponent {...props} />
   }
   return WrappedComponent
-}
-
-type RemoveViewPermissionModalProps = {
-  level: string
-  onConfirm: () => void
-  onCancel: () => void
-}
-
-const RemoveViewPermissionModal = ({
-  level,
-  onCancel,
-  onConfirm,
-}: RemoveViewPermissionModalProps) => {
-  return (
-    <div>
-      <div>
-        Removing <b>view {level} permission</b> will remove all other user
-        permissions for this {level}.
-      </div>
-      <div className='text-right mt-2'>
-        <Button
-          className='mr-2'
-          onClick={() => {
-            onCancel()
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          theme='danger'
-          onClick={() => {
-            onConfirm()
-          }}
-        >
-          Confirm
-        </Button>
-      </div>
-    </div>
-  )
 }
 
 const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
@@ -232,6 +172,8 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     const [showRoles, setShowRoles] = useState<boolean>(false)
     const [valueChanged, setValueChanged] = useState(false)
 
+    const levelUpperCase = level.toUpperCase()
+    const viewPermission = `VIEW_${levelUpperCase}`
     const projectId =
       props.level === 'project'
         ? props.id
@@ -524,34 +466,12 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       //eslint-disable-next-line
     }, [])
 
-    const admin = () => entityPermissions && entityPermissions.admin
+    const isAdmin = entityPermissions && entityPermissions.admin
 
     const hasPermission = (key: string) => {
-      if (admin()) return true
-      return entityPermissions.permissions.find(
+      if (isAdmin) return true
+      return !!entityPermissions.permissions.find(
         (permission) => permission.permission_key === key,
-      )
-    }
-
-    const getPermissionType = (key: string) => {
-      if (admin()) return 'GRANTED'
-      const permission = entityPermissions.permissions.find(
-        (v) => v.permission_key === key,
-      )
-
-      if (!permission) return 'NONE'
-
-      if (permission.tags?.length || limitedPermissions.includes(key)) {
-        return 'GRANTED_FOR_TAGS'
-      }
-
-      return 'GRANTED'
-    }
-
-    const requiresViewPermission = (permissionKey: string) => {
-      return (
-        level !== 'organisation' &&
-        permissionKey !== `VIEW_${level.toUpperCase()}`
       )
     }
 
@@ -658,7 +578,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
 
     const selectPermissions = (
       key: string,
-      value: 'GRANTED' | 'GRANTED_FOR_TAGS' | 'NONE',
+      value: PermissionRoleType,
       tags: number[] = [],
     ) => {
       const updatedPermissions = [
@@ -669,7 +589,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       const updatedLimitedPermissions = limitedPermissions.filter(
         (v) => v !== key,
       )
-      if (value === 'NONE') {
+      if (value === PermissionRoleType.NONE) {
         setEntityPermissions({
           ...entityPermissions,
           permissions: updatedPermissions,
@@ -685,7 +605,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           ]),
         })
       }
-      if (value === 'GRANTED_FOR_TAGS') {
+      if (value === PermissionRoleType.GRANTED_FOR_TAGS) {
         setLimitedPermissions(updatedLimitedPermissions.concat([key]))
       } else {
         setLimitedPermissions(updatedLimitedPermissions)
@@ -720,10 +640,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
           permission_key: key,
           tags: [],
         })
-      } else if (
-        level !== 'organisation' &&
-        key === `VIEW_${level.toUpperCase()}`
-      ) {
+      } else if (level !== 'organisation' && key === viewPermission) {
         newEntityPermissions.permissions = []
       } else {
         newEntityPermissions.permissions.splice(index, 1)
@@ -884,7 +801,6 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
     }
 
     const rolesAdded = getRoles(roles, rolesSelected || [])
-    const isAdmin = admin()
 
     return !permissions || !entityPermissions ? (
       <div className='modal-body text-center'>
@@ -922,103 +838,53 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
               title='Permissions'
               className='no-pad mb-2 overflow-visible'
               items={permissions}
-              renderRow={(p) => {
-                const levelUpperCase = level.toUpperCase()
-                const viewPermission = `VIEW_${levelUpperCase}`
-                const isPermissionDisabled =
-                  requiresViewPermission(p.key) &&
-                  !hasPermission(viewPermission)
+              renderRow={(p) => (
+                <PermissionRow
+                  key={p.key}
+                  permission={p}
+                  level={level}
+                  projectId={projectId}
+                  entityPermissions={entityPermissions}
+                  limitedPermissions={limitedPermissions}
+                  isAdmin={isAdmin}
+                  isSaving={saving}
+                  isTagBasedPermissions={tagBasedPermissions}
+                  onValueChanged={(
+                    permissionKey: string,
+                    shouldToggle?: boolean,
+                  ) => {
+                    const showRemoveViewPermissionModal =
+                      level !== 'organisation' &&
+                      permissionKey === viewPermission &&
+                      hasPermission(viewPermission) &&
+                      entityPermissions.permissions.length > 1
 
-                const permission = entityPermissions.permissions.find(
-                  (v) => v.permission_key === p.key,
-                )
-                const permissionType = getPermissionType(p.key)
-                return (
-                  <Row
-                    key={p.key}
-                    style={admin() ? { opacity: 0.5 } : undefined}
-                    className='list-item list-item-sm px-3 py-2'
-                  >
-                    <Row space>
-                      <Flex>
-                        <strong>{Format.enumeration.get(p.key)}</strong>
-                        <div className='list-item-subtitle'>
-                          {p.description}
-                        </div>
-                        {permissionType === 'GRANTED_FOR_TAGS' && (
-                          <AddEditTags
-                            projectId={`${projectId}`}
-                            value={permission?.tags || []}
-                            onChange={(v) => {
-                              setValueChanged(true)
-                              selectPermissions(p.key, 'GRANTED_FOR_TAGS', v)
-                            }}
-                          />
-                        )}
-                      </Flex>
-                      {tagBasedPermissions ? (
-                        <div className='ms-2' style={{ width: 200 }}>
-                          <Select
-                            value={permissionOptions.find(
-                              (v) => v.value === permissionType,
-                            )}
-                            onChange={(v) => {
-                              setValueChanged(true)
-                              selectPermissions(p.key, v.value)
-                            }}
-                            className='react-select select-sm'
-                            disabled={isPermissionDisabled || admin() || saving}
-                            options={
-                              p.supports_tag
-                                ? permissionOptions
-                                : permissionOptions.filter(
-                                    (v) => v.value !== 'GRANTED_FOR_TAGS',
-                                  )
-                            }
-                            components={{ SingleValue }}
-                          />
-                        </div>
-                      ) : (
-                        <Switch
-                          data-test={`permission-switch-${p.key}`}
-                          onChange={() => {
-                            if (
-                              level !== 'organisation' &&
-                              p.key === viewPermission &&
-                              hasPermission(viewPermission) &&
-                              entityPermissions.permissions.length > 1
-                            ) {
-                              return openModal2(
-                                `Remove View ${Utils.capitalize(
-                                  level,
-                                )} Permission`,
-                                <RemoveViewPermissionModal
-                                  level={level}
-                                  onConfirm={() => {
-                                    setValueChanged(true)
-                                    togglePermission(p.key)
-                                    closeModal2()
-                                  }}
-                                  onCancel={() => {
-                                    closeModal2()
-                                  }}
-                                />,
-                              )
-                            }
-
+                    if (showRemoveViewPermissionModal) {
+                      return openModal2(
+                        `Remove View ${Utils.capitalize(level)} Permission`,
+                        <RemoveViewPermissionModal
+                          level={level}
+                          onConfirm={() => {
                             setValueChanged(true)
-                            togglePermission(p.key)
+                            togglePermission(permissionKey)
+                            closeModal2()
                           }}
-                          disabled={isPermissionDisabled || admin() || saving}
-                          checked={
-                            !isPermissionDisabled && hasPermission(p.key)
-                          }
-                        />
-                      )}
-                    </Row>
-                  </Row>
-                )
-              }}
+                          onCancel={() => {
+                            closeModal2()
+                          }}
+                        />,
+                      )
+                    }
+
+                    setValueChanged(true)
+
+                    if (shouldToggle) {
+                      togglePermission(permissionKey)
+                    }
+                  }}
+                  onSelectPermissions={selectPermissions}
+                />
+              )}
             />
 
             <p className='text-right mt-5 text-dark'>
