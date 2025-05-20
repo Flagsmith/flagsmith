@@ -1,0 +1,134 @@
+import pytest
+from django.utils import timezone
+from environments.models import Environment
+from features.release_pipelines.core.models import (
+    PipelineStage,
+    PipelineStageAction,
+    PipelineStageTrigger,
+    ReleasePipeline,
+    StageActionType,
+    StageTriggerType,
+)
+from audit.constants import (
+    RELEASE_PIPELINE_CREATED_MESSAGE,
+    RELEASE_PIPELINE_DELETED_MESSAGE,
+    RELEASE_PIPELINE_PUBLISHED_MESSAGE,
+)
+
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from projects.models import Project
+from segments.models import Segment
+from users.models import FFAdminUser
+
+from features.release_pipelines.core.exceptions import InvalidPipelineStateError
+
+
+def test_release_pipeline_publish_creates_audit_log(
+    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
+) -> None:
+    # When
+    release_pipeline.publish(admin_user)
+
+    # Then
+    assert (
+        AuditLog.objects.filter(
+            related_object_id=release_pipeline.id,
+            related_object_type=RelatedObjectType.RELEASE_PIPELINE.name,
+            project=release_pipeline.project,
+            log=RELEASE_PIPELINE_PUBLISHED_MESSAGE % release_pipeline.name,
+            author=admin_user,
+        ).exists()
+        is True
+    )
+
+
+def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(
+    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
+) -> None:
+    # Given - the pipeline is already published
+    release_pipeline.publish(admin_user)
+
+    # When / Then
+    with pytest.raises(
+        InvalidPipelineStateError, match="Pipeline is already published."
+    ):
+        release_pipeline.publish(admin_user)
+
+
+def test_release_pipeline_get_first_stage_returns_none_if_pipeline_has_no_stages(
+    release_pipeline: ReleasePipeline,
+) -> None:
+    # When
+    first_stage = release_pipeline.get_first_stage()
+
+    # Then
+    assert first_stage is None
+
+
+def test_release_pipeline_get_first_stage_returns_correct_stage(
+    release_pipeline: ReleasePipeline, environment: Environment
+) -> None:
+    # Given
+    for i in range(3):
+        PipelineStage.objects.create(
+            name=f"Stage {i}",
+            pipeline=release_pipeline,
+            environment=environment,
+            order=i,
+        )
+
+    # When
+    first_stage = release_pipeline.get_first_stage()
+
+    # Then
+    assert first_stage.order == 0
+
+
+def test_release_pipeline_get_last_stage_returns_none_if_pipeline_has_no_stages(
+    release_pipeline: ReleasePipeline,
+) -> None:
+    # When
+    last_stage = release_pipeline.get_last_stage()
+
+    # Then
+    assert last_stage is None
+
+
+def test_release_pipeline_get_last_stage_returns_correct_stage(
+    release_pipeline: ReleasePipeline, environment: Environment
+) -> None:
+    # Given
+    for i in range(3):
+        PipelineStage.objects.create(
+            name=f"Stage {i}",
+            pipeline=release_pipeline,
+            environment=environment,
+            order=i,
+        )
+
+    # When
+    last_stage = release_pipeline.get_last_stage()
+
+    # Then
+    assert last_stage.order == 2
+
+
+def test_release_pipeline_get_create_log_message(
+    release_pipeline: ReleasePipeline,
+) -> None:
+    # When
+    expected_message = RELEASE_PIPELINE_CREATED_MESSAGE % release_pipeline.name
+
+    # Then
+    assert release_pipeline.get_create_log_message(release_pipeline) == expected_message
+
+
+def test_release_pipeline_get_delete_log_message(
+    release_pipeline: ReleasePipeline,
+) -> None:
+    # When
+    expected_message = RELEASE_PIPELINE_DELETED_MESSAGE % release_pipeline.name
+
+    # Then
+    assert release_pipeline.get_delete_log_message(release_pipeline) == expected_message

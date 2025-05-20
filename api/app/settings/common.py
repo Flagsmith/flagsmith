@@ -113,6 +113,7 @@ INSTALLED_APPS = [
     "features.multivariate",
     "features.versioning",
     "features.workflows.core",
+    "features.release_pipelines.core",
     "segments",
     "app",
     "e2etests",
@@ -1066,6 +1067,14 @@ if WORKFLOWS_LOGIC_INSTALLED:
 
     if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
         INSTALLED_APPS.append("workflows_logic.stale_flags")
+
+RELEASE_PIPELINES_LOGIC_INSTALLED = (
+    importlib.util.find_spec("release_pipelines_logic") is not None
+)
+
+if RELEASE_PIPELINES_LOGIC_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("release_pipelines_logic")
+
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
