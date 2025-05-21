@@ -41,6 +41,9 @@
   --ifm-color-primary-lighter: #bca1ff;
   --ifm-color-primary-lightest: #d5c4ff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --ifm-background-color: #111111; /* Base dark background */
+  --ifm-background-surface-color: #222221; /* Lighter dark background for cards/sections */
+  --icon-circle-color: #22194D; /* Circle around icons */
 }
 
 /* Card styles */
@@ -57,7 +60,7 @@
 }
 
 [data-theme='dark'] .card {
-  background: #15192b;
+  background: var(--ifm-background-surface-color);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -76,7 +79,7 @@
 
 /* Section styles */
 .section {
-  margin: 48px 0;
+  margin: 3rem 0;
 }
 
 .section h2 {
@@ -150,13 +153,117 @@
   height: 44px;
 }
 
+/* Icon container styles */
+.card-header {
+  display: flex;
+  align-items: left;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.flex-column {
+  flex-direction: column;
+  align-items: left;
+  text-align: left;
+}
+
+.icon-container {
+  display: flex;
+  align-items: left;
+  justify-content: left;
+  margin-bottom: 1rem;
+}
+
 /* Icon styles */
 .card-icon {
   font-size: 24px !important;
-  margin-right: 8px; 
+  padding: 12px;
+  border-radius: 50%;
 }
 
-/* Dark mode adjustments */
+/* Light mode */
+[data-theme='light'] .card-icon {
+  color: var(--ifm-color-primary);
+  background: none;
+}
+
+/* Circle around icons for dark mode */
 [data-theme='dark'] .card-icon {
   color: var(--ifm-color-primary-lighter);
+  background-color: rgba(149, 108, 255, 0.1);
+}
+
+/* Add bottom padding */
+main.container {
+  padding-bottom: 5rem;
+}
+
+/* Hero section with different background */
+.hero {
+  background: var(--ifm-background-color);
+  padding: 5rem 0;
+  margin-bottom: 2rem;
+}
+
+/* Update hero container styles */
+.hero .container {
+  margin: 0 auto;
+  max-width: var(--ifm-container-width);
+  padding: 0 var(--ifm-spacing-horizontal);
+  width: 100%;
+}
+
+/* Match hero text with sections */
+.hero h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  max-width: 800px; /* Limit text width for better readability / responsiveness */
+}
+
+/* Section background alternation for dark mode */
+[data-theme='dark'] section:nth-child(even) {
+  background: var(--ifm-background-surface-color);
+  padding: 3rem 0;
+  margin: 0;
+  /* full width */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+[data-theme='dark'] section:nth-child(odd) {
+  background: var(--ifm-background-color);
+  padding: 3rem 0;
+  margin: 0;
+  /* full width */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/*  container width inside sections */
+section > div,
+section > h2 {
+  margin: 0 auto;
+  max-width: var(--ifm-container-width);
+  padding: 0 var(--ifm-spacing-horizontal);
+  width: 100%;
+}
+
+section > h2 {
+  padding-left: var(--ifm-spacing-horizontal); /* Using the same padding as div */
+}
+
+/* Ensure consistent container width */
+.container {
+  max-width: var(--ifm-container-width);
+  margin: 0 auto;
+  padding: 0 var(--ifm-spacing-horizontal);
+  width: 100%;
 }

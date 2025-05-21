@@ -20,12 +20,24 @@ import {
     gitBranch,
 } from 'ionicons/icons';
 import styles from './index.module.css';
-
+// TODO - Replace placeholder image with actual logo
+// TODO - Allign hero with sections
+// TODO - Icon must be above card title
+// TODO - Fix card per line: 2x2 first 1x4 second etc
+// TODO - Responsiveness
+// TODO - Hero/header spacing (logo and text)
+// TODO - Icon circle has a different color than the card background in light mode
+// TODO - fix alternating background (must change every 2 sections)
+// TODO - Hover para link da card
 function Card({ title, description, link, icon }) {
   return (
     <div className={styles.card}>
-      <div className="card-header">
-        {icon && <IonIcon icon={icon} className="card-icon" />}
+      <div className="card-header flex-column">
+        {icon && (
+          <div className="icon-container">
+            <IonIcon icon={icon} className="card-icon" />
+          </div>
+        )}
         <h3>{title}</h3>
       </div>
       <p>{description}</p>
