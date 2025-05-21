@@ -87,6 +87,7 @@ from tests.types import (
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
+from segments.services import SegmentCloner
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -392,7 +393,7 @@ def segment(project: Project):  # type: ignore[no-untyped-def]
     _segment = Segment.objects.create(name="segment", project=project)
     # Deep clone the segment to ensure that any bugs around
     # versioning get bubbled up through the test suite.
-    _segment.deep_clone()
+    SegmentCloner(_segment).deep_clone()
 
     return _segment
 

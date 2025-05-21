@@ -620,10 +620,10 @@ def test_commit_change_request_publishes_environment_feature_versions(  # type: 
     change_request.environment_feature_versions.add(environment_feature_version)
 
     mock_rebuild_environment_document_task = mocker.patch(
-        "features.workflows.core.models.rebuild_environment_document"
+        "core.workflows_services.rebuild_environment_document"
     )
     mock_trigger_update_version_webhooks = mocker.patch(
-        "features.workflows.core.models.trigger_update_version_webhooks"
+        "core.workflows_services.trigger_update_version_webhooks"
     )
 
     # When

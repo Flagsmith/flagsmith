@@ -29,6 +29,7 @@ from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
+from segments.services import SegmentCloner
 
 User = get_user_model()
 
@@ -173,7 +174,7 @@ def test_segments_limit_ignores_old_segment_versions(
     project.save()
 
     # and create some older versions for the segment fixture
-    segment.deep_clone()
+    SegmentCloner(segment).deep_clone()
     assert Segment.objects.filter(version_of_id=segment.id).count() == 3
     assert Segment.live_objects.count() == 1
 

@@ -44,8 +44,8 @@ from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
-    ChangeRequestNotApprovedError,
 )
+from core.workflows_services import ChangeRequestCommitter
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -117,107 +117,93 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
         )
 
     def commit(self, committed_by: "FFAdminUser"):  # type: ignore[no-untyped-def]
-        if not self.is_approved():  # type: ignore[no-untyped-call]
-            raise ChangeRequestNotApprovedError(
-                "Change request has not been approved by all required approvers."
-            )
+        ChangeRequestCommitter(self).commit(committed_by)
 
-        logger.debug("Committing change request #%d", self.id)
+    # def _publish_feature_states(self) -> None:
+    #     now = timezone.now()
 
-        self._publish_feature_states()
-        self._publish_environment_feature_versions(committed_by)
-        self._publish_change_sets(committed_by)
-        self._publish_segments()
+    #     if feature_states := list(self.feature_states.all()):
+    #         for feature_state in feature_states:
+    #             if not feature_state.live_from or feature_state.live_from < now:
+    #                 feature_state.live_from = now
 
-        self.committed_at = timezone.now()
-        self.committed_by = committed_by
-        self.save()
+    #             feature_state.version = FeatureState.get_next_version_number(
+    #                 environment_id=feature_state.environment_id,  # type: ignore[arg-type]
+    #                 feature_id=feature_state.feature_id,
+    #                 feature_segment_id=feature_state.feature_segment_id,  # type: ignore[arg-type]
+    #                 identity_id=feature_state.identity_id,  # type: ignore[arg-type]
+    #             )
 
-    def _publish_feature_states(self) -> None:
-        now = timezone.now()
+    #         FeatureState.objects.bulk_update(
+    #             feature_states, fields=["live_from", "version"]
+    #         )
 
-        if feature_states := list(self.feature_states.all()):
-            for feature_state in feature_states:
-                if not feature_state.live_from or feature_state.live_from < now:
-                    feature_state.live_from = now
+    # def _publish_environment_feature_versions(
+    #     self, published_by: "FFAdminUser"
+    # ) -> None:
+    #     now = timezone.now()
 
-                feature_state.version = FeatureState.get_next_version_number(
-                    environment_id=feature_state.environment_id,  # type: ignore[arg-type]
-                    feature_id=feature_state.feature_id,
-                    feature_segment_id=feature_state.feature_segment_id,  # type: ignore[arg-type]
-                    identity_id=feature_state.identity_id,  # type: ignore[arg-type]
-                )
+    #     if environment_feature_versions := list(
+    #         self.environment_feature_versions.all()
+    #     ):
+    #         for environment_feature_version in environment_feature_versions:
+    #             if (
+    #                 not environment_feature_version.live_from
+    #                 or environment_feature_version.live_from < now
+    #             ):
+    #                 environment_feature_version.live_from = now
 
-            FeatureState.objects.bulk_update(
-                feature_states, fields=["live_from", "version"]
-            )
+    #             environment_feature_version.publish(published_by, persist=False)
 
-    def _publish_environment_feature_versions(
-        self, published_by: "FFAdminUser"
-    ) -> None:
-        now = timezone.now()
+    #         EnvironmentFeatureVersion.objects.bulk_update(
+    #             environment_feature_versions,
+    #             fields=["published_at", "published_by", "live_from"],
+    #         )
 
-        if environment_feature_versions := list(
-            self.environment_feature_versions.all()
-        ):
-            for environment_feature_version in environment_feature_versions:
-                if (
-                    not environment_feature_version.live_from
-                    or environment_feature_version.live_from < now
-                ):
-                    environment_feature_version.live_from = now
+    #         for environment_feature_version in environment_feature_versions:
+    #             trigger_update_version_webhooks.delay(
+    #                 kwargs={
+    #                     "environment_feature_version_uuid": str(
+    #                         environment_feature_version.uuid
+    #                     )
+    #                 },
+    #                 delay_until=environment_feature_version.live_from,
+    #             )
+    #             rebuild_environment_document.delay(
+    #                 kwargs={"environment_id": self.environment_id},
+    #                 delay_until=environment_feature_version.live_from,
+    #             )
+    #             environment_feature_version_published.send(
+    #                 EnvironmentFeatureVersion, instance=environment_feature_version
+    #             )
 
-                environment_feature_version.publish(published_by, persist=False)
+    # def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
+    #     for change_set in self.change_sets.all():
+    #         change_set.publish(user=published_by)
 
-            EnvironmentFeatureVersion.objects.bulk_update(
-                environment_feature_versions,
-                fields=["published_at", "published_by", "live_from"],
-            )
+    # def _publish_segments(self) -> None:
+    #     for segment in self.segments.all():
+    #         target_segment = segment.version_of
+    #         assert target_segment != segment
 
-            for environment_feature_version in environment_feature_versions:
-                trigger_update_version_webhooks.delay(
-                    kwargs={
-                        "environment_feature_version_uuid": str(
-                            environment_feature_version.uuid
-                        )
-                    },
-                    delay_until=environment_feature_version.live_from,
-                )
-                rebuild_environment_document.delay(
-                    kwargs={"environment_id": self.environment_id},
-                    delay_until=environment_feature_version.live_from,
-                )
-                environment_feature_version_published.send(
-                    EnvironmentFeatureVersion, instance=environment_feature_version
-                )
+    #         # Deep clone the segment to establish historical version this is required
+    #         # because the target segment will be altered when the segment is published.
+    #         # Think of it like a regular update to a segment where we create the clone
+    #         # to create the version, then modifying the new 'draft' version with the
+    #         # data from the change request.
+    #         target_segment.deep_clone()  # type: ignore[union-attr]
 
-    def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
-        for change_set in self.change_sets.all():
-            change_set.publish(user=published_by)
+    #         # Set the properties of the change request's segment to the properties
+    #         # of the target (i.e., canonical) segment.
+    #         target_segment.name = segment.name  # type: ignore[union-attr]
+    #         target_segment.description = segment.description  # type: ignore[union-attr]
+    #         target_segment.feature = segment.feature  # type: ignore[union-attr]
+    #         target_segment.save()  # type: ignore[union-attr]
 
-    def _publish_segments(self) -> None:
-        for segment in self.segments.all():
-            target_segment = segment.version_of
-            assert target_segment != segment
-
-            # Deep clone the segment to establish historical version this is required
-            # because the target segment will be altered when the segment is published.
-            # Think of it like a regular update to a segment where we create the clone
-            # to create the version, then modifying the new 'draft' version with the
-            # data from the change request.
-            target_segment.deep_clone()  # type: ignore[union-attr]
-
-            # Set the properties of the change request's segment to the properties
-            # of the target (i.e., canonical) segment.
-            target_segment.name = segment.name  # type: ignore[union-attr]
-            target_segment.description = segment.description  # type: ignore[union-attr]
-            target_segment.feature = segment.feature  # type: ignore[union-attr]
-            target_segment.save()  # type: ignore[union-attr]
-
-            # Delete the rules in order to replace them with copies of the segment.
-            target_segment.rules.all().delete()  # type: ignore[union-attr]
-            for rule in segment.rules.all():
-                rule.deep_clone(target_segment)  # type: ignore[arg-type]
+    #         # Delete the rules in order to replace them with copies of the segment.
+    #         target_segment.rules.all().delete()  # type: ignore[union-attr]
+    #         for rule in segment.rules.all():
+    #             rule.deep_clone(target_segment)  # type: ignore[arg-type]
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title

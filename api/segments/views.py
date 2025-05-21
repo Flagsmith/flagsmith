@@ -30,6 +30,7 @@ from .serializers import (
     CloneSegmentSerializer,
     SegmentListQuerySerializer,
 )
+from .services import SegmentCloner
 
 logger = logging.getLogger()
 
@@ -139,7 +140,7 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         source_segment = self.get_object()
         serializer = CloneSegmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        clone = source_segment.clone(serializer.validated_data["name"])
+        clone = SegmentCloner(source_segment).clone(serializer.validated_data["name"])
         return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 

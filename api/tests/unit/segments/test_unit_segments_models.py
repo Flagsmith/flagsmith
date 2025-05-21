@@ -7,6 +7,7 @@ from pytest_mock import MockerFixture
 from features.models import Feature
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from segments.services import SegmentCloner
 
 
 def test_get_segment_returns_parent_segment_for_nested_rule(
@@ -299,7 +300,7 @@ def test_deep_clone_of_segment(
     )
 
     # When
-    cloned_segment = segment.deep_clone()
+    cloned_segment = SegmentCloner(segment).deep_clone()
 
     # Then
     assert cloned_segment.name == segment.name
@@ -385,7 +386,7 @@ def test_manager_returns_only_highest_version_of_segments(
     assert segment.version == 2
     assert segment.version_of == segment
 
-    cloned_segment = segment.deep_clone()
+    cloned_segment = SegmentCloner(segment).deep_clone()
     assert cloned_segment.version == 2
     assert segment.version == 3
 
@@ -423,7 +424,7 @@ def test_deep_clone_of_segment_with_improper_sub_rule(
     SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE, rule=rule)
 
     with pytest.raises(AssertionError) as exception:
-        segment.deep_clone()
+        SegmentCloner(segment).deep_clone()
 
     assert (
         "AssertionError: Unexpected rule, expecting segment set not rule"
@@ -451,7 +452,7 @@ def test_deep_clone_of_segment_with_grandchild_rule(
     SegmentRule.objects.create(rule=child_rule, type=SegmentRule.ANY_RULE)
 
     with pytest.raises(AssertionError) as exception:
-        segment.deep_clone()
+        SegmentCloner(segment).deep_clone()
 
     assert (
         "AssertionError: Expected two layers of rules, not more" == exception.exconly()
@@ -506,7 +507,7 @@ def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(
 
 def test_segment_rule_get_skip_create_audit_log_when_skips(segment: Segment) -> None:
     # Given
-    cloned_segment = segment.deep_clone()
+    cloned_segment = SegmentCloner(segment).deep_clone()
     assert cloned_segment != cloned_segment.version_of
 
     segment_rule = SegmentRule.objects.create(

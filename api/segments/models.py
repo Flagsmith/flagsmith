@@ -161,55 +161,7 @@ class Segment(
 
         return cloned_rules
 
-    def _clone_segment_metadata(self, cloned_segment: "Segment") -> list["Metadata"]:
-        cloned_metadata = []
-        for metadata in self.metadata.all():
-            cloned_metadata.append(metadata.deep_clone_for_new_entity(cloned_segment))
-        cloned_segment.refresh_from_db()
-        assert (
-            len(self.metadata.all())
-            == len(cloned_metadata)
-            == len(cloned_segment.metadata.all())
-        ), "Mismatch during metadata creation"
-
-        return cloned_metadata
-
-    def clone(self, name: str) -> "Segment":
-        cloned_segment = Segment(
-            name=name,
-            version_of=None,
-            uuid=uuid.uuid4(),
-            description=self.description,
-            change_request=self.change_request,
-            project=self.project,
-            feature=self.feature,
-        )
-        cloned_segment.save()
-        self._clone_segment_rules(cloned_segment)
-        self._clone_segment_metadata(cloned_segment)
-        cloned_segment.refresh_from_db()
-        return cloned_segment
-
-    def shallow_clone(
-        self,
-        name: str,
-        description: str,
-        change_request: typing.Optional["ChangeRequest"],
-    ) -> "Segment":
-        cloned_segment = Segment(
-            version_of=self,
-            uuid=uuid.uuid4(),
-            name=name,
-            description=description,
-            change_request=change_request,
-            project=self.project,
-            feature=self.feature,
-            version=None,
-        )
-        cloned_segment.history.update()
-        cloned_segment.save()
-        return cloned_segment
-
+    # TODO: To be depreacted in flagsmith-common and flagsmith-workflows
     def deep_clone(self) -> "Segment":
         cloned_segment = deepcopy(self)
         cloned_segment.id = None
