@@ -5,7 +5,7 @@ import loadCrisp from 'common/loadCrisp'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon, { IconName } from 'components/Icon'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountStore from 'common/stores/account-store'
 import classNames from 'classnames'
@@ -15,6 +15,8 @@ import flagsmith from 'flagsmith'
 import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import API from 'project/api'
+import { integrationCategories } from './IntegrationsPage'
+import SidebarLink from 'components/SidebarLink'
 type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
@@ -60,12 +62,6 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   const complete = data.persistId
     ? localComplete || Utils.getFlagsmithTrait(data.persistId)
     : _complete
-  useEffect(() => {
-    document.body.classList.add('full-screen')
-    return () => {
-      document.body.classList.remove('full-screen')
-    }
-  }, [])
 
   const onCTAClick = () => {
     if (data.disabledMessage) {
@@ -152,10 +148,18 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
 }
 
 const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
+  useEffect(() => {
+    document.body.classList.add('full-screen')
+    return () => {
+      document.body.classList.remove('full-screen')
+    }
+  }, [])
   async function onCrispClick() {
     loadCrisp('8857f89e-0eb5-4263-ab49-a293872b6c19')
     Utils.openChat()
   }
+
+  const [category, setCategory] = useState('All')
 
   const organisationId = AccountStore.getOrganisation()?.id
   const { data: projects } = useGetProjectsQuery(
@@ -185,6 +189,11 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     { projectId: `${project}` },
     { skip: !project },
   )
+
+  const hasSubmittedIntegrations = Utils.getFlagsmithTrait(
+    'submitted_integrations',
+  )
+
   const environment = environments?.results?.[0]?.api_key
   const items: GettingStartedItem[] = [
     {
@@ -256,6 +265,32 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       title: 'Version comparison',
     },
   ]
+
+  if (!hasSubmittedIntegrations) {
+    return (
+      <div className='bg-light100 pb-5'>
+        <div className='container-fluid mt-4 px-3'>
+          <PageTitle title={'Use Feature Flags with your favourite tools'}>
+            To personalise your experience and help us assist you, select the
+            relevant tools you want to use feature flags with.
+          </PageTitle>
+        </div>
+        <div className='row'>
+          <div className='col-md-3 col-xl-2 h-100 d-flex flex-column'>
+            {['All'].concat(integrationCategories).map((v) => (
+              <SidebarLink
+                active={category === v}
+                onClick={() => setCategory(category)}
+              >
+                {v}
+              </SidebarLink>
+            ))}
+          </div>
+          <div className='col-md-4 h-100'></div>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>
