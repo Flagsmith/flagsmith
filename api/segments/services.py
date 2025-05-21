@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from copy import deepcopy
 
 from segments.models import Segment
@@ -22,13 +22,16 @@ class SegmentCloner:
             feature=self.segment.feature,
             version_of=None,
         )
-        self._clone_rules(to_segment=cloned)
-        self._clone_metadata(to_segment=cloned)
+        self.clone_segment_rules(cloned_segment=cloned)
+        self._clone_segment_metadata(cloned_segment=cloned)
         cloned.refresh_from_db()
         return cloned
 
     def shallow_clone(
-        self, name: str, description: str, change_request: "ChangeRequest"
+        self,
+        name: str,
+        description: str,
+        change_request: Optional["ChangeRequest"] = None,
     ) -> Segment:
         cloned_segment = Segment(
             version_of=self.segment,
@@ -49,34 +52,37 @@ class SegmentCloner:
         Create a versioned deep clone of the segment with rules only (no metadata in legacy logic),
         incrementing the original's version.
         """
-        clone = deepcopy(self.segment)
-        clone.id = None
-        clone.uuid = uuid.uuid4()
-        clone.version_of = self.segment
-        clone.save()
+        cloned_segment = deepcopy(self.segment)
+        cloned_segment.id = None
+        cloned_segment.uuid = uuid.uuid4()
+        cloned_segment.version_of = self.segment
+        cloned_segment.save()
 
-        self.segment.version += 1
+        self.segment.version = self.segment.version + 1
         self.segment.save_without_historical_record()
 
-        self._clone_rules(to_segment=clone)
-        return clone
+        self.clone_segment_rules(cloned_segment=cloned_segment)
+        return cloned_segment
 
-    def _clone_rules(self, to_segment: Segment) -> None:
+    def clone_segment_rules(self, cloned_segment: Segment) -> None:
         cloned_rules = []
         for rule in self.segment.rules.all():
-            cloned_rules.append(rule.deep_clone(to_segment))
-        to_segment.refresh_from_db()
+            cloned_rule = rule.deep_clone(cloned_segment)
+            cloned_rules.append(cloned_rule)
+        cloned_segment.refresh_from_db()
         assert (
-            self.segment.rules.count() == len(cloned_rules) == to_segment.rules.count()
+            len(self.segment.rules.all())
+            == len(cloned_rules)
+            == len(cloned_segment.rules.all())
         ), "Mismatch during rule cloning"
 
-    def _clone_metadata(self, to_segment: Segment) -> None:
+    def _clone_segment_metadata(self, cloned_segment: Segment) -> None:
         cloned_metadata = []
         for metadata in self.segment.metadata.all():
-            cloned_metadata.append(metadata.deep_clone_for_new_entity(to_segment))
-        to_segment.refresh_from_db()
+            cloned_metadata.append(metadata.deep_clone_for_new_entity(cloned_segment))
+        cloned_segment.refresh_from_db()
         assert (
-            self.segment.metadata.count()
+            len(self.segment.metadata.all())
             == len(cloned_metadata)
-            == to_segment.metadata.count()
+            == len(cloned_segment.metadata.all())
         ), "Mismatch during metadata cloning"

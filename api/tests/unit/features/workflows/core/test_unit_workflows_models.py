@@ -42,6 +42,7 @@ from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
+from segments.services import SegmentCloner
 
 now = timezone.now()
 
@@ -755,7 +756,8 @@ def test_retrieving_segments(
     )
 
     # When
-    segment = base_segment.shallow_clone(
+    cloner = SegmentCloner(base_segment)
+    segment = cloner.shallow_clone(
         name="New Name", description="New description", change_request=change_request
     )
 
@@ -808,7 +810,8 @@ def test_publishing_segments_as_part_of_commit(
 ) -> None:
     # Given
     assert segment.version == 2
-    cr_segment = segment.shallow_clone("Test Name", "Test Description", change_request)
+    cloner = SegmentCloner(segment)
+    cr_segment = cloner.shallow_clone("Test Name", "Test Description", change_request)
     assert cr_segment.rules.count() == 0
 
     # Add some rules that the original segment will be cloning from
