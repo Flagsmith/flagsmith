@@ -464,8 +464,8 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),
     )
 
 
@@ -494,6 +494,6 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
     )
