@@ -1,6 +1,6 @@
 import uuid
-from typing import TYPE_CHECKING, Optional
 from copy import deepcopy
+from typing import TYPE_CHECKING, Optional
 
 from segments.models import Segment
 

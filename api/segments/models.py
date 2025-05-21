@@ -32,7 +32,7 @@ from projects.models import Project
 from .managers import LiveSegmentManager, SegmentManager
 
 if typing.TYPE_CHECKING:
-    from features.workflows.core.models import ChangeRequest
+    pass
 
 logger = logging.getLogger(__name__)
 
