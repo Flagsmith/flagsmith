@@ -439,25 +439,26 @@ export type IdentityFeatureState = {
 }
 
 export type FeatureState = {
-  id: number
-  feature_state_value: FlagsmithValue
-  multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  uuid: string
-  enabled: boolean
+  change_request?: number
   created_at: string
-  updated_at: string
-  environment_feature_version: string
-  version?: number
-  live_from?: string
-  feature: number
+  enabled: boolean
   environment: number
+  environment_feature_version: string
+  feature: number
   feature_segment?: {
     id: number
     priority: number
     segment: number
     uuid: string
   }
-  change_request?: number
+  feature_state_value: FlagsmithValue
+  id: number
+  identity?: number
+  live_from?: string
+  multivariate_feature_state_values: MultivariateFeatureStateValue[]
+  updated_at: string
+  uuid: string
+  version?: number
   //Added by FE
   toRemove?: boolean
 }

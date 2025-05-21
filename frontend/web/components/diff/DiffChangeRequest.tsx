@@ -8,6 +8,7 @@ type DiffChangeRequestType = {
   changeRequest: ChangeRequest | null
   feature: number
   projectId: string
+  identity: number | null
   environmentId: string
   isVersioned: boolean
 }
@@ -15,6 +16,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
   changeRequest,
   environmentId,
   feature,
+  identity = null,
   isVersioned,
   projectId,
 }) => {
@@ -55,7 +57,7 @@ const DiffChangeRequest: FC<DiffChangeRequestType> = ({
       disableSegments={!isVersioned}
       projectId={projectId}
       newState={newState || []}
-      oldState={data?.results || []}
+      oldState={data?.results?.filter((v) => v.identity === identity) || []}
     />
   )
 }
