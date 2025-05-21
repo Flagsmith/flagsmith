@@ -51,6 +51,43 @@
   margin-top: 1rem;
 }
 
+/* Grid layouts */
+section .cardGrid {
+  display: grid;
+  gap: 24px;
+}
+
+/* Introduction section - 2x2 grid */
+[data-section="introduction"] .cardGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* Integration section - 1x4 grid */
+[data-section="integration"] .cardGrid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Configuration section - 2+1 grid */
+[data-section="configuration"] .cardGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+[data-section="configuration"] .cardGrid > *:last-child {
+  grid-column: 1;
+}
+
+/* Ecosystem section - 1x3 grid */
+[data-section="ecosystem"] .cardGrid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Responsive layout */
+@media (max-width: 996px) {
+  section .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .card {
   background: #fff;
   padding: 1.5rem;

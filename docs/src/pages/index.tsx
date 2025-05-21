@@ -20,9 +20,9 @@ import {
     gitBranch,
 } from 'ionicons/icons';
 import styles from './index.module.css';
-// TODO - Replace placeholder image with actual logo
-// TODO - Allign hero with sections
-// TODO - Icon must be above card title
+// TODO - Replace placeholder image with actual logo 
+// TODO - Allign hero with sections X 
+// TODO - Icon must be above card title X 
 // TODO - Fix card per line: 2x2 first 1x4 second etc
 // TODO - Responsiveness
 // TODO - Hero/header spacing (logo and text)
@@ -46,9 +46,9 @@ function Card({ title, description, link, icon }) {
   );
 }
 
-function Section({ title, children }) {
+function Section({ title, children, id }) {
   return (
-    <section className={styles.section}>
+    <section className={styles.section} data-section={id}>
       <h2>{title}</h2>
       <div className={styles.cardGrid}>{children}</div>
     </section>
@@ -73,7 +73,7 @@ export default function Home() {
       </header>
 
       <main className="container">
-        <Section title="Introduction to Flagsmith">
+        <Section title="Introduction to Flagsmith" id="introduction">
           <Card 
             title="Quickstart Guide" 
             description="Create your first project and flag" 
@@ -100,7 +100,7 @@ export default function Home() {
           />
         </Section>
 
-        <Section title="Flagsmith Integration">
+        <Section title="Flagsmith Integration" id="integration">
           <Card 
             title="OpenFeature Compatibility" 
             description="Use Flagsmith with OpenFeature" 
@@ -127,7 +127,7 @@ export default function Home() {
           />
         </Section>
 
-        <Section title="Configuration & Deployment">
+        <Section title="Configuration & Deployment" id="configuration">
           <Card 
             title="Integrations" 
             description="Third-party integrations (Segment, Datadog)" 
@@ -148,7 +148,7 @@ export default function Home() {
           />
         </Section>
 
-        <Section title="Flagsmith Ecosystem">
+        <Section title="Flagsmith Ecosystem" id="ecosystem">
           <Card 
             title="Release Notes" 
             description="What's new in Flagsmith" 
