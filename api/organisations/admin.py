@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from django.db import models
 from django.db.models import Count, Q
 
 from organisations.models import (
@@ -13,7 +14,7 @@ from organisations.models import (
 from projects.models import Project
 
 
-class ProjectInline(admin.StackedInline):  # type: ignore[type-arg]
+class ProjectInline(admin.StackedInline[Project]):
     model = Project
     extra = 0
     show_change_link = True
@@ -21,14 +22,14 @@ class ProjectInline(admin.StackedInline):  # type: ignore[type-arg]
     classes = ("collapse",)
 
 
-class SubscriptionInline(admin.StackedInline):  # type: ignore[type-arg]
+class SubscriptionInline(admin.StackedInline[Subscription]):
     model = Subscription
     extra = 0
     show_change_link = True
     verbose_name_plural = "Subscription"
 
 
-class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
+class UserOrganisationInline(admin.TabularInline[UserOrganisation]):
     model = UserOrganisation
     extra = 0
     show_change_link = True
@@ -36,7 +37,7 @@ class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
     verbose_name_plural = "Users"
 
 
-class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):  # type: ignore[type-arg]
+class OrganisationSubscriptionInformationCacheInline(admin.StackedInline[OrganisationSubscriptionInformationCache]):
     model = OrganisationSubscriptionInformationCache
     extra = 0
     show_change_link = False
@@ -97,7 +98,7 @@ class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):  # ty
 
 
 @admin.register(Organisation)
-class OrganisationAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
+class OrganisationAdmin(admin.ModelAdmin[Organisation]):
     inlines = [
         ProjectInline,
         SubscriptionInline,
@@ -117,7 +118,7 @@ class OrganisationAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     list_filter = ("subscription__plan",)
     search_fields = ("id", "name", "subscription__subscription_id", "users__email")
 
-    def get_queryset(self, request):  # type: ignore[no-untyped-def] # pragma: no cover
+    def get_queryset(self, request) -> models.QuerySet[Organisation]:  # pragma: no cover
         return (
             Organisation.objects.select_related("subscription")
             .annotate(
