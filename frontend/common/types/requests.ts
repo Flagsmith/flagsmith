@@ -640,6 +640,14 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
+  testWebhook: {
+    webhookUrl: string
+    secret?: string
+    scope: {
+      type: 'environment' | 'organisation'
+      id: string
+    }
+  }
   createOnboarding: {
     first_name: string
     last_name: string
