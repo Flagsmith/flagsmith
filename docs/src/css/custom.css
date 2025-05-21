@@ -29,6 +29,8 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
   --ifm-font-family-base: 'Open Sans Regular';
   --ifm-font-size-base: 92%;
+  --icon-color: #22194D; /* icon color */
+  --icon-circle-color: #F6F3EE; /* circle color */
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -43,7 +45,8 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
   --ifm-background-color: #111111; /* Base dark background */
   --ifm-background-surface-color: #222221; /* Lighter dark background for cards/sections */
-  --icon-circle-color: #22194D; /* Circle around icons */
+  --icon-color: #22194D; /* icon color */
+  --icon-circle-color: #7B51FB; /* circle color */
 }
 
 /* Card styles */
@@ -174,18 +177,8 @@
   font-size: 24px !important;
   padding: 12px;
   border-radius: 50%;
-}
-
-/* Light mode */
-[data-theme='light'] .card-icon {
-  color: var(--ifm-color-primary);
-  background: none;
-}
-
-/* Circle around icons for dark mode */
-[data-theme='dark'] .card-icon {
-  color: var(--ifm-color-primary-lighter);
-  background-color: rgba(149, 108, 255, 0.1);
+  color: var(--icon-color);
+  background-color: var(--icon-circle-color);
 }
 
 /* Add bottom padding */
