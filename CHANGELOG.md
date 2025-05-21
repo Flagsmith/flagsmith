@@ -1,5 +1,73 @@
 # Changelog
 
+## [2.177.1](https://github.com/Flagsmith/flagsmith/compare/v2.177.0...v2.177.1) (2025-05-14)
+
+
+### Bug Fixes
+
+* **e2e:** Incorrect project selected in RBAC E2E on staging ([#5433](https://github.com/Flagsmith/flagsmith/issues/5433)) ([c5a514d](https://github.com/Flagsmith/flagsmith/commit/c5a514ded1b7b19f7f7a5ad857e68d9d2fac81a2))
+* **e2e:** Missing RBAC tests ([#5419](https://github.com/Flagsmith/flagsmith/issues/5419)) ([0031301](https://github.com/Flagsmith/flagsmith/commit/003130144df562ec681bea470985b574acc0b86d))
+* lint ([#5427](https://github.com/Flagsmith/flagsmith/issues/5427)) ([7f0035e](https://github.com/Flagsmith/flagsmith/commit/7f0035e70b548414661c1230be9ab6057d3c454c))
+* metadata-feature-changes-erases-existing-value ([#5362](https://github.com/Flagsmith/flagsmith/issues/5362)) ([055644f](https://github.com/Flagsmith/flagsmith/commit/055644f8e46f8816407d95a63fda73963fc89810))
+* misc test fixes ([#5450](https://github.com/Flagsmith/flagsmith/issues/5450)) ([fd1e63c](https://github.com/Flagsmith/flagsmith/commit/fd1e63cab0e2ed50bdf951511c7ce3248297820f))
+* permissions not revoked after view project disabled ([#5438](https://github.com/Flagsmith/flagsmith/issues/5438)) ([2862e41](https://github.com/Flagsmith/flagsmith/commit/2862e41f7ddb44f30059790b6af67206d00172fc))
+* removed-node-sass-deprecated-package ([#5424](https://github.com/Flagsmith/flagsmith/issues/5424)) ([fd36ec3](https://github.com/Flagsmith/flagsmith/commit/fd36ec3cf4ce5f683121879f5e321ae75905dcf9))
+
+
+### Dependency Updates
+
+* bump jinja2 from 3.1.5 to 3.1.6 in /api ([#5435](https://github.com/Flagsmith/flagsmith/issues/5435)) ([4aa9e1b](https://github.com/Flagsmith/flagsmith/commit/4aa9e1b3116d617634773bdef6d8ce86c853a987))
+
+## [2.177.0](https://github.com/Flagsmith/flagsmith/compare/v2.176.2...v2.177.0) (2025-05-06)
+
+
+### Features
+
+* Render usage report in sales dashboard usage directly, without sending email ([#5407](https://github.com/Flagsmith/flagsmith/issues/5407)) ([3ad0124](https://github.com/Flagsmith/flagsmith/commit/3ad0124a0d42238e2edf951fc99330a0a4318263))
+
+
+### Bug Fixes
+
+* remove-pipedrive ([#5423](https://github.com/Flagsmith/flagsmith/issues/5423)) ([4bfae2e](https://github.com/Flagsmith/flagsmith/commit/4bfae2eb4bceacba2c1dca28a1c71582ab1b85a6))
+
+## [2.176.2](https://github.com/Flagsmith/flagsmith/compare/v2.176.1...v2.176.2) (2025-05-02)
+
+
+### Bug Fixes
+
+* marketing consent should default to True ([#5416](https://github.com/Flagsmith/flagsmith/issues/5416)) ([1d98d27](https://github.com/Flagsmith/flagsmith/commit/1d98d27103e7c32a8857ae1c2c6710544956c8d3))
+
+## [2.176.1](https://github.com/Flagsmith/flagsmith/compare/v2.176.0...v2.176.1) (2025-05-01)
+
+
+### Bug Fixes
+
+* incorrect feature value passed in integrations ([#5389](https://github.com/Flagsmith/flagsmith/issues/5389)) ([7262990](https://github.com/Flagsmith/flagsmith/commit/72629904c3d4ec1652e271f45644b4f26e5c22ef))
+* return-empty-trait-list-if-persistence-not-allowed-from-sdk ([#5399](https://github.com/Flagsmith/flagsmith/issues/5399)) ([19cd637](https://github.com/Flagsmith/flagsmith/commit/19cd637e5b78bc7c8bbf7828e29848c382a543a4))
+* **self-hosted onboarding:** add hubspot access token to API instances ([#5410](https://github.com/Flagsmith/flagsmith/issues/5410)) ([0bf5197](https://github.com/Flagsmith/flagsmith/commit/0bf51971ff035f9b7e35171d56d68cc021a810a5))
+
+## [2.176.0](https://github.com/Flagsmith/flagsmith/compare/v2.175.0...v2.176.0) (2025-04-30)
+
+
+### Features
+
+* Add product version to API response headers ([#5366](https://github.com/Flagsmith/flagsmith/issues/5366)) ([0cfe793](https://github.com/Flagsmith/flagsmith/commit/0cfe793544fcaad4a8f3cb06cf5962fc50a9e4de))
+* If-Modified-Since for /environment-document ([#5283](https://github.com/Flagsmith/flagsmith/issues/5283)) ([8e8ff22](https://github.com/Flagsmith/flagsmith/commit/8e8ff2213defbfa82c889d89470ca6d7dc934fcc))
+* TCP health check integration + ECS health checks on staging ([#5377](https://github.com/Flagsmith/flagsmith/issues/5377)) ([d4b5d6a](https://github.com/Flagsmith/flagsmith/commit/d4b5d6a68383067f27655ac848890a924d311aee))
+
+
+### Bug Fixes
+
+* convert large integers to strings ([#5314](https://github.com/Flagsmith/flagsmith/issues/5314)) ([ee9335d](https://github.com/Flagsmith/flagsmith/commit/ee9335db5500209dd7a50d9ab56bb91aef0476a1))
+* Gets build version for validating org plan ([#5402](https://github.com/Flagsmith/flagsmith/issues/5402)) ([a41b878](https://github.com/Flagsmith/flagsmith/commit/a41b878ac1245bd5dc0e1176da5094639a3fb84b))
+* move custom fields to org settings ([#5163](https://github.com/Flagsmith/flagsmith/issues/5163)) ([ea4db70](https://github.com/Flagsmith/flagsmith/commit/ea4db704c9b5a9f18ca5b8b9087102ef80dcd7d3))
+* replaced-undefined-with-null-when-disabling-change-requests ([#5391](https://github.com/Flagsmith/flagsmith/issues/5391)) ([5066427](https://github.com/Flagsmith/flagsmith/commit/5066427e66e6a1d4a0457c2dbec4e53f56dbe3d2))
+
+
+### Dependency Updates
+
+* bump flagsmith-common from 1.10.0 to 1.11.0 ([d4b5d6a](https://github.com/Flagsmith/flagsmith/commit/d4b5d6a68383067f27655ac848890a924d311aee))
+
 ## [2.175.0](https://github.com/Flagsmith/flagsmith/compare/v2.174.0...v2.175.0) (2025-04-23)
 
 

@@ -6,7 +6,26 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "command": ["run-task-processor"],
+            "command": [
+                "run-task-processor"
+            ],
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
@@ -20,6 +39,10 @@
                 {
                     "name": "AWS_DEFAULT_REGION",
                     "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_ALLOWED_HOSTS",
+                    "value": "*"
                 },
                 {
                     "name": "DJANGO_SETTINGS_MODULE",

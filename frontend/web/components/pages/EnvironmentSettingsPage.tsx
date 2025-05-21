@@ -187,10 +187,11 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       return
     }
 
-    if (
-      environmentData?.use_v2_feature_versioning &&
-      !currentEnv?.use_v2_feature_versioning
-    ) {
+    const isEnvDataVersioningEnabled =
+      environmentData?.use_v2_feature_versioning
+    const isCurrentEnvVersioningDisabled =
+      !!currentEnv && !currentEnv?.use_v2_feature_versioning
+    if (isEnvDataVersioningEnabled && isCurrentEnvVersioningDisabled) {
       setCurrentEnv((currentEnvState) => {
         AppActions.editEnv(environmentData)
         return {
@@ -205,8 +206,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     isFetchingEnvironment,
     environmentData,
     isSuccessEnvironment,
+    currentEnv,
     currentEnv?.use_v2_feature_versioning,
-    ])
+  ])
 
   const onSave = () => {
     toast('Environment Saved')
@@ -651,8 +653,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                               {
                                 minimum_change_request_approvals: value
                                   ? 0
-                                  : undefined,
+                                  : null,
                               },
+                              true,
                               true,
                             )
                           }
@@ -789,8 +792,10 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                           </div>
                           <div className='mt-4'>
                             <Setting
-                              title='Allow client SDKs to set user traits'
-                              description={`Disabling this option will prevent client SDKs from using the client key from setting traits.`}
+                              title='Persist traits when using client-side SDK keys'
+                              description={
+                                'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'
+                              }
                               checked={currentEnv?.allow_client_traits}
                               onChange={(value) => {
                                 updateCurrentEnv(
