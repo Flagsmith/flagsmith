@@ -2,7 +2,6 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from django.conf import settings
-
 from django.utils import timezone as d_timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
