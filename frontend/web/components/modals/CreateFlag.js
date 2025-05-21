@@ -810,7 +810,6 @@ const CreateFlag = class extends Component {
               editingChangeRequest={this.props.changeRequest}
               projectId={this.props.projectId}
               environmentId={this.props.environmentId}
-              history={this.props.history}
               changeRequests={changeRequests}
               scheduledChangeRequests={scheduledChangeRequests}
             />
@@ -1093,7 +1092,6 @@ const CreateFlag = class extends Component {
                             {isEdit && !identity ? (
                               <Tabs
                                 onChange={() => this.forceUpdate()}
-                                history={this.props.history}
                                 urlParam='tab'
                               >
                                 <TabItem

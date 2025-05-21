@@ -24,7 +24,7 @@ import CreateGroup from 'components/modals/CreateGroup'
 import UserGroupList from 'components/UserGroupList'
 import { useGetRolesQuery } from 'common/services/useRole'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
+import { RouterChildContext, useHistory } from 'react-router'
 import map from 'lodash/map'
 import Input from 'components/base/forms/Input'
 import ErrorMessage from 'components/ErrorMessage'
@@ -77,6 +77,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const { data: userInvitesData } = useGetUserInvitesQuery({
     organisationId: organisation.id,
   })
+
+  const history = useHistory()
+
   const [deleteUserInvite] = useDeleteUserInviteMutation()
   const [resendUserInvite] = useResendUserInviteMutation()
 
@@ -317,7 +320,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                         <a
                                           href='#'
                                           onClick={() => {
-                                            router.history.replace(
+                                            history.replace(
                                               Constants.getUpgradeUrl(),
                                             )
                                           }}

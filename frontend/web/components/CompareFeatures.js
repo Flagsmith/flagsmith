@@ -14,10 +14,6 @@ class CompareEnvironments extends Component {
 
   static propTypes = {}
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   constructor(props) {
     super(props)
     this.state = {
@@ -141,16 +137,15 @@ class CompareEnvironments extends Component {
                             permission={permission}
                             environmentId={data.api_key}
                             projectId={this.props.projectId}
-                            history={this.context.router.history}
+                            history={this.props.history}
                             index={i}
                             canDelete={permission}
                             toggleFlag={toggleFlag}
                             removeFlag={removeFlag}
                             projectFlag={this.state.flag}
                             onCloseEditModal={() => {
-                              this.context.router.history.replace({
-                                pathname:
-                                  this.context.router.history.location.pathname,
+                              this.props.history.replace({
+                                pathname: this.props.history.location.pathname,
                                 search: '?tab=feature-values',
                               })
                             }}

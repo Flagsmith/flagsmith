@@ -30,13 +30,13 @@ const UserPage = class extends Component {
       .then((res) => {
         const user = res.results[0]
         if (user) {
-          this.context.router.history.replace(
+          this.props.history.replace(
             `/project/${params.projectId}/environment/${
               params.environmentId
             }/users/${params.identity}/${user.identity || user.identity_uuid}`,
           )
         } else {
-          this.context.router.history.replace(
+          this.props.history.replace(
             `/project/${params.projectId}/environment/${params.environmentId}/users/`,
           )
         }

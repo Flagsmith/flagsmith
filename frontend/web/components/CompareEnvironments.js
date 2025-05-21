@@ -20,10 +20,6 @@ class CompareEnvironments extends Component {
 
   static propTypes = {}
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   constructor(props) {
     super(props)
     this.state = {
@@ -255,7 +251,7 @@ class CompareEnvironments extends Component {
                           condensed
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
-                          history={this.context.router.history}
+                          history={this.props.history}
                           fadeValue={fadeValue}
                           environmentFlags={this.state.environmentLeftFlags}
                           projectFlags={this.state.projectFlagsLeft}
@@ -286,7 +282,7 @@ class CompareEnvironments extends Component {
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
-                          history={this.context.router.history}
+                          history={this.props.history}
                           environmentFlags={this.state.environmentRightFlags}
                           projectFlags={this.state.projectFlagsRight}
                           permission={permission}

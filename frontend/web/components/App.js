@@ -428,7 +428,6 @@ const App = class extends Component {
                                     <div className='d-flex gap-1 ml-1 align-items-center'>
                                       <BreadcrumbSeparator
                                         projectId={projectId}
-                                        router={this.context.router}
                                         hideSlash={!activeProject}
                                         focus='organisation'
                                       >
@@ -455,7 +454,6 @@ const App = class extends Component {
                                       {!!activeProject && (
                                         <BreadcrumbSeparator
                                           projectId={projectId}
-                                          router={this.context.router}
                                           hideSlash
                                           focus='project'
                                         >

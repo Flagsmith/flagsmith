@@ -32,14 +32,10 @@ const SettingsTab = {
 }
 
 const OrganisationSettingsPage = class extends Component {
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   static displayName = 'OrganisationSettingsPage'
 
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       manageSubscriptionLoaded: true,
       permissions: [],
@@ -77,9 +73,9 @@ const OrganisationSettingsPage = class extends Component {
   onRemove = () => {
     toast('Your organisation has been removed')
     if (AccountStore.getOrganisation()) {
-      this.context.router.history.replace(Utils.getOrganisationHomePage())
+      this.props.history.replace(Utils.getOrganisationHomePage())
     } else {
-      this.context.router.history.replace('/create')
+      this.props.history.replace('/create')
     }
   }
 

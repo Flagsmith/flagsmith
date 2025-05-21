@@ -5,15 +5,14 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Project from 'common/project'
 import { onPaymentLoad } from './modals/Payment'
 import makeAsyncScriptLoader from 'react-async-script'
+import { useRouteMatch } from 'react-router'
 
-type ProjectsPageType = {
-  match: {
-    params: {
-      organisationId: string
-    }
-  }
+interface RouteParams {
+  organisationId: string
 }
-const ProjectsPage: FC<ProjectsPageType> = ({ match }) => {
+
+const ProjectsPage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
   return (
     <OrganisationProvider id={match.params.organisationId}>
       {() => {

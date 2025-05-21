@@ -19,7 +19,7 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRoleEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import { Link, RouterChildContext } from 'react-router-dom'
+import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
@@ -56,26 +56,18 @@ const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Enabled', value: true },
 ]
 
-interface EnvironmentSettingsPageProps {
-  // Router props
-  match: {
-    params: {
-      projectId: string
-      environmentId: string
-    }
-  }
-  router: RouterChildContext['router']
-}
-
-const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
-  match,
-  router,
-}) => {
+const EnvironmentSettingsPage: React.FC = () => {
   const [createWebhook] = useCreateWebhookMutation()
   const [deleteWebhook] = useDeleteWebhookMutation()
   const [saveWebhook] = useUpdateWebhookMutation()
 
   const store = getStore()
+  const history = useHistory()
+  const match = useRouteMatch<{
+    projectId: string
+    environmentId: string
+  }>()
+
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [environmentContentType, setEnvironmentContentType] =
@@ -106,10 +98,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     }
   }
 
-  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal(
-    router.history,
-    { onDiscard: onDiscard },
-  )
+  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal({
+    onDiscard: onDiscard,
+  })
 
   const {
     data: environmentData,
@@ -216,7 +207,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
 
   const onRemove = () => {
     toast('Your project has been removed')
-    router.history.replace(Utils.getOrganisationHomePage())
+    history.replace(Utils.getOrganisationHomePage())
   }
 
   const confirmRemove = (environment: Environment, callback: () => void) => {
@@ -230,14 +221,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
   const onRemoveEnvironment = (environment: Environment) => {
     const envs = ProjectStore.getEnvs() as Environment[] | null
     if (envs && envs?.length > 0) {
-      router.history.replace(
+      history.replace(
         `/project/${match.params.projectId}/environment` +
           `/${envs[0].api_key}/features`,
       )
     } else {
-      router.history.replace(
-        `/project/${match.params.projectId}/environment/create`,
-      )
+      history.replace(`/project/${match.params.projectId}/environment/create`)
     }
     toast(
       <div>
@@ -299,7 +288,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     openModal(
       'New Webhook',
       <CreateWebhookModal
-        router={router}
         environmentId={match.params.environmentId}
         projectId={match.params.projectId}
         save={(webhook: Webhook) =>
@@ -317,7 +305,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     openModal(
       'Edit Webhook',
       <CreateWebhookModal
-        router={router}
         webhook={webhook}
         isEdit
         environmentId={match.params.environmentId}
@@ -877,7 +864,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                         level='environment'
                         roleTabTitle='Environment Permissions'
                         roles={roles}
-                        router={router}
                       />
                     </FormGroup>
                   </TabItem>

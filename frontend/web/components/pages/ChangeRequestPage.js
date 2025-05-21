@@ -29,17 +29,14 @@ import ErrorMessage from 'components/ErrorMessage'
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
   getApprovals = (users, approvals) =>
     users?.filter((v) => approvals?.includes(v.id))
 
   getGroupApprovals = (groups, approvals) =>
     groups.filter((v) => approvals.find((a) => a.group === v.id))
 
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       showArchived: false,
       tags: [],
@@ -121,7 +118,7 @@ const ChangeRequestsPage = class extends Component {
       destructive: true,
       onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
-          this.context.router.history.replace(
+          this.props.history.replace(
             `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
           )
         })
@@ -138,7 +135,7 @@ const ChangeRequestsPage = class extends Component {
     openModal(
       'Edit Change Request',
       <CreateFlagModal
-        history={this.props.router.history}
+        history={this.props.history}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}

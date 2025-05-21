@@ -5,21 +5,17 @@ import Icon from './Icon'
 import ServerSideSDKKeys from './ServerSideSDKKeys'
 import PageTitle from './PageTitle'
 import Utils from 'common/utils/utils'
+import { useRouteMatch } from 'react-router'
 
-type SDKKeysType = {
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
 
-const SDKKeysPage: FC<SDKKeysType> = ({
-  match: {
-    params: { environmentId },
-  },
-}) => {
+const SDKKeysPage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
+  const environmentId = match?.params?.environmentId
+
   return (
     <div
       data-test='segments-page'

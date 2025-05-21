@@ -29,12 +29,8 @@ import WarningMessage from 'components/WarningMessage'
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       roles: [],
     }
@@ -510,7 +506,7 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
-                                this.context.router.history.replace(
+                                this.props.history.replace(
                                   Utils.getOrganisationHomePage(),
                                 )
                                 deleteProject(this.props.match.params.projectId)
