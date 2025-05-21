@@ -2,16 +2,16 @@ from typing import TYPE_CHECKING
 
 from django.utils import timezone
 
-from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 from environments.tasks import rebuild_environment_document
-from features.versioning.tasks import trigger_update_version_webhooks
-from features.versioning.signals import environment_feature_version_published
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.signals import environment_feature_version_published
+from features.versioning.tasks import trigger_update_version_webhooks
+from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 from segments.services import SegmentCloner
 
 if TYPE_CHECKING:
-    from users.models import FFAdminUser
     from features.workflows.core.models import ChangeRequest
+    from users.models import FFAdminUser
 
 
 class ChangeRequestCommitter:

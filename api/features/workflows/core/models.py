@@ -36,16 +36,11 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-from environments.tasks import rebuild_environment_document
-from features.models import FeatureState
-from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.signals import environment_feature_version_published
-from features.versioning.tasks import trigger_update_version_webhooks
+from core.workflows_services import ChangeRequestCommitter
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
 )
-from core.workflows_services import ChangeRequestCommitter
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment

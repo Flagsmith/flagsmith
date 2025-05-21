@@ -27,9 +27,9 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from segments.services import SegmentCloner
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
-from segments.services import SegmentCloner
 
 User = get_user_model()
 

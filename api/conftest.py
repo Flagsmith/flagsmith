@@ -79,6 +79,7 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
+from segments.services import SegmentCloner
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
@@ -87,7 +88,6 @@ from tests.types import (
     WithProjectPermissionsCallable,
 )
 from users.models import FFAdminUser, UserPermissionGroup
-from segments.services import SegmentCloner
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

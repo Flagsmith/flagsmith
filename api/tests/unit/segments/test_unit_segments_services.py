@@ -1,14 +1,13 @@
-import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.contenttypes.models import ContentType
-from flag_engine.segments.constants import EQUAL, CONTAINS, GREATER_THAN
+from flag_engine.segments.constants import CONTAINS, EQUAL, GREATER_THAN
 
 from features.workflows.core.models import ChangeRequest
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
-from segments.models import Segment, SegmentRule, Condition
+from segments.models import Condition, Segment, SegmentRule
 from segments.services import SegmentCloner
 
 
