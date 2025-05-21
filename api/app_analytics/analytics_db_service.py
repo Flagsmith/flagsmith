@@ -57,10 +57,9 @@ def get_usage_data(
 
         case constants.PREVIOUS_BILLING_PERIOD:
             if not is_subscription_valid or sub_cache is None:
-                last_day_of_prev_month = now.replace(day=1) - timedelta(days=1)
-                first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
-                date_start = first_day_of_prev_month
-                date_stop = last_day_of_prev_month
+                # Last day of previous month
+                date_stop = now.replace(day=1) - timedelta(days=1)
+                date_start = date_stop.replace(day=1)
             else:
                 starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
                     days=30
