@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from django.db import models
 from django.db.models import Count, Q
+from django.db.models.query import QuerySet
 from django.http import HttpRequest
 from typing import Protocol
 
@@ -129,7 +130,7 @@ class OrganisationAdmin(admin.ModelAdmin[Organisation]):
 
     def get_queryset(
         self, request: HttpRequest
-    ) -> models.QuerySet[Organisation]:  # pragma: no cover
+    ) -> QuerySet[Organisation]:  # pragma: no cover
         return (
             Organisation.objects.select_related("subscription")
             .annotate(
