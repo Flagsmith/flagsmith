@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.db import models
 from django.db.models import Count, Q
 from django.http import HttpRequest
+from typing import Protocol
 
 from organisations.models import (
     Organisation,
@@ -15,7 +16,12 @@ from organisations.models import (
 from projects.models import Project
 
 
-class ProjectInline(admin.StackedInline[Project]):
+class OrganisationWithAnnotations(Protocol):
+    num_users: int
+    num_projects: int
+
+
+class ProjectInline(admin.StackedInline[Project, Organisation]):
     model = Project
     extra = 0
     show_change_link = True
@@ -23,14 +29,14 @@ class ProjectInline(admin.StackedInline[Project]):
     classes = ("collapse",)
 
 
-class SubscriptionInline(admin.StackedInline[Subscription]):
+class SubscriptionInline(admin.StackedInline[Subscription, Organisation]):
     model = Subscription
     extra = 0
     show_change_link = True
     verbose_name_plural = "Subscription"
 
 
-class UserOrganisationInline(admin.TabularInline[UserOrganisation]):
+class UserOrganisationInline(admin.TabularInline[UserOrganisation, Organisation]):
     model = UserOrganisation
     extra = 0
     show_change_link = True
@@ -39,7 +45,7 @@ class UserOrganisationInline(admin.TabularInline[UserOrganisation]):
 
 
 class OrganisationSubscriptionInformationCacheInline(
-    admin.StackedInline[OrganisationSubscriptionInformationCache]
+    admin.StackedInline[OrganisationSubscriptionInformationCache, Organisation]
 ):
     model = OrganisationSubscriptionInformationCache
     extra = 0
@@ -139,11 +145,11 @@ class OrganisationAdmin(admin.ModelAdmin[Organisation]):
             .all()
         )
 
-    def num_users(self, instance: Organisation) -> int:
-        return instance.num_users  # type: ignore[no-any-return]
+    def num_users(self, instance: OrganisationWithAnnotations) -> int:
+        return instance.num_users
 
-    def num_projects(self, instance: Organisation) -> int:
-        return instance.num_projects  # type: ignore[no-any-return]
+    def num_projects(self, instance: OrganisationWithAnnotations) -> int:
+        return instance.num_projects
 
     def subscription_id(self, instance: Organisation) -> str:
         if instance.subscription and instance.subscription.subscription_id:
