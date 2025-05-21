@@ -1,55 +1,89 @@
 # Change Requests
 
 :::tip
-
-Change requests are part of our Scale-Up and Enterprise plans.
-
+Change requests are part of our [Scale-Up and Enterprise plans](/version-comparison).
 :::
 
 ## Overview
 
-You can use Change Requests to add workflow control to the changing of Flag values. Change Requests allow a user to
-propose a change to a flag value, and then require that change is approved by a number of other team members.
+Change Requests add workflow control to flag value modifications, similar to Git Pull Requests. They ensure changes (especially in Production) get proper review before deployment.
 
-You can use Change Requests to ensure that, for example, a change to a flag in Production has to be approved by another
-team member. They work in a similar way to Pull Requests in git.
+```mermaid
+flowchart TB
+    subgraph Change Request Flow
+        A[Create Change Request] -->|Submit| B[Under Review]
+        B -->|Approve| C[Ready to Publish]
+        B -->|Reject| D[Needs Revision]
+        D -->|Update| B
+        C -->|Publish| E[Changes Live]
+    end
+```
 
-## Setting up Change Requests
+## Required Permissions
 
-Change Requests are configured at the Environment level. To enable Change Requests, go to the Environment Settings Page,
-Enable the Change Request setting, and select how many approvals you would like for each Change Request to be applied.
+For a complete list of available permissions, see the [permissions reference](/system-administration/rbac#permissions-reference).
 
-## Creating a Change Request
+| Action | Required Permission | Details |
+|--------|-------------------|----------|
+| Create Changes | Update Feature | Project level permission |
+| Review Changes | Environment Write | Environment level access |
+| Publish Changes | Environment Admin | Environment level access |
 
-:::info
+## Workflow Steps
 
-Any user that has permission to _Update_ a Feature within the Environment can create a Change Request
+### 1. Setup Change Requests
 
+Change Requests are configured at the Environment level. To enable Change Requests, go to the Environment Settings Page, Enable the Change Request setting, and select how many approvals you would like for each Change Request to be applied.
+
+### 2. Creating Changes
+
+When modifying flags in protected environments:
+
+1. Select flag to modify
+2. Click "Create Change Request" button (top-right of flag details)
+3. Provide required information:
+   ```text
+   Title: [Required] Brief description
+   Description: [Optional] Detailed explanation
+   Reviewers: [Required] At least one assignee
+   ```
+
+:::tip
+Users need Update Feature permissions to create requests
+:::
+### 3. Review Process
+
+Reviewers will:
+1. Receive email notification when assigned
+2. Access Change Requests area from main navigation
+3. Review proposed changes:
+   - Current flag state
+   - Proposed modifications
+   - Change description
+4. Take action:
+   - Approve
+   - Request changes
+   - Add comments
+
+:::tip
+Reviewers need Environment Write permissions
+:::
+### 4. Publishing Changes
+
+Once approved:
+1. Original requester gets notification
+2. "Publish Change" button becomes available
+3. Changes apply immediately on publish
+
+
+
+:::tip Best Practices
+- Use clear titles describing the change
+- Add detailed descriptions for complex changes
+- Assign multiple reviewers for critical environments
+- Use [audit logging](/system-administration/audit-logs) for tracking
 :::
 
-Once an Environment is configured with Change Requests enabled, attempting to change a flag value will prompt you to
-create a new Change Request.
-
-You will need to provide:
-
-- The title of the Change Request
-- Optionally a description of the reason for the Change Request
-- Any number of assignees. These people will receive an email alerting them of the Change Request
-
-## Approving a Change Request
-
-:::info
-
-Any user that has permission to write to the Environment containing the Change Request can approve it.
-
+:::warning
+ Review your environment configuration before enabling Change Requests in Production
 :::
-
-Change Requests awaiting approval are listed in the Change Request area.
-
-Clicking on a Change Request brings up the details of the request, and the current and new Flag values.
-
-## Publishing a Change Request
-
-When the required number of approvals have been made, you will be able to publish the Change Request.
-
-The Change Request will immediately come into effect once the Publish Change button is clicked.
