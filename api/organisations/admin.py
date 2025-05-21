@@ -37,7 +37,9 @@ class UserOrganisationInline(admin.TabularInline[UserOrganisation]):
     verbose_name_plural = "Users"
 
 
-class OrganisationSubscriptionInformationCacheInline(admin.StackedInline[OrganisationSubscriptionInformationCache]):
+class OrganisationSubscriptionInformationCacheInline(
+    admin.StackedInline[OrganisationSubscriptionInformationCache]
+):
     model = OrganisationSubscriptionInformationCache
     extra = 0
     show_change_link = False
@@ -118,7 +120,9 @@ class OrganisationAdmin(admin.ModelAdmin[Organisation]):
     list_filter = ("subscription__plan",)
     search_fields = ("id", "name", "subscription__subscription_id", "users__email")
 
-    def get_queryset(self, request) -> models.QuerySet[Organisation]:  # pragma: no cover
+    def get_queryset(
+        self, request
+    ) -> models.QuerySet[Organisation]:  # pragma: no cover
         return (
             Organisation.objects.select_related("subscription")
             .annotate(
