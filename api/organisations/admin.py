@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 from django.db import models
 from django.db.models import Count, Q
+from django.http import HttpRequest
 
 from organisations.models import (
     Organisation,
@@ -121,7 +122,7 @@ class OrganisationAdmin(admin.ModelAdmin[Organisation]):
     search_fields = ("id", "name", "subscription__subscription_id", "users__email")
 
     def get_queryset(
-        self, request
+        self, request: HttpRequest
     ) -> models.QuerySet[Organisation]:  # pragma: no cover
         return (
             Organisation.objects.select_related("subscription")
