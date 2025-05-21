@@ -21,7 +21,7 @@ class OrganisationWithAnnotations(Protocol):
     num_projects: int
 
 
-class ProjectInline(admin.StackedInline[Project, Organisation]):
+class ProjectInline(admin.StackedInline[Project]):
     model = Project
     extra = 0
     show_change_link = True
@@ -29,14 +29,14 @@ class ProjectInline(admin.StackedInline[Project, Organisation]):
     classes = ("collapse",)
 
 
-class SubscriptionInline(admin.StackedInline[Subscription, Organisation]):
+class SubscriptionInline(admin.StackedInline[Subscription]):
     model = Subscription
     extra = 0
     show_change_link = True
     verbose_name_plural = "Subscription"
 
 
-class UserOrganisationInline(admin.TabularInline[UserOrganisation, Organisation]):
+class UserOrganisationInline(admin.TabularInline[UserOrganisation]):
     model = UserOrganisation
     extra = 0
     show_change_link = True
@@ -45,7 +45,7 @@ class UserOrganisationInline(admin.TabularInline[UserOrganisation, Organisation]
 
 
 class OrganisationSubscriptionInformationCacheInline(
-    admin.StackedInline[OrganisationSubscriptionInformationCache, Organisation]
+    admin.StackedInline[OrganisationSubscriptionInformationCache]
 ):
     model = OrganisationSubscriptionInformationCache
     extra = 0
