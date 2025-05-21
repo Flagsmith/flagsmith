@@ -41,8 +41,8 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from users.models import FFAdminUser
 from segments.services import SegmentCloner
+from users.models import FFAdminUser
 
 now = timezone.now()
 
