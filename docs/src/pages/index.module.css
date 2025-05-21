@@ -21,3 +21,58 @@
   align-items: center;
   justify-content: center;
 }
+.hero {
+  background: #fdf9f6;
+  padding: 4rem 0;
+}
+
+.heroInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo {
+  max-width: 200px;
+}
+
+.section {
+  margin-top: 4rem;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  transition: transform 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card h3 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.card p {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.card a {
+  font-weight: bold;
+  color: #6c4efc;
+  text-decoration: none;
+}

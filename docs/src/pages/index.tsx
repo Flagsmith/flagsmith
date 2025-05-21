@@ -1,0 +1,72 @@
+import React from 'react';
+import clsx from 'clsx';
+import Layout from '@theme/Layout';
+import Link from '@docusaurus/Link';
+import styles from './index.module.css';
+
+function Card({ title, description, link }) {
+  return (
+    <div className={styles.card}>
+      <h3>{title}</h3>
+      <p>{description}</p>
+      <Link to={link}>Learn more →</Link>
+    </div>
+  );
+}
+
+function Section({ title, children }) {
+  return (
+    <section className={styles.section}>
+      <h2>{title}</h2>
+      <div className={styles.cardGrid}>{children}</div>
+    </section>
+  );
+}
+
+export default function Home() {
+  return (
+    <Layout>
+      <header className={styles.hero}>
+        <div className="container">
+          <div className={styles.heroInner}>
+            <div>
+              <h1>Manage feature flags and remote config across web, mobile, and server-side apps.</h1>
+              <Link className="button button--primary button--lg" to="/docs/">
+                Get Started
+              </Link>
+            </div>
+            <img src="/img/banner-logo-dark.png" alt="Flagsmith Logo" className={styles.logo} /> {/* Placeholder img needs replacement */}
+          </div>
+        </div>
+      </header>
+
+      <main className="container">
+        <Section title="Introduction to Flagsmith">
+          <Card title="Quickstart Guide" description="Create your first project and flag" link="/quickstart" />
+          <Card title="What are Feature Flags?" description="Concepts and basics" link="/basic-features/managing-features" />
+          <Card title="Advanced Capabilities" description="Testing, monitoring, analytics, experiments" link="/advanced-use/ab-testing" />
+          <Card title="Compare Plans" description="Overview of Flagsmith plans" link="/version-comparison" />
+        </Section>
+
+        <Section title="Flagsmith Integration">
+          <Card title="OpenFeature Compatibility" description="Use Flagsmith with OpenFeature" link="/clients/openfeature" />
+          <Card title="Client-Side SDKs" description="Web, React Native, etc." link="/clients#client-side-sdks" />
+          <Card title="Server-Side SDKs" description="Node, Python, Java, etc." link="/clients#server-side-sdks" />
+          <Card title="Flagsmith API" description="REST API reference and usage examples" link="/clients/rest" />
+        </Section>
+
+        <Section title="Configuration & Deployment">
+          <Card title="Integrations" description="Third-party integrations (Segment, Datadog)" link="/integrations" />
+          <Card title="System Settings" description="Admin settings and multi-tenancy" link="/system-administration/authentication/" /> {/*Placeholder until this section has a index*/}
+          <Card title="Self-hosting & Deployment" description="Hosting options and setup" link="/deployment" />
+        </Section>
+
+        <Section title="Flagsmith Ecosystem">
+          <Card title="Release Notes" description="What's new in Flagsmith" link="/platform/releases" />
+          <Card title="Public Roadmap" description="Features coming soon" link="/platform/roadmap" />
+          <Card title="Contribute to Flagsmith" description="How to file issues, PRs, and contribute" link="/CONTRIBUTING.md" />
+        </Section>
+      </main>
+    </Layout>
+  );
+}
