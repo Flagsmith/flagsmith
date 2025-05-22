@@ -5,7 +5,6 @@ from typing import Any
 
 from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
-import datetime
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
