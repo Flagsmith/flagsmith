@@ -52,6 +52,7 @@ import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
+import { withRouter } from 'react-router'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -2145,10 +2146,6 @@ CreateFlag.propTypes = {}
 //This will remount the modal when a feature is created
 const FeatureProvider = (WrappedComponent) => {
   class HOC extends Component {
-    static contextTypes = {
-      router: propTypes.object.isRequired,
-    }
-
     constructor(props) {
       super(props)
       this.state = {
@@ -2248,4 +2245,6 @@ const FeatureProvider = (WrappedComponent) => {
   return HOC
 }
 
-export default FeatureProvider(ConfigProvider(withSegmentOverrides(CreateFlag)))
+const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(CreateFlag))
+
+export default FeatureProvider(WrappedCreateFlag)

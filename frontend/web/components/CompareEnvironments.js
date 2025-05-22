@@ -12,6 +12,7 @@ import Icon from './Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
+import { withRouter } from 'react-router'
 
 const featureNameWidth = 300
 
@@ -299,6 +300,7 @@ class CompareEnvironments extends Component {
                   </Row>
                 )
               }
+              console.log(this.props.history)
               return (
                 <div>
                   {this.state.isLoading && (
@@ -446,4 +448,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = ConfigProvider(CompareEnvironments)
+module.exports = withRouter(ConfigProvider(CompareEnvironments))

@@ -1,13 +1,9 @@
 import React, { Component } from 'react'
 import data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
-
+import { withRouter } from 'react-router'
 const UserPage = class extends Component {
   static displayName = 'UserPage'
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props, context) {
     super(props, context)
@@ -56,4 +52,4 @@ const UserPage = class extends Component {
 
 UserPage.propTypes = {}
 
-module.exports = ConfigProvider(UserPage)
+module.exports = withRouter(ConfigProvider(UserPage))

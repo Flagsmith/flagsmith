@@ -1,10 +1,7 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
+import { withRouter } from 'react-router'
 const InvitePage = class extends Component {
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   static displayName = 'InvitePage'
 
   constructor(props, context) {
@@ -51,4 +48,4 @@ const InvitePage = class extends Component {
 
 InvitePage.propTypes = {}
 
-module.exports = InvitePage
+module.exports = withRouter(InvitePage)

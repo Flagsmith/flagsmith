@@ -6,11 +6,12 @@ import data from 'common/data/base/_data'
 import FeatureRow from './FeatureRow'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
+import { withRouter } from 'react-router'
 
 const featureNameWidth = 300
 
-class CompareEnvironments extends Component {
-  static displayName = 'CompareEnvironments'
+class CompareFeatures extends Component {
+  static displayName = 'CompareFeatures'
 
   static propTypes = {}
 
@@ -197,4 +198,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = ConfigProvider(CompareEnvironments)
+module.exports = withRouter(ConfigProvider(CompareFeatures))

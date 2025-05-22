@@ -3,7 +3,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
-import OnboardingPage from './OnboardingPage'
+import { withRouter } from 'react-router'
 
 class CreateOrganisationPage extends Component {
   static displayName = 'CreateOrganisastionPage'
@@ -11,10 +11,6 @@ class CreateOrganisationPage extends Component {
   constructor(props, context) {
     super(props, context)
     this.state = { name: '' }
-  }
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
   }
 
   componentDidMount = () => {
@@ -104,4 +100,4 @@ class CreateOrganisationPage extends Component {
   }
 }
 
-export default ConfigProvider(CreateOrganisationPage)
+export default withRouter(ConfigProvider(CreateOrganisationPage))

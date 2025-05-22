@@ -4,10 +4,6 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 const ProjectSelect = class extends Component {
   static displayName = 'ProjectSelect'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   constructor(props, context) {
     super(props, context)
     this.state = { search: '' }
