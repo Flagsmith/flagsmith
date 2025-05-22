@@ -77,7 +77,8 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
   const orgSubscription = AccountStore.getOrganisation()?.subscription
   const isOnFreePlanPeriods =
-    planNames.free === currentPlan || !orgSubscription?.has_billing_periods
+    planNames.free === currentPlan ||
+    !orgSubscription?.has_active_billing_periods
   const [billingPeriod, setBillingPeriod] = useState<
     Req['getOrganisationUsage']['billing_period']
   >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
