@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect, useMemo, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import loadCrisp from 'common/loadCrisp'
@@ -15,8 +15,14 @@ import flagsmith from 'flagsmith'
 import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import API from 'project/api'
-import { integrationCategories } from './IntegrationsPage'
+import {
+  integrationCategories,
+  unreleasedIntegrations,
+} from './IntegrationsPage'
 import SidebarLink from 'components/SidebarLink'
+import { sortBy } from 'lodash'
+import Input from 'components/base/forms/Input'
+import IntegrationSelect from 'components/IntegrationSelect'
 type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
@@ -159,8 +165,6 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     Utils.openChat()
   }
 
-  const [category, setCategory] = useState('All')
-
   const organisationId = AccountStore.getOrganisation()?.id
   const { data: projects } = useGetProjectsQuery(
     {
@@ -267,29 +271,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
   ]
 
   if (!hasSubmittedIntegrations) {
-    return (
-      <div className='bg-light100 pb-5'>
-        <div className='container-fluid mt-4 px-3'>
-          <PageTitle title={'Use Feature Flags with your favourite tools'}>
-            To personalise your experience and help us assist you, select the
-            relevant tools you want to use feature flags with.
-          </PageTitle>
-        </div>
-        <div className='row'>
-          <div className='col-md-3 col-xl-2 h-100 d-flex flex-column'>
-            {['All'].concat(integrationCategories).map((v) => (
-              <SidebarLink
-                active={category === v}
-                onClick={() => setCategory(category)}
-              >
-                {v}
-              </SidebarLink>
-            ))}
-          </div>
-          <div className='col-md-4 h-100'></div>
-        </div>
-      </div>
-    )
+    return <IntegrationSelect />
   }
   return (
     <div className='bg-light100 pb-5'>

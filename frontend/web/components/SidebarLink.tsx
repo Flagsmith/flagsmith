@@ -20,7 +20,8 @@ const SidebarLink: FC<SidebarLinkType> = ({
   ...rest
 }) => {
   const Tag = (to ? NavLink : 'div') as any
-  const activeClassName = 'text-primary bg-primary-opacity-5 fill-primary'
+  const activeClassName =
+    'fw-semibold text-primary bg-primary-opacity-5 fill-primary'
   const inactiveClassName = 'text-body fill-body'
   return (
     <Tag
