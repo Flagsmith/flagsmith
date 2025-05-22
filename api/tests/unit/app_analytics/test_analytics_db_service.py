@@ -6,6 +6,7 @@ from django.utils import timezone as d_timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import NotFound
+
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
