@@ -265,10 +265,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         )
 
     @property
-    def has_billing_periods(self) -> bool:
+    def has_active_billing_periods(self) -> bool:
         return (
             self.organisation.has_subscription_information_cache()
-            and self.organisation.subscription_information_cache.has_billing_periods()
+            and self.organisation.subscription_information_cache.has_active_billing_periods()
         )
 
     @property
@@ -553,19 +553,19 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             "feature_history_visibility_days": self.feature_history_visibility_days,
         }
 
-    def has_billing_periods(self) -> bool:
+    def is_billing_terms_dates_set(self) -> bool:
+        return (
+            self.current_billing_term_starts_at is not None
+            and self.current_billing_term_ends_at is not None
+        )
+
+    def has_active_billing_periods(self) -> bool:
         """
         Returns True if current date is within the billing term.
         If either start or end date is None, returns False.
         """
-        if (
-            self.current_billing_term_starts_at is None
-            or self.current_billing_term_ends_at is None
-        ):
-            return False
-
         now = timezone.now()
-        return (
+        return self.is_billing_terms_dates_set() and (
             self.current_billing_term_starts_at
             <= now
             <= self.current_billing_term_ends_at
