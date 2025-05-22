@@ -165,6 +165,34 @@
   color: white;
 }
 
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.iconContainer {
+  margin-bottom: 1rem;
+}
+
+.cardIcon {
+  font-size: 24px !important;
+  padding: 12px;
+  border-radius: 50%;
+  color: var(--icon-color);
+  background-color: var(--icon-circle-color);
+  transition: color 0.2s;
+}
+
+.cardLink {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--link-color);
+  text-decoration: none;
+}
+
 @media (max-width: 996px) {
   section .cardGrid {
     grid-template-columns: 1fr;
