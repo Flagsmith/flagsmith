@@ -40,7 +40,7 @@ def get_usage_data(
     date_start = date_stop = None
     sub_cache = getattr(organisation, "subscription_information_cache", None)
     is_subscription_valid = (
-        sub_cache is not None and sub_cache.has_active_billing_periods()
+        sub_cache is not None and sub_cache.is_billing_terms_dates_set()
     )
 
     match period:
