@@ -109,7 +109,12 @@ const Constants = {
       'Go': require('./code-help/init/init-go')(envId, keywords),
       'Java': require('./code-help/init/init-java')(envId, keywords),
       'JavaScript': require('./code-help/init/init-js')(envId, keywords),
-      'Next.js': require('./code-help/init/init-next')(envId, keywords),
+      'Next.js (app router)': require('./code-help/init/init-next-app-router')(
+        envId,
+        keywords,
+      ),
+      'Next.js (pages router)':
+        require('./code-help/init/init-next-pages-router')(envId, keywords),
       'Node JS': require('./code-help/init/init-node')(envId, keywords),
       'PHP': require('./code-help/init/init-php')(envId, keywords),
       'Python': require('./code-help/init/init-python')(envId, keywords),
@@ -363,7 +368,7 @@ const Constants = {
     },
   },
   exampleAuditWebhook: `{
- "created_date": "2020-02-23T17:30:57.006318Z",
+    "created_date": "2020-02-23T17:30:57.006318Z",
  "log": "New Flag / Remote Config created: my_feature",
  "author": {
   "id": 3,
@@ -435,6 +440,19 @@ const Constants = {
  },
  "event_type": "FLAG_UPDATED"
 }`,
+  featureHealth: {
+    unhealthyColor: '#D35400',
+  },
+  featurePanelTabs: {
+    ANALYTICS: 'analytics',
+    FEATURE_HEALTH: 'feature-health',
+    HISTORY: 'history',
+    IDENTITY_OVERRIDES: 'identity-overrides',
+    LINKS: 'links',
+    SEGMENT_OVERRIDES: 'segment-overrides',
+    SETTINGS: 'settings',
+    VALUE: 'value',
+  },
   forms: {
     maxLength: {
       'FEATURE_ID': 150,

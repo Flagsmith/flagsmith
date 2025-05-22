@@ -1,9 +1,6 @@
 import React, { Component } from 'react'
 import ConfirmRemoveOrganisation from 'components/modals/ConfirmRemoveOrganisation'
 import Payment from 'components/modals/Payment'
-import withAuditWebhooks from 'common/providers/withAuditWebhooks'
-import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
-import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
 import Button from 'components/base/forms/Button'
 import AdminAPIKeys from 'components/AdminAPIKeys'
 import Tabs from 'components/base/forms/Tabs'
@@ -18,11 +15,17 @@ import PageTitle from 'components/PageTitle'
 import SamlTab from 'components/SamlTab'
 import Setting from 'components/Setting'
 import AccountProvider from 'common/providers/AccountProvider'
+import LicensingTabContent from 'components/LicensingTabContent'
+import Utils from 'common/utils/utils'
+import AuditLogWebhooks from 'components/modals/AuditLogWebhooks'
+import MetadataPage from 'components/metadata/MetadataPage'
 
 const SettingsTab = {
   'Billing': 'billing',
+  'CustomFields': 'custom-fields',
   'General': 'general',
   'Keys': 'keys',
+  'Licensing': 'licensing',
   'SAML': 'saml',
   'Usage': 'usage',
   'Webhooks': 'webhooks',
@@ -45,7 +48,6 @@ const OrganisationSettingsPage = class extends Component {
       return
     }
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
-    this.props.getWebhooks()
 
     this.getOrganisationPermissions(AccountStore.getOrganisation().id)
   }
@@ -62,10 +64,6 @@ const OrganisationSettingsPage = class extends Component {
     this.setState({ name: null }, () => {
       toast('Saved organisation')
     })
-  }
-
-  onChange = () => {
-    this.props.getWebhooks()
   }
 
   confirmRemove = (organisation, cb) => {
@@ -162,41 +160,6 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  createWebhook = () => {
-    openModal(
-      'New Webhook',
-      <CreateAuditWebhookModal
-        router={this.context.router}
-        save={this.props.createWebhook}
-      />,
-      'side-modal',
-    )
-  }
-
-  editWebhook = (webhook) => {
-    openModal(
-      'Edit Webhook',
-      <CreateAuditWebhookModal
-        router={this.context.router}
-        webhook={webhook}
-        isEdit
-        save={this.props.saveWebhook}
-      />,
-      'side-modal',
-    )
-  }
-
-  deleteWebhook = (webhook) => {
-    openModal(
-      'Remove Webhook',
-      <ConfirmRemoveAuditWebhook
-        url={webhook.url}
-        cb={() => this.props.deleteWebhook(webhook)}
-      />,
-      'p-0',
-    )
-  }
-
   getOrganisationPermissions = (id) => {
     if (this.state.permissions.length) return
 
@@ -207,18 +170,11 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   render() {
-    const {
-      props: { webhooks, webhooksLoading },
-    } = this
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
 
     return (
       <div className='app-container container'>
-        <AccountProvider
-          onSave={this.onSave}
-          onRemove={this.onRemove}
-          onChange={this.onChange}
-        >
+        <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
               <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
@@ -228,7 +184,8 @@ const OrganisationSettingsPage = class extends Component {
                   const { chargebee_email } = subscriptionMeta || {}
 
                   const displayedTabs = []
-
+                  //todo: replace with RTK when this is a functional component
+                  const isEnterprise = Utils.isEnterpriseImage()
                   if (
                     AccountStore.getUser() &&
                     AccountStore.getOrganisationRole() === 'ADMIN'
@@ -237,6 +194,8 @@ const OrganisationSettingsPage = class extends Component {
                       ...[
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
+                        isEnterprise ? SettingsTab.Licensing : null,
+                        SettingsTab.CustomFields,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
                         SettingsTab.SAML,
@@ -463,6 +422,20 @@ const OrganisationSettingsPage = class extends Component {
                           </TabItem>
                         )}
 
+                        {displayedTabs.includes(SettingsTab.Licensing) && (
+                          <TabItem tabLabel='Licensing'>
+                            <LicensingTabContent
+                              organisationId={organisation.id}
+                            />
+                          </TabItem>
+                        )}
+                        {displayedTabs.includes(SettingsTab.CustomFields) && (
+                          <TabItem tabLabel='Custom Fields'>
+                            <MetadataPage
+                              organisationId={AccountStore.getOrganisation().id}
+                            />
+                          </TabItem>
+                        )}
                         {displayedTabs.includes(SettingsTab.Keys) && (
                           <TabItem tabLabel='API Keys'>
                             <AdminAPIKeys organisationId={organisation.id} />
@@ -472,123 +445,11 @@ const OrganisationSettingsPage = class extends Component {
                         {displayedTabs.includes(SettingsTab.Webhooks) && (
                           <TabItem tabLabel='Webhooks'>
                             <FormGroup className='mt-4'>
-                              <JSONReference
-                                title={'Webhooks'}
-                                json={webhooks}
+                              <AuditLogWebhooks
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
                               />
-
-                              <Column className='mb-3 ml-0 col-md-8'>
-                                <h5 className='mb-2'>Audit Webhooks</h5>
-                                <p className='fs-small lh-sm mb-4'>
-                                  Audit webhooks let you know when audit logs
-                                  occur, you can configure 1 or more audit
-                                  webhooks per organisation.{' '}
-                                  <Button
-                                    theme='text'
-                                    href='https://docs.flagsmith.com/system-administration/webhooks'
-                                    className='fw-normal'
-                                  >
-                                    Learn about Audit Webhooks.
-                                  </Button>
-                                </p>
-                                <Button onClick={this.createWebhook}>
-                                  Create audit webhook
-                                </Button>
-                              </Column>
-                              {webhooksLoading && !webhooks ? (
-                                <Loader />
-                              ) : (
-                                <PanelSearch
-                                  id='webhook-list'
-                                  title={
-                                    <Tooltip
-                                      title={
-                                        <h5 className='mb-0'>
-                                          Webhooks <Icon name='info' />
-                                        </h5>
-                                      }
-                                      place='right'
-                                    >
-                                      {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                    </Tooltip>
-                                  }
-                                  items={webhooks}
-                                  renderRow={(webhook) => (
-                                    <Row
-                                      onClick={() => {
-                                        this.editWebhook(webhook)
-                                      }}
-                                      space
-                                      className='list-item clickable cursor-pointer'
-                                      key={webhook.id}
-                                    >
-                                      <Flex className='table-column px-3'>
-                                        <div className='font-weight-medium mb-1'>
-                                          {webhook.url}
-                                        </div>
-                                        {webhook.created_at ? (
-                                          <div className='list-item-description'>
-                                            Created{' '}
-                                            {moment(webhook.created_at).format(
-                                              'DD/MMM/YYYY',
-                                            )}
-                                          </div>
-                                        ) : null}
-                                      </Flex>
-                                      <div className='table-column'>
-                                        <Switch checked={webhook.enabled} />
-                                      </div>
-                                      <div className='table-column'>
-                                        <Button
-                                          id='delete-invite'
-                                          type='button'
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            e.preventDefault()
-                                            this.deleteWebhook(webhook)
-                                          }}
-                                          className='btn btn-with-icon'
-                                        >
-                                          <Icon
-                                            name='trash-2'
-                                            width={20}
-                                            fill='#656D7B'
-                                          />
-                                        </Button>
-                                      </div>
-                                    </Row>
-                                  )}
-                                  renderNoResults={
-                                    <Panel
-                                      className='no-pad'
-                                      title={
-                                        <Tooltip
-                                          title={
-                                            <h5 className='mb-0'>
-                                              Webhooks{' '}
-                                              <Icon name='info-outlined' />
-                                            </h5>
-                                          }
-                                          place='right'
-                                        >
-                                          {
-                                            Constants.strings
-                                              .AUDIT_WEBHOOKS_DESCRIPTION
-                                          }
-                                        </Tooltip>
-                                      }
-                                    >
-                                      <div className='search-list'>
-                                        <Row className='list-item p-3 text-muted'>
-                                          You currently have no webhooks
-                                          configured for this organisation.
-                                        </Row>
-                                      </div>
-                                    </Panel>
-                                  }
-                                  isLoading={this.props.webhookLoading}
-                                />
-                              )}
                             </FormGroup>
                           </TabItem>
                         )}
@@ -612,4 +473,4 @@ const OrganisationSettingsPage = class extends Component {
 
 OrganisationSettingsPage.propTypes = {}
 
-module.exports = ConfigProvider(withAuditWebhooks(OrganisationSettingsPage))
+module.exports = ConfigProvider(OrganisationSettingsPage)

@@ -2,7 +2,7 @@ from itertools import chain
 
 from django.contrib.contenttypes.models import ContentType
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -31,11 +31,11 @@ from .serializers import (
     name="list",
     decorator=swagger_auto_schema(query_serializer=MetadataFieldQuerySerializer),
 )
-class MetadataFieldViewSet(viewsets.ModelViewSet):
+class MetadataFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataFieldPermissions]
     serializer_class = MetadataFieldSerializer
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return MetadataField.objects.none()
 
@@ -56,11 +56,11 @@ class MetadataFieldViewSet(viewsets.ModelViewSet):
     name="list",
     decorator=swagger_auto_schema(query_serializer=MetadataModelFieldQuerySerializer),
 )
-class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
+class MetaDataModelFieldViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [MetadataModelFieldPermissions]
     serializer_class = MetaDataModelFieldSerializer
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         queryset = MetadataModelField.objects.filter(
             field__organisation_id=self.kwargs.get("organisation_pk")
         )
@@ -81,7 +81,7 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         methods=["GET"],
         url_path="supported-content-types",
     )
-    def supported_content_types(self, request, organisation_pk=None):
+    def supported_content_types(self, request, organisation_pk=None):  # type: ignore[no-untyped-def]
         need_content_type_of = list(
             chain.from_iterable(
                 (key, *value) for key, value in SUPPORTED_REQUIREMENTS_MAPPING.items()
@@ -103,7 +103,7 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
         methods=["GET"],
         url_path="supported-required-for-models",
     )
-    def supported_required_for_models(self, request, organisation_pk=None):
+    def supported_required_for_models(self, request, organisation_pk=None):  # type: ignore[no-untyped-def]
         serializer = SupportedRequiredForModelQuerySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
@@ -117,6 +117,6 @@ class MetaDataModelFieldViewSet(viewsets.ModelViewSet):
             )
 
         qs = ContentType.objects.filter(model__in=supported_models)
-        serializer = ContentTypeSerializer(qs, many=True)
+        serializer = ContentTypeSerializer(qs, many=True)  # type: ignore[assignment]
 
         return Response(serializer.data)

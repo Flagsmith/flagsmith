@@ -2,11 +2,15 @@ import importlib
 
 from django.conf import settings
 from django.urls import include, path, re_path
-from rest_framework_nested import routers
+from rest_framework_nested import routers  # type: ignore[import-untyped]
 
 from audit.views import ProjectAuditLogViewSet
 from features.feature_external_resources.views import (
     FeatureExternalResourceViewSet,
+)
+from features.feature_health.views import (
+    FeatureHealthEventViewSet,
+    FeatureHealthProviderViewSet,
 )
 from features.import_export.views import (
     FeatureExportListView,
@@ -69,6 +73,16 @@ projects_router.register(
     "audit",
     ProjectAuditLogViewSet,
     basename="project-audit",
+)
+projects_router.register(
+    "feature-health/providers",
+    FeatureHealthProviderViewSet,
+    basename="feature-health-providers",
+)
+projects_router.register(
+    "feature-health/events",
+    FeatureHealthEventViewSet,
+    basename="feature-health-events",
 )
 
 if settings.WORKFLOWS_LOGIC_INSTALLED:  # pragma: no cover

@@ -1,15 +1,16 @@
 import typing
 
 import pytest
-from core.constants import STRING
 from django.conf import settings
+
+from core.constants import STRING
 
 
 @pytest.mark.skipif(
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_remove_duplicate_mv_feature_state_values(migrator):
+def test_remove_duplicate_mv_feature_state_values(migrator):  # type: ignore[no-untyped-def]
     # Given
     # We set the DB to be in the state prior to the migration we want to test
     old_state = migrator.apply_initial_migration(("multivariate", "0001_initial"))
@@ -86,7 +87,7 @@ def test_remove_duplicate_mv_feature_state_values(migrator):
     )
 
 
-def _setup(db_state) -> typing.Tuple:
+def _setup(db_state) -> typing.Tuple:  # type: ignore[type-arg,no-untyped-def]
     """Create some test data from a given db state"""
     organisation_model = db_state.apps.get_model("organisations", "Organisation")
     project_model = db_state.apps.get_model("projects", "Project")

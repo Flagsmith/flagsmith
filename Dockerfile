@@ -19,11 +19,11 @@
 # Build a SaaS API image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-saas-api:dev --target saas-api \
 #     --secret="id=sse_pgp_pkey,src=./sse_pgp_pkey.key"\
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
 
 # Build a Private Cloud Unified image:
 # $ GH_TOKEN=$(gh auth token) docker build -t flagsmith-private-cloud:dev --target private-cloud-unified \
-#     --secret="id=github_private_cloud_token,env=GH_TOKEN" . 
+#     --secret="id=github_private_cloud_token,env=GH_TOKEN" .
 
 # Table of Contents
 # Stages are described as stage-name [dependencies]
@@ -54,8 +54,8 @@ ARG CI_COMMIT_SHA=dev
 ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.11
 
-FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm as node
-FROM cgr.dev/chainguard/wolfi-base:latest as wolfi-base
+FROM public.ecr.aws/docker/library/node:${NODE_VERSION}-bookworm AS node
+FROM cgr.dev/chainguard/wolfi-base:latest AS wolfi-base
 
 # - Intermediary stages
 # * build-node
@@ -73,24 +73,24 @@ RUN cd frontend && ENV=${ENV} npm ci --quiet --production
 COPY frontend /build/frontend
 
 # * build-node-django [build-node]
-FROM build-node as build-node-django
+FROM build-node AS build-node-django
 
 RUN mkdir /build/api && cd frontend && npm run bundledjango
 
 # * build-node-selfhosted [build-node]
-FROM build-node as build-node-selfhosted
+FROM build-node AS build-node-selfhosted
 
 RUN cd frontend && npm run bundle
 
 # * build-python
-FROM wolfi-base as build-python
+FROM wolfi-base AS build-python
 WORKDIR /build
 
 ARG PYTHON_VERSION
 RUN apk add build-base linux-headers curl git \
   python-${PYTHON_VERSION} \
   python-${PYTHON_VERSION}-dev \
-  py${PYTHON_VERSION}-pip 
+  py${PYTHON_VERSION}-pip
 
 COPY api/pyproject.toml api/poetry.lock api/Makefile ./
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true \
@@ -115,7 +115,7 @@ RUN --mount=type=secret,id=github_private_cloud_token \
   make install-private-modules
 
 # * api-runtime
-FROM wolfi-base as api-runtime
+FROM wolfi-base AS api-runtime
 
 # Install Python and make it available to venv entrypoints
 ARG PYTHON_VERSION
@@ -139,8 +139,11 @@ ENTRYPOINT ["/app/scripts/run-docker.sh"]
 
 CMD ["migrate-and-serve"]
 
+HEALTHCHECK --interval=2s --timeout=2s --retries=3 --start-period=20s \
+  CMD flagsmith healthcheck tcp
+
 # * api-runtime-private [api-runtime]
-FROM api-runtime as api-runtime-private
+FROM api-runtime AS api-runtime-private
 
 # Install SAML binary dependency
 RUN apk add xmlsec
@@ -159,7 +162,7 @@ CMD ["make test"]
 
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
-FROM api-runtime-private as private-cloud-api
+FROM api-runtime-private AS private-cloud-api
 
 COPY --from=build-python-private /build/.venv/ /usr/local/
 
@@ -169,7 +172,7 @@ RUN touch ./ENTERPRISE_VERSION
 USER nobody
 
 # * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
-FROM api-runtime-private as private-cloud-unified
+FROM api-runtime-private AS private-cloud-unified
 
 COPY --from=build-python-private /build/.venv/ /usr/local/
 COPY --from=build-node-django /build/api/ /app/
@@ -180,7 +183,7 @@ RUN touch ./ENTERPRISE_VERSION
 USER nobody
 
 # * saas-api [api-runtime-private, build-python-private]
-FROM api-runtime-private as saas-api
+FROM api-runtime-private AS saas-api
 
 # Install GnuPG and import private key
 RUN --mount=type=secret,id=sse_pgp_pkey \
@@ -197,7 +200,7 @@ RUN touch ./SAAS_DEPLOYMENT
 USER nobody
 
 # * oss-api [api-runtime, build-python]
-FROM api-runtime as oss-api
+FROM api-runtime AS oss-api
 
 COPY --from=build-python /build/.venv/ /usr/local/
 
@@ -228,7 +231,7 @@ CMD ["node",  "./api/index.js"]
 USER nobody
 
 # * oss-unified [api-runtime, build-python, build-node-django]
-FROM api-runtime as oss-unified
+FROM api-runtime AS oss-unified
 
 COPY --from=build-python /build/.venv/ /usr/local/
 COPY --from=build-node-django /build/api/ /app/

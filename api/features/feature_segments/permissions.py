@@ -1,13 +1,15 @@
 from contextlib import suppress
 
-from common.environments.permissions import MANAGE_SEGMENT_OVERRIDES
+from common.environments.permissions import (
+    MANAGE_SEGMENT_OVERRIDES,
+)
 from rest_framework.permissions import IsAuthenticated
 
 from environments.models import Environment
 
 
 class FeatureSegmentPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -30,7 +32,7 @@ class FeatureSegmentPermissions(IsAuthenticated):
 
         return False
 
-    def has_object_permission(self, request, view, obj):
+    def has_object_permission(self, request, view, obj):  # type: ignore[no-untyped-def]
         return request.user.has_environment_permission(
             MANAGE_SEGMENT_OVERRIDES, environment=obj.environment
         )

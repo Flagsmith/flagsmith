@@ -6,6 +6,6 @@ from integrations.rudderstack.serializers import (
 
 
 class RudderstackConfigurationViewSet(EnvironmentIntegrationCommonViewSet):
-    serializer_class = RudderstackConfigurationSerializer
+    serializer_class = RudderstackConfigurationSerializer  # type: ignore[assignment]
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = RudderstackConfiguration
+    model_class = RudderstackConfiguration  # type: ignore[assignment]

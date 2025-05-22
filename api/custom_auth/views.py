@@ -3,8 +3,8 @@ from typing import Any
 from django.conf import settings
 from django.contrib.auth import user_logged_out
 from django.utils.decorators import method_decorator
-from djoser.views import TokenCreateView, UserViewSet
-from drf_yasg.utils import swagger_auto_schema
+from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action, api_view, permission_classes
@@ -33,12 +33,12 @@ from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from .models import UserPasswordResetRequest
 
 
-class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
+class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[misc]
     """
     Class to handle throttling for login requests
     """
 
-    authentication_classes = []
+    authentication_classes = []  # type: ignore[var-annotated]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "login"
 
@@ -49,9 +49,9 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
         try:
             mfa_model = MFAMethod
             mfa_method = mfa_model.objects.get_primary_active(user_id=user.id)
-            conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]
+            conf = settings.TRENCH_AUTH["MFA_METHODS"]["app"]  # type: ignore[index]
             mfa_handler = CustomApplicationBackend(mfa_method=mfa_method, config=conf)
-            mfa_handler.dispatch_message()
+            mfa_handler.dispatch_message()  # type: ignore[no-untyped-call]
             return Response(
                 data={
                     "ephemeral_token": user_token_generator.make_token(user),
@@ -65,15 +65,15 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):
                     Response(status=HTTP_204_NO_CONTENT),
                     secure=request.is_secure(),
                 )
-            return self._action(serializer)
+            return self._action(serializer)  # type: ignore[no-any-return]
 
 
-class CustomAuthTokenLoginWithMFACode(TokenCreateView):
+class CustomAuthTokenLoginWithMFACode(TokenCreateView):  # type: ignore[misc]
     """
     Override class to add throttling
     """
 
-    authentication_classes = []
+    authentication_classes = []  # type: ignore[var-annotated]
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "mfa_code"
 
@@ -85,21 +85,21 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):
                 code=serializer.validated_data["code"],
                 ephemeral_token=serializer.validated_data["ephemeral_token"],
             )
-            serializer.user = user
+            serializer.user = user  # type: ignore[attr-defined]
             if settings.COOKIE_AUTH_ENABLED:
                 return authorise_response(
                     user,
                     Response(status=HTTP_204_NO_CONTENT),
                     secure=request.is_secure(),
                 )
-            return self._action(serializer)
+            return self._action(serializer)  # type: ignore[no-any-return]
         except MFAValidationError as cause:
-            return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)
+            return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)  # type: ignore[arg-type]
 
 
 @api_view(["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_token(request):
+def delete_token(request):  # type: ignore[no-untyped-def]
     Token.objects.filter(user=request.user).delete()
     user_logged_out.send(
         sender=request.user.__class__, request=request, user=request.user
@@ -111,15 +111,15 @@ def delete_token(request):
     name="destroy",
     decorator=swagger_auto_schema(query_serializer=CustomUserDelete()),
 )
-class FFAdminUserViewSet(UserViewSet):
+class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
     throttle_scope = "signup"
 
     def perform_authentication(self, request: Request) -> None:
         if self.action == "create":
             return
-        return super().perform_authentication(request)
+        return super().perform_authentication(request)  # type: ignore[no-any-return]
 
-    def get_throttles(self):
+    def get_throttles(self):  # type: ignore[no-untyped-def]
         """
         Used for throttling create(signup) action
         """
@@ -132,9 +132,9 @@ class FFAdminUserViewSet(UserViewSet):
         response = super().create(request, *args, **kwargs)
         if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)
-        return response
+        return response  # type: ignore[no-any-return]
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance):  # type: ignore[no-untyped-def]
         instance.delete(
             delete_orphan_organisations=self.request.data.get(
                 "delete_orphan_organisations",
@@ -143,7 +143,7 @@ class FFAdminUserViewSet(UserViewSet):
         )
 
     @action(["post"], detail=False)
-    def reset_password(self, request, *args, **kwargs):
+    def reset_password(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()

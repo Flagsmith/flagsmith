@@ -7,7 +7,7 @@ on:
     - cron: '0 12 * * 2'
 jobs:
   vercel-deploy:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Run Vercel deploy hook
         run: curl -X POST "${{ secrets.VERCEL_SDK_VERSIONS_DEPLOY_HOOKS_URL }}"

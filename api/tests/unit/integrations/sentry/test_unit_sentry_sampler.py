@@ -7,45 +7,45 @@ SAMPLE_RATE = 0.5
 
 
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_empty_context_returns_default_sample_rate():
+def test_traces_sampler_empty_context_returns_default_sample_rate():  # type: ignore[no-untyped-def]
     # When
-    sample_rate = traces_sampler({})
+    sample_rate = traces_sampler({})  # type: ignore[no-untyped-call]
 
     # Then
     assert sample_rate == SAMPLE_RATE
 
 
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_0_for_health_check_transaction():
+def test_traces_sampler_returns_0_for_health_check_transaction():  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/health"}}
 
     # When
-    sample_rate = traces_sampler(ctx)
+    sample_rate = traces_sampler(ctx)  # type: ignore[no-untyped-call]
 
     # Then
     assert sample_rate == 0
 
 
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_0_for_home_page_transaction():
+def test_traces_sampler_returns_0_for_home_page_transaction():  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/"}}
 
     # When
-    sample_rate = traces_sampler(ctx)
+    sample_rate = traces_sampler(ctx)  # type: ignore[no-untyped-call]
 
     # Then
     assert sample_rate == 0
 
 
 @override_settings(DASHBOARD_ENDPOINTS_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_dashboard_sample_rate_for_dashboard_request():
+def test_traces_sampler_returns_dashboard_sample_rate_for_dashboard_request():  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": "/api/v1/environments/"}}
 
     # When
-    sample_rate = traces_sampler(ctx)
+    sample_rate = traces_sampler(ctx)  # type: ignore[no-untyped-call]
 
     # Then
     assert sample_rate == SAMPLE_RATE
@@ -63,12 +63,12 @@ def test_traces_sampler_returns_dashboard_sample_rate_for_dashboard_request():
     ),
 )
 @override_settings(DEFAULT_SENTRY_TRACE_SAMPLE_RATE=SAMPLE_RATE)
-def test_traces_sampler_returns_sample_rate_for_sdk_request(path_info):
+def test_traces_sampler_returns_sample_rate_for_sdk_request(path_info):  # type: ignore[no-untyped-def]
     # Given
     ctx = {"wsgi_environ": {"PATH_INFO": path_info}}
 
     # When
-    sample_rate = traces_sampler(ctx)
+    sample_rate = traces_sampler(ctx)  # type: ignore[no-untyped-call]
 
     # Then
     assert sample_rate == SAMPLE_RATE

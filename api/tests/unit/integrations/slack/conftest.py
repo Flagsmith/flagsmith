@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.fixture
-def mocked_slack_internal_client(mocker):
+def mocked_slack_internal_client(mocker):  # type: ignore[no-untyped-def]
     mocked_client = mocker.MagicMock()
 
     mocker.patch(

@@ -6,20 +6,22 @@ from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import CREATE_ENVIRONMENT
-from core.constants import STRING
+from common.projects.permissions import (
+    CREATE_ENVIRONMENT,
+)
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from api_keys.models import MasterAPIKey
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
+from core.constants import STRING
 from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -82,7 +84,7 @@ def test_get_by_uuid_returns_environment(
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     url = reverse(
         "api-v1:environments:environment-get-by-uuid",
@@ -121,7 +123,7 @@ def test_user_with_view_environment_permission_can_retrieve_environment(
     # Given
     url = reverse("api-v1:environments:environment-detail", args=[environment.api_key])
 
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(url)
@@ -130,7 +132,7 @@ def test_user_with_view_environment_permission_can_retrieve_environment(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_can_clone_environment_with_create_environment_permission(
+def test_can_clone_environment_with_create_environment_permission(  # type: ignore[no-untyped-def]
     test_user,
     test_user_client,
     environment,
@@ -280,7 +282,7 @@ def test_environment_user_can_get_their_permissions(
     environment: Environment,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
     url = reverse(
         "api-v1:environments:environment-my-permissions", args=[environment.api_key]
     )
@@ -292,6 +294,87 @@ def test_environment_user_can_get_their_permissions(
     assert response.status_code == status.HTTP_200_OK
     assert not response.json()["admin"]
     assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
+
+
+def test_environment_user_can_get_their_detailed_permissions(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, staff_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "VIEW_ENVIRONMENT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
+def test_environment_user_can_not_get_detailed_permissions_of_other_user(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, admin_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_environment_admin_can_get_detailed_permissions_of_other_user(
+    admin_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, staff_user.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "VIEW_ENVIRONMENT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
 
 
 def test_can_create_webhook_for_an_environment(
@@ -466,7 +549,7 @@ def test_list_api_keys(
     api_key_2 = EnvironmentAPIKey.objects.create(
         environment=environment, name="api key 2"
     )
-    url = reverse("api-v1:environments:api-keys-list", args={environment.api_key})
+    url = reverse("api-v1:environments:api-keys-list", args={environment.api_key})  # type: ignore[arg-type]
 
     # When
     response = admin_client_new.get(url)
@@ -490,7 +573,7 @@ def test_create_api_key(
     # Given
     some_key = "some.key"
     data = {"name": "Some key", "key": some_key}
-    url = reverse("api-v1:environments:api-keys-list", args={environment.api_key})
+    url = reverse("api-v1:environments:api-keys-list", args={environment.api_key})  # type: ignore[arg-type]
 
     # When
     response = admin_client_new.post(
@@ -559,7 +642,7 @@ def test_delete_api_key(
         (lazy_fixture("admin_client_original"), False),
     ],
 )
-def test_should_create_environments(
+def test_should_create_environments(  # type: ignore[no-untyped-def]
     project, client, admin_user, is_admin_master_api_key_client
 ) -> None:
     # Given
@@ -588,7 +671,34 @@ def test_should_create_environments(
         ).exists()
 
 
-def test_create_environment_without_required_metadata_returns_400(
+def test_environment_matches_existing_environment_name(
+    project: Project,
+    admin_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:environments:environment-list")
+    description = "This is the description"
+    name = "Test environment"
+    data = {
+        "name": name,
+        "project": project.id,
+        "description": description,
+    }
+    Environment.objects.create(name=name, description=description, project=project)
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "non_field_errors": ["An environment with this name already exists."]
+    }
+
+
+def test_create_environment_without_required_metadata_returns_400(  # type: ignore[no-untyped-def]
     project,
     admin_client_new,
     required_a_environment_metadata_field,
@@ -682,7 +792,7 @@ def _assert_view_environment_with_staff__query_count(
     expected_query_count: int,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     url = reverse("api-v1:environments:environment-list")
     data = {"project": project.id}
@@ -704,7 +814,7 @@ def _assert_view_environment_with_staff__query_count(
         field_value="10",
     )
 
-    with_environment_permissions([VIEW_ENVIRONMENT], environment_id=environment_2.id)
+    with_environment_permissions([VIEW_ENVIRONMENT], environment_id=environment_2.id)  # type: ignore[call-arg]
 
     # One additional query for an unrelated, unfixable N+1 issue that deals with
     # the defer logic around filtered environments.
@@ -756,7 +866,7 @@ def test_view_environment_with_admin__query_count_is_expected(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_create_environment_with_required_metadata_returns_201(
+def test_create_environment_with_required_metadata_returns_201(  # type: ignore[no-untyped-def]
     project,
     admin_client_new,
     required_a_environment_metadata_field,
@@ -792,7 +902,7 @@ def test_create_environment_with_required_metadata_returns_201(
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
-def test_update_environment_metadata(
+def test_update_environment_metadata(  # type: ignore[no-untyped-def]
     project,
     admin_client_new,
     environment,
@@ -895,7 +1005,7 @@ def test_get_document(
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
     # Given
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # and some sample data to make sure we're testing all of the document
     segment_rule = SegmentRule.objects.create(
@@ -986,7 +1096,7 @@ def test_user_with_view_environment_can_get_trait_keys(
         "api-v1:environments:environment-trait-keys", args=[environment.api_key]
     )
 
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # When
     res = staff_client.get(url)

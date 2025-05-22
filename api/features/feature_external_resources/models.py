@@ -4,7 +4,7 @@ import re
 
 from django.db import models
 from django.db.models import Q
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
     BEFORE_DELETE,
     LifecycleModelMixin,
@@ -42,7 +42,7 @@ tag_by_type_and_state = {
 }
 
 
-class FeatureExternalResource(LifecycleModelMixin, models.Model):
+class FeatureExternalResource(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     url = models.URLField()
     type = models.CharField(max_length=20, choices=ResourceType.choices)
 
@@ -66,7 +66,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
         ]
 
     @hook(AFTER_SAVE)
-    def execute_after_save_actions(self):
+    def execute_after_save_actions(self):  # type: ignore[no-untyped-def]
         # Tag the feature with the external resource type
         metadata = json.loads(self.metadata) if self.metadata else {}
         state = metadata.get("state", "open")
@@ -86,7 +86,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                 pattern = r"github.com/([^/]+)/([^/]+)/issues/\d+$"
 
             url_match = re.search(pattern, self.url)
-            owner, repo = url_match.groups()
+            owner, repo = url_match.groups()  # type: ignore[union-attr]
 
             github_repo = GitHubRepository.objects.get(
                 github_configuration=github_configuration.id,
@@ -122,7 +122,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                 )
 
             call_github_task(
-                organisation_id=self.feature.project.organisation_id,
+                organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
                 type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_ADDED.value,
                 feature=self.feature,
                 segment_name=None,
@@ -130,7 +130,7 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
                 feature_states=feature_states,
             )
 
-    @hook(BEFORE_DELETE)
+    @hook(BEFORE_DELETE)  # type: ignore[misc]
     def execute_before_save_actions(self) -> None:
         # Add a comment to GitHub Issue/PR when feature is unlinked to the GH external resource
         if (
@@ -138,9 +138,8 @@ class FeatureExternalResource(LifecycleModelMixin, models.Model):
             .get(id=self.feature.project.organisation_id)
             .github_config.first()
         ):
-
             call_github_task(
-                organisation_id=self.feature.project.organisation_id,
+                organisation_id=self.feature.project.organisation_id,  # type: ignore[arg-type]
                 type=GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value,
                 feature=self.feature,
                 segment_name=None,

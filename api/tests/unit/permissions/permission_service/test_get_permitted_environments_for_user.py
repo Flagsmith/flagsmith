@@ -4,13 +4,13 @@ from common.environments.permissions import (
     UPDATE_FEATURE_STATE,
     VIEW_ENVIRONMENT,
 )
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
 from environments.permissions.models import EnvironmentPermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
 
 
-def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(
+def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]
     admin_user, environment, project, project_two_environment
 ):
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -30,7 +30,7 @@ def test_get_permitted_environments_for_user_returns_all_environments_for_org_ad
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(
+def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user, environment, project, project_admin, project_two_environment
 ):
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -50,7 +50,7 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
         (lazy_fixture("environment_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(
+def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(  # type: ignore[no-untyped-def]  # noqa: E501
     test_user, environment, project, environment_admin, project_two_environment
 ):
     for permission in EnvironmentPermissionModel.objects.all().values_list(
@@ -63,7 +63,7 @@ def test_get_permitted_environments_for_user_returns_the_environment_for_environ
         )
 
 
-def test_get_permitted_environments_for_user_returns_correct_environment(
+def test_get_permitted_environments_for_user_returns_correct_environment(  # type: ignore[no-untyped-def]
     test_user,
     environment,
     project_two_environment,

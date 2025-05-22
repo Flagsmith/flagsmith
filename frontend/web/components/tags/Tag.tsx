@@ -5,6 +5,7 @@ import { Tag as TTag } from 'common/types/responses'
 import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
+import Constants from 'common/constants'
 
 type TagType = {
   className?: string
@@ -18,6 +19,9 @@ type TagType = {
 export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
   if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
     return '#9DA4AE'
+  }
+  if (tag.type === 'UNHEALTHY') {
+    return Constants.featureHealth.unhealthyColor
   }
   if (selected) {
     return tag.color
@@ -61,6 +65,14 @@ const Tag: FC<TagType> = ({
         {!!tag.label && <TagContent tag={tag} />}
       </ToggleChip>
     )
+  }
+
+  // Hide unhealthy tags if feature is disabled
+  if (
+    !Utils.getFlagsmithHasFeature('feature_health') &&
+    tag.type === 'UNHEALTHY'
+  ) {
+    return null
   }
 
   return (

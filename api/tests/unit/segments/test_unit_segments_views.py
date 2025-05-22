@@ -2,7 +2,10 @@ import json
 import random
 
 import pytest
-from common.projects.permissions import MANAGE_SEGMENTS, VIEW_PROJECT
+from common.projects.permissions import (
+    MANAGE_SEGMENTS,
+    VIEW_PROJECT,
+)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -10,7 +13,7 @@ from django.urls import reverse
 from flag_engine.segments.constants import EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -34,7 +37,7 @@ User = get_user_model()
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_filter_by_identity_to_get_only_matching_segments(
+def test_can_filter_by_identity_to_get_only_matching_segments(  # type: ignore[no-untyped-def]
     project, client, environment, identity, trait, identity_matching_segment, segment
 ):
     # Given
@@ -52,7 +55,7 @@ def test_can_filter_by_identity_to_get_only_matching_segments(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_cannot_create_segments_without_rules(project, client):
+def test_cannot_create_segments_without_rules(project, client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {"name": "New segment name", "project": project.id, "rules": []}
@@ -68,7 +71,7 @@ def test_cannot_create_segments_without_rules(project, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_create_segments_with_boolean_condition(project, client):
+def test_can_create_segments_with_boolean_condition(project, client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {
@@ -96,7 +99,7 @@ def test_can_create_segments_with_boolean_condition(project, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_create_segments_with_condition_that_has_null_value(project, client):
+def test_can_create_segments_with_condition_that_has_null_value(project, client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {
@@ -122,7 +125,7 @@ def test_can_create_segments_with_condition_that_has_null_value(project, client)
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_segments_reaching_max_limit(project, client, settings):
+def test_create_segments_reaching_max_limit(project, client, settings):  # type: ignore[no-untyped-def]
     # Given
     # let's reduce the max segments allowed to 1
     project.max_segments_allowed = 1
@@ -163,7 +166,7 @@ def test_segments_limit_ignores_old_segment_versions(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS])
+    with_project_permissions([MANAGE_SEGMENTS])  # type: ignore[call-arg]
 
     # let's reduce the max segments allowed to 2
     project.max_segments_allowed = 2
@@ -198,7 +201,7 @@ def test_segments_limit_ignores_old_segment_versions(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_audit_log_created_when_segment_updated(project, client):
+def test_audit_log_created_when_segment_updated(project, client):  # type: ignore[no-untyped-def]
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
     url = reverse(
@@ -229,7 +232,7 @@ def test_audit_log_created_when_segment_updated(project, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_patch_segment(project, segment, client):
+def test_can_patch_segment(project, segment, client):  # type: ignore[no-untyped-def]
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
     url = reverse(
@@ -252,7 +255,7 @@ def test_can_patch_segment(project, segment, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_audit_log_created_when_segment_deleted(project, segment, client):
+def test_audit_log_created_when_segment_deleted(project, segment, client):  # type: ignore[no-untyped-def]
     # Given
     segment = Segment.objects.create(name="Test segment", project=project)
     url = reverse(
@@ -278,7 +281,7 @@ def test_audit_log_created_when_segment_deleted(project, segment, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_audit_log_created_when_segment_created(project, client):
+def test_audit_log_created_when_segment_created(project, client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {
@@ -305,7 +308,7 @@ def test_audit_log_created_when_segment_created(project, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_filter_by_edge_identity_to_get_only_matching_segments(
+def test_can_filter_by_edge_identity_to_get_only_matching_segments(  # type: ignore[no-untyped-def]
     project,
     environment,
     identity,
@@ -339,7 +342,7 @@ def test_can_filter_by_edge_identity_to_get_only_matching_segments(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_associated_features_returns_all_the_associated_features(
+def test_associated_features_returns_all_the_associated_features(  # type: ignore[no-untyped-def]
     project, environment, feature, segment, segment_featurestate, client
 ):
     # Given
@@ -435,7 +438,7 @@ def test_associated_features_returns_only_latest_versions_of_associated_features
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_create_feature_based_segment(project, client, feature):
+def test_can_create_feature_based_segment(project, client, feature):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {
@@ -457,7 +460,7 @@ def test_can_create_feature_based_segment(project, client, feature):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_get_segment_by_uuid(client, project, segment):
+def test_get_segment_by_uuid(client, project, segment):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:segments:get-segment-by-uuid", args=[segment.uuid])
 
@@ -571,7 +574,7 @@ def _list_segment_setup_data(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_search_segments(django_assert_num_queries, project, client):
+def test_search_segments(django_assert_num_queries, project, client):  # type: ignore[no-untyped-def]
     # Given
     segments = []
     segment_names = ["segment one", "segment two"]
@@ -607,7 +610,7 @@ def test_search_segments(django_assert_num_queries, project, client):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_segments_with_description_condition(project, client):
+def test_create_segments_with_description_condition(project, client):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:projects:project-segments-list", args=[project.id])
     data = {
@@ -1009,7 +1012,7 @@ def test_update_segment_versioned_segment_with_thrown_exception(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_segment_delete_existing_condition(
+def test_update_segment_delete_existing_condition(  # type: ignore[no-untyped-def]
     project, client, segment, segment_rule
 ):
     # Given
@@ -1064,7 +1067,7 @@ def test_update_segment_delete_existing_condition(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_update_segment_delete_existing_rule(project, client, segment, segment_rule):
+def test_update_segment_delete_existing_rule(project, client, segment, segment_rule):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
@@ -1101,6 +1104,69 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     assert response.status_code == status.HTTP_200_OK
 
     assert segment_rule.conditions.count() == 0
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
+def test_update_segment_metadata_create_correct_number_of_metadata(
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    first_segment_data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+    second_segment_data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response_first = client.post(
+        url, data=json.dumps(first_segment_data), content_type="application/json"
+    )
+    response_second = client.post(
+        url, data=json.dumps(second_segment_data), content_type="application/json"
+    )
+    # Then
+    assert response_first.status_code == status.HTTP_201_CREATED
+    assert response_second.status_code == status.HTTP_201_CREATED
+    assert (
+        response_first.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+    assert (
+        response_second.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+
+    metadata = Metadata.objects.filter(
+        model_field=required_a_segment_metadata_field.id
+    ).all()
+    assert metadata.count() == 2
 
 
 @pytest.mark.parametrize(
@@ -1455,7 +1521,7 @@ def test_include_feature_specific_query_filter__true(
     feature_specific_segment: Segment,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])  # type: ignore[call-arg]
     url = "%s?include_feature_specific=1" % (
         reverse("api-v1:projects:project-segments-list", args=[project.id]),
     )
@@ -1479,7 +1545,7 @@ def test_include_feature_specific_query_filter__false(
     feature_specific_segment: Segment,
 ) -> None:
     # Given
-    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])
+    with_project_permissions([MANAGE_SEGMENTS, VIEW_PROJECT])  # type: ignore[call-arg]
     url = "%s?include_feature_specific=0" % (
         reverse("api-v1:projects:project-segments-list", args=[project.id]),
     )

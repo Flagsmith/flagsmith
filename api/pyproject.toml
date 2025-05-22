@@ -3,26 +3,56 @@
 # verbose regular expressions by Black.  Use [ ] to denote a significant space
 # character.
 
-[tool.black]
+[project]
+name = "flagsmith-api"
+version = "2.68.0"
+description = "The API component for the Flagsmith application."
+authors = [{ name = "Flagsmith", email = "support@flagsmith.com" }]
+readme = "readme.md"
+requires-python = ">=3.11, <3.13"
+dynamic = ["dependencies"]
+
+[tool.ruff]
 line-length = 88
-target-version = ['py310', 'py311']
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | \.direnv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | migrations
-)/
-'''
+indent-width = 4
+target-version = "py311"
+extend-exclude = ["migrations"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings. Markdown,
+# reStructuredText code/literal blocks and doctests are all supported.
+docstring-code-format = true
+
+# Set the line length limit used when formatting code snippets in
+# docstrings.
+docstring-code-line-length = "dynamic"
+
+[tool.ruff.lint]
+# Establish parity with flake8 + isort
+select = ["C901", "E4", "E7", "E9", "F", "I", "W"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# Need the * prefix to work with pre-commit which runs from the root of the repo
+"*app/settings/local.py" = ["F403", "F405"]
+"*app/settings/production.py" = ["F403", "F405"]
+"*app/settings/saas.py" = ["F403", "F405"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
@@ -32,90 +62,51 @@ exclude_also = [
   '@(abc\\.)?abstractmethod',
 ]
 
-[tool.isort]
-use_parentheses = true
-multi_line_output = 3
-include_trailing_comma = true
-line_length = 79
-known_first_party = [
-  'analytics',
-  'app',
-  'custom_auth',
-  'environments',
-  'integrations',
-  'organisations',
-  'projects',
-  'segments',
-  'tests',
-  'users',
-  'webhooks',
-  'api',
-  'audit',
-  'e2etests',
-  'features',
-  'permissions',
-  'util',
-]
-known_third_party = [
-  '_pytest',
-  'apiclient',
-  'app_analytics',
-  'axes',
-  'chargebee',
-  'core',
-  'coreapi',
-  'corsheaders',
-  'dj_database_url',
-  'django',
-  'django_lifecycle',
-  'djoser',
-  'drf_writable_nested',
-  'drf_yasg',
-  'environs',
-  'google',
-  'influxdb_client',
-  'ordered_model',
-  'pyotp',
-  'pytest',
-  'pytz',
-  'requests',
-  'responses',
-  'rest_framework',
-  'rest_framework_nested',
-  'rest_framework_recursive',
-  'sentry_sdk',
-  'shortuuid',
-  'simple_history',
-  'six',
-  'task_processor',
-  'telemetry',
-  'tests',
-  'trench',
-  'whitenoise',
-]
-skip = ['migrations', '.venv', '.direnv']
+[tool.coverage.run]
+omit = ["scripts/*", "manage.py", "e2etests/*"]
 
 [tool.pytest.ini_options]
-addopts = ['--ds=app.settings.test', '-vvvv', '-p', 'no:warnings']
+addopts = [
+  '--ds=app.settings.test',
+  '-vvvv',
+  '-p',
+  'no:warnings',
+  '--dist=worksteal',
+]
 console_output_style = 'count'
 
-[tool.poetry]
-name = "flagsmith-api"
-version = "2.68.0"
-description = "The API component for the Flagsmith application."
-authors = ["Flagsmith <support@flagsmith.com>"]
-readme = "readme.md"
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["admin_sso.models"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["rbac.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["saml.*"]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "app.settings.local"
+
+[tool.drf-stubs]
+enabled = true
 
 [tool.poetry.dependencies]
-python = ">=3.11, <3.13"
-django = "~4.2.17"
+python = ">3.11,<3.13"
+django = "~4.2.21"
 rudder-sdk-python = "~2.0.2"
 segment-analytics-python = "~2.2.3"
 backoff = "~2.2.1"
 appdirs = "~1.4.4"
 django-cors-headers = "~3.5.0"
 djangorestframework = "~3.15.2"
-gunicorn = "~22.0.0"
+gunicorn = "~23.0.0"
 pyparsing = "~2.4.7"
 requests = "~2.32.2"
 six = "~1.16.0"
@@ -138,12 +129,12 @@ django-admin-sso = "~5.2.0"
 drf-yasg = "~1.21.6"
 django-debug-toolbar = "~3.2.1"
 sentry-sdk = "~2.8.0"
-environs = "~9.2.0"
-django-lifecycle = "~1.0.0"
+environs = "^14.1.1"
+django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
 flagsmith-flag-engine = "^5.3.0"
-boto3 = "~1.28.78"
+boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
 opencensus-ext-azure = "~1.1.4"
@@ -161,7 +152,7 @@ django-ordered-model = "~3.4.1"
 django-ses = "~3.5.0"
 django-axes = "~5.32.0"
 pydantic = "^2.3.0"
-pyngo = "~2.0.1"
+pyngo = "~2.2.1"
 flagsmith = "^3.6.0"
 python-gnupg = "^0.5.1"
 django-redis = "^5.4.0"
@@ -169,11 +160,12 @@ pygithub = "2.1.1"
 hubspot-api-client = "^8.2.1"
 djangorestframework-dataclasses = "^1.3.1"
 pyotp = "^2.9.0"
-flagsmith-task-processor = { git = "https://github.com/Flagsmith/flagsmith-task-processor", tag = "v1.1.1" }
-flagsmith-common = { git = "https://github.com/Flagsmith/flagsmith-common", tag = "v1.4.2" }
+flagsmith-common = "^1.13.0"
+django-stubs = "^5.1.3"
 tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
 structlog = "^24.4.0"
+prometheus-client = "^0.21.1"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -197,7 +189,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.5" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v2.7.8" }
 
 [tool.poetry.group.licensing]
 optional = true
@@ -219,7 +211,6 @@ pep8 = "~1.7.1"
 autopep8 = "~2.0.1"
 pytest = "~7.2.1"
 pytest-django = "^4.8.0"
-black = "~24.3.0"
 pytest-cov = "~4.1.0"
 datamodel-code-generator = "~0.25"
 requests-mock = "^1.11.0"
@@ -227,7 +218,20 @@ django-extensions = "^3.2.3"
 pdbpp = "^0.10.3"
 mypy-boto3-dynamodb = "^1.33.0"
 pytest-structlog = "^1.1"
+pyfakefs = "^5.7.4"
+mypy = "^1.15.0"
+djangorestframework-stubs = "^3.15.2"
+boto3-stubs = "^1.36.20"
+types-requests = "^2.32.0.20241016"
+types-markdown = "^3.7.0.20241204"
+types-pygments = "^2.19.0.20250107"
+types-influxdb-client = "^1.45.0.20241221"
+types-psycopg2 = "^2.9.21.20250121"
+types-python-dateutil = "^2.9.0.20241206"
+types-pytz = "^2025.1.0.20250204"
+ruff = "^0.9.7"
+flagsmith-common = { version = "^1.13.0", extras = ["test-tools"] }
 
 [build-system]
-requires = ["poetry-core>=1.5.0"]
+requires = ["poetry>=2.0.0"]
 build-backend = "poetry.core.masonry.api"

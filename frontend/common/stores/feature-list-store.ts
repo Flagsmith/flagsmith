@@ -12,12 +12,13 @@ import {
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
 import {
-    ChangeRequest,
-    Environment,
-    FeatureState,
-    PagedResponse,
-    ProjectFlag, TypedFeatureState,
-} from 'common/types/responses';
+  ChangeRequest,
+  Environment,
+  FeatureState,
+  PagedResponse,
+  ProjectFlag,
+  TypedFeatureState,
+} from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Actions from 'common/dispatcher/action-constants'
 import Project from 'common/project'
@@ -233,7 +234,7 @@ const controller = {
         }
       })
   },
-  editFeatureState: (
+  editFeatureState: async (
     projectId,
     environmentId,
     flag,
@@ -247,6 +248,7 @@ const controller = {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env = ProjectStore.getEnvironment(environmentId)
+
     if (env.use_v2_feature_versioning) {
       controller.editVersionedFeatureState(
         projectId,
@@ -278,19 +280,13 @@ const controller = {
               feature_segment: {
                 segment: v.segment,
               },
-              feature_state_value: {
-                boolean_value:
-                  v.feature_segment_value.feature_state_value.boolean_value,
-                integer_value:
-                  v.feature_segment_value.feature_state_value.integer_value,
-                string_value:
-                  v.feature_segment_value.feature_state_value.string_value,
-                type: v.feature_segment_value.feature_state_value.type,
-              },
+              feature_state_value: Utils.valueToFeatureState(v.value),
+              multivariate_feature_state_values: v.multivariate_options,
             },
             { forceRefetch: true },
           ).then((segmentOverride) => {
             const newValue = {
+              created: !segmentOverrides[i].id,
               environment: segmentOverride.data.environment,
               feature: featureFlagId,
               feature_segment_value: {
@@ -380,9 +376,12 @@ const controller = {
           )
         }
 
+        const priorityChanged = segmentOverrides?.find(
+          (v) => v.originalPriority !== v.priority,
+        )
         const segmentOverridesRequest =
           mode === 'SEGMENT' && segmentOverrides
-            ? (segmentOverrides.length
+            ? (priorityChanged
                 ? updateSegmentPriorities(
                     getStore(),
                     segmentOverrides.map((override, index) => ({
@@ -394,29 +393,32 @@ const controller = {
               ).then(() =>
                 Promise.all(
                   segmentOverrides.map((override) =>
-                    data.put(
-                      `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
-                      {
-                        ...override.feature_segment_value,
-                        enabled: override.enabled,
-                        feature_state_value: Utils.valueToFeatureState(
-                          override.value,
-                        ),
-                        multivariate_feature_state_values:
-                          override.multivariate_options &&
-                          override.multivariate_options.map((o) => {
-                            if (o.multivariate_feature_option) return o
-                            return {
-                              multivariate_feature_option:
-                                environmentFlag
-                                  .multivariate_feature_state_values[
-                                  o.multivariate_feature_option_index
-                                ].multivariate_feature_option,
-                              percentage_allocation: o.percentage_allocation,
-                            }
-                          }),
-                      },
-                    ),
+                    !override.created
+                      ? data.put(
+                          `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
+                          {
+                            ...override.feature_segment_value,
+                            enabled: override.enabled,
+                            feature_state_value: Utils.valueToFeatureState(
+                              override.value,
+                            ),
+                            multivariate_feature_state_values:
+                              override.multivariate_options &&
+                              override.multivariate_options.map((o) => {
+                                if (o.multivariate_feature_option) return o
+                                return {
+                                  multivariate_feature_option:
+                                    environmentFlag
+                                      .multivariate_feature_state_values[
+                                      o.multivariate_feature_option_index
+                                    ].multivariate_feature_option,
+                                  percentage_allocation:
+                                    o.percentage_allocation,
+                                }
+                              }),
+                          },
+                        )
+                      : Promise.resolve(override),
                   ),
                 ),
               )
@@ -472,16 +474,17 @@ const controller = {
       API.trackEvent(Constants.events.EDIT_FEATURE)
       const env: Environment = ProjectStore.getEnvironment(environmentId) as any
       // Detect differences between change request and existing feature states
-      const res: { data: PagedResponse<TypedFeatureState> } = await getFeatureStates(
-        getStore(),
-        {
-          environment: environmentFlag.environment,
-          feature: projectFlag.id,
-        },
-        {
-          forceRefetch: true,
-        },
-      )
+      const res: { data: PagedResponse<TypedFeatureState> } =
+        await getFeatureStates(
+          getStore(),
+          {
+            environment: environmentFlag.environment,
+            feature: projectFlag.id,
+          },
+          {
+            forceRefetch: true,
+          },
+        )
       const segmentResult = await getSegments(getStore(), {
         include_feature_specific: true,
         page_size: 1000,
@@ -668,12 +671,17 @@ const controller = {
                   )
                 }
               })
+              return updatedChangeRequest
             },
           )
         })
 
-      Promise.all([prom]).then(() => {
-        store.saved({ changeRequest: true, isCreate: true })
+      Promise.all([prom]).then(([updatedChangeRequest]) => {
+        store.saved({
+          changeRequest: true,
+          isCreate: true,
+          updatedChangeRequest,
+        })
       })
     } catch (e) {
       API.ajaxHandler(store, e)
@@ -973,7 +981,7 @@ const controller = {
 
 const store = Object.assign({}, BaseStore, {
   getEnvironmentFlags() {
-    return store.model && store.model.keyedEnvironmentFeatures
+    return store?.model?.keyedEnvironmentFeatures
   },
   getFeatureUsage() {
     return store.model && store.model.usageData

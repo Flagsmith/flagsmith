@@ -141,11 +141,19 @@ class CompareEnvironments extends Component {
                             permission={permission}
                             environmentId={data.api_key}
                             projectId={this.props.projectId}
+                            history={this.context.router.history}
                             index={i}
                             canDelete={permission}
                             toggleFlag={toggleFlag}
                             removeFlag={removeFlag}
                             projectFlag={this.state.flag}
+                            onCloseEditModal={() => {
+                              this.context.router.history.replace({
+                                pathname:
+                                  this.context.router.history.location.pathname,
+                                search: '?tab=feature-values',
+                              })
+                            }}
                           />
                         </Row>
                       )}

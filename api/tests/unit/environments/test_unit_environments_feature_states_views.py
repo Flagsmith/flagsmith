@@ -11,7 +11,7 @@ from rest_framework import status
 from tests.unit.environments.helpers import get_environment_user_client
 
 
-def test_user_without_update_feature_state_permission_cannot_update_feature_state(
+def test_user_without_update_feature_state_permission_cannot_update_feature_state(  # type: ignore[no-untyped-def]
     client,
     organisation_one,
     organisation_one_project_one,
@@ -50,7 +50,7 @@ def test_user_without_update_feature_state_permission_cannot_update_feature_stat
     "permissions, admin",
     (([], True), ([VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE], False)),
 )
-def test_permitted_user_can_update_feature_state(
+def test_permitted_user_can_update_feature_state(  # type: ignore[no-untyped-def]
     organisation_one_project_one_environment_one,
     organisation_one_project_one_feature_one,
     organisation_one_project_one,
@@ -85,7 +85,7 @@ def test_permitted_user_can_update_feature_state(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_user_with_view_environment_can_retrieve_feature_state(
+def test_user_with_view_environment_can_retrieve_feature_state(  # type: ignore[no-untyped-def]
     organisation_one_project_one_environment_one,
     organisation_one_project_one_feature_one,
     organisation_one_user,

@@ -1,9 +1,11 @@
 import typing
+from typing import cast
 
 from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.db import models
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -19,7 +21,7 @@ from util.drf_writable_nested.serializers import (
 )
 
 
-class EnvironmentSerializerFull(serializers.ModelSerializer):
+class EnvironmentSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     feature_states = FeatureStateSerializerFull(many=True)
     project = ProjectListSerializer()
 
@@ -37,7 +39,7 @@ class EnvironmentSerializerFull(serializers.ModelSerializer):
         )
 
 
-class EnvironmentSerializerLight(serializers.ModelSerializer):
+class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[type-arg]
     use_mv_v2_evaluation = serializers.SerializerMethodField()
 
     class Meta:
@@ -71,7 +73,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):
         (e.g. in a PUT request) will not behave as expected but, since this is a minor
         issue, I think we can ignore.
         """
-        return instance.use_identity_composite_key_for_hashing
+        return instance.use_identity_composite_key_for_hashing  # type: ignore[no-any-return]
 
 
 class EnvironmentSerializerWithMetadata(
@@ -82,24 +84,36 @@ class EnvironmentSerializerWithMetadata(
     metadata = MetadataSerializer(required=False, many=True)
 
     class Meta(EnvironmentSerializerLight.Meta):
-        fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)
+        fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
-    def get_project(self, validated_data: dict = None) -> Project:
+    def get_project(
+        self,
+        validated_data: dict[str, typing.Any] | None = None,
+    ) -> Project:
         if self.instance:
-            return self.instance.project
-        elif "project" in validated_data:
-            return validated_data["project"]
+            return self.instance.project  # type: ignore[no-any-return,union-attr]
+        elif validated_data and "project" in validated_data:
+            return validated_data["project"]  # type: ignore[no-any-return]
 
         raise serializers.ValidationError(
             "Unable to retrieve project for metadata validation."
         )
+
+    def update(
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
+    ) -> Environment:
+        metadata_items = validated_data.pop("metadata", [])
+        environment = cast(Environment, super().update(instance, validated_data))
+        self.update_metadata(environment, metadata_items)
+        environment.refresh_from_db()
+        return environment
 
 
 class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadata):
     total_segment_overrides = serializers.IntegerField()
 
     class Meta(EnvironmentSerializerWithMetadata.Meta):
-        fields = EnvironmentSerializerWithMetadata.Meta.fields + (
+        fields = EnvironmentSerializerWithMetadata.Meta.fields + (  # type: ignore[has-type]
             "total_segment_overrides",
         )
         read_only_fields = ("total_segment_overrides",)
@@ -110,6 +124,15 @@ class CreateUpdateEnvironmentSerializer(
 ):
     invalid_plans = ("free",)
     field_names = ("minimum_change_request_approvals",)
+
+    class Meta(EnvironmentSerializerWithMetadata.Meta):
+        validators = [
+            serializers.UniqueTogetherValidator(  # type: ignore[attr-defined]
+                queryset=EnvironmentSerializerWithMetadata.Meta.model.objects.all(),
+                fields=("name", "project"),
+                message="An environment with this name already exists.",
+            )
+        ]
 
     def get_subscription(self) -> typing.Optional[Subscription]:
         view = self.context["view"]
@@ -127,7 +150,7 @@ class CreateUpdateEnvironmentSerializer(
 
             return getattr(project.organisation, "subscription", None)
         elif view.action in ("update", "partial_update"):
-            return getattr(self.instance.project.organisation, "subscription", None)
+            return getattr(self.instance.project.organisation, "subscription", None)  # type: ignore[union-attr]
 
         return None
 
@@ -146,7 +169,7 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
         fields = ("id", "name", "api_key", "project", "clone_feature_states_async")
         read_only_fields = ("id", "api_key", "project")
 
-    def create(self, validated_data):
+    def create(self, validated_data):  # type: ignore[no-untyped-def]
         name = validated_data.get("name")
         source_env = validated_data.get("source_env")
         clone_feature_states_async = validated_data.get("clone_feature_states_async")
@@ -156,14 +179,14 @@ class CloneEnvironmentSerializer(EnvironmentSerializerLight):
         return clone
 
 
-class WebhookSerializer(serializers.ModelSerializer):
+class WebhookSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Webhook
         fields = ("id", "url", "enabled", "created_at", "updated_at", "secret")
         read_only_fields = ("id", "created_at", "updated_at")
 
 
-class EnvironmentAPIKeySerializer(serializers.ModelSerializer):
+class EnvironmentAPIKeySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = EnvironmentAPIKey
         fields = ("id", "key", "active", "created_at", "name", "expires_at")

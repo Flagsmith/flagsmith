@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.urls import reverse
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -16,7 +16,7 @@ from users.models import FFAdminUser
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
+def test_can_create_mv_option(client, project, mv_option_50_percent, feature):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -47,7 +47,7 @@ def test_can_create_mv_option(client, project, mv_option_50_percent, feature):
         (lazy_fixture("admin_client"), "89809"),
     ],
 )
-def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, project):
+def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, project):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -70,7 +70,7 @@ def test_cannot_create_mv_option_when_feature_id_invalid(client, feature_id, pro
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):
+def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):  # type: ignore[no-untyped-def]
     # Given
     new_user = FFAdminUser.objects.create(email="testuser@mail.com")
     organisation = Organisation.objects.create(name="Test Org")
@@ -106,7 +106,7 @@ def test_cannot_create_mv_option_when_user_is_not_owner_of_the_feature(project):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
+def test_can_list_mv_option(project, mv_option_50_percent, client, feature):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:projects:feature-mv-options-list",
@@ -127,7 +127,7 @@ def test_can_list_mv_option(project, mv_option_50_percent, client, feature):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
+def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
     url = reverse(
@@ -157,7 +157,7 @@ def test_creating_mv_options_with_accumulated_total_gt_100_returns_400(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_update_default_percentage_allocation(
+def test_can_update_default_percentage_allocation(  # type: ignore[no-untyped-def]
     project, mv_option_50_percent, client, feature
 ):
     url = reverse(
@@ -187,7 +187,7 @@ def test_can_update_default_percentage_allocation(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(
+def test_updating_default_percentage_allocation_that_pushes_the_total_percentage_allocation_over_100_returns_400(  # type: ignore[no-untyped-def]  # noqa: E501
     project, mv_option_50_percent, client, feature
 ):
     # First let's create another mv_option with 30 percent allocation
@@ -237,7 +237,7 @@ def test_updating_default_percentage_allocation_that_pushes_the_total_percentage
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):
+def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):  # type: ignore[no-untyped-def]
     # Given
     mv_option_url = reverse(
         "api-v1:projects:feature-mv-options-detail",
@@ -269,7 +269,7 @@ def test_can_remove_mv_option(project, mv_option_50_percent, client, feature):
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
+def test_create_and_update_multivariate_feature_with_2_variations_50_percent(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
     """
@@ -364,7 +364,7 @@ def test_create_and_update_multivariate_feature_with_2_variations_50_percent(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
-def test_modify_weight_of_2_variations_in_single_request(
+def test_modify_weight_of_2_variations_in_single_request(  # type: ignore[no-untyped-def]
     project, environment, environment_api_key, client, feature
 ):
     """

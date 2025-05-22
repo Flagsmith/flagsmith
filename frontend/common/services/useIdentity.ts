@@ -61,12 +61,11 @@ export const identityService = service
             pageType,
             pages,
             q,
-            search,
           } = baseQuery
           let url = `${getIdentityEndpoint(environmentId, isEdge)}/?q=${
             dashboard_alias ? 'dashboard_alias:' : ''
           }${encodeURIComponent(
-            dashboard_alias || search || q || '',
+            dashboard_alias || q || '',
           )}&page_size=${page_size}`
           let last_evaluated_key = null
           if (!isEdge) {
@@ -142,7 +141,7 @@ export const identityService = service
             query.environmentId
           }/${Utils.getIdentitiesEndpoint()}/${
             query.data.identity_uuid || query.data.id
-          }`,
+          }/`,
         }),
       }),
       // END OF ENDPOINTS

@@ -4,7 +4,7 @@ from django.contrib import admin
 from .models import Identity
 
 
-class IdentityAdmin(admin.ModelAdmin):
+class IdentityAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     date_hierarchy = "created_date"
     list_display = ("__str__", "created_date", "environment")
     list_filter = ("created_date", "environment")

@@ -19,6 +19,9 @@ from integrations.github.github import call_github_task
 from segments.models import Segment
 from users.models import FFAdminUser
 
+if typing.TYPE_CHECKING:
+    from features.models import FeatureState
+
 
 class CustomEnvironmentFeatureVersionFeatureStateSerializer(
     CustomCreateSegmentOverrideFeatureStateSerializer
@@ -28,20 +31,20 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
     class Meta(CustomCreateSegmentOverrideFeatureStateSerializer.Meta):
         read_only_fields = (
             CustomCreateSegmentOverrideFeatureStateSerializer.Meta.read_only_fields
-            + ("feature",)
+            + ("feature",)  # type: ignore[assignment]
         )
 
-    def save(self, **kwargs):
-        response = super().save(**kwargs)
+    def save(self, **kwargs):  # type: ignore[no-untyped-def]
+        response = super().save(**kwargs)  # type: ignore[no-untyped-call]
 
-        feature_state = self.instance
+        feature_state: "FeatureState" = self.instance  # type: ignore[assignment]
         if (
             not feature_state.identity_id
             and feature_state.feature.external_resources.exists()
+            and feature_state.environment
             and feature_state.environment.project.github_project.exists()
             and feature_state.environment.project.organisation.github_config.exists()
         ):
-
             call_github_task(
                 organisation_id=feature_state.environment.project.organisation_id,
                 type=GitHubEventType.FLAG_UPDATED.value,
@@ -54,7 +57,7 @@ class CustomEnvironmentFeatureVersionFeatureStateSerializer(
         return response
 
 
-class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):
+class EnvironmentFeatureVersionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = EnvironmentFeatureVersion
         fields = (
@@ -91,7 +94,7 @@ class EnvironmentFeatureVersionRetrieveSerializer(EnvironmentFeatureVersionSeria
             "environment",
         )
 
-        fields = EnvironmentFeatureVersionSerializer.Meta.fields + _fields
+        fields = EnvironmentFeatureVersionSerializer.Meta.fields + _fields  # type: ignore[assignment]
 
     def get_previous_version_uuid(
         self, environment_feature_version: EnvironmentFeatureVersion
@@ -120,7 +123,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
         help_text="Array of feature states to update in the new version.",
         write_only=True,
     )
-    segment_ids_to_delete_overrides = serializers.ListSerializer(
+    segment_ids_to_delete_overrides = serializers.ListSerializer(  # type: ignore[var-annotated]
         child=serializers.IntegerField(),
         required=False,
         allow_null=True,
@@ -135,7 +138,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     )
 
     class Meta(EnvironmentFeatureVersionSerializer.Meta):
-        fields = EnvironmentFeatureVersionSerializer.Meta.fields + (
+        fields = EnvironmentFeatureVersionSerializer.Meta.fields + (  # type: ignore[assignment]
             "feature_states_to_create",
             "feature_states_to_update",
             "segment_ids_to_delete_overrides",
@@ -201,10 +204,12 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
                 )
             )
 
-        return version
+        return version  # type: ignore[no-any-return]
 
     def _create_feature_state(
-        self, feature_state: dict, version: EnvironmentFeatureVersion
+        self,
+        feature_state: dict,  # type: ignore[type-arg]
+        version: EnvironmentFeatureVersion,
     ) -> None:
         if not self._is_segment_override(feature_state):
             raise serializers.ValidationError(
@@ -225,7 +230,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
                 {
                     "message": "An unresolvable conflict occurred: "
                     "segment override already exists for segment '%s'"
-                    % existing_segment_override.feature_segment.segment.name
+                    % existing_segment_override.feature_segment.segment.name  # type: ignore[union-attr]
                 }
             )
 
@@ -239,7 +244,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             context=save_kwargs,
         )
         fs_serializer.is_valid(raise_exception=True)
-        fs_serializer.save(**save_kwargs)
+        fs_serializer.save(**save_kwargs)  # type: ignore[no-untyped-call]
 
     def _update_feature_state(
         self, feature_state: dict[str, typing.Any], version: EnvironmentFeatureVersion
@@ -293,7 +298,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             },
         )
         fs_serializer.is_valid(raise_exception=True)
-        fs_serializer.save(
+        fs_serializer.save(  # type: ignore[no-untyped-call]
             environment_feature_version=version, environment=version.environment
         )
 
@@ -302,7 +307,7 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
     ) -> None:
         version.feature_segments.filter(segment_id__in=segment_ids).delete()
 
-    def _is_segment_override(self, feature_state: dict) -> bool:
+    def _is_segment_override(self, feature_state: dict) -> bool:  # type: ignore[type-arg]
         return feature_state.get("feature_segment") is not None
 
     def _validate_segment_override_limit(self, environment: Environment) -> None:
@@ -325,10 +330,10 @@ class EnvironmentFeatureVersionCreateSerializer(EnvironmentFeatureVersionSeriali
             )
 
 
-class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
+class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):  # type: ignore[type-arg]
     live_from = serializers.DateTimeField(required=False)
 
-    def save(self, **kwargs):
+    def save(self, **kwargs):  # type: ignore[no-untyped-def]
         live_from = self.validated_data.get("live_from")
 
         request = self.context["request"]
@@ -341,7 +346,7 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
         elif isinstance(request.user, APIKeyUser):
             published_by_api_key = request.user.key
 
-        self.instance.publish(
+        self.instance.publish(  # type: ignore[union-attr]
             live_from=live_from,
             published_by=published_by,
             published_by_api_key=published_by_api_key,
@@ -349,5 +354,5 @@ class EnvironmentFeatureVersionPublishSerializer(serializers.Serializer):
         return self.instance
 
 
-class EnvironmentFeatureVersionQuerySerializer(serializers.Serializer):
+class EnvironmentFeatureVersionQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     is_live = serializers.BooleanField(allow_null=True, required=False, default=None)

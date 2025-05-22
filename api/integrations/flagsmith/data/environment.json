@@ -15,7 +15,7 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 638869,
+      "django_id": 772178,
       "enabled": true,
       "feature": {
         "id": 96656,
@@ -24,11 +24,11 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "768e6102-7a0c-49f6-9d9f-097e376ed76c",
+      "featurestate_uuid": "1e5de9b6-52df-4a7b-a9cc-e56ee654b019",
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 638871,
+      "django_id": 772176,
       "enabled": true,
       "feature": {
         "id": 96657,
@@ -37,7 +37,7 @@
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "346cc272-dabe-4993-9cfa-76afd0d848f1",
+      "featurestate_uuid": "b5f95449-c333-482e-8864-cd32fc11c795",
       "multivariate_feature_state_values": []
     },
     {
@@ -51,6 +51,19 @@
       "feature_segment": null,
       "feature_state_value": null,
       "featurestate_uuid": "3adb2623-f4b4-4407-bdf4-033dc60dc785",
+      "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 691557,
+      "enabled": false,
+      "feature": {
+        "id": 125135,
+        "name": "enable_feature_versioning_for_new_projects",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": null,
+      "featurestate_uuid": "616f859f-1901-4099-b082-ffe5364798a2",
       "multivariate_feature_state_values": []
     }
   ],

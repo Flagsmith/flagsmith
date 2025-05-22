@@ -6,13 +6,26 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "entryPoint": [
-                "python",
-                "manage.py",
-                "runprocessor",
-                "--sleepintervalms",
-                "700"
+            "command": [
+                "run-task-processor"
             ],
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
@@ -26,6 +39,10 @@
                 {
                     "name": "AWS_DEFAULT_REGION",
                     "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_ALLOWED_HOSTS",
+                    "value": "*"
                 },
                 {
                     "name": "DJANGO_SETTINGS_MODULE",
@@ -154,6 +171,18 @@
                 {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
+                },
+                {
+                    "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
+                    "value": "1000"
+                },
+                {
+                    "name": "TASK_PROCESSOR_NUM_THREADS",
+                    "value": "12"
                 }
             ],
             "secrets": [

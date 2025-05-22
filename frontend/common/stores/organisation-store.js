@@ -254,35 +254,6 @@ const controller = {
           }),
       )
   },
-  inviteUsers: (invites) => {
-    store.saving()
-    data
-      .post(`${Project.api}organisations/${store.id}/invite/`, {
-        frontend_base_url: `${document.location.origin}/email-invite/`,
-        invites: invites.map((invite) => {
-          API.trackEvent(Constants.events.INVITE)
-          return {
-            email: invite.emailAddress,
-            role: invite.role.value,
-          }
-        }),
-      })
-      .then((res) => {
-        store.model.invites = store.model.invites || []
-        store.model.invites = store.model.invites.concat(res)
-        store.saved()
-        toast('Invite(s) sent successfully')
-      })
-      .catch((e) => {
-        store.saved()
-        toast(
-          `Failed to send invite(s). ${
-            e && e.error ? e.error : 'Please try again later'
-          }`,
-          'danger',
-        )
-      })
-  },
   resendInvite: (id) => {
     data
       .post(`${Project.api}organisations/${store.id}/invites/${id}/resend/`)
@@ -358,9 +329,6 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     case Actions.DELETE_PROJECT:
       controller.deleteProject(action.id)
       break
-    case Actions.INVITE_USERS:
-      controller.inviteUsers(action.invites)
-      break
     case Actions.DELETE_INVITE:
       controller.deleteInvite(action.id)
       break
@@ -377,6 +345,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.invalidateInviteLink(action.link)
       break
     case Actions.LOGOUT:
+      store.model = null
       store.id = null
       break
     default:

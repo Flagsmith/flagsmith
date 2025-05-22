@@ -48,12 +48,21 @@ def get_range_bucket_mappings(date_start: datetime) -> str:
 
 
 class InfluxDBWrapper:
-    def __init__(self, name):
+    def __init__(self, name):  # type: ignore[no-untyped-def]
         self.name = name
         self.records = []
         self.write_api = influxdb_client.write_api(write_options=SYNCHRONOUS)
 
-    def add_data_point(self, field_name, field_value, tags=None):
+    def add_data_point(
+        self,
+        field_name: str,
+        field_value: str | int | float,
+        tags: typing.Mapping[
+            str,
+            str | int | float,
+        ]
+        | None = None,
+    ) -> None:
         point = Point(self.name)
         point.field(field_name, field_value)
 
@@ -63,7 +72,7 @@ class InfluxDBWrapper:
 
         self.records.append(point)
 
-    def write(self):
+    def write(self) -> None:
         try:
             self.write_api.write(bucket=settings.INFLUXDB_BUCKET, record=self.records)
         except (HTTPError, InfluxDBError) as e:
@@ -79,7 +88,7 @@ class InfluxDBWrapper:
             )
 
     @staticmethod
-    def influx_query_manager(
+    def influx_query_manager(  # type: ignore[no-untyped-def]
         date_start: datetime | None = None,
         date_stop: datetime | None = None,
         drop_columns: typing.Tuple[str, ...] = DEFAULT_DROP_COLUMNS,
@@ -119,7 +128,7 @@ class InfluxDBWrapper:
 
 
 def get_events_for_organisation(
-    organisation_id: id,
+    organisation_id: id,  # type: ignore[valid-type]
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
 ) -> int:
@@ -191,7 +200,7 @@ def get_event_list_for_organisation(
         date_stop=date_stop,
     )
     dataset = defaultdict(list)
-    labels = []
+    labels = []  # type: ignore[var-annotated]
 
     date_difference = date_stop - date_start
     required_records = date_difference.days + 1
@@ -205,8 +214,8 @@ def get_event_list_for_organisation(
 
 def get_multiple_event_list_for_organisation(
     organisation_id: int,
-    project_id: int = None,
-    environment_id: int = None,
+    project_id: int = None,  # type: ignore[assignment]
+    environment_id: int = None,  # type: ignore[assignment]
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
 ) -> list[UsageData]:
@@ -244,16 +253,16 @@ def get_multiple_event_list_for_organisation(
         extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
     )
     if not results:
-        return results
+        return results  # type: ignore[no-any-return]
 
-    dataset = [{} for _ in range(len(results[0].records))]
+    dataset = [{} for _ in range(len(results[0].records))]  # type: ignore[var-annotated]
 
     for result in results:
         for i, record in enumerate(result.records):
             dataset[i][record.values["resource"].capitalize()] = record.values["_value"]
             dataset[i]["name"] = record.values["_time"].strftime("%Y-%m-%d")
 
-    return dataset
+    return dataset  # type: ignore[return-value]
 
 
 def get_usage_data(
@@ -272,12 +281,12 @@ def get_usage_data(
 
     events_list = get_multiple_event_list_for_organisation(
         organisation_id=organisation_id,
-        project_id=project_id,
-        environment_id=environment_id,
+        project_id=project_id,  # type: ignore[arg-type]
+        environment_id=environment_id,  # type: ignore[arg-type]
         date_start=date_start,
         date_stop=date_stop,
     )
-    return UsageDataSchema(many=True).load(events_list)
+    return UsageDataSchema(many=True).load(events_list)  # type: ignore[no-any-return,arg-type]
 
 
 def get_multiple_event_list_for_feature(
@@ -285,7 +294,7 @@ def get_multiple_event_list_for_feature(
     feature_name: str,
     date_start: datetime | None = None,
     aggregate_every: str = "24h",
-) -> list[dict]:
+) -> list[dict]:  # type: ignore[type-arg]
     """
     Get aggregated request data for the given feature in a given environment across
     all time, aggregated into time windows of length defined by the period argument.
@@ -325,7 +334,7 @@ def get_multiple_event_list_for_feature(
     if not results:
         return []
 
-    dataset = [{} for _ in range(len(results[0].records))]
+    dataset = [{} for _ in range(len(results[0].records))]  # type: ignore[var-annotated]
 
     # Iterating over Influx data looking for feature_id, and adding proper requests value and datetime to it
     # todo move it to marshmallow schema
@@ -348,7 +357,7 @@ def get_feature_evaluation_data(
         environment_id=environment_id,
         date_start=date_start,
     )
-    return FeatureEvaluationDataSchema(many=True).load(data)
+    return FeatureEvaluationDataSchema(many=True).load(data)  # type: ignore[no-any-return]
 
 
 def get_top_organisations(
@@ -401,7 +410,8 @@ def get_top_organisations(
 
 
 def get_current_api_usage(
-    organisation_id: int, date_start: datetime | None = None
+    organisation_id: int,
+    date_start: datetime,
 ) -> int:
     """
     Query influx db for api usage
@@ -411,10 +421,6 @@ def get_current_api_usage(
 
     :return: number of current api calls
     """
-    now = timezone.now()
-    if date_start is None:
-        date_start = now - timedelta(days=30)
-
     bucket = read_bucket
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,

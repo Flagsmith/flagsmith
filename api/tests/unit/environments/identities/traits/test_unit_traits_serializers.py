@@ -1,10 +1,9 @@
 from core.constants import STRING
-
 from environments.identities.traits.models import Trait
 from environments.sdk.serializers import SDKBulkCreateUpdateTraitSerializer
 
 
-def test_bulk_create_update_serializer_save_many(
+def test_bulk_create_update_serializer_save_many(  # type: ignore[no-untyped-def]
     identity, django_assert_num_queries, mocker
 ):
     # Given

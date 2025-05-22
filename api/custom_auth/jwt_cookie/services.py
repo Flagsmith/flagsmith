@@ -6,13 +6,13 @@ from custom_auth.jwt_cookie.constants import JWT_SLIDING_COOKIE_KEY
 from users.models import FFAdminUser
 
 
-def authorise_response(user: FFAdminUser, response: Response, secure=False) -> Response:
+def authorise_response(user: FFAdminUser, response: Response, secure=False) -> Response:  # type: ignore[no-untyped-def]
     sliding_token = SlidingToken.for_user(user)
     response.set_cookie(
         JWT_SLIDING_COOKIE_KEY,
         str(sliding_token),
         httponly=True,
         secure=secure,
-        samesite=settings.COOKIE_SAME_SITE,
+        samesite=settings.COOKIE_SAME_SITE,  # type: ignore[arg-type]
     )
     return response

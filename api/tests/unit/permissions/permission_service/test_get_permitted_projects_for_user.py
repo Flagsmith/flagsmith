@@ -4,13 +4,13 @@ from common.projects.permissions import (
     DELETE_FEATURE,
     VIEW_PROJECT,
 )
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
 from permissions.permission_service import get_permitted_projects_for_user
 from projects.models import ProjectPermissionModel
 
 
-def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(
+def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(  # type: ignore[no-untyped-def]
     admin_user, project, project_two
 ):
     for permission in ProjectPermissionModel.objects.all().values_list(
@@ -27,7 +27,7 @@ def test_get_permitted_projects_for_user_returns_all_projects_for_org_admin(
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(
+def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(  # type: ignore[no-untyped-def]
     test_user, project, project_admin, project_two
 ):
     for permission in ProjectPermissionModel.objects.all().values_list(
@@ -37,7 +37,7 @@ def test_get_permitted_projects_for_user_returns_the_project_for_project_admin(
         assert get_permitted_projects_for_user(test_user, permission).count() == 1
 
 
-def test_get_permitted_projects_for_user_returns_correct_project(
+def test_get_permitted_projects_for_user_returns_correct_project(  # type: ignore[no-untyped-def]
     test_user,
     project,
     project_permission_using_user_permission,

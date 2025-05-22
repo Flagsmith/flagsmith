@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from environments.identities.models import Identity
@@ -8,7 +10,7 @@ from integrations.amplitude.constants import DEFAULT_AMPLITUDE_API_URL
 from integrations.amplitude.models import AmplitudeConfiguration
 
 
-def test_amplitude_initialized_correctly():
+def test_amplitude_initialized_correctly() -> None:
     # Given
     config = AmplitudeConfiguration(api_key="123key")
 
@@ -20,7 +22,7 @@ def test_amplitude_initialized_correctly():
     assert amplitude_wrapper.url == expected_url
 
 
-def test_amplitude_initialized_correctly_with_custom_base_url():
+def test_amplitude_initialized_correctly_with_custom_base_url() -> None:
     # Given
     base_url = "https://api.eu.amplitude.com"
     config = AmplitudeConfiguration(api_key="123key", base_url=base_url)
@@ -33,7 +35,13 @@ def test_amplitude_initialized_correctly_with_custom_base_url():
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "feature_state_with_value,expected_property_value",
+    [(False, False), (True, True), ("foo", "foo"), (1, 1), (0, 0)],
+    indirect=["feature_state_with_value"],
+)
 def test_amplitude_when_generate_user_data_with_correct_values_then_success(
+    expected_property_value: typing.Any,
     environment: Environment,
     feature_state: FeatureState,
     feature_state_with_value: FeatureState,
@@ -47,13 +55,15 @@ def test_amplitude_when_generate_user_data_with_correct_values_then_success(
 
     # When
     user_data = amplitude_wrapper.generate_user_data(
-        identity=identity, feature_states=[feature_state, feature_state_with_value]
+        identity=identity,
+        feature_states=[feature_state, feature_state_with_value],
+        trait_models=[],
     )
 
     # Then
     feature_properties = {
         feature_state.feature.name: feature_state.enabled,
-        feature_state_with_value.feature.name: "foo",  # hardcoded here from the feature_state_with_value fixture
+        feature_state_with_value.feature.name: expected_property_value,
     }
 
     expected_user_data = {

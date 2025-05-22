@@ -1,7 +1,8 @@
 from typing import Any
 
+from common.core.utils import is_saas
 from django.conf import settings
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer  # type: ignore[import-untyped]
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied
@@ -19,7 +20,7 @@ from .constants import (
 )
 
 
-class CustomTokenSerializer(serializers.ModelSerializer):
+class CustomTokenSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Token
         fields = ("key",)
@@ -37,7 +38,7 @@ class InviteLinkValidationMixin:
         match sign_up_type:
             case SignUpType.INVITE_LINK.value:
                 valid = InviteLink.objects.filter(
-                    hash=self.initial_data.get("invite_hash")
+                    hash=self.initial_data.get("invite_hash")  # type: ignore[attr-defined]
                 ).exists()
             case SignUpType.INVITE_EMAIL.value:
                 valid = Invite.objects.filter(email__iexact=email.lower()).exists()
@@ -46,19 +47,24 @@ class InviteLinkValidationMixin:
             raise PermissionDenied(USER_REGISTRATION_WITHOUT_INVITE_ERROR_MESSAGE)
 
 
-class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):
+class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin):  # type: ignore[misc]
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         if not settings.COOKIE_AUTH_ENABLED:
             self.fields["key"] = serializers.SerializerMethodField()
 
-    class Meta(UserCreateSerializer.Meta):
+        if not is_saas():
+            self.fields["superuser"] = serializers.BooleanField(
+                write_only=True, required=False
+            )
+
+    class Meta(UserCreateSerializer.Meta):  # type: ignore[misc]
         fields = UserCreateSerializer.Meta.fields + (
             "is_active",
             "marketing_consent_given",
             "uuid",
         )
-        read_only_fields = ("is_active", "uuid")
+        read_only_fields = ("is_active", "uuid", "marketing_consent_given")
         write_only_fields = ("sign_up_type",)
         extra_kwargs = {
             "email": {
@@ -72,11 +78,22 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
             }
         }
 
-    def validate(self, attrs):
+    def validate(self, attrs):  # type: ignore[no-untyped-def]
         attrs = super().validate(attrs)
         email = attrs.get("email")
+        if attrs.get("superuser"):
+            if FFAdminUser.objects.exists():
+                raise serializers.ValidationError(
+                    {
+                        "superuser": (
+                            "A superuser can only be created through this  "
+                            "endpoint if no other users exist."
+                        )
+                    }
+                )
+
         if settings.AUTH_CONTROLLER_INSTALLED:
-            from auth_controller.controller import (
+            from auth_controller.controller import (  # type: ignore[import-not-found,import-untyped,unused-ignore]
                 is_authentication_method_valid,
             )
 
@@ -95,15 +112,15 @@ class CustomUserCreateSerializer(UserCreateSerializer, InviteLinkValidationMixin
         instance = super().save()
         if "view" in self.context:
             self.context["view"].user = instance
-        return instance
+        return instance  # type: ignore[no-any-return]
 
     @staticmethod
-    def get_key(instance) -> str:
+    def get_key(instance) -> str:  # type: ignore[no-untyped-def]
         token, _ = Token.objects.get_or_create(user=instance)
-        return token.key
+        return token.key  # type: ignore[no-any-return]
 
 
-class CustomUserDelete(serializers.Serializer):
+class CustomUserDelete(serializers.Serializer):  # type: ignore[type-arg]
     current_password = serializers.CharField(
         style={"input_type": "password"},
         required=False,
@@ -116,7 +133,7 @@ class CustomUserDelete(serializers.Serializer):
         "field_blank": FIELD_BLANK_ERROR,
     }
 
-    def validate_current_password(self, value):
+    def validate_current_password(self, value):  # type: ignore[no-untyped-def]
         user_auth_type = self.context["request"].user.auth_type
         if (
             user_auth_type == AuthType.GOOGLE.value

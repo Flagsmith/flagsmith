@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from slack_sdk.oauth import AuthorizeUrlGenerator
+from slack_sdk.oauth import AuthorizeUrlGenerator  # type: ignore[attr-defined]
 
 from environments.models import Environment
 from integrations.common.views import EnvironmentIntegrationCommonViewSet
@@ -33,7 +33,7 @@ from .permissions import OauthInitPermission, SlackGetChannelPermissions
 signer = TimestampSigner()
 
 
-class SlackGetChannelsViewSet(GenericViewSet):
+class SlackGetChannelsViewSet(GenericViewSet):  # type: ignore[type-arg]
     serializer_class = SlackChannelListSerializer
     pagination_class = None  # set here to ensure documentation is correct
     permission_classes = [SlackGetChannelPermissions]
@@ -46,9 +46,9 @@ class SlackGetChannelsViewSet(GenericViewSet):
             config = SlackConfiguration.objects.get(project=environment.project)
         except ObjectDoesNotExist as e:
             raise SlackConfigurationDoesNotExist() from e
-        return config.api_token
+        return config.api_token  # type: ignore[no-any-return]
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         api_token = self.get_api_token()
         q_param_serializer = SlackChannelListQueryParamSerializer(data=request.GET)
         q_param_serializer.is_valid(raise_exception=True)
@@ -61,9 +61,9 @@ class SlackGetChannelsViewSet(GenericViewSet):
 
 
 class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
-    serializer_class = SlackEnvironmentSerializer
+    serializer_class = SlackEnvironmentSerializer  # type: ignore[assignment]
     pagination_class = None  # set here to ensure documentation is correct
-    model_class = SlackEnvironment
+    model_class = SlackEnvironment  # type: ignore[assignment]
 
     def get_permissions(self) -> list[BasePermission]:
         if (action := self.action) in [
@@ -76,26 +76,27 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
         return super().get_permissions()
 
     @action(detail=False, methods=["GET"], url_path="signature")
-    def get_temporary_signature(self, request, *args, **kwargs):
+    def get_temporary_signature(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         return Response({"signature": signer.sign(request.user.id)})
 
     @action(detail=False, methods=["GET"], url_path="callback")
-    def slack_oauth_callback(self, request, environment_api_key):
+    def slack_oauth_callback(self, request, environment_api_key):  # type: ignore[no-untyped-def]
         code = request.GET.get("code")
         if not code:
             return Response(
                 "code not found in query params",
                 status.HTTP_400_BAD_REQUEST,
             )
-        validate_state(request.GET.get("state"), request)
+        validate_state(request.GET.get("state"), request)  # type: ignore[no-untyped-call]
         bot_token = SlackWrapper().get_bot_token(
-            code, self._get_slack_callback_url(environment_api_key)
+            code,
+            self._get_slack_callback_url(environment_api_key),  # type: ignore[no-untyped-call]
         )
 
         SlackConfiguration.objects.update_or_create(
             project=request.environment.project, defaults={"api_token": bot_token}
         )
-        return redirect(self._get_front_end_redirect_url())
+        return redirect(self._get_front_end_redirect_url())  # type: ignore[no-untyped-call]
 
     @action(
         detail=False,
@@ -103,7 +104,7 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
         url_path="oauth",
         authentication_classes=[OauthInitAuthentication],
     )
-    def slack_oauth_init(self, request, environment_api_key):
+    def slack_oauth_init(self, request, environment_api_key):  # type: ignore[no-untyped-def]
         if not settings.SLACK_CLIENT_ID:
             return Response(
                 data={"message": "Slack is not configured"},
@@ -118,22 +119,22 @@ class SlackEnvironmentViewSet(EnvironmentIntegrationCommonViewSet):
         request.session["front_end_redirect_url"] = front_end_redirect_url
         authorize_url_generator = AuthorizeUrlGenerator(
             client_id=settings.SLACK_CLIENT_ID,
-            redirect_uri=self._get_slack_callback_url(environment_api_key),
+            redirect_uri=self._get_slack_callback_url(environment_api_key),  # type: ignore[no-untyped-call]
             scopes=["chat:write", "channels:read", "channels:join"],
         )
         return redirect(authorize_url_generator.generate(state))
 
-    def _get_slack_callback_url(self, environment_api_key):
+    def _get_slack_callback_url(self, environment_api_key):  # type: ignore[no-untyped-def]
         return self.reverse_action("slack-oauth-callback", args=[environment_api_key])
 
-    def _get_front_end_redirect_url(self):
+    def _get_front_end_redirect_url(self):  # type: ignore[no-untyped-def]
         try:
             return self.request.session.pop("front_end_redirect_url")
         except KeyError as e:
             raise FrontEndRedirectURLNotFound() from e
 
 
-def validate_state(state, request):
+def validate_state(state, request):  # type: ignore[no-untyped-def]
     state_before = request.session.pop("state", None)
     if state_before != state:
         raise InvalidStateError()

@@ -1,4 +1,7 @@
+from typing import Any
+
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from util.drf_writable_nested.serializers import (
@@ -12,29 +15,29 @@ from .models import (
 )
 
 
-class MetadataFieldQuerySerializer(serializers.Serializer):
+class MetadataFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     organisation = serializers.IntegerField(
         required=True, help_text="Organisation ID to filter by"
     )
 
 
-class SupportedRequiredForModelQuerySerializer(serializers.Serializer):
+class SupportedRequiredForModelQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     model_name = serializers.CharField(required=True)
 
 
-class MetadataFieldSerializer(serializers.ModelSerializer):
+class MetadataFieldSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = MetadataField
         fields = ("id", "name", "type", "description", "organisation")
 
 
-class MetadataModelFieldQuerySerializer(serializers.Serializer):
+class MetadataModelFieldQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     content_type = serializers.IntegerField(
         required=False, help_text="Content type of the model to filter by."
     )
 
 
-class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):
+class MetadataModelFieldRequirementSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = MetadataModelFieldRequirement
         fields = ("content_type", "object_id")
@@ -47,15 +50,28 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         model = MetadataModelField
         fields = ("id", "field", "content_type", "is_required_for")
 
-    def validate(self, data):
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
         data = super().validate(data)
         for requirement in data.get("is_required_for", []):
-            org_id = (
-                requirement["content_type"]
-                .model_class()
-                .objects.get(id=requirement["object_id"])
-                .organisation_id
-            )
+            model_type = requirement["content_type"].model
+            if model_type == "organisation":
+                org_id = requirement["object_id"]
+            elif model_type == "project":
+                try:
+                    org_id = (
+                        requirement["content_type"]
+                        .model_class()
+                        .objects.get(id=requirement["object_id"])
+                        .organisation_id
+                    )
+                except ObjectDoesNotExist:
+                    raise serializers.ValidationError(
+                        "The requirement organisation does not match the field organisation"
+                    )
+            else:
+                raise serializers.ValidationError(
+                    "The requirement content type must be project or organisation"
+                )
             if org_id != data["field"].organisation_id:
                 raise serializers.ValidationError(
                     "The requirement organisation does not match the field organisation"
@@ -63,7 +79,7 @@ class MetaDataModelFieldSerializer(DeleteBeforeUpdateWritableNestedModelSerializ
         return data
 
 
-class ContentTypeSerializer(serializers.ModelSerializer):
+class ContentTypeSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = ContentType
         fields = ("id", "app_label", "model")

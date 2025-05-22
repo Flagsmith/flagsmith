@@ -1,9 +1,11 @@
 from django.conf import settings
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_task_handler,
+)
 
 
 @register_task_handler()
-def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:
+def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
@@ -60,3 +62,20 @@ def track_hubspot_lead_without_organisation(user_id: int) -> None:
         return
 
     track_hubspot_lead(user.id)
+
+
+@register_task_handler()
+def create_self_hosted_onboarding_lead_task(
+    email: str, first_name: str, last_name: str, organisation_name: str
+) -> None:
+    # Avoid circular imports.
+    from integrations.lead_tracking.hubspot.services import (
+        create_self_hosted_onboarding_lead,
+    )
+
+    create_self_hosted_onboarding_lead(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        organisation_name=organisation_name,
+    )

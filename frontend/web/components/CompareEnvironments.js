@@ -227,7 +227,7 @@ class CompareEnvironments extends Component {
                             </div>
                             <Button
                               onClick={() => {
-                                Utils.copyFeatureName(p.projectFlagLeft.name)
+                                Utils.copyToClipboard(p.projectFlagLeft.name)
                               }}
                               theme='icon'
                               className='ms-2 me-2'
@@ -255,6 +255,7 @@ class CompareEnvironments extends Component {
                           condensed
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
+                          history={this.context.router.history}
                           fadeValue={fadeValue}
                           environmentFlags={this.state.environmentLeftFlags}
                           projectFlags={this.state.projectFlagsLeft}
@@ -285,6 +286,7 @@ class CompareEnvironments extends Component {
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
+                          history={this.context.router.history}
                           environmentFlags={this.state.environmentRightFlags}
                           projectFlags={this.state.projectFlagsRight}
                           permission={permission}

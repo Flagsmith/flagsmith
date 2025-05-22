@@ -1,6 +1,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested.routers import NestedSimpleRouter
+from rest_framework_nested.routers import (  # type: ignore[import-untyped]
+    NestedSimpleRouter,
+)
 
 from features.versioning.views import (
     EnvironmentFeatureVersionFeatureStatesViewSet,

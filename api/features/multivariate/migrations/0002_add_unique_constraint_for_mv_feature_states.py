@@ -4,7 +4,7 @@ from django.db import migrations
 from django.db.models import Max
 
 
-def remove_duplicate_mv_feature_state_values(apps, schema_editor):
+def remove_duplicate_mv_feature_state_values(apps, schema_editor):  # type: ignore[no-untyped-def]
     MultivariateFeatureStateValue = apps.get_model(
         "multivariate", "MultivariateFeatureStateValue"
     )

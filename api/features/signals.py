@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=FeatureState)
-def trigger_feature_state_change_webhooks_signal(instance, **kwargs):
-    if instance.environment_feature_version_id:
+def trigger_feature_state_change_webhooks_signal(instance, **kwargs):  # type: ignore[no-untyped-def]
+    if instance.environment_feature_version_id or instance.deleted_at:
         return
     trigger_feature_state_change_webhooks(instance)

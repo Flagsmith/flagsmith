@@ -7,12 +7,10 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import {
   deleteIdentity,
-  useDeleteIdentityMutation,
   useGetIdentitiesQuery,
 } from 'common/services/useIdentity'
 import useSearchThrottle from 'common/useSearchThrottle'
 import { Req } from 'common/types/requests'
-import { Identity } from 'common/types/responses'
 import CreateUserModal from 'components/modals/CreateUser'
 import PanelSearch from 'components/PanelSearch'
 import Button from 'components/base/forms/Button' // we need this to make JSX compile
@@ -60,6 +58,7 @@ export const removeIdentity = (
         id,
         isEdge: Utils.getIsEdge(),
       }).then((res) => {
+        // @ts-ignore
         if (res.error) {
           toast('Identity could not be removed', 'danger')
         } else {
@@ -138,7 +137,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
               <FormGroup className='float-right'>
                 <Button
                   className='float-right'
-                  data-test='show-create-feature-btn'
+                  data-test='show-create-identity-btn'
                   id='show-create-feature-btn'
                   onClick={newUser}
                 >
@@ -150,8 +149,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 title={
                   <Button
                     disabled
-                    data-test='show-create-feature-btn'
-                    id='show-create-feature-btn'
+                    data-test='show-create-identity-btn'
+                    id='show-create-identity-btn'
                     onClick={newUser}
                   >
                     Create Identities
@@ -188,7 +187,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   <Select
                     options={searchTypes}
                     value={searchTypes.find((v) => v.value === searchType)}
-                    onChange={(v) => {
+                    onChange={(v: { value: 'id' | 'alias' }) => {
                       setSearchType(v.value)
                     }}
                   />
@@ -206,10 +205,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
             title='Identities'
             className='no-pad'
             isLoading={isLoading}
-            filterLabel={Utils.getIsEdge() ? 'Starts with' : 'Contains'}
             items={identities?.results}
             paging={identities}
-            showExactFilter
             nextPage={() => {
               setPage({
                 number: page.number + 1,
@@ -239,8 +236,8 @@ const UsersPage: FC<UsersPageType> = (props) => {
               })
             }}
             renderRow={(
-              { dashboard_alias, id, identifier, identity_uuid }: Identity,
-              index: number,
+              { dashboard_alias, id, identifier, identity_uuid },
+              index,
             ) =>
               permission ? (
                 <Row
@@ -299,22 +296,38 @@ const UsersPage: FC<UsersPageType> = (props) => {
               )
             }
             renderNoResults={
-              <Row className='list-item p-3'>
-                You have no identities in this environment
-                {search ? (
-                  <span>
+              !permission ? (
+                <div
+                  className='list-item p-3 text-center'
+                  data-test={`missing-view-identities`}
+                >
+                  To view the list of identities feature you will need the
+                  <i> View Identities</i> permission for this environment.
+                  <br />
+                  Please contact a member of this environment who has
+                  administrator privileges.
+                </div>
+              ) : (
+                <Row className='list-item p-3'>
+                  <>
                     {' '}
-                    for <strong>"{search}"</strong>
-                  </span>
-                ) : (
-                  ''
-                )}
-                .
-              </Row>
+                    You have no identities in this environment
+                    {search ? (
+                      <span>
+                        {' '}
+                        for <strong>"{search}"</strong>
+                      </span>
+                    ) : (
+                      ''
+                    )}
+                    .
+                  </>
+                </Row>
+              )
             }
             filterRow={() => true}
             search={searchInput}
-            onChange={(e: InputEvent) => {
+            onChange={(e) => {
               setSearchInput(Utils.safeParseEventValue(e))
             }}
           />

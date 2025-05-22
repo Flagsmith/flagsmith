@@ -1,13 +1,14 @@
 import argparse
 from typing import Any
 
+from django.conf import settings
+from django.core.management import BaseCommand
+
 from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
 from app_analytics.tasks import (
     populate_api_usage_bucket,
     populate_feature_evaluation_bucket,
 )
-from django.conf import settings
-from django.core.management import BaseCommand
 
 MINUTES_IN_DAY: int = 1440
 

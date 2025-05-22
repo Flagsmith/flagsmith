@@ -1,3 +1,5 @@
+import typing
+
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
     VIEW_ENVIRONMENT,
@@ -15,9 +17,13 @@ from environments.models import Environment
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature
 from tests.types import WithEnvironmentPermissionsCallable
+from users.models import FFAdminUser
+
+if typing.TYPE_CHECKING:
+    from mypy_boto3_dynamodb.service_resource import Table
 
 
-def test_edge_identity_view_set_get_permissions():
+def test_edge_identity_view_set_get_permissions() -> None:
     # Given
     view_set = EdgeIdentityViewSet()
 
@@ -32,55 +38,45 @@ def test_edge_identity_view_set_get_permissions():
         "list": VIEW_IDENTITIES,
         "retrieve": VIEW_IDENTITIES,
         "create": MANAGE_IDENTITIES,
-        "perform_destroy": MANAGE_IDENTITIES,
+        "destroy": MANAGE_IDENTITIES,
         "get_traits": VIEW_IDENTITIES,
         "update_traits": MANAGE_IDENTITIES,
     }
 
 
 def test_user_with_manage_identity_permission_can_delete_identity(
-    dynamo_enabled_project_environment_one,
-    identity_document_without_fs,
-    edge_identity_dynamo_wrapper_mock,
-    test_user_client,
-    view_environment_permission,
-    view_identities_permission,
-    view_project_permission,
-    user_environment_permission,
-    user_project_permission,
-):
+    environment: Environment,
+    identity_document_without_fs: dict[str, typing.Any],
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    flagsmith_identities_table: "Table",
+) -> None:
     # Given
-    user_environment_permission.permissions.add(
-        view_environment_permission, view_identities_permission
+    with_environment_permissions(  # type: ignore[call-arg]
+        [VIEW_ENVIRONMENT, MANAGE_IDENTITIES, VIEW_IDENTITIES],
+        environment.id,
     )
-    user_project_permission.permissions.add(view_project_permission)
 
+    flagsmith_identities_table.put_item(Item=identity_document_without_fs)
     identity_uuid = identity_document_without_fs["identity_uuid"]
+    composite_key = identity_document_without_fs["composite_key"]
 
     url = reverse(
         "api-v1:environments:environment-edge-identities-detail",
-        args=[dynamo_enabled_project_environment_one.api_key, identity_uuid],
-    )
-
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.return_value = (
-        identity_document_without_fs
+        args=[environment.api_key, identity_uuid],
     )
 
     # When
-    response = test_user_client.delete(url)
+    response = staff_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-
-    edge_identity_dynamo_wrapper_mock.get_item_from_uuid_or_404.assert_called_with(
-        identity_uuid
-    )
-    edge_identity_dynamo_wrapper_mock.delete_item.assert_called_with(
-        identity_document_without_fs["composite_key"]
-    )
+    assert flagsmith_identities_table.get_item(Key={"composite_key": composite_key})
 
 
-def test_edge_identity_viewset_returns_404_for_invalid_environment_key(admin_client):
+def test_edge_identity_viewset_returns_404_for_invalid_environment_key(
+    admin_client: APIClient,
+) -> None:
     # Given
     api_key = "not-valid"
     url = reverse(
@@ -100,8 +96,8 @@ def test_get_edge_identity_overrides_for_a_feature(
     mocker: MockerFixture,
     feature: Feature,
     environment: Environment,
-    edge_identity_override_document: dict,
-    edge_identity_override_document_2: dict,
+    edge_identity_override_document: dict,  # type: ignore[type-arg]
+    edge_identity_override_document_2: dict,  # type: ignore[type-arg]
     edge_identity_model: EdgeIdentity,
     edge_identity_model_2: EdgeIdentity,
 ) -> None:
@@ -110,7 +106,7 @@ def test_get_edge_identity_overrides_for_a_feature(
         "api-v1:environments:edge-identity-overrides", args=[environment.api_key]
     )
     url = f"{base_url}?feature={feature.id}"
-    with_environment_permissions([VIEW_IDENTITIES])
+    with_environment_permissions([VIEW_IDENTITIES])  # type: ignore[call-arg]
 
     mock_dynamodb_wrapper = mocker.MagicMock()
     mocker.patch(
@@ -175,10 +171,45 @@ def test_user_without_manage_identities_permission_cannot_get_edge_identity_over
         "api-v1:environments:edge-identity-overrides", args=[environment.api_key]
     )
     url = f"{base_url}?feature={feature.id}"
-    with_environment_permissions([VIEW_ENVIRONMENT])
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
 
     # When
     response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_user_cannot_delete_identity_from_another_project(
+    identity_document_without_fs: dict[str, typing.Any],
+    flagsmith_identities_table: "Table",
+    environment: Environment,
+) -> None:
+    # Given
+    # A user that belongs to no organisation
+    user = FFAdminUser.objects.create(email="no-orgs@example.com")
+
+    assert not user.belongs_to(environment.project.organisation_id)
+
+    api_client = APIClient()
+    api_client.force_authenticate(user)
+
+    identifier = identity_document_without_fs["identifier"]
+    identity_uuid = identity_document_without_fs["identity_uuid"]
+    environment_api_key = environment.api_key
+    composite_key = f"{environment_api_key}_{identifier}"
+
+    flagsmith_identities_table.put_item(Item=identity_document_without_fs)
+
+    url = reverse(
+        "api-v1:environments:environment-edge-identities-detail",
+        args=[environment_api_key, identity_uuid],
+    )
+
+    # When
+    response = api_client.delete(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    assert flagsmith_identities_table.get_item(Key={"composite_key": composite_key})

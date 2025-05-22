@@ -9,6 +9,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const moment = require('moment');
 const base = require('../webpack.config');
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 
 const extraPlugins = [
     // Clear out build folder
@@ -57,7 +58,13 @@ module.exports = {
                     'style': 'style.[fullhash].css',
                 },
             });
-        })),
+        })).concat([
+            sentryWebpackPlugin({
+                org: "flagsmith",
+                project: "flagsmith-frontend",
+                authToken: process.env.SENTRY_AUTH_TOKEN,
+            }),
+        ]),
 
     module: {
         rules: require('./loaders').concat([

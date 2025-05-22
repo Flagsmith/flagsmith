@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   update_server_defaults:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     name: Update API Flagsmith Defaults
     env:
       FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL: https://edge.api.flagsmith.com/api/v1

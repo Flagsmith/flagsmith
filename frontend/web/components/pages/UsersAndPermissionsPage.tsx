@@ -39,19 +39,26 @@ import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import {
+  useDeleteUserInviteMutation,
+  useGetUserInvitesQuery,
+  useResendUserInviteMutation,
+} from 'common/services/useInvites'
+import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
 }
 
 const widths = [300, 200, 80]
+const noEmailProvider = `You must configure an email provider before using email invites. Please read our documentation on how to configure an email provider.`
 
 type UsersAndPermissionsInnerType = {
   organisation: Organisation
   error: any
   invalidateInviteLink: typeof AppActions.invalidateInviteLink
   inviteLinks: InviteLink[] | null
-  invites: Invite[] | null
   isLoading: boolean
   users: User[]
   subscriptionMeta: SubscriptionMeta | null
@@ -62,18 +69,26 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   error,
   invalidateInviteLink,
   inviteLinks,
-  invites,
   isLoading,
   organisation,
   router,
   subscriptionMeta,
   users,
 }) => {
+  const { data: userInvitesData } = useGetUserInvitesQuery({
+    organisationId: organisation.id,
+  })
+  const [deleteUserInvite] = useDeleteUserInviteMutation()
+  const [resendUserInvite] = useResendUserInviteMutation()
 
+  const invites = userInvitesData?.results
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
+  const { data: version } = useGetBuildVersionQuery({})
+
+  const hasEmailProvider = version?.backend?.has_email_provider ?? false
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
@@ -84,6 +99,12 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     level: 'organisation',
     permission: 'MANAGE_USER_GROUPS',
   })
+
+  const hasInvitePermission =
+    hasEmailProvider && manageUsersPermission.permission
+  const tooltTipText = !hasEmailProvider
+    ? noEmailProvider
+    : Constants.organisationPermissions('Admin')
 
   const roleChanged = (id: number, { value: role }: { value: string }) => {
     AppActions.updateUserRole(id, role)
@@ -138,6 +159,29 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       'p-0 side-modal',
     )
   }
+
+  const inspectPermissions = (user: User, organisationId: number) => {
+    openModal(
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          <TabItem tabLabel='Permissions'>
+            <div className='pt-4'>
+              <InspectPermissions
+                uncontrolled
+                user={user}
+                orgId={organisationId}
+              />
+            </div>
+          </TabItem>
+        </Tabs>
+      </div>,
+      'p-0 side-modal',
+    )
+  }
+
   const formatLastLoggedIn = (last_login: string | undefined) => {
     if (!last_login) return 'Never'
 
@@ -180,7 +224,15 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
         </div>
       ),
       destructive: true,
-      onYes: () => AppActions.deleteInvite(id),
+      onYes: () =>
+        deleteUserInvite({ inviteId: id, organisationId: organisation.id })
+          .then(() => {
+            toast('Invite deleted successfully')
+          })
+          .catch((error) => {
+            toast('Error deleting invite', 'error')
+            console.error(error)
+          }),
       title: 'Delete Invite',
       yesText: 'Confirm',
     })
@@ -188,6 +240,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const needsUpgradeForAdditionalSeats =
     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
     (!autoSeats && usedSeats)
+
+  const isInspectPermissionsEnabled = Utils.getFlagsmithHasFeature(
+    'inspect_permissions',
+  )
+
   return (
     <div className='app-container container'>
       <JSONReference
@@ -230,10 +287,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                       <Row space className='mt-4'>
                         <h5 className='mb-0'>Team Members</h5>
                         {Utils.renderWithPermission(
-                          !manageUsersPermission.permission,
-                          Constants.organisationPermissions('Admin'),
+                          hasInvitePermission,
+                          tooltTipText,
                           <Button
                             disabled={
+                              !hasEmailProvider ||
                               needsUpgradeForAdditionalSeats ||
                               !manageUsersPermission.permission
                             }
@@ -378,16 +436,16 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           theme='secondary'
                                           size='small'
                                           onClick={() => {
-                                            navigator.clipboard.writeText(
+                                            Utils.copyToClipboard(
                                               `${
                                                 document.location.origin
-                                              }/invite/${
+                                              }/invite-link/${
                                                 inviteLinks?.find(
                                                   (f) => f.role === role,
                                                 )?.hash
                                               }`,
+                                              'Link copied',
                                             )
-                                            toast('Link copied')
                                           }}
                                         >
                                           Copy Invite Link
@@ -471,7 +529,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                           }
                           items={users}
                           itemHeight={65}
-                          renderRow={(user: User, i: number) => {
+                          renderRow={(user) => {
                             const {
                               email,
                               first_name,
@@ -496,7 +554,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                             }
                             return (
                               <Row
-                                data-test={`user-${i}`}
+                                data-test={`user-${email}`}
                                 space
                                 className={classNames('list-item clickable')}
                                 onClick={onEditClick}
@@ -585,6 +643,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
                                     canEdit={AccountStore.isAdmin()}
+                                    canInspectPermissions={
+                                      isInspectPermissionsEnabled &&
+                                      AccountStore.isAdmin()
+                                    }
+                                    onInspectPermissions={() => {
+                                      inspectPermissions(user, organisation.id)
+                                    }}
                                   />
                                 </div>
                               </Row>
@@ -635,14 +700,8 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               </Row>
                             }
                             renderRow={(
-                              {
-                                date_created,
-                                email,
-                                id,
-                                invited_by,
-                                link,
-                              }: Invite,
-                              i: number,
+                              { date_created, email, id, invited_by, link },
+                              i,
                             ) => (
                               <Row
                                 data-test={`pending-invite-${i}`}
@@ -677,7 +736,20 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       id='resend-invite'
                                       type='button'
                                       onClick={() =>
-                                        AppActions.resendInvite(id)
+                                        resendUserInvite({
+                                          inviteId: id,
+                                          organisationId: organisation.id,
+                                        })
+                                          .then(() => {
+                                            toast('Invite resent successfully')
+                                          })
+                                          .catch((error) => {
+                                            toast(
+                                              'Error resent invite',
+                                              'error',
+                                            )
+                                            console.error(error)
+                                          })
                                       }
                                       theme='text'
                                       size='small'
@@ -787,7 +859,6 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
             error,
             invalidateInviteLink,
             inviteLinks,
-            invites,
             isLoading,
             subscriptionMeta,
             users,
@@ -806,7 +877,6 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
                 error={error}
                 invalidateInviteLink={invalidateInviteLink}
                 inviteLinks={inviteLinks}
-                invites={invites}
                 isLoading={isLoading}
                 users={users}
                 subscriptionMeta={subscriptionMeta}

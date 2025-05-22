@@ -7,12 +7,10 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 1.8.3
-
-GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
+POETRY_VERSION ?= 2.1.1
 
 SAML_REVISION ?= v1.6.4
-RBAC_REVISION ?= v0.11.2
+RBAC_REVISION ?= v0.11.6
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -42,6 +40,10 @@ install: install-pip install-poetry install-packages
 .PHONY: lint
 lint:
 	poetry run pre-commit run -a
+
+.PHONY: typecheck
+typecheck:
+	poetry run mypy .
 
 .PHONY: docker-up
 docker-up:
@@ -73,11 +75,20 @@ django-make-migrations:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py makemigrations $(opts)
 
+.PHONY: django-squash-migrations
+django-squash-migrations:
+	poetry run python manage.py waitfordb
+	poetry run python manage.py squashmigrations $(opts)
+
 .PHONY: django-migrate
 django-migrate:
 	poetry run python manage.py waitfordb
 	poetry run python manage.py migrate
 	poetry run python manage.py createcachetable
+
+.PHONY: django-shell
+django-shell:
+	poetry run python manage.py shell
 
 .PHONY: django-collect-static
 django-collect-static:
@@ -85,18 +96,30 @@ django-collect-static:
 
 .PHONY: serve
 serve:
-	poetry run gunicorn --bind 0.0.0.0:8000 \
-		--logger-class ${GUNICORN_LOGGER_CLASS} \
-		--reload \
-		app.wsgi
+	poetry run flagsmith start --reload api
+		
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
 	curl -sSL https://app.launchdarkly.com/api/v2/openapi.json | \
 	npx openapi-format /dev/fd/0 \
-		--filterFile ld-openapi-filter.yaml | \
+		--filterFile openapi-filter-launchdarkly.yaml | \
 	datamodel-codegen \
 		--output integrations/launch_darkly/types.py \
+		--output-model-type typing.TypedDict \
+		--target-python-version 3.10 \
+		--use-double-quotes \
+		--use-standard-collections \
+		--wrap-string-literal \
+		--special-field-name-prefix=
+
+.PHONY: generate-grafana-client-types
+generate-grafana-client-types:
+	curl -sSL https://raw.githubusercontent.com/grafana/grafana/refs/heads/main/public/openapi3.json | \
+	npx openapi-format /dev/fd/0 \
+		--filterFile openapi-filter-grafana.yaml | \
+	datamodel-codegen \
+		--output integrations/grafana/types.py \
 		--output-model-type typing.TypedDict \
 		--target-python-version 3.10 \
 		--use-double-quotes \
@@ -117,3 +140,7 @@ integrate-private-tests:
 
 	git clone https://github.com/flagsmith/flagsmith-task-processor --depth 1 --branch ${TASK_PROCESSOR_REVISION} && mv ./flagsmith-task-processor/tests tests/task_processor_tests
 	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller ./flagsmith-task-processor
+
+.PHONY: generate-docs
+generate-docs:
+	poetry run flagsmith docgen metrics > ../docs/docs/system-administration/metrics.md

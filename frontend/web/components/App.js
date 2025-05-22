@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react'
 import { matchPath } from 'react-router'
 import { Link, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
+import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
@@ -12,7 +13,6 @@ import ButterBar from './ButterBar'
 import AccountSettingsPage from './pages/AccountSettingsPage'
 import Headway from './Headway'
 import ProjectStore from 'common/stores/project-store'
-import getBuildVersion from 'project/getBuildVersion'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
@@ -37,6 +37,7 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
+import { getBuildVersion } from 'common/services/useBuildVersion'
 
 const App = class extends Component {
   static propTypes = {
@@ -98,13 +99,14 @@ const App = class extends Component {
         defaultTracking: true,
         serverZone: 'EU',
       })
+      amplitude.add(engagementPlugin())
       const sessionReplayTracking = sessionReplayPlugin({
         sampleRate: 0.5,
         serverZone: 'EU',
       })
       amplitude.add(sessionReplayTracking)
     }
-    getBuildVersion()
+    getBuildVersion(getStore(), {})
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
@@ -216,10 +218,7 @@ const App = class extends Component {
         this.context.router.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
-          if (
-            this.props.location.search.includes('github-redirect') &&
-            Utils.getFlagsmithHasFeature('github_integration')
-          ) {
+          if (this.props.location.search.includes('github-redirect')) {
             this.context.router.history.replace(
               `/github-setup${this.props.location.search}`,
             )
@@ -338,7 +337,7 @@ const App = class extends Component {
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
-    if (document.location.href.includes('widget')) {
+    if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'
@@ -438,8 +437,8 @@ const App = class extends Component {
                                         focus='organisation'
                                       >
                                         <NavLink
-                                          id='org-settings-link'
-                                          data-test='org-settings-link'
+                                          id='organisation-link'
+                                          data-test='organisation-link'
                                           activeClassName='active'
                                           className={classNames(
                                             'breadcrumb-link',
@@ -529,7 +528,9 @@ const App = class extends Component {
                                       </div>
                                     }
                                   >
-                                    Dark Mode
+                                    {Utils.getFlagsmithHasFeature('dark_mode')
+                                      ? 'Light Mode'
+                                      : 'Dark Mode'}
                                   </Tooltip>
                                 </Row>
                               </nav>
@@ -663,7 +664,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={<SettingsIcon />}
                                   id='org-settings-link'
-                                data-test='org-settings-link'
+                                  data-test='org-settings-link'
                                   to={`/organisation/${
                                     AccountStore.getOrganisation().id
                                   }/settings`}

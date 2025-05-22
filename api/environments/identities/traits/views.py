@@ -1,15 +1,18 @@
-from common.environments.permissions import MANAGE_IDENTITIES, VIEW_IDENTITIES
+from common.environments.permissions import (
+    MANAGE_IDENTITIES,
+    VIEW_IDENTITIES,
+)
 from django.conf import settings
 from django.core.exceptions import BadRequest
 from django.db.models import Q
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from edge_api.identities.edge_request_forwarder import (
+from edge_api.identities.tasks import (
     forward_trait_request,
     forward_trait_requests,
 )
@@ -35,10 +38,10 @@ from environments.views import logger
 from util.views import SDKAPIView
 
 
-class TraitViewSet(viewsets.ModelViewSet):
+class TraitViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = TraitSerializer
 
-    def initial(self, request, *args, **kwargs):
+    def initial(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         # Add environment and identity to request(used by generate_identity_update_message decorator)
         identity = Identity.objects.select_related("environment").get(
             pk=self.kwargs["identity_pk"]
@@ -53,7 +56,7 @@ class TraitViewSet(viewsets.ModelViewSet):
 
         super().initial(request, *args, **kwargs)
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         """
         Override queryset to filter based on the parent identity.
         """
@@ -62,7 +65,7 @@ class TraitViewSet(viewsets.ModelViewSet):
 
         return Trait.objects.filter(identity=self.identity)
 
-    def get_permissions(self):
+    def get_permissions(self):  # type: ignore[no-untyped-def]
         return [
             IsAuthenticated(),
             NestedEnvironmentPermissions(
@@ -74,14 +77,14 @@ class TraitViewSet(viewsets.ModelViewSet):
                     "list": VIEW_IDENTITIES,
                     "retrieve": VIEW_IDENTITIES,
                 },
-                get_environment_from_object_callable=lambda t: t.identity.environment,
+                get_environment_from_object_callable=lambda t: t.identity.environment,  # type: ignore[attr-defined]
             ),
         ]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(identity=self.identity)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(identity=self.identity)
 
     @swagger_auto_schema(
@@ -94,7 +97,7 @@ class TraitViewSet(viewsets.ModelViewSet):
             )
         ]
     )
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         if request.query_params.get("deleteAllMatchingTraits") in ("true", "True"):
             trait = self.get_object()
             Trait.objects.filter(
@@ -114,7 +117,7 @@ class SDKTraitsDeprecated(SDKAPIView):
 
     schema = None
 
-    def post(self, request, identifier, trait_key, *args, **kwargs):
+    def post(self, request, identifier, trait_key, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         THIS ENDPOINT IS DEPRECATED. Please use `/traits/` instead.
         """
@@ -176,12 +179,12 @@ class SDKTraitsDeprecated(SDKAPIView):
             )
 
 
-class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):  # type: ignore[type-arg]
     permission_classes = (EnvironmentKeyPermissions, TraitPersistencePermissions)
     authentication_classes = (EnvironmentKeyAuthentication,)
     throttle_classes = []
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "increment_value":
             return IncrementTraitValueSerializer
         if self.action == "bulk_create":
@@ -189,13 +192,13 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
         return SDKCreateUpdateTraitSerializer
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super(SDKTraits, self).get_serializer_context()
         context["environment"] = self.request.environment
         return context
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer)
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         response = super(SDKTraits, self).create(request, *args, **kwargs)
         response.status_code = status.HTTP_200_OK
         if settings.EDGE_API_URL and request.environment.project.enable_dynamo_db:
@@ -215,7 +218,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
         request_body=IncrementTraitValueSerializer,
     )
     @action(detail=False, methods=["POST"], url_path="increment-value")
-    def increment_value(self, request):
+    def increment_value(self, request):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -237,7 +240,7 @@ class SDKTraits(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     @swagger_auto_schema(request_body=SDKCreateUpdateTraitSerializer(many=True))
     @action(detail=False, methods=["PUT"], url_path="bulk")
-    def bulk_create(self, request):
+    def bulk_create(self, request):  # type: ignore[no-untyped-def]
         try:
             if not request.environment.trait_persistence_allowed(request):
                 raise BadRequest("Unable to set traits with client key.")

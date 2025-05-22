@@ -6,7 +6,7 @@ from django.conf import settings
     settings.SKIP_MIGRATION_TESTS is True,
     reason="Skip migration tests to speed up tests where necessary",
 )
-def test_migration_creates_default_subscription_for_organisations_without_subscription(
+def test_migration_creates_default_subscription_for_organisations_without_subscription(  # type: ignore[no-untyped-def]  # noqa: E501
     migrator,
 ):
     # Given

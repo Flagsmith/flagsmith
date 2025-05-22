@@ -1,8 +1,10 @@
 import typing
 from itertools import chain
 
+from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Prefetch, Q
+from django.db.models.functions import Upper
 from django.utils import timezone
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
@@ -40,12 +42,18 @@ class Identity(models.Model):
         # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
         # we can provide them the SQL to add it manually in a small window of downtime.
         index_together = (("environment", "created_date"),)
+        indexes = [
+            GinIndex(
+                OpClass(Upper("identifier"), name="gin_trgm_ops"),
+                name="identity_identifier_idx",
+            ),
+        ]
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key
 
     @property
-    def composite_key(self):
+    def composite_key(self):  # type: ignore[no-untyped-def]
         return f"{self.environment.api_key}_{self.identifier}"
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
@@ -72,11 +80,15 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits, overrides_only=True)
+        segments = self.get_segments(traits=traits, overrides_only=True)  # type: ignore[arg-type]
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
-        overridden_for_identity_query = Q(identity=self)
+        if self.id:
+            overridden_for_identity_query = Q(identity=self)
+        else:
+            # skip identity overrides for transient identities
+            overridden_for_identity_query = Q()
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
             feature_segment__environment=self.environment,
@@ -153,7 +165,9 @@ class Identity(models.Model):
         return {fs.feature_id: fs for fs in self.identity_features.all()}
 
     def get_segments(
-        self, traits: typing.List[Trait] = None, overrides_only: bool = False
+        self,
+        traits: typing.List[Trait] = None,  # type: ignore[assignment]
+        overrides_only: bool = False,
     ) -> typing.List[Segment]:
         """
         Get the list of segments this identity is a part of.
@@ -191,11 +205,11 @@ class Identity(models.Model):
 
         return matching_segments
 
-    def get_all_user_traits(self):
+    def get_all_user_traits(self):  # type: ignore[no-untyped-def]
         # this is pointless, we should probably replace all uses with the below code
         return self.identity_traits.all()
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Account %s" % self.identifier
 
     def generate_traits(

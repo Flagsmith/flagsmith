@@ -4,6 +4,7 @@ const path = require('path');
 const { fork } = require('child_process');
 const _options = require("../.testcaferc")
 const upload = require('../bin/upload-file');
+const minimist = require('minimist');
 const options = {
     ..._options,
     browsers: process.env.E2E_DEV ? ['firefox'] : ['firefox:headless'],
@@ -16,15 +17,29 @@ if (fs.existsSync(dir)) {
     fs.rmdirSync(dir, { recursive: true });
 }
 const start = Date.now().valueOf();
+// Parse CLI arg --meta-filter
+const args = minimist(process.argv.slice(2));
+const filterString = args['meta-filter']; // "type=smoke,priority=high"
+const metaConditions = (filterString || '')
+    .split(',')
+    .map(pair => {
+        const [key, value] = pair.split('=');
+        return { key, value };
+    });
 createTestCafe()
     .then(async (tc) => {
         testcafe = tc;
         await new Promise((resolve) => {
             process.env.PORT = 3000;
-            server = fork('./api/index');
-            server.on('message', () => {
-                resolve();
-            });
+            console.log(process.env.E2E_LOCAL)
+            if (process.env.E2E_LOCAL) {
+                resolve()
+            } else {
+                server = fork('./api/index');
+                server.on('message', () => {
+                    resolve();
+                });
+            }
         });
         const runner = testcafe.createRunner()
         const args = process.argv.splice(2).map(value => value.toLowerCase());
@@ -35,14 +50,12 @@ createTestCafe()
         return runner
             .clientScripts('e2e/add-error-logs.js')
             .src(['./e2e/init.cafe.js'])
-            .filter(testName => {
-                if (!args.length) {
-                    return true
-                } else {
-                return args.includes(testName.toLowerCase())
-                }
-            })
             .concurrency(parseInt(concurrentInstances))
+            .filter((_, __, ___, testMeta, fixtureMeta) =>
+                 metaConditions.some(({ key, value }) =>
+                      testMeta[key] === value || fixtureMeta[key] === value
+                 )
+           )
             .run(options)
     })
     .then(async (v) => {

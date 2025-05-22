@@ -3,8 +3,10 @@ from unittest.mock import MagicMock
 
 import pytest
 import responses
-import simplejson as json
-from common.environments.permissions import UPDATE_FEATURE_STATE
+import simplejson as json  # type: ignore[import-untyped]
+from common.environments.permissions import (
+    UPDATE_FEATURE_STATE,
+)
 from django.core.serializers.json import DjangoJSONEncoder
 from django.urls import reverse
 from django.utils.formats import get_format
@@ -78,7 +80,6 @@ def test_create_feature_external_resource(
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
-
     # Given
     repository_owner_name = (
         f"{github_repository.repository_owner}/{github_repository.repository_name}"
@@ -114,16 +115,16 @@ def test_create_feature_external_resource(
         "**Flagsmith feature linked:** `feature_with_value`\n"
         + "Default Values:\n"
         + expected_default_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment.api_key,
-            feature_with_value.id,
+            feature_with_value.id,  # type: ignore[arg-type]
             feature_state_update_at,
         )
         + "\n"
         + expected_segment_comment_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment.api_key,
-            feature_with_value.id,
+            feature_with_value.id,  # type: ignore[arg-type]
             segment_override_updated_at,
             "❌ Disabled",
             "`value`",
@@ -175,7 +176,7 @@ def test_create_feature_external_resource(
         response.json()["results"][0]["type"] == feature_external_resource_data["type"]
     )
     assert response.json()["results"][0]["url"] == feature_external_resource_data["url"]
-    feature_external_resource_data["metadata"]["title"] = "resource name"
+    feature_external_resource_data["metadata"]["title"] = "resource name"  # type: ignore[index]
 
     assert (
         response.json()["results"][0]["metadata"]
@@ -195,7 +196,6 @@ def test_create_feature_external_resource_missing_tags(
     post_request_mock: MagicMock,
     mock_github_client_generate_token: MagicMock,
 ) -> None:
-
     # Given
     Tag.objects.all().delete()
     repository_owner_name = (
@@ -222,8 +222,8 @@ def test_create_feature_external_resource_missing_tags(
     assert response.status_code == status.HTTP_201_CREATED
     assert Tag.objects.count() == 1
     tag = Tag.objects.first()
-    assert tag.project == project
-    assert tag.label == "Issue Open"
+    assert tag.project == project  # type: ignore[union-attr]
+    assert tag.label == "Issue Open"  # type: ignore[union-attr]
 
 
 def test_cannot_create_feature_external_resource_with_an_invalid_gh_url(
@@ -548,9 +548,9 @@ def test_create_github_comment_on_feature_state_updated(
     expected_body_comment = (
         "**Flagsmith Feature `Test Feature1` has been updated:**\n"
         + expected_default_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment.api_key,
-            feature.id,
+            feature.id,  # type: ignore[arg-type]
             feature_state_updated_at,
             "✅ Enabled",
             "",
@@ -642,9 +642,9 @@ def test_create_github_comment_on_segment_override_updated(
         "**Flagsmith Feature `feature_with_value` has been updated:**\n"
         + "\n"
         + expected_segment_comment_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment.api_key,
-            feature_with_value.id,
+            feature_with_value.id,  # type: ignore[arg-type]
             segment_override_updated_at,
             "✅ Enabled",
             "`new value`",
@@ -752,9 +752,9 @@ def test_create_github_comment_using_v2(
         "**Flagsmith Feature `Test Feature1` has been updated:**\n"
         + "\n"
         + expected_segment_comment_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment.api_key,
-            feature.id,
+            feature.id,  # type: ignore[arg-type]
             formatted_updated_at,
             "✅ Enabled",
             "`segment value!`",
@@ -788,7 +788,6 @@ def test_create_github_comment_using_v2_fails_on_wrong_params(
     post_request_mock: MagicMock,
     mocker: MockerFixture,
 ) -> None:
-
     # Given
     environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment_v2_versioning, feature=feature
@@ -868,16 +867,16 @@ def test_create_feature_external_resource_on_environment_with_v2(
         "**Flagsmith feature linked:** `feature_with_value`\n"
         + "Default Values:\n"
         + expected_default_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment_v2_versioning.api_key,
-            feature_id,
+            feature_id,  # type: ignore[arg-type]
             feature_state_update_at,
         )
         + "\n"
         + expected_segment_comment_body(
-            project.id,
+            project.id,  # type: ignore[arg-type]
             environment_v2_versioning.api_key,
-            feature_id,
+            feature_id,  # type: ignore[arg-type]
             segment_override_updated_at,
             "❌ Disabled",
             "`value`",

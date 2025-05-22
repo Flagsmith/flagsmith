@@ -352,6 +352,7 @@ $scrollbar-thumb-dark-hover: $bg-dark300;
 
 $theme-colors: (
         light200: $bg-light200,
+        light300: $bg-light300,
         primary: $primary,
         primary900: $primary900,
         danger: $danger,
@@ -391,3 +392,7 @@ $input-padding-y: 1rem !default;
 
 //TRANSITIONS
 $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
+
+.bg-opacity-5 {
+  --bs-bg-opacity: 0.5 !important;
+}

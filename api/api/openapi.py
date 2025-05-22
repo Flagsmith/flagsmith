@@ -1,8 +1,12 @@
 import inspect
 from typing import Any
 
-from drf_yasg.inspectors import SwaggerAutoSchema
-from drf_yasg.openapi import SCHEMA_DEFINITIONS, Response, Schema
+from drf_yasg.inspectors import SwaggerAutoSchema  # type: ignore[import-untyped]
+from drf_yasg.openapi import (  # type: ignore[import-untyped]
+    SCHEMA_DEFINITIONS,
+    Response,
+    Schema,
+)
 from pydantic import BaseModel
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from pydantic_core import core_schema
@@ -30,10 +34,10 @@ class _GenerateJsonSchema(GenerateJsonSchema):
         if type := elem.get("type"):
             return {"type": type, "x-nullable": True}
         # Assuming a reference here (which we can not annotate)
-        return elem
+        return elem  # type: ignore[no-any-return]
 
 
-class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):
+class PydanticResponseCapableSwaggerAutoSchema(SwaggerAutoSchema):  # type: ignore[misc]
     """
     A `SwaggerAutoSchema` subclass that allows to generate view response Swagger docs
     from a Pydantic model.

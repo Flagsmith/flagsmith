@@ -16,11 +16,11 @@ from environments.permissions.serializers import (
 )
 
 
-class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
+class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return UserEnvironmentPermission.objects.none()
 
@@ -31,30 +31,30 @@ class UserEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
             environment__api_key=self.kwargs["environment_api_key"]
         )
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "list":
             return ListUserEnvironmentPermissionSerializer
 
         return CreateUpdateUserEnvironmentPermissionSerializer
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         environment = Environment.objects.get(
             api_key=self.kwargs["environment_api_key"]
         )
         serializer.save(environment=environment)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         environment = Environment.objects.get(
             api_key=self.kwargs["environment_api_key"]
         )
         serializer.save(environment=environment)
 
 
-class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
+class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return UserPermissionGroupEnvironmentPermission.objects.none()
 
@@ -65,19 +65,19 @@ class UserPermissionGroupEnvironmentPermissionsViewSet(viewsets.ModelViewSet):
             environment__api_key=self.kwargs["environment_api_key"]
         )
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "list":
             return ListUserPermissionGroupEnvironmentPermissionSerializer
 
         return CreateUpdateUserPermissionGroupEnvironmentPermissionSerializer
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         environment = Environment.objects.get(
             api_key=self.kwargs["environment_api_key"]
         )
         serializer.save(environment=environment)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         environment = Environment.objects.get(
             api_key=self.kwargs["environment_api_key"]
         )

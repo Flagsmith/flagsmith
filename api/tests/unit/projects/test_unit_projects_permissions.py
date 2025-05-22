@@ -30,7 +30,7 @@ def test_list_project_has_permission(
     project_permissions = ProjectPermissions()
 
     # When
-    response = project_permissions.has_permission(mock_request, mock_view)
+    response = project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert response is True
@@ -42,7 +42,7 @@ def test_create_project_has_permission(
     with_organisation_permissions: WithOrganisationPermissionsCallable,
 ) -> None:
     # Given
-    with_organisation_permissions([CREATE_PROJECT])
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(
         user=staff_user, data={"name": "Test", "organisation": organisation.id}
     )
@@ -50,7 +50,7 @@ def test_create_project_has_permission(
     project_permissions = ProjectPermissions()
 
     # When
-    response = project_permissions.has_permission(mock_request, mock_view)
+    response = project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert response is True
@@ -62,7 +62,7 @@ def test_create_project_has_permission_with_e2e_test_auth_token(
     with_organisation_permissions: WithOrganisationPermissionsCallable,
 ) -> None:
     # Given
-    with_organisation_permissions([CREATE_PROJECT])
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(
         user=staff_user, data={"name": "Test", "organisation": organisation.id}
     )
@@ -75,7 +75,7 @@ def test_create_project_has_permission_with_e2e_test_auth_token(
     project_permissions = ProjectPermissions()
 
     # When
-    response = project_permissions.has_permission(mock_request, mock_view)
+    response = project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert response is True
@@ -88,13 +88,13 @@ def test_admin_can_update_project_has_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions(admin=True)
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(action="update", detail=True)
     project_permissions = ProjectPermissions()
 
     # When
-    result = project_permissions.has_object_permission(mock_request, mock_view, project)
+    result = project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -119,7 +119,7 @@ def test_admin_group_can_update_project_has_permission(
     project_permissions = ProjectPermissions()
 
     # When
-    result = project_permissions.has_object_permission(mock_request, mock_view, project)
+    result = project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -132,13 +132,13 @@ def test_regular_user_cannot_update_project_missing_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(action="update", detail=True)
     project_permissions = ProjectPermissions()
 
     # When
-    result = project_permissions.has_object_permission(mock_request, mock_view, project)
+    result = project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is False
@@ -162,7 +162,7 @@ def test_admin_can_delete_project_has_permission(
     project_permissions = ProjectPermissions()
 
     # When
-    result = project_permissions.has_object_permission(mock_request, mock_view, project)
+    result = project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is True
@@ -175,13 +175,13 @@ def test_regular_user_cannot_delete_project(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(action="destroy", detail=True)
     project_permissions = ProjectPermissions()
 
     # When
-    result = project_permissions.has_object_permission(mock_request, mock_view, project)
+    result = project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result is False
@@ -205,13 +205,13 @@ def test_organisation_admin_can_perform_all_actions_on_a_project(
     for action in list_actions:
         mock_view.action = action
         mock_view.detail = False
-        results.append(project_permissions.has_permission(mock_request, mock_view))
+        results.append(project_permissions.has_permission(mock_request, mock_view))  # type: ignore[no-untyped-call]
 
     for action in detail_actions:
         mock_view.action = action
         mock_view.detail = True
         results.append(
-            project_permissions.has_object_permission(mock_request, mock_view, project)
+            project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
         )
 
     # Then
@@ -224,13 +224,13 @@ def test_user_with_view_project_permission_can_view_project(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(action="retrieve")
     project_permissions = ProjectPermissions()
 
     # When
-    result = project_permissions.has_object_permission(mock_request, mock_view, project)
+    result = project_permissions.has_object_permission(mock_request, mock_view, project)  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert result
@@ -242,7 +242,7 @@ def test_project_admin_has_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions(admin=True)
+    with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(detail=False, kwargs={"project_pk": project.id})
     actions = ["list", "create"]
@@ -252,7 +252,7 @@ def test_project_admin_has_permission(
     results = []
     for action in actions:
         mock_view.action = action
-        results.append(permissions.has_permission(mock_request, mock_view))
+        results.append(permissions.has_permission(mock_request, mock_view))  # type: ignore[no-untyped-call]
 
     # Then
     assert all(results)
@@ -264,7 +264,7 @@ def test_project_admin_has_object_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    upp = with_project_permissions(admin=True)
+    upp = with_project_permissions(admin=True)  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(detail=True, kwargs={"project_pk": project.id})
     actions = ["update", "destroy"]
@@ -274,7 +274,7 @@ def test_project_admin_has_object_permission(
     results = []
     for action in actions:
         mock_view.action = action
-        results.append(permissions.has_object_permission(mock_request, mock_view, upp))
+        results.append(permissions.has_object_permission(mock_request, mock_view, upp))  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert all(results)
@@ -295,7 +295,7 @@ def test_organisation_admin_has_permission(
     results = []
     for action in actions:
         mock_view.action = action
-        results.append(permissions.has_permission(mock_request, mock_view))
+        results.append(permissions.has_permission(mock_request, mock_view))  # type: ignore[no-untyped-call]
 
     # Then
     assert all(results)
@@ -311,7 +311,7 @@ def test_organisation_admin_has_object_permission(
     # Given
     # From refactoring: It is unclear why the original test needs
     # to include the below permission check.
-    upp = with_project_permissions([VIEW_PROJECT])
+    upp = with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=admin_user)
     mock_view = mock.MagicMock(detail=False, kwargs={"project_pk": project.id})
     actions = ["update", "destroy"]
@@ -321,7 +321,7 @@ def test_organisation_admin_has_object_permission(
     results = []
     for action in actions:
         mock_view.action = action
-        results.append(permissions.has_object_permission(mock_request, mock_view, upp))
+        results.append(permissions.has_object_permission(mock_request, mock_view, upp))  # type: ignore[no-untyped-call]  # noqa: E501
 
     # Then
     assert all(results)
@@ -339,7 +339,7 @@ def test_regular_user_has_no_list_permission(
     permissions = IsProjectAdmin()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -357,7 +357,7 @@ def test_regular_user_has_no_create_permission(
     permissions = IsProjectAdmin()
 
     # When
-    result = permissions.has_permission(mock_request, mock_view)
+    result = permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -369,7 +369,7 @@ def test_regular_user_has_no_update_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    upp = with_project_permissions([VIEW_PROJECT])
+    upp = with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         action="update", detail=True, kwargs={"project_pk": project.id}
@@ -377,7 +377,7 @@ def test_regular_user_has_no_update_permission(
     permissions = IsProjectAdmin()
 
     # When
-    result = permissions.has_object_permission(mock_request, mock_view, upp)
+    result = permissions.has_object_permission(mock_request, mock_view, upp)  # type: ignore[no-untyped-call]
 
     # Then
     assert result is False
@@ -389,7 +389,7 @@ def test_regular_user_has_no_destroy_permission(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    upp = with_project_permissions([VIEW_PROJECT])
+    upp = with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     mock_request = mock.MagicMock(user=staff_user)
     mock_view = mock.MagicMock(
         action="destroy", detail=True, kwargs={"project_pk": project.id}
@@ -397,7 +397,7 @@ def test_regular_user_has_no_destroy_permission(
     permissions = IsProjectAdmin()
 
     # When
-    result = permissions.has_object_permission(mock_request, mock_view, upp)
+    result = permissions.has_object_permission(mock_request, mock_view, upp)  # type: ignore[no-untyped-call]
 
     # Then - exception thrown
     assert not result
@@ -421,14 +421,14 @@ def test_free_plan_has_only_fixed_projects_permission() -> None:
 
     # When
     for i in range(settings.MAX_PROJECTS_IN_FREE_PLAN):
-        assert project_permissions.has_permission(mock_request, mock_view)
+        assert project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
         Project.objects.create(name=f"Test project{i}", organisation=organisation)
 
     # Then - free projects limit should be exhausted
-    assert not project_permissions.has_permission(mock_request, mock_view)
+    assert not project_permissions.has_permission(mock_request, mock_view)  # type: ignore[no-untyped-call]
 
 
-def test_is_project_admin_has_permission_raises_permission_denied_if_not_found(
+def test_is_project_admin_has_permission_raises_permission_denied_if_not_found(  # type: ignore[no-untyped-def]
     mocker, admin_user
 ) -> None:
     # Given
@@ -437,10 +437,10 @@ def test_is_project_admin_has_permission_raises_permission_denied_if_not_found(
 
     # Then
     with pytest.raises(PermissionDenied):
-        IsProjectAdmin().has_permission(request, view)
+        IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]
 
 
-def test_is_project_admin_has_permission_raises_api_exception_if_no_kwarg(
+def test_is_project_admin_has_permission_raises_api_exception_if_no_kwarg(  # type: ignore[no-untyped-def]
     mocker, admin_user
 ) -> None:
     # Given
@@ -449,10 +449,10 @@ def test_is_project_admin_has_permission_raises_api_exception_if_no_kwarg(
 
     # Then
     with pytest.raises(APIException):
-        IsProjectAdmin().has_permission(request, view)
+        IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]
 
 
-def test_is_project_admin_has_permission_returns_true_if_project_admin(
+def test_is_project_admin_has_permission_returns_true_if_project_admin(  # type: ignore[no-untyped-def]
     mocker, admin_user, organisation, project
 ) -> None:
     # Given
@@ -461,4 +461,4 @@ def test_is_project_admin_has_permission_returns_true_if_project_admin(
     view = mocker.MagicMock(kwargs={"project_pk": project.id})
 
     # Then
-    assert IsProjectAdmin().has_permission(request, view)
+    assert IsProjectAdmin().has_permission(request, view)  # type: ignore[no-untyped-call]

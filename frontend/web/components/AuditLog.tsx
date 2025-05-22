@@ -173,9 +173,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div>
             {author?.first_name} {author?.last_name}
           </div>
-          <div className="list-item-subtitle">
-            {author?.email}
-          </div>
+          <div className='list-item-subtitle'>{author?.email}</div>
         </div>
         {environment?.name ? (
           <Link
@@ -240,7 +238,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
         filter={envFilter}
         search={searchInput}
         searchPanel={props.searchPanel}
-        onChange={(e: InputEvent) => {
+        onChange={(e) => {
           setSearchInput(Utils.safeParseEventValue(e))
         }}
         paging={{

@@ -8,27 +8,27 @@ from environments.models import Environment
 from organisations.models import Organisation
 from projects.models import Project
 
-if settings.IS_RBAC_INSTALLED:
-    from rbac.permission_service import get_role_permission_filter
-    from rbac.permissions_calculator import (
-        RolePermissionData,
+if settings.IS_RBAC_INSTALLED:  # pragma: no cover
+    from rbac.permission_service import (  # type: ignore[import-not-found,unused-ignore]
+        get_role_permission_filter,
+    )
+    from rbac.permissions_calculator import (  # type: ignore[import-not-found,unused-ignore]
         get_roles_permission_data_for_environment,
         get_roles_permission_data_for_organisation,
         get_roles_permission_data_for_project,
     )
 else:
-    RolePermissionData = []
 
-    def get_roles_permission_data_for_organisation(*args, **kwargs):
+    def get_roles_permission_data_for_organisation(*args, **kwargs):  # type: ignore[no-untyped-def]
         return []
 
-    def get_roles_permission_data_for_project(*args, **kwargs):
+    def get_roles_permission_data_for_project(*args, **kwargs):  # type: ignore[no-untyped-def]
         return []
 
-    def get_roles_permission_data_for_environment(*args, **kwargs):
+    def get_roles_permission_data_for_environment(*args, **kwargs):  # type: ignore[no-untyped-def]
         return []
 
-    def get_role_permission_filter(*args, **kwargs) -> Q:
+    def get_role_permission_filter(*args, **kwargs) -> Q:  # type: ignore[no-untyped-def]
         return Q()
 
 
@@ -45,7 +45,7 @@ def is_master_api_key_object_admin(
     return ModelClass.objects.filter(filter_).exists()
 
 
-def get_permitted_projects_for_master_api_key_using_roles(
+def get_permitted_projects_for_master_api_key_using_roles(  # type: ignore[no-untyped-def]
     master_api_key: "MasterAPIKey", permission_key: str, tag_ids=None
 ) -> QuerySet[Project]:
     if not settings.IS_RBAC_INSTALLED:
@@ -61,10 +61,10 @@ def get_permitted_environments_for_master_api_key_using_roles(
     master_api_key: "MasterAPIKey",
     project: Project,
     permission_key: str,
-    tag_ids: List[int] = None,
+    tag_ids: List[int] = None,  # type: ignore[assignment]
 ) -> QuerySet[Environment]:
     if not settings.IS_RBAC_INSTALLED:
-        return Environment.objects.none()
+        return Environment.objects.none()  # type: ignore[no-any-return]
 
     base_filter = get_role_permission_filter(
         master_api_key, Environment, permission_key, tag_ids=tag_ids
@@ -72,7 +72,7 @@ def get_permitted_environments_for_master_api_key_using_roles(
 
     filter_ = base_filter & Q(project=project)
 
-    return Environment.objects.filter(filter_).distinct().defer("description")
+    return Environment.objects.filter(filter_).distinct().defer("description")  # type: ignore[no-any-return]
 
 
 def master_api_key_has_organisation_permission_using_roles(
@@ -86,4 +86,4 @@ def master_api_key_has_organisation_permission_using_roles(
     )
     filter_ = base_filter & Q(id=organisation.id)
 
-    return Organisation.objects.filter(filter_).exists()
+    return Organisation.objects.filter(filter_).exists()  # type: ignore[no-any-return]

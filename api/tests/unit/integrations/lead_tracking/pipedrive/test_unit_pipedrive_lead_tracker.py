@@ -15,7 +15,7 @@ from organisations.models import Organisation, Subscription
 from users.models import FFAdminUser, SignUpType
 
 
-def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, settings):
+def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, settings):  # type: ignore[no-untyped-def]
     # Given
     user = FFAdminUser.objects.create(
         email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
@@ -52,7 +52,7 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     mock_pipedrive_client.create_organization.assert_not_called()
 
 
-def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker):
+def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker):  # type: ignore[no-untyped-def]
     # Given
     domain_organization_field_key = "domain-organization-field-key"
     settings.PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = domain_organization_field_key
@@ -96,7 +96,7 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     )
 
 
-def test_create_lead_throws_exception_if_multiple_organisations_found(
+def test_create_lead_throws_exception_if_multiple_organisations_found(  # type: ignore[no-untyped-def]
     db, settings, mocker
 ):
     # Given
@@ -128,7 +128,7 @@ def test_create_lead_throws_exception_if_multiple_organisations_found(
         ("example.io", r"example\..*", False),
     ),
 )
-def test_pipedrive_lead_tracker_should_track_ignore_domains_regex(
+def test_pipedrive_lead_tracker_should_track_ignore_domains_regex(  # type: ignore[no-untyped-def]
     user_domain, regex, expected_result, settings, django_user_model, mocker
 ):
     # Given
@@ -154,7 +154,7 @@ def test_pipedrive_lead_tracker_should_track_ignore_domains_regex(
     "user_domain, ignore_domains, expected_result",
     (("gmail.com", [], True), ("gmail.com", ["gmail.com"], False)),
 )
-def test_pipedrive_lead_tracker_should_track_ignore_domains(
+def test_pipedrive_lead_tracker_should_track_ignore_domains(  # type: ignore[no-untyped-def]
     user_domain, ignore_domains, expected_result, settings, django_user_model, mocker
 ):
     # Given
@@ -176,7 +176,7 @@ def test_pipedrive_lead_tracker_should_track_ignore_domains(
     assert result is expected_result
 
 
-def test_pipedrive_lead_tracker_should_track_false_if_user_belongs_to_paid_organisation(
+def test_pipedrive_lead_tracker_should_track_false_if_user_belongs_to_paid_organisation(  # type: ignore[no-untyped-def]  # noqa: E501
     settings, django_user_model, organisation, chargebee_subscription, mocker
 ):
     # Given
@@ -198,7 +198,7 @@ def test_pipedrive_lead_tracker_should_track_false_if_user_belongs_to_paid_organ
     assert result is False
 
 
-def test_create_lead_creates_person_if_none_found(db, mocker, settings):
+def test_create_lead_creates_person_if_none_found(db, mocker, settings):  # type: ignore[no-untyped-def]
     # Given
     user = FFAdminUser.objects.create(
         email="elmerfudd@looneytunes.com", sign_up_type=SignUpType.NO_INVITE.value
@@ -235,11 +235,11 @@ def test_create_lead_creates_person_if_none_found(db, mocker, settings):
     )
     mock_pipedrive_client.create_organization.assert_not_called()
     mock_pipedrive_client.create_person.assert_called_once_with(
-        user.full_name, user.email, MarketingStatus.NO_CONSENT
+        user.full_name, user.email, MarketingStatus.SUBSCRIBED
     )
 
 
-def test_create_lead_adds_existing_customer_label_if_organisation_is_paid(
+def test_create_lead_adds_existing_customer_label_if_organisation_is_paid(  # type: ignore[no-untyped-def]
     db, mocker, settings
 ):
     # Given
@@ -287,7 +287,7 @@ def test_create_lead_adds_existing_customer_label_if_organisation_is_paid(
     "subscription_id, label_id, expected_label_ids",
     (("subscription-id", "label-id", ["label-id"]), (None, "label-id", [])),
 )
-def test_get_label_ids_for_user(
+def test_get_label_ids_for_user(  # type: ignore[no-untyped-def]
     db, settings, subscription_id, label_id, expected_label_ids
 ):
     # Given

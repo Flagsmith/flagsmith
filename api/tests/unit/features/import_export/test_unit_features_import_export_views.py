@@ -10,7 +10,12 @@ from rest_framework.test import APIClient
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
-from features.import_export.constants import OVERWRITE_DESTRUCTIVE, PROCESSING
+from features.import_export.constants import (
+    FAILED,
+    OVERWRITE_DESTRUCTIVE,
+    PROCESSING,
+    SUCCESS,
+)
 from features.import_export.models import (
     FeatureExport,
     FeatureImport,
@@ -69,7 +74,7 @@ def test_list_feature_export_with_filtered_environments(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     environment2 = Environment.objects.create(
         name="Allowed admin for this environment",
         project=project,
@@ -136,6 +141,7 @@ def test_download_feature_export(
     feature_export = FeatureExport.objects.create(
         environment=environment,
         data='[{"feature": "data"}]',
+        status=SUCCESS,
     )
     url = reverse("api-v1:features:download-feature-export", args=[feature_export.id])
     # When
@@ -166,6 +172,29 @@ def test_download_feature_export_unauthorized(
     assert response.status_code == 403
 
 
+@pytest.mark.parametrize("status", (PROCESSING, FAILED))
+def test_cannot_download_non_success_feature_export(
+    admin_client_new: APIClient,
+    environment: Environment,
+    status: str,
+) -> None:
+    # Given
+    feature_export = FeatureExport.objects.create(
+        environment=environment,
+        status=status,
+    )
+    url = reverse("api-v1:features:download-feature-export", args=[feature_export.id])
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"Unable to download export with status '{status}'."
+    }
+
+
 def test_feature_import(
     admin_client: APIClient,
     environment: Environment,
@@ -188,7 +217,7 @@ def test_feature_import(
     assert response.status_code == 201
     assert FeatureImport.objects.count() == 1
     feature_import = FeatureImport.objects.first()
-    assert feature_import.strategy == OVERWRITE_DESTRUCTIVE
+    assert feature_import.strategy == OVERWRITE_DESTRUCTIVE  # type: ignore[union-attr]
 
 
 def test_feature_import_already_processing(
@@ -280,17 +309,17 @@ def test_create_feature_export(
     feature_export = FeatureExport.objects.all().first()
     # Picked up later by task for processing.
 
-    assert feature_export.data is None
+    assert feature_export.data is None  # type: ignore[union-attr]
     assert response.data == {
         "created_at": "2023-12-08T06:05:47.320000Z",
         "environment_id": environment.id,
-        "id": feature_export.id,
+        "id": feature_export.id,  # type: ignore[union-attr]
         "name": "Test Environment | 2023-12-08 06:05 UTC",
         "status": PROCESSING,
     }
 
     task_mock.delay.assert_called_once_with(
-        kwargs={"feature_export_id": feature_export.id, "tag_ids": [tag.id]},
+        kwargs={"feature_export_id": feature_export.id, "tag_ids": [tag.id]},  # type: ignore[union-attr]
     )
 
 
@@ -383,7 +412,7 @@ def test_list_feature_import_with_filtered_environments(
     with_project_permissions: WithProjectPermissionsCallable,
 ) -> None:
     # Given
-    with_project_permissions([VIEW_PROJECT])
+    with_project_permissions([VIEW_PROJECT])  # type: ignore[call-arg]
     environment2 = Environment.objects.create(
         name="Allowed admin for this environment",
         project=project,

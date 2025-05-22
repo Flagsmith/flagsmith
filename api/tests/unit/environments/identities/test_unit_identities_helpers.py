@@ -6,11 +6,11 @@ from environments.identities.helpers import (
 )
 
 
-def test_get_hashed_percentage_for_object_ids_is_number_between_0_inc_and_1_exc():
+def test_get_hashed_percentage_for_object_ids_is_number_between_0_inc_and_1_exc():  # type: ignore[no-untyped-def]
     assert 1 > get_hashed_percentage_for_object_ids([12, 93]) >= 0
 
 
-def test_get_hashed_percentage_for_object_ids_is_the_same_each_time():
+def test_get_hashed_percentage_for_object_ids_is_the_same_each_time():  # type: ignore[no-untyped-def]
     # Given
     object_ids = [30, 73]
 
@@ -22,7 +22,7 @@ def test_get_hashed_percentage_for_object_ids_is_the_same_each_time():
     assert result_1 == result_2
 
 
-def test_percentage_value_is_unique_for_different_identities():
+def test_percentage_value_is_unique_for_different_identities():  # type: ignore[no-untyped-def]
     # Given
     first_object_ids = [14, 106]
     second_object_ids = [53, 200]
@@ -35,7 +35,7 @@ def test_percentage_value_is_unique_for_different_identities():
     assert result_1 != result_2
 
 
-def test_get_hashed_percentage_for_object_ids_should_be_evenly_distributed():
+def test_get_hashed_percentage_for_object_ids_should_be_evenly_distributed():  # type: ignore[no-untyped-def]
     """
     This test checks if the percentage value returned by the helper function returns
     evenly distributed values.
@@ -72,7 +72,7 @@ def test_get_hashed_percentage_for_object_ids_should_be_evenly_distributed():
 
 
 @mock.patch("environments.identities.helpers.hashlib")
-def test_get_hashed_percentage_does_not_return_1(mock_hashlib):
+def test_get_hashed_percentage_does_not_return_1(mock_hashlib):  # type: ignore[no-untyped-def]
     """
     Quite complex test to ensure that the function will never return 1.
 
@@ -92,7 +92,7 @@ def test_get_hashed_percentage_does_not_return_1(mock_hashlib):
     hash_string_to_return_0 = "270f"
     hashed_values = [hash_string_to_return_0, hash_string_to_return_1]
 
-    def hexdigest_side_effect():
+    def hexdigest_side_effect():  # type: ignore[no-untyped-def]
         return hashed_values.pop()
 
     mock_hash = mock.MagicMock()

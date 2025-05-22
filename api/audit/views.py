@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 
@@ -27,7 +27,9 @@ from organisations.models import Organisation, OrganisationRole
     decorator=swagger_auto_schema(query_serializer=AuditLogsQueryParamSerializer()),
 )
 class _BaseAuditLogViewSet(
-    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     pagination_class = CustomPagination
 
@@ -54,7 +56,7 @@ class _BaseAuditLogViewSet(
 
         return self._apply_visibility_limits(queryset)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         return {"retrieve": AuditLogRetrieveSerializer}.get(
             self.action, AuditLogListSerializer
         )
@@ -67,7 +69,7 @@ class _BaseAuditLogViewSet(
     ) -> QuerySet[AuditLog]:
         organisation = self._get_organisation()
         if not organisation:
-            return AuditLog.objects.none()
+            return AuditLog.objects.none()  # type: ignore[no-any-return]
 
         subscription_metadata = organisation.subscription.get_subscription_metadata()
         if (
@@ -104,7 +106,7 @@ class AllAuditLogViewSet(_BaseAuditLogViewSet):
         Since we're applying the base filters to the query set
         """
         return (
-            self.request.user.organisations.filter(
+            self.request.user.organisations.filter(  # type: ignore[union-attr]
                 userorganisation__role=OrganisationRole.ADMIN
             )
             .select_related("subscription", "subscription_information_cache")
@@ -119,7 +121,7 @@ class OrganisationAuditLogViewSet(_BaseAuditLogViewSet):
         return Q(project__organisation__id=self.kwargs["organisation_pk"])
 
     def _get_organisation(self) -> Organisation | None:
-        return (
+        return (  # type: ignore[no-any-return]
             Organisation.objects.select_related(
                 "subscription", "subscription_information_cache"
             )
@@ -135,7 +137,7 @@ class ProjectAuditLogViewSet(_BaseAuditLogViewSet):
         return Q(project__id=self.kwargs["project_pk"])
 
     def _get_organisation(self) -> Organisation | None:
-        return (
+        return (  # type: ignore[no-any-return]
             Organisation.objects.select_related(
                 "subscription", "subscription_information_cache"
             )

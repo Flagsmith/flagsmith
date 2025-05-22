@@ -16,6 +16,8 @@ import {
   Identity,
   Role,
   RolePermission,
+  Webhook,
+  IdentityTrait,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -25,6 +27,11 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export enum PermissionRoleType {
+  GRANTED = 'GRANTED',
+  GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
+  NONE = 'NONE',
+}
 export const billingPeriods = [
   {
     label: 'Current billing period',
@@ -46,6 +53,20 @@ export type CreateVersionFeatureState = {
   featureId: number
   sha: string
   featureState: FeatureState
+}
+
+export type LoginRequest = {
+  email: string
+  password: string
+}
+export type RegisterRequest = {
+  email: string
+  first_name: string
+  last_name: string
+  password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
 }
 export type Req = {
   getSegments: PagedRequest<{
@@ -69,6 +90,13 @@ export type Req = {
     environments?: string
   }>
   getOrganisations: {}
+  uploadOrganisationLicence: {
+    id: number
+    body: {
+      licence_signature: File
+      licence: File
+    }
+  }
   getProjects: {
     organisationId: string
   }
@@ -83,6 +111,26 @@ export type Req = {
       | 'current_billing_period'
       | 'previous_billing_period'
       | '90_day_period'
+  }
+  getWebhooks: {
+    environmentId: string
+  }
+  createWebhook: {
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  updateWebhook: {
+    id: number
+    environmentId: string
+    enabled: boolean
+    secret: string
+    url: string
+  }
+  deleteWebhook: {
+    id: number
+    environmentId: string
   }
   deleteIdentity: {
     id: string
@@ -107,6 +155,10 @@ export type Req = {
   getPermission: { id: string; level: PermissionLevel }
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: string }
+  getHealthEvents: { projectId: number | string }
+  getHealthProviders: { projectId: number }
+  createHealthProvider: { projectId: number; name: string }
+  deleteHealthProvider: { projectId: number; name: string }
   updateTag: { projectId: string; tag: Tag }
   deleteTag: {
     id: number
@@ -145,6 +197,7 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
+    multivariate_feature_state_values: MultivariateOption[] | null
     feature_segment: {
       segment: number
     }
@@ -155,6 +208,25 @@ export type Req = {
     organisation_id: number
     description: string | null
     name: string
+  }
+  getUserInvites: {
+    organisationId: number
+  }
+  createUserInvite: {
+    organisationId: number
+    invites: {
+      email: string
+      role: string
+      permission_groups: number[]
+    }[]
+  }
+  deleteUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  resendUserInvite: {
+    organisationId: number
+    inviteId: number
   }
   getRole: { organisation_id: string; role_id: number }
   updateRole: {
@@ -528,6 +600,65 @@ export type Req = {
   updateIdentity: {
     environmentId: string
     data: Identity
+  }
+  createAuditLogWebhooks: {
+    organisationId: string
+    data: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>
+  }
+  getAuditLogWebhooks: { organisationId: string }
+  updateAuditLogWebhooks: { organisationId: string; data: Webhook }
+  deleteAuditLogWebhook: { organisationId: string; id: number }
+  createIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  getIdentityTraits: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+  }
+  updateIdentityTrait: {
+    use_edge_identities: boolean
+    environmentId: string
+    identity: string
+    data: IdentityTrait
+  }
+  deleteIdentityTrait: {
+    environmentId: string
+    identity: string
+    use_edge_identities: boolean
+    data: Omit<IdentityTrait, 'trait_value'>
+  }
+  getIdentitySegments: PagedRequest<{
+    q?: string
+    identity: string
+    projectId: string
+  }>
+  getConversionEvents: PagedRequest<{ q?: string; environment_id: string }>
+  getSplitTest: PagedRequest<{
+    conversion_event_type_id: string
+  }>
+  createOnboarding: {
+    first_name: string
+    last_name: string
+    email: string
+    password: string
+    contact_consent_given: boolean
+    organisation_name: string
+    superuser: boolean
+  }
+  getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: string
+  }
+  getUserPermissions: {
+    id?: string
+    userId: number | undefined
+    level: PermissionLevel
   }
   // END OF TYPES
 }

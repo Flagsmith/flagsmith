@@ -9,7 +9,12 @@ import FeatureListStore from 'common/stores/feature-list-store'
 import FeatureListProvider from 'common/providers/FeatureListProvider'
 import AppActions from 'common/dispatcher/app-actions'
 import FeatureRow from 'components/FeatureRow'
-import { FeatureState, ProjectFlag, TagStrategy } from 'common/types/responses'
+import {
+  FeatureListProviderData,
+  FeatureState,
+  ProjectFlag,
+  TagStrategy,
+} from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
@@ -125,8 +130,8 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
           environmentFlags,
           projectFlags,
         }: {
-          environmentFlags?: FeatureState[]
-          projectFlags: ProjectFlag[]
+          environmentFlags?: FeatureListProviderData['environmentFlags']
+          projectFlags: FeatureListProviderData['projectFlags']
         }) => {
           const isLoading = !FeatureListStore.hasLoaded
 
@@ -154,16 +159,12 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                 isLoading={FeatureListStore.isLoading}
                 paging={FeatureListStore.paging}
                 nextPage={() => setPage(page + 1)}
-                renderRow={(projectFlag: ProjectFlag, i: number) => (
+                renderRow={(projectFlag, i) => (
                   <FeatureRow
                     readOnly
                     hideRemove
                     hideAudit
-                    descriptionInTooltip
-                    hideActions
-                    size='sm'
                     environmentFlags={environmentFlags}
-                    projectFlags={projectFlags}
                     environmentId={environment}
                     projectId={projectId}
                     index={i}
@@ -201,9 +202,7 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
               <Flex className='table-column px-3'>Export</Flex>
             </Row>
           }
-          renderRow={(data: FeatureExportType) => (
-            <FeatureExportItem data={data} />
-          )}
+          renderRow={(data) => <FeatureExportItem data={data} />}
         />
       )}
     </div>

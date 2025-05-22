@@ -8,6 +8,7 @@ import { sortBy } from 'lodash'
 import PanelSearch from './PanelSearch'
 import Input from './base/forms/Input'
 import Button from './base/forms/Button'
+import Utils from 'common/utils/utils'
 
 type OrgProjectSelectType = {
   organisationId?: string | null
@@ -28,7 +29,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
   projectId,
   useApiKey,
 }) => {
-  const [search, setSearch] = useState()
+  const [search, setSearch] = useState<string>()
 
   const { data: organisations, isLoading: organisationsLoading } =
     useGetOrganisationsQuery({})
@@ -116,7 +117,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
               style={{ width: 80 }}
               className='btn-secondary ml-2 mr-4'
               onClick={() => {
-                navigator.clipboard.writeText(projectId)
+                Utils.copyToClipboard(projectId)
               }}
             >
               Copy
@@ -138,7 +139,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
               style={{ width: 80 }}
               className='btn-secondary ml-2 mr-4'
               onClick={() => {
-                navigator.clipboard.writeText(environmentId)
+                Utils.copyToClipboard(environmentId)
               }}
             >
               Copy
@@ -153,7 +154,6 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
             organisationsLoading || projectsLoading || environmentsLoading
           }
           id='segment-list'
-          icon='ion-ios-globe'
           title={`${Format.camelCase(level)} Search`}
           items={sortBy(items, (v) => {
             return v.name
@@ -163,7 +163,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
           }
           onChange={setSearch}
           search={search}
-          renderRow={({ api_key, id, name }: Environment) => (
+          renderRow={({ api_key, id, name }) => (
             <a
               className='list-item clickable flex flex-1 flex-row px-4'
               onClick={() => {

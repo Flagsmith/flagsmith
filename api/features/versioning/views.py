@@ -1,12 +1,14 @@
 from datetime import timedelta
 
-from common.environments.permissions import VIEW_ENVIRONMENT
+from common.environments.permissions import (
+    VIEW_ENVIRONMENT,
+)
 from common.projects.permissions import VIEW_PROJECT
 from django.db.models import BooleanField, ExpressionWrapper, Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.mixins import (
@@ -52,7 +54,7 @@ from users.models import FFAdminUser
     ),
 )
 class EnvironmentFeatureVersionViewSet(
-    GenericViewSet,
+    GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
@@ -60,14 +62,14 @@ class EnvironmentFeatureVersionViewSet(
     permission_classes = [IsAuthenticated, EnvironmentFeatureVersionPermissions]
     pagination_class = CustomPagination
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
 
         # populated during the request to use across multiple view methods
         self.feature = None
         self.environment = None
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         match self.action:
             case "publish":
                 return EnvironmentFeatureVersionPublishSerializer
@@ -78,17 +80,17 @@ class EnvironmentFeatureVersionViewSet(
             case _:
                 return EnvironmentFeatureVersionSerializer
 
-    def initial(self, request: Request, *args, **kwargs):
+    def initial(self, request: Request, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().initial(request, *args, **kwargs)
 
         feature = get_object_or_404(
             Feature.objects.filter(
-                project__in=self.request.user.get_permitted_projects(VIEW_PROJECT)
+                project__in=self.request.user.get_permitted_projects(VIEW_PROJECT)  # type: ignore[union-attr]
             ),
             pk=self.kwargs["feature_pk"],
         )
         environment = get_object_or_404(
-            self.request.user.get_permitted_environments(
+            self.request.user.get_permitted_environments(  # type: ignore[union-attr]
                 VIEW_ENVIRONMENT, project=feature.project
             ),
             pk=self.kwargs["environment_pk"],
@@ -97,7 +99,7 @@ class EnvironmentFeatureVersionViewSet(
         self.feature = feature
         self.environment = environment
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return EnvironmentFeatureVersion.objects.none()
 
@@ -124,7 +126,7 @@ class EnvironmentFeatureVersionViewSet(
 
         return queryset
 
-    def perform_create(self, serializer: Serializer) -> None:
+    def perform_create(self, serializer: Serializer) -> None:  # type: ignore[override,type-arg]
         created_by = None
         if isinstance(self.request.user, FFAdminUser):
             created_by = self.request.user
@@ -139,24 +141,25 @@ class EnvironmentFeatureVersionViewSet(
         super().perform_destroy(instance)
 
     @action(detail=True, methods=["POST"])
-    def publish(self, request: Request, **kwargs) -> Response:
+    def publish(self, request: Request, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         ef_version = self.get_object()
         serializer = self.get_serializer(data=request.data, instance=ef_version)
         serializer.is_valid(raise_exception=True)
         serializer.save(published_by=request.user)
         return Response(serializer.data)
 
-    def _apply_visibility_limits(self, queryset: QuerySet) -> QuerySet:
+    def _apply_visibility_limits(self, queryset: QuerySet) -> QuerySet:  # type: ignore[type-arg]
         """
         Filter the given queryset by the visibility limits enforced
         by the given organisation's subscription.
         """
-        subscription = self.environment.project.organisation.subscription
+        subscription = self.environment.project.organisation.subscription  # type: ignore[union-attr]
         subscription_metadata = subscription.get_subscription_metadata()
         if (
             subscription_metadata
             and (
-                version_limit_days := subscription_metadata.feature_history_visibility_days
+                version_limit_days
+                := subscription_metadata.feature_history_visibility_days
             )
             is not None
         ):
@@ -173,7 +176,7 @@ class EnvironmentFeatureVersionViewSet(
         return queryset
 
 
-class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):
+class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):  # type: ignore[type-arg]
     """
     This is an additional endpoint to retrieve a specific version without needing
     to provide the environment or feature as part of the URL.
@@ -185,12 +188,12 @@ class EnvironmentFeatureVersionRetrieveAPIView(RetrieveAPIView):
     ]
     serializer_class = EnvironmentFeatureVersionRetrieveSerializer
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         return EnvironmentFeatureVersion.objects.all()
 
 
 class EnvironmentFeatureVersionFeatureStatesViewSet(
-    GenericViewSet,
+    GenericViewSet,  # type: ignore[type-arg]
     ListModelMixin,
     CreateModelMixin,
     UpdateModelMixin,
@@ -203,7 +206,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
     ]
     pagination_class = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
 
         # populated during the request to use across multiple view methods
@@ -211,7 +214,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         self.environment = None
         self.environment_feature_version = None
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return FeatureState.objects.none()
 
@@ -223,7 +226,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
             environment_feature_version_id=environment_feature_version_uuid,
         )
 
-    def initial(self, request: Request, *args, **kwargs):
+    def initial(self, request: Request, *args, **kwargs):  # type: ignore[no-untyped-def]
         super().initial(request, *args, **kwargs)
         environment_feature_version = get_object_or_404(
             EnvironmentFeatureVersion,
@@ -239,7 +242,7 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         )
         self.feature = get_object_or_404(Feature, pk=self.kwargs["feature_pk"])
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super().get_serializer_context()
         context["environment"] = self.environment
         context["feature"] = self.feature
@@ -247,24 +250,26 @@ class EnvironmentFeatureVersionFeatureStatesViewSet(
         return context
 
     def perform_create(
-        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
+        self,
+        serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
-        )
+        )  # type: ignore[no-untyped-call]
 
     def perform_update(
-        self, serializer: CustomCreateSegmentOverrideFeatureStateSerializer
+        self,
+        serializer: CustomCreateSegmentOverrideFeatureStateSerializer,  # type: ignore[override]
     ) -> None:
         serializer.save(
             feature=self.feature,
             environment=self.environment,
             environment_feature_version=self.environment_feature_version,
-        )
+        )  # type: ignore[no-untyped-call]
 
-    def perform_destroy(self, instance) -> None:
+    def perform_destroy(self, instance) -> None:  # type: ignore[no-untyped-def]
         if instance.feature_segment is None and instance.identity is None:
             raise FeatureVersionDeleteError(
                 "Cannot delete environment default feature state."

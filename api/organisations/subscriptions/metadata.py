@@ -6,7 +6,7 @@ from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 class BaseSubscriptionMetadata:
     payment_source = None
 
-    def __init__(
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         seats: int = 0,
         api_calls: int = 0,
@@ -23,7 +23,7 @@ class BaseSubscriptionMetadata:
         self.audit_log_visibility_days = audit_log_visibility_days
         self.feature_history_visibility_days = feature_history_visibility_days
 
-    def __add__(self, other: "BaseSubscriptionMetadata"):
+    def __add__(self, other: "BaseSubscriptionMetadata"):  # type: ignore[no-untyped-def]
         if self.payment_source != other.payment_source:
             raise TypeError(
                 "Cannot add SubscriptionMetadata from multiple payment sources."
@@ -46,7 +46,7 @@ class BaseSubscriptionMetadata:
             ),
         )
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return (
             "%s Subscription Metadata (seats: %d, api_calls: %d, projects: %s, "
             "chargebee_email: %s, audit_log_visibility_days: %s, feature_history_visibility_days: %s)"
@@ -65,10 +65,10 @@ class BaseSubscriptionMetadata:
             )
         )
 
-    def __repr__(self):
+    def __repr__(self):  # type: ignore[no-untyped-def]
         return str(self)
 
-    def __eq__(self, other: "BaseSubscriptionMetadata"):
+    def __eq__(self, other: "BaseSubscriptionMetadata"):  # type: ignore[override,no-untyped-def]
         return (
             self.seats == other.seats
             and self.api_calls == other.api_calls

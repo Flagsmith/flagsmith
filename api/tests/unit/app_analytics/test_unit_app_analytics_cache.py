@@ -1,9 +1,10 @@
-from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
-from app_analytics.models import Resource
 from django.utils import timezone
 from freezegun import freeze_time
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+
+from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
+from app_analytics.models import Resource
 
 
 def test_api_usage_cache(
@@ -11,7 +12,7 @@ def test_api_usage_cache(
     settings: SettingsWrapper,
 ) -> None:
     # Given
-    settings.PG_API_USAGE_CACHE_SECONDS = 60
+    settings.API_USAGE_CACHE_SECONDS = 60
 
     cache = APIUsageCache()
     now = timezone.now()
@@ -24,14 +25,22 @@ def test_api_usage_cache(
         # Make some tracking requests
         for _ in range(10):
             for resource in Resource:
-                cache.track_request(resource, host, environment_key_1)
-                cache.track_request(resource, host, environment_key_2)
+                cache.track_request(
+                    resource,
+                    host,
+                    environment_key_1,
+                )
+                cache.track_request(
+                    resource,
+                    host,
+                    environment_key_2,
+                )
 
         # make sure track_request task was not called
         assert not mocked_track_request_task.called
 
         # Now, let's move the time forward
-        frozen_time.tick(settings.PG_API_USAGE_CACHE_SECONDS + 1)
+        frozen_time.tick(settings.API_USAGE_CACHE_SECONDS + 1)  # type: ignore[arg-type]
 
         # let's track another request(to trigger flush)
         cache.track_request(
@@ -46,7 +55,7 @@ def test_api_usage_cache(
             expected_calls.append(
                 mocker.call(
                     kwargs={
-                        "resource": resource,
+                        "resource": resource.value,
                         "host": host,
                         "environment_key": environment_key_1,
                         "count": 11 if resource == Resource.FLAGS else 10,
@@ -56,14 +65,14 @@ def test_api_usage_cache(
             expected_calls.append(
                 mocker.call(
                     kwargs={
-                        "resource": resource,
+                        "resource": resource.value,
                         "host": host,
                         "environment_key": environment_key_2,
                         "count": 10,
                     }
                 )
             )
-        mocked_track_request_task.delay.assert_has_calls(expected_calls)
+        mocked_track_request_task.run_in_thread.assert_has_calls(expected_calls)
 
         # Next, let's reset the mock
         mocked_track_request_task.reset_mock()
@@ -79,7 +88,7 @@ def test_api_usage_cache(
         assert not mocked_track_request_task.called
 
 
-def test_feature_evaluation_cache(
+def test_feature_evaluation_cache(  # type: ignore[no-untyped-def]
     mocker: MockerFixture,
     settings: SettingsWrapper,
 ):
@@ -99,7 +108,7 @@ def test_feature_evaluation_cache(
     feature_1_name = "feature_1_name"
     feature_2_name = "feature_2_name"
 
-    cache = FeatureEvaluationCache()
+    cache = FeatureEvaluationCache()  # type: ignore[no-untyped-call]
     now = timezone.now()
 
     with freeze_time(now) as frozen_time:
@@ -114,7 +123,7 @@ def test_feature_evaluation_cache(
         assert not mocked_track_feature_evaluation_influxdb_task.delay.called
 
         # Now, let's move the time forward
-        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)
+        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
 
         # track another evaluation(to trigger cache flush)
         cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)
@@ -152,7 +161,7 @@ def test_feature_evaluation_cache(
         cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)
 
         # move time forward again
-        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)
+        frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
 
         # track another one(to trigger cache flush)
         cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)

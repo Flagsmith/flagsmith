@@ -3,10 +3,18 @@ import Constants from 'common/constants'
 import cloneDeep from 'lodash/cloneDeep'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
-import { Operator, SegmentCondition, SegmentRule } from 'common/types/responses'
+import {
+  Operator,
+  SegmentCondition,
+  SegmentConditionsError,
+  SegmentRule,
+} from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
+import RuleInputValue from './RuleInputValue'
+import ErrorMessage from 'components/ErrorMessage'
+import classNames from 'classnames'
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
@@ -17,6 +25,7 @@ export default class Rule extends PureComponent<{
   readOnly?: boolean
   showDescription?: boolean
   'data-test'?: string
+  errors: SegmentConditionsError[]
 }> {
   static displayName = 'Rule'
 
@@ -35,6 +44,8 @@ export default class Rule extends PureComponent<{
       }
       return acc
     }, 0)
+    const ruleErrors = this.props.errors?.[i]
+
     const isLastRule = i === lastIndex
     const hasOr = i > 0
     const operatorObj = Utils.findOperator(rule.operator, rule.value, operators)
@@ -69,7 +80,12 @@ export default class Rule extends PureComponent<{
                 readOnly={this.props.readOnly}
                 data-test={`${this.props['data-test']}-property-${i}`}
                 value={`${rule.property}`}
-                style={{ width: '135px' }}
+                inputClassName={classNames({
+                  'border-danger': ruleErrors?.property,
+                })}
+                style={{
+                  width: '135px',
+                }}
                 placeholder={
                   operator && operator === 'PERCENTAGE_SPLIT'
                     ? 'Trait (N/A)'
@@ -100,7 +116,7 @@ export default class Rule extends PureComponent<{
               style={{ width: '190px' }}
             />
           )}
-          <Input
+          <RuleInputValue
             readOnly={this.props.readOnly}
             data-test={`${this.props['data-test']}-value-${i}`}
             value={value || ''}
@@ -116,7 +132,7 @@ export default class Rule extends PureComponent<{
                     : value,
               })
             }}
-            isValid={Utils.validateRule(rule)}
+            isValid={Utils.validateRule(rule) && !ruleErrors?.value}
           />
           {isLastRule && !this.props.readOnly ? (
             <Button
@@ -153,6 +169,11 @@ export default class Rule extends PureComponent<{
                 this.setRuleProperty(i, 'description', { value })
               }}
             />
+          </Row>
+        )}
+        {(ruleErrors?.property || ruleErrors?.value) && (
+          <Row className='mt-2'>
+            <ErrorMessage error={ruleErrors} />
           </Row>
         )}
       </div>

@@ -7,13 +7,13 @@ from common.environments.permissions import (
     VIEW_IDENTITIES,
 )
 from common.projects.permissions import VIEW_PROJECT
-from core.constants import INTEGER, STRING
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
+from core.constants import INTEGER, STRING
 from environments.identities.models import Identity
 from environments.identities.traits.constants import (
     TRAIT_STRING_VALUE_MAX_LENGTH,
@@ -116,7 +116,7 @@ def test_can_set_trait_with_boolean_value_for_an_identity(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert (
-        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()
+        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()  # type: ignore[no-untyped-call]
         == trait_value
     )
 
@@ -147,7 +147,7 @@ def test_can_set_trait_with_identity_value_for_an_identity(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert (
-        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()
+        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()  # type: ignore[no-untyped-call]
         == trait_value
     )
 
@@ -180,7 +180,7 @@ def test_can_set_trait_with_float_value_for_an_identity(
 
     # and
     assert (
-        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()
+        Trait.objects.get(identity=identity, trait_key=trait_key).get_trait_value()  # type: ignore[no-untyped-call]
         == trait_value
     )
 
@@ -227,7 +227,7 @@ def test_trait_is_updated_if_already_exists(
     url = reverse("api-v1:sdk-traits-list")
     trait_key = "some-key"
     trait_value = 10.5
-    trait = Trait.objects.create(
+    trait = Trait.objects.create(  # type: ignore[misc]
         trait_key=trait_key,
         value_type=STRING,
         string_value=trait_value,
@@ -250,7 +250,7 @@ def test_trait_is_updated_if_already_exists(
 
     # Then
     trait.refresh_from_db()
-    assert trait.get_trait_value() == new_value
+    assert trait.get_trait_value() == new_value  # type: ignore[no-untyped-call]
 
 
 def test_increment_value_increments_trait_value_if_value_positive_integer(
@@ -285,7 +285,7 @@ def test_increment_value_increments_trait_value_if_value_positive_integer(
     assert response.status_code == status.HTTP_200_OK
 
     trait.refresh_from_db()
-    assert trait.get_trait_value() == initial_value + increment_by
+    assert trait.get_trait_value() == initial_value + increment_by  # type: ignore[no-untyped-call]
 
 
 def test_increment_value_decrements_trait_value_if_value_negative_integer(
@@ -319,7 +319,7 @@ def test_increment_value_decrements_trait_value_if_value_negative_integer(
     assert response.status_code == status.HTTP_200_OK
 
     trait.refresh_from_db()
-    assert trait.get_trait_value() == initial_value + increment_by
+    assert trait.get_trait_value() == initial_value + increment_by  # type: ignore[no-untyped-call]
 
 
 def test_increment_value_initialises_trait_with_a_value_of_zero_if_it_doesnt_exist(
@@ -343,7 +343,7 @@ def test_increment_value_initialises_trait_with_a_value_of_zero_if_it_doesnt_exi
 
     # Then
     trait = Trait.objects.get(trait_key=trait_key, identity=identity)
-    assert trait.get_trait_value() == increment_by
+    assert trait.get_trait_value() == increment_by  # type: ignore[no-untyped-call]
 
 
 def test_increment_value_returns_400_if_trait_value_not_integer(
@@ -432,7 +432,7 @@ def test_can_set_trait_with_bad_value_for_an_identity(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert Trait.objects.get(
+    assert Trait.objects.get(  # type: ignore[no-untyped-call]
         identity=identity, trait_key=trait_key
     ).get_trait_value() == str(bad_trait_value)
 
@@ -457,7 +457,7 @@ def test_bulk_create_traits(
         },
     ]
 
-    identifiers = [trait["identity"]["identifier"] for trait in traits]
+    identifiers = [trait["identity"]["identifier"] for trait in traits]  # type: ignore[index]
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     # When
     response = api_client.put(
@@ -512,7 +512,7 @@ def test_bulk_create_traits_when_bad_trait_value_sent_then_trait_value_stringifi
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert Trait.objects.filter(identity=identity).count() == len(traits)
-    assert Trait.objects.get(
+    assert Trait.objects.get(  # type: ignore[no-untyped-call]
         identity=identity, trait_key=bad_trait_key
     ).get_trait_value() == str(bad_trait_value)
 
@@ -593,7 +593,7 @@ def test_bulk_create_traits_when_float_value_sent_then_trait_value_correct(
     assert response.status_code == status.HTTP_200_OK
     assert Trait.objects.filter(identity=identity).count() == 1
     assert (
-        Trait.objects.get(
+        Trait.objects.get(  # type: ignore[no-untyped-call]
             identity=identity, trait_key=float_trait_key
         ).get_trait_value()
         == float_trait_value
@@ -945,7 +945,7 @@ def test_delete_trait_only_deletes_traits_in_current_environment(
     assert Trait.objects.filter(pk=trait_2.id).exists()
 
 
-def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(
+def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(  # type: ignore[no-untyped-def]
     settings, identity, environment, api_client
 ):
     # Given
@@ -970,7 +970,7 @@ def test_set_trait_for_an_identity_is_not_throttled_by_user_throttle(
         assert res.status_code == status.HTTP_200_OK
 
 
-def test_user_with_manage_identities_permission_can_add_trait_for_identity(
+def test_user_with_manage_identities_permission_can_add_trait_for_identity(  # type: ignore[no-untyped-def]
     environment, identity, django_user_model, api_client
 ):
     # Given
@@ -1007,7 +1007,7 @@ def test_user_with_manage_identities_permission_can_add_trait_for_identity(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):
+def test_trait_view_delete_trait(environment, admin_client, identity, trait, mocker):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
@@ -1024,7 +1024,7 @@ def test_trait_view_delete_trait(environment, admin_client, identity, trait, moc
     assert not Trait.objects.filter(pk=trait.id).exists()
 
 
-def test_trait_view_set_update(environment, admin_client, identity, trait, mocker):
+def test_trait_view_set_update(environment, admin_client, identity, trait, mocker):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:environments:identities-traits-detail",
@@ -1040,12 +1040,12 @@ def test_trait_view_set_update(environment, admin_client, identity, trait, mocke
     assert response.json()["string_value"] == new_value
 
 
-def test_edge_identity_view_set_get_permissions():
+def test_edge_identity_view_set_get_permissions():  # type: ignore[no-untyped-def]
     # Given
     view_set = TraitViewSet()
 
     # When
-    permissions = view_set.get_permissions()
+    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
 
     # Then
     assert isinstance(permissions[0], IsAuthenticated)

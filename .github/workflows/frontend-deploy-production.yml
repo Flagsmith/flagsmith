@@ -10,7 +10,7 @@ on:
 
 jobs:
   run-tests:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     name: Run E2E Tests
     environment: production
     concurrency:
@@ -43,5 +43,14 @@ jobs:
     uses: ./.github/workflows/.reusable-frontend-deploy.yml
     with:
       gh_environment: demo
+      npm_build_environment: prod
+    secrets: inherit
+
+  deploy-demo2:
+    name: Deploy to Vercel Demo2
+    needs: run-tests
+    uses: ./.github/workflows/.reusable-frontend-deploy.yml
+    with:
+      gh_environment: demo2
       npm_build_environment: prod
     secrets: inherit

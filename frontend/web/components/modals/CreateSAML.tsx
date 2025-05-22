@@ -59,9 +59,8 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
     `./auth/saml/${name}/response/`,
     new Request(Project.api).url, // Project.api can be relative, e.g. /api/v1/
   ).href
-  const copyAcsUrl = async () => {
-    await navigator.clipboard.writeText(acsUrl)
-    toast('Copied to clipboard')
+  const copyAcsUrl = () => {
+    Utils.copyToClipboard(acsUrl)
   }
 
   useEffect(() => {
@@ -131,7 +130,7 @@ const CreateSAML: FC<CreateSAML> = ({ organisationId, samlName }) => {
       />
 
       <InputGroup
-        className='mt-2 mb-4'
+        className={`mt-2 mb-4 ${Utils.isSaas() ? 'd-none' : ''}`}
         title='Frontend URL*'
         data-test='frontend-url'
         tooltip='The base URL of the Flagsmith dashboard. Users will be redirected here after authenticating successfully.'

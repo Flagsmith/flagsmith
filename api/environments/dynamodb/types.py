@@ -32,13 +32,13 @@ class DynamoProjectMetadata:
     """Internal class used by `IdentityMigrator` to store identity migration state"""
 
     id: int
-    migration_start_time: str = None
-    migration_end_time: str = None
-    triggered_at: str = None
+    migration_start_time: str = None  # type: ignore[assignment]
+    migration_end_time: str = None  # type: ignore[assignment]
+    triggered_at: str = None  # type: ignore[assignment]
 
     @classmethod
     def get_or_new(cls, project_id: int) -> "DynamoProjectMetadata":
-        document = project_metadata_table.get_item(Key={"id": project_id}).get("Item")
+        document = project_metadata_table.get_item(Key={"id": project_id}).get("Item")  # type: ignore[union-attr]
         if document:
             return cls(**document)
         return cls(id=project_id)
@@ -55,28 +55,28 @@ class DynamoProjectMetadata:
             return ProjectIdentityMigrationStatus.MIGRATION_IN_PROGRESS
         return ProjectIdentityMigrationStatus.MIGRATION_COMPLETED
 
-    def trigger_identity_migration(self):
+    def trigger_identity_migration(self):  # type: ignore[no-untyped-def]
         if self.triggered_at:
             raise AttributeError("Migration has already been triggered.")
         self.triggered_at = datetime.now().isoformat()
-        self._save()
+        self._save()  # type: ignore[no-untyped-call]
 
-    def start_identity_migration(self):
+    def start_identity_migration(self):  # type: ignore[no-untyped-def]
         if self.migration_start_time:
             raise AttributeError("Migration has already been started.")
         self.migration_start_time = datetime.now().isoformat()
-        self._save()
+        self._save()  # type: ignore[no-untyped-call]
 
-    def finish_identity_migration(self):
+    def finish_identity_migration(self):  # type: ignore[no-untyped-def]
         if self.migration_end_time:
             raise AttributeError("Migration has already been finished.")
         self.migration_end_time = datetime.now().isoformat()
-        self._save()
+        self._save()  # type: ignore[no-untyped-call]
 
-    def _save(self):
-        return project_metadata_table.put_item(Item=asdict(self))
+    def _save(self):  # type: ignore[no-untyped-def]
+        return project_metadata_table.put_item(Item=asdict(self))  # type: ignore[union-attr]
 
-    def delete(self):
+    def delete(self):  # type: ignore[no-untyped-def]
         if project_metadata_table:
             project_metadata_table.delete_item(Key={"id": self.id})
 

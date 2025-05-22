@@ -32,7 +32,7 @@ class PaginatedQueryParams:
     page: int = field(default=1, kw_only=True)
     page_size: int = field(default=100, kw_only=True)
 
-    def __post_init__(self):
+    def __post_init__(self):  # type: ignore[no-untyped-def]
         if self.page < 1:
             raise ValueError("Page must be greater or equal than 1")
         if self.page_size < 1 or self.page_size > 100:

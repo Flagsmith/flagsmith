@@ -29,7 +29,7 @@ documentation for subscribing to real-time flag updates.
 ## How it works
 
 The following sequence diagram shows how a typical application would use real-time flag updates.
-[Billable API requests](/pricing) are highlighted in yellow.
+[Billable API requests](/billing) are highlighted in yellow.
 
 ```mermaid
 sequenceDiagram
@@ -64,16 +64,16 @@ must propagate the latest flag state throughout your application as necessary.
 Real-time flag update events only contain a timestamp indicating when any flag in the environment was last updated.
 Applications must still call the Flagsmith API to get the actual flags for their current environment or user.
 
-Only environment-level feature changes result in flag update events. For example, the following operations will generate
-flag update events:
+Only changes made to environments or projects result in flag update events. For example, the following operations will
+cause updates to be sent:
 
 - Manually toggling a flag on or off, or changing its value.
 - A [scheduled Change Request](/advanced-use/scheduled-flags) for a feature goes live.
 - Creating or updating segment overrides for a feature.
-
-Project-level or identity-level operations _will not_ generate flag update events:
-
 - Changing a segment definition.
+
+Identity-level operations _will not_ cause updates to be sent:
+
 - Updating an identity's traits.
 - Creating or updating an identity override.
 
@@ -84,6 +84,7 @@ The following SDK clients support subscribing to real-time flag updates:
 - iOS
 - Flutter
 - Python
+- Ruby
 
 ## Implementation details
 
@@ -97,6 +98,12 @@ Each real-time flag event message is a JSON object containing a Unix epoch times
 
 ```json
 {
- "updated_at": 3133690620000
+  "updated_at": 3133690620000
 }
+```
+
+You can test real-time flag updates by using cURL to connect to the event source URL:
+
+```
+curl -H 'Accept: text/event-stream' -N -i https://realtime.flagsmith.com/sse/environments/ENVIRONMENT_ID/stream
 ```
