@@ -80,6 +80,32 @@
   background: var(--card-bg-hover)
 }
 
+/* Card title and text styles */
+.card h3 {
+  margin-top: 0;
+  font-size: 1.25rem; /* Increased from 1.1rem */
+  font-weight: 600; /* Added bold */
+  margin-bottom: 0.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.card p {
+  font-size: 1rem; /* Increased from 0.95rem */
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+  margin-bottom: 1rem;
+}
+
+/* Card link styles */
+.card a {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  text-decoration: none;
+}
+
+
+
 /* Grid layout for cards */
 
 
@@ -174,17 +200,12 @@
   text-align: left;
 }
 
-.icon-container {
-  display: flex;
-  align-items: left;
-  justify-content: left;
-  margin-bottom: 1rem;
-}
+
 
 /* Icon styles */
 .card-icon {
-  font-size: 24px !important;
-  padding: 12px;
+  font-size: 30px !important; /* Increased from 24px */
+  padding: 10px; /* Increased from 12px for larger circle */
   border-radius: 50%;
   color: var(--icon-color);
   background-color: var(--icon-circle-color);
@@ -195,27 +216,8 @@ main.container {
   padding-bottom: 5rem;
 }
 
-/* Hero section with different background */
-.hero {
-  background: var(--ifm-background-color);
-  padding: 5rem 0;
-  margin-bottom: 2rem;
-}
 
-/* Update hero container styles */
-.hero .container {
-  margin: 0 auto;
-  max-width: var(--ifm-container-width);
-  padding: 0 var(--ifm-spacing-horizontal);
-  width: 100%;
-}
 
-/* Match hero text with sections */
-.hero h1 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  max-width: 800px; /* Limit text width for better readability / responsiveness */
-}
 
 /* Section background alternation for dark mode */
 [data-theme='dark'] section:nth-child(even) {
@@ -232,7 +234,7 @@ main.container {
 }
 
 [data-theme='dark'] section:nth-child(odd) {
-  background: var(--ifm-background-color);
+  background: #111111;
   padding: 3rem 0;
   margin: 0;
   /* full width */
@@ -247,7 +249,7 @@ main.container {
 /* Section background alternation for dark mode - alternating every 2 sections */
 [data-theme='dark'] section:nth-child(4n+1),
 [data-theme='dark'] section:nth-child(4n+2) {
-  background: var(--ifm-background-color);
+  background: #111111;
   padding: 3rem 0;
   margin: 0;
   /* full width */
