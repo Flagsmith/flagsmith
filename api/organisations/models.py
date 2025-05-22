@@ -265,6 +265,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         )
 
     @property
+    def has_billing_periods(self) -> bool:
+        return (
+            self.organisation.has_subscription_information_cache()
+            and self.organisation.subscription_information_cache.has_billing_periods()
+        )
+
+    @property
     def is_free_plan(self) -> bool:
         return self.subscription_plan_family == SubscriptionPlanFamily.FREE
 
@@ -386,7 +393,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         # Note that Free plans are caught in the parent method above.
         if self.organisation.has_subscription_information_cache():
             return self.organisation.subscription_information_cache.as_base_subscription_metadata(
-                seats=self.max_seats, api_calls=self.max_api_calls
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
             )
         return BaseSubscriptionMetadata(
             seats=self.max_seats, api_calls=self.max_api_calls
@@ -544,6 +552,24 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             "audit_log_visibility_days": self.audit_log_visibility_days,
             "feature_history_visibility_days": self.feature_history_visibility_days,
         }
+
+    def has_billing_periods(self) -> bool:
+        """
+        Returns True if current date is within the billing term.
+        If either start or end date is None, returns False.
+        """
+        if (
+            self.current_billing_term_starts_at is None
+            or self.current_billing_term_ends_at is None
+        ):
+            return False
+
+        now = timezone.now()
+        return (
+            self.current_billing_term_starts_at
+            <= now
+            <= self.current_billing_term_ends_at
+        )
 
 
 class OrganisationAPIUsageNotification(models.Model):

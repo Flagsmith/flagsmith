@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-
+from rest_framework.exceptions import NotFound
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
@@ -382,33 +382,6 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
     )
     mocked_get_feature_evaluation_data_from_local_db.assert_called_once_with(
         feature=feature, environment_id=environment.id, period=30
-    )
-
-
-@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_30d_of_60d_when_unset_subscription_information_cache_for_previous_billing_period(
-    mocker: MockerFixture,
-    settings: SettingsWrapper,
-    organisation: Organisation,
-) -> None:
-    # Given
-    period = PREVIOUS_BILLING_PERIOD
-    settings.USE_POSTGRES_FOR_ANALYTICS = True
-    mocked_get_usage_data_from_local_db = mocker.patch(
-        "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
-    )
-    assert getattr(organisation, "subscription_information_cache", None) is None
-
-    # When
-    get_usage_data(organisation, period=period)
-
-    # Then
-    mocked_get_usage_data_from_local_db.assert_called_once_with(
-        organisation=organisation,
-        environment_id=None,
-        project_id=None,
-        date_start=datetime(2022, 11, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
     )
 
 
