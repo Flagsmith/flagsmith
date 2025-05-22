@@ -75,11 +75,14 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
   const [project, setProject] = useState<string | undefined>()
   const [environment, setEnvironment] = useState<string | undefined>()
   const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+  const orgSubscription = AccountStore.getOrganisation()?.subscription
+  const isOnFreePlanPeriods =
+    planNames.free === currentPlan || !orgSubscription?.has_billing_periods
   const [billingPeriod, setBillingPeriod] = useState<
     Req['getOrganisationUsage']['billing_period']
-  >(currentPlan === planNames.free ? '90_day_period' : 'current_billing_period')
+  >(isOnFreePlanPeriods ? '90_day_period' : 'current_billing_period')
 
-  const { data } = useGetOrganisationUsageQuery(
+  const { data, isError } = useGetOrganisationUsageQuery(
     {
       billing_period: billingPeriod,
       environmentId: environment,
@@ -103,16 +106,14 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
     }
   }
 
-  return data?.totals ? (
+  return data?.totals || isError ? (
     <div className='mt-4 row'>
       <div className='col-md-4'>
         <label>Period</label>
         <Select
           onChange={(v) => setBillingPeriod(v.value)}
           value={billingPeriods.find((v) => v.value === billingPeriod)}
-          options={
-            currentPlan === planNames.free ? freePeriods : billingPeriods
-          }
+          options={isOnFreePlanPeriods ? freePeriods : billingPeriods}
         />
       </div>
       <div className='col-md-4 mb-5'>
@@ -135,39 +136,45 @@ const OrganisationUsage: FC<OrganisationUsageType> = ({ organisationId }) => {
           />
         </div>
       )}
-      <div className='d-flex gap-5 align-items-center'>
-        <LegendItem
-          selection={selection}
-          onChange={updateSelection}
-          colour={colours[0]}
-          value={data.totals.flags}
-          title='Flags'
-        />
-        <LegendItem
-          selection={selection}
-          onChange={updateSelection}
-          colour={colours[1]}
-          value={data.totals.identities}
-          title='Identities'
-        />
-        <LegendItem
-          selection={selection}
-          onChange={updateSelection}
-          colour={colours[2]}
-          value={data.totals.environmentDocument}
-          title='Environment Document'
-        />
-        <LegendItem
-          selection={selection}
-          onChange={updateSelection}
-          colour={colours[3]}
-          value={data.totals.traits}
-          title='Traits'
-        />
-        <LegendItem value={data.totals.total} title='Total API Calls' />
-      </div>
-      {data?.events_list?.length === 0 ? (
-        <div className='py-4 fw-semibold text-center'>No usage recorded.</div>
+      {data?.totals && (
+        <div className='d-flex gap-5 align-items-center'>
+          <LegendItem
+            selection={selection}
+            onChange={updateSelection}
+            colour={colours[0]}
+            value={data.totals.flags}
+            title='Flags'
+          />
+          <LegendItem
+            selection={selection}
+            onChange={updateSelection}
+            colour={colours[1]}
+            value={data.totals.identities}
+            title='Identities'
+          />
+          <LegendItem
+            selection={selection}
+            onChange={updateSelection}
+            colour={colours[2]}
+            value={data.totals.environmentDocument}
+            title='Environment Document'
+          />
+          <LegendItem
+            selection={selection}
+            onChange={updateSelection}
+            colour={colours[3]}
+            value={data.totals.traits}
+            title='Traits'
+          />
+          <LegendItem value={data.totals.total} title='Total API Calls' />
+        </div>
+      )}
+      {isError || data?.events_list?.length === 0 ? (
+        <div className='py-4 fw-semibold text-center'>
+          {isError
+            ? 'Your organisation does not have recurrent billing periods'
+            : 'No usage recorded.'}
+        </div>
       ) : (
         <ResponsiveContainer height={400} width='100%'>
           <BarChart
