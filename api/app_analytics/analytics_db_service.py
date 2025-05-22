@@ -36,38 +36,35 @@ def get_usage_data(
     period: PERIOD_TYPE | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
+
     date_start = date_stop = None
-    sub_cache = getattr(organisation, "subscription_information_cache", None)
-    is_subscription_valid = (
-        sub_cache is not None and sub_cache.current_billing_term_starts_at is not None
-    )
 
     match period:
         case constants.CURRENT_BILLING_PERIOD:
-            if not is_subscription_valid or sub_cache is None:
-                date_stop = now
-                date_start = now.replace(day=1)
+            if not getattr(organisation, "subscription_information_cache", None):
+                starts_at = now - timedelta(days=30)
             else:
+                sub_cache = organisation.subscription_information_cache
                 starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
                     days=30
                 )
-                month_delta = relativedelta(now, starts_at).months
-                date_start = relativedelta(months=month_delta) + starts_at
-                date_stop = now
+            month_delta = relativedelta(now, starts_at).months
+            date_start = relativedelta(months=month_delta) + starts_at
+            date_stop = now
 
         case constants.PREVIOUS_BILLING_PERIOD:
-            if not is_subscription_valid or sub_cache is None:
-                # Last day of previous month
-                date_stop = now.replace(day=1) - timedelta(days=1)
-                date_start = date_stop.replace(day=1)
+            if not getattr(organisation, "subscription_information_cache", None):
+                starts_at = now - timedelta(days=30)
             else:
+                sub_cache = organisation.subscription_information_cache
                 starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
                     days=30
                 )
-                month_delta = relativedelta(now, starts_at).months - 1
-                month_delta += relativedelta(now, starts_at).years * 12
-                date_start = relativedelta(months=month_delta) + starts_at
-                date_stop = relativedelta(months=month_delta + 1) + starts_at
+            month_delta = relativedelta(now, starts_at).months - 1
+            month_delta += relativedelta(now, starts_at).years * 12
+            date_start = relativedelta(months=month_delta) + starts_at
+            date_stop = relativedelta(months=month_delta + 1) + starts_at
+
         case constants.NINETY_DAY_PERIOD:
             date_start = now - relativedelta(days=90)
             date_stop = now
@@ -78,6 +75,7 @@ def get_usage_data(
             "environment_id": environment_id,
             "project_id": project_id,
         }
+
         if date_start:
             assert date_stop
             kwargs["date_start"] = date_start  # type: ignore[assignment]
