@@ -52,6 +52,7 @@ def test_SegmentCloneService_shallow_clone(project: Project, segment: Segment) -
 def test_SegmentCloneService_clone_segment(
     project: Project,
     source_segment: Segment,
+    required_a_segment_metadata_field: MetadataModelField,
 ) -> None:
     # Given
     cloner = SegmentCloneService(source_segment)
@@ -73,6 +74,15 @@ def test_SegmentCloneService_clone_segment(
         operator=EQUAL,
         value="bar",
         created_with_segment=False,
+    )
+
+    # Preparing the metadata
+    segment_content_type = ContentType.objects.get_for_model(source_segment)
+    metadata = Metadata.objects.create(
+        object_id=source_segment.id,
+        content_type=segment_content_type,
+        model_field=required_a_segment_metadata_field,
+        field_value="test-clone-segment-metadata",
     )
 
     # When
@@ -107,6 +117,12 @@ def test_SegmentCloneService_clone_segment(
     assert cloned_condition.property == created_condition.property
     assert cloned_condition.operator == created_condition.operator
     assert cloned_condition.value == created_condition.value
+
+    # Testing cloning of metadata
+    cloned_metadata = cloned_segment.metadata.first()
+    assert cloned_metadata.model_field == metadata.model_field
+    assert cloned_metadata.field_value == metadata.field_value
+    assert cloned_metadata.id != metadata.id
 
 
 def test_SegmentCloneService_deep_clone_of_segment(
