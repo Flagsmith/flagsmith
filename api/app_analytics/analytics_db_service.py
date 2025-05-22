@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db.models import Sum
 from django.utils import timezone
 from rest_framework.exceptions import NotFound
+
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.influxdb_wrapper import (
     get_events_for_organisation,
