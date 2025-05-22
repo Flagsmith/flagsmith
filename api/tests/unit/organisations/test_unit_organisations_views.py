@@ -222,6 +222,7 @@ def test_should_update_organisation_data(
 @pytest.mark.parametrize(
     "current_billing_term_starts_at, current_billing_term_ends_at, has_billing_periods",
     [
+        (None, None, False),
         (timezone.now() - timedelta(days=5), timezone.now() + timedelta(days=5), True),
         (timezone.now() - timedelta(days=5), timezone.now() - timedelta(days=1), False),
     ],
@@ -246,7 +247,7 @@ def test_get_subscription_metadata_returns_expected_result(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert (
-        response.data["results"][0]["subscription"]["has_billing_periods"]
+        response.data["results"][0]["subscription"]["has_active_billing_periods"]
         == has_billing_periods
     )
 

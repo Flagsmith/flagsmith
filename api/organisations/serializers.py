@@ -23,14 +23,14 @@ logger = logging.getLogger(__name__)
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
-    has_billing_periods = serializers.SerializerMethodField()
+    has_active_billing_periods = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
         exclude = ("organisation",)
 
-    def get_has_billing_periods(self, obj):  # type: ignore[no-untyped-def]
-        return obj.has_billing_periods
+    def get_has_active_billing_periods(self, obj):  # type: ignore[no-untyped-def]
+        return obj.has_active_billing_periods
 
 
 class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]

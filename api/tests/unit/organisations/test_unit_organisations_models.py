@@ -584,7 +584,7 @@ def test_organisation_has_billing_periods(
 
     organisation.refresh_from_db()
     # When
-    result = organisation.subscription.has_billing_periods
+    result = organisation.subscription.has_active_billing_periods
 
     # Then
     assert result == expected_result
