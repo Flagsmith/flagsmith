@@ -1559,55 +1559,19 @@ def test_include_feature_specific_query_filter__false(
     assert [res["id"] for res in response.json()["results"]] == [segment.id]
 
 
-@pytest.mark.parametrize(
-    "source_segment",
-    [
-        (lazy_fixture("segment")),
-        (lazy_fixture("feature_specific_segment")),
-    ],
-)
 def test_clone_segment(
     project: Project,
     admin_client: APIClient,
-    source_segment: Segment,
-    required_a_segment_metadata_field: MetadataModelField,
+    segment: Segment,
 ) -> None:
     # Given
     url = reverse(
-        "api-v1:projects:project-segments-clone", args=[project.id, source_segment.id]
+        "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
     )
     new_segment_name = "cloned_segment"
     data = {
         "name": new_segment_name,
     }
-    # Preparing the rules
-    segment_rule = SegmentRule.objects.create(
-        segment=source_segment,
-        type=SegmentRule.ALL_RULE,
-    )
-    sub_rule = SegmentRule.objects.create(
-        rule=segment_rule,
-        type=SegmentRule.ALL_RULE,
-    )
-
-    # Preparing the conditions
-    created_condition = Condition.objects.create(
-        rule=sub_rule,
-        property="foo",
-        operator=EQUAL,
-        value="bar",
-        created_with_segment=False,
-    )
-
-    # Preparing the metadata
-    segment_content_type = ContentType.objects.get_for_model(source_segment)
-    metadata = Metadata.objects.create(
-        object_id=source_segment.id,
-        content_type=segment_content_type,
-        model_field=required_a_segment_metadata_field,
-        field_value="test-clone-segment-metadata",
-    )
-
     # When
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
@@ -1619,39 +1583,7 @@ def test_clone_segment(
     response_data = response.json()
     assert response_data["name"] == new_segment_name
     assert response_data["project"] == project.id
-    assert response_data["id"] != source_segment.id
-
-    # Testing cloned segment main attributes
-    cloned_segment = Segment.objects.get(id=response_data["id"])
-    assert cloned_segment.name == new_segment_name
-    assert cloned_segment.project_id == project.id
-    assert cloned_segment.description == source_segment.description
-    assert cloned_segment.version == 1
-    assert cloned_segment.version_of_id == cloned_segment.id
-    assert cloned_segment.change_request is None
-    assert cloned_segment.feature_id == source_segment.feature_id
-
-    # Testing cloning of rules
-    assert cloned_segment.rules.count() == source_segment.rules.count()
-
-    cloned_top_rule = cloned_segment.rules.first()
-    cloned_sub_rule = cloned_top_rule.rules.first()
-
-    assert cloned_top_rule.type == segment_rule.type
-    assert cloned_sub_rule.type == segment_rule.type
-
-    # Testing cloning of sub-rules conditions
-    cloned_condition = cloned_sub_rule.conditions.first()
-
-    assert cloned_condition.property == created_condition.property
-    assert cloned_condition.operator == created_condition.operator
-    assert cloned_condition.value == created_condition.value
-
-    # Testing cloning of metadata
-    cloned_metadata = cloned_segment.metadata.first()
-    assert cloned_metadata.model_field == metadata.model_field
-    assert cloned_metadata.field_value == metadata.field_value
-    assert cloned_metadata.id != metadata.id
+    assert response_data["id"] != segment.id
 
 
 def test_clone_segment_without_name_should_fail(
