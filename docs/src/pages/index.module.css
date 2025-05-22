@@ -2,7 +2,17 @@
  * CSS files with the .module.css suffix will be treated as CSS modules
  * and scoped locally.
  */
-
+:root{
+--card-primary-text: #23232A;
+--card-secondary-text: #71768B;
+--border-color: #D7D7D7;
+}
+[data-theme="dark"] {
+--card-primary-text: #FFFFFF;
+--card-secondary-text: #FFFFFF;
+--border-color: #464646;
+}
+ 
 .heroBanner {
   padding: 4rem 0;
   text-align: center;
@@ -36,8 +46,16 @@
   gap: 2rem;
 }
 
+/* Flexbox layout for hero section */
+.heroInner > div {
+  flex: 1;
+  max-width: 50%;
+}
+
 .logo {
-  max-width: 200px;
+  max-width: 80%; /* Fill the container */
+  width: 35%;
+  height: auto;
 }
 
 .section {
@@ -88,6 +106,16 @@ section .cardGrid {
   section .cardGrid {
     grid-template-columns: 1fr;
   }
+
+  .heroInner {
+    flex-direction: column;
+  }
+
+  .heroInner > div,
+  .logo {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 .card {
@@ -97,14 +125,17 @@ section .cardGrid {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   border: 1px solid #eee;
   transition: transform 0.2s;
+  border-color: var(--border-color);
 }
 [data-theme="dark"] .card {
   background: #222221;
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-color);
 }
 
 .card:hover {
   transform: translateY(-4px);
+  background: #7B51FB;
+  box-shadow: 0 8px 16px rgba(35, 41, 54, 0.1);
 }
 
 .card h3 {
@@ -113,7 +144,7 @@ section .cardGrid {
 }
 
 .card p {
-  color: #666;
+  color: var(--card-primary-text);
   font-size: 0.95rem;
 }
 

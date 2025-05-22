@@ -31,6 +31,9 @@
   --ifm-font-size-base: 92%;
   --icon-color: #22194D; /* icon color */
   --icon-circle-color: #F6F3EE; /* circle color */
+  --button-primary-color: #7B51FB;
+  --button-primary-hover: #5D3DC2;
+  --card-bg-hover: #7B51FB;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -47,6 +50,9 @@
   --ifm-background-surface-color: #222221; /* Lighter dark background for cards/sections */
   --icon-color: #22194D; /* icon color */
   --icon-circle-color: #7B51FB; /* circle color */
+  --button-primary-color: #7B51FB;
+  --button-primary-hover: #5D3DC2;
+  --card-bg-hover: #7B51FB;
 }
 
 /* Card styles */
@@ -60,6 +66,7 @@
 [data-theme='light'] .card {
   background: #ffffff;
   box-shadow: 0px 4px 8px rgba(35, 41, 54, 0.05);
+  border-color: #D7D7D7;
 }
 
 [data-theme='dark'] .card {
@@ -70,6 +77,7 @@
 .card:hover {
   transform: translateY(-4px);
   box-shadow: 0px 8px 16px rgba(35, 41, 54, 0.1);
+  background: var(--card-bg-hover)
 }
 
 /* Grid layout for cards */
@@ -135,13 +143,14 @@
 
 /* Homepage buttons */
 .button.button--primary {
-  background-color: var(--ifm-color-primary);
+  background-color: var(--button-primary-color);
+  color: #ffffff;
   border: none;
   transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .button.button--primary:hover {
-  background-color: var(--ifm-color-primary-darker);
+  background-color: var(--button-primary-hover);
 }
 
 .button.button--lg {
@@ -224,6 +233,35 @@ main.container {
 
 [data-theme='dark'] section:nth-child(odd) {
   background: var(--ifm-background-color);
+  padding: 3rem 0;
+  margin: 0;
+  /* full width */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/* Section background alternation for dark mode - alternating every 2 sections */
+[data-theme='dark'] section:nth-child(4n+1),
+[data-theme='dark'] section:nth-child(4n+2) {
+  background: var(--ifm-background-color);
+  padding: 3rem 0;
+  margin: 0;
+  /* full width */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+[data-theme='dark'] section:nth-child(4n+3),
+[data-theme='dark'] section:nth-child(4n+4) {
+  background: var(--ifm-background-surface-color);
   padding: 3rem 0;
   margin: 0;
   /* full width */

@@ -20,13 +20,13 @@ import {
     gitBranch,
 } from 'ionicons/icons';
 import styles from './index.module.css';
-// TODO - Replace placeholder image with actual logo 
+// TODO - Replace placeholder image with actual logo x
 // TODO - Allign hero with sections X 
 // TODO - Icon must be above card title X 
-// TODO - Fix card per line: 2x2 first 1x4 second etc
-// TODO - Responsiveness
-// TODO - Hero/header spacing (logo and text)
-// TODO - Icon circle has a different color than the card background in light mode
+// TODO - Fix card per line: 2x2 first 1x4 second etc x
+// TODO - Responsiveness x
+// TODO - Hero/header spacing (logo and text) x
+// TODO - Icon circle has a different color than the card background in light mode 
 // TODO - fix alternating background (must change every 2 sections)
 // TODO - Hover para link da card
 function Card({ title, description, link, icon }) {
@@ -67,7 +67,7 @@ export default function Home() {
                 Get Started
               </Link>
             </div>
-            <img src="/img/banner-logo-dark.png" alt="Flagsmith Logo" className={styles.logo} /> {/* Placeholder img needs replacement */}
+            <img src="/img/full-logo.svg" alt="Flagsmith Logo" className={styles.logo} />
           </div>
         </div>
       </header>
