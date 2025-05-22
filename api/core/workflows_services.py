@@ -7,8 +7,8 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
-from segments.services import SegmentCloneService
 from segments.models import Segment
+from segments.services import SegmentCloneService
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest

@@ -4,7 +4,6 @@ import pytest
 from django.contrib.contenttypes.models import ContentType
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
-from rest_framework.test import APIClient
 
 from features.models import Feature
 from features.workflows.core.models import ChangeRequest
