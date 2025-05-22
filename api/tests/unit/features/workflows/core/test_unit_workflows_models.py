@@ -41,7 +41,7 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
-from segments.services import SegmentCloner
+from segments.services import SegmentCloneService
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -756,7 +756,7 @@ def test_retrieving_segments(
     )
 
     # When
-    cloner = SegmentCloner(base_segment)
+    cloner = SegmentCloneService(base_segment)
     segment = cloner.shallow_clone(
         name="New Name", description="New description", change_request=change_request
     )
@@ -810,7 +810,7 @@ def test_publishing_segments_as_part_of_commit(
 ) -> None:
     # Given
     assert segment.version == 2
-    cloner = SegmentCloner(segment)
+    cloner = SegmentCloneService(segment)
     cr_segment = cloner.shallow_clone("Test Name", "Test Description", change_request)
     assert cr_segment.rules.count() == 0
 
@@ -987,7 +987,7 @@ def test_approval_via_project(project_change_request: ChangeRequest) -> None:
     assert project_change_request.project.minimum_change_request_approvals is None
 
     # When
-    is_approved = project_change_request.is_approved()  # type: ignore[no-untyped-call]
+    is_approved = project_change_request.is_approved()
 
     # Then
     assert is_approved is True

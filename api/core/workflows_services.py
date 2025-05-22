@@ -7,7 +7,8 @@ from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
-from segments.services import SegmentCloner
+from segments.services import SegmentCloneService
+from segments.models import Segment
 
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
@@ -42,10 +43,10 @@ class ChangeRequestCommitter:
                 fs.live_from = now
 
             fs.version = fs.get_next_version_number(
-                environment_id=fs.environment_id,
+                environment_id=fs.environment_id,  # type: ignore[arg-type]
                 feature_id=fs.feature_id,
-                feature_segment_id=fs.feature_segment_id,
-                identity_id=fs.identity_id,
+                feature_segment_id=fs.feature_segment_id,  # type: ignore[arg-type]
+                identity_id=fs.identity_id,  # type: ignore[arg-type]
             )
 
         if feature_states:
@@ -96,7 +97,7 @@ class ChangeRequestCommitter:
 
     def _publish_segments(self) -> None:
         for segment in self.change_request.segments.all():
-            target_segment = segment.version_of
+            target_segment: Segment = segment.version_of  # type: ignore[assignment]
             assert target_segment != segment
 
             # Deep clone the segment to establish historical version this is required
@@ -104,7 +105,7 @@ class ChangeRequestCommitter:
             # Think of it like a regular update to a segment where we create the clone
             # to create the version, then modifying the new 'draft' version with the
             # data from the change request.
-            SegmentCloner(target_segment).deep_clone()
+            SegmentCloneService(target_segment).deep_clone()
 
             # Set the properties of the change request's segment to the properties
             # of the target (i.e., canonical) segment.

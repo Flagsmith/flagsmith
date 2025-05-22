@@ -27,7 +27,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
-from segments.services import SegmentCloner
+from segments.services import SegmentCloneService
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
@@ -174,7 +174,7 @@ def test_segments_limit_ignores_old_segment_versions(
     project.save()
 
     # and create some older versions for the segment fixture
-    SegmentCloner(segment).deep_clone()
+    SegmentCloneService(segment).deep_clone()
     assert Segment.objects.filter(version_of_id=segment.id).count() == 3
     assert Segment.live_objects.count() == 1
 

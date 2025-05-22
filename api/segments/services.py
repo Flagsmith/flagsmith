@@ -8,12 +8,12 @@ if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
 
 
-class SegmentCloner:
+class SegmentCloneService:
     def __init__(self, segment: Segment):
-        self.segment = segment
+        self.segment: Segment = segment
 
     def clone(self, name: str) -> Segment:
-        cloned = Segment.objects.create(
+        cloned: Segment = Segment.objects.create(
             name=name,
             uuid=uuid.uuid4(),
             description=self.segment.description,
@@ -52,13 +52,13 @@ class SegmentCloner:
         Create a versioned deep clone of the segment with rules only (no metadata in legacy logic),
         incrementing the original's version.
         """
-        cloned_segment = deepcopy(self.segment)
+        cloned_segment: Segment = deepcopy(self.segment)
         cloned_segment.id = None
         cloned_segment.uuid = uuid.uuid4()
         cloned_segment.version_of = self.segment
         cloned_segment.save()
 
-        self.segment.version = self.segment.version + 1
+        self.segment.version = (self.segment.version or 0) + 1
         self.segment.save_without_historical_record()
 
         self.clone_segment_rules(cloned_segment=cloned_segment)
