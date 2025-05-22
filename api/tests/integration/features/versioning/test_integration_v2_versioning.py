@@ -614,7 +614,7 @@ def test_v2_versioning_carries_existing_segment_overrides_across(
     )
 
 
-def test_deleting_segment_overrides(
+def test_identities_should_return_default_environment_values_after_deleting_segment_override(
     feature: int,
     default_feature_value: str,
     segment_featurestate: int,
@@ -646,8 +646,6 @@ def test_deleting_segment_overrides(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
 
-    # now let's retrieve the flags for an identity that matches the segment
-    # and verify that they are not receiving the
     identity_flags_response_json = get_identity_flags_response_json(
         num_expected_flags=1
     )
@@ -656,8 +654,6 @@ def test_deleting_segment_overrides(
         == default_feature_value
     )
 
-    # let's also check the environment document response to make sure that
-    # the segment override doesn't exist there
     url = reverse("api-v1:environment-document")
     environment_document_response_json = server_side_sdk_client.get(url).json()
     assert (
