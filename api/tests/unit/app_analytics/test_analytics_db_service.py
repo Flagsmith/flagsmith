@@ -1,11 +1,11 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from django.conf import settings
-from django.utils import timezone
+from django.utils import timezone as d_timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-
+from rest_framework.exceptions import NotFound
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
     get_feature_evaluation_data_from_local_db,
@@ -35,8 +35,8 @@ from projects.models import Project
 def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCache:  # type: ignore[misc]
     yield OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
-        current_billing_term_starts_at=timezone.now() - timedelta(days=20),
-        current_billing_term_ends_at=timezone.now() + timedelta(days=10),
+        current_billing_term_starts_at=d_timezone.now() - timedelta(days=20),
+        current_billing_term_ends_at=d_timezone.now() + timedelta(days=10),
         api_calls_24h=2000,
         api_calls_7d=12000,
         api_calls_30d=38000,
@@ -52,7 +52,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
     environment_id = environment.id
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
@@ -122,7 +122,7 @@ def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-unty
 ):
     # Given
     environment_id = environment.id
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
     total_count = 10
@@ -165,7 +165,7 @@ def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-unty
 def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
@@ -222,7 +222,7 @@ def test_get_feature_evaluation_data_from_local_db(  # type: ignore[no-untyped-d
 ):
     environment_id = environment.id
     feature_name = feature.name
-    now = timezone.now()
+    now = d_timezone.now()
     read_bucket_size = 15
     settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
 
@@ -386,13 +386,14 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_for_current_billing_period(
+@pytest.mark.parametrize("period", [PREVIOUS_BILLING_PERIOD, CURRENT_BILLING_PERIOD])
+def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
+    period: str,
 ) -> None:
     # Given
-    period = CURRENT_BILLING_PERIOD
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
@@ -400,16 +401,12 @@ def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_fo
     assert getattr(organisation, "subscription_information_cache", None) is None
 
     # When
-    get_usage_data(organisation, period=period)
-
+    try:
+        get_usage_data(organisation, period=period)
     # Then
-    mocked_get_usage_data_from_local_db.assert_called_once_with(
-        organisation=organisation,
-        environment_id=None,
-        project_id=None,
-        date_start=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-    )
+    except NotFound as e:
+        assert "No billing periods found for this organisation." in str(e)
+    mocked_get_usage_data_from_local_db.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -436,8 +433,8 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),
     )
 
 
@@ -466,6 +463,6 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
+        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),
     )
