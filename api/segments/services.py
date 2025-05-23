@@ -61,10 +61,10 @@ class SegmentCloneService:
         self.segment.version = (self.segment.version or 0) + 1
         self.segment.save_without_historical_record()
 
-        self.clone_segment_rules(cloned_segment=cloned_segment)
+        self._clone_segment_rules(cloned_segment=cloned_segment)
         return cloned_segment
 
-    def clone_segment_rules(self, cloned_segment: Segment) -> None:
+    def _clone_segment_rules(self, cloned_segment: Segment) -> None:
         cloned_rules = []
         for rule in self.segment.rules.all():
             cloned_rule = rule.deep_clone(cloned_segment)

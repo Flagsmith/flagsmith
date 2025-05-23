@@ -31,9 +31,6 @@ from projects.models import Project
 
 from .managers import LiveSegmentManager, SegmentManager
 
-if typing.TYPE_CHECKING:
-    pass
-
 logger = logging.getLogger(__name__)
 
 
