@@ -13,6 +13,12 @@ class SegmentCloneService:
         self.segment: Segment = segment
 
     def clone(self, name: str) -> Segment:
+        """
+        Create a standalone full clone of a Segment
+
+        The new segment will include all rules and metadata from the original
+        segment, but will have its own history.
+        """
         cloned: Segment = Segment.objects.create(
             name=name,
             uuid=uuid.uuid4(),
@@ -22,35 +28,20 @@ class SegmentCloneService:
             feature=self.segment.feature,
             version_of=None,
         )
-        self.clone_segment_rules(cloned_segment=cloned)
+
+        self._clone_segment_rules(cloned_segment=cloned)
         self._clone_segment_metadata(cloned_segment=cloned)
         cloned.refresh_from_db()
         return cloned
 
-    def shallow_clone(
-        self,
-        name: str,
-        description: str,
-        change_request: Optional["ChangeRequest"] = None,
-    ) -> Segment:
-        cloned_segment = Segment(
-            version_of=self.segment,
-            uuid=uuid.uuid4(),
-            name=name,
-            description=description,
-            change_request=change_request,
-            project=self.segment.project,
-            feature=self.segment.feature,
-            version=None,
-        )
-        cloned_segment.history.update()
-        cloned_segment.save()
-        return cloned_segment
-
     def deep_clone(self) -> Segment:
         """
-        Create a versioned deep clone of the segment with rules only (no metadata in legacy logic),
-        incrementing the original's version.
+        Create a versioned deep clone of the segment with rules only (no
+        metadata in legacy logic), incrementing the original's version.
+
+        TODO: Improve clarity. This method exists to allow for updating a
+        segment while keeping the previous version (this) intact for history.
+        We should refactor this, or at least rename it.
         """
         cloned_segment: Segment = deepcopy(self.segment)
         cloned_segment.id = None
@@ -63,6 +54,29 @@ class SegmentCloneService:
 
         self._clone_segment_rules(cloned_segment=cloned_segment)
         return cloned_segment
+
+    # TODO: This is not used in the product, move into a test helper or refactor
+    def shallow_clone(
+        self,
+        name: str,
+        description: str,
+        change_request: Optional["ChangeRequest"] = None,
+    ) -> Segment:
+        cloned = Segment(
+            uuid=uuid.uuid4(),
+            name=name,
+            description=description,
+            change_request=change_request,
+            project=self.segment.project,
+            feature=self.segment.feature,
+        )
+
+        # Keep track of the original segment
+        cloned.version_of = self.segment
+
+        cloned.history.update()
+        cloned.save()
+        return cloned
 
     def _clone_segment_rules(self, cloned_segment: Segment) -> None:
         cloned_rules = []
