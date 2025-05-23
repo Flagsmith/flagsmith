@@ -36,7 +36,7 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-from core.workflows_services import ChangeRequestCommitter
+from core.workflows_services import ChangeRequestCommitService
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
@@ -112,7 +112,7 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
         )
 
     def commit(self, committed_by: "FFAdminUser"):  # type: ignore[no-untyped-def]
-        ChangeRequestCommitter(self).commit(committed_by)
+        ChangeRequestCommitService(self).commit(committed_by)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
