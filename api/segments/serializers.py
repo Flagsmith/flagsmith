@@ -19,3 +19,9 @@ class SegmentListQuerySerializer(serializers.Serializer):  # type: ignore[type-a
         help_text="Optionally provide the id of an identity to get only the segments they match",
     )
     include_feature_specific = serializers.BooleanField(required=False, default=True)
+
+
+class CloneSegmentSerializer(serializers.ModelSerializer[Segment]):
+    class Meta:
+        model = Segment
+        fields = ("name",)
