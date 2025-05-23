@@ -50,6 +50,16 @@ jobs:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
+  docker-build-split-testing:
+    name: Split Testing Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: split-testing
+      image-name: flagsmith-split-testing
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
   docker-build-api-test:
     name: Build API Test Image
     uses: ./.github/workflows/.reusable-docker-build.yml
@@ -170,6 +180,18 @@ jobs:
       docker-password-secret-name: QUAY_PUBLISH_PASSWORD
       source-images: ${{ needs.docker-build-frontend.outputs.image }}
       target-images: quay.io/${{ vars.QUAY_ORGANISATION_NAME }}/flagsmith-frontend
+    secrets: inherit
+
+  docker-publish-quay-split-testing:
+    needs: [ docker-build-split-testing, run-e2e-tests ]
+    uses: ./.github/workflows/.reusable-docker-publish.yml
+    if: github.event_name == 'release'
+    with:
+      target-registry-url: quay.io
+      docker-username: ${{ vars.QUAY_PUBLISH_USERNAME }}
+      docker-password-secret-name: QUAY_PUBLISH_PASSWORD
+      source-images: ${{ needs.docker-build-split-testing.outputs.image }}
+      target-images: quay.io/${{ vars.QUAY_ORGANISATION_NAME }}/flagsmith-split-testing
     secrets: inherit
 
   update-charts:

@@ -129,6 +129,19 @@ jobs:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
+  docker-build-split-testing:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Split Testing Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: split-testing
+      image-name: flagsmith-split-testing
+      comment: true
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
   run-e2e-tests:
     if: '!cancelled()'
     needs: [permissions-check, docker-build-api, docker-build-e2e]
