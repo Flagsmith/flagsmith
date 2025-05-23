@@ -135,9 +135,10 @@ jobs:
     name: Build Split Testing Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
-      target: split-testing
-      image-name: flagsmith-split-testing
-      comment: true
+      target: private-cloud-unified
+      image-name: flagsmith-private-cloud-split-testing
+      build-args: |
+        WITH=saml,auth-controller,ldap,workflows,licensing,split-testing
     secrets:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}

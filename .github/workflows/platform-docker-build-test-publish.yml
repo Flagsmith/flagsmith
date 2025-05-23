@@ -51,7 +51,7 @@ jobs:
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   docker-build-split-testing:
-    name: Split Testing Image
+    name: Build Split Testing Image
     uses: ./.github/workflows/.reusable-docker-build.yml
     with:
       target: private-cloud-unified
