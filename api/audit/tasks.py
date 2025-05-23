@@ -48,6 +48,17 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
     if not feature_state.change_request:
         raise RuntimeError("Feature state must have a change request")
 
+    expected_in_future = feature_state.live_from > timezone.now()
+    if expected_in_future:
+        logger.info(
+            "FeatureState is not due to go live yet. Likely means the change request was rescheduled.",
+        )
+        create_feature_state_went_live_audit_log.delay(
+            delay_until=feature_state.live_from,
+            args=(feature_state.id,),
+        )
+        return
+
     log = msg_template % (
         feature_state.feature.name,
         feature_state.change_request.title,
