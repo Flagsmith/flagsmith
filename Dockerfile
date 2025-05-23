@@ -113,7 +113,7 @@ ARG RBAC_REVISION
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows,licensing,split-testing' && \
+  make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows,licensing' && \
   make install-private-modules 
 
 # * build-python-split-testing [build-python-private]
