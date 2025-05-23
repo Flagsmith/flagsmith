@@ -1,4 +1,4 @@
-import React, { Component, useMemo } from 'react'
+import { withRouter } from 'react-router-dom'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -22,9 +22,9 @@ import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
-import { mergeChangeSets } from 'common/services/useChangeRequest'
 import WarningMessage from 'components/WarningMessage'
 import ErrorMessage from 'components/ErrorMessage'
+import { Component } from 'react'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -623,4 +623,6 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(withSegmentOverrides(ChangeRequestsPage))
+export default withRouter(
+  ConfigProvider(withSegmentOverrides(ChangeRequestsPage)),
+)

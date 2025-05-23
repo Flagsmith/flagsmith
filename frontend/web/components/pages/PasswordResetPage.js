@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
 import ErrorMessage from 'components/ErrorMessage'
-
+import { withRouter } from 'react-router-dom'
 const PasswordResetPage = class extends Component {
   static displayName = 'PasswordResetPage'
 
@@ -111,8 +111,7 @@ const PasswordResetPage = class extends Component {
 
 PasswordResetPage.propTypes = {
   history: RequiredObject,
-  location: RequiredObject,
   match: RequiredObject,
 }
 
-module.exports = PasswordResetPage
+export default withRouter(PasswordResetPage)

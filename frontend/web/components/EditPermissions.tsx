@@ -1071,7 +1071,13 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           Learn about User Roles.
         </Button>
       </p>
-      <Tabs urlParam='type' value={tab} onChange={setTab} theme='pill'>
+      <Tabs
+        urlParam='type'
+        value={tab}
+        onChange={setTab}
+        theme='pill'
+        history={history}
+      >
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
             {({ isLoading, users }) => (

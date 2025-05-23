@@ -12,7 +12,7 @@ import Icon from './Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router-dom'
 
 const featureNameWidth = 300
 

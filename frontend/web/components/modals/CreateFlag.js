@@ -52,7 +52,7 @@ import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router-dom'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1094,6 +1094,7 @@ const CreateFlag = class extends Component {
                               <Tabs
                                 onChange={() => this.forceUpdate()}
                                 urlParam='tab'
+                                history={this.props.history}
                               >
                                 <TabItem
                                   data-test='value'

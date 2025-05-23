@@ -3,7 +3,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router-dom'
 
 class CreateOrganisationPage extends Component {
   static displayName = 'CreateOrganisastionPage'

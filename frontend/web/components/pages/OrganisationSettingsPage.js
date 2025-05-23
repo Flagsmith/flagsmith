@@ -19,7 +19,7 @@ import LicensingTabContent from 'components/LicensingTabContent'
 import Utils from 'common/utils/utils'
 import AuditLogWebhooks from 'components/modals/AuditLogWebhooks'
 import MetadataPage from 'components/metadata/MetadataPage'
-
+import { withRouter } from 'react-router-dom'
 const SettingsTab = {
   'Billing': 'billing',
   'CustomFields': 'custom-fields',
@@ -207,7 +207,12 @@ const OrganisationSettingsPage = class extends Component {
                   return (
                     <div>
                       <PageTitle title={'Organisation Settings'} />
-                      <Tabs hideNavOnSingleTab urlParam='tab' className='mt-0'>
+                      <Tabs
+                        hideNavOnSingleTab
+                        urlParam='tab'
+                        className='mt-0'
+                        history={this.props.history}
+                      >
                         {displayedTabs.includes(SettingsTab.General) && (
                           <TabItem tabLabel='General'>
                             <FormGroup className='mt-4'>
@@ -469,4 +474,4 @@ const OrganisationSettingsPage = class extends Component {
 
 OrganisationSettingsPage.propTypes = {}
 
-module.exports = ConfigProvider(OrganisationSettingsPage)
+export default withRouter(ConfigProvider(OrganisationSettingsPage))

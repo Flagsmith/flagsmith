@@ -6,7 +6,7 @@ import data from 'common/data/base/_data'
 import FeatureRow from './FeatureRow'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router-dom'
 
 const featureNameWidth = 300
 

@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import data from 'common/data/base/_data'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router-dom'
 const UserPage = class extends Component {
   static displayName = 'UserPage'
 

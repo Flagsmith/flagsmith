@@ -25,7 +25,7 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
 import EditHealthProvider from 'components/EditHealthProvider'
 import WarningMessage from 'components/WarningMessage'
-
+import { withRouter } from 'react-router-dom'
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -652,4 +652,4 @@ const ProjectSettingsPage = class extends Component {
 
 ProjectSettingsPage.propTypes = {}
 
-module.exports = ConfigProvider(ProjectSettingsPage)
+export default withRouter(ConfigProvider(ProjectSettingsPage))

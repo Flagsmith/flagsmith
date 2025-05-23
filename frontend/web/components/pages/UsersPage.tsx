@@ -1,5 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { Link, useRouteMatch } from 'react-router-dom'
+import { Link, useRouteMatch, withRouter } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
@@ -66,7 +66,7 @@ export const removeIdentity = (
   })
 }
 
-const UsersPage: FC = () => {
+const UsersPage: FC<{ props: any }> = (props) => {
   const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
     number: number
@@ -353,4 +353,4 @@ const UsersPage: FC = () => {
   )
 }
 
-export default ConfigProvider(UsersPage)
+export default withRouter(ConfigProvider(UsersPage))

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import ModalHR from 'components/modals/ModalHR'
 import Utils from 'common/utils/utils'
 import Button, { themeClassNames } from './Button'
-import { useHistory, useLocation } from 'react-router'
+import { useHistory, useLocation } from 'react-router-dom'
 
 interface TabItemProps {
   tabLabel: React.ReactNode
@@ -27,6 +27,7 @@ interface TabsProps {
   buttonTheme?: string
   noFocus?: boolean
   isRoles?: boolean
+  history?: any
 }
 
 const Tabs: React.FC<TabsProps> = ({
@@ -34,6 +35,7 @@ const Tabs: React.FC<TabsProps> = ({
   children,
   className = '',
   hideNavOnSingleTab,
+  history,
   isRoles,
   noFocus,
   onChange,
@@ -43,9 +45,7 @@ const Tabs: React.FC<TabsProps> = ({
   value: propValue = 0,
 }) => {
   const [internalValue, setInternalValue] = useState(0)
-
-  const history = useHistory()
-
+  const routerHistory = useHistory() || history
   const tabChildren = (Array.isArray(children) ? children : [children]).filter(
     Boolean,
   )
@@ -92,17 +92,19 @@ const Tabs: React.FC<TabsProps> = ({
                   e.stopPropagation()
                   e.preventDefault()
                   if (urlParam) {
-                    const currentParams = Utils.fromParam()
-                    history?.replace(
-                      `${document.location.pathname}?${Utils.toParam({
-                        ...currentParams,
-                        [urlParam]: String(
-                          child.props.tabLabelString || child.props.tabLabel,
-                        )
-                          .toLowerCase()
-                          .replace(/ /g, '-'),
-                      })}`,
+                    const searchParams = new URLSearchParams(
+                      window.location.search,
                     )
+                    searchParams.set(
+                      urlParam,
+                      String(child.props.tabLabelString || child.props.tabLabel)
+                        .toLowerCase()
+                        .replace(/ /g, '-'),
+                    )
+                    routerHistory?.replace({
+                      pathname: window.location.pathname,
+                      search: searchParams.toString(),
+                    })
                   } else if (uncontrolled) {
                     setInternalValue(i)
                   }

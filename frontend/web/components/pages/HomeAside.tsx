@@ -22,7 +22,7 @@ import Icon from 'components/Icon'
 import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { useHistory } from 'react-router'
+import { useHistory, withRouter } from 'react-router'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
@@ -267,9 +267,13 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                     </div>
                   </div>
                   <EnvironmentDropdown
-                    renderRow={(environment: Environment, onClick: any) =>
+                    renderRow={(
+                      environment: Environment,
+                      onClick: any,
+                      index: number,
+                    ) =>
                       environment?.api_key === environmentId && (
-                        <div className='collapsible__content'>
+                        <div className='collapsible__content' key={index}>
                           <Permission
                             level='environment'
                             permission='ADMIN'
@@ -400,4 +404,4 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
   )
 }
 
-export default ConfigProvider(HomeAside)
+export default withRouter(ConfigProvider(HomeAside))

@@ -17,7 +17,7 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import Breadcrumb from 'components/Breadcrumb'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-
+import { useHistory } from 'react-router-dom'
 interface RouteParams {
   id: string
   environmentId: string
@@ -27,7 +27,7 @@ interface RouteParams {
 const FeatureHistoryPage: FC = () => {
   const [open, setOpen] = useState(false)
   const match = useRouteMatch<RouteParams>()
-
+  const history = useHistory()
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
   ) as any

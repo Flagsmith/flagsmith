@@ -96,7 +96,7 @@ const ChangeRequestsPage = class extends Component {
                   </InfoMessage>
                 ) : null}
               </p>
-              <Tabs urlParam={'tab'}>
+              <Tabs urlParam={'tab'} history={this.props.history}>
                 <TabItem
                   tabLabelString='Open'
                   tabLabel={
@@ -292,4 +292,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = withRouter(ConfigProvider(ChangeRequestsPage))
+export default withRouter(ConfigProvider(ChangeRequestsPage))

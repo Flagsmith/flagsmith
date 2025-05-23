@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import {
   FeatureConflict,
-  FeatureState,
   FeatureStateWithConflict,
 } from 'common/types/responses'
 import Tabs from 'components/base/forms/Tabs'
@@ -21,7 +20,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import WarningMessage from 'components/WarningMessage'
 import { Link } from 'react-router-dom'
-
+import { withRouter } from 'react-router-dom'
 type FeatureDiffType = {
   oldState: FeatureStateWithConflict[]
   newState: FeatureStateWithConflict[]
@@ -236,4 +235,4 @@ const DiffFeature: FC<FeatureDiffType> = ({
   )
 }
 
-export default DiffFeature
+export default withRouter(DiffFeature)
