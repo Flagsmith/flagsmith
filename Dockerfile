@@ -34,7 +34,6 @@
 # * build-node-selfhosted [build-node]
 # * build-python [wolfi-base]
 # * build-python-private [build-python]
-# * build-python-split-testing [build-python-private]
 # * api-runtime [wolfi-base]
 # * api-runtime-private [api-runtime]
 
@@ -44,7 +43,6 @@
 # - Target (shippable) stages
 # * private-cloud-api [api-runtime-private, build-python-private]
 # * private-cloud-unified [api-runtime-private, build-python-private, build-node-django]
-# * split-testing [api-runtime-private, build-python-split-testing, build-node-django]
 # * saas-api [api-runtime-private, build-python-private]
 # * oss-api [api-runtime, build-python]
 # * oss-frontend [node:slim, build-node-selfhosted]
@@ -110,16 +108,12 @@ FROM build-python AS build-python-private
 # and integrate private modules
 ARG SAML_REVISION
 ARG RBAC_REVISION
+ARG WITH="saml,auth-controller,ldap,workflows,licensing"
 RUN --mount=type=secret,id=github_private_cloud_token \
   echo "https://$(cat /run/secrets/github_private_cloud_token):@github.com" > ${HOME}/.git-credentials && \
   git config --global credential.helper store && \
-  make install-packages opts='--without dev --with saml,auth-controller,ldap,workflows,licensing' && \
+  make install-packages opts='--without dev --with ${WITH}' && \
   make install-private-modules
-
-# * build-python-split-testing [build-python-private]
-FROM build-python-private AS build-python-split-testing
-
-RUN make install opts='--with split-testing'
 
 # * api-runtime
 FROM wolfi-base AS api-runtime
@@ -182,17 +176,6 @@ USER nobody
 FROM api-runtime-private AS private-cloud-unified
 
 COPY --from=build-python-private /build/.venv/ /usr/local/
-COPY --from=build-node-django /build/api/ /app/
-
-RUN python manage.py collectstatic --no-input
-RUN touch ./ENTERPRISE_VERSION
-
-USER nobody
-
-# * split-testing [api-runtime-private, build-python-split-testing, build-node-django]
-FROM api-runtime-private as split-testing
-
-COPY --from=build-python-split-testing /build/.venv/ /usr/local/
 COPY --from=build-node-django /build/api/ /app/
 
 RUN python manage.py collectstatic --no-input
