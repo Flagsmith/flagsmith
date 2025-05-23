@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
-class ChangeRequestCommitter:
+class ChangeRequestCommitService:
     def __init__(self, change_request: "ChangeRequest") -> None:
         self.change_request = change_request
 
