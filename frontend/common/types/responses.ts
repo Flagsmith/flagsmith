@@ -798,6 +798,35 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
+export type ReleasePipeline = {
+  id: number
+  status: 'DRAFT' | 'ACTIVE'
+  name: string
+  project: number
+}
+
+export type StageTrigger = {
+  id: number
+  trigger_type: 'ON_ENTER'
+  trigger_body: string | null
+}
+
+export type StageAction = {
+  id: number
+  action_type: 'ENABLE_FEATURE' | 'DISABLE_FEATURE'
+  action_body: string | null
+}
+
+export type PipelineStage = {
+  id: number
+  name: string
+  pipeline: number
+  environment: number
+  order: number
+  triggers: StageTrigger[]
+  actions: StageAction[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -936,5 +965,9 @@ export type Res = {
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
   userPermissions: UserPermissions
+  releasePipelines: PagedResponse<ReleasePipeline>
+  releasePipeline: ReleasePipeline
+  pipelineStages: PagedResponse<PipelineStage>
+  pipelineStage: PipelineStage
   // END OF TYPES
 }

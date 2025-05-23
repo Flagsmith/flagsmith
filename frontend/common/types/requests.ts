@@ -18,6 +18,8 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  StageTrigger,
+  StageAction,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -672,6 +674,29 @@ export type Req = {
     id?: string
     userId: number | undefined
     level: PermissionLevel
+  getReleasePipelines: PagedRequest<{ projectId: number }>
+  getReleasePipeline: { projectId: number; pipelineId: number }
+  createReleasePipeline: {
+    projectId: number
+    name: string
+  }
+  getPipelineStages: PagedRequest<{
+    projectId: number
+    pipelineId: number
+  }>
+  getPipelineStage: {
+    projectId: number
+    pipelineId: number
+    stageId: number
+  }
+  createPipelineStage: {
+    name: string
+    projectId: number
+    environmentId: number
+    pipelineId: number
+    order: number
+    triggers: Omit<StageTrigger, 'id'>[]
+    actions: Omit<StageAction, 'id'>[]
   }
   // END OF TYPES
 }

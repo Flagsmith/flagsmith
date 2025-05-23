@@ -3,6 +3,7 @@ import { useGetReleasePipelinesQuery } from 'common/services/useReleasePipelines
 import { Button } from 'components/base/forms/Button'
 import { RouterChildContext } from 'react-router'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { ReleasePipeline } from 'common/types/responses'
 
 type ReleasePipelinesPageType = {
   router: RouterChildContext['router']
@@ -44,7 +45,7 @@ const NoReleasePipelines = ({
 }
 
 type ReleasePipelinesPageContentProps = {
-  data: any // TODO: type ReleasePipeline[]
+  data: ReleasePipeline[] | undefined
   isLoading: boolean
   projectId: string
   router: RouterChildContext['router']
@@ -64,7 +65,7 @@ const ReleasePipelinesPageContent = ({
     )
   }
 
-  if (!data?.results?.length) {
+  if (!data?.length) {
     return <NoReleasePipelines router={router} projectId={projectId} />
   }
 
@@ -73,7 +74,9 @@ const ReleasePipelinesPageContent = ({
 
 const ReleasePipelinesPage = ({ match, router }: ReleasePipelinesPageType) => {
   const { projectId } = match.params
-  const { data, isLoading } = useGetReleasePipelinesQuery({})
+  const { data, isLoading } = useGetReleasePipelinesQuery({
+    projectId: Number(projectId),
+  })
   const hasReleasePipelines = !!data?.results?.length
 
   return (
@@ -86,7 +89,7 @@ const ReleasePipelinesPage = ({ match, router }: ReleasePipelinesPageType) => {
           'Define the stages your flags should go from development to launched. Learn more.'}
       </PageTitle>
       <ReleasePipelinesPageContent
-        data={data}
+        data={data?.results}
         isLoading={isLoading}
         projectId={projectId}
         router={router}

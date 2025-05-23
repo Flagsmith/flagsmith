@@ -5,9 +5,11 @@ import StageLine from './StageLine'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
+import InputGroup from 'components/base/forms/InputGroup'
+import Utils from 'common/utils/utils'
 
 type PipelineData = {
-  status: 'draft' | 'active'
+  name: string
   stages: StageData[]
 }
 
@@ -24,8 +26,9 @@ export default function CreateReleasePipeline({
         name: '',
       },
     ],
-    status: 'draft',
   })
+
+  const [pipelineName, setPipelineName] = useState('')
 
   const handleOnChange = (stageData: StageData, index: number) => {
     const newStageData = pipelineData.stages.map((stage, i) =>
@@ -53,7 +56,15 @@ export default function CreateReleasePipeline({
       />
 
       <PageTitle
-        title='New Release Pipeline'
+        title={
+          <InputGroup
+            className='mb-0'
+            value={''}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              console.log(event.target.value)
+            }}
+          />
+        }
         cta={
           <Button disabled={!validatePipelineData()} onClick={() => {}}>
             Save Release Pipeline
