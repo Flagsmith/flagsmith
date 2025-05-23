@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import Logo from 'components/Logo'
 import Button from 'components/base/forms/Button'
-import { useCreateOnboardingMutation } from 'common/services/useOnboarding'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import OnboardingStep from 'components/onboarding/OnboardingStep'
@@ -33,8 +32,6 @@ const OnboardingPage: FC<OnboardingPageProps> = ({ onComplete }) => {
     document.body.classList.add('onboarding')
     return () => document.body.classList.remove('onboarding')
   }, [])
-
-  const [createOnboarding, { error, isLoading }] = useCreateOnboardingMutation()
 
   const setFieldValue = (key: keyof typeof onboarding, value: any) => {
     setOnboarding({ ...onboarding, [key]: Utils.safeParseEventValue(value) })
