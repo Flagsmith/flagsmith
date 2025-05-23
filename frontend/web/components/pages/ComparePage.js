@@ -7,15 +7,12 @@ import CompareFeatures from 'components/CompareFeatures'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CompareIdentities from 'components/CompareIdentities'
 import PageTitle from 'components/PageTitle'
+import { withRouter } from 'react-router-dom'
 
-class TheComponent extends Component {
-  static displayName = 'TheComponent'
+class ComparePage extends Component {
+  static displayName = 'ComparePage'
 
   static propTypes = {}
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props) {
     super(props)
@@ -27,7 +24,7 @@ class TheComponent extends Component {
         <PageTitle className='mb-2' title={'Compare'}>
           Compare data across your environments, features and identities.
         </PageTitle>
-        <Tabs className='mt-0' urlParam='tab'>
+        <Tabs className='mt-0' urlParam='tab' history={this.props.history}>
           <TabItem tabLabel='Environments'>
             <div className='mt-4'>
               <CompareEnvironments
@@ -55,4 +52,4 @@ class TheComponent extends Component {
   }
 }
 
-module.exports = ConfigProvider(TheComponent)
+module.exports = withRouter(ConfigProvider(ComparePage))

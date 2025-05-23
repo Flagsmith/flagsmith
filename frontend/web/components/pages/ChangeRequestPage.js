@@ -1,4 +1,4 @@
-import React, { Component, useMemo } from 'react'
+import { withRouter } from 'react-router-dom'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -22,24 +22,21 @@ import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
-import { mergeChangeSets } from 'common/services/useChangeRequest'
 import WarningMessage from 'components/WarningMessage'
 import ErrorMessage from 'components/ErrorMessage'
+import { Component } from 'react'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
   getApprovals = (users, approvals) =>
     users?.filter((v) => approvals?.includes(v.id))
 
   getGroupApprovals = (groups, approvals) =>
     groups.filter((v) => approvals.find((a) => a.group === v.id))
 
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       showArchived: false,
       tags: [],
@@ -121,7 +118,7 @@ const ChangeRequestsPage = class extends Component {
       destructive: true,
       onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
-          this.context.router.history.replace(
+          this.props.history.replace(
             `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
           )
         })
@@ -138,7 +135,7 @@ const ChangeRequestsPage = class extends Component {
     openModal(
       'Edit Change Request',
       <CreateFlagModal
-        history={this.props.router.history}
+        history={this.props.history}
         environmentId={this.props.match.params.environmentId}
         projectId={this.props.match.params.projectId}
         changeRequest={ChangeRequestStore.model[id]}
@@ -626,4 +623,6 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(withSegmentOverrides(ChangeRequestsPage))
+export default withRouter(
+  ConfigProvider(withSegmentOverrides(ChangeRequestsPage)),
+)

@@ -13,26 +13,18 @@ import ProjectProvider, {
 } from 'common/providers/ProjectProvider'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { RouterChildContext } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router'
 import API from 'project/api'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 
-type CreateEnvironmentPageProps = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
 
-const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
-  match,
-  router,
-}) => {
+const CreateEnvironmentPage: React.FC = () => {
   const [envContentType, setEnvContentType] = useState<Record<string, any>>({})
   const [metadata, setMetadata] = useState<any[]>([])
   const [name, setName] = useState<string>('')
@@ -40,8 +32,11 @@ const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
   const [selectedEnv, setSelectedEnv] = useState<any | undefined>()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
+  const history = useHistory()
+  const match = useRouteMatch<RouteParams>()
+
   const onSave = (environment: Environment) => {
-    router.history.push(
+    history.push(
       `/project/${match.params.projectId}/environment/${environment.api_key}/features`,
     )
   }

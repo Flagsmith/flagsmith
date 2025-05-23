@@ -1,5 +1,10 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we need this to make JSX compile
-import { RouterChildContext } from 'react-router'
+import React, { FC, ReactNode, useEffect, useState } from 'react' // we need this to make JSX compile
+import {
+  RouteComponentProps,
+  useHistory,
+  useLocation,
+  useRouteMatch,
+} from 'react-router'
 import { find, sortBy } from 'lodash'
 
 import Constants from 'common/constants'
@@ -28,18 +33,21 @@ import InfoMessage from 'components/InfoMessage'
 import { withRouter } from 'react-router-dom'
 
 import CodeHelp from 'components/CodeHelp'
-type SegmentsPageType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
+type SegmentsPageType = RouteComponentProps<{
+  environmentId: string
+  projectId: string
+}> & {
+  router: {
+    history: History
   }
 }
 
 const SegmentsPage: FC<SegmentsPageType> = (props) => {
-  const { projectId } = props.match.params
+  const history = useHistory()
+  const route = useRouteMatch<{ environmentId: string; projectId: string }>()
+  const location = useLocation()
+
+  const { projectId } = route.params
   const environmentId = (
     ProjectStore.getEnvironment() as unknown as Environment | undefined
   )?.api_key
@@ -78,12 +86,12 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace(Utils.getOrganisationHomePage())
+      history.replace(Utils.getOrganisationHomePage())
     }
-  }, [error, props.router.history])
+  }, [error, history])
 
   useEffect(() => {
-    props.router.history.replace(
+    history.replace(
       `${document.location.pathname}?${Utils.toParam({
         ...Utils.fromParam(),
         featureSpecific: showFeatureSpecific,
@@ -142,7 +150,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       />,
       'side-modal create-segment-modal',
       () => {
-        props.router.history.push(
+        history.push(
           `${document.location.pathname}?${Utils.toParam({
             ...Utils.fromParam(),
             id: undefined,
@@ -257,7 +265,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           onClick={
                             manageSegmentsPermission
                               ? () =>
-                                  props.router.history.push(
+                                  history.push(
                                     `${
                                       document.location.pathname
                                     }?${Utils.toParam({

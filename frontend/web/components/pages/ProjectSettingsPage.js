@@ -25,16 +25,12 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import classNames from 'classnames'
 import EditHealthProvider from 'components/EditHealthProvider'
 import WarningMessage from 'components/WarningMessage'
-
+import { withRouter } from 'react-router-dom'
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       roles: [],
     }
@@ -510,7 +506,7 @@ const ProjectSettingsPage = class extends Component {
                           <Button
                             onClick={() =>
                               this.confirmRemove(project, () => {
-                                this.context.router.history.replace(
+                                this.props.history.replace(
                                   Utils.getOrganisationHomePage(),
                                 )
                                 deleteProject(this.props.match.params.projectId)
@@ -656,4 +652,4 @@ const ProjectSettingsPage = class extends Component {
 
 ProjectSettingsPage.propTypes = {}
 
-module.exports = ConfigProvider(ProjectSettingsPage)
+export default withRouter(ConfigProvider(ProjectSettingsPage))

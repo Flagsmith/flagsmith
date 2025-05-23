@@ -10,23 +10,14 @@ import React, {
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import RolePermissionsList from 'components/RolePermissionsList'
+
 import {
   useCreateRoleMutation,
   useGetRoleQuery,
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
-import { EditPermissionsModal } from 'components/EditPermissions'
-import OrganisationStore from 'common/stores/organisation-store'
-import ProjectFilter from 'components/ProjectFilter'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroup,
-} from 'common/types/responses'
+import { Role, User, UserGroup } from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -44,11 +35,10 @@ import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
-
+import { withRouter } from 'react-router-dom'
 type TabRef = {
   onClosing: () => Promise<void>
   tabChanged: () => boolean
@@ -437,7 +427,12 @@ const CreateRole: FC<CreateRoleType> = ({
     }
 
     return isEdit ? (
-      <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
+      <Tabs
+        value={tab}
+        onChange={changeTab}
+        buttonTheme='text'
+        history={this.props.history}
+      >
         <TabItem
           tabLabel={<Row className='justify-content-center'>General</Row>}
         >
@@ -543,5 +538,4 @@ const CreateRole: FC<CreateRoleType> = ({
     </div>
   )
 }
-export default CreateRole
-module.exports = CreateRole
+export default withRouter(CreateRole)

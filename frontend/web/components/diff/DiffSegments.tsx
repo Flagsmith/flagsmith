@@ -8,7 +8,7 @@ import TabItem from 'components/base/forms/TabItem'
 import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import DiffVariations from './DiffVariations'
 
 type DiffSegment = {
@@ -85,6 +85,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
   environmentId,
   projectId,
 }) => {
+  const history = useHistory()
   const { created, deleted, modified, unChanged } = useMemo(() => {
     const created: TDiffSegment[] = []
     const deleted: TDiffSegment[] = []
@@ -121,7 +122,7 @@ const DiffSegments: FC<DiffSegmentsType> = ({
   )
 
   return diffs ? (
-    <Tabs className='mt-4' uncontrolled theme='pill'>
+    <Tabs className='mt-4' uncontrolled theme='pill' history={history}>
       {!!created.length && (
         <TabItem
           className='p-0'
