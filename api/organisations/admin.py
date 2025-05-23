@@ -2,7 +2,11 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from django.db import models
 from django.db.models import Count, Q
+from django.db.models.query import QuerySet
+from django.http import HttpRequest
+from typing import Protocol
 
 from organisations.models import (
     Organisation,
@@ -13,7 +17,12 @@ from organisations.models import (
 from projects.models import Project
 
 
-class ProjectInline(admin.StackedInline):  # type: ignore[type-arg]
+class OrganisationWithAnnotations(Protocol):
+    num_users: int
+    num_projects: int
+
+
+class ProjectInline(admin.StackedInline[Project, Organisation]):
     model = Project
     extra = 0
     show_change_link = True
@@ -21,14 +30,14 @@ class ProjectInline(admin.StackedInline):  # type: ignore[type-arg]
     classes = ("collapse",)
 
 
-class SubscriptionInline(admin.StackedInline):  # type: ignore[type-arg]
+class SubscriptionInline(admin.StackedInline[Subscription, Organisation]):
     model = Subscription
     extra = 0
     show_change_link = True
     verbose_name_plural = "Subscription"
 
 
-class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
+class UserOrganisationInline(admin.TabularInline[UserOrganisation, Organisation]):
     model = UserOrganisation
     extra = 0
     show_change_link = True
@@ -36,7 +45,9 @@ class UserOrganisationInline(admin.TabularInline):  # type: ignore[type-arg]
     verbose_name_plural = "Users"
 
 
-class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):  # type: ignore[type-arg]
+class OrganisationSubscriptionInformationCacheInline(
+    admin.StackedInline[OrganisationSubscriptionInformationCache, Organisation]
+):
     model = OrganisationSubscriptionInformationCache
     extra = 0
     show_change_link = False
@@ -97,7 +108,7 @@ class OrganisationSubscriptionInformationCacheInline(admin.StackedInline):  # ty
 
 
 @admin.register(Organisation)
-class OrganisationAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
+class OrganisationAdmin(admin.ModelAdmin[Organisation]):
     inlines = [
         ProjectInline,
         SubscriptionInline,
@@ -117,8 +128,10 @@ class OrganisationAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
     list_filter = ("subscription__plan",)
     search_fields = ("id", "name", "subscription__subscription_id", "users__email")
 
-    def get_queryset(self, request):  # type: ignore[no-untyped-def] # pragma: no cover
-        return (
+    def get_queryset(
+        self, request: HttpRequest
+    ) -> QuerySet[Organisation]:  # pragma: no cover
+        queryset: QuerySet[Organisation] = (
             Organisation.objects.select_related("subscription")
             .annotate(
                 num_users=Count(
@@ -132,12 +145,13 @@ class OrganisationAdmin(admin.ModelAdmin):  # type: ignore[type-arg]
             )
             .all()
         )
+        return queryset
 
-    def num_users(self, instance: Organisation) -> int:
-        return instance.num_users  # type: ignore[no-any-return]
+    def num_users(self, instance: OrganisationWithAnnotations) -> int:
+        return instance.num_users
 
-    def num_projects(self, instance: Organisation) -> int:
-        return instance.num_projects  # type: ignore[no-any-return]
+    def num_projects(self, instance: OrganisationWithAnnotations) -> int:
+        return instance.num_projects
 
     def subscription_id(self, instance: Organisation) -> str:
         if instance.subscription and instance.subscription.subscription_id:
