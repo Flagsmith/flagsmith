@@ -1,12 +1,19 @@
 import json
+from datetime import timedelta
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog
+from core.signals import create_audit_log_from_historical_record
+from features.models import FeatureState
+from features.workflows.core.models import ChangeRequest
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 @pytest.fixture(autouse=True)
@@ -121,6 +128,74 @@ def test_retrieve_audit_log_for_feature_state_enabled_change(
     assert retrieve_response_json["change_details"][0]["field"] == "enabled"
     assert retrieve_response_json["change_details"][0]["new"] is True
     assert retrieve_response_json["change_details"][0]["old"] is False
+
+
+def test_creates_audit_log_for_feature_state_update(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment_api_key: str,
+    environment: int,
+    feature_state: int,
+    feature: int,
+) -> None:
+    # Given
+    feature_state_obj = FeatureState.objects.get(pk=feature_state)
+    feature_state_obj.enabled = True
+    feature_state_obj.save()
+    history_instance = feature_state_obj.history.first()
+    assert history_instance.history_type == "~"
+
+    # When
+    create_audit_log_from_historical_record(
+        instance=feature_state_obj,
+        history_user=admin_user,
+        history_instance=history_instance,
+    )
+
+    # Then
+    audit_log = AuditLog.objects.first()
+    feature_name = feature_state_obj.feature.name
+    assert audit_log.log == f"Flag state updated for feature: {feature_name}"
+
+
+def test_creates_audit_log_for_scheduled_feature_state_update(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment_api_key: str,
+    environment: int,
+    feature_state: int,
+    feature: int,
+) -> None:
+    # Given
+    future = timezone.now() + timedelta(days=1)
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment,
+        title="Test",
+        committed_at=timezone.now(),
+        committed_by=admin_user,
+    )
+    feature_state_obj = FeatureState.objects.get(pk=feature_state)
+    feature_state_obj.change_request = change_request
+    feature_state_obj.enabled = True
+    feature_state_obj.live_from = future
+    feature_state_obj.save()
+    history_instance = feature_state_obj.history.first()
+    assert history_instance.history_type == "~"
+
+    # When
+    create_audit_log_from_historical_record(
+        instance=feature_state_obj,
+        history_user=admin_user,
+        history_instance=history_instance,
+    )
+
+    # Then
+    audit_log = AuditLog.objects.first()
+    feature_name = feature_state_obj.feature.name
+    assert (
+        audit_log.log
+        == f"Flag state for feature '{feature_name}' will be updated at {future:%Y-%m-%d %H:%M} UTC unless the Change Request '{change_request.title}' is rescheduled or deleted."
+    )
 
 
 def test_retrieve_audit_log_for_feature_state_value_change(

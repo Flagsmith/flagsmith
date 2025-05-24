@@ -300,7 +300,9 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
     @hook(AFTER_SAVE, when="committed_at", was=None, is_not=None)
     def create_audit_log_for_related_feature_state(self) -> None:
         for feature_state in self.feature_states.all():
-            expected_in_future = self.committed_at < feature_state.live_from
+            expected_in_future = (
+                feature_state.live_from and self.committed_at < feature_state.live_from
+            )
             if expected_in_future:
                 create_feature_state_went_live_audit_log.delay(
                     delay_until=feature_state.live_from, args=(feature_state.id,)
