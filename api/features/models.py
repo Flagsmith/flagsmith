@@ -33,6 +33,7 @@ from audit.constants import (
     FEATURE_DELETED_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_STATE_VALUE_UPDATED_MESSAGE,
+    FEATURE_STATE_WILL_BE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
@@ -958,6 +959,14 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        expected_in_future = self.live_from and self.live_from > timezone.now()
+        if expected_in_future:
+            return FEATURE_STATE_WILL_BE_UPDATED_MESSAGE % (
+                self.feature.name,
+                self.live_from.strftime("%Y-%m-%d %H:%M"),
+                self.change_request.title,
+            )
+
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,

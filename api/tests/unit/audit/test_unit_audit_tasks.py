@@ -1,4 +1,9 @@
+from datetime import timedelta
+
 from django.utils import timezone
+from pytest import LogCaptureFixture
+from pytest_mock import MockerFixture
+from task_processor.decorators import TaskHandler
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
@@ -325,6 +330,37 @@ def test_create_feature_state_went_live_audit_log(
         ).count()
         == 1
     )
+
+
+def test_create_feature_state_went_live_audit_log__waits_for_rescheduled_time(
+    caplog: LogCaptureFixture,
+    change_request_feature_state: FeatureState,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    future = timezone.now() + timedelta(minutes=1)
+    change_request_feature_state.live_from = future
+    change_request_feature_state.save()
+    delay_task = mocker.patch.object(TaskHandler, "delay")
+
+    # When
+    create_feature_state_went_live_audit_log(change_request_feature_state.id)
+
+    # Then
+    assert not AuditLog.objects.filter(
+        related_object_id=change_request_feature_state.id,
+        log__contains="went live",
+    ).exists()
+
+    delay_task.assert_called_once_with(
+        delay_until=future,
+        args=(change_request_feature_state.id,),
+    )
+
+    assert (
+        "INFO",
+        "FeatureState is not due to go live yet. Likely means the change request was rescheduled.",
+    ) in ((record.levelname, record.message) for record in caplog.records)
 
 
 def test_create_feature_state_updated_by_change_request_audit_log(
