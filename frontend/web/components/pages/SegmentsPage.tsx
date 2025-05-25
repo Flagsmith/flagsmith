@@ -324,7 +324,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                               })
                               }
                             }}
-                            className='btn btn-with-icon me-2' // Add margin to the right
+                            className='btn btn-with-icon me-2'
                           >
                             <Icon name='copy' width={20} fill='#656D7B' />
                           </Button>
