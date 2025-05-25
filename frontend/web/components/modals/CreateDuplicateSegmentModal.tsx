@@ -2,7 +2,7 @@ import React, { FC, FormEvent, useState } from 'react'
 import { Segment, SegmentRule } from 'common/types/responses'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import InputGroup from 'components/base/forms/InputGroup'
-import Utils from 'common/utils/utils' // we need this to make JSX compile
+import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import ModalHR from './ModalHR'
 
