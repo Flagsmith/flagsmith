@@ -6,6 +6,7 @@ import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
 import { Environment, Segment } from 'common/types/responses'
 import {
+  useCreateSegmentMutation,
   useDeleteSegmentMutation,
   useGetSegmentsQuery,
 } from 'common/services/useSegment'
@@ -14,6 +15,7 @@ import API from 'project/api'
 import Button from 'components/base/forms/Button'
 import ConfirmRemoveSegment from 'components/modals/ConfirmRemoveSegment'
 import CreateSegmentModal from 'components/modals/CreateSegment'
+import CreateDuplicateSegmentModal from 'components/modals/CreateDuplicateSegmentModal'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -28,6 +30,7 @@ import InfoMessage from 'components/InfoMessage'
 import { withRouter } from 'react-router-dom'
 
 import CodeHelp from 'components/CodeHelp'
+
 type SegmentsPageType = {
   router: RouterChildContext['router']
   match: {
@@ -66,6 +69,8 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     q: search,
   })
   const [removeSegment, { isLoading: isRemoving }] = useDeleteSegmentMutation()
+
+  const [createSegment, { isLoading: isCreating }] = useCreateSegmentMutation()
 
   const segmentsLimitAlert = Utils.calculateRemainingLimitsPercentage(
     ProjectStore.getTotalSegments(),
@@ -110,6 +115,14 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
     openModal(
       'Remove Segment',
       <ConfirmRemoveSegment segment={segment} cb={cb} />,
+      'p-0',
+    )
+  }
+
+  const duplicateSegment = (segment: Segment, cb: (newSegment: Omit<Segment, "id" | "uuid">) => void) => {
+    openModal(
+      'Duplicate Segment',
+      <CreateDuplicateSegmentModal segment={segment} cb={cb} />,
       'p-0',
     )
   }
@@ -222,7 +235,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
           <div>
             {Utils.displayLimitAlert('segments', segmentsLimitAlert.percentage)}
             <div>
-              <FormGroup className={classNames({ 'opacity-50': isRemoving })}>
+              <FormGroup className={classNames({ 'opacity-50': isRemoving || isCreating })}>
                 <PanelSearch
                   filterElement={
                     <div className='text-right me-2'>
@@ -284,6 +297,37 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                           </div>
                         </Flex>
                         <div className='table-column'>
+                          <Button
+                            disabled={!manageSegmentsPermission}
+                            data-test={`new-button-${i}`}
+                            onClick={() => {
+                              const segment = find(segments, { id })
+                              if (segment) {
+                                duplicateSegment(segment, (newSegment) => {
+                                createSegment({ projectId, segment: newSegment })
+                                  .then((res) => {
+                                    toast(
+                                      <div>
+                                        Duplicated Segment:{' '}
+                                        <strong>{segment.name}</strong>
+                                      </div>,
+                                    )
+                                  })
+                                  .catch((error) => {
+                                    toast(
+                                      <div>
+                                        Failed to duplicate segment:{' '}
+                                        <strong>{segment.name}</strong>
+                                      </div>,
+                                    )
+                                  })
+                              })
+                              }
+                            }}
+                            className='btn btn-with-icon me-2' // Add margin to the right
+                          >
+                            <Icon name='copy' width={20} fill='#656D7B' />
+                          </Button>
                           <Button
                             disabled={!manageSegmentsPermission}
                             data-test={`remove-segment-btn-${i}`}
