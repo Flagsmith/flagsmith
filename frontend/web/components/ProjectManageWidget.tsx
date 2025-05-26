@@ -1,11 +1,6 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  RouterChildContext,
-  useHistory,
-  useLocation,
-  useRouteMatch,
-} from 'react-router'
+import { useHistory, useLocation } from 'react-router'
 
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
@@ -22,22 +17,21 @@ import AppActions from 'common/dispatcher/app-actions'
 import CreateProjectModal from './modals/CreateProject'
 
 type SegmentsPageType = {
-  // router: RouterChildContext['router']
   organisationId: number | null
 }
 
-const ProjectManageWidget: FC<SegmentsPageType> = ({
-  organisationId,
-  // router,
-}) => {
+const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
   const history = useHistory()
-  const route = useRouteMatch()
   const location = useLocation()
   const isAdmin = AccountStore.isAdmin()
   const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
   const organisation = useMemo(
-    () => organisations?.results?.find((v) => v.id === organisationId),
+    // TODO: FIX organisationId is not a number
+    () =>
+      organisations?.results?.find(
+        (v) => v.id?.toString() === organisationId?.toString(),
+      ),
     [organisations, organisationId],
   )
 

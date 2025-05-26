@@ -3,7 +3,6 @@ import ErrorMessage from 'components/ErrorMessage'
 import Button from 'components/base/forms/Button'
 import { setInterceptClose } from './base/ModalDefault'
 import PlanBasedAccess from 'components/PlanBasedAccess'
-import { withRouter } from 'react-router-dom'
 
 const CreateProject = class extends Component {
   static displayName = 'CreateProject'
@@ -123,4 +122,4 @@ const CreateProject = class extends Component {
 
 CreateProject.propTypes = {}
 
-export default withRouter(CreateProject)
+export default CreateProject

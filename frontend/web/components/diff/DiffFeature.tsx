@@ -20,7 +20,7 @@ import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
 import WarningMessage from 'components/WarningMessage'
 import { Link } from 'react-router-dom'
-import { withRouter } from 'react-router-dom'
+
 type FeatureDiffType = {
   oldState: FeatureStateWithConflict[]
   newState: FeatureStateWithConflict[]
@@ -235,4 +235,4 @@ const DiffFeature: FC<FeatureDiffType> = ({
   )
 }
 
-export default withRouter(DiffFeature)
+export default DiffFeature
