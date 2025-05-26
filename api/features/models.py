@@ -631,7 +631,7 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from and self.live_from > timezone.now()  # type: ignore[return-value]
+        return bool(self.live_from and self.live_from > timezone.now())
 
     def clone(
         self,
@@ -959,14 +959,12 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
-        expected_in_future = self.live_from and self.live_from > timezone.now()
-        if expected_in_future:
+        if self.change_request and self.is_scheduled:
             return FEATURE_STATE_WILL_BE_UPDATED_MESSAGE % (
                 self.feature.name,
-                self.live_from.strftime("%Y-%m-%d %H:%M"),
+                self.live_from.strftime("%Y-%m-%d %H:%M"),  # type: ignore[union-attr]
                 self.change_request.title,
             )
-
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,
