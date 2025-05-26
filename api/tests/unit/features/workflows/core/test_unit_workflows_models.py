@@ -41,6 +41,7 @@ from features.workflows.core.models import (
 from organisations.models import Organisation
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from segments.services import SegmentCloneService
 from users.models import FFAdminUser
 
 now = timezone.now()
@@ -620,10 +621,10 @@ def test_commit_change_request_publishes_environment_feature_versions(  # type: 
     change_request.environment_feature_versions.add(environment_feature_version)
 
     mock_rebuild_environment_document_task = mocker.patch(
-        "features.workflows.core.models.rebuild_environment_document"
+        "core.workflows_services.rebuild_environment_document"
     )
     mock_trigger_update_version_webhooks = mocker.patch(
-        "features.workflows.core.models.trigger_update_version_webhooks"
+        "core.workflows_services.trigger_update_version_webhooks"
     )
 
     # When
@@ -755,7 +756,8 @@ def test_retrieving_segments(
     )
 
     # When
-    segment = base_segment.shallow_clone(
+    cloner = SegmentCloneService(base_segment)
+    segment = cloner.shallow_clone(
         name="New Name", description="New description", change_request=change_request
     )
 
@@ -808,7 +810,8 @@ def test_publishing_segments_as_part_of_commit(
 ) -> None:
     # Given
     assert segment.version == 2
-    cr_segment = segment.shallow_clone("Test Name", "Test Description", change_request)
+    cloner = SegmentCloneService(segment)
+    cr_segment = cloner.shallow_clone("Test Name", "Test Description", change_request)
     assert cr_segment.rules.count() == 0
 
     # Add some rules that the original segment will be cloning from
@@ -984,7 +987,7 @@ def test_approval_via_project(project_change_request: ChangeRequest) -> None:
     assert project_change_request.project.minimum_change_request_approvals is None
 
     # When
-    is_approved = project_change_request.is_approved()  # type: ignore[no-untyped-call]
+    is_approved = project_change_request.is_approved()
 
     # Then
     assert is_approved is True
