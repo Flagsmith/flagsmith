@@ -84,9 +84,10 @@ def test_change_request_commit_raises_exception_when_not_approved(  # type: igno
     # Given
     user_2 = FFAdminUser.objects.create(email="user_2@example.com")
 
+    commit_service = ChangeRequestCommitService(change_request_1_required_approvals)
     # When
     with pytest.raises(ChangeRequestNotApprovedError):
-        change_request_1_required_approvals.commit(committed_by=user_2)
+        commit_service.commit(committed_by=user_2)
 
 
 def test_change_request_commit_not_scheduled(  # type: ignore[no-untyped-def]
@@ -94,12 +95,12 @@ def test_change_request_commit_not_scheduled(  # type: ignore[no-untyped-def]
 ):
     # Given
     user = FFAdminUser.objects.create(email="approver@example.com")
-
+    commit_service = ChangeRequestCommitService(change_request_no_required_approvals)
     now = timezone.now()
     mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
-    change_request_no_required_approvals.commit(committed_by=user)
+    commit_service.commit(committed_by=user)
 
     # Then
     assert change_request_no_required_approvals.committed_at == now
@@ -119,11 +120,11 @@ def test_change_request_commit_scheduled(  # type: ignore[no-untyped-def]
     change_request_no_required_approvals.feature_states.update(live_from=tomorrow)
 
     user = FFAdminUser.objects.create(email="approver@example.com")
-
+    commit_service = ChangeRequestCommitService(change_request_no_required_approvals)
     mocker.patch("features.workflows.core.models.timezone.now", return_value=now)
 
     # When
-    change_request_no_required_approvals.commit(committed_by=user)
+    commit_service.commit(committed_by=user)
 
     # Then
     assert change_request_no_required_approvals.committed_at == now
@@ -170,8 +171,10 @@ def test_committing_scheduled_change_requests_results_in_correct_versions(  # ty
 
     # When
     # we commit the change requests in the 'wrong' order
-    scheduled_cr_2.commit(admin_user)
-    scheduled_cr_1.commit(admin_user)
+    commit_service = ChangeRequestCommitService(scheduled_cr_2)
+    commit_service.commit(admin_user)
+    commit_service = ChangeRequestCommitService(scheduled_cr_1)
+    commit_service.commit(admin_user)
 
     # and move time on to after the feature states from both CRs should have gone live
     freezer.move_to(three_hours_from_now)
@@ -199,7 +202,7 @@ def test_commit_change_request_publishes_environment_feature_versions(  # type: 
     change_request = ChangeRequest.objects.create(
         title="Test CR", environment=environment, user=admin_user
     )
-
+    commit_service = ChangeRequestCommitService(change_request)
     environment_feature_version = EnvironmentFeatureVersion.objects.create(
         environment=environment, feature=feature
     )
@@ -217,7 +220,7 @@ def test_commit_change_request_publishes_environment_feature_versions(  # type: 
     )
 
     # When
-    change_request.commit(admin_user)
+    commit_service.commit(admin_user)
 
     # Then
     environment_feature_version.refresh_from_db()
@@ -273,9 +276,9 @@ def test_publishing_segments_as_part_of_commit(
         value="0.2",
         created_with_segment=False,
     )
-
+    commit_service = ChangeRequestCommitService(change_request)
     # When
-    change_request.commit(admin_user)
+    commit_service.commit(admin_user)
 
     # Then
     segment.refresh_from_db()

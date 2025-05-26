@@ -36,7 +36,6 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-
 from core.workflows_services import ChangeRequestCommitService
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,

@@ -10,7 +10,6 @@ from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 from segments.models import Segment
 from segments.services import SegmentCloneService
-from features.models import FeatureState
 from django.db.models import Q
 from features.tasks import trigger_feature_state_change_webhooks
 import logging
@@ -108,8 +107,9 @@ class ChangeRequestCommitService:
                 identity_id=fs.identity_id,  # type: ignore[arg-type]
             )
 
-        if feature_states:
-            type(fs).objects.bulk_update(feature_states, ["live_from", "version"])
+        FeatureState.objects.bulk_update(
+            feature_states, fields=["live_from", "version"]
+        )
 
     def _publish_environment_feature_versions(
         self, published_by: "FFAdminUser"
