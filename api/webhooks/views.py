@@ -11,24 +11,38 @@ from webhooks.webhooks import WebhookType
 
 from .permissions import TriggerSampleWebhookPermission
 from .webhooks import send_test_request_to_webhook
+from drf_yasg.utils import swagger_auto_schema
+from .serializers import (
+    TestWebhookSerializer,
+    TestWebhookSuccessResponseSerializer,
+    TestWebhookErrorResponseSerializer,
+)
 
 
 class WebhookViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, TriggerSampleWebhookPermission]
 
-    @action(detail=False, methods=["POST"])
+    @swagger_auto_schema(
+        request_body=TestWebhookSerializer,
+        responses={
+            200: TestWebhookSuccessResponseSerializer(),
+            400: TestWebhookErrorResponseSerializer(),
+        },
+        method="post",
+    )
+    @action(
+        detail=False,
+        url_path="test",
+        methods=["POST"],
+    )
     def test(self, request: Request) -> Response:
-        secret: str | None = request.data.get(
-            "secret",
-        )
-        scope: dict[str, Any] = request.data.get("scope", {})
-        webhook_url: str = request.data.get("webhookUrl", "")
-        scope_type: str = scope.get("type", "")
-        if not all([webhook_url, scope_type]):
-            return Response(
-                {"detail": "webhookUrl is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer = TestWebhookSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+        secret = data.get("secret")
+        webhook_url = data["webhookUrl"]
+        scope_type = data.get("scope", {}).get("type")
         try:
             webhook_type = (
                 WebhookType.ORGANISATION

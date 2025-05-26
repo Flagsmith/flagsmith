@@ -510,4 +510,4 @@ def test_should_return_bad_request_when_webhook_url_is_missing(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"detail": "webhookUrl is required"}
+    assert response.json() == {"webhookUrl": ["This field may not be blank."]}
