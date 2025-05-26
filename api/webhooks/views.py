@@ -23,8 +23,8 @@ class WebhookViewSet(viewsets.ViewSet):
         )
         scope: dict[str, Any] = request.data.get("scope", {})
         webhook_url: str = request.data.get("webhookUrl", "")
-        scopeType: str = scope.get("type", "")
-        if not all([webhook_url, scopeType]):
+        scope_type: str = scope.get("type", "")
+        if not all([webhook_url, scope_type]):
             return Response(
                 {"detail": "webhookUrl is required"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -32,7 +32,7 @@ class WebhookViewSet(viewsets.ViewSet):
         try:
             webhook_type = (
                 WebhookType.ORGANISATION
-                if scopeType == "organisation"
+                if scope_type == "organisation"
                 else WebhookType.ENVIRONMENT
             )
             response = send_test_request_to_webhook(webhook_url, secret, webhook_type)
