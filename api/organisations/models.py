@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
@@ -566,9 +566,10 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         """
         if not self.is_billing_terms_dates_set():
             return False
-    if TYPE_CHECKING:
-        assert self.current_billing_term_starts_at is not None
-        assert self.current_billing_term_ends_at is not None
+
+        if TYPE_CHECKING:
+            assert self.current_billing_term_starts_at is not None
+            assert self.current_billing_term_ends_at is not None
 
         starts_at = self.current_billing_term_starts_at
         ends_at = self.current_billing_term_ends_at
