@@ -30,7 +30,6 @@ from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from segments.services import SegmentCloneService
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
-from segments.services import SegmentCloneService
 
 User = get_user_model()
 
