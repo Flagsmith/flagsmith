@@ -60,7 +60,7 @@ def project_overrides(request: Request) -> HttpResponse:
     }
     is_secure_request = request.is_secure()
     override_data["useSecureCookies"] = is_secure_request or settings.USE_SECURE_COOKIES
-    if settings.COOKIE_SAME_SITE is not None:
+    if settings.COOKIE_SAME_SITE:
         same_site = settings.COOKIE_SAME_SITE
     elif is_secure_request:
         same_site = "None"
