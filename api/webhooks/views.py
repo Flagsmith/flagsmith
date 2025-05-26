@@ -39,7 +39,7 @@ class WebhookViewSet(viewsets.ViewSet):
             if response.status_code != 200:
                 return Response(
                     {
-                        "detail": "Webhook returned error status",
+                        "detail": "Webhook returned invalid status",
                         "body": response.text,
                         "status": response.status_code,
                     },
