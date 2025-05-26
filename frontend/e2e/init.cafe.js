@@ -15,6 +15,7 @@ import organisationPermissionTest from './tests/organisation-permission-test'
 import projectPermissionTest from './tests/project-permission-test'
 import environmentPermissionTest from './tests/environment-permission-test'
 import flagsmith from 'flagsmith/isomorphic';
+import rolesTest from './tests/roles-test'
 
 require('dotenv').config()
 
