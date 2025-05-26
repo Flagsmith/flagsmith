@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.178.0](https://github.com/Flagsmith/flagsmith/compare/v2.177.1...v2.178.0) (2025-05-23)
+
+
+### Features
+
+* **5308:** Add endpoints to support permission debugging ([#5408](https://github.com/Flagsmith/flagsmith/issues/5408)) ([bdb9bc1](https://github.com/Flagsmith/flagsmith/commit/bdb9bc17e4c32a1b474dc24abd1f9ce088bc6e0f))
+* Add GIN index on `Identity.identifier` ([#5369](https://github.com/Flagsmith/flagsmith/issues/5369)) ([31bd046](https://github.com/Flagsmith/flagsmith/commit/31bd0465ec76009ad73a2d01683d969cf9632d4a))
+* adds inspect permissions behind a feature flag ([#5473](https://github.com/Flagsmith/flagsmith/issues/5473)) ([dc3b33a](https://github.com/Flagsmith/flagsmith/commit/dc3b33ae6a605c62a73844f2f5523fd2743bead1))
+* Allow task processor to have its own database ([#5406](https://github.com/Flagsmith/flagsmith/issues/5406)) ([55fd861](https://github.com/Flagsmith/flagsmith/commit/55fd86145b479fc318d63d820f45c60a2272144c))
+* Inspect Permissions ([#5375](https://github.com/Flagsmith/flagsmith/issues/5375)) ([1406500](https://github.com/Flagsmith/flagsmith/commit/1406500011adf58af2acbd4ddcf83c1644a728d2))
+
+
+### Bug Fixes
+
+* **ci:** Remove invalid trigger for Update Trivy Database and Scan ([#5462](https://github.com/Flagsmith/flagsmith/issues/5462)) ([7560016](https://github.com/Flagsmith/flagsmith/commit/756001672c0fc2d54a39dc0ac84e1aceda36785d))
+* Exclude identities when viewing change request ([#5475](https://github.com/Flagsmith/flagsmith/issues/5475)) ([c9a4a9d](https://github.com/Flagsmith/flagsmith/commit/c9a4a9dac563f34569dbbc3e83b3c0c099fe3d4b))
+* metadata inputs not updating values ([f39d530](https://github.com/Flagsmith/flagsmith/commit/f39d5303625ad517142d03799e3111b62ae7ee3c))
+* remove unnecessary database access in conditional logic for is_live ([#5465](https://github.com/Flagsmith/flagsmith/issues/5465)) ([dc2d513](https://github.com/Flagsmith/flagsmith/commit/dc2d513d335d0d665903d08c3bf7390f6dc31a56))
+* Revert "feat: Add GIN index on `Identity.identifier`" ([#5481](https://github.com/Flagsmith/flagsmith/issues/5481)) ([dabafb4](https://github.com/Flagsmith/flagsmith/commit/dabafb44dc6c9f56084d72b536f3ee5a28d2d82a))
+* **usage notifications:** handle plans with billing terms longer than 12 months ([#5415](https://github.com/Flagsmith/flagsmith/issues/5415)) ([3dffbab](https://github.com/Flagsmith/flagsmith/commit/3dffbab2991430f8d2024c497d1daab79462da20))
+
+
+### Dependency Updates
+
+* bump django from 4.2.18 to 4.2.21 in /api ([#5436](https://github.com/Flagsmith/flagsmith/issues/5436)) ([ee7ed37](https://github.com/Flagsmith/flagsmith/commit/ee7ed37efd754617e1666ef30d0c086d97a6975e))
+
 ## [2.177.1](https://github.com/Flagsmith/flagsmith/compare/v2.177.0...v2.177.1) (2025-05-14)
 
 
