@@ -38,7 +38,7 @@ import Button from 'components/base/forms/Button'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
-import { withRouter } from 'react-router-dom'
+import { RouteComponentProps } from 'react-router-dom'
 type TabRef = {
   onClosing: () => Promise<void>
   tabChanged: () => boolean
@@ -50,9 +50,12 @@ type CreateRoleType = {
   organisationId?: number
   role?: Role
   users?: User[]
+  history?: RouteComponentProps['history']
 }
+
 const CreateRole: FC<CreateRoleType> = ({
   groups,
+  history,
   isEdit,
   onComplete,
   organisationId,
@@ -431,7 +434,7 @@ const CreateRole: FC<CreateRoleType> = ({
         value={tab}
         onChange={changeTab}
         buttonTheme='text'
-        history={this.props.history}
+        history={history}
       >
         <TabItem
           tabLabel={<Row className='justify-content-center'>General</Row>}
@@ -538,4 +541,4 @@ const CreateRole: FC<CreateRoleType> = ({
     </div>
   )
 }
-export default withRouter(CreateRole)
+export default CreateRole
