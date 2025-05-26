@@ -30,6 +30,7 @@ from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
 from segments.services import SegmentCloneService
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
+from segments.services import SegmentCloneService
 
 User = get_user_model()
 
@@ -1559,16 +1560,24 @@ def test_include_feature_specific_query_filter__false(
     assert [res["id"] for res in response.json()["results"]] == [segment.id]
 
 
-def test_clone_segment(
+def test_clone_endpoint_uses_segment_clone_service(
     project: Project,
     admin_client: APIClient,
     segment: Segment,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     url = reverse(
         "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
     )
     new_segment_name = "cloned_segment"
+    service_mock = mocker.patch("segments.services.SegmentCloneService")
+    service_mock.return_value.clone.return_value = Segment(
+        id=1,
+        name="new_segment_name",
+        project=project,
+        version=1,
+    )
     data = {
         "name": new_segment_name,
     }

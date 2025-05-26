@@ -219,7 +219,6 @@ def test_SegmentCloneService_clone__raises_when_cloned_rules_count_mismatches(
     mocker: MockerFixture,
     segment: Segment,
 ) -> None:
-    """Test that assertions are raised when rule cloning fails"""
     # Given
     SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
     mocker.patch.object(SegmentRule, "deep_clone", return_value=None)
@@ -235,7 +234,6 @@ def test_SegmentCloneService_clone__raises_when_cloned_metadata_count_mismatches
     segment: Segment,
     required_a_segment_metadata_field: MetadataModelField,
 ) -> None:
-    """Test that assertions are raised when metadata cloning fails"""
     # Given
     segment_content_type = ContentType.objects.get_for_model(segment)
     Metadata.objects.create(
