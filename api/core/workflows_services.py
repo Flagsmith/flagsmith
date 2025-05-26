@@ -32,7 +32,7 @@ class ChangeRequestCommitService:
         self.change_request = change_request
 
     def commit(self, committed_by: "FFAdminUser") -> None:
-        if not self.change_request.is_approved():  # type: ignore[no-untyped-call]
+        if not self.change_request.is_approved():
             raise ChangeRequestNotApprovedError(
                 "Change request has not been approved by all required approvers."
             )
