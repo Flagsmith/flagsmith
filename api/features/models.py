@@ -31,9 +31,9 @@ from simple_history.models import HistoricalRecords  # type: ignore[import-untyp
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
+    FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_STATE_VALUE_UPDATED_MESSAGE,
-    FEATURE_STATE_WILL_BE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
@@ -960,10 +960,11 @@ class FeatureState(
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         if self.change_request and self.is_scheduled:
-            return FEATURE_STATE_WILL_BE_UPDATED_MESSAGE % (
+            live_from: datetime.datetime = timezone.localtime(self.live_from)
+            return FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE % (
                 self.feature.name,
-                self.live_from.strftime("%Y-%m-%d %H:%M"),  # type: ignore[union-attr]
                 self.change_request.title,
+                live_from.strftime(settings.DATETIME_FORMAT),
             )
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (

@@ -1,9 +1,11 @@
 import json
-from datetime import timedelta
+from datetime import datetime
 
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from freezegun import freeze_time
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -158,16 +160,32 @@ def test_creates_audit_log_for_feature_state_update(
     assert audit_log.log == f"Flag state updated for feature: {feature_name}"
 
 
+# Future people please bump this up when it's due
+@freeze_time("2199-04-14T12:30:00+00:00")
+@pytest.mark.parametrize(
+    "tz_name, django_datetime_format, expected_ts",
+    [
+        ("America/Los_Angeles", "%Y-%m-%d %H:%M (%Z)", "2199-04-15 05:30 (PDT)"),
+        ("UTC", "%d %b %Y %H:%M (%Z)", "15 Apr 2199 12:30 (UTC)"),
+        ("Asia/Tokyo", "%Y/%m/%d %H:%M (%Z)", "2199/04/15 21:30 (JST)"),
+    ],
+)
 def test_creates_audit_log_for_scheduled_feature_state_update(
     admin_client: APIClient,
     admin_user: FFAdminUser,
+    django_datetime_format: str,
     environment_api_key: str,
     environment: int,
+    expected_ts: str,
     feature_state: int,
     feature: int,
+    settings: SettingsWrapper,
+    tz_name: str,
 ) -> None:
     # Given
-    future = timezone.now() + timedelta(days=1)
+    settings.DATETIME_FORMAT = django_datetime_format
+    settings.TIME_ZONE = tz_name
+    future = datetime.fromisoformat("2199-04-15T12:30:00+00:00")
     change_request = ChangeRequest.objects.create(
         environment_id=environment,
         title="Test",
@@ -194,7 +212,7 @@ def test_creates_audit_log_for_scheduled_feature_state_update(
     feature_name = feature_state_obj.feature.name
     assert (
         audit_log.log
-        == f"Flag state for feature '{feature_name}' will be updated at {future:%Y-%m-%d %H:%M} UTC unless the Change Request '{change_request.title}' is rescheduled or deleted."
+        == f"Flag state for feature '{feature_name}' scheduled for update by Change Request '{change_request.title}' at {expected_ts}."
     )
 
 
