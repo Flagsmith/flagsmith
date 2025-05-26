@@ -83,7 +83,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
       close()
     },
-    [close, onCopyName, onRemove, onShowHistory],
+    [close, onCopyName, onRemove, onShowHistory, onShowAudit],
   )
 
   useOutsideClick(listRef, handleOutsideClick)

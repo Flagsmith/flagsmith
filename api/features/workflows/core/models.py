@@ -6,7 +6,6 @@ from datetime import datetime
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db import models
-from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -37,16 +36,11 @@ from core.models import (
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
-from environments.tasks import rebuild_environment_document
-from features.models import FeatureState
-from features.tasks import trigger_feature_state_change_webhooks
-from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.signals import environment_feature_version_published
-from features.versioning.tasks import trigger_update_version_webhooks
+
+from core.workflows_services import ChangeRequestCommitService
 from features.workflows.core.exceptions import (
     CannotApproveOwnChangeRequest,
     ChangeRequestDeletionError,
-    ChangeRequestNotApprovedError,
 )
 
 if typing.TYPE_CHECKING:
@@ -55,10 +49,6 @@ if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
-
-FeatureStateDiff = dict[
-    typing.Literal["new_feature_state", "previous_feature_state"], FeatureState
-]
 
 
 class ChangeRequest(  # type: ignore[django-manager-missing]
@@ -123,150 +113,7 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
         )
 
     def commit(self, committed_by: "FFAdminUser"):  # type: ignore[no-untyped-def]
-        if not self.is_approved():  # type: ignore[no-untyped-call]
-            raise ChangeRequestNotApprovedError(
-                "Change request has not been approved by all required approvers."
-            )
-
-        logger.debug("Committing change request #%d", self.id)
-
-        feature_states_to_notify = self._get_feature_states_to_notify()
-        self._publish_feature_states()
-        self._publish_environment_feature_versions(committed_by)
-        self._publish_change_sets(committed_by)
-        self._publish_segments()
-        for feature_state_diffs in feature_states_to_notify:
-            if feature_state_diffs["previous_feature_state"]:
-                trigger_feature_state_change_webhooks(
-                    instance=feature_state_diffs["new_feature_state"],
-                    previous_instance=feature_state_diffs[
-                        "previous_feature_state"
-                    ].history.first(),
-                )
-
-        self.committed_at = timezone.now()
-        self.committed_by = committed_by
-        self.save()
-
-    def _get_feature_states_to_notify(
-        self,
-    ) -> list[FeatureStateDiff]:
-        feature_states_to_notify: list[FeatureStateDiff] = []
-
-        for feature_state in self.feature_states.all():
-            latest_live_fs = self._get_previous_version_instance(feature_state)
-            if latest_live_fs and latest_live_fs.version != feature_state.version:
-                feature_states_to_notify.append(
-                    {
-                        "new_feature_state": feature_state,
-                        "previous_feature_state": latest_live_fs,
-                    }
-                )
-
-        return feature_states_to_notify
-
-    def _get_previous_version_instance(
-        self, feature_state: FeatureState
-    ) -> FeatureState | None:
-        assert feature_state.environment is not None
-        fs_live_version = (
-            FeatureState.objects.get_live_feature_states(
-                environment=feature_state.environment,
-                additional_filters=Q(
-                    feature_id=feature_state.feature_id,
-                    feature_segment_id=feature_state.feature_segment_id,
-                    identity_id=feature_state.identity_id,
-                ),
-            )
-            .order_by("-live_from")
-            .first()
-        )
-
-        return fs_live_version
-
-    def _publish_feature_states(self) -> None:
-        now = timezone.now()
-
-        if feature_states := list(self.feature_states.all()):
-            for feature_state in feature_states:
-                if not feature_state.live_from or feature_state.live_from < now:
-                    feature_state.live_from = now
-                feature_state.version = FeatureState.get_next_version_number(
-                    environment_id=feature_state.environment_id,  # type: ignore[arg-type]
-                    feature_id=feature_state.feature_id,
-                    feature_segment_id=feature_state.feature_segment_id,  # type: ignore[arg-type]
-                    identity_id=feature_state.identity_id,  # type: ignore[arg-type]
-                )
-        FeatureState.objects.bulk_update(
-            feature_states, fields=["live_from", "version"]
-        )
-
-    def _publish_environment_feature_versions(
-        self, published_by: "FFAdminUser"
-    ) -> None:
-        now = timezone.now()
-
-        if environment_feature_versions := list(
-            self.environment_feature_versions.all()
-        ):
-            for environment_feature_version in environment_feature_versions:
-                if (
-                    not environment_feature_version.live_from
-                    or environment_feature_version.live_from < now
-                ):
-                    environment_feature_version.live_from = now
-
-                environment_feature_version.publish(published_by, persist=False)
-
-            EnvironmentFeatureVersion.objects.bulk_update(
-                environment_feature_versions,
-                fields=["published_at", "published_by", "live_from"],
-            )
-
-            for environment_feature_version in environment_feature_versions:
-                trigger_update_version_webhooks.delay(
-                    kwargs={
-                        "environment_feature_version_uuid": str(
-                            environment_feature_version.uuid
-                        )
-                    },
-                    delay_until=environment_feature_version.live_from,
-                )
-                rebuild_environment_document.delay(
-                    kwargs={"environment_id": self.environment_id},
-                    delay_until=environment_feature_version.live_from,
-                )
-                environment_feature_version_published.send(
-                    EnvironmentFeatureVersion, instance=environment_feature_version
-                )
-
-    def _publish_change_sets(self, published_by: "FFAdminUser") -> None:
-        for change_set in self.change_sets.all():
-            change_set.publish(user=published_by)
-
-    def _publish_segments(self) -> None:
-        for segment in self.segments.all():
-            target_segment = segment.version_of
-            assert target_segment != segment
-
-            # Deep clone the segment to establish historical version this is required
-            # because the target segment will be altered when the segment is published.
-            # Think of it like a regular update to a segment where we create the clone
-            # to create the version, then modifying the new 'draft' version with the
-            # data from the change request.
-            target_segment.deep_clone()  # type: ignore[union-attr]
-
-            # Set the properties of the change request's segment to the properties
-            # of the target (i.e., canonical) segment.
-            target_segment.name = segment.name  # type: ignore[union-attr]
-            target_segment.description = segment.description  # type: ignore[union-attr]
-            target_segment.feature = segment.feature  # type: ignore[union-attr]
-            target_segment.save()  # type: ignore[union-attr]
-
-            # Delete the rules in order to replace them with copies of the segment.
-            target_segment.rules.all().delete()  # type: ignore[union-attr]
-            for rule in segment.rules.all():
-                rule.deep_clone(target_segment)  # type: ignore[arg-type]
+        ChangeRequestCommitService(self).commit(committed_by)
 
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return CHANGE_REQUEST_CREATED_MESSAGE % self.title
@@ -298,18 +145,18 @@ class ChangeRequest(  # type: ignore[django-manager-missing]
     def _get_project(self) -> "Project":
         return self.project
 
-    def is_approved(self):  # type: ignore[no-untyped-def]
+    def is_approved(self) -> bool:
         if self.environment:
-            return self.is_approved_via_environment()  # type: ignore[no-untyped-call]
-        return self.is_approved_via_project()  # type: ignore[no-untyped-call]
+            return self.is_approved_via_environment()
+        return self.is_approved_via_project()
 
-    def is_approved_via_project(self):  # type: ignore[no-untyped-def]
+    def is_approved_via_project(self) -> bool:
         return self.project.minimum_change_request_approvals is None or (
             self.approvals.filter(approved_at__isnull=False).count()
             >= self.project.minimum_change_request_approvals
         )
 
-    def is_approved_via_environment(self):  # type: ignore[no-untyped-def]
+    def is_approved_via_environment(self) -> bool:
         return (
             self.environment.minimum_change_request_approvals is None  # type: ignore[union-attr]
             or (
