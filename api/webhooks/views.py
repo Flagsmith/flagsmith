@@ -1,6 +1,5 @@
-from typing import Any
-
 import requests
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -10,13 +9,12 @@ from rest_framework.response import Response
 from webhooks.webhooks import WebhookType
 
 from .permissions import TriggerSampleWebhookPermission
-from .webhooks import send_test_request_to_webhook
-from drf_yasg.utils import swagger_auto_schema
 from .serializers import (
+    TestWebhookErrorResponseSerializer,
     TestWebhookSerializer,
     TestWebhookSuccessResponseSerializer,
-    TestWebhookErrorResponseSerializer,
 )
+from .webhooks import send_test_request_to_webhook
 
 
 class WebhookViewSet(viewsets.ViewSet):
