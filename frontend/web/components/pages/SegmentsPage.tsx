@@ -1,4 +1,4 @@
-// TODO: Migrate to new router
+// TODO: migrate to useRouter with next version
 import React, { FC, ReactNode, useEffect, useState } from 'react' // we need this to make JSX compile
 import { RouterChildContext } from 'react-router'
 import { sortBy } from 'lodash'

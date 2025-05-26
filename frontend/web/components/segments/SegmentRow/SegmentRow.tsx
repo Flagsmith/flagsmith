@@ -1,6 +1,6 @@
-// TODO: Migrate to new router
+// TODO: migrate to useRouter with next version
 import { FC } from 'react'
-import { RouterChildContext } from 'react-router'
+import { RouterChildContext, withRouter } from 'react-router'
 
 import { useHasPermission } from 'common/providers/Permission'
 
@@ -151,3 +151,5 @@ export const SegmentRow: FC<SegmentRowProps> = ({
     </Row>
   )
 }
+
+export default withRouter(SegmentRow as any)
