@@ -698,5 +698,9 @@ export type Req = {
     triggers: Omit<StageTrigger, 'id'>[]
     actions: Omit<StageAction, 'id'>[]
   }
+  deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
   // END OF TYPES
 }

@@ -3,12 +3,9 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
+import { PipelineStage as PipelineStageType } from 'common/types/responses'
 
-type StageData = {
-  name: string
-  environmentId?: number
-  segment?: number
-}
+type DraftStageType = Omit<PipelineStageType, 'id' | 'pipeline'>
 
 const TRIGGER_OPTIONS = [
   { label: 'When flag is added to this stage', value: 'flag-added-to-stage' },
@@ -43,8 +40,8 @@ const PipelineStage = ({
   projectId,
   stageData,
 }: {
-  stageData: StageData
-  onChange: (stageData: StageData) => void
+  stageData: DraftStageType
+  onChange: (stageData: DraftStageType) => void
   projectId: string
 }) => {
   const [searchInput, setSearchInput] = useState('')
@@ -93,11 +90,11 @@ const PipelineStage = ({
   }
 
   useEffect(() => {
-    if (!stageData.environmentId && environmentOptions?.length) {
+    if (!stageData.environment && environmentOptions?.length) {
       handleOnChange('environmentId', environmentOptions?.[0].value)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stageData.environmentId, environmentOptions])
+  }, [stageData.environment, environmentOptions])
 
   return (
     <div className='p-3 border-1 rounded' style={{ minWidth: '360px' }}>
@@ -117,7 +114,7 @@ const PipelineStage = ({
           component={
             <Select
               value={Utils.toSelectedValue(
-                stageData.environmentId,
+                stageData.environment,
                 environmentOptions,
                 environmentOptions?.[0],
               )}
@@ -177,7 +174,7 @@ const PipelineStage = ({
           }
         />
       </FormGroup>
-      {selectedAction?.value === 'enabled-for-segment' && (
+      {/* {selectedAction?.value === 'enabled-for-segment' && (
         <FormGroup className='pl-4'>
           <InputGroup
             title='Segment'
@@ -198,10 +195,10 @@ const PipelineStage = ({
             }
           />
         </FormGroup>
-      )}
+      )} */}
     </div>
   )
 }
 
-export type { StageData }
+export type { DraftStageType }
 export default PipelineStage

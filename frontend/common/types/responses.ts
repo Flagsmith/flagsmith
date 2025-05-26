@@ -798,9 +798,14 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
+export enum PipelineStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+}
+
 export type ReleasePipeline = {
   id: number
-  status: 'DRAFT' | 'ACTIVE'
+  status: PipelineStatus
   name: string
   project: number
 }

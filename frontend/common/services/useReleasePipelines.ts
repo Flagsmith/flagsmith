@@ -34,6 +34,15 @@ export const releasePipelinesService = service
           url: `projects/${query.projectId}/release-pipelines/`,
         }),
       }),
+      deleteReleasePipeline: builder.mutation<{}, Req['deleteReleasePipeline']>(
+        {
+          invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+          query: (query: Req['deleteReleasePipeline']) => ({
+            method: 'DELETE',
+            url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/`,
+          }),
+        },
+      ),
       getPipelineStage: builder.query<
         Res['pipelineStage'],
         Req['getPipelineStage']
@@ -133,6 +142,7 @@ export async function createPipelineStages(
 export const {
   useCreatePipelineStagesMutation,
   useCreateReleasePipelineMutation,
+  useDeleteReleasePipelineMutation,
   useGetPipelineStageQuery,
   useGetPipelineStagesQuery,
   useGetReleasePipelineQuery,

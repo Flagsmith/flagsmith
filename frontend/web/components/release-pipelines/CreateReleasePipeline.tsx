@@ -1,46 +1,85 @@
-import { useState } from 'react'
-import PipelineStage from './PipelineStage'
-import { StageData } from './PipelineStage'
+import { useEffect, useState } from 'react'
+import PipelineStage, { DraftStageType } from './PipelineStage'
 import StageLine from './StageLine'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-
-type PipelineData = {
-  name: string
-  stages: StageData[]
-}
+import { PipelineStatus, ReleasePipeline } from 'common/types/responses'
+import Icon from 'components/Icon'
+import { useCreateReleasePipelineMutation } from 'common/services/useReleasePipelines'
+import { withRouter, RouteComponentProps } from 'react-router'
 
 type CreateReleasePipelineType = {
   projectId: string
+} & RouteComponentProps
+
+type DraftPipelineType = Omit<ReleasePipeline, 'id'>
+
+const blankStage: DraftStageType = {
+  actions: [],
+  environment: 0,
+  name: '',
+  order: 0,
+  triggers: [],
 }
 
-export default function CreateReleasePipeline({
+function CreateReleasePipeline({
+  history,
   projectId,
 }: CreateReleasePipelineType) {
-  const [pipelineData, setPipelineData] = useState<PipelineData>({
-    stages: [
-      {
-        name: '',
-      },
-    ],
+  const [
+    createReleasePipeline,
+    {
+      error: createPipelineError,
+      isLoading: isCreatingPipeline,
+      isSuccess: isCreatingPipelineSuccess,
+    },
+  ] = useCreateReleasePipelineMutation()
+
+  const [pipelineData, setPipelineData] = useState<DraftPipelineType>({
+    name: '',
+    project: Number(projectId),
+    status: PipelineStatus.DRAFT,
   })
 
-  const [pipelineName, setPipelineName] = useState('')
+  const [stages, setStages] = useState<DraftStageType[]>([
+    {
+      actions: [],
+      environment: 0,
+      name: '',
+      order: 0,
+      triggers: [],
+    },
+  ])
 
-  const handleOnChange = (stageData: StageData, index: number) => {
-    const newStageData = pipelineData.stages.map((stage, i) =>
+  const [isEditingName, setIsEditingName] = useState(
+    !pipelineData?.name?.length,
+  )
+
+  useEffect(() => {
+    if (isCreatingPipelineSuccess) {
+      history.push(`/project/${projectId}/release-pipelines`)
+    }
+  }, [isCreatingPipelineSuccess, createPipelineError, history, projectId])
+
+  const handleOnChange = (stageData: DraftStageType, index: number) => {
+    const newStageData = stages.map((stage, i) =>
       i === index ? stageData : stage,
     )
-    setPipelineData({ ...pipelineData, stages: newStageData })
+    setStages(newStageData)
   }
 
   const validatePipelineData = () => {
-    const hasName = pipelineData.stages.every((stage) => stage.name !== '')
-    const hasSegments = pipelineData.stages.every((stage) => !!stage.segment)
-    return hasName && hasSegments
+    return pipelineData?.name !== ''
+  }
+
+  const handleSave = () => {
+    createReleasePipeline({
+      name: pipelineData.name,
+      projectId: Number(projectId),
+    })
   }
 
   return (
@@ -57,40 +96,62 @@ export default function CreateReleasePipeline({
 
       <PageTitle
         title={
-          <InputGroup
-            className='mb-0'
-            value={''}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              console.log(event.target.value)
-            }}
-          />
+          <Row>
+            {!isEditingName && !!pipelineData?.name?.length ? (
+              <div>{pipelineData?.name}</div>
+            ) : (
+              <InputGroup
+                className='mb-0'
+                value={pipelineData?.name}
+                placeholder='Release Pipeline Name'
+                onChange={(event: InputEvent) => {
+                  setPipelineData({
+                    ...pipelineData,
+                    name: Utils.safeParseEventValue(event),
+                  })
+                }}
+              />
+            )}
+            <Button
+              theme='text'
+              className='ml-2 clickable'
+              onClick={() => setIsEditingName(!isEditingName)}
+              disabled={!pipelineData?.name?.length}
+            >
+              {isEditingName ? (
+                <Icon width={20} fill='#6837FC' name='close-circle' />
+              ) : (
+                <Icon width={20} fill='#6837FC' name='edit' />
+              )}
+            </Button>
+          </Row>
         }
         cta={
-          <Button disabled={!validatePipelineData()} onClick={() => {}}>
+          <Button
+            disabled={!validatePipelineData() || isCreatingPipeline}
+            onClick={() => handleSave()}
+          >
             Save Release Pipeline
           </Button>
         }
       />
       <div className='px-2 pb-4 overflow-auto'>
         <Row className='no-wrap'>
-          {pipelineData.stages.map((stageData, index) => (
+          {stages?.map((stageData, index) => (
             <Row key={index}>
               <Row className='align-items-start no-wrap'>
                 <PipelineStage
                   stageData={stageData}
-                  onChange={(stageData) => handleOnChange(stageData, index)}
+                  onChange={(stageData: DraftStageType) =>
+                    handleOnChange(stageData, index)
+                  }
                   projectId={projectId}
                 />
                 <div className='flex-1'>
                   <StageLine
-                    showAddStageButton={
-                      index === pipelineData.stages.length - 1
-                    }
+                    showAddStageButton={index === stages.length - 1}
                     onAddStage={() =>
-                      setPipelineData((prev) => ({
-                        ...prev,
-                        stages: [...prev.stages, { name: '' }],
-                      }))
+                      setStages((prev) => prev.concat(blankStage))
                     }
                   />
                 </div>
@@ -102,3 +163,5 @@ export default function CreateReleasePipeline({
     </div>
   )
 }
+
+export default withRouter(CreateReleasePipeline)

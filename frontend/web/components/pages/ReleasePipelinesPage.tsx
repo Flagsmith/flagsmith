@@ -1,9 +1,14 @@
 import PageTitle from 'components/PageTitle'
-import { useGetReleasePipelinesQuery } from 'common/services/useReleasePipelines'
+import {
+  useDeleteReleasePipelineMutation,
+  useGetReleasePipelinesQuery,
+} from 'common/services/useReleasePipelines'
 import { Button } from 'components/base/forms/Button'
 import { RouterChildContext } from 'react-router'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { ReleasePipeline } from 'common/types/responses'
+import Card from 'components/Card'
+import DropdownMenu from 'components/base/DropdownMenu'
 
 type ReleasePipelinesPageType = {
   router: RouterChildContext['router']
@@ -57,6 +62,8 @@ const ReleasePipelinesPageContent = ({
   projectId,
   router,
 }: ReleasePipelinesPageContentProps) => {
+  const [deleteReleasePipeline] = useDeleteReleasePipelineMutation()
+
   if (isLoading) {
     return (
       <div className='text-center'>
@@ -69,7 +76,34 @@ const ReleasePipelinesPageContent = ({
     return <NoReleasePipelines router={router} projectId={projectId} />
   }
 
-  return <div>Release Pipelines List</div>
+  return (
+    <>
+      {data?.map((pipeline) => (
+        <Card
+          contentClassName='bg-light200 bg-white'
+          className='rounded position-relative border-1 px-2'
+          key={pipeline.id}
+        >
+          <Row className='align-items-center justify-content-between'>
+            <span className='fw-bold'>{pipeline.name}</span>
+            <DropdownMenu
+              items={[
+                {
+                  icon: 'trash-2',
+                  label: 'Remove Release Pipeline',
+                  onClick: () =>
+                    deleteReleasePipeline({
+                      pipelineId: pipeline.id,
+                      projectId: Number(projectId),
+                    }),
+                },
+              ]}
+            />
+          </Row>
+        </Card>
+      ))}
+    </>
+  )
 }
 
 const ReleasePipelinesPage = ({ match, router }: ReleasePipelinesPageType) => {
