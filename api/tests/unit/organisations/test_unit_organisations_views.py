@@ -219,6 +219,39 @@ def test_should_update_organisation_data(
     assert organisation.restrict_project_create_to_admin is True
 
 
+@pytest.mark.parametrize(
+    "current_billing_term_starts_at, current_billing_term_ends_at, has_billing_periods",
+    [
+        (None, None, False),
+        (timezone.now() - timedelta(days=5), timezone.now() + timedelta(days=5), True),
+        (timezone.now() - timedelta(days=5), timezone.now() - timedelta(days=1), False),
+    ],
+)
+def test_get_subscription_metadata_returns_expected_result(
+    organisation: Organisation,
+    admin_client: APIClient,
+    current_billing_term_starts_at: datetime,
+    current_billing_term_ends_at: datetime,
+    has_billing_periods: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=current_billing_term_starts_at,
+        current_billing_term_ends_at=current_billing_term_ends_at,
+    )
+
+    # When
+    response = admin_client.get("/api/v1/organisations/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        response.data["results"][0]["subscription"]["has_active_billing_periods"]
+        == has_billing_periods
+    )
+
+
 def test_should_invite_users_to_organisation(
     settings: SettingsWrapper,
     admin_client: APIClient,

@@ -546,3 +546,45 @@ def test_subscription_plan_family(
     plan_id: str, expected_plan_family: SubscriptionPlanFamily
 ) -> None:
     assert Subscription(plan=plan_id).subscription_plan_family == expected_plan_family
+
+
+@pytest.mark.parametrize(
+    "billing_term_starts_at, billing_term_ends_at, expected_result",
+    [
+        (None, None, False),
+        (
+            timezone.now() - timedelta(hours=1),
+            timezone.now() + timedelta(days=30),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() + timedelta(hours=1),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() - timedelta(days=5),
+            False,
+        ),
+    ],
+)
+def test_organisation_has_billing_periods(
+    organisation: Organisation,
+    billing_term_starts_at: datetime,
+    billing_term_ends_at: datetime,
+    expected_result: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=billing_term_starts_at,
+        current_billing_term_ends_at=billing_term_ends_at,
+    )
+
+    organisation.refresh_from_db()
+    # When
+    result = organisation.subscription.has_active_billing_periods
+
+    # Then
+    assert result == expected_result
