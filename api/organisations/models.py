@@ -566,6 +566,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         """
         if not self.is_billing_terms_dates_set():
             return False
+
     if TYPE_CHECKING:
         assert self.current_billing_term_starts_at is not None
         assert self.current_billing_term_ends_at is not None
