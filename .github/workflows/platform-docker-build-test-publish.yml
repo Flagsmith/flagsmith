@@ -95,9 +95,9 @@ jobs:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
         args:
           - api-image: ${{ needs.docker-build-api.outputs.image }}
-            args: --meta-filter category=oss
+            args: --project=oss
           - api-image: ${{ needs.docker-build-private-cloud-api.outputs.image }}
-            args: --meta-filter category=oss,category=enterprise
+            args: --project=oss --project=enterprise
 
   # Publish to dockerhub
 
@@ -237,3 +237,9 @@ jobs:
             {
               "appVersion": "${{ steps.version-trim.outputs.version }}"
             }
+
+  steps:
+    - name: Install Playwright browsers
+      run: npm run playwright:install
+    - name: Run tests
+      run: npm run test
