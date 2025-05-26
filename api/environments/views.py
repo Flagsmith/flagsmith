@@ -1,5 +1,5 @@
 import logging
-from typing import Generic, Type, TypeVar, cast
+from typing import Generic, Type, TypeVar
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
