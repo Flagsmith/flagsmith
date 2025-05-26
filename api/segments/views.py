@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from common.projects.permissions import VIEW_PROJECT
 from common.segments.serializers import (
@@ -6,9 +7,10 @@ from common.segments.serializers import (
 )
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
@@ -24,7 +26,11 @@ from features.versioning.models import EnvironmentFeatureVersion
 
 from .models import Segment
 from .permissions import SegmentPermissions
-from .serializers import SegmentListQuerySerializer
+from .serializers import (
+    CloneSegmentSerializer,
+    SegmentListQuerySerializer,
+)
+from .services import SegmentCloneService
 
 logger = logging.getLogger()
 
@@ -118,6 +124,26 @@ class SegmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=CloneSegmentSerializer,
+        responses={201: SegmentSerializer()},
+        method="post",
+    )  # type: ignore[misc]
+    @action(
+        detail=True,
+        methods=["POST"],
+        url_path="clone",
+        serializer_class=CloneSegmentSerializer,
+    )
+    def clone(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        source_segment = self.get_object()
+        serializer = CloneSegmentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        clone = SegmentCloneService(source_segment).clone(
+            serializer.validated_data["name"]
+        )
+        return Response(SegmentSerializer(clone).data, status=status.HTTP_201_CREATED)
 
 
 @swagger_auto_schema(responses={200: SegmentSerializer()}, method="get")

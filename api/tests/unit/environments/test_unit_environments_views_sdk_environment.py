@@ -24,6 +24,7 @@ from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.tasks import enable_v2_versioning
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
+from segments.services import SegmentCloneService
 
 if TYPE_CHECKING:
     from pytest_django import DjangoAssertNumQueries
@@ -65,7 +66,7 @@ def test_get_environment_document(
         segment = Segment.objects.create(project=project)
 
         # Create a shallow clone which should not be returned in the document.
-        segment.shallow_clone(
+        SegmentCloneService(segment).shallow_clone(
             name=f"disregarded-clone-{i}",
             description=f"some-disregarded-clone-{i}",
             change_request=None,
