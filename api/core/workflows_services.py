@@ -1,19 +1,18 @@
+import logging
 from typing import TYPE_CHECKING, Literal
 
+from django.db.models import Q
 from django.utils import timezone
 
 from environments.tasks import rebuild_environment_document
 from features.models import FeatureState
+from features.tasks import trigger_feature_state_change_webhooks
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 from segments.models import Segment
 from segments.services import SegmentCloneService
-from django.db.models import Q
-from features.tasks import trigger_feature_state_change_webhooks
-import logging
-
 
 logger = logging.getLogger(__name__)
 

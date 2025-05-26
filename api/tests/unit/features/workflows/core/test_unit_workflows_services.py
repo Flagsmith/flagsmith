@@ -1,20 +1,20 @@
-from features.models import Feature, FeatureState
-from features.workflows.core.models import ChangeRequest
-from core.workflows_services import ChangeRequestCommitService
-from users.models import FFAdminUser
-from environments.models import Environment
-from pytest_mock import MockerFixture
-from django.utils import timezone
 from datetime import timedelta
-from environments.models import Environment
-from features.versioning.models import EnvironmentFeatureVersion
-from features.models import Feature
-from segments.models import Segment, SegmentRule, Condition
-from segments.services import SegmentCloneService
+
+import pytest
+from django.utils import timezone
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
+from pytest_mock import MockerFixture
+
+from core.workflows_services import ChangeRequestCommitService
+from environments.models import Environment
+from features.models import Feature, FeatureState
+from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.versioning_service import get_environment_flags_list
 from features.workflows.core.exceptions import ChangeRequestNotApprovedError
-import pytest
+from features.workflows.core.models import ChangeRequest
+from segments.models import Condition, Segment, SegmentRule
+from segments.services import SegmentCloneService
+from users.models import FFAdminUser
 
 now = timezone.now()
 
