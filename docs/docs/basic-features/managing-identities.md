@@ -25,6 +25,30 @@ unintentionally leaking Identity trait data.
 
 :::
 
+## Identity Lifecycle
+
+<div style={{textAlign: 'center'}}>
+
+```mermaid
+flowchart TD
+    A[Application] -->|identify| B[SDK]
+    B -->|API Call| C[Flagsmith]
+    C -->|Create/Update| D[Identity Store]
+    D -->|Evaluate| E[Feature Flags]
+    
+    subgraph Evaluation Order
+    E --> F[Environment Defaults]
+    E --> G[Segment Rules]
+    E --> H[Identity Overrides]
+    end
+
+    style C fill:#4f9eda
+    style D fill:#4f9eda
+    style E fill:#95d47a
+```
+
+</div>
+
 ## Identity Overrides
 
 Once you have uniquely identified a user, you can then override features for that user from your Environment defaults.
@@ -43,6 +67,26 @@ to override flags and configs on a per-identity basis. You can do this by naviga
 and modifying their Flags.
 
 ## Identity Traits
+
+<div style={{textAlign: 'center'}}>
+
+```mermaid
+erDiagram
+    IDENTITY ||--o{ TRAIT : has
+    IDENTITY {
+        string identifier
+        string environment
+    }
+    TRAIT {
+        string key
+        any value
+        string type
+    }
+    TRAIT ||--o{ SEGMENT : "used by"
+    SEGMENT ||--|{ FEATURE : controls
+```
+
+</div>
 
 You can also use Flagsmith to store 'Traits' against identities. Traits are key/value pairs that are associated with
 individual Identities for a particular Environment. Traits have two purposes outlined below, but the main use case is to
@@ -114,6 +158,20 @@ Traits can be used within your application, but they can also be used to power [
 
 ## Trait Value Data Types
 
+<div style={{textAlign: 'center'}}>
+
+```mermaid
+classDiagram
+    class TraitValue {
+        Boolean: true/false
+        String: max 2000 bytes
+        Integer: 32-bit signed
+        Float: ~15 digit precision
+    }
+```
+
+</div>
+
 :::tip
 
 You can remove a trait by sending `null` as the trait value.
@@ -135,3 +193,4 @@ type conversion within the SDK.
 Identities are lazily created within Flagsmith. There might be instances where you want to push Identity and Trait data
 into the platform outside of a user session. We have a
 [code example for this](/clients/rest#bulk-uploading-identities-and-traits).
+
