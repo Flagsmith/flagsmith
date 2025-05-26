@@ -327,10 +327,10 @@ class NestedEnvironmentViewSet(Generic[T], viewsets.GenericViewSet[T]):
         serializer.save(environment=self._get_environment())
 
     def _get_environment(self) -> Environment:
-        return cast(
-            Environment,
-            Environment.objects.get(api_key=self.kwargs.get("environment_api_key")),
+        environment: Environment = Environment.objects.get(
+            api_key=self.kwargs.get("environment_api_key")
         )
+        return environment
 
 
 class WebhookViewSet(
