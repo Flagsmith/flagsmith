@@ -2,7 +2,14 @@ import Constants from 'common/constants'
 
 module.exports = (
   envId,
-  { FEATURE_NAME, FEATURE_NAME_ALT, LIB_NAME, NPM_NODE_CLIENT, USER_ID, TRAIT_NAME },
+  {
+    FEATURE_NAME,
+    FEATURE_NAME_ALT,
+    LIB_NAME,
+    NPM_NODE_CLIENT,
+    TRAIT_NAME,
+    USER_ID,
+  },
   userId,
 ) => `import Flagsmith from "${NPM_NODE_CLIENT}"; // Add this line if you're using ${LIB_NAME} via npm
 
@@ -18,9 +25,7 @@ const ${LIB_NAME} = new Flagsmith({${
 const traits = { ${TRAIT_NAME}: 42 };
 
 // Identify the user
-const flags = await flagsmith.getIdentityFlags('${
-  userId || USER_ID
-}', traits);
+const flags = await flagsmith.getIdentityFlags('${userId || USER_ID}', traits);
 
 // get the state / value of the user's flags 
 const isEnabled = flags.isFeatureEnabled('${FEATURE_NAME}');

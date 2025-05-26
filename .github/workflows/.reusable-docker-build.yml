@@ -71,7 +71,7 @@ on:
 jobs:
   build:
     name: Build ${{ inputs.scan && 'and verify ' || '' }}${{ inputs.image-name }} image
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     outputs:
       image: ${{ steps.image-tag.outputs.image-tag }}
 

@@ -1,3 +1,4 @@
+// TODO: Migrate to new router
 import { FC } from 'react'
 import { RouterChildContext } from 'react-router'
 
@@ -21,12 +22,7 @@ interface SegmentRowProps {
   projectId: string
   router: RouterChildContext['router']
   removeSegment: MutationTrigger<
-    MutationDefinition<Req['deleteSegment'],
-      any,
-      'Segment',
-      Segment,
-      'service'
-    >
+    MutationDefinition<Req['deleteSegment'], any, 'Segment', Segment, 'service'>
   >
 }
 

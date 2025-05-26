@@ -22,7 +22,6 @@ interface FeatureActionProps {
   hideHistory: boolean
   hideRemove: boolean
   onShowHistory: () => void
-  isCompact?: boolean
   onCopyName: () => void
   onShowAudit: () => void
   onRemove: () => void
@@ -35,7 +34,6 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   hideAudit,
   hideHistory,
   hideRemove,
-  isCompact,
   onCopyName,
   onRemove,
   onShowAudit,
@@ -71,7 +69,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
       close()
     },
-    [close, onCopyName, onRemove, onShowHistory],
+    [close, onCopyName, onRemove, onShowHistory, onShowAudit],
   )
 
   useOutsideClick(listRef, handleOutsideClick)
