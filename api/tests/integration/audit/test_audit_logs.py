@@ -165,9 +165,9 @@ def test_creates_audit_log_for_feature_state_update(
 @pytest.mark.parametrize(
     "tz_name, django_datetime_format, expected_ts",
     [
-        ("America/Los_Angeles", "%Y-%m-%d %H:%M (%Z)", "2199-04-15 05:30 (PDT)"),
-        ("UTC", "%d %b %Y %H:%M (%Z)", "15 Apr 2199 12:30 (UTC)"),
-        ("Asia/Tokyo", "%Y/%m/%d %H:%M (%Z)", "2199/04/15 21:30 (JST)"),
+        ("America/Los_Angeles", "Y-m-d H:i (T)", "2199-04-15 05:30 (PDT)"),
+        ("UTC", "D j M Y H:i (T)", "Mon 15 Apr 2199 12:30 (UTC)"),
+        ("Asia/Tokyo", "Y年n月j日 H:i (T)", "2199年4月15日 21:30 (JST)"),
     ],
 )
 def test_creates_audit_log_for_scheduled_feature_state_update(

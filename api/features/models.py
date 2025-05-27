@@ -15,7 +15,7 @@ from django.core.exceptions import (
 )
 from django.db import models
 from django.db.models import Max, Q, QuerySet
-from django.utils import timezone
+from django.utils import formats, timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
@@ -964,7 +964,7 @@ class FeatureState(
             return FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE % (
                 self.feature.name,
                 self.change_request.title,
-                live_from.strftime(settings.DATETIME_FORMAT),
+                formats.date_format(live_from, settings.DATETIME_FORMAT),
             )
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
