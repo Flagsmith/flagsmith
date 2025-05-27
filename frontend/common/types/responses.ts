@@ -239,6 +239,11 @@ export type githubIntegration = {
   organisation: string
 }
 
+export type GettingStartedTask = {
+  name: string
+  completed_at: string
+}
+
 export type User = {
   id: number
   email: string
@@ -250,6 +255,7 @@ export type User = {
     completed: boolean
     selection: string[]
   }
+  tasks: GettingStartedTask[]
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -916,5 +922,6 @@ export type Res = {
   onboardingSupportOptIn: { id: string }
   preferredTools: {}
   profile: User
+  completedTask: { id: string }
   // END OF TYPES
 }

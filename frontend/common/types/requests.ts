@@ -19,6 +19,7 @@ import {
   Webhook,
   IdentityTrait,
   User,
+  GettingStartedTask,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -648,6 +649,7 @@ export type Req = {
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
   getProfile: {}
+  createCompletedTask: GettingStartedTask
   updatePreferredTools: User['tools']
   // END OF TYPES
 }

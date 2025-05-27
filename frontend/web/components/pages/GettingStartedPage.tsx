@@ -15,8 +15,9 @@ import flagsmith from 'flagsmith'
 import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import API from 'project/api'
-import IntegrationSelect from 'components/IntegrationSelect'
 import { useGetProfileQuery } from 'common/services/useProfile'
+import { useCreateCompletedTaskMutation } from 'common/services/useCompletedTask'
+import IntegrationSelect from 'components/IntegrationSelect'
 type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
@@ -27,7 +28,7 @@ type GettingStartedItem = {
   icon?: IconName
   complete?: boolean
   disabledMessage?: string | null
-  persistId?: string
+  key?: string
 }
 type GettingStartedItemType = {
   data: GettingStartedItem
@@ -57,20 +58,21 @@ const resources: {
 const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   //Immediate complete state rather than wait for traits to come back
   const [localComplete, setLocalComplete] = useState(false)
-
+  const { data: profile } = useGetProfileQuery({})
+  const [completeTask] = useCreateCompletedTaskMutation({})
   const { complete: _complete, cta, description, duration, link, title } = data
-  const complete = data.persistId
-    ? localComplete || Utils.getFlagsmithTrait(data.persistId)
+  const complete = data.key
+    ? localComplete || profile?.tasks?.find((v) => v.name === data.key)
     : _complete
 
   const onCTAClick = () => {
     if (data.disabledMessage) {
       return
     }
-    API.trackEvent({ 'category': 'GettingStarted', 'event': data.persistId })
-    if (data.persistId) {
+    API.trackEvent({ 'category': 'GettingStarted', 'event': data.key })
+    if (data.key) {
       setLocalComplete(true)
-      flagsmith.setTrait(data.persistId, Date.now())
+      completeTask({ completed_at: new Date().toISOString(), name: data.key })
     }
   }
 
@@ -227,15 +229,15 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     {
       description: 'Everything you need to get up-and-running with Flagsmith',
       duration: 5,
+      key: 'quickstart',
       link: 'https://docs.flagsmith.com/quickstart/',
-      persistId: 'quickstart',
       title: 'Quick Start Guide',
     },
     {
       description: "Familiarise yourself with Flagsmith's features",
       duration: 1,
+      key: 'basic-features',
       link: 'https://docs.flagsmith.com/basic-features/',
-      persistId: 'basic-features',
       title: 'Feature Overview',
     },
     {
@@ -244,8 +246,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         "Integrate Flagsmith with Flagsmith's features your existing tech stack",
       duration: 1,
       icon: 'layers',
+      key: 'integrations',
       link: 'https://docs.flagsmith.com/integrations/',
-      persistId: 'integrations',
       title: 'Integrations',
     },
     {
@@ -254,8 +256,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       description:
         "Compare Flagsmith's free open source and commercial features",
       duration: 1,
+      key: 'version-comparison',
       link: 'https://docs.flagsmith.com/version-comparison',
-      persistId: 'version-comparison',
       title: 'Version comparison',
     },
   ]
