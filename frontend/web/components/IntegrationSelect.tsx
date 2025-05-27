@@ -2,7 +2,8 @@ import React, { FC, useMemo, useState } from 'react'
 import PageTitle from './PageTitle'
 import {
   integrationCategories,
-  unreleasedIntegrations,
+  integrationSummaries,
+  IntegrationSummary,
 } from './pages/IntegrationsPage'
 import SidebarLink from './SidebarLink'
 import Input from './base/forms/Input'
@@ -12,30 +13,50 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Button from './base/forms/Button'
 import classNames from 'classnames'
 import ModalDefault from './modals/base/ModalDefault'
-import Icon from './Icon'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
+import { useUpdatePreferredToolsMutation } from 'common/services/usePreferredTool'
 
-type IntegrationSelectType = {}
+type IntegrationSelectType = {
+  onComplete: () => void
+}
+const ALL_CATEGORY = 'All'
 
-const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
-  const [search, setSearch] = useState()
+const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
+  // Initialize search as an empty string
+  const [search, setSearch] = useState<string>('')
   const integrationsData = Utils.getFlagsmithValue('integration_data')
-  const [category, setCategory] = useState('All')
+  const [category, setCategory] = useState<string>(ALL_CATEGORY)
 
+  // Filter integrations by category and search term
   const allIntegrations = useMemo(() => {
     if (!integrationsData) {
-      return [] as typeof unreleasedIntegrations
+      return [] as typeof integrationSummaries
     }
-    const value = Object.values(JSON.parse(integrationsData))
-      .concat(unreleasedIntegrations)
-      .filter((v) => category === 'All' || v.categories.includes(category))
-    return sortBy(value, 'title') as typeof unreleasedIntegrations
-  }, [integrationsData, category])
+    const parsed = Object.values(JSON.parse(integrationsData)).concat(
+      integrationSummaries,
+    ) as IntegrationSummary[]
+
+    const filtered = parsed.filter((v) => {
+      const matchesCategory =
+        category === ALL_CATEGORY || v.categories.includes(category as any)
+      const matchesSearch =
+        !search || v.title.toLowerCase().includes(search.toLowerCase())
+
+      return matchesCategory && matchesSearch
+    })
+
+    return sortBy(filtered, 'title') as typeof integrationSummaries
+  }, [integrationsData, category, search])
+
   const [selected, setSelected] = useState<string[]>([])
   const [showCustomTool, setShowCustomTool] = useState(false)
   const [customTool, setCustomTool] = useState('')
-
+  const [updateTools, { isLoading }] = useUpdatePreferredToolsMutation({})
+  const skip = () =>
+    updateTools({ completed: true, selection: [] }).then(onComplete)
+  const submit = () =>
+    updateTools({ completed: true, selection: selected }).then(onComplete)
   return (
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>
@@ -48,7 +69,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
         <div className='row'>
           <div className='col-md-4 d-none d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
             <div className='mx-md-3'>
-              {['All'].concat(integrationCategories).map((v) => (
+              {[ALL_CATEGORY].concat(integrationCategories).map((v) => (
                 <SidebarLink
                   key={v}
                   active={category === v}
@@ -62,9 +83,8 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
           <div className='col-md-8 h-100'>
             <div className='col-md-6 mx-2 mb-2'>
               <Input
-                onChange={(e: InputEvent) => {
-                  const v = Utils.safeParseEventValue(e)
-                  setSearch(v)
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setSearch(Utils.safeParseEventValue(e))
                 }}
                 value={search}
                 type='text'
@@ -72,14 +92,22 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
                 placeholder='Search'
                 search
               />
-              <div className='d-flex mt-4 flex-wrap gap-2'>
-                {selected.map((v) => (
-                  <div className='chip--xs cursor-pointer chip'>
-                    {v}
-                    <IonIcon className='text-primary fs-small' name={close} />
-                  </div>
-                ))}
-              </div>
+            </div>
+            <div className='d-flex m-2 flex-wrap gap-2'>
+              {selected.map((label) => (
+                <div
+                  key={label}
+                  onClick={() =>
+                    setSelected(selected.filter((target) => target !== label))
+                  }
+                  className='chip--xs cursor-pointer chip'
+                >
+                  {label}
+                  <span className='chip-icon ion'>
+                    <IonIcon className='fs-small' icon={close} />
+                  </span>
+                </div>
+              ))}
             </div>
             <div
               style={{ height: 550 }}
@@ -90,6 +118,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
                   const isSelected = selected.includes(v.title)
                   return (
                     <div
+                      key={v.title}
                       onClick={() => {
                         if (isSelected) {
                           setSelected(
@@ -101,7 +130,6 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
                           setSelected(selected.concat(v.title))
                         }
                       }}
-                      key={v.title}
                       className='col cursor-pointer px-2 py-2 text-center'
                     >
                       <div className='bg-body rounded border-xxl-1 card p-3'>
@@ -139,11 +167,12 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
             </div>
             <hr className='mb-5 mt-0' />
             <div className='sticky d-flex justify-content-end gap-4'>
-              <Button style={{ width: 120 }} theme='secondary'>
+              <Button onClick={skip} style={{ width: 120 }} theme='secondary'>
                 Skip
               </Button>
               <Button
-                disabled={!selected?.length}
+                onClick={submit}
+                disabled={!selected?.length || isLoading}
                 style={{ width: 120 }}
                 theme='primary'
               >
@@ -162,11 +191,11 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
         <p>Let us know what tool you would love to use with feature flags</p>
         <Input
           className='w-100'
-          onChange={(e: InputEvent) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setCustomTool(Utils.safeParseEventValue(e))
           }}
           value={customTool}
-          placeholder='Tool name'
+          placeholder='Enter a name...'
         />
         <div className={'text-end mt-4'}>
           <Button

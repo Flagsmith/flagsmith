@@ -916,5 +916,12 @@ export type Res = {
       selected: string[]
     }
   }
+  profile: {
+    tools: {
+      completed: boolean
+      selection: string[]
+    }
+  }
+  preferredTools: {}
   // END OF TYPES
 }

@@ -32,12 +32,12 @@ export const integrationCategories = [
   'Source',
   'Webhooks',
 ] as const
-
-export const unreleasedIntegrations: {
+export type IntegrationSummary = {
   categories: (typeof integrationCategories)[number][]
   image: string
   title: string
-}[] = [
+}
+export const integrationSummaries: IntegrationSummary[] = [
   {
     categories: ['Monitoring'],
     image: '/static/images/integrations/appdynamics.svg',

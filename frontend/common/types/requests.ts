@@ -649,5 +649,7 @@ export type Req = {
   createOnboardingSupportOptIn: {}
   updatePreferences: Res['preferences']
   getPreferences: Res['preferences']
+  getProfile: {}
+  updatePreferredTools: Res['profile']['tools']
   // END OF TYPES
 }

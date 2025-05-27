@@ -16,6 +16,7 @@ import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import API from 'project/api'
 import IntegrationSelect from 'components/IntegrationSelect'
+import { useGetProfileQuery } from 'common/services/useProfile'
 type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
@@ -187,10 +188,6 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     { skip: !project },
   )
 
-  const hasSubmittedIntegrations = Utils.getFlagsmithTrait(
-    'submitted_integrations',
-  )
-
   const environment = environments?.results?.[0]?.api_key
   const items: GettingStartedItem[] = [
     {
@@ -263,8 +260,23 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     },
   ]
 
+  const { data, isLoading } = useGetProfileQuery({})
+  const [completedIntegrations, setCompletedIntegrations] = useState(false)
+
+  const hasSubmittedIntegrations =
+    completedIntegrations || data?.tools?.completed
+  if (isLoading && !hasSubmittedIntegrations) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
   if (!hasSubmittedIntegrations) {
-    return <IntegrationSelect />
+    return (
+      <IntegrationSelect onComplete={() => setCompletedIntegrations(true)} />
+    )
   }
   return (
     <div className='bg-light100 pb-5'>
