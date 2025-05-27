@@ -87,7 +87,7 @@ def test_has_permission_ignores_payload_scope_if_not_webhook_test(  # type: igno
     mock_request = rf.post("/v1/webhooks/test")
     mock_request.user = user
     mock_request.data = {
-        "webhookUrl": "http://test.webhook.com",
+        "webhook_url": "http://test.webhook.com",
         "secret": "some-secret",
         "payload": {"test": "data"},
         "scope": {"type": "organisation", "id": organisation.id},
@@ -109,7 +109,7 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation
     mock_request = rf.post("/v1/webhooks/test")
     mock_request.user = user
     mock_request.data = {
-        "webhookUrl": "http://test.webhook.com",
+        "webhook_url": "http://test.webhook.com",
         "secret": "some-secret",
         "payload": {"test": "data"},
         "scope": {"type": "organisation", "id": organisation.id},
@@ -133,7 +133,7 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_
     mock_request = rf.post("/v1/webhooks/test")
     mock_request.user = user
     mock_request.data = {
-        "webhookUrl": "http://test.webhook.com",
+        "webhook_url": "http://test.webhook.com",
         "secret": "some-secret",
         "payload": {"test": "data"},
         "scope": {"type": "environment", "id": environment.api_key},

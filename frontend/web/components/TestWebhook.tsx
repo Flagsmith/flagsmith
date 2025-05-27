@@ -6,6 +6,7 @@ import data from 'common/data/base/_data'
 import Button from './base/forms/Button'
 import { useTestWebhookMutation } from 'common/services/useWebhooks'
 import Utils from 'common/utils/utils'
+
 type TestWebhookType = {
   webhookUrl: string | undefined
   json: string
@@ -63,11 +64,16 @@ const TestWebhook: FC<TestWebhookType> = ({
   secret,
   webhookUrl,
 }) => {
-  const [testWebhook, { error: backendError, isLoading, isSuccess: isBackendSuccess }] = useTestWebhookMutation()
+  const [
+    testWebhook,
+    { error: backendError, isLoading, isSuccess: isBackendSuccess },
+  ] = useTestWebhookMutation()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const isBackendTestEnabled = Utils.getFlagsmithHasFeature('test_webhook_backend')
+  const isBackendTestEnabled = Utils.getFlagsmithHasFeature(
+    'test_webhook_backend',
+  )
   const submit = () => {
     setError(null)
     setLoading(true)
@@ -97,42 +103,68 @@ const TestWebhook: FC<TestWebhookType> = ({
     })
   }
 
+  const formatError = (error: any) => {
+    if (error?.data?.detail) {
+      const statusError = error?.data?.status ? `(${error?.data?.status})` : ''
+      return `${error?.data?.detail} ${statusError} \n${error?.data?.body}`
+    } else if (error?.data?.webhook_url) {
+      return `${error?.data?.webhook_url?.[0]}`
+    } else {
+      return error?.status
+    }
+  }
   // TODO: Clean this nested ternary when flag is removed
-  const webhookError = isBackendTestEnabled ? backendError ? `${backendError?.data?.detail} (${backendError?.data?.status}) - ${backendError?.data?.body}` : error : error
+  const webhookError = isBackendTestEnabled
+    ? backendError
+      ? formatError(backendError)
+      : error
+    : error
+
   const webhookLoading = isBackendTestEnabled ? isLoading : loading
   const webhookSuccess = isBackendTestEnabled ? isBackendSuccess : success
   return (
     <>
-    {webhookError && <ErrorMessage error={webhookError} errorStyles={{ marginBottom: '0' }}/>}
+      {webhookError && (
+        <ErrorMessage
+          error={webhookError}
+          errorStyles={{ marginBottom: '0' }}
+        />
+      )}
       {webhookSuccess && (
         <div style={{ maxWidth: 'fit-content' }}>
-          <SuccessMessage message='Your API returned with a successful 200 response.' successStyles={{ marginBottom: '0', width: 'fit-content !important' }}/>
+          <SuccessMessage
+            message='Your API returned with a successful 200 response.'
+            successStyles={{
+              marginBottom: '0',
+              width: 'fit-content !important',
+            }}
+          />
         </div>
       )}
       <div>
-      <Button
-        type='button'
-        id='try-it-btn'
-        disabled={webhookLoading || !webhookUrl}
-        onClick={() =>{
-          if (!webhookUrl) {
-            return
-          }
-          if (isBackendTestEnabled) {
-            testWebhook({
-              scope,
-              secret: secret ?? undefined,
-              webhookUrl,
-            })
-          } else {
-            submit()
-          }
-        }}
-        theme='secondary'
-      >
-        Test your webhook
-      </Button>
-    </div>
+        <Button
+          type='button'
+          id='try-it-btn'
+          disabled={webhookLoading || !webhookUrl}
+          onClick={() => {
+            if (!webhookUrl) {
+              return
+            }
+            if (isBackendTestEnabled) {
+              testWebhook({
+                scope,
+                secret: secret ?? undefined,
+                webhookUrl,
+              })
+            } else {
+              submit()
+            }
+          }}
+          theme='secondary'
+        >
+          Test your webhook
+        </Button>
+      </div>
     </>
   )
 }

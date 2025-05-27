@@ -39,7 +39,7 @@ class WebhookViewSet(viewsets.ViewSet):
 
         data = serializer.validated_data
         secret = data.get("secret")
-        webhook_url = data["webhookUrl"]
+        webhook_url = data["webhook_url"]
         scope_type = data.get("scope", {}).get("type")
         try:
             webhook_type = (

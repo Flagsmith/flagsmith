@@ -34,15 +34,16 @@ export const webhookService = service
 
       testWebhook: builder.mutation<void, Req['testWebhook']>({
         query: (query) => {
-          return ({
-          body: {
-            scope: query.scope,
-            secret: query.secret,
-            webhookUrl: query.webhookUrl,
-          },
-          method: 'POST',
-          url: `webhooks/test/`,
-        })},
+          return {
+            body: {
+              scope: query.scope,
+              secret: query.secret,
+              webhook_url: query.webhookUrl,
+            },
+            method: 'POST',
+            url: `webhooks/test/`,
+          }
+        },
       }),
 
       updateWebhook: builder.mutation<Res['webhook'], Req['updateWebhook']>({

@@ -15,7 +15,7 @@ class ScopeSerializer(serializers.Serializer[None]):
 
 
 class TestWebhookSerializer(serializers.Serializer[None]):
-    webhookUrl = serializers.URLField(required=True)
+    webhook_url = serializers.URLField(required=True)
     scope = ScopeSerializer(required=True)
     secret = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 

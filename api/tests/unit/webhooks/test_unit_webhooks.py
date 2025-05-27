@@ -380,7 +380,7 @@ def test_send_test_request_to_webhook_returns_correct_response(
     url = reverse("api-v1:webhooks:webhooks-test")
 
     data = {
-        "webhookUrl": webhook_url,
+        "webhook_url": webhook_url,
         "secret": "some-secret",
         "scope": {"type": "organisation", "id": organisation.id},
     }
@@ -437,7 +437,7 @@ def test_send_test_request_to_webhook_returns_has_correct_payload(
     url = reverse("api-v1:webhooks:webhooks-test")
 
     data = {
-        "webhookUrl": webhook_url,
+        "webhook_url": webhook_url,
         "secret": secret,
         "scope": {"type": "environment", "id": environment.api_key},
     }
@@ -474,7 +474,7 @@ def test_send_test_request_to_webhook_handles_request_exception(
     url = reverse("api-v1:webhooks:webhooks-test")
 
     data = {
-        "webhookUrl": webhook_url,
+        "webhook_url": webhook_url,
         "secret": "some-secret",
         "scope": {"type": "organisation", "id": organisation.id},
     }
@@ -499,7 +499,7 @@ def test_should_return_bad_request_when_webhook_url_is_missing(
     # Given
     url = reverse("api-v1:webhooks:webhooks-test")
     data = {
-        "webhookUrl": "",
+        "webhook_url": "",
         "secret": "some-secret",
         "scope": {"type": "organisation", "id": organisation.id},
     }
@@ -510,4 +510,4 @@ def test_should_return_bad_request_when_webhook_url_is_missing(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    assert response.json() == {"webhookUrl": ["This field may not be blank."]}
+    assert response.json() == {"webhook_url": ["This field may not be blank."]}
