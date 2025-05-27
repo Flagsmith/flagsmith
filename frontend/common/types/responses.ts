@@ -282,6 +282,30 @@ export type UserPermission = {
   role?: number
 }
 
+export type DerivedPermission = {
+  groups: {
+    name: string
+    id: number
+  }[]
+  roles: {
+    name: string
+    id: number
+  }[]
+}
+
+export type Permission = {
+  is_directly_granted: boolean
+  permission_key: string
+  tags: number[]
+  derived_from: DerivedPermission
+}
+export type UserPermissions = {
+  admin: boolean
+  is_directly_granted: boolean
+  derived_from: DerivedPermission
+  permissions: Permission[]
+}
+
 export type RolePermission = Omit<UserPermission, 'permissions'> & {
   permissions: { permission_key: string; tags: number[] }[]
 }
@@ -425,25 +449,26 @@ export type IdentityFeatureState = {
 }
 
 export type FeatureState = {
-  id: number
-  feature_state_value: FlagsmithValue
-  multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  uuid: string
-  enabled: boolean
+  change_request?: number
   created_at: string
-  updated_at: string
-  environment_feature_version: string
-  version?: number
-  live_from?: string
-  feature: number
+  enabled: boolean
   environment: number
+  environment_feature_version: string
+  feature: number
   feature_segment?: {
     id: number
     priority: number
     segment: number
     uuid: string
   }
-  change_request?: number
+  feature_state_value: FlagsmithValue
+  id: number
+  identity?: number
+  live_from?: string
+  multivariate_feature_state_values: MultivariateFeatureStateValue[]
+  updated_at: string
+  uuid: string
+  version?: number
   //Added by FE
   toRemove?: boolean
 }
@@ -922,5 +947,6 @@ export type Res = {
   onboardingSupportOptIn: { id: string }
   profile: User
   completedTask: { id: string }
+  userPermissions: UserPermissions
   // END OF TYPES
 }

@@ -444,8 +444,8 @@ const App = class extends Component {
                                         focus='organisation'
                                       >
                                         <NavLink
-                                          id='org-settings-link'
-                                          data-test='org-settings-link'
+                                          id='organisation-link'
+                                          data-test='organisation-link'
                                           activeClassName='active'
                                           className={classNames(
                                             'breadcrumb-link',
