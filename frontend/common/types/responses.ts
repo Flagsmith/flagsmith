@@ -246,6 +246,10 @@ export type User = {
   last_name: string
   last_login: string
   uuid: string
+  tools: {
+    completed: boolean
+    selection: string[]
+  }
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -910,18 +914,6 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
-  preferences: {
-    tools: {
-      complete: boolean
-      selected: string[]
-    }
-  }
-  profile: {
-    tools: {
-      completed: boolean
-      selection: string[]
-    }
-  }
-  preferredTools: {}
+  profile: User
   // END OF TYPES
 }
