@@ -60,7 +60,11 @@ class CustomAuthTokenLoginOrRequestMFACode(TokenCreateView):  # type: ignore[mis
             )
         except MFAMethodDoesNotExistError:
             if settings.COOKIE_AUTH_ENABLED:
-                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
+                return authorise_response(
+                    user,
+                    Response(status=HTTP_204_NO_CONTENT),
+                    secure=request.is_secure(),
+                )
             return self._action(serializer)  # type: ignore[no-any-return]
 
 
@@ -83,7 +87,11 @@ class CustomAuthTokenLoginWithMFACode(TokenCreateView):  # type: ignore[misc]
             )
             serializer.user = user  # type: ignore[attr-defined]
             if settings.COOKIE_AUTH_ENABLED:
-                return authorise_response(user, Response(status=HTTP_204_NO_CONTENT))
+                return authorise_response(
+                    user,
+                    Response(status=HTTP_204_NO_CONTENT),
+                    secure=request.is_secure(),
+                )
             return self._action(serializer)  # type: ignore[no-any-return]
         except MFAValidationError as cause:
             return ErrorResponse(error=cause, status=status.HTTP_401_UNAUTHORIZED)  # type: ignore[arg-type]

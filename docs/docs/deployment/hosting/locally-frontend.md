@@ -95,11 +95,10 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `SENTRY_API_KEY`: Sentry key for error reporting.
 - `ALBACROSS_CLIENT_ID`: Albacross client ID key for behaviour tracking.
 - `BASE_URL`: Used for specifying a base url path that's ignored during routing if serving from a subdirectory.
-- `USE_SECURE_COOKIES`: Enable / disable the use of secure cookies. If deploying the FE in a private network without a
-  domain / SSL cert, disable secure cookies to ensure that session token is persisted. Default: true.
-- `COOKIE_SAME_SITE`: Define the value of the samesite attribute for the session token cookie set by the frontend.
-  Further reading on this value is available [here](https://web.dev/articles/samesite-cookies-explained). Default:
-  'none'.
+- `USE_SECURE_COOKIES`: If set to `true`, forces the use of secure (i.e. HTTPS-only) session cookies.
+- `COOKIE_SAME_SITE`: The
+   [SameSite attribute](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie#samesitesamesite-value)
+   value to use for the Flagsmith session cookie. Defaults to `None` if authenticating via HTTPS, or `Lax` otherwise.
 
 ### GitHub Integration Environment Variables
 
