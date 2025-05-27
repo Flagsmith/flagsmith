@@ -11,7 +11,8 @@ from webhooks.webhooks import WebhookType
 
 from .permissions import TriggerSampleWebhookPermission
 from .webhooks import send_test_request_to_webhook
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
+
 from .serializers import (
     TestWebhookSerializer,
     TestWebhookSuccessResponseSerializer,
@@ -29,7 +30,7 @@ class WebhookViewSet(viewsets.ViewSet):
             400: TestWebhookErrorResponseSerializer(),
         },
         method="post",
-    )
+    )  # type: ignore[misc]
     @action(
         detail=False,
         url_path="test",
