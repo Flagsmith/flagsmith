@@ -86,19 +86,29 @@ const ReleasePipelinesPageContent = ({
         >
           <Row className='align-items-center justify-content-between'>
             <span className='fw-bold'>{pipeline.name}</span>
-            <DropdownMenu
-              items={[
-                {
-                  icon: 'trash-2',
-                  label: 'Remove Release Pipeline',
-                  onClick: () =>
-                    deleteReleasePipeline({
-                      pipelineId: pipeline.id,
-                      projectId: Number(projectId),
-                    }),
-                },
-              ]}
-            />
+            <Row className=' gap-3'>
+              <div className='text-center'>
+                <div className='fw-bold'>{pipeline.stages_count ?? 0}</div>
+                <div>Stages</div>
+              </div>
+              <div className='text-center'>
+                <div className='fw-bold'>{pipeline.flags_count ?? 0}</div>
+                <div>Flags</div>
+              </div>
+              <DropdownMenu
+                items={[
+                  {
+                    icon: 'trash-2',
+                    label: 'Remove Release Pipeline',
+                    onClick: () =>
+                      deleteReleasePipeline({
+                        pipelineId: pipeline.id,
+                        projectId: Number(projectId),
+                      }),
+                  },
+                ]}
+              />
+            </Row>
           </Row>
         </Card>
       ))}

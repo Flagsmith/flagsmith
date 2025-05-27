@@ -806,6 +806,8 @@ export enum PipelineStatus {
 export type ReleasePipeline = {
   id: number
   status: PipelineStatus
+  stages_count: number
+  flags_count: number
   name: string
   project: number
 }

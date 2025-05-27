@@ -15,7 +15,10 @@ type CreateReleasePipelineType = {
   projectId: string
 } & RouteComponentProps
 
-type DraftPipelineType = Omit<ReleasePipeline, 'id'>
+type DraftPipelineType = Omit<
+  ReleasePipeline,
+  'id' | 'stages_count' | 'flags_count'
+>
 
 const blankStage: DraftStageType = {
   actions: [],
