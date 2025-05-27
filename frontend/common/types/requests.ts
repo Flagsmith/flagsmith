@@ -18,6 +18,7 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  User,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -647,5 +648,6 @@ export type Req = {
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
   getProfile: {}
+  updatePreferredTools: User['tools']
   // END OF TYPES
 }

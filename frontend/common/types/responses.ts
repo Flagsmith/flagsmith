@@ -914,6 +914,7 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  preferredTools: {}
   profile: User
   // END OF TYPES
 }
