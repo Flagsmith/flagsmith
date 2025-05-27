@@ -1,15 +1,11 @@
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 83.7 96" style="enable-background:new 0 0 83.7 96;" xml:space="preserve">
- <style type="text/css">
-  .st0{fill:#00AC69;}
-	.st1{fill:#1CE783;}
-	.st2{fill:#1D252C;}
- </style>
+<svg width="96" height="96" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" version="1.1">
+
  <g>
-  <path class="st0" d="M67.6,33.2v29.5L41.9,77.5V96l41.9-24V24L67.6,33.2z">
-  </path>
-  <path class="st1" d="M41.9,18.5l25.8,14.8L83.7,24L41.9,0L0,24l16.1,9.2L41.9,18.5z">
-  </path>
-  <path class="st2" d="M25.8,57.2v29.5L41.9,96V48L0,24v18.5L25.8,57.2z">
-  </path>
+  <title>Layer 1</title>
+  <g id="svg_1">
+   <path id="svg_2" fill="#00AC69" d="m73.7,33.2l0,29.5l-25.7,14.8l0,18.5l41.9,-24l0,-48l-16.2,9.2z" class="st0"/>
+   <path id="svg_3" fill="#1CE783" d="m48,18.5l25.8,14.8l16,-9.3l-41.8,-24l-41.9,24l16.1,9.2l25.8,-14.7z" class="st1"/>
+   <path id="svg_4" fill="#1D252C" d="m31.9,57.2l0,29.5l16.1,9.3l0,-48l-41.9,-24l0,18.5l25.8,14.7z" class="st2"/>
+  </g>
  </g>
 </svg>

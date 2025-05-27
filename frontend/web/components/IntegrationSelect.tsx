@@ -10,6 +10,7 @@ import Utils from 'common/utils/utils'
 import { sortBy } from 'lodash'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Button from './base/forms/Button'
+import classNames from 'classnames'
 
 type IntegrationSelectType = {}
 
@@ -40,7 +41,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
       <div className='container-fluid'>
         <div className='row'>
           <div className='col-md-4 d-none d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
-            <div className='mx-md-2'>
+            <div className='mx-md-3'>
               {['All'].concat(integrationCategories).map((v) => (
                 <SidebarLink
                   active={category === v}
@@ -52,7 +53,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
             </div>
           </div>
           <div className='col-md-8 h-100'>
-            <div className='ms-3 col-md-6'>
+            <div className='col-md-6 mx-2 mb-2'>
               <Input
                 onChange={(e: InputEvent) => {
                   const v = Utils.safeParseEventValue(e)
@@ -60,16 +61,16 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
                 }}
                 value={search}
                 type='text'
-                className='mb-4 w-100'
+                className='w-100'
                 placeholder='Search'
                 search
               />
             </div>
             <div
               style={{ height: 550 }}
-              className='overflow-scroll d-flex flex-column m-0 p-0 custom-scroll'
+              className='overflow-scroll overflow-x-hidden d-flex flex-column m-0  pt-0 custom-scroll'
             >
-              <div className='d-flex flex-fill flex-wrap'>
+              <div className='row mx-0 row-cols-4  row-cols-xxl-6'>
                 {allIntegrations.map((v) => {
                   const isSelected = selected.includes(v.title)
                   return (
@@ -86,15 +87,29 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
                         }
                       }}
                       key={v.title}
-                      style={{ height: 150, width: 150 }}
-                      className='text-center'
+                      className='col cursor-pointer px-2 py-2 text-center'
                     >
-                      <div className='px-3 mb-2'>
-                        <div className='rounded bg-body p-2 outline border-1'>
-                          <img className='w-100' src={v.image} />
+                      <div className='bg-body rounded border-xxl-1 card p-3'>
+                        <div className='mb-2'>
+                          <div
+                            className={classNames(
+                              'rounded  outline border-1 bg-white',
+                              {
+                                'border-primary': isSelected,
+                              },
+                            )}
+                          >
+                            <div
+                              className={classNames('w-100 p-4 h-100', {
+                                'bg-primary-opacity-5': isSelected,
+                              })}
+                            >
+                              <img className='w-100' src={v.image} />
+                            </div>
+                          </div>
                         </div>
+                        <span className='fs-small fw-semibold'>{v.title}</span>
                       </div>
-                      <span className='fs-small fw-semibold'>{v.title}</span>
                     </div>
                   )
                 })}
@@ -109,7 +124,11 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({}) => {
               <Button style={{ width: 120 }} theme='secondary'>
                 Skip
               </Button>
-              <Button style={{ width: 120 }} theme='primary'>
+              <Button
+                disabled={!selected?.length}
+                style={{ width: 120 }}
+                theme='primary'
+              >
                 Select Apps
               </Button>
             </div>
