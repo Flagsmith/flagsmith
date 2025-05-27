@@ -15,13 +15,6 @@ import flagsmith from 'flagsmith'
 import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import API from 'project/api'
-import {
-  integrationCategories,
-  unreleasedIntegrations,
-} from './IntegrationsPage'
-import SidebarLink from 'components/SidebarLink'
-import { sortBy } from 'lodash'
-import Input from 'components/base/forms/Input'
 import IntegrationSelect from 'components/IntegrationSelect'
 type ResourcesPageType = {}
 type GettingStartedItem = {
