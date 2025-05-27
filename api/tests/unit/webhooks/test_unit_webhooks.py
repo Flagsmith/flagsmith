@@ -333,7 +333,7 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
             "wrong-payload",
             400,
             {
-                "detail": "Webhook returned error status",
+                "detail": "Webhook returned invalid status",
                 "status": 400,
                 "body": "wrong-payload",
             },
@@ -343,7 +343,7 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
             "invalid-signature",
             400,
             {
-                "detail": "Webhook returned error status",
+                "detail": "Webhook returned invalid status",
                 "status": 401,
                 "body": "invalid-signature",
             },
@@ -353,7 +353,7 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
             "internal-server-error",
             400,
             {
-                "detail": "Webhook returned error status",
+                "detail": "Webhook returned invalid status",
                 "status": 500,
                 "body": "internal-server-error",
             },
