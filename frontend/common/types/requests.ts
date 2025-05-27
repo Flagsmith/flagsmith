@@ -646,5 +646,6 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getProfile: {}
   // END OF TYPES
 }

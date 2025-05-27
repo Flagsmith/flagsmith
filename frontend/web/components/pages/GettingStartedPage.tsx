@@ -60,12 +60,6 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   const complete = data.persistId
     ? localComplete || Utils.getFlagsmithTrait(data.persistId)
     : _complete
-  useEffect(() => {
-    document.body.classList.add('full-screen')
-    return () => {
-      document.body.classList.remove('full-screen')
-    }
-  }, [])
 
   const onCTAClick = () => {
     if (data.disabledMessage) {
@@ -152,6 +146,12 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
 }
 
 const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
+  useEffect(() => {
+    document.body.classList.add('full-screen')
+    return () => {
+      document.body.classList.remove('full-screen')
+    }
+  }, [])
   async function onCrispClick() {
     loadCrisp('8857f89e-0eb5-4263-ab49-a293872b6c19')
     Utils.openChat()
