@@ -285,8 +285,8 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
           </Button>
           !
         </PageTitle>
-        <div className='row'>
-          <div className='col-md-8'>
+        <div className='row row-gap-4'>
+          <div className='col-xxl-9 col-xl-8'>
             <div className='card bg-card py-3 shadow rounded'>
               <h5 className='mb-3 px-3'>Getting Started</h5>
               <hr className='mt-0 py-0' />
@@ -298,7 +298,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
             </div>
           </div>
 
-          <div className='col-md-4'>
+          <div className='col-xxl-3 col-xl-4'>
             <div className='card bg-card h-100 py-3 shadow rounded'>
               <h5 className='mb-3 px-3'>Community links</h5>
               <hr className='mt-0 py-0' />
@@ -340,7 +340,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
                             src={v.image}
                           />
                         </div>
-                        <div className='me-5 h-100 d-flex flex-column justify-content-center p-3'>
+                        <div className='h-100 d-flex flex-column justify-content-center p-3'>
                           <a
                             href={v.url}
                             target='_blank'
