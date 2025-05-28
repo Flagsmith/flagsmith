@@ -150,6 +150,18 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
     users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
+class OnboardingToolsSerializer(serializers.Serializer):
+    completed = serializers.BooleanField(required=False)
+    integrations = serializers.ListField(
+        child=serializers.CharField(), allow_empty=True, required=True
+    )
+
+    def to_representation(self, instance):
+        if len(instance.get("integrations", [])) > 0 and not instance.get("completed"):
+            instance["completed"] = True
+        return instance
+
+
 class OnboardingTaskSerializer(serializers.Serializer):
     name = serializers.CharField()
     completed_at = serializers.DateTimeField(allow_null=True)
@@ -166,12 +178,12 @@ class OnboardingTaskSerializer(serializers.Serializer):
 
 class PatchOnboardingSerializer(serializers.Serializer):
     tasks = OnboardingTaskSerializer(many=True, required=False)
+    tools = OnboardingToolsSerializer(required=False)
 
-    # TODO: Onboarding will have integrations and tasks - one of them at least is required
     def validate(self, data):
-        if "tasks" not in data:
+        if "tasks" not in data and "tools" not in data:
             raise serializers.ValidationError(
-                "At least one of 'tasks' or 'integrations' must be provided."
+                "At least one of 'tasks' or 'tools' must be provided."
             )
         return data
 

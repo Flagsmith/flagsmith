@@ -58,11 +58,17 @@ logger = logging.getLogger(__name__)
 
 class OnboardingTask(typing.TypedDict):
     name: str
-    completed_at: datetime  # or str if you store as ISO string
+    completed_at: datetime
+
+
+class OnboardingTools(typing.TypedDict):
+    completed: bool
+    integrations: typing.List[str]
 
 
 class OnboardingType(typing.TypedDict):
     tasks: typing.List[OnboardingTask]
+    tools: OnboardingTools
 
 
 class SignUpType(models.TextChoices):
