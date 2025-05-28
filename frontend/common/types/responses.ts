@@ -246,7 +246,7 @@ export type GettingStartedTask = {
 export type Onboarding = {
   tools: {
     completed: boolean
-    selection: string[]
+    integrations: string[]
   }
   tasks: GettingStartedTask[]
 }

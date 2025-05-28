@@ -370,6 +370,9 @@ $theme-colors: (
   .bg-primary800 {
     background-color: $body-bg-dark !important;
   }
+  .bg-body {
+    background-color: $body-bg-dark !important;
+  }
 }
 .bg-faint {
   background-color: #fafafa;

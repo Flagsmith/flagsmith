@@ -157,34 +157,23 @@ nav a {
       pointer-events: none;
     }
   }
-.collapsible__content a {
-  padding-left: 12px;
-  padding-right: 4px;
-  margin-right: 10px;
-  line-height: 32px;
-  display: flex;
-  align-items: center;
-  border-radius: $border-radius;
-  &.active {
-    background-color: $primary-alfa-8;
+.fill-body {
+  svg {
+    path {
+      fill: $body-color;
+    }
   }
 }
+.fill-primary {
+  svg {
+    path {
+      fill: $primary;
+    }
+  }
+}
+
 .dark {
-  .collapsible__content {
-    svg {
-      path {
-        fill: $body-color-dark;
-      }
-      opacity: 0.3;
-    }
-  }
-  .aside-nav a {
-    &.active {
-      background-color: $primary-alfa-16;
-    }
-  }
-  .aside-nav a:hover {
-    background-color: $primary-alfa-8;
+  .fill-body {
     svg {
       path {
         fill: $body-color-dark;

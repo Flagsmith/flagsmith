@@ -18,6 +18,7 @@ import API from 'project/api'
 import { useGetProfileQuery } from 'common/services/useProfile'
 import { useCreateCompletedTaskMutation } from 'common/services/useCompletedTask'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
+import IntegrationSelect from 'components/IntegrationSelect'
 type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
@@ -263,6 +264,25 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
       title: 'Version comparison',
     },
   ]
+
+  const { data, isLoading } = useGetProfileQuery({})
+  const [completedIntegrations, setCompletedIntegrations] = useState(false)
+
+  const hasSubmittedIntegrations =
+    completedIntegrations || data?.onboarding?.tools?.completed
+  if (isLoading && !hasSubmittedIntegrations) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  if (!hasSubmittedIntegrations) {
+    return (
+      <IntegrationSelect onComplete={() => setCompletedIntegrations(true)} />
+    )
+  }
   return (
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>
