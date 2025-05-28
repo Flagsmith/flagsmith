@@ -1,11 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pytest
 from freezegun import freeze_time
 from rest_framework.exceptions import ValidationError
 
 from users.serializers import (
-    OnboardingResponseTypeSerializer,
     OnboardingTaskSerializer,
     PatchOnboardingSerializer,
     UserIdsSerializer,
@@ -82,16 +81,15 @@ def test_onboarding_task_to_representation_converts_datetime_to_json_compatible_
 ):
     # Given
     serializer = OnboardingTaskSerializer()
-
+    date = datetime(2025, 1, 1, 12, 0, 0)
     # When
     result = serializer.to_representation(
         {
             "name": "task-1",
-            "completed_at": datetime(2025, 1, 1, 12, 0, 0),
+            "completed_at": date,
         }
     )
 
     # Then
-    expected = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc).isoformat()
-    assert result["completed_at"] == expected
+    assert result["completed_at"] == date.isoformat()
     assert result["name"] == "task-1"
