@@ -2,7 +2,6 @@ import React, { FC, useMemo, useState } from 'react'
 import PageTitle from './PageTitle'
 import {
   integrationCategories,
-  integrationSummaries,
   IntegrationSummary,
 } from './pages/IntegrationsPage'
 import SidebarLink from './SidebarLink'
@@ -15,11 +14,50 @@ import classNames from 'classnames'
 import ModalDefault from './modals/base/ModalDefault'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
-import { useUpdatePreferredToolsMutation } from 'common/services/usePreferredTool'
+import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 
 type IntegrationSelectType = {
   onComplete: () => void
 }
+
+const integrationSummaries: IntegrationSummary[] = [
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/appdynamics.svg',
+    title: 'AppDynamics',
+  },
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/aws_cloudtrail.svg',
+    title: 'AWS CloudTrail',
+  },
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/aws_cloudwatch.svg',
+    title: 'AWS CloudWatch',
+  },
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/elastic.svg',
+    title: 'Elastic (ELK) Stack',
+  },
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/opentelemetry.svg',
+    title: 'OpenTelemetry',
+  },
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/prometheus.svg',
+    title: 'Prometheus',
+  },
+  {
+    categories: ['Monitoring'],
+    image: '/static/images/integrations/sumologic.svg',
+    title: 'SumoLogic',
+  },
+]
+
 const ALL_CATEGORY = 'All'
 
 const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
@@ -52,11 +90,21 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
   const [selected, setSelected] = useState<string[]>([])
   const [showCustomTool, setShowCustomTool] = useState(false)
   const [customTool, setCustomTool] = useState('')
-  const [updateTools, { isLoading }] = useUpdatePreferredToolsMutation({})
+  const [updateTools, { isLoading }] = useUpdateOnboardingMutation({})
   const skip = () =>
-    updateTools({ completed: true, selection: [] }).then(onComplete)
+    updateTools({
+      tools: {
+        completed: true,
+        integrations: [],
+      },
+    }).then(onComplete)
   const submit = () =>
-    updateTools({ completed: true, selection: selected }).then(onComplete)
+    updateTools({
+      tools: {
+        completed: true,
+        integrations: selected,
+      },
+    }).then(onComplete)
   return (
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>

@@ -246,7 +246,7 @@ export type GettingStartedTask = {
 export type Onboarding = {
   tools: {
     completed: boolean
-    selection: string[]
+    integrations: string[]
   }
   tasks: GettingStartedTask[]
 }
@@ -947,7 +947,6 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
-  preferredTools: {}
   profile: User
   onboarding: {}
   userPermissions: UserPermissions

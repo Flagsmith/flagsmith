@@ -37,44 +37,6 @@ export type IntegrationSummary = {
   image: string
   title: string
 }
-export const integrationSummaries: IntegrationSummary[] = [
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/appdynamics.svg',
-    title: 'AppDynamics',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/aws_cloudtrail.svg',
-    title: 'AWS CloudTrail',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/aws_cloudwatch.svg',
-    title: 'AWS CloudWatch',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/elastic.svg',
-    title: 'Elastic (ELK) Stack',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/opentelemetry.svg',
-    title: 'OpenTelemetry',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/prometheus.svg',
-    title: 'Prometheus',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/sumologic.svg',
-    title: 'SumoLogic',
-  },
-]
-
 const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)

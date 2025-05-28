@@ -1,11 +1,11 @@
-import React, { FC, useEffect, useMemo, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import loadCrisp from 'common/loadCrisp'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Icon, { IconName } from 'components/Icon'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountStore from 'common/stores/account-store'
 import classNames from 'classnames'
@@ -193,7 +193,6 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     { projectId: `${project}` },
     { skip: !project },
   )
-
   const environment = environments?.results?.[0]?.api_key
   const items: GettingStartedItem[] = [
     {
@@ -270,7 +269,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
   const [completedIntegrations, setCompletedIntegrations] = useState(false)
 
   const hasSubmittedIntegrations =
-    completedIntegrations || data?.tools?.completed
+    completedIntegrations || data?.onboarding?.tools?.completed
   if (isLoading && !hasSubmittedIntegrations) {
     return (
       <div className='text-center'>
