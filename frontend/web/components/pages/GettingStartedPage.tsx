@@ -97,9 +97,9 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
           })}
         >
           <div
-            className={classNames(
+            className={
               'p-3 fs-small pt-1 d-flex h-100 flex-column mx-0',
-            )}
+            }
           >
             <div className='d-flex justify-content-between align-items-center'>
               <div className='d-flex align-items-center gap-3'>
