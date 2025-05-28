@@ -150,14 +150,14 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
     users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
-class OnboardingToolsSerializer(serializers.Serializer):
+class OnboardingToolsSerializer(serializers.Serializer[None]):
     completed = serializers.BooleanField(required=False, default=True)
     integrations = serializers.ListField(
         child=serializers.CharField(), allow_empty=True, required=True
     )
 
 
-class OnboardingTaskSerializer(serializers.Serializer):
+class OnboardingTaskSerializer(serializers.Serializer[None]):
     name = serializers.CharField()
     completed_at = serializers.DateTimeField(allow_null=True)
 
@@ -171,7 +171,7 @@ class OnboardingTaskSerializer(serializers.Serializer):
         return rep
 
 
-class PatchOnboardingSerializer(serializers.Serializer):
+class PatchOnboardingSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True, required=False)
     tools = OnboardingToolsSerializer(required=False)
 
@@ -186,8 +186,18 @@ class PatchOnboardingSerializer(serializers.Serializer):
         return super().to_representation(instance)
 
 
-class OnboardingTypeSerializer(serializers.Serializer):
+class OnboardingTypeSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True)
+    tools = OnboardingToolsSerializer(required=False)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+
+        tools = rep.get("tools")
+        if tools and isinstance(tools, dict):
+            rep["tools"] = {"completed": tools.get("completed", False)}
+
+        return rep
 
 
 class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
