@@ -151,15 +151,10 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
 
 
 class OnboardingToolsSerializer(serializers.Serializer):
-    completed = serializers.BooleanField(required=False)
+    completed = serializers.BooleanField(required=False, default=True)
     integrations = serializers.ListField(
         child=serializers.CharField(), allow_empty=True, required=True
     )
-
-    def to_representation(self, instance):
-        if len(instance.get("integrations", [])) > 0 and not instance.get("completed"):
-            instance["completed"] = True
-        return instance
 
 
 class OnboardingTaskSerializer(serializers.Serializer):
