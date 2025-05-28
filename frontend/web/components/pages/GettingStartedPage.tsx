@@ -17,6 +17,7 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import API from 'project/api'
 import { useGetProfileQuery } from 'common/services/useProfile'
 import { useCreateCompletedTaskMutation } from 'common/services/useCompletedTask'
+import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 import IntegrationSelect from 'components/IntegrationSelect'
 type ResourcesPageType = {}
 type GettingStartedItem = {
@@ -56,13 +57,11 @@ const resources: {
 ]
 
 const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
-  //Immediate complete state rather than wait for traits to come back
-  const [localComplete, setLocalComplete] = useState(false)
   const { data: profile } = useGetProfileQuery({})
-  const [completeTask] = useCreateCompletedTaskMutation({})
+  const [updateProfile, { isLoading }] = useUpdateOnboardingMutation({})
   const { complete: _complete, cta, description, duration, link, title } = data
   const complete = data.key
-    ? localComplete || profile?.tasks?.find((v) => v.name === data.key)
+    ? profile?.onboarding?.tasks?.find((v) => v.name === data.key)
     : _complete
 
   const onCTAClick = () => {
@@ -71,8 +70,13 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
     }
     API.trackEvent({ 'category': 'GettingStarted', 'event': data.key })
     if (data.key) {
-      setLocalComplete(true)
-      completeTask({ completed_at: new Date().toISOString(), name: data.key })
+      if (profile) {
+        updateProfile({
+          tasks: (profile.onboarding?.tasks || []).concat({
+            name: data.key,
+          }),
+        })
+      }
     }
   }
 

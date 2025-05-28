@@ -9,7 +9,7 @@ export const profileService = service
       getProfile: builder.query<Res['profile'], Req['getProfile']>({
         providesTags: [{ id: 'LIST', type: 'Profile' }],
         query: () => ({
-          url: `profile`,
+          url: `auth/users/me/`,
         }),
       }),
       // END OF ENDPOINTS

@@ -150,6 +150,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                           <Link
                             key={id}
                             id={`project-select-${i}`}
+                            data-test={`project-${Utils.toKebabCase(name)}`}
                             to={`/project/${id}/environment/${
                               environments && environments[0]
                                 ? `${environments[0].api_key}/features`
