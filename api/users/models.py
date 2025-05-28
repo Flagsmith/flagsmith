@@ -56,21 +56,6 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class OnboardingTask(typing.TypedDict):
-    name: str
-    completed_at: datetime
-
-
-class OnboardingTools(typing.TypedDict):
-    completed: bool
-    integrations: typing.List[str]
-
-
-class OnboardingType(typing.TypedDict):
-    tasks: typing.List[OnboardingTask]
-    tools: OnboardingTools
-
-
 class SignUpType(models.TextChoices):
     NO_INVITE = "NO_INVITE"
     INVITE_EMAIL = "INVITE_EMAIL"
@@ -126,9 +111,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
-    onboarding: typing.Optional[OnboardingType] = models.JSONField(
-        blank=True, null=True
-    )
+    onboarding = models.JSONField(blank=True, null=True)
     # Default to True, since it is covered in our Terms of Service.
     marketing_consent_given = models.BooleanField(
         default=True,

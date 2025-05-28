@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from typing import Any
 from djoser.serializers import (  # type: ignore[import-untyped]
     UserSerializer as DjoserUserSerializer,
 )
@@ -161,7 +161,7 @@ class OnboardingTaskSerializer(serializers.Serializer[None]):
     name = serializers.CharField()
     completed_at = serializers.DateTimeField(allow_null=True)
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Any) -> dict[str, Any]:
         rep = super().to_representation(instance)
         completed_at = rep.get("completed_at")
 
@@ -175,22 +175,22 @@ class PatchOnboardingSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True, required=False)
     tools = OnboardingToolsSerializer(required=False)
 
-    def validate(self, data):
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
         if "tasks" not in data and "tools" not in data:
             raise serializers.ValidationError(
                 "At least one of 'tasks' or 'tools' must be provided."
             )
         return data
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Any) -> dict[str, Any]:
         return super().to_representation(instance)
 
 
-class OnboardingTypeSerializer(serializers.Serializer[None]):
+class OnboardingResponseTypeSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True)
     tools = OnboardingToolsSerializer(required=False)
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Any) -> dict[str, Any]:
         rep = super().to_representation(instance)
 
         tools = rep.get("tools")
@@ -204,7 +204,7 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     uuid = serializers.UUIDField(read_only=True)
-    onboarding = OnboardingTypeSerializer(
+    onboarding = OnboardingResponseTypeSerializer(
         read_only=True, required=False, allow_null=True
     )
 
