@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from freezegun import freeze_time
@@ -118,5 +118,6 @@ def test_onboarding_task_to_representation_converts_datetime_to_json_compatible_
     )
 
     # Then
-    assert result["completed_at"] == "2025-01-01T12:00:00"
+    expected = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc).isoformat()
+    assert result["completed_at"] == expected
     assert result["name"] == "task-1"

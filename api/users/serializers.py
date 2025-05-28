@@ -198,15 +198,6 @@ class OnboardingResponseTypeSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True)
     tools = OnboardingToolsSerializer(required=False)
 
-    def to_representation(self, instance: Any) -> dict[str, Any]:
-        rep = super().to_representation(instance)
-
-        tools = rep.get("tools")
-        if tools and isinstance(tools, dict):
-            rep["tools"] = {"completed": tools.get("completed", False)}
-
-        return rep
-
 
 class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     auth_type = serializers.CharField(read_only=True)
