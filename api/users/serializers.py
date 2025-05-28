@@ -165,7 +165,9 @@ class OnboardingTaskSerializer(serializers.Serializer[None]):
         rep = super().to_representation(instance)
         completed_at = rep.get("completed_at")
 
-        if isinstance(completed_at, datetime):
+        if not completed_at:
+            rep["completed_at"] = datetime.now().isoformat()
+        elif isinstance(completed_at, datetime):
             rep["completed_at"] = completed_at.isoformat()
 
         return rep
