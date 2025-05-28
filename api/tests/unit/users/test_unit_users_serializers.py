@@ -5,7 +5,6 @@ from freezegun import freeze_time
 from rest_framework.exceptions import ValidationError
 
 from users.serializers import (
-    OnboardingResponseTypeSerializer,
     OnboardingTaskSerializer,
     PatchOnboardingSerializer,
     UserIdsSerializer,
