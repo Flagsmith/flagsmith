@@ -18,7 +18,7 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
-  GettingStartedTask,
+  Onboarding,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -662,6 +662,6 @@ export type Req = {
     level: PermissionLevel
   }
   getProfile: {}
-  createCompletedTask: GettingStartedTask
+  updateOnboarding: Partial<Onboarding>
   // END OF TYPES
 }

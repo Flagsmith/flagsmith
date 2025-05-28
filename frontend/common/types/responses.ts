@@ -241,9 +241,15 @@ export type githubIntegration = {
 
 export type GettingStartedTask = {
   name: string
-  completed_at: string
+  completed_at?: string
 }
-
+export type Onboarding = {
+  tools: {
+    completed: boolean
+    selection: string[]
+  }
+  tasks: GettingStartedTask[]
+}
 export type User = {
   id: number
   email: string
@@ -251,11 +257,7 @@ export type User = {
   last_name: string
   last_login: string
   uuid: string
-  tools: {
-    completed: boolean
-    selection: string[]
-  }
-  tasks: GettingStartedTask[]
+  onboarding: Onboarding
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -946,7 +948,7 @@ export type Res = {
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
   profile: User
-  completedTask: { id: string }
+  onboarding: {}
   userPermissions: UserPermissions
   // END OF TYPES
 }
