@@ -1,5 +1,8 @@
 import { RequestLogger, Selector, t } from 'testcafe'
 import { FlagsmithValue } from '../common/types/responses';
+import Project from '../common/project';
+import flagsmith from 'flagsmith/isomorphic';
+import { IFlagsmith } from 'flagsmith/types';
 
 export const LONG_TIMEOUT = 40000
 
@@ -12,6 +15,11 @@ export type Rule = {
   operator: string
   value: string | number | boolean
   ors?: Rule[]
+}
+const initProm = flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
+export const getFlagsmith = async function() {
+  await initProm
+  return flagsmith as IFlagsmith
 }
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)

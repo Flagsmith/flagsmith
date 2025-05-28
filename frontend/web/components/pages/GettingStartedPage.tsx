@@ -22,6 +22,7 @@ type ResourcesPageType = {}
 type GettingStartedItem = {
   duration: number
   title: string
+  testId?: string
   description: string
   link: string
   cta?: string
@@ -80,7 +81,11 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
   }
 
   const inner = (
-    <div onClick={onCTAClick} className='col-md-12 cursor-pointer'>
+    <div
+      data-test={data.testId}
+      onClick={onCTAClick}
+      className='col-md-12 cursor-pointer'
+    >
       <div
         className={classNames('card h-100 bg-card border-1 rounded', {
           'border-primary': complete,
@@ -201,6 +206,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
         'Projects let you create and manage a set of features and configure them between multiple app environments',
       duration: 1,
       link: `/organisation/${organisationId}/projects`,
+      testId: 'create-project',
       title: 'Create a Project',
     },
     {
