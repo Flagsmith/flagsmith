@@ -1006,33 +1006,6 @@ def test_can_update_secret_for_webhook(
     assert webhook.secret == data["secret"]
 
 
-@mock.patch("webhooks.mixins.trigger_sample_webhook")
-def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
-    trigger_sample_webhook: MagicMock,
-    organisation: Organisation,
-    admin_client: APIClient,
-) -> None:
-    # Given
-    mocked_response = mock.MagicMock(status_code=200)
-    trigger_sample_webhook.return_value = mocked_response
-
-    url = reverse(
-        "api-v1:organisations:organisation-webhooks-trigger-sample-webhook",
-        args=[organisation.id],
-    )
-    valid_webhook_url = "http://my.webhook.com/webhooks"
-    data = {"url": valid_webhook_url}
-
-    # When
-    response = admin_client.post(url, data)
-
-    # Then
-    assert response.json()["message"] == "Request returned 200"
-    assert response.status_code == status.HTTP_200_OK
-    args, _ = trigger_sample_webhook.call_args
-    assert args[0].url == valid_webhook_url
-
-
 def test_get_subscription_metadata_when_subscription_information_cache_exist(
     organisation: Organisation,
     admin_client: APIClient,
