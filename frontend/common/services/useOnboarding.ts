@@ -16,7 +16,7 @@ export const onboardingService = service
         query: (query: Req['updateOnboarding']) => ({
           body: query,
           method: 'PATCH',
-          url: `auth/users/me/onboarding`,
+          url: `auth/users/me/onboarding/`,
         }),
         transformResponse: async (res) => {
           await getProfile(getStore(), {}, { forceRefetch: true })
