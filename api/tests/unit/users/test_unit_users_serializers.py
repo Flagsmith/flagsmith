@@ -77,32 +77,6 @@ def test_patch_onboarding_serializer_returns_correct_format(
     }
 
 
-def test_onboarding_response_type_serializer_omits_integrations() -> None:
-    # Given
-    data = {
-        "tasks": [{"name": "task-1", "completed_at": "2024-01-02T15:00:00Z"}],
-        "tools": {
-            "completed": True,
-            "integrations": ["integration-1", "integration-2"],
-        },
-    }
-
-    # When
-    serializer = OnboardingResponseTypeSerializer(data=data)
-    assert serializer.is_valid(), serializer.errors
-
-    # Then
-    data = serializer.data
-    assert data["tools"] == {"completed": True}
-    assert "integrations" not in data["tools"]
-    assert data["tasks"] == [
-        {
-            "name": "task-1",
-            "completed_at": "2024-01-02T15:00:00Z",
-        },
-    ]
-
-
 def test_onboarding_task_to_representation_converts_datetime_to_json_compatible_string() -> (
     None
 ):

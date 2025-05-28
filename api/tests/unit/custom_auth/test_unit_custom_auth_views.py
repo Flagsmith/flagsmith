@@ -25,7 +25,7 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
     assert response_json["uuid"] == str(staff_user.uuid)
 
 
-def test_get_me_should_return_onboarding_object_without_integrations(db: None) -> None:
+def test_get_me_should_return_onboarding_object(db: None) -> None:
     # Given
     new_user = FFAdminUser.objects.create(
         email="testuser@mail.com",
@@ -47,7 +47,9 @@ def test_get_me_should_return_onboarding_object_without_integrations(db: None) -
     response_json = response.json()
     assert response_json["onboarding"] is not None
     assert response_json["onboarding"].get("tools", {}).get("completed") is True
-    assert response_json["onboarding"].get("tools", {}).get("integrations") is None
+    assert response_json["onboarding"].get("tools", {}).get("integrations") == [
+        "integration-1"
+    ]
     assert response_json["onboarding"].get("tasks") is not None
     assert response_json["onboarding"].get("tasks", [])[0].get("name") == "task-1"
 
@@ -69,7 +71,7 @@ def test_get_me_should_return_onboarding_object_without_integrations(db: None) -
         ),
     ],
 )
-def test_patch_user_onboarding_updates_only_tasks_without_tools(
+def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     data: dict[str, Any],
