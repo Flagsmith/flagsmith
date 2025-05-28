@@ -1,72 +1,70 @@
-import React, { useState, useRef, FormEvent, ChangeEvent } from 'react'
 import Constants from 'common/constants'
-import ConfigProvider from 'common/providers/ConfigProvider'
-import Highlight from 'components/Highlight'
+import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import { Webhook } from 'common/types/responses'
+import Utils from 'common/utils/utils'
 import ErrorMessage from 'components/ErrorMessage'
+import Highlight from 'components/Highlight'
 import TestWebhook from 'components/TestWebhook'
 import ViewDocs from 'components/ViewDocs'
-import Button from 'components/base/forms/Button'
-import AccountStore from 'common/stores/account-store'
-import Utils from 'common/utils/utils'
-import Input from 'components/base/forms/Input'
-import Switch from 'components/Switch'
-import { Webhook } from 'common/types/responses'
-import {
-  useCreateAuditLogWebhooksMutation,
-  useUpdateAuditLogWebhooksMutation,
-} from 'common/services/useAuditLogWebhook'
+import { FC, useState, useRef, ChangeEvent } from 'react'
 
-type Props = {
+interface CreateWebhookProps {
+  environmentId: string
+  projectId: string
   webhook?: Webhook
-  organisationId: string
+  isEdit?: boolean
+  save: (webhook: Partial<Webhook>) => Promise<any>
 }
 
-const CreateAuditLogWebhook: React.FC<Props> = ({
-  organisationId,
+const exampleJSON = Constants.exampleWebhook
+
+const CreateWebhook: FC<CreateWebhookProps> = ({
+  environmentId,
+  isEdit,
+  save,
   webhook,
 }) => {
-  const [create, { error: createError, isLoading: isCreating }] =
-    useCreateAuditLogWebhooksMutation({})
-  const [update, { error: updateError, isLoading: isUpdating }] =
-    useUpdateAuditLogWebhooksMutation({})
-  const isSaving = isUpdating || isCreating
-  const error = updateError || createError
-  const isEdit = !!webhook
+  const [url, setUrl] = useState(isEdit ? webhook?.url : '')
   const [enabled, setEnabled] = useState(
     isEdit ? webhook?.enabled ?? true : true,
   )
-  const [secret, setSecret] = useState(isEdit ? webhook?.secret : '')
-  const [url, setUrl] = useState(isEdit ? webhook?.url : '')
-  const inputRef = useRef<any>(null)
 
-  const handleSave = () => {
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState(false)
+  const [secret, setSecret] = useState(isEdit ? webhook?.secret : '')
+  const urlInputRef = useRef<HTMLInputElement>(null)
+  const secretInputRef = useRef<HTMLInputElement>(null)
+  const { data: environment } = useGetEnvironmentQuery({
+    id: environmentId,
+  })
+
+  const handleSave = async () => {
     if (!url) return
-    const auditWebhook: Omit<Webhook, 'id' | 'created_at' | 'updated_at'> & {
-      id?: number
-    } = {
+
+    const webhookData: Partial<Webhook> = {
       enabled,
-      secret: secret || '',
+      secret,
       url,
     }
+
     if (isEdit && webhook) {
-      auditWebhook.id = webhook.id
+      webhookData.id = webhook.id
     }
 
-    const func = isEdit ? update : create
-
-    func({ data: auditWebhook as any, organisationId }).then((res: any) => {
-      if (!res?.error) {
-        closeModal()
-        toast(`${isEdit ? 'Updated' : 'Created'} webhook`)
-      }
-    })
+    try {
+      await save(webhookData)
+      closeModal()
+    } catch (error) {
+      setError(true)
+      setIsSaving(false)
+    }
   }
 
   return (
     <div className='px-4'>
       <form
         className='mt-4'
-        onSubmit={(e: FormEvent<HTMLFormElement>) => {
+        onSubmit={(e) => {
           e.preventDefault()
           handleSave()
         }}
@@ -77,7 +75,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               <label>*URL (Expects a 200 response from POST)</label>
             </div>
             <Input
-              ref={inputRef}
+              ref={urlInputRef}
               value={url}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setUrl(Utils.safeParseEventValue(e))
@@ -85,14 +83,14 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               isValid={!!url && url.length > 0}
               type='text'
               inputClassName='input--wide'
-              placeholder='https://example.com/audit/'
+              placeholder='https://example.com/feature-changed/'
             />
           </Flex>
           <Row className='ms-4'>
             <Switch
               defaultChecked={enabled}
               checked={enabled}
-              onChange={(val: boolean) => setEnabled(val)}
+              onChange={(value: boolean) => setEnabled(value)}
             />
             <span onClick={() => setEnabled(!enabled)} className='ms-2'>
               Enable
@@ -106,7 +104,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
               <a
                 className='text-info'
                 target='_blank'
-                href='https://docs.flagsmith.com/system-administration/webhooks#web-hook-signature'
+                href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks'
                 rel='noreferrer'
               >
                 More info
@@ -114,12 +112,11 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
             </label>
           </div>
           <Input
-            ref={inputRef}
+            ref={secretInputRef}
             value={secret}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               setSecret(Utils.safeParseEventValue(e))
             }
-            isValid={!!url && url.length > 0}
             type='text'
             className='full-width'
             placeholder='Secret'
@@ -133,36 +130,30 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
             <div className='mb-3'>
               <p className='text-dark fw-bold'>
                 This will {isEdit ? 'update' : 'create'} a webhook for the
-                Organisation{' '}
-                <strong>{AccountStore.getOrganisation().name}</strong>
+                environment <strong>{environment?.name}</strong>
               </p>
             </div>
             <div className='justify-content-end flex-row gap-3'>
               <TestWebhook
-                json={Constants.exampleAuditWebhook}
+                json={Constants.exampleWebhook}
                 webhookUrl={url}
                 secret={secret}
                 scope={{
-                  id: organisationId,
-                  type: 'organisation',
+                  type: 'environment',
+                  id: environmentId,
                 }}
               />
               {isEdit ? (
                 <Button
-                  type='submit'
                   data-test='update-feature-btn'
                   id='update-feature-btn'
                   disabled={isSaving || !url}
-                  size='small'
+                  type='submit'
                 >
                   {isSaving ? 'Updating' : 'Update Webhook'}
                 </Button>
               ) : (
-                <Button
-                  type='submit'
-                  disabled={isSaving || !url}
-                  size='small'
-                >
+                <Button type='submit' disabled={isSaving || !url}>
                   {isSaving ? 'Creating' : 'Create Webhook'}
                 </Button>
               )}
@@ -172,11 +163,17 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
         <FormGroup className='ml-1'>
           <div>
             <Row className='mb-3' space>
-              <div className='font-weight-medium'>Example Payload </div>
-              <ViewDocs href='https://docs.flagsmith.com/system-administration/webhooks#audit-log-web-hooks' />
+              <div className='font-weight-medium text-dark'>
+                Example Payload
+              </div>
+              <ViewDocs href='https://docs.flagsmith.com/system-administration/webhooks#environment-web-hooks' />
             </Row>
-            <Highlight forceExpanded className='json mb-2'>
-              {Constants.exampleAuditWebhook}
+            <Highlight
+              forceExpanded
+              style={{ marginBottom: 10 }}
+              className='json'
+            >
+              {exampleJSON}
             </Highlight>
           </div>
         </FormGroup>
@@ -185,4 +182,4 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
   )
 }
 
-export default ConfigProvider(CreateAuditLogWebhook)
+export default CreateWebhook

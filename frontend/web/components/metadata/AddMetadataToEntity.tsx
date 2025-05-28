@@ -215,16 +215,18 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     segmentDataLoaded,
   ])
 
-
   const getMetadataErrors = (error: any) => {
-    const nonFieldErrors = error?.data?.metadata?.map((metadata: any) => metadata?.non_field_errors) || []
-    const fieldErrors = error?.data?.metadata?.map((metadata: any) => metadata) || []
+    const nonFieldErrors =
+      error?.data?.metadata?.map(
+        (metadata: any) => metadata?.non_field_errors,
+      ) || []
+    const fieldErrors =
+      error?.data?.metadata?.map((metadata: any) => metadata) || []
 
-  
-    const allErrors = [...nonFieldErrors, ...fieldErrors];
+    const allErrors = [...nonFieldErrors, ...fieldErrors]
 
     return allErrors.join('\n')
-  };
+  }
 
   return (
     <>
@@ -331,11 +333,11 @@ const MetadataRow: FC<MetadataRowType> = ({
 }) => {
   const [metadataValueChanged, setMetadataValueChanged] =
     useState<boolean>(false)
-    const metadataValue =
-      metadata?.type === 'bool'
-        ? metadata?.field_value === 'true'
-        : metadata?.field_value || ''
-      
+  const metadataValue =
+    metadata?.type === 'bool'
+      ? metadata?.field_value === 'true'
+      : metadata?.field_value || ''
+
   const handleChange = (newMetadataValue: string | boolean) => {
     setMetadataValueChanged(false)
     const updatedMetadataObject = { ...metadata }
@@ -344,8 +346,11 @@ const MetadataRow: FC<MetadataRowType> = ({
     getMetadataValue?.(updatedMetadataObject as CustomMetadata)
   }
 
-  const isRequiredForAndCorrectType = (metadata?.isRequiredFor && Utils.validateMetadataType(metadata?.type, metadataValue))
-  const isNotRequiredAndCorrectType = !!metadataValue && Utils.validateMetadataType(metadata?.type, metadataValue)
+  const isRequiredForAndCorrectType =
+    metadata?.isRequiredFor &&
+    Utils.validateMetadataType(metadata?.type, metadataValue)
+  const isNotRequiredAndCorrectType =
+    !!metadataValue && Utils.validateMetadataType(metadata?.type, metadataValue)
   const isEmptyAuthorized = !metadataValue && !metadata?.isRequiredFor
 
   return (
@@ -356,7 +361,7 @@ const MetadataRow: FC<MetadataRowType> = ({
       <Flex className='table-column'>{`${metadata?.name} ${
         metadata?.isRequiredFor ? '*' : ''
       }`}</Flex>
-     {metadata?.type === 'bool' ? (
+      {metadata?.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
             checked={[true, 'true'].includes(metadataValue)}
@@ -378,8 +383,12 @@ const MetadataRow: FC<MetadataRowType> = ({
               },
             }}
             noMargin
-            isValid={isRequiredForAndCorrectType || isNotRequiredAndCorrectType || isEmptyAuthorized}
-            onChange={(e: InputEvent) =>{
+            isValid={
+              isRequiredForAndCorrectType ||
+              isNotRequiredAndCorrectType ||
+              isEmptyAuthorized
+            }
+            onChange={(e: InputEvent) => {
               setMetadataValueChanged(true)
               handleChange(Utils.safeParseEventValue(e))
             }}
