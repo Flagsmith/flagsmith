@@ -97,3 +97,20 @@ def test_patch_user_onboarding_updates_only_tasks_without_tools(
         assert onboarding.get("tools", {}).get("integrations") == data.get(
             "tools", {}
         ).get("integrations")
+
+
+def test_patch_user_onboarding_returns_error_if_tasks_and_tools_are_missing(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    url = reverse("api-v1:custom_auth:ffadminuser-patch-onboarding")
+
+    # When
+    response = staff_client.patch(url, data={}, format="json")
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "non_field_errors": ["At least one of 'tasks' or 'tools' must be provided."]
+    }

@@ -101,3 +101,19 @@ def test_onboarding_response_type_serializer_omits_integrations() -> None:
             "completed_at": "2024-01-02T15:00:00Z",
         },
     ]
+
+
+def test_onboarding_task_to_representation_converts_datetime_to_json_compatible_string() -> (
+    None
+):
+    serializer = OnboardingTaskSerializer()
+
+    result = serializer.to_representation(
+        {
+            "name": "task-1",
+            "completed_at": datetime(2025, 1, 1, 12, 0, 0),
+        }
+    )
+
+    assert result["completed_at"] == "2025-01-01T12:00:00"
+    assert result["name"] == "task-1"
