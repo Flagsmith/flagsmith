@@ -91,5 +91,7 @@ def test_onboarding_task_to_representation_converts_datetime_to_json_compatible_
     )
 
     # Then
-    assert result["completed_at"] == date.isoformat()
+    assert isinstance(date, datetime)
+    assert isinstance(result["completed_at"], str)
+    assert result["completed_at"] == "2025-01-01T12:00:00Z"
     assert result["name"] == "task-1"
