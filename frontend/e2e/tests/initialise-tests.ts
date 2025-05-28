@@ -1,6 +1,7 @@
 import {
   byId,
-  click, getFlagsmith,
+  click,
+  getFlagsmith,
   log,
   setText,
   waitForElementVisible,
