@@ -141,7 +141,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         url_path="onboarding",
         permission_classes=[IsAuthenticated],
     )
-    def update_onboarding_task(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def patch_onboarding(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         user = self.get_object()
         if request.user != user and not request.user.is_superuser:
             return Response(status=status.HTTP_403_FORBIDDEN)
