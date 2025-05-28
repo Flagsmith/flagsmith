@@ -1,38 +1,23 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useEffect } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import loadCrisp from 'common/loadCrisp'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Icon, { IconName } from 'components/Icon'
-import { Link } from 'react-router-dom'
+import Icon from 'components/Icon'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountStore from 'common/stores/account-store'
-import classNames from 'classnames'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
-import flagsmith from 'flagsmith'
-import Tooltip from 'components/Tooltip'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import API from 'project/api'
-import { useGetProfileQuery } from 'common/services/useProfile'
-import { useCreateCompletedTaskMutation } from 'common/services/useCompletedTask'
-import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
-type ResourcesPageType = {}
-type GettingStartedItem = {
-  duration: number
+import GettingStartedItem, {
+  GettingStartedItemType,
+} from 'components/GettingStartedItem'
+import GettingStartedResource from 'components/GettingStartedResource'
+
+type LinkItem = {
   title: string
-  testId?: string
-  description: string
-  link: string
-  cta?: string
-  icon?: IconName
-  complete?: boolean
-  disabledMessage?: string | null
-  key?: string
-}
-type GettingStartedItemType = {
-  data: GettingStartedItem
+  href: string
 }
 
 const resources: {
@@ -56,108 +41,7 @@ const resources: {
   },
 ]
 
-const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
-  const { data: profile } = useGetProfileQuery({})
-  const [updateProfile, { isLoading }] = useUpdateOnboardingMutation({})
-  const { complete: _complete, cta, description, duration, link, title } = data
-  const complete = data.key
-    ? profile?.onboarding?.tasks?.find((v) => v.name === data.key)
-    : _complete
-
-  const onCTAClick = () => {
-    if (data.disabledMessage) {
-      return
-    }
-    API.trackEvent({ 'category': 'GettingStarted', 'event': data.key })
-    if (data.key) {
-      if (profile) {
-        updateProfile({
-          tasks: (profile.onboarding?.tasks || []).concat({
-            name: data.key,
-          }),
-        })
-      }
-    }
-  }
-
-  const inner = (
-    <div
-      data-test={data.testId}
-      onClick={onCTAClick}
-      className='col-md-12 cursor-pointer'
-    >
-      <div
-        className={classNames('card h-100 bg-card border-1 rounded', {
-          'border-primary': complete,
-        })}
-      >
-        <div
-          className={classNames('h-100', {
-            'bg-primary-opacity-5': complete,
-          })}
-        >
-          <div
-            className={classNames(
-              'p-3 fs-small pt-1 d-flex h-100 flex-column mx-0',
-            )}
-          >
-            <div className='d-flex justify-content-between align-items-center'>
-              <div className='d-flex align-items-center gap-3'>
-                <div
-                  style={{ height: 34, width: 34 }}
-                  className={
-                    'd-flex rounded border-1 align-items-center justify-content-center'
-                  }
-                >
-                  {complete ? (
-                    <Icon fill='#6837fc' name={'checkmark-circle'} />
-                  ) : (
-                    <Icon
-                      name={data.icon || 'file-text'}
-                      className='text-body'
-                    />
-                  )}
-                </div>
-                <div>
-                  <span
-                    className={`d-flex fw-bold fs-small align-items-center mb-0 gap-1`}
-                  >
-                    {title}
-                  </span>
-
-                  <h6 className='fw-normal d-flex fs-small text-muted flex-1 mb-0'>
-                    {description}
-                  </h6>
-                </div>
-              </div>
-
-              <div className='d-flex'>
-                <span className='chip chip-secondary d-flex gap-1  align-items-center lh-1 chip chip--xs'>
-                  <Icon className='chip-svg-icon' width={14} name={'clock'} />
-                  <span>{duration} Min</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-  if (data.disabledMessage) {
-    return <Tooltip title={inner}>{data.disabledMessage}</Tooltip>
-  }
-  return link?.startsWith('http') ? (
-    <a href={link} target={'_blank'} onClick={onCTAClick} rel='noreferrer'>
-      {inner}
-    </a>
-  ) : (
-    <Link onClick={onCTAClick} to={link}>
-      {inner}
-    </Link>
-  )
-}
-
-const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
+const GettingStartedPage: FC = () => {
   useEffect(() => {
     document.body.classList.add('full-screen')
     return () => {
@@ -198,10 +82,9 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     { skip: !project },
   )
   const environment = environments?.results?.[0]?.api_key
-  const items: GettingStartedItem[] = [
+  const items: GettingStartedItemType[] = [
     {
       complete: !!projects?.length,
-      cta: 'Create Project',
       description:
         'Projects let you create and manage a set of features and configure them between multiple app environments',
       duration: 1,
@@ -211,7 +94,6 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     },
     {
       complete: !!flags?.results?.length,
-      cta: 'Create Feature',
       description:
         'The first step to using feature flags is to create one in the features page',
       disabledMessage: !project
@@ -223,7 +105,6 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     },
     {
       complete: !!segments?.results?.length,
-      cta: 'Create a Segment',
       description:
         'Once your features are setup you can target their rollout with segments',
       disabledMessage: !project
@@ -237,36 +118,57 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
     {
       description: 'Everything you need to get up-and-running with Flagsmith',
       duration: 5,
-      key: 'quickstart',
       link: 'https://docs.flagsmith.com/quickstart/',
+      name: 'quickstart',
       title: 'Quick Start Guide',
     },
     {
       description: "Familiarise yourself with Flagsmith's features",
       duration: 1,
-      key: 'basic-features',
       link: 'https://docs.flagsmith.com/basic-features/',
+      name: 'basic-features',
       title: 'Feature Overview',
     },
     {
-      cta: 'Explore integrations',
       description:
         "Integrate Flagsmith with Flagsmith's features your existing tech stack",
       duration: 1,
       icon: 'layers',
-      key: 'integrations',
       link: 'https://docs.flagsmith.com/integrations/',
+      name: 'integrations',
       title: 'Integrations',
     },
     {
       complete: !!segments?.results?.length,
-      cta: 'Create a Segment',
       description:
         "Compare Flagsmith's free open source and commercial features",
       duration: 1,
-      key: 'version-comparison',
       link: 'https://docs.flagsmith.com/version-comparison',
+      name: 'version-comparison',
       title: 'Version comparison',
+    },
+  ]
+
+  const links: LinkItem[] = [
+    {
+      href: 'https://github.com/flagsmith',
+      title: 'Find us on GitHub',
+    },
+    {
+      href: 'https://docs.flagsmith.com/platform/contributing',
+      title: 'Contribution Guidelines',
+    },
+    {
+      href: 'https://discord.gg/hFhxNtXzgm',
+      title: 'Chat with Developers on Discord',
+    },
+    {
+      href: 'https://www.flagsmith.com/blog',
+      title: 'View our Blog',
+    },
+    {
+      href: 'https://www.flagsmith.com/podcast',
+      title: 'Listen to our Podcast',
     },
   ]
   return (
@@ -292,7 +194,7 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
               <hr className='mt-0 py-0' />
               <div className='row px-3 row-gap-4'>
                 {items.map((v, i) => (
-                  <GettingStartedItem key={i} data={v} />
+                  <GettingStartedItem key={i} {...v} />
                 ))}
               </div>
             </div>
@@ -303,62 +205,19 @@ const GettingStartedPage: FC<ResourcesPageType> = ({}) => {
               <h5 className='mb-3 px-3'>Community links</h5>
               <hr className='mt-0 py-0' />
               <div className='d-flex mb-3 flex-column align-items-start gap-2'>
-                <Button theme='text' href='https://github.com/flagsmith'>
-                  <Icon name='link' />
-                  Find us on GitHub
-                </Button>
-                <Button theme='text' href='https://github.com/flagsmith'>
-                  <Icon name='link' />
-                  Contribution Guidelines
-                </Button>
-                <Button theme='text' href='https://github.com/flagsmith'>
-                  <Icon name='link' />
-                  Chat with Developers on Discord
-                </Button>
-                <Button theme='text' href='https://github.com/flagsmith'>
-                  <Icon name='link' />
-                  Listen to our Podcast
-                </Button>
+                {links.map((v) => (
+                  <Button key={v.href} theme='text' href={v.href}>
+                    <Icon name='link' />
+                    {v.title}
+                  </Button>
+                ))}
               </div>
               <hr className='mt-0 py-0' />
               <h5 className='mb-3 px-3'>Resources</h5>
               <hr className='mt-0 py-0' />
               <div className='d-flex flex-column gap-4'>
-                {resources.map((v, i) => (
-                  <div key={i} className='col-lg-12 d-flex h-100'>
-                    <div className='card bg-card p-0 h-100 border-1 rounded'>
-                      <div className='d-flex align-items-center'>
-                        <div>
-                          <img
-                            style={{
-                              aspectRatio: '155 / 200',
-                              height: 150,
-                              objectFit: 'cover',
-                              objectPosition: 'center',
-                            }}
-                            className=' rounded'
-                            src={v.image}
-                          />
-                        </div>
-                        <div className='h-100 d-flex flex-column justify-content-center p-3'>
-                          <a
-                            href={v.url}
-                            target='_blank'
-                            className=''
-                            rel='noreferrer'
-                          >
-                            <h6 className={`d-flex align-items-center gap-1`}>
-                              {v.title}
-                            </h6>
-
-                            <h6 className='fw-normal d-flex text-muted flex-1'>
-                              {v.description}
-                            </h6>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                {resources.map((v) => (
+                  <GettingStartedResource key={v.url} {...v} />
                 ))}
               </div>
             </div>
