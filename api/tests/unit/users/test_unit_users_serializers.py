@@ -1,13 +1,99 @@
 import pytest
 from rest_framework.exceptions import ValidationError
+from freezegun import freeze_time
+from datetime import datetime
+from users.serializers import (
+    UserIdsSerializer,
+    OnboardingTaskSerializer,
+    PatchOnboardingSerializer,
+    OnboardingResponseTypeSerializer,
+)
 
-from users.serializers import UserIdsSerializer
 
-
-def test_user_ids_serializer_raises_exception_for_invalid_user_id(db):  # type: ignore[no-untyped-def]
+def test_user_ids_serializer_raises_exception_for_invalid_user_id(db) -> None:
     # Given
     serializer = UserIdsSerializer(data={"user_ids": [99999]})
 
     # Then
     with pytest.raises(ValidationError):
         serializer.is_valid(raise_exception=True)
+
+
+@freeze_time("2025-01-01T12:00:00Z")
+def test_onboarding_task_serializer_list_returns_correct_format():
+    # Given
+    data = [
+        {"name": "task-1"},
+        {"name": "task-2", "completed_at": "2024-01-02T15:00:00Z"},
+        {"name": "task-3", "completed_at": None},
+    ]
+
+    # When
+    serializer = OnboardingTaskSerializer(data=data, many=True)
+    assert serializer.is_valid(), serializer.errors
+
+    # Then
+    results = serializer.data
+    assert results[0]["completed_at"] == datetime.now().isoformat()
+    assert results[0]["name"] == "task-1"
+    assert results[1]["completed_at"] == "2024-01-02T15:00:00Z"
+    assert results[1]["name"] == "task-2"
+    assert results[2]["completed_at"] == datetime.now().isoformat()
+    assert results[2]["name"] == "task-3"
+
+
+@pytest.mark.parametrize("tools_completed", [True, False, None])
+def test_patch_onboarding_serializer_returns_correct_format(tools_completed) -> None:
+    # Given
+    data = {
+        "tasks": [
+            {"name": "task-1", "completed_at": "2024-01-02T15:00:00Z"},
+        ],
+        "tools": {
+            "completed": tools_completed,
+            "integrations": ["integration-1", "integration-2"],
+        },
+    }
+
+    # When
+    serializer = PatchOnboardingSerializer(data=data)
+    assert serializer.is_valid(), serializer.errors
+
+    # Then
+    data = serializer.validated_data
+    assert data["tasks"] == [
+        {
+            "name": "task-1",
+            "completed_at": datetime.fromisoformat("2024-01-02T15:00:00Z"),
+        },
+    ]
+    assert data["tools"] == {
+        "completed": True if tools_completed is None else tools_completed,
+        "integrations": ["integration-1", "integration-2"],
+    }
+
+
+def test_onboarding_response_type_serializer_omits_integrations() -> None:
+    # Given
+    data = {
+        "tasks": [{"name": "task-1", "completed_at": "2024-01-02T15:00:00Z"}],
+        "tools": {
+            "completed": True,
+            "integrations": ["integration-1", "integration-2"],
+        },
+    }
+
+    # When
+    serializer = OnboardingResponseTypeSerializer(data=data)
+    assert serializer.is_valid(), serializer.errors
+
+    # Then
+    data = serializer.data
+    assert data["tools"] == {"completed": True}
+    assert "integrations" not in data["tools"]
+    assert data["tasks"] == [
+        {
+            "name": "task-1",
+            "completed_at": "2024-01-02T15:00:00Z",
+        },
+    ]

@@ -151,15 +151,20 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
 
 
 class OnboardingToolsSerializer(serializers.Serializer[None]):
-    completed = serializers.BooleanField(required=False, default=True)
+    completed = serializers.BooleanField(required=False, allow_null=True)
     integrations = serializers.ListField(
         child=serializers.CharField(), allow_empty=True, required=True
     )
 
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        if data.get("completed") is None:
+            data["completed"] = True
+        return data
+
 
 class OnboardingTaskSerializer(serializers.Serializer[None]):
     name = serializers.CharField()
-    completed_at = serializers.DateTimeField(allow_null=True)
+    completed_at = serializers.DateTimeField(allow_null=True, required=False)
 
     def to_representation(self, instance: Any) -> dict[str, Any]:
         rep = super().to_representation(instance)
