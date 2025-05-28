@@ -5,6 +5,7 @@ from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
+from rest_framework.viewsets import GenericViewSet
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]
@@ -30,7 +31,6 @@ from features.versioning.tasks import (
 )
 from metrics.serializers import EnvironmentMetricsSerializer
 from metrics.types import EnvMetricsPayload
-from metrics.views import BaseMetricsViewSet
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -328,10 +328,12 @@ class EnvironmentAPIKeyViewSet(
     model_class = EnvironmentAPIKey  # type: ignore[assignment]
 
 
-class EnvironmentMetricsViewSet(NestedEnvironmentViewSet, BaseMetricsViewSet):
-    model_class = Environment  # type: ignore[assignment]
+class EnvironmentMetricsViewSet(GenericViewSet):
+    permission_classes = [IsAuthenticated]
+    lookup_field = "api_key"
     lookup_url_kwarg = "environment_api_key"
     serializer_class = EnvironmentMetricsSerializer
+    queryset = Environment.objects.all()  # type: ignore[assignment]
 
     def get_metrics(self, environment: Environment) -> EnvMetricsPayload:
         is_workflows_enabled = environment.is_change_requests_enabled
@@ -342,4 +344,8 @@ class EnvironmentMetricsViewSet(NestedEnvironmentViewSet, BaseMetricsViewSet):
         responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
     )
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        return super().list(request, *args, **kwargs)
+        environment = self.get_object()
+        serializer = self.get_serializer(
+            instance={"metrics": self.get_metrics(environment)}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)

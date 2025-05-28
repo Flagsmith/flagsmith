@@ -14,4 +14,4 @@ class MetricItemSerializer(
 class EnvironmentMetricsSerializer(
     serializers.Serializer[dict[str, list[MetricItemSerializer]]]
 ):
-    metrics = MetricItemSerializer(many=True)
+    metrics = MetricItemSerializer(many=True, read_only=True)
