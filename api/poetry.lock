@@ -2010,8 +2010,8 @@ scipy = "^1.11.4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-split-testing"
-reference = "v0.2.0"
-resolved_reference = "0d24bcac191be5447b2c101b3147b4ebd3332464"
+reference = "v0.2.1"
+resolved_reference = "67cf037ad89b1c7bd72e3a5a2d9a179c2302cbba"
 
 [[package]]
 name = "freezegun"
@@ -5326,4 +5326,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "8340bf542dc02ad88c7ef6e6021b99132015cd143a60292d13ca2ef00b6c8899"
+content-hash = "cace707eaa1ab5c02e5d1d5db6f971dad819d24e47566a51b89ba24e0ab53c21"
