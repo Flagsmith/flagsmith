@@ -53,7 +53,7 @@ def launch_darkly_backoff(
             retry_at=timezone_now() + timedelta(seconds=retry_after)
         )
 
-    return backoff.on_exception(
+    return backoff.on_predicate(
         wait_gen=backoff.runtime,
         exception=RequestException,
         jitter=backoff.full_jitter,
