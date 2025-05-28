@@ -56,14 +56,11 @@ const resources: {
 ]
 
 const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
-  //Immediate complete state rather than wait for traits to come back
-  const [localComplete, setLocalComplete] = useState(false)
   const { data: profile } = useGetProfileQuery({})
   const [updateProfile, { isLoading }] = useUpdateOnboardingMutation({})
   const { complete: _complete, cta, description, duration, link, title } = data
   const complete = data.key
-    ? localComplete ||
-      profile?.onboarding?.tasks?.find((v) => v.name === data.key)
+    ? profile?.onboarding?.tasks?.find((v) => v.name === data.key)
     : _complete
 
   const onCTAClick = () => {
@@ -72,7 +69,6 @@ const GettingStartedItem: FC<GettingStartedItemType> = ({ data }) => {
     }
     API.trackEvent({ 'category': 'GettingStarted', 'event': data.key })
     if (data.key) {
-      setLocalComplete(true)
       if (profile) {
         updateProfile({
           tasks: (profile.onboarding?.tasks || []).concat({
