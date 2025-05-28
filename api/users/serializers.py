@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from djoser.serializers import (  # type: ignore[import-untyped]
     UserSerializer as DjoserUserSerializer,
 )
@@ -148,10 +150,46 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
     users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
+class OnboardingTaskSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    completed_at = serializers.DateTimeField(allow_null=True)
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        completed_at = rep.get("completed_at")
+
+        if isinstance(completed_at, datetime):
+            rep["completed_at"] = completed_at.isoformat()
+
+        return rep
+
+
+class PatchOnboardingSerializer(serializers.Serializer):
+    tasks = OnboardingTaskSerializer(many=True, required=False)
+
+    # TODO: Onboarding will have integrations and tasks - one of them at least is required
+    def validate(self, data):
+        if "tasks" not in data:
+            raise serializers.ValidationError(
+                "At least one of 'tasks' or 'integrations' must be provided."
+            )
+        return data
+
+    def to_representation(self, instance):
+        return super().to_representation(instance)
+
+
+class OnboardingTypeSerializer(serializers.Serializer):
+    tasks = OnboardingTaskSerializer(many=True)
+
+
 class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     uuid = serializers.UUIDField(read_only=True)
+    onboarding = OnboardingTypeSerializer(
+        read_only=True, required=False, allow_null=True
+    )
 
     class Meta(DjoserUserSerializer.Meta):  # type: ignore[misc]
         fields = DjoserUserSerializer.Meta.fields + (
@@ -159,6 +197,7 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
             "is_superuser",
             "date_joined",
             "uuid",
+            "onboarding",
         )
 
 

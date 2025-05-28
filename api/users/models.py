@@ -1,7 +1,7 @@
 import logging
 import typing
 import uuid
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -54,6 +54,15 @@ if typing.TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
+
+
+class OnboardingTask(typing.TypedDict):
+    name: str
+    completed_at: datetime  # or str if you store as ISO string
+
+
+class OnboardingType(typing.TypedDict):
+    tasks: typing.List[OnboardingTask]
 
 
 class SignUpType(models.TextChoices):
@@ -111,7 +120,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
-
+    onboarding: typing.Optional[OnboardingType] = models.JSONField(
+        blank=True, null=True
+    )
     # Default to True, since it is covered in our Terms of Service.
     marketing_consent_given = models.BooleanField(
         default=True,
