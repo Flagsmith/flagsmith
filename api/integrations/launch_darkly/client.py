@@ -1,15 +1,67 @@
-from typing import Any, Iterator, Optional, TypeVar
+from datetime import timedelta
+from typing import Any, Callable, Iterator, Optional, TypeVar
 
-from requests import Session
+import backoff
+from backoff.types import Details
+from django.utils.timezone import now as timezone_now
+from requests import RequestException, Response, Session
+from rest_framework.status import HTTP_429_TOO_MANY_REQUESTS
 
 from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.constants import (
+    BACKOFF_DEFAULT_RETRY_SECONDS,
+    BACKOFF_MAX_RETRIES,
     LAUNCH_DARKLY_API_BASE_URL,
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_VERSION,
 )
+from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
 
 T = TypeVar("T")
+
+
+def launch_darkly_backoff(
+    _get_json_response: Callable[..., T],
+) -> Callable[..., T]:
+    # Handle LaunchDarkly rate limiting according to their API documentation:
+    # https://launchdarkly.com/docs/api
+    #
+    # 1. If a request returns a 429 Too Many Requests status code, the client should back off.
+    # 2. When backing off, the client retries the request after the time specified in the `Retry-After` header
+    #   or the `X-Ratelimit-Reset` header, if present, or a default of `BACKOFF_DEFAULT_RETRY_SECONDS`.
+    # 3. After `BACKOFF_MAX_RETRIES` retries, we give up and raise a `LaunchDarklyRateLimitError`.
+    #   If the last error was a 429 and contained retry information,
+    #   the whole import request will be retried after the specified time.
+
+    def _should_backoff(response: Response) -> bool:
+        return response.status_code == HTTP_429_TOO_MANY_REQUESTS
+
+    def _get_retry_after(response: Response) -> int:
+        headers = response.headers
+        if retry_after := headers.get("Retry-After"):
+            return int(retry_after)
+        if ratelimit_reset := headers.get("X-Ratelimit-Reset"):
+            return int(ratelimit_reset) - int(timezone_now().timestamp())
+        return BACKOFF_DEFAULT_RETRY_SECONDS
+
+    def _handle_giveup(
+        details: Details,
+    ) -> None:
+        response: Response = details["value"]
+        retry_after = _get_retry_after(response)
+        raise LaunchDarklyRateLimitError(
+            retry_at=timezone_now() + timedelta(seconds=retry_after)
+        )
+
+    return backoff.on_exception(
+        wait_gen=backoff.runtime,
+        exception=RequestException,
+        jitter=backoff.full_jitter,
+        predicate=_should_backoff,
+        value=_get_retry_after,
+        on_giveup=_handle_giveup,
+        max_tries=BACKOFF_MAX_RETRIES,
+    )(_get_json_response)
 
 
 class LaunchDarklyClient:
@@ -23,6 +75,7 @@ class LaunchDarklyClient:
         )
         self.client_session = client_session
 
+    @launch_darkly_backoff
     def _get_json_response(
         self,
         endpoint: str,
@@ -53,7 +106,7 @@ class LaunchDarklyClient:
         if additional_params:
             params.update(additional_params)
 
-        response_json = self._get_json_response(  # type: ignore[var-annotated]
+        response_json: dict[str, Any] = self._get_json_response(
             endpoint=collection_endpoint,
             params=params,
         )
