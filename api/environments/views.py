@@ -5,6 +5,7 @@ from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
+from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
 from django.db.models import Count, Q
 from django.utils.decorators import method_decorator
@@ -328,12 +329,12 @@ class EnvironmentAPIKeyViewSet(
     model_class = EnvironmentAPIKey  # type: ignore[assignment]
 
 
-class EnvironmentMetricsViewSet(GenericViewSet):
+class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
     permission_classes = [IsAuthenticated]
     lookup_field = "api_key"
     lookup_url_kwarg = "environment_api_key"
-    serializer_class = EnvironmentMetricsSerializer
-    queryset = Environment.objects.all()  # type: ignore[assignment]
+    serializer_class: type[BaseSerializer[Any]] = EnvironmentMetricsSerializer
+    queryset = Environment.objects.all()
 
     def get_metrics(self, environment: Environment) -> EnvMetricsPayload:
         is_workflows_enabled = environment.is_change_requests_enabled
@@ -344,7 +345,11 @@ class EnvironmentMetricsViewSet(GenericViewSet):
         responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
     )
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        environment = self.get_object()
+        environment: Environment = self.get_object()
+        if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):  # type: ignore[union-attr]
+            raise PermissionDenied(
+                "You do not have permission to view this environment."
+            )
         serializer = self.get_serializer(
             instance={"metrics": self.get_metrics(environment)}
         )

@@ -24,7 +24,7 @@ from users.models import FFAdminUser
 
 
 def test_get_environment_metrics_without_workflows(
-    staff_client: APIClient,
+    admin_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
@@ -35,7 +35,7 @@ def test_get_environment_metrics_without_workflows(
     )
 
     # When
-    response = staff_client.get(url)
+    response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -51,7 +51,7 @@ def test_get_environment_metrics_without_workflows(
 
 
 def test_get_environment_metrics_with_workflows(
-    staff_client: APIClient,
+    admin_client: APIClient,
     environment: Environment,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
 ) -> None:
@@ -64,7 +64,7 @@ def test_get_environment_metrics_with_workflows(
     )
 
     # When
-    response = staff_client.get(url)
+    response = admin_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
@@ -90,7 +90,7 @@ def test_get_environment_metrics_with_workflows(
     ],
 )
 def test_get_environment_metrics_correctly_computes_data(
-    staff_client: APIClient,
+    admin_client: APIClient,
     admin_user: FFAdminUser,
     project: Project,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
@@ -161,7 +161,7 @@ def test_get_environment_metrics_correctly_computes_data(
     url = reverse("api-v1:environments:environment-metrics-list", args=[env.api_key])
 
     # When
-    res = staff_client.get(url)
+    res = admin_client.get(url)
 
     # Then
     assert res.status_code == status.HTTP_200_OK
@@ -196,7 +196,7 @@ def test_get_environment_metrics_correctly_computes_data(
     ],
 )
 def test_environment_metrics_uses_correct_identity_overrides_method(
-    staff_client: APIClient,
+    admin_client: APIClient,
     project: Project,
     with_environment_permissions: WithEnvironmentPermissionsCallable,
     dynamo_db_enabled: bool,
@@ -225,7 +225,7 @@ def test_environment_metrics_uses_correct_identity_overrides_method(
     url = reverse("api-v1:environments:environment-metrics-list", args=[env.api_key])
 
     # When
-    res = staff_client.get(url)
+    res = admin_client.get(url)
 
     # Then
     assert res.status_code == status.HTTP_200_OK
@@ -236,3 +236,19 @@ def test_environment_metrics_uses_correct_identity_overrides_method(
     else:
         mock_queryset.assert_called_once()
         mock_dynamo.assert_not_called()
+
+
+def test_environment_metrics_requires_permission(
+    staff_client: APIClient,
+    environment: Environment,
+) -> None:
+    # Given: No permissions are set for the user
+    url = reverse(
+        "api-v1:environments:environment-metrics-list", args=[environment.api_key]
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
