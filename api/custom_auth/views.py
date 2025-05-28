@@ -136,16 +136,13 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         )
 
     @action(
-        detail=True,
-        methods=["PATCH"],
-        url_path="onboarding",
+        detail=False,
+        methods=["patch"],
+        url_path="me/onboarding",
         permission_classes=[IsAuthenticated],
     )
     def patch_onboarding(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
-        user = self.get_object()
-        if request.user != user and not request.user.is_superuser:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
+        user = request.user
         serializer = PatchOnboardingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

@@ -25,8 +25,7 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
     assert response_json["uuid"] == str(staff_user.uuid)
 
 
-@pytest.mark.django_db()
-def test_get_me_should_return_onboarding_object_without_integrations() -> None:
+def test_get_me_should_return_onboarding_object_without_integrations(db: None) -> None:
     # Given
     new_user = FFAdminUser.objects.create(
         email="testuser@mail.com",
@@ -53,21 +52,6 @@ def test_get_me_should_return_onboarding_object_without_integrations() -> None:
     assert response_json["onboarding"].get("tasks", [])[0].get("name") == "task-1"
 
 
-def test_patch_user_onboarding_returns_403_if_not_from_user(
-    staff_user: FFAdminUser, staff_client: APIClient
-) -> None:
-    # Given
-    new_user = FFAdminUser.objects.create(email="testuser@mail.com")
-    new_user.save()
-    url = reverse("api-v1:custom_auth:ffadminuser-patch-onboarding", args=[new_user.id])
-
-    # When
-    response = staff_client.patch(url, data={"tasks": [{"name": "task-1"}]})
-
-    # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-
-
 @pytest.mark.parametrize(
     "data,expected_keys",
     [
@@ -92,9 +76,7 @@ def test_patch_user_onboarding_updates_only_tasks_without_tools(
     expected_keys: set[str],
 ) -> None:
     # Given
-    url = reverse(
-        "api-v1:custom_auth:ffadminuser-patch-onboarding", args=[staff_user.id]
-    )
+    url = reverse("api-v1:custom_auth:ffadminuser-patch-onboarding")
 
     # When
     response = staff_client.patch(url, data=data, format="json")

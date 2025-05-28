@@ -12,7 +12,7 @@ from users.serializers import (
 )
 
 
-def test_user_ids_serializer_raises_exception_for_invalid_user_id() -> None:
+def test_user_ids_serializer_raises_exception_for_invalid_user_id(db: None) -> None:
     # Given
     serializer = UserIdsSerializer(data={"user_ids": [99999]})
 
