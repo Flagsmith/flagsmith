@@ -158,11 +158,7 @@ const CreateAuditLogWebhook: React.FC<Props> = ({
                   {isSaving ? 'Updating' : 'Update Webhook'}
                 </Button>
               ) : (
-                <Button
-                  type='submit'
-                  disabled={isSaving || !url}
-                  size='small'
-                >
+                <Button type='submit' disabled={isSaving || !url} size='small'>
                   {isSaving ? 'Creating' : 'Create Webhook'}
                 </Button>
               )}

@@ -8,6 +8,7 @@ import {
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
+  projectFlagService,
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
@@ -28,6 +29,7 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
+import { projectService } from 'common/services/useProject'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -133,6 +135,10 @@ const controller = {
               environmentFeatures && _.keyBy(environmentFeatures, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
+
           store.saved({ createdFlag: flag.name })
         }),
       )
@@ -165,6 +171,9 @@ const controller = {
           const index = _.findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
           store.changed()
         }
       })
@@ -449,6 +458,9 @@ const controller = {
               store.model.lastSaved = new Date().valueOf()
             }
             onComplete && onComplete()
+            getStore().dispatch(
+              projectFlagService.util.invalidateTags(['ProjectFlag']),
+            )
             store.saved({})
           })
           .catch((e) => {
@@ -959,6 +971,9 @@ const controller = {
           (f) => f.id !== flag.id,
         )
         store.model.lastSaved = new Date().valueOf()
+        getStore().dispatch(
+          projectFlagService.util.invalidateTags(['ProjectFlag']),
+        )
         store.saved({})
         store.trigger('removed', flag)
       })

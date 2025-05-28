@@ -18,6 +18,7 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  Onboarding,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -648,7 +649,7 @@ export type Req = {
       id: string
     }
   }
-  createOnboarding: {
+  register: {
     first_name: string
     last_name: string
     email: string
@@ -668,5 +669,7 @@ export type Req = {
     userId: number | undefined
     level: PermissionLevel
   }
+  getProfile: {}
+  updateOnboarding: Partial<Onboarding>
   // END OF TYPES
 }

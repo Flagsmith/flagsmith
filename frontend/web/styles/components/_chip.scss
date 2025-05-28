@@ -4,6 +4,15 @@
     border: 1px solid $primary-alfa-32;
     color: $primary400;
 
+    &-secondary {
+      border: 1px solid $basic-alpha-16;
+      background-color: $basic-alpha-16 !important;
+      color: $text-icon-light !important;
+      svg path {
+        fill: $text-icon-light;
+      }
+    }
+
     .icon-check {
       border: 1px solid $primary-alfa-32;
     }
@@ -38,6 +47,10 @@
   font-weight: normal;
   text-wrap: nowrap;
   color: $primary600;
+  &-secondary {
+    background-color: $bg-light300;
+    color: $text-icon-grey;
+  }
   .icon-check {
     border: 1px solid $primary-alfa-24;
     height: 20px;

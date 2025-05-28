@@ -139,8 +139,8 @@ const CreateWebhook: FC<CreateWebhookProps> = ({
                 webhookUrl={url}
                 secret={secret}
                 scope={{
-                  type: 'environment',
                   id: environmentId,
+                  type: 'environment',
                 }}
               />
               {isEdit ? (
