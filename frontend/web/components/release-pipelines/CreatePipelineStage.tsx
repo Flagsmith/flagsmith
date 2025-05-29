@@ -1,24 +1,17 @@
-import {
-  SyntheticEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { SyntheticEvent, useEffect, useMemo, useState } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
 import {
   PipelineStage as PipelineStageType,
-  StageAction,
   StageActionType,
   StageTrigger,
 } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import { FLAG_ACTIONS, TRIGGER_OPTIONS } from './constants'
+import { StageActionRequest } from 'common/types/requests'
 
 type DraftStageType = Omit<PipelineStageType, 'id' | 'pipeline'>
 
@@ -29,7 +22,7 @@ const getFlagActions = (trigger: string | undefined) => {
   return []
 }
 
-const PipelineStage = ({
+const CreatePipelineStage = ({
   onChange,
   onRemove,
   projectId,
@@ -91,7 +84,7 @@ const PipelineStage = ({
 
   const handleOnChange = (
     fieldName: keyof DraftStageType,
-    value: string | number | StageTrigger | StageAction[],
+    value: string | number | StageTrigger | StageActionRequest[],
   ) => {
     onChange({ ...stageData, [fieldName]: value })
   }
@@ -125,14 +118,21 @@ const PipelineStage = ({
 
   useEffect(() => {
     if (selectedSegment?.value) {
-      handleOnChange('trigger', {
-        trigger_body: { segment_id: selectedSegment.value },
-        trigger_type: stageData.trigger.trigger_type,
+      const actions = stageData.actions.map((action) => {
+        if (action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT) {
+          return {
+            ...action,
+            action_body: { enabled: true, segment_id: selectedSegment.value },
+          }
+        }
+        return action
       })
+
+      handleOnChange('actions', actions)
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSegment, stageData.trigger.trigger_type])
+  }, [selectedSegment])
 
   return (
     <div
@@ -234,4 +234,4 @@ const PipelineStage = ({
 }
 
 export type { DraftStageType }
-export default PipelineStage
+export default CreatePipelineStage

@@ -111,6 +111,7 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
               key={stageData?.id}
               stageData={stageData}
               environmentsData={environmentsData?.results}
+              projectId={Number(projectId)}
             />
           ))}
           {!!stagesData?.results?.length && <LaunchedCard />}
