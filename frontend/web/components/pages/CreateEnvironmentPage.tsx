@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -34,7 +34,7 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const history = useHistory()
   const match = useRouteMatch<RouteParams>()
-
+  const projectIdFromUrl = Utils.getProjectIdFromUrl(match)
   const onSave = (environment: Environment) => {
     history.push(
       `/project/${match.params.projectId}/environment/${environment.api_key}/features`,
@@ -74,7 +74,7 @@ const CreateEnvironmentPage: React.FC = () => {
           description,
           metadata,
           name,
-          projectId: match.params.projectId,
+          projectId: projectIdFromUrl,
         })
       }
     }
@@ -87,13 +87,13 @@ const CreateEnvironmentPage: React.FC = () => {
       <Permission
         level='project'
         permission='CREATE_ENVIRONMENT'
-        id={match.params.projectId}
+        id={projectIdFromUrl}
       >
         {({ isLoading, permission }) =>
           isLoading ? (
             <Loader />
           ) : permission ? (
-            <ProjectProvider id={match.params.projectId} onSave={onSave}>
+            <ProjectProvider id={projectIdFromUrl} onSave={onSave}>
               {({ createEnv, error, isSaving, project }) => (
                 <form
                   id='create-env-modal'
@@ -181,7 +181,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                 organisationId={
                                   AccountStore.getOrganisation().id
                                 }
-                                projectId={match.params.projectId}
+                                projectId={projectIdFromUrl}
                                 entityId={selectedEnv?.api_key}
                                 envName={name}
                                 entityContentType={envContentType.id}

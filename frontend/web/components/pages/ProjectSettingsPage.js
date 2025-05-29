@@ -26,6 +26,8 @@ import classNames from 'classnames'
 import EditHealthProvider from 'components/EditHealthProvider'
 import WarningMessage from 'components/WarningMessage'
 import { withRouter } from 'react-router-dom'
+import Utils from 'common/utils/utils'
+
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
 
@@ -34,7 +36,7 @@ const ProjectSettingsPage = class extends Component {
     this.state = {
       roles: [],
     }
-    AppActions.getProject(this.props.match.params.projectId)
+    AppActions.getProject(Utils.getProjectIdFromUrl(props.match))
     this.getPermissions()
   }
 
@@ -67,10 +69,9 @@ const ProjectSettingsPage = class extends Component {
   onSave = () => {
     toast('Project Saved')
   }
-
   componentDidUpdate(prevProps) {
     if (this.props.projectId !== prevProps.projectId) {
-      AppActions.getProject(this.props.match.params.projectId)
+      AppActions.getProject(Utils.getProjectIdFromUrl(this.props.match))
     }
   }
   confirmRemove = (project, cb) => {
@@ -140,7 +141,7 @@ const ProjectSettingsPage = class extends Component {
   }
 
   migrate = () => {
-    AppActions.migrateProject(this.props.match.params.projectId)
+    AppActions.migrateProject(Utils.getProjectIdFromUrl(this.props.match))
   }
 
   forceSelectionRange = (e) => {
@@ -156,13 +157,10 @@ const ProjectSettingsPage = class extends Component {
   render() {
     const { name, stale_flags_limit_days } = this.state
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
-
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     return (
       <div className='app-container container'>
-        <ProjectProvider
-          id={this.props.match.params.projectId}
-          onSave={this.onSave}
-        >
+        <ProjectProvider id={projectIdFromUrl} onSave={this.onSave}>
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
             if (
               !this.state.stale_flags_limit_days &&
@@ -509,7 +507,7 @@ const ProjectSettingsPage = class extends Component {
                                 this.props.history.replace(
                                   Utils.getOrganisationHomePage(),
                                 )
-                                deleteProject(this.props.match.params.projectId)
+                                deleteProject(projectIdFromUrl)
                               })
                             }
                             className='btn btn-with-icon btn-remove'
@@ -570,9 +568,7 @@ const ProjectSettingsPage = class extends Component {
                       </div>
                     </TabItem>
                     <TabItem tabLabel='Usage'>
-                      <ProjectUsage
-                        projectId={this.props.match.params.projectId}
-                      />
+                      <ProjectUsage projectId={projectIdFromUrl} />
                     </TabItem>
                     {Utils.getFlagsmithHasFeature('feature_health') && (
                       <TabItem
@@ -580,7 +576,7 @@ const ProjectSettingsPage = class extends Component {
                         tabLabel='Feature Health'
                       >
                         <EditHealthProvider
-                          projectId={this.props.match.params.projectId}
+                          projectId={projectIdFromUrl}
                           tabClassName='flat-panel'
                         />
                       </TabItem>
@@ -592,7 +588,7 @@ const ProjectSettingsPage = class extends Component {
                         }}
                         permissions={this.state.permissions}
                         tabClassName='flat-panel'
-                        id={this.props.match.params.projectId}
+                        id={projectIdFromUrl}
                         level='project'
                         roleTabTitle='Project Permissions'
                         role
@@ -627,16 +623,14 @@ const ProjectSettingsPage = class extends Component {
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage
                           environmentId={this.props.match.params.environmentId}
-                          projectId={this.props.match.params.projectId}
+                          projectId={projectIdFromUrl}
                           projectName={project.name}
                         />
                       </TabItem>
                     )}
                     {!!ProjectStore.getEnvs()?.length && (
                       <TabItem tabLabel='Export'>
-                        <FeatureExport
-                          projectId={this.props.match.params.projectId}
-                        />
+                        <FeatureExport projectId={projectIdFromUrl} />
                       </TabItem>
                     )}
                   </Tabs>

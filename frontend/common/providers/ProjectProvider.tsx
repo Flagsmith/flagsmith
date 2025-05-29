@@ -67,10 +67,9 @@ const ProjectProvider: FC<ProjectProviderType> = ({
         editEnv: AppActions.editEnv,
         editProject: AppActions.editProject,
         error: ProjectStore.error,
-        // TODO: Fix before releasing
         isLoading:
           !ProjectStore.getEnvs() ||
-          ProjectStore.id?.toString() !== id?.toString() ||
+          ProjectStore.id !== id ||
           !ProjectStore.model,
         isSaving: ProjectStore.isSaving,
         project: ProjectStore.model || null,

@@ -26,12 +26,10 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
   const isAdmin = AccountStore.isAdmin()
   const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
+
   const organisation = useMemo(
     // TODO: FIX organisationId is not a number
-    () =>
-      organisations?.results?.find(
-        (v) => v.id?.toString() === organisationId?.toString(),
-      ),
+    () => organisations?.results?.find((v) => v.id === organisationId),
     [organisations, organisationId],
   )
 

@@ -71,7 +71,7 @@ const FeaturesPage = class extends Component {
     ES6Component(this)
 
     AppActions.getFeatures(
-      this.props.match.params.projectId,
+      projectIdFromUrl,
       this.props.match.params.environmentId,
       true,
       this.state.search,
@@ -118,7 +118,7 @@ const FeaturesPage = class extends Component {
       <CreateFlagModal
         history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
+        projectId={projectIdFromUrl}
       />,
       'side-modal create-feature-modal',
     )
@@ -171,7 +171,7 @@ const FeaturesPage = class extends Component {
       }
       if (page) {
         AppActions.getFeatures(
-          this.props.match.params.projectId,
+          projectIdFromUrl,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -181,7 +181,7 @@ const FeaturesPage = class extends Component {
         )
       } else {
         AppActions.searchFeatures(
-          this.props.match.params.projectId,
+          projectIdFromUrl,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -197,7 +197,7 @@ const FeaturesPage = class extends Component {
       <Permission
         level='project'
         permission='CREATE_FEATURE'
-        id={this.props.match.params.projectId}
+        id={projectIdFromUrl}
       >
         {({ permission }) =>
           permission
@@ -217,6 +217,8 @@ const FeaturesPage = class extends Component {
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+
     const hasFilters = !isEqual(
       this.getFiltersFromParams({ ...params, page: '1' }),
       this.getFiltersFromParams({ page: '1' }),
@@ -226,7 +228,7 @@ const FeaturesPage = class extends Component {
       const newState = this.getFiltersFromParams({})
       this.setState(newState, () => {
         AppActions.getFeatures(
-          this.props.match.params.projectId,
+          projectIdFromUrl,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -602,7 +604,7 @@ const FeaturesPage = class extends Component {
                           />
                           <EnvironmentDocumentCodeHelp
                             title='3: Providing feature defaults and support offline'
-                            projectId={this.props.match.params.projectId}
+                            projectId={projectIdFromUrl}
                             environmentId={
                               this.props.match.params.environmentId
                             }

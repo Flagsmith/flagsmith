@@ -27,7 +27,6 @@ import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
-import format from './format'
 
 const semver = require('semver')
 
@@ -418,6 +417,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
+  },
+  getProjectIdFromUrl(match: any) {
+    const projectId = match?.params?.projectId
+    return projectId ? parseInt(projectId) : null
   },
   getRequiredPlan: (feature: PaidFeature) => {
     let plan

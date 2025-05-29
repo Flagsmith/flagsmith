@@ -37,6 +37,7 @@ const ChangeRequestsPage = class extends Component {
 
   constructor(props) {
     super(props)
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     this.state = {
       showArchived: false,
       tags: [],
@@ -50,7 +51,7 @@ const ChangeRequestsPage = class extends Component {
     )
     AppActions.getChangeRequest(
       this.props.match.params.id,
-      this.props.match.params.projectId,
+      projectIdFromUrl,
       this.props.match.params.environmentId,
     )
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
@@ -96,10 +97,11 @@ const ChangeRequestsPage = class extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     if (prevProps.match.params.id !== this.props.match.params.id) {
       AppActions.getChangeRequest(
         this.props.match.params.id,
-        this.props.match.params.projectId,
+        projectIdFromUrl,
         this.props.match.params.environmentId,
       )
     }
@@ -131,13 +133,13 @@ const ChangeRequestsPage = class extends Component {
   editChangeRequest = (projectFlag, environmentFlag) => {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
-
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     openModal(
       'Edit Change Request',
       <CreateFlagModal
         history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
+        projectId={projectIdFromUrl}
         changeRequest={ChangeRequestStore.model[id]}
         projectFlag={projectFlag}
         multivariate_options={
@@ -226,7 +228,7 @@ const ChangeRequestsPage = class extends Component {
           'commit',
           () => {
             AppActions.refreshFeatures(
-              this.props.match.params.projectId,
+              Utils.getProjectIdFromUrl(this.props.match),
               this.props.match.params.environmentId,
               true,
             )
@@ -279,6 +281,7 @@ const ChangeRequestsPage = class extends Component {
         </div>
       )
     }
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     const orgUsers = OrganisationStore.model && OrganisationStore.model.users
     const orgGroups = this.state.groups || []
     const ownerUsers =
@@ -326,6 +329,7 @@ const ChangeRequestsPage = class extends Component {
     const isVersioned = environment?.use_v2_feature_versioning
     const minApprovals = environment.minimum_change_request_approvals || 0
     const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
+
     return (
       <Permission
         level='environment'
@@ -542,7 +546,7 @@ const ChangeRequestsPage = class extends Component {
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
                     feature={projectFlag.id}
-                    projectId={this.props.match.params.projectId}
+                    projectId={projectIdFromUrl}
                   />
                 </div>
                 <JSONReference
