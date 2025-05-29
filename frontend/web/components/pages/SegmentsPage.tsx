@@ -269,7 +269,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
               </FormGroup>
 
               <InfoMessage collapseId={'segment-identify'}>
-                Segments require you to identitfy users, setting traits will add
+                Segments require you to identify users, setting traits will add
                 users to segments.
               </InfoMessage>
               <FormGroup className='mt-4'>
