@@ -3,56 +3,47 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
-import { PipelineStage as PipelineStageType } from 'common/types/responses'
+import {
+  PipelineStage as PipelineStageType,
+  StageAction,
+  StageActionType,
+  StageTrigger,
+} from 'common/types/responses'
+import Button from 'components/base/forms/Button'
+import Icon from 'components/Icon'
+import { FLAG_ACTIONS, TRIGGER_OPTIONS } from './constants'
 
 type DraftStageType = Omit<PipelineStageType, 'id' | 'pipeline'>
 
-const TRIGGER_OPTIONS = [
-  { label: 'When flag is added to this stage', value: 'flag-added-to-stage' },
-  { label: 'Wait for approval', value: 'wait-for-approval' },
-  { label: 'Wait a set amount of time', value: 'wait-for-time' },
-  {
-    description: 'coming soon!',
-    isDisabled: true,
-    label: 'When change request is approved',
-    value: 'change-request-approved',
-  },
-]
-
-const FLAG_ACTIONS = {
-  'change-request-approved': [],
-  'flag-added-to-stage': [
-    { label: 'Enable flag for everyone', value: 'enabled-for-everyone' },
-    { label: 'Enable flag for a segment', value: 'enabled-for-segment' },
-    {
-      description: 'coming soon!',
-      isDisabled: true,
-      label: 'Start a progressive rollout',
-      value: 'start-progressive-rollout',
-    },
-  ],
-  'wait-for-approval': [],
-  'wait-for-time': [],
+const getFlagActions = (trigger: string | undefined) => {
+  if (trigger === 'ON_ENTER') {
+    return FLAG_ACTIONS.ON_ENTER
+  }
+  return []
 }
 
 const PipelineStage = ({
   onChange,
+  onRemove,
   projectId,
+  showRemoveButton,
   stageData,
 }: {
   stageData: DraftStageType
   onChange: (stageData: DraftStageType) => void
   projectId: string
+  showRemoveButton?: boolean
+  onRemove?: () => void
 }) => {
   const [searchInput, setSearchInput] = useState('')
   const [selectedAction, setSelectedAction] = useState<{
     label: string
     value: string
   }>({ label: 'Select an action', value: '' })
-  const [selectedTrigger, setSelectedTrigger] = useState<{
+  const [selectedSegment, setSelectedSegment] = useState<{
     label: string
-    value: string
-  }>(TRIGGER_OPTIONS[0])
+    value: number | null
+  }>()
 
   const { data: environmentsData, isLoading: isEnvironmentsLoading } =
     useGetEnvironmentsQuery(
@@ -68,8 +59,14 @@ const PipelineStage = ({
       page_size: 1000,
       projectId,
     },
-    { skip: !projectId || selectedAction?.value !== 'enabled-for-segment' },
+    { skip: !projectId },
   )
+
+  const selectedTrigger = useMemo(() => {
+    return TRIGGER_OPTIONS.find(
+      (trigger) => trigger.value === stageData.triggers.trigger_type,
+    ) //|| TRIGGER_OPTIONS[0]
+  }, [stageData.triggers])
 
   const segmentOptions = useMemo(() => {
     return segments?.results?.map((segment) => ({
@@ -85,19 +82,51 @@ const PipelineStage = ({
     }))
   }, [environmentsData])
 
-  const handleOnChange = (fieldName: string, value: string | number) => {
+  const handleOnChange = (
+    fieldName: keyof DraftStageType,
+    value: string | number | StageTrigger | StageAction[],
+  ) => {
     onChange({ ...stageData, [fieldName]: value })
   }
 
   useEffect(() => {
-    if (!stageData.environment && environmentOptions?.length) {
-      handleOnChange('environmentId', environmentOptions?.[0].value)
+    if (environmentOptions?.length && stageData.environment === -1) {
+      handleOnChange('environment', environmentOptions?.[0]?.value)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stageData.environment, environmentOptions])
+  }, [environmentOptions, stageData])
+
+  useEffect(() => {
+    if (selectedAction.value === '') {
+      return handleOnChange('actions', [])
+    }
+
+    let action_body = null
+    const action_type = selectedAction.value.includes('ENABLE_FEATURE')
+      ? StageActionType.ENABLE_FEATURE
+      : StageActionType.DISABLE_FEATURE
+
+    if (selectedAction.value.includes('FOR_SEGMENT')) {
+      action_body = String(selectedSegment?.value)
+    }
+
+    return handleOnChange('actions', [{ action_body, action_type }])
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAction, selectedSegment])
 
   return (
-    <div className='p-3 border-1 rounded' style={{ minWidth: '360px' }}>
+    <div
+      className='p-3 border-1 rounded position-relative'
+      style={{ minWidth: '360px' }}
+    >
+      {showRemoveButton && (
+        <div className='position-absolute top-0 end-0 p-2'>
+          <Button theme='text' onClick={() => onRemove?.()}>
+            <Icon fill='#8F98A3' name='trash-2' width={16} />
+          </Button>
+        </div>
+      )}
       <FormGroup>
         <InputGroup
           title='Stage Name'
@@ -116,7 +145,6 @@ const PipelineStage = ({
               value={Utils.toSelectedValue(
                 stageData.environment,
                 environmentOptions,
-                environmentOptions?.[0],
               )}
               isDisabled={isEnvironmentsLoading}
               isLoading={isEnvironmentsLoading}
@@ -124,7 +152,7 @@ const PipelineStage = ({
               onInputChange={setSearchInput}
               options={environmentOptions}
               onChange={(option: { value: number; label: string }) =>
-                handleOnChange('environmentId', option.value)
+                handleOnChange('environment', option.value)
               }
             />
           }
@@ -140,7 +168,10 @@ const PipelineStage = ({
               value={selectedTrigger}
               options={TRIGGER_OPTIONS}
               onChange={(option: { value: string; label: string }) =>
-                setSelectedTrigger(option)
+                handleOnChange('triggers', {
+                  trigger_body: null,
+                  trigger_type: option.value,
+                } as StageTrigger)
               }
             />
           }
@@ -157,24 +188,13 @@ const PipelineStage = ({
           component={
             <Select
               value={selectedAction}
-              options={
-                selectedTrigger
-                  ? FLAG_ACTIONS[
-                      selectedTrigger.value as keyof typeof FLAG_ACTIONS
-                    ]
-                  : []
-              }
-              onChange={(option: { value: string; label: string }) => {
-                setSelectedAction(option)
-                if (option.value === 'enabled-for-everyone') {
-                  handleOnChange('segment', 'all')
-                }
-              }}
+              options={getFlagActions(selectedTrigger?.value)}
+              onChange={setSelectedAction}
             />
           }
         />
       </FormGroup>
-      {/* {selectedAction?.value === 'enabled-for-segment' && (
+      {selectedAction.value.includes('FOR_SEGMENT') && (
         <FormGroup className='pl-4'>
           <InputGroup
             title='Segment'
@@ -182,20 +202,14 @@ const PipelineStage = ({
               <Select
                 isDisabled={isSegmentsLoading}
                 isLoading={isSegmentsLoading}
-                value={Utils.toSelectedValue(
-                  stageData.segment,
-                  segmentOptions,
-                  { label: 'Select a segment', value: '' },
-                )}
+                value={Utils.toSelectedValue(selectedSegment, segmentOptions)}
                 options={segmentOptions}
-                onChange={(option: { value: number; label: string }) =>
-                  handleOnChange('segment', option.value)
-                }
+                onChange={setSelectedSegment}
               />
             }
           />
         </FormGroup>
-      )} */}
+      )}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { service } from 'common/service'
 import { Req } from 'common/types/requests'
 import { Res } from 'common/types/responses'
+import Utils from 'common/utils/utils'
 
 export const releasePipelinesService = service
   .enhanceEndpoints({ addTagTypes: ['ReleasePipelines'] })
@@ -14,13 +15,13 @@ export const releasePipelinesService = service
         query: (query: Req['createPipelineStage']) => ({
           body: {
             actions: query.actions,
-            environment: query.environmentId,
+            environment: query.environment,
             name: query.name,
             order: query.order,
             triggers: query.triggers,
           },
           method: 'POST',
-          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/stages/`,
+          url: `projects/${query.project}/release-pipelines/${query.pipeline}/stages/`,
         }),
       }),
       createReleasePipeline: builder.mutation<
@@ -48,15 +49,21 @@ export const releasePipelinesService = service
         Req['getPipelineStage']
       >({
         query: (query: Req['getPipelineStage']) => ({
-          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/stages/${query.stageId}`,
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/stages/${query.stageId}/`,
         }),
       }),
       getPipelineStages: builder.query<
         Res['pipelineStages'],
         Req['getPipelineStages']
       >({
-        query: (query: Req['getPipelineStages']) => ({
-          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/stages/`,
+        query: ({
+          pipelineId,
+          projectId,
+          ...rest
+        }: Req['getPipelineStages']) => ({
+          url: `projects/${projectId}/release-pipelines/${pipelineId}/stages/?${Utils.toParam(
+            rest,
+          )}`,
         }),
       }),
       getReleasePipeline: builder.query<
@@ -64,7 +71,7 @@ export const releasePipelinesService = service
         Req['getReleasePipeline']
       >({
         query: (query: Req['getReleasePipeline']) => ({
-          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}`,
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/`,
         }),
       }),
       getReleasePipelines: builder.query<
@@ -72,8 +79,10 @@ export const releasePipelinesService = service
         Req['getReleasePipelines']
       >({
         providesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
-        query: (query: Req['getReleasePipelines']) => ({
-          url: `projects/${query.projectId}/release-pipelines/`,
+        query: ({ projectId, ...rest }: Req['getReleasePipelines']) => ({
+          url: `projects/${projectId}/release-pipelines/?${Utils.toParam(
+            rest,
+          )}`,
         }),
       }),
       // END OF ENDPOINTS

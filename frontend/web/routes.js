@@ -43,6 +43,7 @@ import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
 import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
+import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -56,6 +57,7 @@ export const routes = {
   'compare': '/project/:projectId/compare',
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
+  'create-release-pipeline': '/project/:projectId/release-pipelines/create',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
@@ -64,7 +66,6 @@ export const routes = {
   'features': '/project/:projectId/environment/:environmentId/features',
   'github-setup': '/github-setup',
   'home': '/home',
-  'create-release-pipeline': '/project/:projectId/release-pipelines/create',
   'integrations': '/project/:projectId/integrations',
   'invite': '/invite/:id',
   'invite-link': '/invite-link/:id',
@@ -86,6 +87,7 @@ export const routes = {
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
   'release-pipelines': '/project/:projectId/release-pipelines',
+  'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
   'root': '/',
   'saml': '/saml',
   'scheduled-change':
@@ -250,6 +252,11 @@ export default (
         path={routes['create-release-pipeline']}
         exact
         component={CreateReleasePipelinePage}
+      />
+      <ParameterizedRoute
+        path={routes['release-pipelines-detail']}
+        exact
+        component={ReleasePipelineDetailPage}
       />
       <ParameterizedRoute
         path={routes['audit-log-item']}

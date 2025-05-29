@@ -1,12 +1,12 @@
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 
-type StageLineProps = {
-  onAddStage: () => void
-  showAddStageButton: boolean
+type StageArrowProps = {
+  onAddStage?: () => void
+  showAddStageButton?: boolean
 }
 
-const StageLine = ({ onAddStage, showAddStageButton }: StageLineProps) => {
+const StageArrow = ({ onAddStage, showAddStageButton }: StageArrowProps) => {
   return (
     <div className='d-flex align-items-center'>
       <div className='d-flex align-items-center stage-line'>
@@ -26,16 +26,9 @@ const StageLine = ({ onAddStage, showAddStageButton }: StageLineProps) => {
           </div>
         </div>
       </div>
-
-      {showAddStageButton && (
-        <div className='d-flex align-items-center p-2 border-1 rounded border-primary '>
-          <Icon width={30} name='checkmark-circle' fill='#27AB95' />
-          Launched
-        </div>
-      )}
     </div>
   )
 }
 
-export type { StageLineProps }
-export default StageLine
+export type { StageArrowProps }
+export default StageArrow

@@ -3,7 +3,6 @@ import Icon, { IconName } from 'components/Icon'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
 import { createPortal } from 'react-dom'
-import Button from './forms/Button'
 
 type MenuItem = {
   icon?: IconName
@@ -63,7 +62,10 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
     <div className={classNames('feature-action', className)} tabIndex={-1}>
       <button
         className={classNames('btn btn-link p-0', buttonClassName)}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen(!isOpen)
+        }}
         ref={btnRef}
       >
         <Icon

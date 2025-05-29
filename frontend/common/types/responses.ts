@@ -813,14 +813,17 @@ export type ReleasePipeline = {
 }
 
 export type StageTrigger = {
-  id: number
   trigger_type: 'ON_ENTER'
   trigger_body: string | null
 }
 
+export enum StageActionType {
+  ENABLE_FEATURE = 'ENABLE_FEATURE',
+  DISABLE_FEATURE = 'DISABLE_FEATURE',
+}
+
 export type StageAction = {
-  id: number
-  action_type: 'ENABLE_FEATURE' | 'DISABLE_FEATURE'
+  action_type: StageActionType
   action_body: string | null
 }
 
@@ -830,7 +833,7 @@ export type PipelineStage = {
   pipeline: number
   environment: number
   order: number
-  triggers: StageTrigger[]
+  triggers: StageTrigger
   actions: StageAction[]
 }
 

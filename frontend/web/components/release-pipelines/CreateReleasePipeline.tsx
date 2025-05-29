@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import PipelineStage, { DraftStageType } from './PipelineStage'
-import StageLine from './StageLine'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
@@ -8,8 +7,12 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { PipelineStatus, ReleasePipeline } from 'common/types/responses'
 import Icon from 'components/Icon'
-import { useCreateReleasePipelineMutation } from 'common/services/useReleasePipelines'
+import {
+  useCreatePipelineStagesMutation,
+  useCreateReleasePipelineMutation,
+} from 'common/services/useReleasePipelines'
 import { withRouter, RouteComponentProps } from 'react-router'
+import StageArrow from './StageArrow'
 
 type CreateReleasePipelineType = {
   projectId: string
@@ -22,10 +25,13 @@ type DraftPipelineType = Omit<
 
 const blankStage: DraftStageType = {
   actions: [],
-  environment: 0,
+  environment: -1,
   name: '',
   order: 0,
-  triggers: [],
+  triggers: {
+    trigger_body: null,
+    trigger_type: 'ON_ENTER',
+  },
 }
 
 function CreateReleasePipeline({
@@ -41,48 +47,78 @@ function CreateReleasePipeline({
     },
   ] = useCreateReleasePipelineMutation()
 
+  const [
+    createStages,
+    {
+      error: createStageError,
+      isLoading: isCreatingStage,
+      isSuccess: isCreatingStageSuccess,
+    },
+  ] = useCreatePipelineStagesMutation()
+
   const [pipelineData, setPipelineData] = useState<DraftPipelineType>({
     name: '',
     project: Number(projectId),
     status: PipelineStatus.DRAFT,
   })
 
-  const [stages, setStages] = useState<DraftStageType[]>([
-    {
-      actions: [],
-      environment: 0,
-      name: '',
-      order: 0,
-      triggers: [],
-    },
-  ])
+  const [stages, setStages] = useState<DraftStageType[]>([blankStage])
 
   const [isEditingName, setIsEditingName] = useState(
     !pipelineData?.name?.length,
   )
 
+  const [isStagesCreationSuccess, setStagesCreationSuccess] =
+    useState<boolean>(false)
+
   useEffect(() => {
-    if (isCreatingPipelineSuccess) {
+    if (isCreatingPipelineSuccess && isStagesCreationSuccess) {
       history.push(`/project/${projectId}/release-pipelines`)
     }
-  }, [isCreatingPipelineSuccess, createPipelineError, history, projectId])
+  }, [isCreatingPipelineSuccess, isStagesCreationSuccess, history, projectId])
 
-  const handleOnChange = (stageData: DraftStageType, index: number) => {
-    const newStageData = stages.map((stage, i) =>
-      i === index ? stageData : stage,
+  const handleOnChange = (newStageData: DraftStageType, index: number) => {
+    const updatedStages = stages.map((stage, i) =>
+      i === index ? newStageData : stage,
     )
-    setStages(newStageData)
+    setStages(updatedStages)
   }
 
   const validatePipelineData = () => {
     return pipelineData?.name !== ''
   }
 
-  const handleSave = () => {
-    createReleasePipeline({
-      name: pipelineData.name,
-      projectId: Number(projectId),
-    })
+  const handleSave = async () => {
+    setStagesCreationSuccess(false)
+    try {
+      const response = await createReleasePipeline({
+        name: pipelineData.name,
+        projectId: Number(projectId),
+        status: PipelineStatus.DRAFT,
+      })
+
+      if ('data' in response && response.data.id) {
+        const pipelineId = response.data.id
+        const stagesCreationPromises = stages.map((stage, index) => {
+          return createStages({
+            ...stage,
+            order: index,
+            pipeline: pipelineId,
+            project: Number(projectId),
+          })
+        })
+
+        await Promise.all(stagesCreationPromises)
+      }
+      setStagesCreationSuccess(true)
+    } catch (error) {
+      toast('Error creating release pipeline', 'error')
+    }
+  }
+
+  const handleRemoveStage = (index: number) => {
+    const newStages = stages.filter((_, i) => i !== index)
+    setStages(newStages)
   }
 
   return (
@@ -94,7 +130,7 @@ function CreateReleasePipeline({
             url: `/project/${projectId}/release-pipelines`,
           },
         ]}
-        currentPage={'New Release Pipeline'}
+        currentPage='New Release Pipeline'
       />
 
       <PageTitle
@@ -149,14 +185,22 @@ function CreateReleasePipeline({
                     handleOnChange(stageData, index)
                   }
                   projectId={projectId}
+                  showRemoveButton={index > 0}
+                  onRemove={() => handleRemoveStage(index)}
                 />
                 <div className='flex-1'>
-                  <StageLine
+                  <StageArrow
                     showAddStageButton={index === stages.length - 1}
                     onAddStage={() =>
                       setStages((prev) => prev.concat(blankStage))
                     }
                   />
+                  {index === stages.length - 1 && (
+                    <div className='m-auto p-2 border-1 rounded border-primary '>
+                      <Icon width={30} name='checkmark-circle' fill='#27AB95' />
+                      Launched
+                    </div>
+                  )}
                 </div>
               </Row>
             </Row>

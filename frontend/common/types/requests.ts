@@ -20,6 +20,7 @@ import {
   IdentityTrait,
   StageTrigger,
   StageAction,
+  PipelineStatus,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -679,6 +680,7 @@ export type Req = {
   createReleasePipeline: {
     projectId: number
     name: string
+    status: PipelineStatus
   }
   getPipelineStages: PagedRequest<{
     projectId: number
@@ -691,12 +693,12 @@ export type Req = {
   }
   createPipelineStage: {
     name: string
-    projectId: number
-    environmentId: number
-    pipelineId: number
+    project: number
+    environment: number
+    pipeline: number
     order: number
-    triggers: Omit<StageTrigger, 'id'>[]
-    actions: Omit<StageAction, 'id'>[]
+    triggers: StageTrigger
+    actions: StageAction[]
   }
   deleteReleasePipeline: {
     projectId: number
