@@ -698,7 +698,7 @@ export type Req = {
     environment: number
     pipeline: number
     order: number
-    triggers: StageTrigger
+    trigger: StageTrigger
     actions: StageAction[]
   }
   deleteReleasePipeline: {

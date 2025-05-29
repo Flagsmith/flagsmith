@@ -812,19 +812,24 @@ export type ReleasePipeline = {
   project: number
 }
 
+export enum StageTriggerType {
+  ON_ENTER = 'ON_ENTER',
+  WAIT_FOR = 'WAIT_FOR',
+}
+
 export type StageTrigger = {
-  trigger_type: 'ON_ENTER'
-  trigger_body: string | null
+  trigger_type: StageTriggerType
+  trigger_body: string | null | { segment_id: number }
 }
 
 export enum StageActionType {
-  ENABLE_FEATURE = 'ENABLE_FEATURE',
-  DISABLE_FEATURE = 'DISABLE_FEATURE',
+  TOGGLE_FEATURE = 'TOGGLE_FEATURE',
+  TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
 }
 
 export type StageAction = {
   action_type: StageActionType
-  action_body: string | null
+  action_body: { enabled: boolean }
 }
 
 export type PipelineStage = {
@@ -833,7 +838,7 @@ export type PipelineStage = {
   pipeline: number
   environment: number
   order: number
-  triggers: StageTrigger
+  trigger: StageTrigger
   actions: StageAction[]
 }
 

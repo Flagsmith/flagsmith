@@ -1,13 +1,18 @@
+import { StageTriggerType } from 'common/types/responses'
+
 const TRIGGER_OPTIONS = [
   { label: 'When flag is added to this stage', value: 'ON_ENTER' },
 ]
 
 const FLAG_ACTIONS = {
-  'ON_ENTER': [
-    { label: 'Enable flag for everyone', value: 'ENABLE_FEATURE' },
-    { label: 'Disable flag for everyone', value: 'DISABLE_FEATURE' },
-    { label: 'Enable flag for segment', value: 'ENABLE_FEATURE_FOR_SEGMENT' },
-    { label: 'Disable flag for segment', value: 'DISABLE_FEATURE_FOR_SEGMENT' },
+  [StageTriggerType.ON_ENTER]: [
+    { label: 'Enable flag for everyone', value: 'TOGGLE_FEATURE' },
+    { label: 'Disable flag for everyone', value: 'TOGGLE_FEATURE_DISABLE' },
+    { label: 'Enable flag for segment', value: 'TOGGLE_FEATURE_FOR_SEGMENT' },
+    {
+      label: 'Disable flag for segment',
+      value: 'TOGGLE_FEATURE_DISABLE_FOR_SEGMENT',
+    },
   ],
 }
 
