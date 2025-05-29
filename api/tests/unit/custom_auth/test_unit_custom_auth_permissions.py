@@ -51,7 +51,7 @@ def test_signup_blocked_when_prevent_signup_enabled_and_no_invitation(
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert (
         str(response.data["detail"])
-        == "Signing-up without a valid invitation is disabled. Please contact your administrator."
+        == "Signing up without an invitation is disabled. Please contact your administrator."
     )
 
 
@@ -84,7 +84,7 @@ def test_signup_allowed_with_email_invite(
         (
             lambda _: "invalid-hash",
             status.HTTP_403_FORBIDDEN,
-            "Signing-up without a valid invitation is disabled. Please contact your administrator.",
+            "Signing up without an invitation is disabled. Please contact your administrator.",
         ),
         (
             lambda organisation: InviteLink.objects.create(
@@ -92,7 +92,7 @@ def test_signup_allowed_with_email_invite(
                 expires_at=timezone.now() - timedelta(days=1),
             ),
             status.HTTP_403_FORBIDDEN,
-            "Signing-up without a valid invitation is disabled. Please contact your administrator.",
+            "Signing up without an invitation is disabled. Please contact your administrator.",
         ),
     ],
 )

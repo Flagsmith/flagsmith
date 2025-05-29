@@ -20,7 +20,7 @@ class CurrentUser(IsAuthenticated):
 
 
 class IsSignupAllowed(AllowAny):
-    message = "Signing-up without a valid invitation is disabled. Please contact your administrator."
+    message = "Signing up without an invitation is disabled. Please contact your administrator."
 
     def has_permission(self, request: Request, view: View) -> bool:
         if not settings.PREVENT_SIGNUP:
@@ -34,10 +34,11 @@ class IsSignupAllowed(AllowAny):
         if invite_hash:
             try:
                 invite_link = InviteLink.objects.get(hash=invite_hash)
-                if not invite_link.is_expired:
-                    return True
             except InviteLink.DoesNotExist:
                 pass
+
+        if not invite_link.is_expired:
+            return True
 
         raise PermissionDenied(self.message)
 
