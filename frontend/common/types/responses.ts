@@ -272,6 +272,30 @@ export type UserPermission = {
   role?: number
 }
 
+export type DerivedPermission = {
+  groups: {
+    name: string
+    id: number
+  }[]
+  roles: {
+    name: string
+    id: number
+  }[]
+}
+
+export type Permission = {
+  is_directly_granted: boolean
+  permission_key: string
+  tags: number[]
+  derived_from: DerivedPermission
+}
+export type UserPermissions = {
+  admin: boolean
+  is_directly_granted: boolean
+  derived_from: DerivedPermission
+  permissions: Permission[]
+}
+
 export type RolePermission = Omit<UserPermission, 'permissions'> & {
   permissions: { permission_key: string; tags: number[] }[]
 }
@@ -415,25 +439,26 @@ export type IdentityFeatureState = {
 }
 
 export type FeatureState = {
-  id: number
-  feature_state_value: FlagsmithValue
-  multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  uuid: string
-  enabled: boolean
+  change_request?: number
   created_at: string
-  updated_at: string
-  environment_feature_version: string
-  version?: number
-  live_from?: string
-  feature: number
+  enabled: boolean
   environment: number
+  environment_feature_version: string
+  feature: number
   feature_segment?: {
     id: number
     priority: number
     segment: number
     uuid: string
   }
-  change_request?: number
+  feature_state_value: FlagsmithValue
+  id: number
+  identity?: number
+  live_from?: string
+  multivariate_feature_state_values: MultivariateFeatureStateValue[]
+  updated_at: string
+  uuid: string
+  version?: number
   //Added by FE
   toRemove?: boolean
 }
@@ -773,6 +798,45 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
+export enum PipelineStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+}
+
+export type ReleasePipeline = {
+  id: number
+  status: PipelineStatus
+  stages_count: number
+  flags_count: number
+  name: string
+  project: number
+}
+
+export type StageTrigger = {
+  trigger_type: 'ON_ENTER'
+  trigger_body: string | null
+}
+
+export enum StageActionType {
+  ENABLE_FEATURE = 'ENABLE_FEATURE',
+  DISABLE_FEATURE = 'DISABLE_FEATURE',
+}
+
+export type StageAction = {
+  action_type: StageActionType
+  action_body: string | null
+}
+
+export type PipelineStage = {
+  id: number
+  name: string
+  pipeline: number
+  environment: number
+  order: number
+  triggers: StageTrigger
+  actions: StageAction[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -910,5 +974,10 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  userPermissions: UserPermissions
+  releasePipelines: PagedResponse<ReleasePipeline>
+  releasePipeline: ReleasePipeline
+  pipelineStages: PagedResponse<PipelineStage>
+  pipelineStage: PipelineStage
   // END OF TYPES
 }

@@ -3,7 +3,6 @@ import { useGetPermissionQuery } from 'common/services/usePermission'
 import { PermissionLevel } from 'common/types/requests'
 import AccountStore from 'common/stores/account-store'
 import intersection from 'lodash/intersection'
-import { add } from 'ionicons/icons'
 import { cloneDeep } from 'lodash' // we need this to make JSX compile
 
 type PermissionType = {

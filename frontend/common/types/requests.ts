@@ -18,6 +18,9 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  StageTrigger,
+  StageAction,
+  PipelineStatus,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -27,6 +30,11 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export enum PermissionRoleType {
+  GRANTED = 'GRANTED',
+  GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
+  NONE = 'NONE',
+}
 export const billingPeriods = [
   {
     label: 'Current billing period',
@@ -78,6 +86,11 @@ export type Req = {
   createSegment: {
     projectId: number | string
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  cloneSegment: {
+    projectId: number | string
+    segmentId: number
+    name: string
   }
   getAuditLogs: PagedRequest<{
     search?: string
@@ -635,6 +648,14 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
+  testWebhook: {
+    webhookUrl: string
+    secret?: string
+    scope: {
+      type: 'environment' | 'organisation'
+      id: string
+    }
+  }
   createOnboarding: {
     first_name: string
     last_name: string
@@ -646,5 +667,42 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: string
+  }
+  getUserPermissions: {
+    id?: string
+    userId: number | undefined
+    level: PermissionLevel
+  getReleasePipelines: PagedRequest<{ projectId: number }>
+  getReleasePipeline: { projectId: number; pipelineId: number }
+  createReleasePipeline: {
+    projectId: number
+    name: string
+    status: PipelineStatus
+  }
+  getPipelineStages: PagedRequest<{
+    projectId: number
+    pipelineId: number
+  }>
+  getPipelineStage: {
+    projectId: number
+    pipelineId: number
+    stageId: number
+  }
+  createPipelineStage: {
+    name: string
+    project: number
+    environment: number
+    pipeline: number
+    order: number
+    triggers: StageTrigger
+    actions: StageAction[]
+  }
+  deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
   // END OF TYPES
 }

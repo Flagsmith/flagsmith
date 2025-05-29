@@ -547,15 +547,15 @@ class FeatureState(
         if self.type == other.type:
             if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
                 if (
-                    self.environment_feature_version is None
-                    or other.environment_feature_version is None
+                    self.environment_feature_version_id is None
+                    or other.environment_feature_version_id is None
                 ):
                     raise ValueError(
                         "Cannot compare feature states as they are missing environment_feature_version."
                     )
 
                 return (  # type: ignore[no-any-return]
-                    self.environment_feature_version > other.environment_feature_version
+                    self.environment_feature_version > other.environment_feature_version  # type: ignore[operator]
                 )
             else:
                 # we use live_from here as a priority over the version since
@@ -618,8 +618,8 @@ class FeatureState(
     def is_live(self) -> bool:
         if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
             return (
-                self.environment_feature_version is not None
-                and self.environment_feature_version.is_live
+                self.environment_feature_version_id is not None
+                and self.environment_feature_version.is_live  # type: ignore[union-attr]
             )
         else:
             return (

@@ -1,10 +1,8 @@
 import typing
 from itertools import chain
 
-from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.db import models
 from django.db.models import Prefetch, Q
-from django.db.models.functions import Upper
 from django.utils import timezone
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
@@ -42,12 +40,6 @@ class Identity(models.Model):
         # avoid any downtime. If people using MySQL / Oracle have issues with poor performance on the identities table,
         # we can provide them the SQL to add it manually in a small window of downtime.
         index_together = (("environment", "created_date"),)
-        indexes = [
-            GinIndex(
-                OpClass(Upper("identifier"), name="gin_trgm_ops"),
-                name="identity_identifier_idx",
-            ),
-        ]
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key
