@@ -18,7 +18,7 @@ export const releasePipelinesService = service
             environment: query.environment,
             name: query.name,
             order: query.order,
-            triggers: query.triggers,
+            trigger: query.trigger,
           },
           method: 'POST',
           url: `projects/${query.project}/release-pipelines/${query.pipeline}/stages/`,

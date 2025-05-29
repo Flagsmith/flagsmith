@@ -1,4 +1,11 @@
-import { SyntheticEvent, useEffect, useMemo, useState } from 'react'
+import {
+  SyntheticEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
@@ -64,9 +71,9 @@ const PipelineStage = ({
 
   const selectedTrigger = useMemo(() => {
     return TRIGGER_OPTIONS.find(
-      (trigger) => trigger.value === stageData.triggers.trigger_type,
-    ) //|| TRIGGER_OPTIONS[0]
-  }, [stageData.triggers])
+      (trigger) => trigger.value === stageData.trigger.trigger_type,
+    )
+  }, [stageData.trigger.trigger_type])
 
   const segmentOptions = useMemo(() => {
     return segments?.results?.map((segment) => ({
@@ -93,6 +100,7 @@ const PipelineStage = ({
     if (environmentOptions?.length && stageData.environment === -1) {
       handleOnChange('environment', environmentOptions?.[0]?.value)
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [environmentOptions, stageData])
 
@@ -101,19 +109,30 @@ const PipelineStage = ({
       return handleOnChange('actions', [])
     }
 
-    let action_body = null
-    const action_type = selectedAction.value.includes('ENABLE_FEATURE')
-      ? StageActionType.ENABLE_FEATURE
-      : StageActionType.DISABLE_FEATURE
+    const isSegment = selectedAction.value.includes('FOR_SEGMENT')
+    const enabled = !selectedAction.value.includes('DISABLE')
 
-    if (selectedAction.value.includes('FOR_SEGMENT')) {
-      action_body = String(selectedSegment?.value)
-    }
+    const action_type = isSegment
+      ? StageActionType.TOGGLE_FEATURE_FOR_SEGMENT
+      : StageActionType.TOGGLE_FEATURE
 
-    return handleOnChange('actions', [{ action_body, action_type }])
+    const action_body = { enabled }
+
+    handleOnChange('actions', [{ action_body, action_type }])
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAction, selectedSegment])
+  }, [selectedAction])
+
+  useEffect(() => {
+    if (selectedSegment?.value) {
+      handleOnChange('trigger', {
+        trigger_body: { segment_id: selectedSegment.value },
+        trigger_type: stageData.trigger.trigger_type,
+      })
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSegment, stageData.trigger.trigger_type])
 
   return (
     <div
@@ -168,7 +187,7 @@ const PipelineStage = ({
               value={selectedTrigger}
               options={TRIGGER_OPTIONS}
               onChange={(option: { value: string; label: string }) =>
-                handleOnChange('triggers', {
+                handleOnChange('trigger', {
                   trigger_body: null,
                   trigger_type: option.value,
                 } as StageTrigger)

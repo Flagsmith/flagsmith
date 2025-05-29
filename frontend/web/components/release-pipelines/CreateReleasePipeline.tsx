@@ -5,7 +5,11 @@ import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { PipelineStatus, ReleasePipeline } from 'common/types/responses'
+import {
+  PipelineStatus,
+  ReleasePipeline,
+  StageTriggerType,
+} from 'common/types/responses'
 import Icon from 'components/Icon'
 import {
   useCreatePipelineStagesMutation,
@@ -28,9 +32,9 @@ const blankStage: DraftStageType = {
   environment: -1,
   name: '',
   order: 0,
-  triggers: {
+  trigger: {
     trigger_body: null,
-    trigger_type: 'ON_ENTER',
+    trigger_type: StageTriggerType.ON_ENTER,
   },
 }
 
