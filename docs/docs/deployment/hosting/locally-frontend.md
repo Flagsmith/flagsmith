@@ -83,7 +83,7 @@ Current variables used between 'frontend/environment.js' and 'frontend/common/pr
 - `FIRST_PROMOTER_ID`: First Promoter ID for checkout affiliates.
 - `ALLOW_SIGNUPS`: **DEPRECATED in favour of PREVENT_SIGNUP** Determines whether to prevent manual signups without
   invites. Set it to any value to allow signups.
-- `PREVENT_SIGNUP`: **DEPRECATED in favour of API PREVENT_SIGNUP** Determines whether to prevent manual signups. Set it to any value to prevent hide signup pages.
+- `PREVENT_SIGNUP`: **DEPRECATED** in favour of `PREVENT_SIGNUP` in the API. Determines whether to prevent manual signups. Set it to any value to prevent hide signup pages.
 - `PREVENT_FORGOT_PASSWORD`: Determines whether to prevent forgot password functionality, useful for LDAP/SAML. Set it
   to any value to prevent forgot password functionality.
 - `PREVENT_EMAIL_PASSWORD`: Disables email address signup, login and change email functionality.
