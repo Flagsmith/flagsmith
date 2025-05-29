@@ -2,7 +2,9 @@ name: Conventional Commit
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types:
+      - edited
+      - opened
 
 jobs:
   conventional-commit:
