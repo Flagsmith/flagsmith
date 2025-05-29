@@ -32,15 +32,15 @@ def launch_darkly_backoff(
     #   If the last error was a 429 and contained retry information,
     #   signal for the import request to be retried later by raising a `LaunchDarklyRateLimitError`.
 
-    def _get_retry_after(exc: RequestException) -> int | None:
+    def _get_retry_after(exc: RequestException) -> float | None:
         if (
-            response := exc.response
+            (response := exc.response) is not None
         ) and response.status_code == HTTP_429_TOO_MANY_REQUESTS:
             headers = response.headers
             if retry_after := headers.get("Retry-After"):
-                return int(retry_after)
+                return float(retry_after)
             if ratelimit_reset := headers.get("X-Ratelimit-Reset"):
-                return int(ratelimit_reset) - int(timezone_now().timestamp())
+                return float(ratelimit_reset) - timezone_now().timestamp()
         return None
 
     def _wait_gen() -> Generator[float, None, None]:
@@ -55,7 +55,7 @@ def launch_darkly_backoff(
     def _handle_giveup(
         details: Details,
     ) -> None:
-        exc: RequestException = details["value"]
+        exc: RequestException = details["exception"]  # type: ignore[typeddict-item]
 
         if retry_after := _get_retry_after(exc):
             raise LaunchDarklyRateLimitError(

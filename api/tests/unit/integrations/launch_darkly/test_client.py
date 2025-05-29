@@ -1,10 +1,12 @@
 import json
 from os.path import abspath, dirname, join
 
+import pytest
 from pytest_mock import MockerFixture
 from requests_mock import Mocker as RequestsMockerFixture
 
 from integrations.launch_darkly.client import LaunchDarklyClient
+from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
 
 
 def test_launch_darkly_client__get_project__return_expected(
@@ -42,6 +44,78 @@ def test_launch_darkly_client__get_project__return_expected(
 
     # Then
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "response_headers",
+    [{"Retry-After": "0.1"}, {"X-Ratelimit-Reset": "1672531200.1"}],
+)
+@pytest.mark.freeze_time("2023-01-01T00:00:00Z")
+def test_launch_darkly_client__rate_limit__expected_backoff(
+    requests_mock: RequestsMockerFixture,
+    response_headers: dict[str, str],
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    example_response_file_path = join(
+        dirname(abspath(__file__)), "example_api_responses/getProject.json"
+    )
+    with open(example_response_file_path) as example_response_fp:
+        example_response_content = example_response_fp.read()
+
+    expected_result = json.loads(example_response_content)
+
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/projects/test-project-key",
+        [
+            {"status_code": 429, "headers": response_headers},
+            {"status_code": 429, "headers": response_headers},
+            {"status_code": 200, "text": example_response_content},
+        ],
+    )
+
+    client = LaunchDarklyClient(token=token)
+
+    # When
+    result = client.get_project(project_key=project_key)
+
+    # Then
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "response_headers",
+    [{"Retry-After": "0.1"}, {"X-Ratelimit-Reset": "1672531200.1"}],
+)
+@pytest.mark.freeze_time("2023-01-01T00:00:00Z")
+def test_launch_darkly_client__rate_limit_max_retries__raises_expected(
+    requests_mock: RequestsMockerFixture,
+    response_headers: dict[str, str],
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/projects/test-project-key",
+        [
+            {"status_code": 429, "headers": response_headers},
+            {"status_code": 429, "headers": response_headers},
+            {"status_code": 429, "headers": response_headers},
+            {"status_code": 429, "headers": response_headers},
+            {"status_code": 429, "headers": response_headers},
+        ],
+    )
+
+    client = LaunchDarklyClient(token=token)
+
+    # When & Then
+    with pytest.raises(LaunchDarklyRateLimitError) as exc_info:
+        client.get_project(project_key=project_key)
+
+    assert exc_info.value.retry_at.isoformat() == "2023-01-01T00:00:00.100000+00:00"
 
 
 def test_launch_darkly_client__get_environments__return_expected(
