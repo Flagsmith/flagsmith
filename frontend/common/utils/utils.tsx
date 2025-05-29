@@ -27,7 +27,6 @@ import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
-import format from './format'
 
 const semver = require('semver')
 

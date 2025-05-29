@@ -84,6 +84,11 @@ export type Req = {
     projectId: number | string
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
   }
+  cloneSegment: {
+    projectId: number | string
+    segmentId: number
+    name: string
+  }
   getAuditLogs: PagedRequest<{
     search?: string
     project: string
