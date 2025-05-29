@@ -267,7 +267,6 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
       )
     }
   }
-  console.log(disableSignup)
   return (
     <AccountProvider>
       {(
