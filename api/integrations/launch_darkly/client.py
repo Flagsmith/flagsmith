@@ -67,7 +67,7 @@ def launch_darkly_backoff(
     return backoff.on_exception(
         wait_gen=_wait_gen,
         exception=RequestException,
-        jitter=backoff.full_jitter,
+        jitter=backoff.random_jitter,
         on_giveup=_handle_giveup,
         max_tries=BACKOFF_MAX_RETRIES,
     )(_get_json_response)
