@@ -2,6 +2,8 @@ from django.conf import settings
 from django.views import View
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
+from organisations.invites.models import InviteLink, Invite
+from rest_framework.exceptions import PermissionDenied
 
 
 class CurrentUser(IsAuthenticated):
@@ -17,8 +19,26 @@ class CurrentUser(IsAuthenticated):
 
 
 class IsSignupAllowed(AllowAny):
+    message = "Signing-up without a valid invitation is disabled. Please contact your administrator."
+
     def has_permission(self, request: Request, view: View) -> bool:
-        return not settings.PREVENT_SIGNUP
+        if not settings.PREVENT_SIGNUP:
+            return True
+
+        email = request.data.get("email")
+        if email and Invite.objects.filter(email__iexact=email).exists():
+            return True
+
+        invite_hash = request.data.get("invite_hash")
+        if invite_hash:
+            try:
+                invite_link = InviteLink.objects.get(hash=invite_hash)
+                if not invite_link.is_expired:
+                    return True
+            except InviteLink.DoesNotExist:
+                pass
+
+        raise PermissionDenied(self.message)
 
 
 class IsPasswordLoginAllowed(AllowAny):
