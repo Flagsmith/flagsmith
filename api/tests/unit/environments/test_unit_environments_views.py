@@ -1,5 +1,4 @@
 import json
-from unittest import mock
 
 import pytest
 from common.environments.permissions import (
@@ -296,6 +295,87 @@ def test_environment_user_can_get_their_permissions(
     assert "VIEW_ENVIRONMENT" in response.json()["permissions"]
 
 
+def test_environment_user_can_get_their_detailed_permissions(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, staff_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "VIEW_ENVIRONMENT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
+def test_environment_user_can_not_get_detailed_permissions_of_other_user(
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, admin_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_environment_admin_can_get_detailed_permissions_of_other_user(
+    admin_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+    environment: Environment,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_environment_permissions([VIEW_ENVIRONMENT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:environments:environment-user-detailed-permissions",
+        args=[environment.api_key, staff_user.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "VIEW_ENVIRONMENT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
 def test_can_create_webhook_for_an_environment(
     environment: Environment,
     admin_client_new: APIClient,
@@ -429,32 +509,6 @@ def test_cannot_delete_webhooks_for_environment_user_does_not_belong_to(
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert Webhook.objects.filter(id=webhook.id).exists()
-
-
-@mock.patch("webhooks.mixins.trigger_sample_webhook")
-def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
-    trigger_sample_webhook_mock: mock.MagicMock,
-    environment: Environment,
-    admin_client: APIClient,
-) -> None:
-    # Given
-    valid_webhook_url = "http://my.webhook.com/webhooks"
-    mocked_response = mock.MagicMock(status_code=200)
-    trigger_sample_webhook_mock.return_value = mocked_response
-    url = reverse(
-        "api-v1:environments:environment-webhooks-trigger-sample-webhook",
-        args=[environment.api_key],
-    )
-    data = {"url": valid_webhook_url}
-
-    # When
-    response = admin_client.post(url, data)
-
-    # Then
-    assert response.json()["message"] == "Request returned 200"
-    assert response.status_code == status.HTTP_200_OK
-    args, _ = trigger_sample_webhook_mock.call_args
-    assert args[0].url == valid_webhook_url
 
 
 def test_list_api_keys(

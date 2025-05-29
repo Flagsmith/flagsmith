@@ -10,7 +10,7 @@ from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.decorators import action, api_view, authentication_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -53,11 +53,12 @@ from organisations.serializers import (
 from permissions.permissions_calculator import get_organisation_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
+    UserDetailedPermissionsSerializer,
     UserObjectPermissionsSerializer,
 )
 from projects.serializers import ProjectListSerializer
+from users.models import FFAdminUser
 from users.serializers import UserIdSerializer
-from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
 from .serializers import OrganisationAPIUsageNotificationSerializer
@@ -275,6 +276,33 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
 
         return Response(serializer.data)
 
+    @swagger_auto_schema(
+        responses={200: UserDetailedPermissionsSerializer},
+    )  # type: ignore[misc]
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
+        url_name="user-detailed-permissions",
+    )
+    def detailed_permissions(self, request: Request, pk: str, user_id: str) -> Response:
+        organisation = self.get_object()
+        user = request.user
+        user_id_int = int(user_id)
+
+        if request.user.id != user_id_int:
+            if not request.user.is_organisation_admin(organisation):  # type: ignore[union-attr]
+                # Only organisation admin can get permissions of other users
+                raise PermissionDenied()
+
+            user = get_object_or_404(FFAdminUser, id=user_id_int)
+
+        permission_data = get_organisation_permission_data(organisation, user)  # type: ignore[arg-type]
+        serializer = UserDetailedPermissionsSerializer(
+            permission_data.to_detailed_permissions_data()
+        )
+        return Response(serializer.data)
+
 
 @api_view(["POST"])
 @authentication_classes([BasicAuthentication])
@@ -306,11 +334,11 @@ def chargebee_webhook(request: Request) -> Response:
     return webhook_handlers.process_subscription(request)
 
 
-class OrganisationWebhookViewSet(viewsets.ModelViewSet, TriggerSampleWebhookMixin):  # type: ignore[type-arg]
+class OrganisationWebhookViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = OrganisationWebhookSerializer
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
 
-    webhook_type = WebhookType.ORGANISATION  # type: ignore[assignment]
+    webhook_type = WebhookType.ORGANISATION
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):

@@ -1,5 +1,4 @@
 import { FC, useCallback, useLayoutEffect, useRef, useState } from 'react'
-import classNames from 'classnames'
 
 import useOutsideClick from 'common/useOutsideClick'
 import Utils from 'common/utils/utils'
@@ -10,6 +9,8 @@ import { Tag } from 'common/types/responses'
 import color from 'color'
 import { getTagColor } from './tags/Tag'
 import ActionButton from './ActionButton'
+import ActionItem from './shared/ActionItem'
+import { calculateListPosition } from 'common/utils/calculateListPosition'
 
 interface FeatureActionProps {
   projectId: string
@@ -21,7 +22,6 @@ interface FeatureActionProps {
   hideHistory: boolean
   hideRemove: boolean
   onShowHistory: () => void
-  isCompact?: boolean
   onCopyName: () => void
   onShowAudit: () => void
   onRemove: () => void
@@ -29,25 +29,11 @@ interface FeatureActionProps {
 
 type ActionType = 'copy' | 'audit' | 'history' | 'remove'
 
-function calculateListPosition(
-  btnEl: HTMLElement,
-  listEl: HTMLElement,
-): { top: number; left: number } {
-  const listPosition = listEl.getBoundingClientRect()
-  const btnPosition = btnEl.getBoundingClientRect()
-  const pageTop = window.visualViewport?.pageTop ?? 0
-  return {
-    left: btnPosition.right - listPosition.width,
-    top: pageTop + btnPosition.bottom,
-  }
-}
-
 export const FeatureAction: FC<FeatureActionProps> = ({
   featureIndex,
   hideAudit,
   hideHistory,
   hideRemove,
-  isCompact,
   onCopyName,
   onRemove,
   onShowAudit,
@@ -83,16 +69,16 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
       close()
     },
-    [close, onCopyName, onRemove, onShowHistory],
+    [close, onCopyName, onRemove, onShowHistory, onShowAudit],
   )
 
   useOutsideClick(listRef, handleOutsideClick)
 
   useLayoutEffect(() => {
     if (!isOpen || !listRef.current || !btnRef.current) return
-    const listPosition = calculateListPosition(btnRef.current, listRef.current)
-    listRef.current.style.top = `${listPosition.top}px`
-    listRef.current.style.left = `${listPosition.left}px`
+    const { left, top } = calculateListPosition(btnRef.current, listRef.current)
+    listRef.current.style.top = `${top}px`
+    listRef.current.style.left = `${left}px`
   }, [isOpen])
 
   const isProtected = !!protectedTags?.length
@@ -107,44 +93,40 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
       {isOpen && (
         <div ref={listRef} className='feature-action__list'>
-          <div
-            className='feature-action__item'
-            onClick={(e) => {
-              e.stopPropagation()
+          <ActionItem
+            icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
+            label='Copy Feature Name'
+            handleActionClick={() => {
               handleActionClick('copy')
             }}
-          >
-            <Icon name='copy' width={18} fill='#9DA4AE' />
-            <span>Copy Feature Name</span>
-          </div>
+            entity='feature'
+            index={featureIndex}
+            action='copy'
+          />
           {!hideAudit && (
-            <div
-              className='feature-action__item'
-              data-test={`feature-audit-${featureIndex}`}
-              onClick={(e) => {
-                e.stopPropagation()
+            <ActionItem
+              icon={<Icon name='list' width={18} fill='#9DA4AE' />}
+              label='Show Audit Logs'
+              handleActionClick={() => {
                 handleActionClick('audit')
               }}
-            >
-              <Icon name='list' width={18} fill='#9DA4AE' />
-              <span>Show Audit Logs</span>
-            </div>
+              entity='feature'
+              index={featureIndex}
+              action='audit'
+            />
           )}
-
           {!hideHistory && (
-            <div
-              className='feature-action__item'
-              data-test={`feature-history-${featureIndex}`}
-              onClick={(e) => {
-                e.stopPropagation()
+            <ActionItem
+              icon={<Icon name='clock' width={18} fill='#9DA4AE' />}
+              label='Show History'
+              handleActionClick={() => {
                 handleActionClick('history')
               }}
-            >
-              <Icon name='clock' width={18} fill='#9DA4AE' />
-              <span>Show History</span>
-            </div>
+              entity='feature'
+              index={featureIndex}
+              action='history'
+            />
           )}
-
           {!hideRemove && (
             <Permission
               level='project'
@@ -158,20 +140,19 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                   Constants.projectPermissions('Delete Feature'),
                   <Tooltip
                     title={
-                      <div
-                        className={classNames('feature-action__item', {
-                          'feature-action__item_disabled':
-                            !removeFeaturePermission || readOnly || isProtected,
-                        })}
-                        data-test={`remove-feature-btn-${featureIndex}`}
-                        onClick={(e) => {
-                          e.stopPropagation()
+                      <ActionItem
+                        icon={<Icon name='trash-2' width={18} fill='#9DA4AE' />}
+                        label='Remove feature'
+                        handleActionClick={() => {
                           handleActionClick('remove')
                         }}
-                      >
-                        <Icon name='trash-2' width={18} fill='#9DA4AE' />
-                        <span>Remove feature</span>
-                      </div>
+                        action='remove'
+                        entity='feature'
+                        index={featureIndex}
+                        disabled={
+                          !removeFeaturePermission || readOnly || isProtected
+                        }
+                      />
                     }
                   >
                     {isProtected &&
