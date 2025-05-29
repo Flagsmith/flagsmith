@@ -96,7 +96,7 @@ def update_organisation_subscription_information_influx_cache():  # type: ignore
     subscription_info_cache.update_caches((SubscriptionCacheEntity.INFLUX,))
 
 
-@register_task_handler()
+@register_task_handler(timeout=timedelta(minutes=5))
 def update_organisation_subscription_information_cache() -> None:
     subscription_info_cache.update_caches(
         (SubscriptionCacheEntity.CHARGEBEE, SubscriptionCacheEntity.INFLUX)
