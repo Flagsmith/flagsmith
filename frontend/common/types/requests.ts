@@ -675,6 +675,7 @@ export type Req = {
     id?: string
     userId: number | undefined
     level: PermissionLevel
+  }
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
   createReleasePipeline: {
