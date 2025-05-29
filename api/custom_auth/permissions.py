@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.views import View
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
-from organisations.invites.models import InviteLink, Invite
-from rest_framework.exceptions import PermissionDenied
+
+from organisations.invites.models import Invite, InviteLink
 
 
 class CurrentUser(IsAuthenticated):

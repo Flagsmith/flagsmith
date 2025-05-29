@@ -1,10 +1,15 @@
+from datetime import timedelta
+from typing import Any, Callable
+
 import pytest
 from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APIClient, override_settings  # type: ignore[attr-defined]
-from datetime import timedelta
 from django.utils import timezone
-from typing import Any, Callable
+from rest_framework import status
+from rest_framework.test import (  # type: ignore[attr-defined]
+    APIClient,
+    override_settings,
+)
+
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation
 
