@@ -169,13 +169,8 @@ class OnboardingTaskSerializer(serializers.Serializer[None]):
 
     def to_representation(self, instance: Any) -> dict[str, Any]:
         rep = super().to_representation(instance)
-        completed_at = rep.get("completed_at")
-
-        if not completed_at:
+        if rep.get("completed_at") is None:
             rep["completed_at"] = datetime.now().isoformat()
-        elif isinstance(completed_at, datetime):
-            rep["completed_at"] = completed_at.isoformat()
-
         return rep
 
 
@@ -189,9 +184,6 @@ class PatchOnboardingSerializer(serializers.Serializer[None]):
                 "At least one of 'tasks' or 'tools' must be provided."
             )
         return data
-
-    def to_representation(self, instance: Any) -> dict[str, Any]:
-        return super().to_representation(instance)
 
 
 class OnboardingResponseTypeSerializer(serializers.Serializer[None]):
