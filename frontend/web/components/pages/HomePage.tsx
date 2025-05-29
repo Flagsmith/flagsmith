@@ -267,7 +267,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
       )
     }
   }
-
+  console.log(disableSignup)
   return (
     <AccountProvider>
       {(
@@ -522,8 +522,9 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                                   >
                                     <ErrorMessage
                                       error={
-                                        typeof AccountStore.error === 'string'
-                                          ? AccountStore.error
+                                        typeof AccountStore.error?.detail ===
+                                        'string'
+                                          ? AccountStore.error.detail
                                           : 'Please check your details and try again'
                                       }
                                     />

@@ -34,8 +34,8 @@ services:
       DJANGO_ALLOWED_HOSTS: '*' # Change this in production
       FLAGSMITH_DOMAIN: localhost:8000 # Change this in production
       DJANGO_SECRET_KEY: secret # Change this in production
-      # PREVENT_SIGNUP: 'true' # Uncomment to prevent additional signups
-      # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true'
+      # PREVENT_SIGNUP: 'true' # Uncomment to prevent any additional signups
+      # ALLOW_REGISTRATION_WITHOUT_INVITE: 'true' # Uncomment and set to false to only allow signups via invitations
 
       # Enable Task Processor
       TASK_RUN_METHOD: TASK_PROCESSOR # other options are: SYNCHRONOUSLY, SEPARATE_THREAD (default)
