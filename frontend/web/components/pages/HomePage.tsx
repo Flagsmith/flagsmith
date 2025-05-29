@@ -267,7 +267,6 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
       )
     }
   }
-
   return (
     <AccountProvider>
       {(
@@ -522,8 +521,9 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                                   >
                                     <ErrorMessage
                                       error={
-                                        typeof AccountStore.error === 'string'
-                                          ? AccountStore.error
+                                        typeof (AccountStore.error as any)
+                                          ?.detail === 'string'
+                                          ? (AccountStore.error as any).detail
                                           : 'Please check your details and try again'
                                       }
                                     />

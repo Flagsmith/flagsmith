@@ -4,14 +4,13 @@ from rest_framework import status
 from rest_framework.test import APIClient, override_settings  # type: ignore[attr-defined]
 from datetime import timedelta
 from django.utils import timezone
-
+from typing import Any, Callable
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation
-from users.models import FFAdminUser
 
 
 @pytest.fixture
-def signup_data():
+def signup_data() -> dict[str, Any]:
     return {
         "email": "test@example.com",
         "password": "testpass123",
@@ -21,7 +20,7 @@ def signup_data():
 
 
 def test_signup_allowed_when_prevent_signup_disabled(
-    api_client: APIClient, signup_data: dict, db: None
+    api_client: APIClient, signup_data: dict[str, Any], db: None
 ) -> None:
     # Given
     url = reverse("api-v1:custom_auth:ffadminuser-list")
@@ -33,9 +32,9 @@ def test_signup_allowed_when_prevent_signup_disabled(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@override_settings(PREVENT_SIGNUP=True)
+@override_settings(PREVENT_SIGNUP=True)  # type: ignore[misc]
 def test_signup_blocked_when_prevent_signup_enabled_and_no_invitation(
-    api_client: APIClient, signup_data: dict, db: None
+    api_client: APIClient, signup_data: dict[str, Any], db: None
 ) -> None:
     # Given
     url = reverse("api-v1:custom_auth:ffadminuser-list")
@@ -51,9 +50,9 @@ def test_signup_blocked_when_prevent_signup_enabled_and_no_invitation(
     )
 
 
-@override_settings(PREVENT_SIGNUP=True)
+@override_settings(PREVENT_SIGNUP=True)  # type: ignore[misc]
 def test_signup_allowed_with_email_invite(
-    api_client: APIClient, signup_data: dict, db: None
+    api_client: APIClient, signup_data: dict[str, Any], db: None
 ) -> None:
     # Given
     organisation = Organisation.objects.create(name="Test Org")
@@ -67,58 +66,51 @@ def test_signup_allowed_with_email_invite(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@override_settings(PREVENT_SIGNUP=True)
-def test_signup_allowed_with_valid_invite_hash(
-    api_client: APIClient, signup_data: dict, invite_link: InviteLink, db: None
+@pytest.mark.parametrize(
+    "get_invite_hash, expected_status, expected_detail",
+    [
+        (
+            lambda organisation: InviteLink.objects.create(
+                organisation=organisation
+            ).hash,
+            status.HTTP_201_CREATED,
+            None,
+        ),
+        (
+            lambda _: "invalid-hash",
+            status.HTTP_403_FORBIDDEN,
+            "Signing-up without a valid invitation is disabled. Please contact your administrator.",
+        ),
+        (
+            lambda organisation: InviteLink.objects.create(
+                organisation=organisation,
+                expires_at=timezone.now() - timedelta(days=1),
+            ),
+            status.HTTP_403_FORBIDDEN,
+            "Signing-up without a valid invitation is disabled. Please contact your administrator.",
+        ),
+    ],
+)
+@override_settings(PREVENT_SIGNUP=True)  # type: ignore[misc]
+def test_signup_with_invite_hash_behavior(
+    api_client: APIClient,
+    signup_data: dict[str, Any],
+    db: None,
+    get_invite_hash: Callable[[Organisation], str],
+    expected_status: int,
+    expected_detail: str,
+    organisation: Organisation,
 ) -> None:
     # Given
-    signup_data_with_hash = {**signup_data, "invite_hash": invite_link.hash}
+    invite_hash = get_invite_hash(organisation)
+
+    signup_data_with_hash = {**signup_data, "invite_hash": invite_hash}
     url = reverse("api-v1:custom_auth:ffadminuser-list")
 
     # When
     response = api_client.post(url, data=signup_data_with_hash)
 
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
-
-
-@override_settings(PREVENT_SIGNUP=True)
-def test_signup_blocked_with_invalid_invite_hash(
-    api_client: APIClient, signup_data: dict, db: None
-) -> None:
-    # Given
-    signup_data_with_hash = {**signup_data, "invite_hash": "invalid-hash"}
-    url = reverse("api-v1:custom_auth:ffadminuser-list")
-
-    # When
-    response = api_client.post(url, data=signup_data_with_hash)
-
-    # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert (
-        str(response.data["detail"])
-        == "Signing-up without a valid invitation is disabled. Please contact your administrator."
-    )
-
-
-@override_settings(PREVENT_SIGNUP=True)
-def test_signup_blocked_with_expired_invite_link(
-    api_client: APIClient, signup_data: dict, db: None
-) -> None:
-    # Given
-    organisation = Organisation.objects.create(name="Test Org")
-    expired_invite_link = InviteLink.objects.create(
-        organisation=organisation, expires_at=timezone.now() - timedelta(days=1)
-    )
-    signup_data_with_hash = {**signup_data, "invite_hash": expired_invite_link.hash}
-    url = reverse("api-v1:custom_auth:ffadminuser-list")
-
-    # When
-    response = api_client.post(url, data=signup_data_with_hash)
-
-    # Then
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert (
-        str(response.data["detail"])
-        == "Signing-up without a valid invitation is disabled. Please contact your administrator."
-    )
+    assert response.status_code == expected_status
+    if expected_detail:
+        assert str(response.data["detail"]) == expected_detail
