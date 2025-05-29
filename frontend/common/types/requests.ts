@@ -19,8 +19,8 @@ import {
   Webhook,
   IdentityTrait,
   StageTrigger,
-  StageAction,
   PipelineStatus,
+  StageActionType,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -71,6 +71,12 @@ export type RegisterRequest = {
   organisation_name?: string
   marketing_consent_given?: boolean
 }
+
+export interface StageActionRequest {
+  action_type: StageActionType
+  action_body: { enabled: boolean; segment_id?: number }
+}
+
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -699,7 +705,7 @@ export type Req = {
     pipeline: number
     order: number
     trigger: StageTrigger
-    actions: StageAction[]
+    actions: StageActionRequest[]
   }
   deleteReleasePipeline: {
     projectId: number

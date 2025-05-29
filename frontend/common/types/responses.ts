@@ -1,5 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 
+import { StageActionRequest } from './requests'
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -817,19 +819,21 @@ export enum StageTriggerType {
   WAIT_FOR = 'WAIT_FOR',
 }
 
+export type StageTriggerBody = string | null
+
 export type StageTrigger = {
   trigger_type: StageTriggerType
-  trigger_body: string | null | { segment_id: number }
+  trigger_body: StageTriggerBody
 }
 
 export enum StageActionType {
   TOGGLE_FEATURE = 'TOGGLE_FEATURE',
   TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
 }
-
-export type StageAction = {
-  action_type: StageActionType
-  action_body: { enabled: boolean }
+// TODO: Check if this is correct
+export interface StageActionResponse
+  extends Omit<StageActionRequest, 'action_body'> {
+  action_body: string
 }
 
 export type PipelineStage = {
@@ -839,7 +843,7 @@ export type PipelineStage = {
   environment: number
   order: number
   trigger: StageTrigger
-  actions: StageAction[]
+  actions: StageActionResponse[]
 }
 
 export type Res = {

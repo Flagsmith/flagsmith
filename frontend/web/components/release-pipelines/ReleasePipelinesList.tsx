@@ -103,9 +103,11 @@ const ReleasePipelinesList = ({
             </Row>
             <Row className='gap-5 p-3'>
               <div className='text-center'>
+                {/* TODO: Add stages count */}
                 <div className='fw-bold'>{stages_count ?? 0}</div>
                 <div>Stages</div>
               </div>
+              {/* TODO: Add flags count */}
               <div className='text-center'>
                 <div className='fw-bold'>{flags_count ?? 0}</div>
                 <div>Flags</div>

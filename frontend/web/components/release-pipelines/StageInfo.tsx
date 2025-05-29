@@ -1,19 +1,54 @@
-import { Environment } from 'common/types/responses'
+import {
+  Environment,
+  StageTriggerType,
+  StageTriggerBody,
+  Segment,
+  StageActionType,
+} from 'common/types/responses'
 
 import { PipelineStage } from 'common/types/responses'
 import StageCard from './StageCard'
 import StageArrow from './StageArrow'
+import { TRIGGER_OPTIONS } from './constants'
+import { useGetSegmentQuery } from 'common/services/useSegment'
 
 type StageInfoProps = {
   environmentsData: Environment[] | undefined
   stageData: PipelineStage
+  projectId: number
 }
 
-const StageInfo = ({ environmentsData, stageData }: StageInfoProps) => {
+const getTriggerText = (
+  triggerType: StageTriggerType,
+  segmentData?: Segment,
+) => {
+  if (triggerType === StageTriggerType.ON_ENTER) {
+    return (
+      <span>
+        When flag is added to this stage, enable flag for{' '}
+        <b>{segmentData?.name ?? 'everyone'}</b>
+      </span>
+    )
+  }
+
+  return null
+}
+
+const StageInfo = ({
+  environmentsData,
+  projectId,
+  stageData,
+}: StageInfoProps) => {
   const environmentData = environmentsData?.find(
     (environment) => environment.id === stageData?.environment,
   )
-  // TODO: After trigger_type and trigger_action is added, we can show the trigger text
+
+  // TODO: Fetch segment data based on action body
+  // const { data: segmentData } = useGetSegmentQuery({
+  //   id: `${segmentId}`,
+  //   projectId: `${projectId}`,
+  // },
+  // { skip: !segmentId },)
 
   return (
     <Row>
@@ -23,11 +58,10 @@ const StageInfo = ({ environmentsData, stageData }: StageInfoProps) => {
             <h5>{stageData?.name}</h5>
             <p>{environmentData?.name}</p>
             <p className='text-muted'>
-              <span>
-                When flag is added to this stage, enable flag for{' '}
-                <b>everyone</b>
-              </span>
+              {/* TODO: Add segment data */}
+              {getTriggerText(stageData?.trigger?.trigger_type, undefined)}
             </p>
+            {/* TODO: Add features count */}
             <h6>Features (0)</h6>
             <p className='text-muted'>No features added to this stage yet.</p>
           </div>

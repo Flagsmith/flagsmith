@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import PipelineStage, { DraftStageType } from './PipelineStage'
+import CreatePipelineStage, { DraftStageType } from './CreatePipelineStage'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
@@ -116,6 +116,7 @@ function CreateReleasePipeline({
       }
       setStagesCreationSuccess(true)
     } catch (error) {
+      console.error('erroroooo')
       toast('Error creating release pipeline', 'error')
     }
   }
@@ -183,7 +184,7 @@ function CreateReleasePipeline({
           {stages?.map((stageData, index) => (
             <Row key={index}>
               <Row className='align-items-start no-wrap'>
-                <PipelineStage
+                <CreatePipelineStage
                   stageData={stageData}
                   onChange={(stageData: DraftStageType) =>
                     handleOnChange(stageData, index)
