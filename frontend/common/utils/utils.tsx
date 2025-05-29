@@ -360,6 +360,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+  getOrganisationIdFromUrl(match: any) {
+    const organisationId = match?.params?.organisationId
+    return organisationId ? parseInt(organisationId) : null
+  },
+
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -378,7 +383,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
-
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {

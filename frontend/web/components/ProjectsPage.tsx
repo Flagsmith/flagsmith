@@ -6,6 +6,7 @@ import Project from 'common/project'
 import { onPaymentLoad } from './modals/Payment'
 import makeAsyncScriptLoader from 'react-async-script'
 import { useRouteMatch } from 'react-router'
+import Utils from 'common/utils/utils'
 
 interface RouteParams {
   organisationId: string
@@ -14,11 +15,13 @@ interface RouteParams {
 const ProjectsPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   return (
-    <OrganisationProvider id={match.params.organisationId}>
+    <OrganisationProvider id={Utils.getOrganisationIdFromUrl(match)}>
       {() => {
         return (
           <div className='app-container container'>
-            <ProjectManageWidget organisationId={match.params.organisationId} />
+            <ProjectManageWidget
+              organisationId={Utils.getOrganisationIdFromUrl(match)}
+            />
           </div>
         )
       }}
