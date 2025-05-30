@@ -194,7 +194,7 @@ class DynamoIdentityWrapper(BaseDynamoWrapper):
 
         return []
 
-    def get_identity_overrides_count_dynamo(self, environment_api_key: str) -> int:
+    def get_identity_overrides_count(self, environment_api_key: str) -> int:
         return sum(
             len(identity["identity_features"])
             for identity in self.iter_all_items_paginated(

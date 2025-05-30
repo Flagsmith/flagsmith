@@ -18,7 +18,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
-
+from metrics.metrics_service import EnvironmentMetricsService
 from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
@@ -364,15 +364,11 @@ class EnvironmentAPIKeyViewSet(
 
 
 class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, EnvironmentPermissions]
     lookup_field = "api_key"
     lookup_url_kwarg = "environment_api_key"
     serializer_class: type[BaseSerializer[Any]] = EnvironmentMetricsSerializer
     queryset = Environment.objects.all()
-
-    def get_metrics(self, environment: Environment) -> EnvMetricsPayload:
-        is_workflows_enabled = environment.is_change_requests_enabled
-        return environment.get_metrics_payload(with_workflows=is_workflows_enabled)
 
     @swagger_auto_schema(  # type: ignore[misc]
         operation_description="Get metrics for this environment.",
@@ -380,11 +376,7 @@ class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
     )
     def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         environment: Environment = self.get_object()
-        if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):  # type: ignore[union-attr]
-            raise PermissionDenied(
-                "You do not have permission to view this environment."
-            )
-        serializer = self.get_serializer(
-            instance={"metrics": self.get_metrics(environment)}
-        )
+        metrics_service = EnvironmentMetricsService(environment)
+        metrics = metrics_service.get_metrics_payload()
+        serializer = self.get_serializer({"metrics": metrics})
         return Response(serializer.data, status=status.HTTP_200_OK)
