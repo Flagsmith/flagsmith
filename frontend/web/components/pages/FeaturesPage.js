@@ -163,6 +163,7 @@ const FeaturesPage = class extends Component {
 
   filter = (page) => {
     const currentParams = Utils.fromParam()
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     this.setState({ page }, () => {
       if (!currentParams.feature) {
         this.props.history.replace(
