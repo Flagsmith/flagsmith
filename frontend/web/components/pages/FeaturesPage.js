@@ -256,7 +256,7 @@ const FeaturesPage = class extends Component {
               </div>,
             )
           }
-          onSave={this.onError}
+          onSave={this.onSave}
           onError={this.onError}
         >
           {(
