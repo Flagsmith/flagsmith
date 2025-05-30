@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.179.1](https://github.com/Flagsmith/flagsmith/compare/v2.179.0...v2.179.1) (2025-05-30)
+
+
+### Dependency Updates
+
+* bump split testing from 0.2.0 to 0.2.1 ([#5510](https://github.com/Flagsmith/flagsmith/issues/5510)) ([e2dbff2](https://github.com/Flagsmith/flagsmith/commit/e2dbff2d22db9c14c71886572e6c0022d80f23d5))
+
 ## [2.179.0](https://github.com/Flagsmith/flagsmith/compare/v2.178.0...v2.179.0) (2025-05-30)
 
 
