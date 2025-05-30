@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
@@ -564,12 +564,18 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         Returns True if current date is within the billing term.
         If either start or end date is None, returns False.
         """
+        if not self.is_billing_terms_dates_set():
+            return False
+
+        if TYPE_CHECKING:
+            assert self.current_billing_term_starts_at is not None
+            assert self.current_billing_term_ends_at is not None
+
+        starts_at = self.current_billing_term_starts_at
+        ends_at = self.current_billing_term_ends_at
         now = timezone.now()
-        return self.is_billing_terms_dates_set() and (
-            self.current_billing_term_starts_at
-            <= now
-            <= self.current_billing_term_ends_at
-        )
+
+        return starts_at <= now <= ends_at
 
 
 class OrganisationAPIUsageNotification(models.Model):
