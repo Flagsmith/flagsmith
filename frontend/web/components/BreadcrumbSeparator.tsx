@@ -18,7 +18,7 @@ import {
 import AccountStore from 'common/stores/account-store'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountProvider from 'common/providers/AccountProvider'
-import { RouterChildContext } from 'react-router'
+import { RouterChildContext, useHistory } from 'react-router'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
@@ -36,7 +36,6 @@ type BreadcrumbSeparatorType = {
   children: ReactNode
   focus?: 'organisation' | 'project'
   projectId: string | undefined
-  router: RouterChildContext['router']
 }
 
 type ItemListType = {
@@ -146,7 +145,6 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   hideDropdown,
   hideSlash,
   projectId,
-  router,
 }) => {
   const [open, setOpen] = useState(false)
   const [organisationSearch, setOrganisationSearch] = useState('')
@@ -161,6 +159,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const [hoveredProject, setHoveredProject] = useState<string | undefined>(
     focus === 'organisation' ? undefined : projectId,
   )
+
+  const history = useHistory()
 
   useEffect(() => {
     const onChangeAccountStore = () => {
@@ -251,14 +251,14 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const goOrganisation = (organisation: Organisation) => {
     AppActions.selectOrganisation(organisation.id)
     AppActions.getOrganisation(organisation.id)
-    router.history.push(Utils.getOrganisationHomePage())
+    history.push(Utils.getOrganisationHomePage())
     setOpen(false)
   }
   const goProject = (project: Project) => {
     getEnvironments(getStore(), {
       projectId: `${project.id}`,
     }).then((res: { data: PagedResponse<Environment> }) => {
-      router.history.push(`/project/${project.id}`)
+      history.push(`/project/${project.id}`)
       setOpen(false)
     })
   }
