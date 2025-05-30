@@ -69,7 +69,7 @@ const FeaturesPage = class extends Component {
     super(props)
     this.state = this.getFiltersFromParams(Utils.fromParam())
     ES6Component(this)
-
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     AppActions.getFeatures(
       projectIdFromUrl,
       this.props.match.params.environmentId,
@@ -113,6 +113,7 @@ const FeaturesPage = class extends Component {
   }
 
   newFlag = () => {
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     openModal(
       'New Feature',
       <CreateFlagModal
@@ -194,6 +195,7 @@ const FeaturesPage = class extends Component {
   }
 
   createFeaturePermission(el) {
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     return (
       <Permission
         level='project'
