@@ -29,6 +29,7 @@ from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+from users.serializers import PatchOnboardingSerializer
 
 from .models import UserPasswordResetRequest
 
@@ -133,6 +134,23 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
                 DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
             )
         )
+
+    @action(
+        detail=False,
+        methods=["patch"],
+        url_path="me/onboarding",
+        permission_classes=[IsAuthenticated],
+    )
+    def patch_onboarding(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+        user = request.user
+        serializer = PatchOnboardingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        onboarding = {**(user.onboarding or {}), **serializer.data}
+        user.onboarding = onboarding
+        user.save(update_fields=["onboarding"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["post"], detail=False)
     def reset_password(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
