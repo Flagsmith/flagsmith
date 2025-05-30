@@ -7,12 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from environments.models import Environment
-from features.models import Feature, FeatureSegment, FeatureState
-from metrics.types import EnvMetricsName
-from projects.models import Project
-from segments.models import Segment
 from tests.types import WithEnvironmentPermissionsCallable
-from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize("with_workflows", [True, False])

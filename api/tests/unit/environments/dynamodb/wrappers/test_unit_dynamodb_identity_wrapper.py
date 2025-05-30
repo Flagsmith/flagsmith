@@ -645,9 +645,7 @@ def test_get_identity_overrides_count_dynamo_returns_correct_total(
     flagsmith_identities_table.put_item(Item=identity_two)
     flagsmith_identities_table.put_item(Item=identity_three)
 
-    result = dynamodb_identity_wrapper.get_identity_overrides_count_dynamo(
-        environment_api_key
-    )
+    result = dynamodb_identity_wrapper.get_identity_overrides_count(environment_api_key)
 
     assert result == len(identity_features[0]) + len(identity_features[1]) + len(
         identity_features[2]

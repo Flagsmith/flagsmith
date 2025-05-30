@@ -1,5 +1,5 @@
-import typing
 import random
+import typing
 from copy import copy
 from datetime import timedelta
 from unittest import mock
@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 from common.test_tools import AssertMetricFixture
+from django.db.models import Count, Q
 from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
@@ -27,20 +28,19 @@ from environments.models import (
     environment_cache,
 )
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
-from util.mappers import map_environment_to_environment_document
 from users.models import FFAdminUser
-from features.models import FeatureSegment
-from features.workflows.core.models import ChangeRequest
+from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
     from django.db.models import Model
@@ -1176,8 +1176,8 @@ def test_environment_metric_query_helpers_match_expected_counts(
 
     # When
     features_agg = env.get_features_metrics_queryset().aggregate(
-        total=FeatureState.objects.count(),
-        enabled=FeatureState.objects.filter(enabled=True).count(),
+        total=Count("id"),
+        enabled=Count("id", filter=Q(enabled=True)),
     )
     segment_count = env.get_segment_metrics_queryset().count()
     identity_override_count = env.get_identity_overrides_queryset().count()

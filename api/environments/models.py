@@ -2,7 +2,7 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
-from typing import TYPE_CHECKING, Callable, Literal
+from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -50,10 +50,6 @@ from environments.metrics import (
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
 from metadata.models import Metadata
-from metrics.types import (
-    EnvMetricsName,
-    EnvMetricsPayload,
-)
 from projects.models import Project
 from segments.models import Segment
 from util.mappers import (
@@ -389,17 +385,6 @@ class Environment(
             **(filter_kwargs or {}),
         )
 
-        if self.is_workflow_enabled:
-            from features.workflows.core.models import ChangeRequest
-
-            base_qs = base_qs.annotate(
-                has_uncommitted_cr=Exists(
-                    ChangeRequest.objects.filter(
-                        pk=OuterRef("change_request_id"),
-                        committed_at__isnull=True,
-                    )
-                )
-            ).filter(has_uncommitted_cr=False)
         group_fields = ["feature_id"]
         if extra_group_by_fields is not None:
             group_fields.append(extra_group_by_fields)
@@ -419,20 +404,16 @@ class Environment(
         return result
 
     def _get_latest_segment_state_ids_subquery(self) -> list[int]:
-        segment_ids = (
-            FeatureSegment.objects.filter(environment=self)
-            .values("feature_id", "segment_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
+        feature_states_qs = FeatureState.objects.get_live_feature_states(
+            environment=self,
+            additional_filters=Q(
+                identity_id__isnull=True,
+                feature_segment_id__isnull=False,
+            ),
         )
 
         fs_base_query = (
-            FeatureState.objects.filter(
-                Q(live_from__isnull=True) | Q(live_from__lte=timezone.now()),
-                feature_segment_id__in=segment_ids,
-                identity_id__isnull=True,
-            )
-            .values("feature_id", "feature_segment_id")
+            feature_states_qs.values("feature_id", "feature_segment_id")
             .annotate(latest_id=Max("id"))
             .values_list("latest_id", flat=True)
         )

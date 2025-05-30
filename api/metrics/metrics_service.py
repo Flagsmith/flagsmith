@@ -1,12 +1,14 @@
 import logging
 import time
 from typing import Callable
-from edge_api.identities.models import EdgeIdentity
-from metrics.constants import DEFAULT_METRIC_DEFINITIONS, WORKFLOW_METRIC_DEFINITIONS
-from metrics.types import EnvMetricsName, EnvMetricsPayload, MetricDefinition
+
 from django.db import models
 from django.db.models import Q
+
+from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
+from metrics.constants import DEFAULT_METRIC_DEFINITIONS, WORKFLOW_METRIC_DEFINITIONS
+from metrics.types import EnvMetricsName, EnvMetricsPayload, MetricDefinition
 
 logger = logging.getLogger(__name__)
 

@@ -18,7 +18,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
-from metrics.metrics_service import EnvironmentMetricsService
+
 from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
@@ -31,8 +31,8 @@ from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
 )
+from metrics.metrics_service import EnvironmentMetricsService
 from metrics.serializers import EnvironmentMetricsSerializer
-from metrics.types import EnvMetricsPayload
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,

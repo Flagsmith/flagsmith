@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from environments.models import Environment
 from metrics.metrics_service import EnvironmentMetricsService
@@ -9,7 +10,9 @@ from metrics.types import EnvMetricsName
 @pytest.mark.parametrize("with_workflows", [True, False])
 @pytest.mark.django_db
 def test_environment_metrics_service_builds_expected_metrics(
-    monkeypatch, environment: Environment, with_workflows: bool
+    monkeypatch: pytest.MonkeyPatch,
+    environment: Environment,
+    with_workflows: bool,
 ) -> None:
     # Given
     mock_agg = {"total": 10, "enabled": 5}
@@ -69,7 +72,10 @@ def test_environment_metrics_service_builds_expected_metrics(
 
 @pytest.mark.parametrize("uses_dynamo, expected_value", [(True, 99), (False, 1)])
 def test_dynamo_identity_metric_used(
-    monkeypatch, environment: Environment, uses_dynamo: bool, expected_value: int
+    monkeypatch: pytest.MonkeyPatch,
+    environment: Environment,
+    uses_dynamo: bool,
+    expected_value: int,
 ) -> None:
     # Given
     environment.project.enable_dynamo_db = uses_dynamo
