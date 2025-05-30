@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
