@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -39,14 +39,20 @@ def get_usage_data(
     now = timezone.now()
     date_start = date_stop = None
     sub_cache = getattr(organisation, "subscription_information_cache", None)
+
     is_subscription_valid = (
         sub_cache is not None and sub_cache.is_billing_terms_dates_set()
     )
 
+    if period in (constants.CURRENT_BILLING_PERIOD, constants.PREVIOUS_BILLING_PERIOD):
+        if not is_subscription_valid:
+            raise NotFound("No billing periods found for this organisation.")
+
+    if TYPE_CHECKING:
+        assert sub_cache is not None
+
     match period:
         case constants.CURRENT_BILLING_PERIOD:
-            if not is_subscription_valid or sub_cache is None:
-                raise NotFound("No billing periods found for this organisation.")
             starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
                 days=30
             )
@@ -55,8 +61,6 @@ def get_usage_data(
             date_stop = now
 
         case constants.PREVIOUS_BILLING_PERIOD:
-            if not is_subscription_valid or sub_cache is None:
-                raise NotFound("No billing periods found for this organisation.")
             starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
                 days=30
             )

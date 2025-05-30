@@ -401,12 +401,11 @@ def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
     )
     assert getattr(organisation, "subscription_information_cache", None) is None
 
-    # When
-    try:
+    # When / Then
+    with pytest.raises(NotFound) as e:
         get_usage_data(organisation, period=period)
-    # Then
-    except NotFound as e:
-        assert "No billing periods found for this organisation." in str(e)
+
+    assert "No billing periods found for this organisation." in str(e)
     mocked_get_usage_data_from_local_db.assert_not_called()
 
 
