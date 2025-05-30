@@ -1927,14 +1927,14 @@ resolved_reference = "303954ba54fd2f402c75806b3b9ba7f2d42aa426"
 
 [[package]]
 name = "flagsmith-common"
-version = "1.13.0"
+version = "1.14.0"
 description = "Flagsmith's common library"
 optional = false
 python-versions = "<4.0,>=3.11"
 groups = ["main", "dev", "split-testing", "workflows"]
 files = [
-    {file = "flagsmith_common-1.13.0-py3-none-any.whl", hash = "sha256:fea805a7ed191b7a6dea3053f9c534da575aa1d47984da61e7aec23b97ebb2d6"},
-    {file = "flagsmith_common-1.13.0.tar.gz", hash = "sha256:67c7c892253f8aeec1e2d1651248b86cfcb68ddfaab5a8c49571925f0a80f595"},
+    {file = "flagsmith_common-1.14.0-py3-none-any.whl", hash = "sha256:d08d67cfdd089838df9d596b3104ffd007c5603e23558a0c84b0db40171305a8"},
+    {file = "flagsmith_common-1.14.0.tar.gz", hash = "sha256:2d3af10717ec811bc068f546a6bcbc96d3987ba76806b240eb7a25ed4f9db509"},
 ]
 
 [package.dependencies]
@@ -2010,8 +2010,8 @@ scipy = "^1.11.4"
 [package.source]
 type = "git"
 url = "https://github.com/flagsmith/flagsmith-split-testing"
-reference = "v0.2.0"
-resolved_reference = "0d24bcac191be5447b2c101b3147b4ebd3332464"
+reference = "v0.2.1"
+resolved_reference = "67cf037ad89b1c7bd72e3a5a2d9a179c2302cbba"
 
 [[package]]
 name = "freezegun"
@@ -5326,4 +5326,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "8340bf542dc02ad88c7ef6e6021b99132015cd143a60292d13ca2ef00b6c8899"
+content-hash = "327e1012280faca51a7b4d9823faad3e031019bccb740a38704ae9551e74f49b"
