@@ -29,7 +29,7 @@ if (flagsmith.hasFeature("maintenance_mode")) {
 
 ### 2. Feature Management
 
-Use flags with [segments](/basic-features/segments.md) to control feature access:
+Use flags with [segments](./segments.md) to control feature access:
 
 - Toggle features by subscription tier
 - Enable features for specific user groups

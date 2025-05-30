@@ -16,7 +16,7 @@ The most common use case for short-lived flags is to decouple feature deployment
 1. Create and implement the flag while developing the feature
 2. Deploy the code with the feature behind the flag
 3. Test the feature in production with limited exposure
-4. Gradually roll out to more users using [segments](/basic-features/segments.md)
+4. Gradually roll out to more users using [segments](./segments.md)
 5. Once fully rolled out, remove the flag
 
 ### 2. A/B Testing and Experimentation
@@ -24,7 +24,7 @@ The most common use case for short-lived flags is to decouple feature deployment
 Short-lived flags are perfect for temporary experiments:
 
 1. Create a [multivariate flag](/basic-features/managing-features.md#multi-variate-flags) for your test variants
-2. Run your experiment using [percentage splits](/basic-features/segments.md#operator-details)
+2. Run your experiment using [percentage splits](./segments.md#special-operators)
 3. Collect data through your analytics platform
 4. Once the experiment concludes, implement the winning variant
 5. Remove the flag
