@@ -1,7 +1,7 @@
 import logging
 import re
 from contextlib import contextmanager
-from typing import Callable, Optional, Tuple
+from typing import Callable, Generator, Optional, Tuple
 
 from django.core import signing
 from django.utils import timezone
@@ -59,10 +59,10 @@ def _log_error(
     import_request.status["error_messages"] += [error_message]
 
 
-@contextmanager  # type: ignore[arg-type]
-def _complete_import_request(  # type: ignore[misc]
+@contextmanager
+def _complete_import_request(
     import_request: LaunchDarklyImportRequest,
-) -> None:
+) -> Generator[None, None, None]:
     """
     Wrap code so the import request always ends up completed.
 

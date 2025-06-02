@@ -567,7 +567,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
             )
 
         mv_values = attrs.get("multivariate_feature_state_values", [])
-        if sum([v["percentage_allocation"] for v in mv_values]) > 100:
+        if sum([v.get("percentage_allocation", 0) for v in mv_values]) > 100:
             raise serializers.ValidationError(
                 "Multivariate percentage values exceed 100%."
             )
