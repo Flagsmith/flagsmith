@@ -581,7 +581,11 @@ def test_process_import_request__large_segments__correctly_imported(
 
     # Then
     assert (
-        json.dumps(import_request.status, indent=2)
+        json.dumps(
+            import_request.status,
+            indent=2,
+            sort_keys=True,
+        )
         == expected_import_request_status_snapshot
     )
     buf = io.StringIO()
