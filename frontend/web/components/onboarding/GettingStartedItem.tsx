@@ -3,8 +3,8 @@ import { useGetProfileQuery } from 'common/services/useProfile'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 import API from 'project/api'
 import classNames from 'classnames'
-import Icon, { IconName } from './Icon'
-import Tooltip from './Tooltip'
+import Icon, { IconName } from 'components/Icon'
+import Tooltip from 'components/Tooltip'
 import { Link } from 'react-router-dom'
 
 export type GettingStartedItemType = {
@@ -30,15 +30,15 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
     if (data.disabledMessage) {
       return
     }
+
     API.trackEvent({ 'category': 'GettingStarted', 'event': data.name })
-    if (data.name) {
-      if (profile) {
-        updateProfile({
-          tasks: (profile.onboarding?.tasks || []).concat({
-            name: data.name,
-          }),
-        })
-      }
+
+    if (data.name && profile) {
+      updateProfile({
+        tasks: (profile.onboarding?.tasks || []).concat({
+          name: data.name,
+        }),
+      })
     }
   }
 
@@ -68,7 +68,7 @@ const GettingStartedItem: FC<GettingStartedItemType> = (data) => {
                 <div
                   style={{ height: 34, width: 34 }}
                   className={
-                    'd-flex rounded border-1 align-items-center justify-content-center'
+                    'd-flex rounded border-1 align-items-center justify-content-center flex-shrink-0'
                   }
                 >
                   {complete ? (
