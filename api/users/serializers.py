@@ -201,11 +201,9 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     def to_representation(self, instance: FFAdminUser) -> dict[str, Any]:
         rep = super().to_representation(instance)
 
-        try:
-            onboarding_json = (
-                json.loads(instance.onboarding) if instance.onboarding else None
-            )
-        except json.JSONDecodeError:
+        if instance.onboarding is not None:
+            onboarding_json = json.loads(instance.onboarding)
+        else:
             onboarding_json = None
 
         rep["onboarding"] = (

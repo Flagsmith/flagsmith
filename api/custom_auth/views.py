@@ -146,10 +146,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         user = request.user
         serializer = PatchOnboardingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            existing_onboarding = json.loads(user.onboarding) if user.onboarding else {}
-        except json.JSONDecodeError:
-            existing_onboarding = {}
+        existing_onboarding = json.loads(user.onboarding) if user.onboarding else {}
 
         updated_onboarding = {**existing_onboarding, **serializer.data}
         user.onboarding = json.dumps(updated_onboarding)
