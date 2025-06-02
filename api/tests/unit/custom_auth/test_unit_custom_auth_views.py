@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 import pytest
@@ -27,13 +28,16 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
 
 def test_get_me_should_return_onboarding_object(db: None) -> None:
     # Given
+    onboarding = {
+        "tasks": [{"name": "task-1"}],
+        "tools": {"completed": True, "integrations": ["integration-1"]},
+    }
+    onboarding_serialized = json.dumps(onboarding)
     new_user = FFAdminUser.objects.create(
         email="testuser@mail.com",
-        onboarding={
-            "tasks": [{"name": "task-1"}],
-            "tools": {"completed": True, "integrations": ["integration-1"]},
-        },
+        onboarding=onboarding_serialized,
     )
+
     new_user.save()
     client = APIClient()
     client.force_authenticate(user=new_user)
@@ -87,16 +91,16 @@ def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
     staff_user.refresh_from_db()
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    onboarding = staff_user.onboarding
-    assert onboarding is not None
+    onboarding_json = json.loads(staff_user.onboarding or "{}")
+    assert onboarding_json is not None
     if "tasks" in expected_keys:
-        assert onboarding.get("tasks", [])[0]
-        assert onboarding.get("tasks", [])[0].get("name") == data.get("tasks", [])[
+        assert onboarding_json.get("tasks", [])[0]
+        assert onboarding_json.get("tasks", [])[0].get("name") == data.get("tasks", [])[
             0
         ].get("name")
     if "tools" in expected_keys:
-        assert onboarding.get("tools", {}).get("completed") is True
-        assert onboarding.get("tools", {}).get("integrations") == data.get(
+        assert onboarding_json.get("tools", {}).get("completed") is True
+        assert onboarding_json.get("tools", {}).get("integrations") == data.get(
             "tools", {}
         ).get("integrations")
 

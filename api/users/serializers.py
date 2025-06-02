@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from typing import Any
 
@@ -167,11 +168,8 @@ class OnboardingTaskSerializer(serializers.Serializer[None]):
     name = serializers.CharField()
     completed_at = serializers.DateTimeField(allow_null=True, required=False)
 
-    def to_representation(self, instance: Any) -> dict[str, Any]:
-        rep = super().to_representation(instance)
-        if rep.get("completed_at") is None:
-            rep["completed_at"] = datetime.now().isoformat()
-        return rep
+    def validate_completed_at(self, completed_at: datetime) -> datetime:
+        return completed_at or datetime.now()
 
 
 class PatchOnboardingSerializer(serializers.Serializer[None]):
@@ -195,9 +193,23 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     uuid = serializers.UUIDField(read_only=True)
-    onboarding = OnboardingResponseTypeSerializer(
-        read_only=True, required=False, allow_null=True
-    )
+
+    def to_representation(self, instance: FFAdminUser) -> dict[str, Any]:
+        rep = super().to_representation(instance)
+
+        try:
+            onboarding_json = (
+                json.loads(instance.onboarding) if instance.onboarding else None
+            )
+        except json.JSONDecodeError:
+            onboarding_json = None
+
+        rep["onboarding"] = (
+            OnboardingResponseTypeSerializer(onboarding_json).data
+            if onboarding_json
+            else None
+        )
+        return rep  # type: ignore[no-any-return]
 
     class Meta(DjoserUserSerializer.Meta):  # type: ignore[misc]
         fields = DjoserUserSerializer.Meta.fields + (
