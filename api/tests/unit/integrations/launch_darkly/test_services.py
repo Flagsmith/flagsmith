@@ -2,7 +2,6 @@ import csv
 import io
 import json
 from operator import attrgetter
-from os.path import abspath, dirname, join
 from unittest.mock import MagicMock
 
 import pytest
@@ -551,6 +550,7 @@ def test_process_import_request__rules_imported(  # type: ignore[no-untyped-def]
 
 
 def test_process_import_request__large_segments__correctly_imported(
+    request: pytest.FixtureRequest,
     ld_client_class_mock: MagicMock,
     import_request: LaunchDarklyImportRequest,
     snapshot: SnapshotFixture,
@@ -570,13 +570,10 @@ def test_process_import_request__large_segments__correctly_imported(
         "Large User List (Override for test)",
         "Large User List (Override for production)",
     ]
-    ld_client_class_mock.return_value.get_segments.return_value = json.load(
-        open(
-            join(
-                dirname(abspath(__file__)),
-                "client_responses/get_segments__large_segments.json",
-            )
-        )
+    ld_client_class_mock.return_value.get_segments.return_value = json.loads(
+        (
+            request.path.parent / "client_responses/get_segments__large_segments.json"
+        ).read_text()
     )
 
     # When
