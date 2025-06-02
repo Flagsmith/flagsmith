@@ -47,7 +47,7 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 :::info
 
-[Feature Health](/advanced-use/feature-health) is an upcoming feature that is not yet available.
+[Feature Health](/advanced-use/feature-health) is beta feature. Please get in touch <a href="#" class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to use it.
 
 :::
 
