@@ -175,6 +175,7 @@ the below variables will be ignored.
   `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 - `ALLOW_REGISTRATION_WITHOUT_INVITE`: Determines whether users can register without an invite. Defaults to True. Set to
   False or 0 to disable. Note that if disabled, new users must be invited via email.
+- `PREVENT_SIGNUP`: Determines whether to prevent new signups.
 - `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 - `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 - `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
