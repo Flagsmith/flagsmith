@@ -24,7 +24,7 @@ def ld_token() -> str:
 
 @pytest.fixture
 def ld_client_mock(mocker: MockerFixture) -> MagicMock:
-    ld_client_mock = mocker.MagicMock(spec=LaunchDarklyClient)
+    ld_client_mock: MagicMock = mocker.MagicMock(spec=LaunchDarklyClient)
 
     for method_name, response_data_path in {
         "get_project": "client_responses/get_project.json",
@@ -39,7 +39,7 @@ def ld_client_mock(mocker: MockerFixture) -> MagicMock:
     ld_client_mock.get_flag_count.return_value = 9
     ld_client_mock.get_flag_tags.return_value = ["testtag", "testtag2"]
 
-    return ld_client_mock  # type: ignore[no-any-return]
+    return ld_client_mock
 
 
 @pytest.fixture

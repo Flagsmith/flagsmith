@@ -65,6 +65,7 @@ import { useHistory } from 'react-router'
 import { PermissionRow } from './PermissionRow'
 import Utils from 'common/utils/utils'
 import RemoveViewPermissionModal from './RemoveViewPermissionModal'
+import { useHistory } from 'react-router-dom'
 
 const Project = require('common/project')
 

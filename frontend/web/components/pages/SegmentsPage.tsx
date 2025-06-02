@@ -1,15 +1,10 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react' // we need this to make JSX compile
-import {
-  RouteComponentProps,
-  useHistory,
-  useLocation,
-  useRouteMatch,
-} from 'react-router'
-import { find, sortBy } from 'lodash'
+import { useHistory, useRouteMatch } from 'react-router-dom'
+import { sortBy } from 'lodash'
 
 import Constants from 'common/constants'
 import useSearchThrottle from 'common/useSearchThrottle'
-import { Environment, Segment } from 'common/types/responses'
+import { Environment } from 'common/types/responses'
 import {
   useDeleteSegmentMutation,
   useGetSegmentsQuery,
@@ -17,35 +12,24 @@ import {
 import { useHasPermission } from 'common/providers/Permission'
 import API from 'project/api'
 import Button from 'components/base/forms/Button'
-import ConfirmRemoveSegment from 'components/modals/ConfirmRemoveSegment'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
-import ConfigProvider from 'common/providers/ConfigProvider'
+
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
-import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
 import Switch from 'components/Switch'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
-import { withRouter } from 'react-router-dom'
 
 import CodeHelp from 'components/CodeHelp'
-type SegmentsPageType = RouteComponentProps<{
-  environmentId: string
-  projectId: string
-}> & {
-  router: {
-    history: History
-  }
-}
+import SegmentRow from 'components/segments/SegmentRow/SegmentRow'
 
-const SegmentsPage: FC<SegmentsPageType> = (props) => {
+const SegmentsPage: FC = () => {
   const history = useHistory()
   const route = useRouteMatch<{ environmentId: string; projectId: string }>()
-  const location = useLocation()
 
   const { projectId } = route.params
   const environmentId = (
@@ -66,6 +50,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       closeModal()
     }
   }, [id])
+
   const { data, error, isLoading, refetch } = useGetSegmentsQuery({
     include_feature_specific: showFeatureSpecific,
     page,
@@ -97,7 +82,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         featureSpecific: showFeatureSpecific,
       })}`,
     )
-  }, [showFeatureSpecific])
+  }, [showFeatureSpecific, history])
 
   const newSegment = () => {
     openModal(
@@ -112,13 +97,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         projectId={projectId}
       />,
       'side-modal create-new-segment-modal',
-    )
-  }
-  const confirmRemove = (segment: Segment, cb: () => void) => {
-    openModal(
-      'Remove Segment',
-      <ConfirmRemoveSegment segment={segment} cb={cb} />,
-      'p-0',
     )
   }
 
@@ -159,6 +137,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       },
     )
   }
+
   const renderWithPermission = (
     permission: boolean,
     name: string,
@@ -172,6 +151,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       </Tooltip>
     )
   }
+
   const segments = data?.results
   return (
     <div
@@ -255,69 +235,16 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                   items={sortBy(segments, (v) => {
                     return `${v.feature ? 'a' : 'z'}${v.name}`
                   })}
-                  renderRow={({ description, feature, id, name }, i) => {
+                  renderRow={(segment, index) => {
                     return renderWithPermission(
                       manageSegmentsPermission,
                       'Manage segments',
-                      <Row className='list-item clickable' key={id} space>
-                        <Flex
-                          className='table-column px-3'
-                          onClick={
-                            manageSegmentsPermission
-                              ? () =>
-                                  history.push(
-                                    `${
-                                      document.location.pathname
-                                    }?${Utils.toParam({
-                                      ...Utils.fromParam(),
-                                      id,
-                                    })}`,
-                                  )
-                              : undefined
-                          }
-                        >
-                          <Row
-                            data-test={`segment-${i}-name`}
-                            className='font-weight-medium'
-                          >
-                            {name}
-                            {feature && (
-                              <div className='chip chip--xs ml-2'>
-                                Feature-Specific
-                              </div>
-                            )}
-                          </Row>
-                          <div className='list-item-subtitle mt-1'>
-                            {description || 'No description'}
-                          </div>
-                        </Flex>
-                        <div className='table-column'>
-                          <Button
-                            disabled={!manageSegmentsPermission}
-                            data-test={`remove-segment-btn-${i}`}
-                            onClick={() => {
-                              const segment = find(segments, { id })
-                              if (segment) {
-                                confirmRemove(segment, () => {
-                                  removeSegment({ id, projectId }).then(
-                                    (res) => {
-                                      toast(
-                                        <div>
-                                          Removed Segment:{' '}
-                                          <strong>{segment.name}</strong>
-                                        </div>,
-                                      )
-                                    },
-                                  )
-                                })
-                              }
-                            }}
-                            className='btn btn-with-icon'
-                          >
-                            <Icon name='trash-2' width={20} fill='#656D7B' />
-                          </Button>
-                        </div>
-                      </Row>,
+                      <SegmentRow
+                        segment={segment}
+                        index={index}
+                        projectId={projectId}
+                        removeSegment={removeSegment}
+                      />,
                     )
                   }}
                   paging={data}
@@ -333,7 +260,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
               </FormGroup>
 
               <InfoMessage collapseId={'segment-identify'}>
-                Segments require you to identitfy users, setting traits will add
+                Segments require you to identify users, setting traits will add
                 users to segments.
               </InfoMessage>
               <FormGroup className='mt-4'>
@@ -350,7 +277,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         <FormGroup>
           <CodeHelp
             title='Managing user traits and segments'
-            snippets={Constants.codeHelp.USER_TRAITS(environmentId!)}
+            snippets={Constants.codeHelp.USER_TRAITS(environmentId || '')}
           />
         </FormGroup>
       </div>
@@ -358,4 +285,4 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   )
 }
 
-module.exports = ConfigProvider(withRouter(SegmentsPage as any))
+export default SegmentsPage
