@@ -29,7 +29,7 @@ import API from 'project/api'
 import Switch from './Switch'
 import AccountStore from 'common/stores/account-store'
 import CondensedFeatureRow from './CondensedFeatureRow'
-import { RouterChildContext, useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 
 interface FeatureRowProps {
