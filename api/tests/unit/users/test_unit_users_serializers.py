@@ -34,12 +34,12 @@ def test_onboarding_task_serializer_list_returns_correct_format() -> None:
     assert serializer.is_valid(), serializer.errors
 
     # Then
-    results = serializer.data
-    assert results[0]["completed_at"] == datetime.now().isoformat()
+    results = serializer.validated_data
+    assert results[0]["completed_at"] == datetime.now()
     assert results[0]["name"] == "task-1"
-    assert results[1]["completed_at"] == "2024-01-02T15:00:00Z"
+    assert results[1]["completed_at"] == datetime.fromisoformat("2024-01-02T15:00:00Z")
     assert results[1]["name"] == "task-2"
-    assert results[2]["completed_at"] == datetime.now().isoformat()
+    assert results[2]["completed_at"] == datetime.now()
     assert results[2]["name"] == "task-3"
 
 

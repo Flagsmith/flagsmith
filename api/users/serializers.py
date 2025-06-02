@@ -166,7 +166,11 @@ class OnboardingToolsSerializer(serializers.Serializer[None]):
 
 class OnboardingTaskSerializer(serializers.Serializer[None]):
     name = serializers.CharField()
-    completed_at = serializers.DateTimeField(allow_null=True, required=False)
+    completed_at = serializers.DateTimeField(
+        allow_null=True,
+        required=False,
+        default=lambda: datetime.now(),
+    )
 
     def validate_completed_at(self, completed_at: datetime) -> datetime:
         return completed_at or datetime.now()
