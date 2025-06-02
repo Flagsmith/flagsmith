@@ -23,7 +23,10 @@ export default class ErrorMessage extends PureComponent {
     return this.props.error ? (
       <div
         className={errorMessageClassName}
-        style={{ display: this.props.errorMessageClass ? 'initial' : '', ...this.props.errorStyles }}
+        style={{
+          display: this.props.errorMessageClass ? 'initial' : '',
+          ...this.props.errorStyles,
+        }}
       >
         <span className='icon-alert'>
           <Icon name='close-circle' />
