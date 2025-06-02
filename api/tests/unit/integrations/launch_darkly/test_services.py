@@ -1,6 +1,12 @@
+import csv
+import io
+import json
+from operator import attrgetter
+from os.path import abspath, dirname, join
 from unittest.mock import MagicMock
 
 import pytest
+from common.test_tools import SnapshotFixture
 from django.conf import settings
 from django.core import signing
 from flag_engine.segments import constants as segment_constants
@@ -542,3 +548,65 @@ def test_process_import_request__rules_imported(  # type: ignore[no-untyped-def]
     ) == {
         ("p1", segment_constants.IN, "this,that"),
     }
+
+
+def test_process_import_request__large_segments__correctly_imported(
+    ld_client_class_mock: MagicMock,
+    import_request: LaunchDarklyImportRequest,
+    snapshot: SnapshotFixture,
+) -> None:
+    # Given
+    expected_import_request_status_snapshot, expected_condition_data_snapshot = (
+        snapshot(
+            "test_process_import_request__large_segments__correctly_imported__import_request_status.json"
+        ),
+        snapshot(
+            "test_process_import_request__large_segments__correctly_imported__condition_data.csv"
+        ),
+    )
+    expected_segment_names = [
+        "Large Dynamic List (Override for test)",
+        "Large Dynamic List (Override for production)",
+        "Large User List (Override for test)",
+        "Large User List (Override for production)",
+    ]
+    ld_client_class_mock.return_value.get_segments.return_value = json.load(
+        open(
+            join(
+                dirname(abspath(__file__)),
+                "client_responses/get_segments__large_segments.json",
+            )
+        )
+    )
+
+    # When
+    process_import_request(import_request)
+
+    # Then
+    assert (
+        json.dumps(import_request.status, indent=2)
+        == expected_import_request_status_snapshot
+    )
+    buf = io.StringIO()
+    csv_writer = csv.writer(buf, dialect="unix", lineterminator="\n")
+    csv_writer.writerow(
+        ["Segment Name", "Property", "Operator", "Value", "Rule Type"],
+    )
+    csv_writer.writerows(
+        [
+            (segment.name, *condition_values)
+            for segment in sorted(
+                Segment.objects.filter(
+                    project=import_request.project,
+                    name__in=expected_segment_names,
+                ),
+                key=attrgetter("name"),
+            )
+            for condition_values in sorted(
+                Condition.objects.filter(
+                    rule__rule__segment__name=segment.name
+                ).values_list("property", "operator", "value", "rule__type"),
+            )
+        ]
+    )
+    assert buf.getvalue() == expected_condition_data_snapshot
