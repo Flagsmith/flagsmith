@@ -54,14 +54,18 @@ const EventTextBlocks = ({
           {textBlock.title && (
             <div className='mb-2 text-body'>
               <strong style={{ color }}>{textBlock.title ?? 'Event'}</strong>
-              <IonIcon
-                style={{ color, marginBottom: -2 }}
-                className='ms-1'
-                icon={
-                  collapsibleItems?.[index]?.collapsed ? chevronDown : chevronUp
-                }
-                onClick={() => handleCollapse(index)}
-              />
+              {!!textBlock.text && (
+                <IonIcon
+                  style={{ color, marginBottom: -2 }}
+                  className='ms-1'
+                  icon={
+                    collapsibleItems?.[index]?.collapsed
+                      ? chevronDown
+                      : chevronUp
+                  }
+                  onClick={() => handleCollapse(index)}
+                />
+              )}
             </div>
           )}
           <Collapse key={index} in={!collapsibleItems?.[index]?.collapsed}>
