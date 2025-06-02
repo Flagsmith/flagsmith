@@ -52,7 +52,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         feature_state.feature.name,
         feature_state.change_request.title,
     )
-    log = {
+    log_data = {
         "created_date": feature_state.live_from,
         "environment": feature_state.environment,
         "is_system_event": True,
@@ -74,7 +74,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         return
 
     # NOTE: This NEEDS to leverage btree indexes on AuditLog
-    audit_logged = AuditLog.objects.filter(**log).exists()
+    audit_logged = AuditLog.objects.filter(**log_data).exists()
     if audit_logged:
         logger.info(
             "FeatureState update audit log already exists. "
@@ -82,7 +82,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         )
         return
 
-    AuditLog.objects.create(**log)
+    AuditLog.objects.create(**log_data)
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
