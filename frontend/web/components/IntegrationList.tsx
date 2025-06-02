@@ -15,7 +15,7 @@ import {
 import map from 'lodash/map'
 import Button from './base/forms/Button'
 import Utils from 'common/utils/utils'
-import { RouterChildContext, useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
 
 const GITHUB_INSTALLATION_SETUP = 'install'

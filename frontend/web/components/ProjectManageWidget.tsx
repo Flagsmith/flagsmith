@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useHistory, useLocation } from 'react-router'
+import { useHistory, useLocation } from 'react-router-dom'
 
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'

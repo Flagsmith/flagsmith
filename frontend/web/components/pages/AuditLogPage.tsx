@@ -2,7 +2,7 @@ import React, { FC, useEffect, useState } from 'react' // we need this to make J
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
-import { useHistory, useRouteMatch } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'

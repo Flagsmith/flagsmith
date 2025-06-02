@@ -18,7 +18,7 @@ import {
 import AccountStore from 'common/stores/account-store'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountProvider from 'common/providers/AccountProvider'
-import { RouterChildContext, useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'

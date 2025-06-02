@@ -13,7 +13,7 @@ import ProjectProvider, {
 } from 'common/providers/ProjectProvider'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { useHistory, useRouteMatch } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import API from 'project/api'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment } from 'common/types/responses'

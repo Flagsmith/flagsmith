@@ -1,5 +1,5 @@
 import React, { ChangeEvent, MouseEvent, useEffect, useState } from 'react'
-import { useHistory, useLocation, withRouter } from 'react-router'
+import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'

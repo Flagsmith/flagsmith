@@ -1,6 +1,6 @@
-import { FC, PropsWithChildren, useEffect, useState } from 'react'
+import { PropsWithChildren, useEffect, useState } from 'react'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
-import { useRouteMatch } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 
 interface RouteParams {
   environmentId?: string

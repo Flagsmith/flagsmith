@@ -5,7 +5,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Project from 'common/project'
 import { onPaymentLoad } from './modals/Payment'
 import makeAsyncScriptLoader from 'react-async-script'
-import { useRouteMatch } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 
 interface RouteParams {

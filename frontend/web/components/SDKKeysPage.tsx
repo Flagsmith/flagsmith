@@ -5,7 +5,7 @@ import Icon from './Icon'
 import ServerSideSDKKeys from './ServerSideSDKKeys'
 import PageTitle from './PageTitle'
 import Utils from 'common/utils/utils'
-import { useRouteMatch } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 
 interface RouteParams {
   environmentId: string

@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import { useHistory, useRouteMatch } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
@@ -8,7 +8,6 @@ import { getViewMode, setViewMode } from 'common/useViewMode'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import {
   FeatureState,
-  FlagsmithValue,
   Identity,
   IdentityFeatureState,
   IdentityTrait,

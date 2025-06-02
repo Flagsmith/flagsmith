@@ -1,5 +1,5 @@
 import { FC, useEffect } from 'react'
-import { useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
 import ConfigProvider from 'common/providers/ConfigProvider'
 

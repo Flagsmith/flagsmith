@@ -1,6 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { matchPath } from 'react-router'
-import { Link, withRouter } from 'react-router-dom'
+import { Link, withRouter, matchPath } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'

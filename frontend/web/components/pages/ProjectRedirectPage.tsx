@@ -1,6 +1,6 @@
 import { FC, useEffect } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { useHistory, useRouteMatch } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
 

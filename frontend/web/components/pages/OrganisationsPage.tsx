@@ -7,7 +7,7 @@ import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PanelSearch from 'components/PanelSearch'
 import AppActions from 'common/dispatcher/app-actions'
-import { useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
 const OrganisationsPage: FC = () => {

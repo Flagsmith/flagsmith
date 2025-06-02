@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import OrganisationUsage from 'components/OrganisationUsage'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { useRouteMatch } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 
 interface RouteParams {
   organisationId: string

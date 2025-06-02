@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 
 import { useHasPermission } from 'common/providers/Permission'
 

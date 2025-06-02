@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { useRouteMatch } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import {
   useGetFeatureVersionQuery,

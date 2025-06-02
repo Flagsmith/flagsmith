@@ -2,7 +2,7 @@ import React, { FC, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import { SplitTestResult } from 'common/types/responses'
-import { useRouteMatch } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import ConversionEventSelect from 'components/ConversionEventSelect'
 import InfoMessage from 'components/InfoMessage'
