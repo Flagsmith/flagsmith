@@ -53,8 +53,6 @@ class ChangeRequestCommitService:
     ) -> None:
         for diff in feature_states:
             prev = diff["previous_feature_state"]
-            if not prev:
-                continue
 
             trigger_feature_state_change_webhooks(
                 instance=diff["new_feature_state"],
