@@ -18,6 +18,7 @@ const FLAG_ACTION_OPTIONS = [
   },
 ]
 
+// TODO: Validate value to be sent in the request
 const TIME_UNIT_OPTIONS = [
   { label: 'Day(s)', value: 'day' },
   { label: 'Hour(s)', value: 'hour' },
