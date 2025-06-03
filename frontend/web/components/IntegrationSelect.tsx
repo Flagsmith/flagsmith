@@ -234,10 +234,10 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
           </div>
           <div className='col-md-9 h-100'>
             {!!categoryDescriptions[category] && (
-                <div className='mx-4 mb-4'>
-                  <span className='fw-semibold'>{category} integrations</span>:{' '}
-                  {categoryDescriptions[category]}
-                </div>
+              <div className='mx-4 mb-4'>
+                <span className='fw-semibold'>{category} integrations</span>:{' '}
+                {categoryDescriptions[category]}
+              </div>
             )}
             <div className='col-md-6 mx-4 mb-2'>
               <Input
@@ -272,10 +272,11 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               className='overflow-scroll overflow-x-hidden d-flex flex-column m-0  pt-0 custom-scroll'
             >
               <div className='row mx-0 row-cols-4  row-cols-xl-6'>
-                {allIntegrations.map((v) => {
+                {allIntegrations.map((v, i) => {
                   const isSelected = selected.includes(v.title)
                   return (
                     <div
+                      data-test={`integration-${i}`}
                       key={v.title}
                       onClick={() => {
                         if (isSelected) {
@@ -325,16 +326,22 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             </div>
             <hr className='mb-5 mt-0' />
             <div className='sticky d-flex justify-content-end gap-4'>
-              <Button onClick={skip} style={{ width: 120 }} theme='secondary'>
+              <Button
+                data-test='skip-integrations'
+                onClick={skip}
+                style={{ width: 120 }}
+                theme='secondary'
+              >
                 Skip
               </Button>
               <Button
+                data-test='submit-integrations'
                 onClick={submit}
                 disabled={!selected?.length || isLoading}
                 style={{ width: 120 }}
                 theme='primary'
               >
-                Select Apps
+                Confirm
               </Button>
             </div>
           </div>
@@ -362,7 +369,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               setSelected(selected.concat([customTool]))
             }}
           >
-            Add App
+            Confirm
           </Button>
         </div>
       </ModalDefault>
