@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.180.0](https://github.com/Flagsmith/flagsmith/compare/v2.179.0...v2.180.0) (2025-06-03)
+
+
+### Features
+
+* **launch-darkly-importer:** Support large segments import, other improvements ([#5519](https://github.com/Flagsmith/flagsmith/issues/5519)) ([9c50468](https://github.com/Flagsmith/flagsmith/commit/9c50468fa36dee945aa95c5478bb0041423fc837))
+
+
+### Bug Fixes
+
+* hide-billing-periods-if-subscription-has-no-periods - 🔴 Blocked by [#5474](https://github.com/Flagsmith/flagsmith/issues/5474) ([#5479](https://github.com/Flagsmith/flagsmith/issues/5479)) ([f28522a](https://github.com/Flagsmith/flagsmith/commit/f28522ad32e951c3101841f2e7909745f4f94607))
+* hide-dropdown-caret-if-no-text-content ([#5517](https://github.com/Flagsmith/flagsmith/issues/5517)) ([aec2e2c](https://github.com/Flagsmith/flagsmith/commit/aec2e2c808187f75ba9aa679f44448c312e952ca))
+* Improve audit logs when postponing a scheduled Change Request ([#5484](https://github.com/Flagsmith/flagsmith/issues/5484)) ([c6d2ce9](https://github.com/Flagsmith/flagsmith/commit/c6d2ce957987e9cbfbe9d751afb984ce7713421a))
+* raise-404-if-org-does-not-have-billing-periods ([#5480](https://github.com/Flagsmith/flagsmith/issues/5480)) ([604e5e1](https://github.com/Flagsmith/flagsmith/commit/604e5e1762a807c0417ffac38f987e6d38f5193a))
+* updated-prevent-signups-and-invitation-doc ([#5508](https://github.com/Flagsmith/flagsmith/issues/5508)) ([e0f91bd](https://github.com/Flagsmith/flagsmith/commit/e0f91bd4c511752ff2ffb6e49b04198dedd97d9d))
+
+
+### Dependency Updates
+
+* bump split testing from 0.2.0 to 0.2.1 ([#5510](https://github.com/Flagsmith/flagsmith/issues/5510)) ([e2dbff2](https://github.com/Flagsmith/flagsmith/commit/e2dbff2d22db9c14c71886572e6c0022d80f23d5))
+
 ## [2.179.0](https://github.com/Flagsmith/flagsmith/compare/v2.178.0...v2.179.0) (2025-05-30)
 
 
