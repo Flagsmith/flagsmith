@@ -315,6 +315,7 @@ const FeaturesPage = class extends Component {
                           <EnvironmentMetricsList
                             environmentApiKey={environment?.api_key}
                             forceRefetch={this.state.forceMetricsRefetch}
+                            projectId={projectId}
                           />
                         )}
                         <PageTitle
