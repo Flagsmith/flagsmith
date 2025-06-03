@@ -11,7 +11,5 @@ class MetricItemSerializer(
     rank = serializers.IntegerField(required=False)
 
 
-class EnvironmentMetricsSerializer(
-    serializers.Serializer[dict[str, list[MetricItemSerializer]]]
-):
-    metrics = MetricItemSerializer(many=True)
+class EnvironmentMetricsSerializer(serializers.Serializer[None]):
+    metrics = MetricItemSerializer(many=True, read_only=True)

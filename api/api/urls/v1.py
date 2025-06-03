@@ -80,6 +80,8 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    # Test webhook url
+    re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
 ]
 
 if settings.SPLIT_TESTING_INSTALLED:
