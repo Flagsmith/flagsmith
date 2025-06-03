@@ -1,6 +1,6 @@
 import { RequestLogger, Selector, t } from 'testcafe'
-import { FlagsmithValue } from '../common/types/responses';
 import Project from '../common/project';
+import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import { IFlagsmith, FlagsmithValue } from 'flagsmith/types';
 
