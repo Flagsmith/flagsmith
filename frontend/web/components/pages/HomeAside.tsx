@@ -30,6 +30,7 @@ import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Resources from 'components/Resources'
 import Constants from 'common/constants'
+import SidebarLink from 'components/SidebarLink'
 
 type HomeAsideType = {
   environmentId: string
@@ -180,7 +181,7 @@ const HomeAside: FC<HomeAsideType> = ({
                   permission && (
                     <Link
                       id='create-env-link'
-                      className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
+                      className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex align-items-center btn--outline'
                       to={`/project/${projectId}/environment/create`}
                     >
                       <IonIcon className='fs-small' icon={createOutline} />
@@ -286,95 +287,73 @@ const HomeAside: FC<HomeAsideType> = ({
                                 </div>
                               ) : (
                                 <div className='list-unstyled aside-nav d-flex flex-column gap-1 ms-3 mb-2 mt-1'>
-                                  <NavLink
-                                    activeClassName='active'
+                                  <SidebarLink
                                     id='features-link'
+                                    icon={<Icon name='features' />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                   >
-                                    <span className='mr-2'>
-                                      <Icon name='features' fill='#9DA4AE' />
-                                    </span>
                                     Features
-                                  </NavLink>
-                                  <NavLink
-                                    activeClassName='active'
+                                  </SidebarLink>
+                                  <SidebarLink
                                     id='change-requests-link'
+                                    icon={<Icon name='timer' />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                   >
-                                    <span className='mr-2'>
-                                      <Icon name='timer' fill='#9DA4AE' />
-                                    </span>
                                     Scheduling
                                     {scheduled ? (
                                       <span className='ml-1 unread d-inline'>
                                         {scheduled}
                                       </span>
                                     ) : null}
-                                  </NavLink>
-                                  <NavLink
-                                    activeClassName='active'
+                                  </SidebarLink>
+                                  <SidebarLink
+                                    icon={<Icon name='request' />}
                                     id='change-requests-link'
                                     to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                   >
-                                    <span className='mr-2'>
-                                      <Icon name='request' fill='#9DA4AE' />
-                                    </span>
                                     Change Requests{' '}
                                     {changeRequests ? (
                                       <span className='ms-1 unread d-inline'>
                                         {changeRequests}
                                       </span>
                                     ) : null}
-                                  </NavLink>
-                                  <NavLink
+                                  </SidebarLink>
+                                  <SidebarLink
                                     id='users-link'
                                     exact
+                                    icon={<Icon name='people' />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                   >
-                                    <span className='mr-2'>
-                                      <Icon name='people' fill={'#9DA4AE'} />
-                                    </span>
                                     Identities
-                                  </NavLink>
-                                  <NavLink
+                                  </SidebarLink>
+                                  <SidebarLink
                                     id='sdk-keys-link'
                                     exact
+                                    icon={<IonIcon icon={code} />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/sdk-keys`}
                                   >
-                                    <IonIcon
-                                      color={'#9DA4AE'}
-                                      className='mr-2'
-                                      icon={code}
-                                    />
                                     SDK Keys
-                                  </NavLink>
+                                  </SidebarLink>
                                   {Utils.getFlagsmithHasFeature(
                                     'split_testing',
                                   ) && (
-                                    <NavLink
+                                    <SidebarLink
                                       id='split-tests-link'
                                       exact
+                                      icon={<IonIcon icon={flask} />}
                                       to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
                                     >
-                                      <IonIcon
-                                        color={'#9DA4AE'}
-                                        className='mr-2'
-                                        icon={flask}
-                                      />
                                       Split Tests
-                                    </NavLink>
+                                    </SidebarLink>
                                   )}
                                   {environmentAdmin && (
-                                    <NavLink
+                                    <SidebarLink
+                                      icon={<SettingsIcon />}
                                       id='env-settings-link'
-                                      className='aside__environment-list-item'
                                       to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                     >
-                                      <span className='mr-2'>
-                                        <SettingsIcon />
-                                      </span>
                                       Environment Settings
-                                    </NavLink>
+                                    </SidebarLink>
                                   )}
                                 </div>
                               )

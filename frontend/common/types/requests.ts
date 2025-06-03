@@ -19,6 +19,8 @@ import {
   Webhook,
   IdentityTrait,
   Onboarding,
+  User,
+  GettingStartedTask,
 } from './responses'
 
 export type PagedRequest<T> = T & {

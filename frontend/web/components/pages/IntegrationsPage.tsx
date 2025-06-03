@@ -17,6 +17,28 @@ type IntegrationsPageType = {
     }
   }
 }
+
+export const integrationCategories = [
+  'Analytics',
+  'Authentication',
+  'CI/CD',
+  'Developer tools',
+  'Infrastructure',
+  'Messaging',
+  'Monitoring',
+  'Webhooks',
+] as const
+export type IntegrationSummary = {
+  categories: (typeof integrationCategories)[number][]
+  image: string
+  title: string
+}
+
+export type IntegrationCategoryDescription = {
+  category: (typeof integrationCategories)[number]
+  description: string
+}
+
 const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)
