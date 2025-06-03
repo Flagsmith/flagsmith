@@ -37,40 +37,40 @@ class ChangeRequestCommitService:
 
         logger.debug("Committing change request #%d", self.change_request.id)
 
-        feature_states_to_notify = self._get_feature_states_to_notify()
+        feature_states_to_notify = self._get_committed_feature_states_diff()
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
         self._publish_segments()
-        for feature_state_diffs in feature_states_to_notify:
-            if feature_state_diffs["previous_feature_state"]:
-                trigger_feature_state_change_webhooks(
-                    instance=feature_state_diffs["new_feature_state"],
-                    previous_instance=feature_state_diffs[
-                        "previous_feature_state"
-                    ].history.first(),
-                )
+        self._notify_committed_changes_webhooks(feature_states_to_notify)
 
         self.change_request.committed_at = timezone.now()
         self.change_request.committed_by = committed_by
         self.change_request.save()
 
-    def _get_feature_states_to_notify(
-        self,
-    ) -> list[FeatureStateDiff]:
-        feature_states_to_notify: list[FeatureStateDiff] = []
+    def _notify_committed_changes_webhooks(
+        self, feature_states: list[FeatureStateDiff]
+    ) -> None:
+        for diff in feature_states:
+            prev = diff["previous_feature_state"]
+            if not prev:
+                continue
 
-        for feature_state in self.change_request.feature_states.all():
-            latest_live_fs = self._get_previous_version_instance(feature_state)
-            if latest_live_fs and latest_live_fs.version != feature_state.version:
-                feature_states_to_notify.append(
-                    {
-                        "new_feature_state": feature_state,
-                        "previous_feature_state": latest_live_fs,
-                    }
-                )
+            trigger_feature_state_change_webhooks(
+                instance=diff["new_feature_state"],
+                previous_instance=prev.history.first(),
+            )
 
-        return feature_states_to_notify
+    def _get_committed_feature_states_diff(self) -> list[FeatureStateDiff]:
+        return [
+            {
+                "new_feature_state": fs,
+                "previous_feature_state": prev_fs,
+            }
+            for fs in self.change_request.feature_states.all()
+            if (prev_fs := self._get_previous_version_instance(fs))
+            and prev_fs.version != fs.version
+        ]
 
     def _get_previous_version_instance(
         self, feature_state: FeatureState
