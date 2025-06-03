@@ -8,6 +8,7 @@ import Utils from 'common/utils/utils'
 import {
   PipelineStatus,
   ReleasePipeline,
+  StageActionType,
   StageTriggerType,
 } from 'common/types/responses'
 import Icon from 'components/Icon'
@@ -88,8 +89,28 @@ function CreateReleasePipeline({
     setStages(updatedStages)
   }
 
+  const validateStage = (stage: DraftStageType) => {
+    if (!stage.actions.length) {
+      return false
+    }
+
+    const segment = stage.actions.find(
+      (action) =>
+        action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
+    )
+    if (segment) {
+      return !!segment.action_body.segment_id
+    }
+
+    return !!stage.name.length
+  }
+
   const validatePipelineData = () => {
-    return pipelineData?.name !== ''
+    if (!pipelineData?.name.length) {
+      return false
+    }
+
+    return stages.every(validateStage)
   }
 
   const handleSave = async () => {
