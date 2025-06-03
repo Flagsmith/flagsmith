@@ -1,10 +1,11 @@
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from django.conf import settings
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from rest_framework.exceptions import NotFound
 
 from app_analytics.analytics_db_service import (
     get_feature_evaluation_data,
@@ -386,30 +387,26 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-def test_get_usage_data_returns_30d_when_unset_subscription_information_cache_for_current_billing_period(
+@pytest.mark.parametrize("period", [PREVIOUS_BILLING_PERIOD, CURRENT_BILLING_PERIOD])
+def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
+    period: str,
 ) -> None:
     # Given
-    period = CURRENT_BILLING_PERIOD
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
     )
     assert getattr(organisation, "subscription_information_cache", None) is None
 
-    # When
-    get_usage_data(organisation, period=period)
+    # When / Then
+    with pytest.raises(NotFound) as e:
+        get_usage_data(organisation, period=period)
 
-    # Then
-    mocked_get_usage_data_from_local_db.assert_called_once_with(
-        organisation=organisation,
-        environment_id=None,
-        project_id=None,
-        date_start=datetime(2022, 12, 20, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-    )
+    assert "No billing periods found for this organisation." in str(e)
+    mocked_get_usage_data_from_local_db.assert_not_called()
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -436,8 +433,8 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
+        date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=UTC),
     )
 
 
@@ -466,6 +463,6 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         organisation=organisation,
         environment_id=None,
         project_id=None,
-        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
-        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=timezone.utc),  # type: ignore[attr-defined]
+        date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=UTC),
+        date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
     )
