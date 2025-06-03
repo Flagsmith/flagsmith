@@ -298,3 +298,46 @@ def test_publishing_segments_as_part_of_commit(
     condition2 = child_rule4.conditions.first()
     assert condition1.value == "condition1"
     assert condition2.value == "0.2"
+
+
+def test_commit_change_request_does_not_fail_when_no_previous_feature_state(
+    mocker: MockerFixture,
+    environment: Environment,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    mock_trigger = mocker.patch(
+        "core.workflows_services.trigger_feature_state_change_webhooks"
+    )
+
+    mocker.patch(
+        "features.models.FeatureState.objects.get_live_feature_states",
+        return_value=FeatureState.objects.none(),
+    )
+
+    feature = Feature.objects.create(
+        name="new_flag_without_history", project=environment.project
+    )
+
+    change_request = ChangeRequest.objects.create(
+        environment=environment,
+        title="Test No History CR",
+        user=admin_user,
+    )
+
+    FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        change_request=change_request,
+        enabled=True,
+        version=None,
+    )
+
+    commit_service = ChangeRequestCommitService(change_request)
+
+    # When
+    commit_service.commit(committed_by=admin_user)
+
+    # Then
+    assert change_request.is_committed
+    mock_trigger.assert_not_called()
