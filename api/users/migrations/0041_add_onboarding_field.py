@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name="ffadminuser",
-            name="onboarding",
+            name="onboarding_data",
             field=models.TextField(blank=True, null=True),
         ),
     ]

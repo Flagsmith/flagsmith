@@ -35,7 +35,7 @@ def test_get_me_should_return_onboarding_object(db: None) -> None:
     onboarding_serialized = json.dumps(onboarding)
     new_user = FFAdminUser.objects.create(
         email="testuser@mail.com",
-        onboarding=onboarding_serialized,
+        onboarding_data=onboarding_serialized,
     )
 
     new_user.save()
@@ -91,7 +91,7 @@ def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
     staff_user.refresh_from_db()
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    onboarding_json = json.loads(staff_user.onboarding or "{}")
+    onboarding_json = json.loads(staff_user.onboarding_data or "{}")
     assert onboarding_json is not None
     if "tasks" in expected_keys:
         assert onboarding_json.get("tasks", [])[0]

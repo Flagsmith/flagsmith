@@ -111,7 +111,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
-    onboarding = models.TextField(blank=True, null=True)
+    onboarding_data = models.TextField(blank=True, null=True)
     # Default to True, since it is covered in our Terms of Service.
     marketing_consent_given = models.BooleanField(
         default=True,

@@ -201,8 +201,8 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     def to_representation(self, instance: FFAdminUser) -> dict[str, Any]:
         rep = super().to_representation(instance)
 
-        if instance.onboarding is not None:
-            onboarding_json = json.loads(instance.onboarding)
+        if instance.onboarding_data is not None:
+            onboarding_json = json.loads(instance.onboarding_data)
         else:
             onboarding_json = None
 
@@ -219,7 +219,6 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
             "is_superuser",
             "date_joined",
             "uuid",
-            "onboarding",
         )
 
 

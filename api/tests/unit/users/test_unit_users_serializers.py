@@ -74,24 +74,3 @@ def test_patch_onboarding_serializer_returns_correct_format(
         "completed": True if tools_completed is None else tools_completed,
         "integrations": ["integration-1", "integration-2"],
     }
-
-
-# def test_onboarding_task_to_representation_converts_datetime_to_json_compatible_string() -> (
-#     None
-# ):
-#     # Given
-#     serializer = OnboardingTaskSerializer()
-#     date = datetime(2025, 1, 1, 12, 0, 0)
-#     # When
-#     result = serializer.to_representation(
-#         {
-#             "name": "task-1",
-#             "completed_at": date,
-#         }
-#     )
-
-#     # Then
-#     assert isinstance(date, datetime)
-#     assert isinstance(result["completed_at"], str)
-#     assert result["completed_at"] == "2025-01-01T12:00:00Z"
-#     assert result["name"] == "task-1"
