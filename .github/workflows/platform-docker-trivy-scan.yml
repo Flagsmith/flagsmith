@@ -1,9 +1,6 @@
 name: Update Trivy Database and Scan
 
 on:
-  push:
-    branches:
-      - ci/upload-trivy-sarif-artiact
   workflow_dispatch:
     inputs:
       registry-url:

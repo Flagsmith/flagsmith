@@ -256,6 +256,48 @@ elif "DJANGO_DB_NAME" in os.environ:
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 
+# Task processor database — OPTIONALLY SEPARATED
+TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
+TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default=None)
+TASK_PROCESSOR_DATABASE_PASSWORD = env(
+    "TASK_PROCESSOR_DATABASE_PASSWORD",
+    default=None,
+)
+TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default=None)
+TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default=None)
+TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default=None)
+
+if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no cover
+    if TASK_PROCESSOR_DATABASE_URL:
+        DATABASES["task_processor"] = dj_database_url.parse(
+            TASK_PROCESSOR_DATABASE_URL,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+        )
+    else:
+        DATABASES["task_processor"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": TASK_PROCESSOR_DATABASE_NAME,
+            "USER": TASK_PROCESSOR_DATABASE_USER,
+            "PASSWORD": TASK_PROCESSOR_DATABASE_PASSWORD,
+            "HOST": TASK_PROCESSOR_DATABASE_HOST,
+            "PORT": TASK_PROCESSOR_DATABASE_PORT,
+            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+        }
+    DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
+
+    # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
+    _task_processor_databases = ["default", "task_processor"]
+else:
+    _task_processor_databases = ["default"]
+
+# Ultimately, allow the user to decide which databases to consume tasks from
+TASK_PROCESSOR_DATABASES = env.list(
+    "TASK_PROCESSOR_DATABASES",
+    subcast=str,
+    default=_task_processor_databases,
+)
+
+
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
@@ -1104,6 +1146,10 @@ TASK_DELETE_RUN_EVERY = env.timedelta(
 )
 RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
     "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
+)
+TASK_BACKOFF_DEFAULT_DELAY_SECONDS = env.int(
+    "TASK_BACKOFF_DEFAULT_DELAY_SECONDS",
+    default=5,
 )
 
 # Webhook settings
