@@ -25,7 +25,7 @@ def enable_hubspot(settings: SettingsWrapper, hubspot_access_token: str) -> None
 
 @pytest.fixture()
 def mocked_hubspot_lead_tracker(mocker: MockerFixture) -> MagicMock:
-    _mocked_hubspot_lead_tracker = mocker.MagicMock(spec=HubspotLeadTracker)
+    _mocked_hubspot_lead_tracker: MagicMock = mocker.MagicMock(spec=HubspotLeadTracker)
     mocker.patch(
         "api.integrations.lead_tracking.hubspot.tasks.HubspotLeadTracker",
         return_value=_mocked_hubspot_lead_tracker,
