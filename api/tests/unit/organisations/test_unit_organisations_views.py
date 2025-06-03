@@ -219,6 +219,39 @@ def test_should_update_organisation_data(
     assert organisation.restrict_project_create_to_admin is True
 
 
+@pytest.mark.parametrize(
+    "current_billing_term_starts_at, current_billing_term_ends_at, has_billing_periods",
+    [
+        (None, None, False),
+        (timezone.now() - timedelta(days=5), timezone.now() + timedelta(days=5), True),
+        (timezone.now() - timedelta(days=5), timezone.now() - timedelta(days=1), False),
+    ],
+)
+def test_get_subscription_metadata_returns_expected_result(
+    organisation: Organisation,
+    admin_client: APIClient,
+    current_billing_term_starts_at: datetime,
+    current_billing_term_ends_at: datetime,
+    has_billing_periods: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=current_billing_term_starts_at,
+        current_billing_term_ends_at=current_billing_term_ends_at,
+    )
+
+    # When
+    response = admin_client.get("/api/v1/organisations/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        response.data["results"][0]["subscription"]["has_active_billing_periods"]
+        == has_billing_periods
+    )
+
+
 def test_should_invite_users_to_organisation(
     settings: SettingsWrapper,
     admin_client: APIClient,
@@ -971,33 +1004,6 @@ def test_can_update_secret_for_webhook(
     # and
     webhook.refresh_from_db()
     assert webhook.secret == data["secret"]
-
-
-@mock.patch("webhooks.mixins.trigger_sample_webhook")
-def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
-    trigger_sample_webhook: MagicMock,
-    organisation: Organisation,
-    admin_client: APIClient,
-) -> None:
-    # Given
-    mocked_response = mock.MagicMock(status_code=200)
-    trigger_sample_webhook.return_value = mocked_response
-
-    url = reverse(
-        "api-v1:organisations:organisation-webhooks-trigger-sample-webhook",
-        args=[organisation.id],
-    )
-    valid_webhook_url = "http://my.webhook.com/webhooks"
-    data = {"url": valid_webhook_url}
-
-    # When
-    response = admin_client.post(url, data)
-
-    # Then
-    assert response.json()["message"] == "Request returned 200"
-    assert response.status_code == status.HTTP_200_OK
-    args, _ = trigger_sample_webhook.call_args
-    assert args[0].url == valid_webhook_url
 
 
 def test_get_subscription_metadata_when_subscription_information_cache_exist(

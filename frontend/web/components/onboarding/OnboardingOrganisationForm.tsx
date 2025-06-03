@@ -2,7 +2,7 @@ import React, { FC, FormEvent } from 'react'
 import InputGroup from 'components/base/forms/InputGroup'
 import Checkbox from 'components/base/forms/Checkbox'
 import Button from 'components/base/forms/Button'
-import ErrorMessage from 'components/ErrorMessage'
+import ErrorMessage from 'components/messages/ErrorMessage'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 import { Req } from 'common/types/requests'
 

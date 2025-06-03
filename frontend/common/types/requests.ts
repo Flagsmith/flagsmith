@@ -87,6 +87,11 @@ export type Req = {
     projectId: number | string
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
   }
+  cloneSegment: {
+    projectId: number | string
+    segmentId: number
+    name: string
+  }
   getAuditLogs: PagedRequest<{
     search?: string
     project: string
@@ -643,6 +648,14 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
+  testWebhook: {
+    webhookUrl: string
+    secret?: string
+    scope: {
+      type: 'environment' | 'organisation'
+      id: string
+    }
+  }
   register: {
     first_name: string
     last_name: string
