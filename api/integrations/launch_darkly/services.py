@@ -3,6 +3,7 @@ import re
 from contextlib import contextmanager
 from typing import Callable, Generator, Optional, Tuple
 
+from django.conf import settings
 from django.core import signing
 from django.utils import timezone
 from flag_engine.segments import constants
@@ -28,8 +29,10 @@ from integrations.launch_darkly.constants import (
     LAUNCH_DARKLY_IMPORTED_DEFAULT_TAG_LABEL,
     LAUNCH_DARKLY_IMPORTED_TAG_COLOR,
 )
+from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
 from integrations.launch_darkly.models import (
     LaunchDarklyImportRequest,
+    LaunchDarklyImportResult,
     LaunchDarklyImportStatus,
 )
 from integrations.launch_darkly.types import Clause
@@ -37,6 +40,7 @@ from projects.models import Project
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
 from users.models import FFAdminUser
+from util.util import iter_chunked_concat, truncate
 
 logger = logging.getLogger(__name__)
 
@@ -71,15 +75,20 @@ def _complete_import_request(
     In case wrapped code needs to expose an error to the user, it should populate
     `import_request.status["error_messages"]` before raising an exception.
     """
+    result: LaunchDarklyImportResult = "incomplete"
     try:
         yield
     except Exception as exc:
-        import_request.status["result"] = "failure"
+        if not isinstance(exc, LaunchDarklyRateLimitError):
+            result = "failure"
         raise exc
     else:
-        import_request.status["result"] = "success"
+        if not import_request.status.get("error_messages"):
+            result = "success"
     finally:
-        import_request.ld_token = ""
+        import_request.status["result"] = result
+        if result in {"success", "failure"}:
+            import_request.ld_token = ""
         import_request.completed_at = timezone.now()
         import_request.save()
 
@@ -163,7 +172,13 @@ def _convert_ld_values(values: list[str], ld_operator: str) -> list[str]:
     match ld_operator:
         case "in":
             # TODO: How to escape the comma itself?
-            return list([",".join(values)])
+            return [
+                *iter_chunked_concat(
+                    values=values,
+                    delimiter=",",
+                    max_len=settings.SEGMENT_CONDITION_VALUE_LIMIT,
+                )
+            ]
         case "endsWith":
             return [".*" + re.escape(value) for value in values]
         case "startsWith":
@@ -313,7 +328,17 @@ def _create_segment_rule_for_segment(
 
             # Create a condition for each value. Each condition is "OR"ed together.
             for value in values:
-                condition, _ = Condition.objects.update_or_create(
+                if len(value) > settings.SEGMENT_CONDITION_VALUE_LIMIT:
+                    _log_error(
+                        import_request=import_request,
+                        error_message=(
+                            f"Segment condition value '{truncate(value)}' for property '{_property}' exceeds the limit of"
+                            f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters,"
+                            f" skipping for segment '{segment.name}'"
+                        ),
+                    )
+                    continue
+                Condition.objects.update_or_create(
                     rule=target_rule,
                     property=_property,
                     value=value,
@@ -915,6 +940,7 @@ def _create_features_from_ld(
 
 
 def _include_users_to_segment(
+    import_request: LaunchDarklyImportRequest,
     segment: Segment,
     users: list[str],
     negate: bool,
@@ -928,18 +954,32 @@ def _include_users_to_segment(
     )
 
     # Create a condition to match against those identities via "key" trait.
-    identities_string = ",".join(users)
-    included_rule = SegmentRule.objects.create(
-        rule=parent_rule,
-        type=SegmentRule.NONE_RULE if negate else SegmentRule.ANY_RULE,
-    )
-    Condition.objects.update_or_create(
-        rule=included_rule,
-        property="key",
-        value=identities_string,
-        operator=constants.IN,
-        created_with_segment=True,
-    )
+    for identities_string in iter_chunked_concat(
+        values=users,
+        delimiter=",",
+        max_len=settings.SEGMENT_CONDITION_VALUE_LIMIT,
+    ):
+        if len(identities_string) > settings.SEGMENT_CONDITION_VALUE_LIMIT:
+            _log_error(
+                import_request=import_request,
+                error_message=(
+                    f"Targeting key '{truncate(identities_string)}' exceeds the limit of"
+                    f" {settings.SEGMENT_CONDITION_VALUE_LIMIT} characters, "
+                    f"skipping for segment '{segment.name}'"
+                ),
+            )
+            continue
+        included_rule = SegmentRule.objects.create(
+            rule=parent_rule,
+            type=SegmentRule.NONE_RULE if negate else SegmentRule.ANY_RULE,
+        )
+        Condition.objects.update_or_create(
+            rule=included_rule,
+            property="key",
+            value=identities_string,
+            operator=constants.IN,
+            created_with_segment=True,
+        )
 
 
 def _create_segments_from_ld(
@@ -994,8 +1034,18 @@ def _create_segments_from_ld(
                 ]
             )
 
-        _include_users_to_segment(segment, ld_segment["included"], False)
-        _include_users_to_segment(segment, ld_segment["excluded"], True)
+        _include_users_to_segment(
+            import_request=import_request,
+            segment=segment,
+            users=ld_segment["included"],
+            negate=False,
+        )
+        _include_users_to_segment(
+            import_request=import_request,
+            segment=segment,
+            users=ld_segment["excluded"],
+            negate=True,
+        )
 
         if (
             len(ld_segment["includedContexts"]) > 0

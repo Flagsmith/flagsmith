@@ -1,0 +1,223 @@
+[
+    {
+        "name": "Large User List",
+        "tags": [],
+        "creationDate": 1704302060324,
+        "lastModifiedDate": 1704302081521,
+        "key": "user-list",
+        "included": [
+            "user-0d693f8d-1faf-4e92-9e11-981daf62fbe2",
+            "user-b74e72a1-6172-4cc2-8f57-2bb756525632",
+            "user-0957c2a2-b46a-4b10-aee3-6ca44df92dbc",
+            "user-5349f0d8-bc9a-42b3-82db-84bc06f26980",
+            "user-47ffb2bf-f9b5-47ed-bd23-f56c02bcaf2f",
+            "user-e39afdd3-0a1f-4fbf-860b-2165ec5e1b56",
+            "user-5e488537-8fca-43e1-b7b8-dbbe83589180",
+            "user-e4c8aa60-dcf2-4e42-8799-8cb6e8928296",
+            "user-e07af1ff-6604-4f07-a492-0a8193d092c1",
+            "user-c228e199-49c6-4e4a-8b46-16dbabe0eecf",
+            "user-d4635b5f-39d7-46a5-8539-cbbf13ae17e3",
+            "user-73079df8-8507-45c7-8906-add52c729c3d",
+            "user-3f4f0ac1-d42a-408d-b647-984d0f969c8c",
+            "user-749e75a6-7aa0-49f6-8713-0e4b9a27d797",
+            "user-1e2547ac-b064-454c-8622-681ed0c20145",
+            "user-ee792cf3-a104-4273-8f7d-11594a3f24fd",
+            "user-e04a3dc0-d4f5-4fde-85e2-7fef8da621ef",
+            "user-1167a3a0-e865-453f-8a0b-650fbcc60690",
+            "user-bbb2f4d2-fe5c-404b-8f57-cbb96dccb409",
+            "user-b04ccdf0-2c46-44c3-9aa0-405c09f4a3aa",
+            "user-b23a703f-cfc4-4fda-b3bc-9dce64030d78",
+            "user-7264f13b-5982-43a7-8f6c-17faf9ecf367",
+            "user-7dd09b25-171e-43d7-bb74-6e7864fa5262",
+            "user-5d4ceb7b-d477-4ec0-a42e-a62bcd0498cb",
+            "user-0cfa9e2e-1db4-4558-b323-035bc03e472b",
+            "user-8888332b-e5b2-4275-996a-6aee0b5058d0",
+            "user-07f81cbd-68a4-499b-bdae-8f8831e9238f",
+            "user-c1e599ba-ef2e-4073-87c4-96e4d3534510"
+        ],
+        "excluded": [
+            "user-103",
+            "user-6125e78cbd6541679b95a3714587ad91ec75c553b4c946f981a17058bf67e5ef122e76ba450b47efba39a350a1309cc80407eed2d52f470c9e8ba6cf3b7333e5e1617b2f0d5142ba8b9ef9d5b3c6312f55d71f85e2c14c1b9dcd47c5d5bd56c9be28dcd4a3e1441ca6332dfa99a3a3311ac7e93ce8b34ca096d810421fe558107f1870685ddc430ebf701d6543a3005ac0de1c6f053c4851b33047ee82a05b23f2c039f4a1c2465599555c1d378fb18bd494f45cc6864024b65f8b18af4eb9f80899ce41c9e44426839f1f599df14f9d38920ef75f6945d280f3833f215e06712d7d0a1ad09b4ba89a84791b08b11d2c70bd7a3f4dcf40649d6280b4d2d528e1276361e8a2574001a249b6912c977e2195093c614a1e4130adee8aeb52fae913a0a2b55dd7534868ad86c27f9e352d0f6e21e00643684e22becd4d9c4b3afed897481938970f45b0b3ee120ffb73e0bd2862f90ee97241faacffceaa21df3206d250ffcdf17f4b7d9142a7c0973eaacf317750335c4141a082425bc8c6a2e3183d2f7ca8b3654636a292eed97aed92ab88555ceec2254a06b0854ba4a9582cdc156949f9116849ffa5e7c6389fc2d29d56c39f0afa5445d68b7614628db6c3f013570a245cfb4ec7afe95e4fdb7b2686fa7cb1122d1c4d30b085f6ef5a58afcb8432922521a64bc1b23c04d89254949b9851945ea1d24613ba9bf1279b61088c81ca07cfd06c49d6807b8165d4a75ff8ec475a9063ef40bfae5b8b3944673f1b8dd2d62f14254e5eab273502cfe63a49"
+        ],
+        "includedContexts": [],
+        "excludedContexts": [],
+        "_links": {
+            "parent": {
+                "href": "/api/v2/segments/default/test",
+                "type": "application/json"
+            },
+            "self": {
+                "href": "/api/v2/segments/default/test/user-list",
+                "type": "application/json"
+            },
+            "site": {
+                "href": "/default/test/segments/user-list",
+                "type": "text/html"
+            }
+        },
+        "rules": [],
+        "version": 2,
+        "deleted": false,
+        "generation": 1
+    },
+    {
+        "name": "Large Dynamic List",
+        "tags": [],
+        "creationDate": 1704302090567,
+        "lastModifiedDate": 1704302154463,
+        "key": "dynamic-list",
+        "included": [],
+        "excluded": [],
+        "includedContexts": [],
+        "excludedContexts": [],
+        "_links": {
+            "parent": {
+                "href": "/api/v2/segments/default/test",
+                "type": "application/json"
+            },
+            "self": {
+                "href": "/api/v2/segments/default/test/dynamic-list",
+                "type": "application/json"
+            },
+            "site": {
+                "href": "/default/test/segments/dynamic-list",
+                "type": "text/html"
+            }
+        },
+        "rules": [
+            {
+                "_id": "3405f9e2-7613-4092-b453-1b10db1bc184",
+                "clauses": [
+                    {
+                        "_id": "43aaaae8-fc33-4edb-a954-c01bb53597e8",
+                        "attribute": "email",
+                        "op": "endsWith",
+                        "values": [
+                            "410f8e860cb348ad83218d65834de218.com",
+                            "f97d9081f7af47c9b21a97b36d3c5fc2.com",
+                            "7688255f6032482fb3fe4ae9780ca52e.com",
+                            "fe28a542c57946dbaad085c156e33209.com",
+                            "895129ac924d4af29817749f6032c8f9.com",
+                            "a39d13e4cc6c45949bcda57c20b399df.com",
+                            "d8899d51b30749659c9603e6bc11e9e4.com",
+                            "732650e37fdd4ff1bfbb2e239fa7dcd6.com",
+                            "22d230fac4524132b7e050d1dbf05f82.com",
+                            "46e6d0b3f1474c1a8335ce434a9196aa.com",
+                            "8a9208af78734d769ed73f0009a28be3.com",
+                            "cbf2359bb0f0456b83287146a4e22abd.com",
+                            "c1546a6090364b0ab52cadb6067724da.com",
+                            "6508fe14f12e40a39b23a4390a60f6e6.com",
+                            "723973bf3e1f4292bea939e2e7ba021f.com",
+                            "b3d74f4883814042876421260d662b52.com",
+                            "8b89fadafbe44e7399b5dea298996017.com",
+                            "d0ca397bc2a940ba90508fbc7efe6a52.com",
+                            "a5e55423d2d04700926b73f4460527b4.com",
+                            "433ee12ed20147e78e0dd7d42dd4b576.com",
+                            "887e35f48b2344848aeeac7ef712aa15.com",
+                            "9b878926a653423b9c8749a0440a18f8.com",
+                            "b772131a81384b3493eaf8cbd7d33bca.com",
+                            "c4130acfcd2e4688a123614f3002161c.com",
+                            "87c5eb3b67464ae792252125c351f307.com",
+                            "a64061b257014657943e5945ac6af7ca.com",
+                            "eba18f11f40a4b40bbb4fbd52febe4cc.com",
+                            "1cb30c51d69f4f44873bb38ced4d7952.com"
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    },
+                    {
+                        "_id": "f19dd5f5-194f-4794-b1aa-44abb8bfaca2",
+                        "attribute": "email",
+                        "op": "endsWith",
+                        "values": [
+                            "1a67f426af8c42738abdc9a85944fda551a25a12439c445392ddb073255ac0f8707cb130327a42bc88b9612b79b8c1769dcdc57ae4a24788afcfa97e05277faecb58b7d60f3e4740897be208a99cf6731485860faf164381bad3e7503eab657de5369c22b0534b4bbc0e5f44c3520821b82ef50b2d164601bae9bd63cdf4853a5e7e9c5635364f0d8070418a21d0b245a1608c18b0e34c8db8ef6bcb0bf957579ad41eeaed6f488dbec0acb7b5184815fb3e461e0fc64760afac04e0b241e5d960a9a8d73f1c4746a22bb0d35d16cb05f3ea69763a174a7a86b61107735b0f937ee6478719354dfb9ca64c1c4e0a536f62be9848a992475590bf8ae80d517de82fd59f1101e04b2e87a23986e5088fb37443c075743f4ba1a8641a7e77766fc50244021cef7945cba11d18e0a7a423c1f0fdb01ecedd4a85999f15910955d5e356a131075faa46ada5ade197349c866314db097303164fd59bc8d800ae2b201f64de8c17ecde4125802193d138e3bb8b06acfc403f5e4dac925cf900425364f8a2bf4567cbef4439bb7c0b86f95db2439666f1d0cbc14b86abeb27fcd95233582ff11fb349b84812b2588114f911df2f909958699d8d4f89a275a5f11c103f995a9ee18f4f814338ae312a3e11be5685deda792322f64ebeabeec52b4a54443fa7517298293a46c288c4db401419699ec7c2bece02434b4c9028682b2ce11938.com"
+                        ],
+                        "contextKind": "user",
+                        "negate": true
+                    }
+                ],
+                "rolloutContextKind": "user"
+            }
+        ],
+        "version": 2,
+        "deleted": false,
+        "generation": 1
+    },
+    {
+        "name": "Dynamic List 2",
+        "tags": [],
+        "creationDate": 1704731242596,
+        "lastModifiedDate": 1704731387257,
+        "key": "dynamic-list-2",
+        "included": [
+            "foo"
+        ],
+        "excluded": [
+            "bar"
+        ],
+        "includedContexts": [],
+        "excludedContexts": [],
+        "_links": {
+            "parent": {
+                "href": "/api/v2/segments/default/test",
+                "type": "application/json"
+            },
+            "self": {
+                "href": "/api/v2/segments/default/test/dynamic-list-2",
+                "type": "application/json"
+            },
+            "site": {
+                "href": "/default/test/segments/dynamic-list-2",
+                "type": "text/html"
+            }
+        },
+        "rules": [
+            {
+                "_id": "9ea1bfc9-91c5-4188-a725-8af69730cd11",
+                "clauses": [
+                    {
+                        "_id": "294210ba-b6cd-4759-beb3-232b475930a9",
+                        "attribute": "p1",
+                        "op": "in",
+                        "values": [
+                            1,
+                            2
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    },
+                    {
+                        "_id": "a156f6dd-1ecb-411c-b308-5b9d3428815a",
+                        "attribute": "p2",
+                        "op": "semVerGreaterThan",
+                        "values": [
+                            "1.0.0"
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    }
+                ],
+                "rolloutContextKind": "user"
+            },
+            {
+                "_id": "7cdd28e2-feae-4a6e-8f87-ce00ccb1ce93",
+                "clauses": [
+                    {
+                        "_id": "a316fd6a-1e0b-4ed0-a5db-c71868ecb691",
+                        "attribute": "p3",
+                        "op": "matches",
+                        "values": [
+                            "foo[0-9]{0,1}"
+                        ],
+                        "contextKind": "user",
+                        "negate": false
+                    }
+                ],
+                "rolloutContextKind": "user"
+            }
+        ],
+        "version": 2,
+        "deleted": false,
+        "generation": 1
+    }
+]

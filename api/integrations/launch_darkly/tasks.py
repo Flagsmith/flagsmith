@@ -29,3 +29,8 @@ def process_launch_darkly_import_request(import_request_id: int) -> None:
             error_message=str(exc),
         )
         raise TaskBackoffError(delay_until=exc.retry_at) from exc
+    except Exception:
+        # Import request credentials are wiped on failure,
+        # so avoid retrying the task by logging the exception
+        # but not raising it.
+        log.exception("import-failed")
