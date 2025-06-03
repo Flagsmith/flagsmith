@@ -325,3 +325,39 @@ def test_launch_darkly_client__rate_limit_invalid_response__raises_expected(
     # When & Then
     with pytest.raises(HTTPError):
         client.get_project(project_key=project_key)
+
+
+def test_launch_darkly_client__rate_limit_no_headers__waits_expected(
+    request: pytest.FixtureRequest,
+    mocker: MockerFixture,
+    requests_mock: RequestsMockerFixture,
+) -> None:
+    # Given
+    token = "test-token"
+    project_key = "test-project-key"
+
+    mocker.patch(
+        "integrations.launch_darkly.client.BACKOFF_DEFAULT_RETRY_AFTER_SECONDS",
+        new=0.1,
+    )
+
+    example_response_content = (
+        request.path.parent / "example_api_responses/getProject.json"
+    ).read_text()
+    expected_result = json.loads(example_response_content)
+
+    requests_mock.get(
+        "https://app.launchdarkly.com/api/v2/projects/test-project-key",
+        [
+            {"status_code": 429},
+            {"status_code": 200, "text": example_response_content},
+        ],
+    )
+
+    client = LaunchDarklyClient(token=token)
+
+    # When
+    result = client.get_project(project_key=project_key)
+
+    # Then
+    assert result == expected_result
