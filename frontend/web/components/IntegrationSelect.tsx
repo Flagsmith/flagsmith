@@ -15,12 +15,98 @@ import ModalDefault from './modals/base/ModalDefault'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
+import InfoMessage from './InfoMessage'
 
 type IntegrationSelectType = {
   onComplete: () => void
 }
 
 const integrationSummaries: IntegrationSummary[] = [
+  {
+    categories: ['Analytics'],
+    image: '/static/images/integrations/hubspot.svg',
+    title: 'HubSpot',
+  },
+  {
+    categories: ['Analytics'],
+    image: '/static/images/integrations/pendo.svg',
+    title: 'Pendo',
+  },
+  {
+    categories: ['Analytics'],
+    image: '/static/images/integrations/adobe-analytics.png',
+    title: 'Adobe Analytics',
+  },
+  {
+    categories: ['Analytics'],
+    image: '/static/images/integrations/google-analytics.svg',
+    title: 'Google Analytics',
+  },
+  {
+    categories: ['Authentication'],
+    image: '/static/images/integrations/okta.svg',
+    title: 'Okta',
+  },
+  {
+    categories: ['Developer tools'],
+    image: '/static/images/integrations/vs-code.svg',
+    title: 'VS Code',
+  },
+  {
+    categories: ['Infrastructure'],
+    image: '/static/images/integrations/terraform.svg',
+    title: 'Terraform',
+  },
+  {
+    categories: ['Infrastructure'],
+    image: '/static/images/integrations/vercel.svg',
+    title: 'Vercel',
+  },
+  {
+    categories: ['Messaging'],
+    image: '/static/images/integrations/microsoft-teams.svg',
+    title: 'Microsoft Teams',
+  },
+  {
+    categories: ['Developer tools'],
+    image: '/static/images/integrations/intellij.svg',
+    title: 'Intellij',
+  },
+  {
+    categories: ['Authentication'],
+    image: '/static/images/integrations/ldap.png',
+    title: 'LDAP',
+  },
+  {
+    categories: ['Authentication'],
+    image: '/static/images/integrations/saml.png',
+    title: 'SAML',
+  },
+  {
+    categories: ['CI/CD'],
+    image: '/static/images/integrations/bitbucket.svg',
+    title: 'Bitbucket',
+  },
+  {
+    categories: ['CI/CD'],
+    image: '/static/images/integrations/gitlab.svg',
+    title: 'GitLab',
+  },
+  {
+    categories: ['CI/CD'],
+    image: '/static/images/integrations/azure-devops.svg',
+    title: 'Azure DevOps',
+  },
+  {
+    categories: ['CI/CD'],
+    image: '/static/images/integrations/jenkins.svg',
+    title: 'Jenkins',
+  },
+  {
+    categories: ['Authentication'],
+    image: '/static/images/integrations/adfs.svg',
+    title: 'Microsoft Active Directory',
+  },
   {
     categories: ['Monitoring'],
     image: '/static/images/integrations/appdynamics.svg',
@@ -57,6 +143,24 @@ const integrationSummaries: IntegrationSummary[] = [
     title: 'SumoLogic',
   },
 ]
+const categoryDescriptions: Record<
+  (typeof integrationCategories)[number],
+  string
+> = {
+  'Analytics': 'Send data on what flags served to each identity.',
+  'Authentication':
+    'Use the Flagsmith Dashboard with your authentication provider.',
+  'CI/CD': 'View your Flagsmith Flags inside your Issues and Pull Request.',
+  'Developer tools': 'Interact with feature flags from your developer tools.',
+  'Infrastructure':
+    'Manage and evaluate your features within your infrastructure tooling.',
+  'Messaging':
+    'Send messages when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+  'Monitoring':
+    'Send events when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+  'Webhooks':
+    'Receive webhooks when your features change or when audit logs occur.',
+}
 
 const ALL_CATEGORY = 'All'
 
@@ -115,7 +219,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
       </div>
       <div className='container-fluid'>
         <div className='row'>
-          <div className='col-md-4 d-none d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
+          <div className=' d-none col-md-4 d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
             <div className='mx-md-3'>
               {[ALL_CATEGORY].concat(integrationCategories).map((v) => (
                 <SidebarLink
@@ -128,8 +232,14 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               ))}
             </div>
           </div>
-          <div className='col-md-8 h-100'>
-            <div className='col-md-6 mx-2 mb-2'>
+          <div className='col-md-9 h-100'>
+            {!!categoryDescriptions[category] && (
+                <div className='mx-4 mb-4'>
+                  <span className='fw-semibold'>{category} integrations</span>:{' '}
+                  {categoryDescriptions[category]}
+                </div>
+            )}
+            <div className='col-md-6 mx-4 mb-2'>
               <Input
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setSearch(Utils.safeParseEventValue(e))
@@ -141,7 +251,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
                 search
               />
             </div>
-            <div className='d-flex m-2 flex-wrap gap-2'>
+            <div className='d-flex my-2 mx-4 flex-wrap gap-2'>
               {selected.map((label) => (
                 <div
                   key={label}
@@ -158,10 +268,10 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               ))}
             </div>
             <div
-              style={{ height: 550 }}
+              style={{ height: 'calc(100vh - 500px)', minHeight: 550 }}
               className='overflow-scroll overflow-x-hidden d-flex flex-column m-0  pt-0 custom-scroll'
             >
-              <div className='row mx-0 row-cols-4  row-cols-xxl-6'>
+              <div className='row mx-0 row-cols-4  row-cols-xl-6'>
                 {allIntegrations.map((v) => {
                   const isSelected = selected.includes(v.title)
                   return (
