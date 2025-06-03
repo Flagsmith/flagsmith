@@ -9,6 +9,7 @@ from rest_framework.status import HTTP_429_TOO_MANY_REQUESTS
 
 from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.constants import (
+    BACKOFF_DEFAULT_RETRY_AFTER_SECONDS,
     BACKOFF_MAX_RETRIES,
     LAUNCH_DARKLY_API_BASE_URL,
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
@@ -41,6 +42,9 @@ def launch_darkly_backoff(
                 return float(retry_after)
             if ratelimit_reset := headers.get("X-Ratelimit-Reset"):
                 return float(ratelimit_reset) - timezone_now().timestamp()
+            # We have no retry information, use a default backoff time
+            # of 10 seconds as per LD documentation.
+            return BACKOFF_DEFAULT_RETRY_AFTER_SECONDS
         return None
 
     def _wait_gen() -> Generator[float, None, None]:
