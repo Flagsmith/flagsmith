@@ -11,10 +11,13 @@ if TYPE_CHECKING:
     from users.models import FFAdminUser
 
 
+LaunchDarklyImportResult = Literal["success", "failure", "incomplete"]
+
+
 class LaunchDarklyImportStatus(TypedDict):
     requested_environment_count: int
     requested_flag_count: int
-    result: NotRequired[Literal["success", "failure"]]
+    result: NotRequired[LaunchDarklyImportResult]
     error_messages: list[str]
 
 
