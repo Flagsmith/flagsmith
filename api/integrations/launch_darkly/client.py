@@ -38,11 +38,19 @@ def launch_darkly_backoff(
             (response := exc.response) is not None
         ) and response.status_code == HTTP_429_TOO_MANY_REQUESTS:
             headers = response.headers
+            # Clients must wait at least `Retry-After` seconds
+            # before making additional calls to the API
             if retry_after := headers.get("Retry-After"):
                 return float(retry_after)
+            # The time at which the current rate limit window resets in epoch milliseconds
             if ratelimit_reset := headers.get("X-Ratelimit-Reset"):
-                return float(ratelimit_reset) - timezone_now().timestamp()
-            # We have no retry information, use a default backoff time
+                timestamp = int(ratelimit_reset) / 1000
+                # Use default backoff time if the timestamp is in the past.
+                return (
+                    max(timestamp - timezone_now().timestamp(), 0)
+                    or BACKOFF_DEFAULT_RETRY_AFTER_SECONDS
+                )
+            # If no retry information retrieved, use a default backoff time
             # of 10 seconds as per LD documentation.
             return BACKOFF_DEFAULT_RETRY_AFTER_SECONDS
         return None
