@@ -149,7 +149,7 @@ def test_user_is_created_on_hubspot_via_form_when_signing_up(
     pass
 
 
-def test_contact_is_updated_if_already_exists_when_signing_up(
+def test_user_is_updated_in_hubspot_if_already_exists_when_signing_up(
     api_client: APIClient,
     user_details: UserDetails,
 ) -> None:
@@ -157,6 +157,13 @@ def test_contact_is_updated_if_already_exists_when_signing_up(
 
 
 def test_organisation_is_created_via_domain_if_user_did_not_join_an_organisation(
+    api_client: APIClient,
+    user_details: UserDetails,
+) -> None:
+    pass
+
+
+def test_create_new_organisation_and_add_user_as_contact_if_new_organisation_is_created(
     api_client: APIClient,
     user_details: UserDetails,
 ) -> None:
