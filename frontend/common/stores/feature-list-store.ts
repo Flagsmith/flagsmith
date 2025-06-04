@@ -436,9 +436,7 @@ const controller = {
         Promise.all([prom, segmentOverridesRequest])
           .then(([res, segmentRes]) => {
             if (store.model) {
-              if (mode === 'VALUE') {
-                store.model.keyedEnvironmentFeatures[projectFlag.id] = res
-              }
+              store.model.keyedEnvironmentFeatures[projectFlag.id] = res
               if (segmentRes) {
                 const feature = _.find(
                   store.model.features,
@@ -861,7 +859,7 @@ const controller = {
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
     if (!store.model || store.envId !== environmentId || force) {
       store.envId = environmentId
-      store.projectId = projectId
+      store.projectId = parseInt(projectId)
       store.environmentId = environmentId
       store.page = page
       store.filter = filter
