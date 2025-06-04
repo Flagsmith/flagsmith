@@ -140,3 +140,24 @@ def test_company_is_updated_when_user_creates_organisation(
 
     # TODO: verify that the correct call is made to hubspot to update the
     #  contact's company
+
+
+def test_user_is_created_on_hubspot_via_form_when_signing_up(
+    api_client: APIClient,
+    user_details: UserDetails,
+) -> None:
+    pass
+
+
+def test_contact_is_updated_if_already_exists_when_signing_up(
+    api_client: APIClient,
+    user_details: UserDetails,
+) -> None:
+    pass
+
+
+def test_organisation_is_created_via_domain_if_user_did_not_join_an_organisation(
+    api_client: APIClient,
+    user_details: UserDetails,
+) -> None:
+    pass
