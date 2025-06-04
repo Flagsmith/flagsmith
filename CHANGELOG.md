@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.182.0](https://github.com/Flagsmith/flagsmith/compare/v2.181.0...v2.182.0) (2025-06-04)
+
+
+### Features
+
+* track welcome page tasks and integrations ([#5500](https://github.com/Flagsmith/flagsmith/issues/5500)) ([e8b2738](https://github.com/Flagsmith/flagsmith/commit/e8b2738597c1e2ce7a7fdef6659ef288acb086ed))
+
+
+### Bug Fixes
+
+* **launch-darkly-importer:** Seconds `X-Ratelimit-Reset` timestamps are expected for rate limited requests ([#5536](https://github.com/Flagsmith/flagsmith/issues/5536)) ([0c84a42](https://github.com/Flagsmith/flagsmith/commit/0c84a428b979dfe56cf2c5315ef06bc0f8e46d6c))
+
 ## [2.181.0](https://github.com/Flagsmith/flagsmith/compare/v2.180.0...v2.181.0) (2025-06-04)
 
 
