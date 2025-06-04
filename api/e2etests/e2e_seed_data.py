@@ -10,7 +10,6 @@ from common.projects.permissions import (
     VIEW_PROJECT,
 )
 from django.conf import settings
-from django.db import transaction
 from flag_engine.identities.models import IdentityModel as EngineIdentity
 
 from edge_api.identities.models import EdgeIdentity
@@ -44,17 +43,21 @@ def delete_user_and_its_organisations(user_email: str) -> None:
 
 def teardown() -> None:
     # delete users and their orgs created for e2e test by front end
-    for email in [
-        settings.E2E_SIGNUP_USER,
-        settings.E2E_USER,
-        settings.E2E_CHANGE_EMAIL_USER,
-        settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
-        settings.E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
-        settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
-        settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
-    ]:
-        with transaction.atomic():
-            delete_user_and_its_organisations(user_email=email)
+    delete_user_and_its_organisations(user_email=settings.E2E_SIGNUP_USER)
+    delete_user_and_its_organisations(user_email=settings.E2E_USER)
+    delete_user_and_its_organisations(user_email=settings.E2E_CHANGE_EMAIL_USER)
+    delete_user_and_its_organisations(
+        user_email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS
+    )
+    delete_user_and_its_organisations(
+        user_email=settings.E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS
+    )
+    delete_user_and_its_organisations(
+        user_email=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS
+    )
+    delete_user_and_its_organisations(
+        user_email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE
+    )
 
 
 def seed_data() -> None:
