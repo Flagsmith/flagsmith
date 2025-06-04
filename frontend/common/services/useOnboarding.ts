@@ -1,41 +1,47 @@
 import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
+import { getProfile } from './useProfile'
+import { getStore } from 'common/store'
 
 export const onboardingService = service
   .enhanceEndpoints({ addTagTypes: ['Onboarding'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      createOnboarding: builder.mutation<
+      updateOnboarding: builder.mutation<
         Res['onboarding'],
-        Req['createOnboarding']
+        Req['updateOnboarding']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'Onboarding' }],
-        query: (query: Req['createOnboarding']) => ({
+        invalidatesTags: (res) => [{ id: 'LIST', type: 'Onboarding' }],
+        query: (query: Req['updateOnboarding']) => ({
           body: query,
-          method: 'POST',
-          url: `onboarding`,
+          method: 'PATCH',
+          url: `auth/users/me/onboarding/`,
         }),
+        transformResponse: async (res) => {
+          await getProfile(getStore(), {}, { forceRefetch: true })
+          return res
+        },
       }),
       // END OF ENDPOINTS
     }),
   })
 
-export async function createOnboarding(
+export async function updateOnboarding(
   store: any,
-  data: Req['createOnboarding'],
+  data: Req['updateOnboarding'],
   options?: Parameters<
-    typeof onboardingService.endpoints.createOnboarding.initiate
+    typeof onboardingService.endpoints.updateOnboarding.initiate
   >[1],
 ) {
   return store.dispatch(
-    onboardingService.endpoints.createOnboarding.initiate(data, options),
+    onboardingService.endpoints.updateOnboarding.initiate(data, options),
   )
 }
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useCreateOnboardingMutation,
+  useUpdateOnboardingMutation,
   // END OF EXPORTS
 } = onboardingService
 
