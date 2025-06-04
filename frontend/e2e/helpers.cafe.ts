@@ -1,5 +1,8 @@
 import { RequestLogger, Selector, t } from 'testcafe'
-import { FlagsmithValue } from '../common/types/responses'
+import Project from '../common/project';
+import fetch from 'node-fetch';
+import flagsmith from 'flagsmith/isomorphic';
+import { IFlagsmith, FlagsmithValue } from 'flagsmith/types';
 
 export const LONG_TIMEOUT = 40000
 
@@ -19,6 +22,11 @@ export const isElementExists = async (selector: string) => {
   return Selector(byId(selector)).exists
 }
 
+const initProm = flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
+export const getFlagsmith = async function() {
+  await initProm
+  return flagsmith as IFlagsmith
+}
 export const setText = async (selector: string, text: string) => {
   logUsingLastSection(`Set text ${selector} : ${text}`)
   if (text) {
