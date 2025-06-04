@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 from django.conf import settings
@@ -29,6 +30,8 @@ from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+from users.models import FFAdminUser
+from users.serializers import PatchOnboardingSerializer
 
 from .models import UserPasswordResetRequest
 
@@ -134,8 +137,29 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
             )
         )
 
+    @action(
+        detail=False,
+        methods=["patch"],
+        url_path="me/onboarding",
+        permission_classes=[IsAuthenticated],
+    )
+    def patch_onboarding(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        serializer = PatchOnboardingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        existing_onboarding = (
+            json.loads(user.onboarding_data) if user.onboarding_data else {}
+        )
+
+        updated_onboarding = {**existing_onboarding, **serializer.data}
+        user.onboarding_data = json.dumps(updated_onboarding)
+        user.save(update_fields=["onboarding_data"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(["post"], detail=False)
-    def reset_password(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
+    def reset_password(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.get_user()
