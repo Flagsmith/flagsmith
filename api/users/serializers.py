@@ -172,7 +172,7 @@ class OnboardingTaskSerializer(serializers.Serializer[None]):
         default=lambda: datetime.now(),
     )
 
-    def validate_completed_at(self, completed_at: datetime) -> datetime:
+    def validate_completed_at(self, completed_at: datetime | None) -> datetime:
         return completed_at or datetime.now()
 
 
