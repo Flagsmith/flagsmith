@@ -17,7 +17,7 @@ module.exports = global.Project = {
   // This is our Bullet Train API key - Bullet Train runs on Bullet Train!
   flagsmith: '4vfqhypYjcPoGGu8ByrBaj',
 
-  flagsmithClientAPI: 'https://api.flagsmith.com/api/v1/',
+  flagsmithClientAPI: 'https://edge.api.flagsmith.com/api/v1/',
 
   flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
 

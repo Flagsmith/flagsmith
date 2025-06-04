@@ -269,7 +269,6 @@ const HomePage: React.FC = () => {
       )
     }
   }
-
   return (
     <AccountProvider>
       {(
@@ -524,8 +523,9 @@ const HomePage: React.FC = () => {
                                   >
                                     <ErrorMessage
                                       error={
-                                        typeof AccountStore.error === 'string'
-                                          ? AccountStore.error
+                                        typeof AccountStore.error?.detail ===
+                                        'string'
+                                          ? AccountStore.error.detail
                                           : 'Please check your details and try again'
                                       }
                                     />

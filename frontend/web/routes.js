@@ -40,6 +40,7 @@ import { ParameterizedRoute } from './components/base/higher-order/Parameterized
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
 import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
+import GettingStartedPage from './components/pages/GettingStartedPage'
 
 export const routes = {
   'account': '/account',
@@ -60,6 +61,7 @@ export const routes = {
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
   'features': '/project/:projectId/environment/:environmentId/features',
+  'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
   'home': '/home',
   'integrations': '/project/:projectId/integrations',
@@ -175,6 +177,11 @@ export default (
         path={routes['create-environment']}
         exact
         component={CreateEnvironmentPage}
+      />
+      <ParameterizedRoute
+        path={routes.gettingStarted}
+        exact
+        component={GettingStartedPage}
       />
       <ParameterizedRoute
         path={routes['project-settings-in-environment']}

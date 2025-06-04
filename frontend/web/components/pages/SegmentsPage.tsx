@@ -181,7 +181,7 @@ const SegmentsPage: FC = () => {
         }
         title={'Segments'}
       >
-        Create and manage groups of users with similar{' '}
+        Create and manage groups of identities with similar{' '}
         <Button
           theme='text'
           href='https://docs.flagsmith.com/basic-features/managing-identities#identity-traits'

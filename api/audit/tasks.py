@@ -48,19 +48,36 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
     if not feature_state.change_request:
         raise RuntimeError("Feature state must have a change request")
 
-    log = msg_template % (
+    if feature_state.is_scheduled:
+        logger.info(
+            "FeatureState is not due to go live. "
+            "Likely the change request was rescheduled to a later date."
+        )
+        create_feature_state_went_live_audit_log.delay(
+            delay_until=feature_state.live_from,
+            args=(feature_state.id,),
+        )
+        return
+
+    log_message = msg_template % (
         feature_state.feature.name,
         feature_state.change_request.title,
     )
-    AuditLog.objects.create(
+    # NOTE: This NEEDS to leverage btree indexes on AuditLog
+    _, log_created = AuditLog.objects.get_or_create(
+        created_date=feature_state.live_from,
+        environment=feature_state.environment,
+        is_system_event=True,
+        log=log_message,
+        project=feature_state.environment.project,
         related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        environment=feature_state.environment,
-        project=feature_state.environment.project,
-        log=log,
-        is_system_event=True,
-        created_date=feature_state.live_from,
     )
+    if not log_created:
+        logger.info(
+            "FeatureState update audit log already exists. "
+            "Likely the change request was rescheduled to an earlier date.",
+        )
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
