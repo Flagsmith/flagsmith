@@ -19,6 +19,7 @@ from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.rudderstack.views import RudderstackConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
+from integrations.sentry.views import SentryChangeTrackingConfigurationViewSet
 from integrations.slack.views import (
     SlackEnvironmentViewSet,
     SlackGetChannelsViewSet,
@@ -90,6 +91,11 @@ environments_router.register(
     r"integrations/mixpanel",
     MixpanelConfigurationViewSet,
     basename="integrations-mixpanel",
+)
+environments_router.register(
+    r"integrations/sentry",
+    SentryChangeTrackingConfigurationViewSet,
+    basename="integrations-sentry",
 )
 environments_router.register(
     r"integrations/slack", SlackEnvironmentViewSet, basename="integrations-slack"
