@@ -859,7 +859,7 @@ const controller = {
   getFeatures: (projectId, environmentId, force, page, filter, pageSize) => {
     if (!store.model || store.envId !== environmentId || force) {
       store.envId = environmentId
-      store.projectId = parseInt(projectId)
+      store.projectId = projectId
       store.environmentId = environmentId
       store.page = page
       store.filter = filter
@@ -982,7 +982,7 @@ const controller = {
     (search, environmentId, projectId, filter, pageSize) => {
       store.search = encodeURIComponent(search || '')
       controller.getFeatures(
-        projectId,
+        parseInt(projectId),
         environmentId,
         true,
         0,
@@ -1042,7 +1042,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         store.sort = action.sort
       }
       controller.getFeatures(
-        action.projectId,
+        parseInt(action.projectId),
         action.environmentId,
         action.force,
         action.page,
@@ -1056,7 +1056,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         action.environmentId === store.environmentId
       ) {
         controller.getFeatures(
-          store.projectId,
+          parseInt(store.projectId),
           store.environmentId,
           true,
           store.page,
