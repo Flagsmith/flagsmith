@@ -11,6 +11,7 @@ export const releasePipelinesService = service
         Res['releasePipeline'],
         Req['addFeatureToReleasePipeline']
       >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
         query: (query: Req['addFeatureToReleasePipeline']) => ({
           body: {
             feature_id: query.featureId,

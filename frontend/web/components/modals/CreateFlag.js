@@ -1085,7 +1085,10 @@ const CreateFlag = class extends Component {
 
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
-              const showReleasePipelineButton = true // Utils.getPlansPermission('FLAG_OWNERS') && isReleasePipelineEnabled
+              // TODO: Check correct permission
+              const showReleasePipelineButton =
+                Utils.getPlansPermission('FLAG_OWNERS') &&
+                isReleasePipelineEnabled
 
               return (
                 <Permission
