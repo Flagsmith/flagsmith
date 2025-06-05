@@ -1,5 +1,5 @@
 import React, { ChangeEvent, MouseEvent, useEffect, useState } from 'react'
-import { RouteComponentProps, withRouter } from 'react-router'
+import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
@@ -30,7 +30,9 @@ import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 
-const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
+const HomePage: React.FC = () => {
+  const history = useHistory()
+  const location = useLocation()
   const [allRequirementsMet, setAllRequirementsMet] = useState(false)
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')

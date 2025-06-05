@@ -1,6 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { matchPath } from 'react-router'
-import { Link, withRouter } from 'react-router-dom'
+import { Link, withRouter, matchPath } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
@@ -42,10 +41,6 @@ import { getBuildVersion } from 'common/services/useBuildVersion'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
-  }
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
   }
 
   state = {
@@ -200,7 +195,7 @@ const App = class extends Component {
 
     if (!AccountStore.getOrganisation() && !invite) {
       // If user has no organisation redirect to /create
-      this.context.router.history.replace(`/create${query}`)
+      this.props.history.replace(`/create${query}`)
       return
     }
 
@@ -215,11 +210,11 @@ const App = class extends Component {
     ) {
       if (redirect) {
         API.setRedirect('')
-        this.context.router.history.replace(redirect)
+        this.props.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
           if (this.props.location.search.includes('github-redirect')) {
-            this.context.router.history.replace(
+            this.props.history.replace(
               `/github-setup${this.props.location.search}`,
             )
             return
@@ -230,7 +225,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/organisations')
+              this.props.history.replace('/organisations')
               return
             }
 
@@ -243,7 +238,7 @@ const App = class extends Component {
               AppActions.getOrganisation(lastOrg.id)
             }
 
-            this.context.router.history.replace(
+            this.props.history.replace(
               `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
             )
             return
@@ -253,9 +248,9 @@ const App = class extends Component {
             Utils.getFlagsmithHasFeature('welcome_page') &&
             AccountStore.getUser()?.isGettingStarted
           ) {
-            this.context.router.history.replace('/getting-started')
+            this.props.history.replace('/getting-started')
           } else {
-            this.context.router.history.replace(Utils.getOrganisationHomePage())
+            this.props.history.replace(Utils.getOrganisationHomePage())
           }
         })
       }
@@ -282,7 +277,7 @@ const App = class extends Component {
     if (document.location.href.includes('saml?')) {
       return
     }
-    this.context.router.history.replace('/')
+    this.props.history.replace('/')
   }
 
   closeAnnouncement = (announcementId) => {
@@ -439,7 +434,6 @@ const App = class extends Component {
                                     <div className='d-flex gap-1 ml-1 align-items-center'>
                                       <BreadcrumbSeparator
                                         projectId={projectId}
-                                        router={this.context.router}
                                         hideSlash={!activeProject}
                                         focus='organisation'
                                       >
@@ -466,7 +460,6 @@ const App = class extends Component {
                                       {!!activeProject && (
                                         <BreadcrumbSeparator
                                           projectId={projectId}
-                                          router={this.context.router}
                                           hideSlash
                                           focus='project'
                                         >
@@ -634,6 +627,27 @@ const App = class extends Component {
                               )
                             }
                           </Permission>
+                          {Utils.getFlagsmithHasFeature(
+                            'release_pipelines',
+                          ) && (
+                            <Permission
+                              level='project'
+                              permission='ADMIN'
+                              id={projectId}
+                            >
+                              {({ permission }) =>
+                                permission && (
+                                  <NavSubLink
+                                    icon={<Icon name='flash' />}
+                                    id='release-pipelines-link'
+                                    to={`/project/${projectId}/release-pipelines`}
+                                  >
+                                    Release Pipelines
+                                  </NavSubLink>
+                                )
+                              }
+                            </Permission>
+                          )}
                         </>
                       ) : (
                         !!AccountStore.getOrganisation() && (
@@ -712,7 +726,7 @@ const App = class extends Component {
                   {environmentId && !isCreateEnvironment ? (
                     <div className='d-flex'>
                       <HomeAside
-                        history={this.context.router.history}
+                        history={this.props.history}
                         environmentId={environmentId}
                         projectId={projectId}
                       />
@@ -735,6 +749,7 @@ const App = class extends Component {
 App.propTypes = {
   history: RequiredObject,
   location: RequiredObject,
+  match: RequiredObject,
 }
 
 export default withRouter(ConfigProvider(App))

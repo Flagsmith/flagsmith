@@ -15,13 +15,12 @@ import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
 import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import { Link } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
-import Constants from 'common/constants'
 import Setting from 'components/Setting'
 
-class TheComponent extends Component {
-  static displayName = 'TheComponent'
+class AccountSettingsPage extends Component {
+  static displayName = 'AccountSettingsPage'
 
   static propTypes = {}
 
@@ -177,7 +176,7 @@ class TheComponent extends Component {
                 }
                 title={'Account'}
               />
-              <Tabs uncontrolled className='mt-0'>
+              <Tabs uncontrolled className='mt-0' history={this.props.history}>
                 <TabItem tabLabel='General'>
                   <div className='mt-4'>
                     <h5 className='mb-5'>General Settings</h5>
@@ -462,4 +461,4 @@ class TheComponent extends Component {
   }
 }
 
-export default ConfigProvider(TheComponent)
+export default withRouter(ConfigProvider(AccountSettingsPage))

@@ -6,17 +6,14 @@ import data from 'common/data/base/_data'
 import FeatureRow from './FeatureRow'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
+import { withRouter } from 'react-router-dom'
 
 const featureNameWidth = 300
 
-class CompareEnvironments extends Component {
-  static displayName = 'CompareEnvironments'
+class CompareFeatures extends Component {
+  static displayName = 'CompareFeatures'
 
   static propTypes = {}
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props) {
     super(props)
@@ -141,16 +138,15 @@ class CompareEnvironments extends Component {
                             permission={permission}
                             environmentId={data.api_key}
                             projectId={this.props.projectId}
-                            history={this.context.router.history}
+                            history={this.props.history}
                             index={i}
                             canDelete={permission}
                             toggleFlag={toggleFlag}
                             removeFlag={removeFlag}
                             projectFlag={this.state.flag}
                             onCloseEditModal={() => {
-                              this.context.router.history.replace({
-                                pathname:
-                                  this.context.router.history.location.pathname,
+                              this.props.history.replace({
+                                pathname: this.props.history.location.pathname,
                                 search: '?tab=feature-values',
                               })
                             }}
@@ -202,4 +198,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = ConfigProvider(CompareEnvironments)
+module.exports = withRouter(ConfigProvider(CompareFeatures))

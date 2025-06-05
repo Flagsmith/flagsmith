@@ -360,6 +360,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+  getOrganisationIdFromUrl(match: any) {
+    const organisationId = match?.params?.organisationId
+    return organisationId ? parseInt(organisationId) : null
+  },
+
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -378,7 +383,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return planNames.free
   },
-
   getPlanPermission: (plan: string, feature: PaidFeature) => {
     const planName = Utils.getPlanName(plan)
     if (!plan || planName === planNames.free) {
@@ -417,6 +421,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
+  },
+  getProjectIdFromUrl(match: any) {
+    const projectId = match?.params?.projectId
+    return projectId ? parseInt(projectId) : null
   },
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
@@ -677,6 +685,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase(),
+
+  toSelectedValue: (
+    value: string,
+    options: { label: string; value: string }[],
+    defaultValue?: string,
+  ) => {
+    return options?.find((option) => option.value === value) ?? defaultValue
+  },
 
   validateMetadataType(type: string, value: any) {
     switch (type) {
