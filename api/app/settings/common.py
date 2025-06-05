@@ -414,8 +414,6 @@ if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
     )
     MIDDLEWARE.append("core.middleware.admin.AdminWhitelistMiddleware")
 
-ROOT_URLCONF = "app.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -1152,6 +1150,8 @@ TASK_BACKOFF_DEFAULT_DELAY_SECONDS = env.int(
     "TASK_BACKOFF_DEFAULT_DELAY_SECONDS",
     default=5,
 )
+
+ROOT_URLCONF = "app.urls.common" if TASK_PROCESSOR_MODE else "app.urls.api"
 
 # Webhook settings
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
