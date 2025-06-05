@@ -1,7 +1,8 @@
 import abc
 import typing
 
-from users.models import FFAdminUser
+if typing.TYPE_CHECKING:
+    from users.models import FFAdminUser
 
 
 class LeadTracker(abc.ABC):
@@ -10,11 +11,11 @@ class LeadTracker(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def should_track(user: FFAdminUser) -> bool:
+    def should_track(user: "FFAdminUser") -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_lead(self, user: FFAdminUser):  # type: ignore[no-untyped-def]
+    def create_lead(self, user: "FFAdminUser"):  # type: ignore[no-untyped-def]
         pass
 
     @abc.abstractmethod

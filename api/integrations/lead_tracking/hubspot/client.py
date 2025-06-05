@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import hubspot  # type: ignore[import-untyped]
 import requests
@@ -20,7 +20,9 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
-from users.models import FFAdminUser
+
+if TYPE_CHECKING:
+    from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ class HubspotClient:
         self.access_token = settings.HUBSPOT_ACCESS_TOKEN
         self.client = client or hubspot.Client.create(access_token=self.access_token)
 
-    def get_contact(self, user: FFAdminUser) -> None | dict[str, Any]:
+    def get_contact(self, user: "FFAdminUser") -> None | dict[str, Any]:
         public_object_id = BatchReadInputSimplePublicObjectId(
             id_property="email",
             inputs=[{"id": user.email}],
@@ -54,7 +56,7 @@ class HubspotClient:
         return results[0]  # type: ignore[no-any-return]
 
     def create_lead_form(
-        self, user: FFAdminUser, hubspot_cookie: str
+        self, user: "FFAdminUser", hubspot_cookie: str
     ) -> dict[str, Any]:
         logger.info(
             f"Creating Hubspot lead form for user {user.email} with hubspot cookie {hubspot_cookie}"
@@ -104,7 +106,7 @@ class HubspotClient:
         return response.json()  # type: ignore[no-any-return]
 
     def create_contact(
-        self, user: FFAdminUser, hubspot_company_id: str
+        self, user: "FFAdminUser", hubspot_company_id: str
     ) -> dict[str, Any]:
         properties = {
             "email": user.email,

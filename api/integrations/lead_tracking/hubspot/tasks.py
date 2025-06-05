@@ -6,16 +6,15 @@ from task_processor.decorators import (
 
 @register_task_handler()
 def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
+    print(settings.ENABLE_HUBSPOT_LEAD_TRACKING)
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
     from organisations.models import Organisation
     from users.models import FFAdminUser
-
     from .lead_tracker import HubspotLeadTracker
 
     user = FFAdminUser.objects.get(id=user_id)
-
     if not HubspotLeadTracker.should_track(user):
         return
 
@@ -28,6 +27,22 @@ def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # ty
         )
 
     hubspot_lead_tracker.create_lead(**create_lead_kwargs)
+
+
+@register_task_handler()
+def track_hubspot_user_contact(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
+    assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
+
+    from users.models import FFAdminUser
+    from .lead_tracker import HubspotLeadTracker
+
+    user = FFAdminUser.objects.get(id=user_id)
+    if not HubspotLeadTracker.should_track(user):
+        return
+
+    hubspot_lead_tracker = HubspotLeadTracker()
+
+    hubspot_lead_tracker.create_user_hubspot_contact(user)
 
 
 @register_task_handler()

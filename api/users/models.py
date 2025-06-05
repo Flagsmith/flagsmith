@@ -21,6 +21,7 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 )
 
 from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_user_contact,
     track_hubspot_lead_without_organisation,
 )
 from organisations.models import (
@@ -146,6 +147,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def schedule_hubspot_tracking(self) -> None:
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_user_contact.delay(args=(self.id,))
             track_hubspot_lead_without_organisation.delay(
                 kwargs={"user_id": self.id},
                 delay_until=timezone.now()

@@ -44,16 +44,30 @@ class HubspotLeadTracker(LeadTracker):
 
         return True
 
+    def create_user_hubspot_contact(self, user: FFAdminUser) -> None:
+        contact = self.client.get_contact(user)
+
+        if contact:
+            hubspot_id = contact["id"]
+        else:
+            response = self.client.create_contact(user)
+            hubspot_id = response["id"]
+
+        HubspotLead.objects.update_or_create(
+            user=user, defaults={"hubspot_id": hubspot_id}
+        )
+        if tracker := HubspotTracker.objects.filter(user=user).first():
+            self.client.create_lead_form(
+                user=user, hubspot_cookie=tracker.hubspot_cookie
+            )
+
     def create_lead(self, user: FFAdminUser, organisation: Organisation = None) -> None:  # type: ignore[assignment]
         contact_data = self.client.get_contact(user)
-
         if contact_data:
             # The user is already present in the system as a lead
             # for an existing organisation, so return early.
             return
-
         hubspot_id = self.get_or_create_organisation_hubspot_id(user, organisation)
-
         response = self.client.create_contact(user, hubspot_id)
 
         HubspotLead.objects.update_or_create(
@@ -68,11 +82,13 @@ class HubspotLeadTracker(LeadTracker):
     def get_or_create_organisation_hubspot_id(
         self,
         user: FFAdminUser,
-        organisation: Organisation = None,  # type: ignore[assignment]
-    ) -> str:
+        organisation: Organisation | None = None,  # type: ignore[assignment]
+    ) -> str | None:
         """
         Return the Hubspot API's id for an organisation.
         """
+        if not organisation:
+            return None
         if organisation and getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
@@ -95,8 +111,6 @@ class HubspotLeadTracker(LeadTracker):
                 organisation=organisation,
                 hubspot_id=response["id"],
             )
-        else:
-            response = self._get_or_create_company_by_domain(domain)  # type: ignore[arg-type]
 
         return response["id"]  # type: ignore[no-any-return]
 
