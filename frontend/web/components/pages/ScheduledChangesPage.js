@@ -5,17 +5,13 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import PlanBasedBanner, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props, context) {
     super(props, context)
@@ -150,4 +146,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(ChangeRequestsPage)
+module.exports = withRouter(ConfigProvider(ChangeRequestsPage))

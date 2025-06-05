@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { useGetConversionEventsQuery } from 'common/services/useConversionEvent'
 import useSearchThrottle from 'common/useSearchThrottle'
 import { ConversionEvent } from 'common/types/responses'

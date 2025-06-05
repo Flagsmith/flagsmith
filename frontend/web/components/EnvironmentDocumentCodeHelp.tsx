@@ -66,7 +66,7 @@ const EnvironmentDocumentCodeHelp: FC<EnvironmentDocumentCodeHelpType> = ({
             </a>{' '}
             and allowing offline capabilities.
           </div>
-          <Tabs uncontrolled theme='pill'>
+          <Tabs uncontrolled theme='pill' history={history}>
             <TabItem tabLabel={'Client-side'}>
               <div className='mt-3'>
                 <InfoMessage

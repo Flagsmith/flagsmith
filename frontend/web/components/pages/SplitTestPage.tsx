@@ -1,16 +1,10 @@
 import React, { FC, useState } from 'react' // we need this to make JSX compile
 import ConfigProvider from 'common/providers/ConfigProvider'
-import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
-import { Project, SplitTestResult } from 'common/types/responses'
-import { RouterChildContext } from 'react-router'
-import AuditLog from 'components/AuditLog'
-import ProjectProvider from 'common/providers/ProjectProvider'
+import { SplitTestResult } from 'common/types/responses'
+import { useRouteMatch } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
-import Tag from 'components/tags/Tag'
-import Select from 'react-select'
 import ConversionEventSelect from 'components/ConversionEventSelect'
-import { useGetConversionEventsQuery } from 'common/services/useConversionEvent'
 import InfoMessage from 'components/InfoMessage'
 import PanelSearch from 'components/PanelSearch'
 import ErrorMessage from 'components/ErrorMessage'
@@ -18,26 +12,21 @@ import useSearchThrottle from 'common/useSearchThrottle'
 import { useGetSplitTestQuery } from 'common/services/useSplitTest'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronForward } from 'ionicons/icons'
-import Format from 'common/utils/format'
 import Confidence from 'components/Confidence'
 import FeatureValue from 'components/FeatureValue'
 
-type AuditLogType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
 
 const pageSize = 10
 const widths = [200, 200, 150]
 const innerWidths = [200, 150, 150]
-const SplitTestPage: FC<AuditLogType> = (props) => {
-  const projectId = props.match.params.projectId
-  const environmentId = props.match.params.environmentId
+
+const SplitTestPage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
+  const environmentId = match?.params?.environmentId
   const { search, searchInput, setSearchInput } = useSearchThrottle()
   const [conversion_event_type_id, setConversionEvent] = useState<
     number | null

@@ -18,13 +18,17 @@ const EnvironmentSelect = class extends Component {
               <ul id='env-list' className='project-list list-unstyled'>
                 {project &&
                   project.environments &&
-                  project.environments.map((environment) =>
-                    this.props.renderRow(environment, () => {
-                      if (this.props.environmentId !== environment.api_key) {
-                        this.props.onChange &&
-                          this.props.onChange(environment.api_key)
-                      }
-                    }),
+                  project.environments.map((environment, index) =>
+                    this.props.renderRow(
+                      environment,
+                      () => {
+                        if (this.props.environmentId !== environment.api_key) {
+                          this.props.onChange &&
+                            this.props.onChange(environment.api_key)
+                        }
+                      },
+                      index,
+                    ),
                   )}
               </ul>
             )}

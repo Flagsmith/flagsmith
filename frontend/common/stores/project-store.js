@@ -259,10 +259,10 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
 
   switch (action.actionType) {
     case Actions.MIGRATE_PROJECT:
-      controller.migrateProject(action.projectId)
+      controller.migrateProject(parseInt(action.projectId))
       break
     case Actions.GET_PROJECT:
-      controller.getProject(action.projectId)
+      controller.getProject(parseInt(action.projectId))
       break
     case Actions.CREATE_ENV:
       controller.createEnv(action)

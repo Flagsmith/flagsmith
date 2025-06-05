@@ -7,13 +7,12 @@ import Utils from 'common/utils/utils'
 import Icon from 'components/Icon'
 import PanelSearch from 'components/PanelSearch'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
-type OrganisationsPageType = {
-  router: RouterChildContext['router']
-}
 
-const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
+const OrganisationsPage: FC = () => {
+  const history = useHistory()
+
   const handleCreateOrganisationClick = useCallback(() => {
     openModal('Create Organisation', <CreateOrganisationModal />, 'side-modal')
   }, [])
@@ -21,7 +20,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
   const onSave = (id: number) => {
     AppActions.selectOrganisation(id)
     AppActions.getOrganisation(id)
-    router.history.push(Utils.getOrganisationHomePage(id))
+    history.push(Utils.getOrganisationHomePage(id))
   }
   return (
     <AccountProvider onSave={onSave}>
@@ -80,7 +79,7 @@ const OrganisationsPage: FC<OrganisationsPageType> = ({ router }) => {
                       onClick={() => {
                         AppActions.selectOrganisation(id)
                         AppActions.getOrganisation(id)
-                        router.history.push(Utils.getOrganisationHomePage())
+                        history.push(Utils.getOrganisationHomePage())
                       }}
                       className='clickable col-md-6 col-xl-3'
                       style={{ minWidth: '190px' }}
