@@ -705,5 +705,18 @@ export type Req = {
     projectId: number
     pipelineId: number
   }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    // name?: string
+    featureId: number
+    // description?: string
+    // published_at?: string
+    // published_by?: number
+  }
+  publishReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
   // END OF TYPES
 }

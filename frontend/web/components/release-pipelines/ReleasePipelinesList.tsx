@@ -1,10 +1,15 @@
-import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipelines'
+import {
+  useDeleteReleasePipelineMutation,
+  usePublishReleasePipelineMutation,
+} from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
 import Button from 'components/base/forms/Button'
-import Icon from 'components/Icon'
+import Icon, { IconName } from 'components/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
 import PanelSearch from 'components/PanelSearch'
+import Tag from 'components/tags/Tag'
+import { useEffect } from 'react'
 
 const NoReleasePipelines = ({
   projectId,
@@ -57,8 +62,53 @@ const ReleasePipelinesList = ({
   projectId,
   router,
 }: ReleasePipelinesListProps) => {
-  const [deleteReleasePipeline] = useDeleteReleasePipelineMutation()
+  const [
+    deleteReleasePipeline,
+    {
+      error: deleteReleasePipelineError,
+      isError: isDeletingError,
+      isLoading: isDeleting,
+      isSuccess: isDeletingSuccess,
+    },
+  ] = useDeleteReleasePipelineMutation()
+  const [
+    publishReleasePipeline,
+    {
+      error: publishReleasePipelineError,
+      isError: isPublishingError,
+      isLoading: isPublishing,
+      isSuccess: isPublishingSuccess,
+    },
+  ] = usePublishReleasePipelineMutation()
   const pipelinesList = data?.results
+
+  useEffect(() => {
+    if (isPublishingSuccess) {
+      return toast('Release pipeline published successfully')
+    }
+
+    if (isPublishingError) {
+      return toast(
+        publishReleasePipelineError?.data?.detail ??
+          'Something went wrong while publishing the release pipeline',
+        'danger',
+      )
+    }
+  }, [isPublishingSuccess, isPublishingError, publishReleasePipelineError])
+
+  useEffect(() => {
+    if (isDeletingSuccess) {
+      return toast('Release pipeline deleted successfully')
+    }
+
+    if (isDeletingError) {
+      return toast(
+        deleteReleasePipelineError?.data?.detail ??
+          'Something went wrong while deleting the release pipeline',
+        'danger',
+      )
+    }
+  }, [isDeletingSuccess, isDeletingError, deleteReleasePipelineError])
 
   if (isLoading) {
     return (
@@ -88,7 +138,14 @@ const ReleasePipelinesList = ({
       nextPage={() => onPageChange(page + 1)}
       prevPage={() => onPageChange(page - 1)}
       goToPage={(page: number) => onPageChange(page)}
-      renderRow={({ flags_count, id, name, stages_count }: ReleasePipeline) => {
+      renderRow={({
+        flags_count,
+        id,
+        name,
+        published_at,
+        stages_count,
+      }: ReleasePipeline) => {
+        const isPublished = !!published_at
         return (
           <Row className='list-item'>
             <Row
@@ -100,14 +157,21 @@ const ReleasePipelinesList = ({
               }}
             >
               <span className='fw-bold'>{name}</span>
+              <div className='ml-3'>
+                <Tag
+                  className='chip--xs'
+                  tag={{
+                    color: isPublished ? '#6837FC' : '#9DA4AE',
+                    label: isPublished ? 'Published' : 'Draft',
+                  }}
+                />
+              </div>
             </Row>
             <Row className='gap-5 p-3'>
               <div className='text-center'>
-                {/* TODO: Add stages count */}
                 <div className='fw-bold'>{stages_count ?? 0}</div>
                 <div>Stages</div>
               </div>
-              {/* TODO: Add flags count */}
               <div className='text-center'>
                 <div className='fw-bold'>{flags_count ?? 0}</div>
                 <div>Flags</div>
@@ -115,6 +179,7 @@ const ReleasePipelinesList = ({
               <DropdownMenu
                 items={[
                   {
+                    disabled: isDeleting,
                     icon: 'trash-2',
                     label: 'Remove Release Pipeline',
                     onClick: () => {
@@ -124,6 +189,21 @@ const ReleasePipelinesList = ({
                       })
                     },
                   },
+                  ...(!isPublished
+                    ? [
+                        {
+                          disabled: isPublishing,
+                          icon: 'checkmark-circle' as IconName,
+                          label: 'Publish Release Pipeline',
+                          onClick: () => {
+                            publishReleasePipeline({
+                              pipelineId: id,
+                              projectId: Number(projectId),
+                            })
+                          },
+                        },
+                      ]
+                    : []),
                 ]}
               />
             </Row>

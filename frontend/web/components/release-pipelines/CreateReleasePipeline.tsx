@@ -63,6 +63,7 @@ function CreateReleasePipeline({
 
   const [pipelineData, setPipelineData] = useState<DraftPipelineType>({
     description: '',
+    description: '',
     name: '',
     project: Number(projectId),
     status: PipelineStatus.DRAFT,
