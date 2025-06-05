@@ -42,7 +42,7 @@ const FlagActionDetail = ({
   if (actionType === StageActionType.TOGGLE_FEATURE) {
     return (
       <span>
-        Disable flag for <b>everyone</b>
+        {actionBody.enabled ? 'Enable' : 'Disable'} flag for <b>everyone</b>
       </span>
     )
   }
