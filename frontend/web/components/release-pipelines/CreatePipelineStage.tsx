@@ -17,11 +17,14 @@ import {
 } from './constants'
 import { PipelineStage, StageAction } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
+import moment from 'moment'
 
 type DraftStageType = Omit<
   PipelineStage,
   'id' | 'pipeline' | 'project' | 'features'
 >
+
+type TimeUnit = 'days' | 'hours' | 'minutes'
 
 const CreatePipelineStage = ({
   onChange,
@@ -38,7 +41,7 @@ const CreatePipelineStage = ({
 }) => {
   const [searchInput, setSearchInput] = useState('')
   const [amountOfTime, setAmountOfTime] = useState(1)
-  const [selectedTimeUnit, setSelectedTimeUnit] = useState('day')
+  const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnit>('days')
   const [selectedAction, setSelectedAction] = useState<{
     label: string
     value: string
@@ -92,6 +95,18 @@ const CreatePipelineStage = ({
     onChange({ ...stageData, [fieldName]: value })
   }
 
+  function formatDurationToHHMMSS(duration: moment.Duration) {
+    const totalSeconds = duration.asSeconds()
+
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = Math.floor(totalSeconds % 60)
+
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(
+      seconds,
+    ).padStart(2, '0')}`
+  }
+
   useEffect(() => {
     if (environmentOptions?.length && stageData.environment === -1) {
       handleOnChange('environment', environmentOptions?.[0]?.value)
@@ -142,10 +157,12 @@ const CreatePipelineStage = ({
     if (
       selectedTrigger?.value === StageTriggerType.WAIT_FOR &&
       amountOfTime >= 1 &&
-      !!selectedTimeUnit.length
+      !!selectedTimeUnit
     ) {
+      const duration = moment.duration(amountOfTime, selectedTimeUnit)
+      const formatted = formatDurationToHHMMSS(duration)
       handleOnChange('trigger', {
-        trigger_body: `${amountOfTime} ${selectedTimeUnit}`,
+        trigger_body: { wait_for: formatted },
         trigger_type: selectedTrigger?.value,
       } as StageTrigger)
     }
@@ -237,7 +254,7 @@ const CreatePipelineStage = ({
               value={Utils.toSelectedValue(selectedTimeUnit, TIME_UNIT_OPTIONS)}
               options={TIME_UNIT_OPTIONS}
               onChange={(option: { value: string; label: string }) =>
-                setSelectedTimeUnit(option.value)
+                setSelectedTimeUnit(option.value as TimeUnit)
               }
             />
           </div>
