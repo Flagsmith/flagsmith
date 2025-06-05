@@ -48,19 +48,6 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
       },
     )
 
-  const { data: stagesData, isLoading: isLoadingStages } =
-    useGetPipelineStagesQuery(
-      {
-        page: 1,
-        page_size: 100,
-        pipelineId: Number(id),
-        projectId: Number(projectId),
-      },
-      {
-        skip: !id || !projectId,
-      },
-    )
-
   const { data: environmentsData, isLoading: isLoadingEnvironments } =
     useGetEnvironmentsQuery(
       {
@@ -86,7 +73,7 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
     </div>
   )
 
-  if (isLoadingPipeline || isLoadingStages || isLoadingEnvironments) {
+  if (isLoadingPipeline || isLoadingEnvironments) {
     return (
       <HeaderWrapper>
         <div className='text-center'>
@@ -99,14 +86,14 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
   return (
     <HeaderWrapper>
       <PageTitle title={pipelineData?.name ?? ''} />
-      {stagesData?.results?.length === 0 && (
+      {pipelineData?.stages?.length === 0 && (
         <Row>
           <span>This release pipeline has no stages.</span>
         </Row>
       )}
       <div className='px-2 pb-4 overflow-auto'>
         <Row className='no-wrap align-items-start'>
-          {stagesData?.results?.map((stageData) => (
+          {pipelineData?.stages?.map((stageData) => (
             <StageInfo
               key={stageData?.id}
               stageData={stageData}
@@ -114,7 +101,7 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
               projectId={Number(projectId)}
             />
           ))}
-          {!!stagesData?.results?.length && <LaunchedCard />}
+          {!!pipelineData?.stages?.length && <LaunchedCard />}
         </Row>
       </div>
     </HeaderWrapper>
