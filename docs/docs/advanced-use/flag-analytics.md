@@ -33,6 +33,13 @@ Flag analytics are disabled by default in our SDKs. You need to explicitly enabl
 client. Please refer to the corresponding SDK documentation for more details. For the Javascript family SDKs please
 refer to [Initialisation options](https://docs.flagsmith.com/clients/javascript#initialisation-options).
 
+:::info
+
+If you are self-hosting Flagsmith, you'll also need to ensure that the `USE_POSTGRES_FOR_ANALYTICS` is set to `True` 
+in your Flagsmith API containers.
+
+:::
+
 ## How does it work?
 
 Every time a flag is evaluated within the SDK (generally a call to a method like
