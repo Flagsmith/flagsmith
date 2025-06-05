@@ -18,9 +18,8 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
-  StageTrigger,
   PipelineStatus,
-  StageActionType,
+  PipelineStage,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -72,19 +71,12 @@ export type RegisterRequest = {
   marketing_consent_given?: boolean
 }
 
-export interface StageActionRequest {
-  action_type: StageActionType
-  action_body: { enabled: boolean; segment_id?: number }
-}
-
-export type PipelineStageRequest = {
-  name: string
+export type CreatePipelineStage = Omit<
+  PipelineStage,
+  'id' | 'pipeline' | 'features'
+> & {
   project: number
-  environment: number
   pipeline: number
-  order: number
-  trigger: StageTrigger
-  actions: StageActionRequest[]
 }
 
 export type Req = {
@@ -708,7 +700,7 @@ export type Req = {
     pipelineId: number
     stageId: number
   }
-  createPipelineStage: PipelineStageRequest
+  createPipelineStage: CreatePipelineStage
   deleteReleasePipeline: {
     projectId: number
     pipelineId: number

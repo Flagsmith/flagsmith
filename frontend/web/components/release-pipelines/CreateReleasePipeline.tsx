@@ -25,7 +25,7 @@ type CreateReleasePipelineType = {
 
 type DraftPipelineType = Omit<
   ReleasePipeline,
-  'id' | 'stages_count' | 'flags_count'
+  'id' | 'stages_count' | 'flags_count' | 'published_at' | 'published_by'
 >
 
 const blankStage: DraftStageType = {
@@ -62,6 +62,7 @@ function CreateReleasePipeline({
   ] = useCreatePipelineStagesMutation()
 
   const [pipelineData, setPipelineData] = useState<DraftPipelineType>({
+    description: '',
     name: '',
     project: Number(projectId),
     status: PipelineStatus.DRAFT,

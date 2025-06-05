@@ -15,10 +15,13 @@ import {
   TIME_UNIT_OPTIONS,
   TRIGGER_OPTIONS,
 } from './constants'
-import { StageActionRequest, PipelineStageRequest } from 'common/types/requests'
+import { PipelineStage, StageAction } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
 
-type DraftStageType = Omit<PipelineStageRequest, 'id' | 'pipeline' | 'project'>
+type DraftStageType = Omit<
+  PipelineStage,
+  'id' | 'pipeline' | 'project' | 'features'
+>
 
 const CreatePipelineStage = ({
   onChange,
@@ -84,7 +87,7 @@ const CreatePipelineStage = ({
 
   const handleOnChange = (
     fieldName: keyof DraftStageType,
-    value: string | number | StageTrigger | StageActionRequest[],
+    value: string | number | StageTrigger | Omit<StageAction, 'id'>[],
   ) => {
     onChange({ ...stageData, [fieldName]: value })
   }
@@ -129,7 +132,7 @@ const CreatePipelineStage = ({
         return action
       })
 
-      handleOnChange('actions', actions as StageActionRequest[])
+      handleOnChange('actions', actions as StageAction[])
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
