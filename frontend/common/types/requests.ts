@@ -19,6 +19,8 @@ import {
   Webhook,
   IdentityTrait,
   Onboarding,
+  PipelineStatus,
+  PipelineStage,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -69,6 +71,15 @@ export type RegisterRequest = {
   organisation_name?: string
   marketing_consent_given?: boolean
 }
+
+export type CreatePipelineStage = Omit<
+  PipelineStage,
+  'id' | 'pipeline' | 'features'
+> & {
+  project: number
+  pipeline: number
+}
+
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -676,5 +687,35 @@ export type Req = {
   }
   getProfile: {}
   updateOnboarding: Partial<Onboarding>
+  getReleasePipelines: PagedRequest<{ projectId: number }>
+  getReleasePipeline: { projectId: number; pipelineId: number }
+  createReleasePipeline: {
+    projectId: number
+    name: string
+    status: PipelineStatus
+  }
+  getPipelineStages: PagedRequest<{
+    projectId: number
+    pipelineId: number
+  }>
+  getPipelineStage: {
+    projectId: number
+    pipelineId: number
+    stageId: number
+  }
+  createPipelineStage: CreatePipelineStage
+  deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
   // END OF TYPES
 }
