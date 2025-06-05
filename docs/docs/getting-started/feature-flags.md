@@ -1,6 +1,6 @@
 ---
 title: What are Feature Flags
-sidebar_position: 2
+sidebar_position: 3
 sidebar_label: What are Feature Flags?
 ---
 

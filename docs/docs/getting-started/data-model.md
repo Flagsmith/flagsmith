@@ -1,6 +1,6 @@
 ---
 title: Data Model
-sidebar_position: 3
+sidebar_position: 4
 sidebar_label: Data Model
 ---
 
