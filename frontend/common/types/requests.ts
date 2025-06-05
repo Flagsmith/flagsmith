@@ -708,11 +708,7 @@ export type Req = {
   addFeatureToReleasePipeline: {
     projectId: number
     pipelineId: number
-    // name?: string
     featureId: number
-    // description?: string
-    // published_at?: string
-    // published_by?: number
   }
   publishReleasePipeline: {
     projectId: number
