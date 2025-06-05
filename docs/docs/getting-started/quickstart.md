@@ -19,7 +19,7 @@ Let's get up and running in 5 minutes. We're going to run through the following 
 :::tip
 
 To get up and running quickly, we're going to use the hosted service at flagsmith.com, but you can run the
-[platform locally via Docker](/deployment/hosting/docker.md).
+[platform locally via Docker](../deployment/hosting/docker.md).
 
 :::
 
@@ -160,12 +160,4 @@ dashboard and enable the flag:
 
 Return to your browser, refresh the page, and the button will re-appear.
 
-## Finishing Up
 
-This was a pretty quick demo, but it covers the core concepts involved in integrating Flagsmith into your application.
-From here, some areas of the documentation you might want to check out are:
-
-- A deeper overview of the application - [Features](basic-features/managing-features.md),
-  [Identities](basic-features/managing-identities.md) and [Segments](basic-features/segments.md).
-- More details about our [API and SDKs](clients/rest.md).
-- How you can [run Flagsmith yourself](/deployment) or use our [Hosted API](https://flagsmith.com/).
