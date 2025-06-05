@@ -2,31 +2,28 @@ import React, { FC, useEffect, useState } from 'react' // we need this to make J
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
-import { RouterChildContext } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
 import { featureDescriptions } from 'components/PlanBasedAccess'
 
-type AuditLogType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
 
-const AuditLogPage: FC<AuditLogType> = (props) => {
-  const projectId = props.match.params.projectId
+const AuditLogPage: FC = () => {
+  const history = useHistory()
+  const match = useRouteMatch<RouteParams>()
+  const projectId = match?.params?.projectId
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
   useEffect(() => {
     const currentParams = Utils.fromParam()
     if (currentParams.env !== environment) {
-      props.router.history.replace(
+      history.replace(
         `${document.location.pathname}?${Utils.toParam({
           env: environment,
           page: currentParams.page,
@@ -34,7 +31,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
         })}`,
       )
     }
-  }, [environment])
+  }, [environment, history])
   return (
     <div className='app-container container'>
       {Utils.getPlansPermission('AUDIT') && (
@@ -50,7 +47,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                 <FormGroup>
                   <AuditLog
                     onSearchChange={(search: string) => {
-                      props.router.history.replace(
+                      history.replace(
                         `${document.location.pathname}?${Utils.toParam({
                           env: environment,
                           page: Utils.fromParam().page,
@@ -59,7 +56,7 @@ const AuditLogPage: FC<AuditLogType> = (props) => {
                       )
                     }}
                     onPageChange={(page: number) => {
-                      props.router.history.replace(
+                      history.replace(
                         `${document.location.pathname}?${Utils.toParam({
                           env: environment,
                           page,

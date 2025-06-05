@@ -1,6 +1,5 @@
-// TODO: migrate to useRouter with next version
 import React, { FC, ReactNode, useEffect, useState } from 'react' // we need this to make JSX compile
-import { RouterChildContext } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import { sortBy } from 'lodash'
 
 import Constants from 'common/constants'
@@ -16,7 +15,7 @@ import Button from 'components/base/forms/Button'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
-import ConfigProvider from 'common/providers/ConfigProvider'
+
 import Utils from 'common/utils/utils'
 import ProjectStore from 'common/stores/project-store'
 import PageTitle from 'components/PageTitle'
@@ -24,22 +23,15 @@ import Switch from 'components/Switch'
 import { setModalTitle } from 'components/modals/base/ModalDefault'
 import classNames from 'classnames'
 import InfoMessage from 'components/InfoMessage'
-import { withRouter } from 'react-router-dom'
 
 import CodeHelp from 'components/CodeHelp'
-import { SegmentRow } from 'components/segments/SegmentRow/SegmentRow'
-type SegmentsPageType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
-}
+import SegmentRow from 'components/segments/SegmentRow/SegmentRow'
 
-const SegmentsPage: FC<SegmentsPageType> = (props) => {
-  const { projectId } = props.match.params
+const SegmentsPage: FC = () => {
+  const history = useHistory()
+  const route = useRouteMatch<{ environmentId: string; projectId: string }>()
+
+  const { projectId } = route.params
   const environmentId = (
     ProjectStore.getEnvironment() as unknown as Environment | undefined
   )?.api_key
@@ -79,18 +71,18 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   useEffect(() => {
     if (error) {
       // Kick user back out to projects
-      props.router.history.replace(Utils.getOrganisationHomePage())
+      history.replace(Utils.getOrganisationHomePage())
     }
-  }, [error, props.router.history])
+  }, [error, history])
 
   useEffect(() => {
-    props.router.history.replace(
+    history.replace(
       `${document.location.pathname}?${Utils.toParam({
         ...Utils.fromParam(),
         featureSpecific: showFeatureSpecific,
       })}`,
     )
-  }, [showFeatureSpecific])
+  }, [showFeatureSpecific, history])
 
   const newSegment = () => {
     openModal(
@@ -136,7 +128,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
       />,
       'side-modal create-segment-modal',
       () => {
-        props.router.history.push(
+        history.push(
           `${document.location.pathname}?${Utils.toParam({
             ...Utils.fromParam(),
             id: undefined,
@@ -251,7 +243,6 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
                         segment={segment}
                         index={index}
                         projectId={projectId}
-                        router={props.router}
                         removeSegment={removeSegment}
                       />,
                     )
@@ -286,7 +277,7 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
         <FormGroup>
           <CodeHelp
             title='Managing user traits and segments'
-            snippets={Constants.codeHelp.USER_TRAITS(environmentId!)}
+            snippets={Constants.codeHelp.USER_TRAITS(environmentId || '')}
           />
         </FormGroup>
       </div>
@@ -294,4 +285,4 @@ const SegmentsPage: FC<SegmentsPageType> = (props) => {
   )
 }
 
-module.exports = ConfigProvider(withRouter(SegmentsPage as any))
+export default SegmentsPage
