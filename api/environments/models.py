@@ -410,27 +410,9 @@ class Environment(
                 identity_id__isnull=True,
                 feature_segment_id__isnull=False,
             ),
-        )
+        ).values_list("id", flat=True)
 
-        fs_base_query = (
-            feature_states_qs.values("feature_id", "feature_segment_id")
-            .annotate(latest_id=Max("id"))
-            .values_list("latest_id", flat=True)
-        )
-
-        if self.is_workflow_enabled:
-            from features.workflows.core.models import ChangeRequest
-
-            fs_base_query = fs_base_query.annotate(
-                has_uncommitted_cr=Exists(
-                    ChangeRequest.objects.filter(
-                        pk=OuterRef("change_request_id"),
-                        committed_at__isnull=True,
-                    )
-                )
-            ).filter(has_uncommitted_cr=False)
-
-        return list(fs_base_query)
+        return list(feature_states_qs)
 
     def get_segment_metrics_queryset(self) -> QuerySet[FeatureState]:
         ids = self._get_latest_segment_state_ids_subquery()

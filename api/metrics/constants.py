@@ -39,7 +39,6 @@ TOTAL_SCHEDULED_CHANGES: MetricDefinition = {
     "name": EnvMetricsName.TOTAL_SCHEDULED_CHANGES,
     "description": "Scheduled changes",
     "entity": EnvMetricsEntities.WORKFLOWS,
-    "disabled": False,
     "rank": 6,
 }
 
