@@ -19,7 +19,7 @@ Integrating with _Evaluation Tracking_ is currently only possible via our
 
 :::
 
-## Integration Setup
+## Change Tracking Setup
 
 1. **In Sentry**
    1. Visit the
@@ -33,7 +33,7 @@ Integrating with _Evaluation Tracking_ is currently only possible via our
    1. Go to Integrations > Sentry > Add Integration.
    1. Choose the Environment from which Sentry will receive feature flag change events.
    1. Paste the URL copied above into "Sentry webhook URL".
-   1. Copy the secret from "Webhook secret".
+   1. Insert a secret (10-60 characters) and copy it.
    1. Click "Save". ✅
 1. **Back to Sentry**
    1. Paste the secret copied above.
@@ -41,3 +41,69 @@ Integrating with _Evaluation Tracking_ is currently only possible via our
 
 Flag change events will now be sent to Sentry, and should be displayed in issue details. For more information, visit
 Sentry's [Issue Details page documentation](https://docs.sentry.io/product/issues/issue-details/#feature-flags).
+
+## Evaluation Tracking example
+
+In order to add **evaluated** feature flags to a Sentry issue when it occurs, events must be sent via Sentry SDK, i.e.
+the same SDK used to send application errors to Sentry.
+
+Flagsmith relies on the OpenFeature SDK and its integration with Sentry.
+
+### Python
+
+Sentry offers [good documentation](https://docs.sentry.io/platforms/python/integrations/openfeature/) on how to
+integrate the Sentry SDK with the OpenFeature SDK. We'll extend it a bit adding an example of using it with Flagsmith.
+
+You'll need to install the following libraries:
+
+```sh
+pip install "sentry-sdk[openfeature]"
+pip install openfeature-provider-flagsmith
+```
+
+The following snippet is a micro-application that reports feature flags to Sentry when an exception is raised.
+
+```python
+import flagsmith
+import sentry_sdk
+from openfeature import api as of_api
+from openfeature_flagsmith.provider import FlagsmithProvider
+from sentry_sdk.integrations.openfeature import OpenFeatureIntegration
+
+app = flask.Flask(__name__)
+
+flagsmith_client = flagsmith.Flagsmith(
+    environment_key='<public environment key>',
+)
+
+feature_flag_provider = FlagsmithProvider(
+    client=flagsmith_client,
+)
+
+of_api.set_provider(feature_flag_provider)
+
+sentry_sdk.init(
+    dsn="<Sentry DSN>",
+    send_default_pii=True,
+    integrations=[
+        OpenFeatureIntegration(),
+    ]
+)
+
+def apply_discount(price):
+    of_client = of_api.get_client()
+    is_discount_enabled = of_client.get_boolean_value('discount_enabled', False)
+    if is_discount_enabled:
+        discount = price / 0  # ZeroDivisionError
+    else:
+        discount = None
+    return price * discount  # TypeError
+```
+
+You can learn more about feature flags and Sentry issues in their
+[Issue Details documentation](https://docs.sentry.io/product/issues/issue-details/#feature-flags).
+
+## JavaScript
+
+You'll need to manually call `Sentry.FeatureFlagsIntegration.addFeatureFlag` when evaluating a feature flag. Learn more
+in the [Sentry documentation](https://docs.sentry.io/platforms/javascript/configuration/integrations/featureflags/).
