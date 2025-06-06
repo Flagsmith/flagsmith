@@ -1134,6 +1134,16 @@ def test_environment_metric_query_helpers_match_expected_counts(
         version += 1
 
     for i in range(min(feature_enabled_count, total_features)):
+        # Create old feature_state versions that should not be counted
+        FeatureState.objects.create(
+            feature=features[i],
+            environment=env,
+            identity=None,
+            enabled=True,
+            version=version,
+        )
+        version += 1
+
         FeatureState.objects.update_or_create(
             feature=features[i],
             environment=env,
