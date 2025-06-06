@@ -23,7 +23,7 @@ def post_change_tracking_update_to_sentry(
     Spec: https://github.com/getsentry/sentry/blob/master/src/sentry/flags/docs/api.md#create-generic-flag-log-post
 
     NOTE:
-    - This works when creating the flag because there is a hook to create (save) a feature state.
+    - This works when creating the flag because there is a hook to create (save) the initial feature state.
     - This works when updating the flag because there is a signal to trigger this on model save.
     - This works when deleting the flag because deleting means saving the model instance with a deleted_at timestamp.
     """
@@ -67,10 +67,12 @@ def post_change_tracking_update_to_sentry(
     try:
         response.raise_for_status()
     except requests.exceptions.RequestException as error:
-        logger.error("Failed to send Sentry update: %s", repr(error))
         # TODO: Should we retry, or ultimately notify the admin of a persisting issue?
-
-    logger.info("Sent '%s' (%s) to Sentry", feature_name, action)
+        logger.error(
+            "Error sending '%s' (%s) to Sentry: %s", feature_name, action, repr(error)
+        )
+    else:
+        logger.info("Sent '%s' (%s) to Sentry", feature_name, action)
 
 
 def _guess_action(feature_state: FeatureState) -> str:
