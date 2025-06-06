@@ -1,11 +1,7 @@
 import React, { Component } from 'react'
 import Constants from 'common/constants'
-
+import { withRouter } from 'react-router-dom'
 const InvitePage = class extends Component {
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   static displayName = 'InvitePage'
 
   constructor(props, context) {
@@ -20,7 +16,7 @@ const InvitePage = class extends Component {
 
   onSave = (id) => {
     AppActions.selectOrganisation(id)
-    this.context.router.history.replace(Utils.getOrganisationHomePage(id))
+    this.props.history.replace(Utils.getOrganisationHomePage(id))
   }
 
   render() {
@@ -51,6 +47,10 @@ const InvitePage = class extends Component {
   }
 }
 
-InvitePage.propTypes = {}
+InvitePage.propTypes = {
+  history: RequiredObject,
+  location: RequiredObject,
+  match: RequiredObject,
+}
 
-module.exports = InvitePage
+export default withRouter(InvitePage)

@@ -1,5 +1,31 @@
 # Changelog
 
+## [2.182.0](https://github.com/Flagsmith/flagsmith/compare/v2.181.0...v2.182.0) (2025-06-04)
+
+
+### Features
+
+* track welcome page tasks and integrations ([#5500](https://github.com/Flagsmith/flagsmith/issues/5500)) ([e8b2738](https://github.com/Flagsmith/flagsmith/commit/e8b2738597c1e2ce7a7fdef6659ef288acb086ed))
+
+
+### Bug Fixes
+
+* **launch-darkly-importer:** Seconds `X-Ratelimit-Reset` timestamps are expected for rate limited requests ([#5536](https://github.com/Flagsmith/flagsmith/issues/5536)) ([0c84a42](https://github.com/Flagsmith/flagsmith/commit/0c84a428b979dfe56cf2c5315ef06bc0f8e46d6c))
+
+## [2.181.0](https://github.com/Flagsmith/flagsmith/compare/v2.180.0...v2.181.0) (2025-06-04)
+
+
+### Features
+
+* welcome page ([#5426](https://github.com/Flagsmith/flagsmith/issues/5426)) ([562cf08](https://github.com/Flagsmith/flagsmith/commit/562cf0853bdfc4d088d67eb45ca70bfdc885593e))
+
+
+### Bug Fixes
+
+* Adjust flagsmith client url ([#5525](https://github.com/Flagsmith/flagsmith/issues/5525)) ([0c43c32](https://github.com/Flagsmith/flagsmith/commit/0c43c32f8f77c87881220736833a7b51d2239ff3))
+* identities endpoint does not respect deleted segment overrides in versioned environments ([#5449](https://github.com/Flagsmith/flagsmith/issues/5449)) ([4f46d12](https://github.com/Flagsmith/flagsmith/commit/4f46d1201987908308799c503ad4cfc60f02cc65))
+* **launch-darkly-importer:** Rate limit responses with no retry information not expected ([#5529](https://github.com/Flagsmith/flagsmith/issues/5529)) ([bd2e7d6](https://github.com/Flagsmith/flagsmith/commit/bd2e7d6bfd077092c581933090e55e8f03d4a19c))
+
 ## [2.180.0](https://github.com/Flagsmith/flagsmith/compare/v2.179.0...v2.180.0) (2025-06-03)
 
 

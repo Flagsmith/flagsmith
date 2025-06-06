@@ -1,3 +1,4 @@
+import random
 import typing
 from copy import copy
 from datetime import timedelta
@@ -6,6 +7,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 from common.test_tools import AssertMetricFixture
+from django.db.models import Count, Q
 from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
@@ -26,16 +28,18 @@ from environments.models import (
     environment_cache,
 )
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
+from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
@@ -1092,3 +1096,108 @@ def test_get_environment_document_from_cache_triggers_correct_metrics__cache_mis
         },
         value=1.0,
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "total_features, feature_enabled_count, segment_overrides_count, change_request_count, scheduled_change_count",
+    [
+        (0, 0, 0, 0, 0),
+        (10, 4, 9, 4, 3),
+        (10, 10, 10, 10, 10),
+        (5, 10, 6, 3, 2),
+        (21, 14, 8, 13, 2),
+    ],
+)
+def test_environment_metric_query_helpers_match_expected_counts(
+    project: Project,
+    admin_user: FFAdminUser,
+    total_features: int,
+    feature_enabled_count: int,
+    segment_overrides_count: int,
+    change_request_count: int,
+    scheduled_change_count: int,
+) -> None:
+    # Given
+    env = Environment.objects.create(name="env", project=project)
+    env.minimum_change_request_approvals = 1
+    env.save()
+
+    features = []
+    version = 0
+    for i in range(total_features):
+        f = Feature.objects.create(project=project, name=f"f-{i}")
+        FeatureState.objects.update_or_create(
+            feature=f, environment=env, identity=None, enabled=False, version=version
+        )
+        features.append(f)
+        version += 1
+
+    for i in range(min(feature_enabled_count, total_features)):
+        # Create old feature_state versions that should not be counted
+        FeatureState.objects.create(
+            feature=features[i],
+            environment=env,
+            identity=None,
+            enabled=True,
+            version=version,
+        )
+        version += 1
+
+        FeatureState.objects.update_or_create(
+            feature=features[i],
+            environment=env,
+            identity=None,
+            enabled=True,
+            version=version,
+        )
+        version += 1
+
+    for i in range(segment_overrides_count):
+        segment = Segment.objects.create(project=project, name=f"s-{i}")
+        f = random.choice(features)
+        fs = FeatureSegment.objects.create(feature=f, segment=segment, environment=env)
+        FeatureState.objects.update_or_create(
+            feature=f,
+            environment=env,
+            feature_segment=fs,
+            identity=None,
+            enabled=False,
+            version=version,
+        )
+        version += 1
+
+    for i in range(change_request_count):
+        ChangeRequest.objects.create(
+            environment=env, title=f"CR-{i}", user_id=admin_user.id
+        )
+        version += 1
+
+    for i in range(scheduled_change_count):
+        FeatureState.objects.update_or_create(
+            feature=random.choice(features),
+            environment=env,
+            identity=None,
+            enabled=True,
+            live_from=timezone.now() + timedelta(days=5),
+            version=version,
+        )
+        version += 1
+
+    # When
+    features_agg = env.get_features_metrics_queryset().aggregate(
+        total=Count("id"),
+        enabled=Count("id", filter=Q(enabled=True)),
+    )
+    segment_count = env.get_segment_metrics_queryset().count()
+    identity_override_count = env.get_identity_overrides_queryset().count()
+    change_request_count_result = env.get_change_requests_metrics_queryset().count()
+    scheduled_count_result = env.get_scheduled_metrics_queryset().count()
+
+    # Then
+    assert features_agg["total"] == total_features
+    assert features_agg["enabled"] == min(feature_enabled_count, total_features)
+    assert segment_count == segment_overrides_count
+    assert change_request_count_result == change_request_count
+    assert scheduled_count_result == scheduled_change_count
+    assert identity_override_count == 0

@@ -79,6 +79,3 @@ REST calls to the API.
 - [Documentation](https://docs.flagsmith.com/)
 - If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
 
-## Acknowledgements
-
-<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=e9b19423-eb7d-4b03-b325-481d10d1a9a4" />

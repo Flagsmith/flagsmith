@@ -214,7 +214,7 @@ def test_launch_darkly_client__get_flag_tags__return_expected(
 
 @pytest.mark.parametrize(
     "response_headers",
-    [{"Retry-After": "0.1"}, {"X-Ratelimit-Reset": "1672531200.1"}],
+    [{"Retry-After": "0.1"}, {"X-Ratelimit-Reset": "1672531200100"}],
 )
 @pytest.mark.freeze_time("2023-01-01T00:00:00Z")
 def test_launch_darkly_client__rate_limit__expected_backoff(
@@ -252,7 +252,7 @@ def test_launch_darkly_client__rate_limit__expected_backoff(
 
 @pytest.mark.parametrize(
     "response_headers",
-    [{"Retry-After": "0.1"}, {"X-Ratelimit-Reset": "1672531200.1"}],
+    [{"Retry-After": "0.1"}, {"X-Ratelimit-Reset": "1672531200100"}],
 )
 @pytest.mark.freeze_time("2023-01-01T00:00:00Z")
 def test_launch_darkly_client__rate_limit_max_retries__raises_expected(

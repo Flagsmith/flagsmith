@@ -1,6 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { matchPath } from 'react-router'
-import { Link, withRouter } from 'react-router-dom'
+import { Link, withRouter, matchPath } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
@@ -42,10 +41,6 @@ import { getBuildVersion } from 'common/services/useBuildVersion'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
-  }
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
   }
 
   state = {
@@ -200,7 +195,7 @@ const App = class extends Component {
 
     if (!AccountStore.getOrganisation() && !invite) {
       // If user has no organisation redirect to /create
-      this.context.router.history.replace(`/create${query}`)
+      this.props.history.replace(`/create${query}`)
       return
     }
 
@@ -215,11 +210,11 @@ const App = class extends Component {
     ) {
       if (redirect) {
         API.setRedirect('')
-        this.context.router.history.replace(redirect)
+        this.props.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
           if (this.props.location.search.includes('github-redirect')) {
-            this.context.router.history.replace(
+            this.props.history.replace(
               `/github-setup${this.props.location.search}`,
             )
             return
@@ -230,7 +225,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/organisations')
+              this.props.history.replace('/organisations')
               return
             }
 
@@ -243,13 +238,20 @@ const App = class extends Component {
               AppActions.getOrganisation(lastOrg.id)
             }
 
-            this.context.router.history.replace(
+            this.props.history.replace(
               `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
             )
             return
           }
 
-          this.context.router.history.replace(Utils.getOrganisationHomePage())
+          if (
+            Utils.getFlagsmithHasFeature('welcome_page') &&
+            AccountStore.getUser()?.isGettingStarted
+          ) {
+            this.props.history.replace('/getting-started')
+          } else {
+            this.props.history.replace(Utils.getOrganisationHomePage())
+          }
         })
       }
     }
@@ -275,7 +277,7 @@ const App = class extends Component {
     if (document.location.href.includes('saml?')) {
       return
     }
-    this.context.router.history.replace('/')
+    this.props.history.replace('/')
   }
 
   closeAnnouncement = (announcementId) => {
@@ -373,7 +375,7 @@ const App = class extends Component {
                       />
                     )}
                     {user && (
-                      <div className='container mt-4'>
+                      <div className='container announcement-container mt-4'>
                         <div>
                           <Announcement />
                           <AnnouncementPerPage pathname={pathname} />
@@ -432,7 +434,6 @@ const App = class extends Component {
                                     <div className='d-flex gap-1 ml-1 align-items-center'>
                                       <BreadcrumbSeparator
                                         projectId={projectId}
-                                        router={this.context.router}
                                         hideSlash={!activeProject}
                                         focus='organisation'
                                       >
@@ -459,7 +460,6 @@ const App = class extends Component {
                                       {!!activeProject && (
                                         <BreadcrumbSeparator
                                           projectId={projectId}
-                                          router={this.context.router}
                                           hideSlash
                                           focus='project'
                                         >
@@ -477,7 +477,40 @@ const App = class extends Component {
                                   )}
                                 </Row>
                                 <Row className='gap-3'>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'welcome_page',
+                                  ) && (
+                                    <NavLink
+                                      activeClassName='active'
+                                      to={'/getting-started'}
+                                      className='d-flex lh-1 align-items-center'
+                                    >
+                                      <span className='mr-1'>
+                                        <Icon
+                                          name='rocket'
+                                          width={20}
+                                          fill='#9DA4AE'
+                                        />
+                                      </span>
+                                      Getting Started
+                                    </NavLink>
+                                  )}
+
+                                  <a
+                                    className='d-flex lh-1 align-items-center'
+                                    href={'https://docs.flagsmith.com'}
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='file-text'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    Docs
+                                  </a>
                                   <NavLink
+                                    className='d-flex lh-1 align-items-center'
                                     id='account-settings-link'
                                     data-test='account-settings-link'
                                     activeClassName='active'
@@ -493,25 +526,6 @@ const App = class extends Component {
                                     Account
                                   </NavLink>
                                   <GithubStar />
-                                  <Tooltip
-                                    place='bottom'
-                                    title={
-                                      <Button
-                                        href='https://docs.flagsmith.com'
-                                        target='_blank'
-                                        className='btn btn-with-icon'
-                                        size='small'
-                                      >
-                                        <Icon
-                                          name='file-text'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </Button>
-                                    }
-                                  >
-                                    Docs
-                                  </Tooltip>
 
                                   <Headway className='cursor-pointer' />
                                   <Tooltip
@@ -691,7 +705,7 @@ const App = class extends Component {
                   {environmentId && !isCreateEnvironment ? (
                     <div className='d-flex'>
                       <HomeAside
-                        history={this.context.router.history}
+                        history={this.props.history}
                         environmentId={environmentId}
                         projectId={projectId}
                       />
@@ -714,6 +728,7 @@ const App = class extends Component {
 App.propTypes = {
   history: RequiredObject,
   location: RequiredObject,
+  match: RequiredObject,
 }
 
 export default withRouter(ConfigProvider(App))

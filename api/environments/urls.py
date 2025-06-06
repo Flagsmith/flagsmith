@@ -32,7 +32,12 @@ from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
 )
-from .views import EnvironmentAPIKeyViewSet, EnvironmentViewSet, WebhookViewSet
+from .views import (
+    EnvironmentAPIKeyViewSet,
+    EnvironmentMetricsViewSet,
+    EnvironmentViewSet,
+    WebhookViewSet,
+)
 
 router = routers.DefaultRouter()
 router.register(r"", EnvironmentViewSet, basename="environment")
@@ -46,6 +51,9 @@ environments_router.register(
 )
 environments_router.register(
     r"webhooks", WebhookViewSet, basename="environment-webhooks"
+)
+environments_router.register(
+    r"metrics", EnvironmentMetricsViewSet, basename="environment-metrics"
 )
 environments_router.register(
     r"featurestates",

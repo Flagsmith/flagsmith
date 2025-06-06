@@ -11,14 +11,16 @@ import { useGetGroupsQuery } from 'common/services/useGroup'
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
 import { useHasPermission } from 'common/providers/Permission'
+import { withRouter, useHistory, RouteComponentProps } from 'react-router-dom'
 const rolesWidths = [250, 100]
 
-type RolesTableType = {
+interface RolesTableType extends RouteComponentProps {
   organisationId: number
   users: User[]
 }
 
 const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
+  const history = useHistory()
   const { data: groups } = useGetGroupsQuery(
     { orgId: organisationId, page: 1 },
     { skip: !organisationId },
@@ -70,6 +72,7 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
         }}
         users={users}
         groups={groups?.results || []}
+        history={history}
       />,
       'side-modal',
     )
@@ -182,4 +185,4 @@ const RolesTable: FC<RolesTableType> = ({ organisationId, users }) => {
   )
 }
 
-export default RolesTable
+export default withRouter(RolesTable)

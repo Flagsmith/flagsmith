@@ -1,14 +1,9 @@
 import React, { Component } from 'react'
 import flagsmith from 'flagsmith'
-import propTypes from 'prop-types'
 import ConfigStore from 'common/stores/config-store'
 
 export default (WrappedComponent) => {
   class HOC extends Component {
-    static contextTypes = {
-      router: propTypes.object.isRequired,
-    }
-
     constructor(props) {
       super(props)
       this.state = {
@@ -36,7 +31,7 @@ export default (WrappedComponent) => {
           ref='wrappedComponent'
           isLoading={isLoading}
           error={error}
-          router={this.context.router}
+          history={this.props.history}
           {...this.props}
           getValue={getValue}
           hasFeature={hasFeature}
