@@ -49,7 +49,7 @@ class PipedriveLeadTracker(LeadTracker):
 
         return True
 
-    def create_lead(self, user: FFAdminUser) -> PipedriveLead:
+    def create_organisation_lead(self, user: FFAdminUser) -> PipedriveLead:
         email_domain = user.email.split("@")[-1]
 
         try:

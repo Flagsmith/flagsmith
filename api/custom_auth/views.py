@@ -30,6 +30,9 @@ from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from .models import UserPasswordResetRequest
 
 
@@ -122,6 +125,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
+        register_hubspot_tracker(request)
         if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)
         return response  # type: ignore[no-any-return]

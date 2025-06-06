@@ -144,10 +144,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self.is_staff = value
         self.is_superuser = value
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
+    @hook(AFTER_CREATE)
     def schedule_hubspot_tracking(self) -> None:
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_user_contact.delay(args=(self.id,))
             track_hubspot_lead_without_organisation.delay(
                 kwargs={"user_id": self.id},
                 delay_until=timezone.now()
@@ -156,8 +155,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
                 ),
             )
 
+    @hook(AFTER_CREATE)
+    def create_hubspot_contact(self) -> None:
+        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            track_hubspot_user_contact.delay(args=(self.id,))
+
     @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
-    def send_warning_email(self):  # type: ignore[no-untyped-def]
+    def send_warning_email(self) -> None:
         from users.tasks import send_email_changed_notification_email
 
         send_email_changed_notification_email.delay(
@@ -168,7 +172,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             )
         )
 
-    def delete_orphan_organisations(self):  # type: ignore[no-untyped-def]
+    def delete_orphan_organisations(self) -> None:
         Organisation.objects.filter(
             id__in=self.organisations.values_list("id", flat=True)
         ).annotate(users_count=Count("users")).filter(users_count=1).delete()

@@ -163,7 +163,7 @@ def test_create_contact(hubspot_client: HubspotClient, admin_user: FFAdminUser) 
     }
 
     # When
-    hubspot_client.create_contact(admin_user, hubspot_company_id)
+    hubspot_client.create_saas_hubspot_contact(admin_user, hubspot_company_id)
 
     # Then
     hubspot_client.client.crm.contacts.basic_api.create.assert_called_once_with(

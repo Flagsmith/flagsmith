@@ -5,8 +5,7 @@ from task_processor.decorators import (
 
 
 @register_task_handler()
-def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
-    print(settings.ENABLE_HUBSPOT_LEAD_TRACKING)
+def track_hubspot_organisation_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
@@ -26,7 +25,7 @@ def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # ty
             id=organisation_id
         )
 
-    hubspot_lead_tracker.create_lead(**create_lead_kwargs)
+    hubspot_lead_tracker.create_organisation_lead(**create_lead_kwargs)
 
 
 @register_task_handler()
@@ -76,7 +75,7 @@ def track_hubspot_lead_without_organisation(user_id: int) -> None:
         # tracked in hubspot already. If so, do nothing.
         return
 
-    track_hubspot_lead(user.id)
+    track_hubspot_organisation_lead(user.id)
 
 
 @register_task_handler()
