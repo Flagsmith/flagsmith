@@ -12,7 +12,8 @@ from users.models import FFAdminUser
 
 
 def test_send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
-    test_user_client: APIClient, is_oss: MagicMock
+    test_user_client: APIClient,
+    oss_mode: None,
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -25,7 +26,8 @@ def test_send_onboarding_request_to_saas_flagsmith_view_for_non_admin_user(
 
 
 def test_send_onboarding_request_to_saas_flagsmith_view_without_org(
-    admin_client_original: APIClient, is_oss: MagicMock
+    admin_client_original: APIClient,
+    oss_mode: None,
 ) -> None:
     # Given
     url = reverse("api-v1:onboarding:send-onboarding-request")
@@ -46,7 +48,7 @@ def test_send_onboarding_request_to_saas_flagsmith_view(
     mocker: MockerFixture,
     organisation: Organisation,
     admin_user: FFAdminUser,
-    is_oss: MagicMock,
+    oss_mode: None,
 ) -> None:
     # Given
     mocked_requests = mocker.patch("onboarding.tasks.requests")
@@ -73,7 +75,7 @@ def test_receive_support_request_from_self_hosted_view_without_hubspot_token(
     settings: SettingsWrapper,
     api_client: APIClient,
     db: None,
-    is_saas: MagicMock,
+    saas_mode: MagicMock,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = None
@@ -93,7 +95,7 @@ def test_receive_support_request_from_self_hosted_view(
     api_client: APIClient,
     mocker: MockerFixture,
     db: None,
-    is_saas: None,
+    saas_mode: None,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
@@ -123,7 +125,7 @@ def test_receive_support_request_throttling(
     api_client: APIClient,
     mocker: MockerFixture,
     db: None,
-    is_saas: MagicMock,
+    saas_mode: MagicMock,
 ) -> None:
     # Given
     settings.HUBSPOT_ACCESS_TOKEN = "some-token"
