@@ -270,6 +270,71 @@ def test_create_feature_segment_staff_wrong_permission(  # type: ignore[no-untyp
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
+def test_create_segment_override_permissions_granted(
+    staff_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    staff_client: APIClient,
+    with_environment_permissions: WithEnvironmentPermissionsCallable,
+) -> None:
+    # Give user permission to manage segment overrides
+    with_environment_permissions([MANAGE_SEGMENT_OVERRIDES])  # type: ignore[call-arg]
+
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "new_state",
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+
+def test_create_segment_override_permissions_denied(
+    staff_user: FFAdminUser,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    segment: Segment,
+    staff_client: APIClient,
+) -> None:
+    # No permissions given explicitly for MANAGE_SEGMENT_OVERRIDES
+    url = reverse(
+        "api-v1:environments:create-segment-override",
+        args=[environment.api_key, feature.id],
+    )
+    data = {
+        "feature_segment": {"segment": segment.id},
+        "enabled": True,
+        "feature_state_value": {
+            "type": "unicode",
+            "string_value": "new_state",
+        },
+    }
+
+    # When
+    response = staff_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
