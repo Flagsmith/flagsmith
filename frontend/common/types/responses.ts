@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -810,6 +808,68 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
+export enum PipelineStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+}
+
+export type ReleasePipeline = {
+  id: number
+  name: string
+  project: number
+  description: string
+  stages_count: number
+  published_at: string
+  published_by: number
+  flags_count: number
+}
+
+export type SingleReleasePipeline = {
+  id: number
+  name: string
+  project: number
+  description: string
+  stages_count: string
+  published_at: string
+  published_by: number
+  stages: PipelineStage[]
+}
+
+export enum StageTriggerType {
+  ON_ENTER = 'ON_ENTER',
+  WAIT_FOR = 'WAIT_FOR',
+}
+
+export type StageTriggerBody = { wait_for?: string } | null
+
+export type StageTrigger = {
+  trigger_type: StageTriggerType
+  trigger_body: StageTriggerBody
+}
+
+export enum StageActionType {
+  TOGGLE_FEATURE = 'TOGGLE_FEATURE',
+  TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+}
+
+export type StageActionBody = { enabled: boolean; segment_id?: number }
+export interface StageAction {
+  id: number
+  action_type: StageActionType
+  action_body: StageActionBody
+}
+
+export type PipelineStage = {
+  id: number
+  name: string
+  pipeline: number
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageAction[]
+  features: number[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -950,5 +1010,9 @@ export type Res = {
   profile: User
   onboarding: {}
   userPermissions: UserPermissions
+  releasePipelines: PagedResponse<ReleasePipeline>
+  releasePipeline: SingleReleasePipeline
+  pipelineStages: PagedResponse<PipelineStage>
+  pipelineStage: PipelineStage
   // END OF TYPES
 }

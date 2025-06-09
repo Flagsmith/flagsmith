@@ -43,6 +43,9 @@ import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
 import GettingStartedPage from './components/pages/GettingStartedPage'
 
+import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
+import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
+import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -56,6 +59,7 @@ export const routes = {
   'compare': '/project/:projectId/compare',
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
+  'create-release-pipeline': '/project/:projectId/release-pipelines/create',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
@@ -85,6 +89,8 @@ export const routes = {
   'project-settings': '/project/:projectId/settings',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
+  'release-pipelines': '/project/:projectId/release-pipelines',
+  'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
   'root': '/',
   'saml': '/saml',
   'scheduled-change':
@@ -244,6 +250,26 @@ export default (
         path={routes['project-redirect']}
         exact
         component={ProjectRedirectPage}
+      />
+      <ParameterizedRoute
+        path={routes['release-pipelines']}
+        exact
+        component={ReleasePipelinesPage}
+      />
+      <ParameterizedRoute
+        path={routes['create-release-pipeline']}
+        exact
+        component={CreateReleasePipelinePage}
+      />
+      <ParameterizedRoute
+        path={routes['release-pipelines-detail']}
+        exact
+        component={ReleasePipelineDetailPage}
+      />
+      <ParameterizedRoute
+        path={routes['audit-log-item']}
+        exact
+        component={AuditLogItemPage}
       />
       <Route path={routes.account} exact component={AccountSettingsPage} />
       <ParameterizedRoute
