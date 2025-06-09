@@ -85,9 +85,6 @@ class SDKAnalyticsFlagsV2(CreateAPIView):  # type: ignore[type-arg]
         for evaluation in self.evaluations:
             if evaluation["feature_name"] in environment_feature_names:
                 continue
-            logger.warning(
-                f"Feature {evaluation['feature_name']} does not belong to project"
-            )
             valid = False
 
         return valid
