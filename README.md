@@ -10,11 +10,11 @@
 
 <p align="center">
   <a href="https://www.flagsmith.com/demo">
-  <img width="50%" height="50%" src="static-files/ReadMe_Demo.gif" alt="Try our interactive demo">
+  <img width="75%" height="75%" src="static-files/ReadMe_Demo.gif" alt="Try our interactive demo">
 </p>
 <p align="center">
   <a href="https://www.flagsmith.com/demo">Try our interactive demo </a>
-  </p>
+</p>
 
 
 # [Flagsmith](https://flagsmith.com/) is an Open-Source Feature Flagging Tool to Ship Faster & Control Releases 
@@ -47,10 +47,6 @@ in your Compose logs:
 Superuser "admin@example.com" created successfully.
 Please go to the following page and choose a password: http://localhost:8000/password-reset/confirm/.../...
 ```
-
-Note: This setup uses http:// for local development. If you've configured SSL for your local environment, you may use
-https:// instead. For any production deployment, always use https://.
-
 
 ![Flagsmith Screenshot](static-files/screenshot.png)
 
@@ -86,9 +82,7 @@ With our core functionality being open, you can use our open-source feature flag
 
 To learn more, [contact us](https://www.flagsmith.com/contact-us) or see our [version comparison](https://docs.flagsmith.com/version-comparison).
 
-## Acknowledgements + Contributors
-
-Thank you to [Uffizzi](https://www.uffizzi.com/) for providing ephemeral environments to preview pull requests.
+## Contributors
 
 Thank you to the open source community for your contributions and for building this with us!  
 
