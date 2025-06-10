@@ -20,6 +20,7 @@ import Utils from 'common/utils/utils'
 import AuditLogWebhooks from 'components/modals/AuditLogWebhooks'
 import MetadataPage from 'components/metadata/MetadataPage'
 import { withRouter } from 'react-router-dom'
+import SettingTitle from 'components/SettingTitle'
 const SettingsTab = {
   'Billing': 'billing',
   'CustomFields': 'custom-fields',
@@ -215,91 +216,83 @@ const OrganisationSettingsPage = class extends Component {
                       >
                         {displayedTabs.includes(SettingsTab.General) && (
                           <TabItem tabLabel='General'>
-                            <FormGroup className='mt-4'>
-                              <h5 className='mb-5'>General Settings</h5>
+                            <div className='col-md-8'>
+                              <SettingTitle>
+                                Organisation Information
+                              </SettingTitle>
                               <JSONReference
                                 title={'Organisation'}
                                 json={organisation}
                               />
                               <div className='mt-2'>
-                                <div className='col-md-8'>
-                                  <form
-                                    key={organisation.id}
-                                    onSubmit={this.save}
-                                  >
-                                    <Row>
-                                      <Flex>
-                                        <InputGroup
-                                          ref={(e) => (this.input = e)}
-                                          data-test='organisation-name'
-                                          value={
-                                            this.state.name || organisation.name
-                                          }
-                                          onChange={(e) =>
-                                            this.setState({
-                                              name: Utils.safeParseEventValue(
-                                                e,
-                                              ),
-                                            })
-                                          }
-                                          isValid={name && name.length}
-                                          type='text'
-                                          inputClassName='input--wide'
-                                          placeholder='My Organisation'
-                                          title='Organisation Name'
-                                          inputProps={{
-                                            className: 'full-width',
-                                          }}
-                                        />
-                                      </Flex>
-                                      <Button
-                                        type='submit'
-                                        disabled={this.saveDisabled()}
-                                        className='ml-3'
-                                      >
-                                        {isSaving ? 'Updating' : 'Update Name'}
-                                      </Button>
-                                    </Row>
-                                  </form>
-                                </div>
-                                <hr className='mt-0 mb-4' />
-                                <div className='col-md-8'>
-                                  <Setting
-                                    feature={'FORCE_2FA'}
-                                    checked={organisation.force_2fa}
-                                    onChange={this.save2FA}
-                                  />
-                                </div>
+                                <form
+                                  key={organisation.id}
+                                  onSubmit={this.save}
+                                >
+                                  <Row>
+                                    <Flex>
+                                      <InputGroup
+                                        ref={(e) => (this.input = e)}
+                                        data-test='organisation-name'
+                                        value={
+                                          this.state.name || organisation.name
+                                        }
+                                        onChange={(e) =>
+                                          this.setState({
+                                            name: Utils.safeParseEventValue(e),
+                                          })
+                                        }
+                                        isValid={name && name.length}
+                                        type='text'
+                                        inputClassName='input--wide'
+                                        placeholder='My Organisation'
+                                        title='Organisation Name'
+                                        inputProps={{
+                                          className: 'full-width',
+                                        }}
+                                      />
+                                    </Flex>
+                                    <Button
+                                      type='submit'
+                                      disabled={this.saveDisabled()}
+                                      className='ml-3'
+                                    >
+                                      {isSaving ? 'Updating' : 'Update Name'}
+                                    </Button>
+                                  </Row>
+                                </form>
+                                <SettingTitle>Admin Settings</SettingTitle>
+                                <Setting
+                                  feature={'FORCE_2FA'}
+                                  checked={organisation.force_2fa}
+                                  onChange={this.save2FA}
+                                />
                                 {Utils.getFlagsmithHasFeature(
                                   'restrict_project_create_to_admin',
                                 ) && (
-                                  <FormGroup className='mt-4 col-md-8'>
-                                    <h5>Admin Settings</h5>
-                                    <Row className='mb-2'>
-                                      <Switch
-                                        checked={
-                                          organisation.restrict_project_create_to_admin
-                                        }
-                                        onChange={() =>
-                                          this.setAdminCanCreateProject(
-                                            !organisation.restrict_project_create_to_admin,
-                                          )
-                                        }
-                                      />
-                                      <p className='fs-small ml-3 mb-0 lh-sm'>
-                                        Only allow organisation admins to create
-                                        projects
-                                      </p>
-                                    </Row>
+                                  <FormGroup className='mt-4'>
+                                    <Setting
+                                      title='Restrict Project Creation'
+                                      checked={
+                                        organisation.restrict_project_create_to_admin
+                                      }
+                                      onChange={() =>
+                                        this.setAdminCanCreateProject(
+                                          !organisation.restrict_project_create_to_admin,
+                                        )
+                                      }
+                                      description={
+                                        'Only allow organisation admins to create projects'
+                                      }
+                                    />
                                   </FormGroup>
                                 )}
                               </div>
-                            </FormGroup>
-                            <hr className='my-4' />
-                            <FormGroup className='mt-4 col-md-8'>
+                              <SettingTitle danger>
+                                Delete Organisation
+                              </SettingTitle>
                               <Row space>
                                 <div className='col-md-7'>
-                                  <h5 className='mn-2'>Delete Organisation</h5>
                                   <p className='fs-small lh-sm'>
                                     This organisation will be permanently
                                     deleted, along with all projects and
@@ -313,16 +306,12 @@ const OrganisationSettingsPage = class extends Component {
                                       deleteOrganisation()
                                     })
                                   }
-                                  className='btn-with-icon btn-remove'
+                                  theme='danger'
                                 >
-                                  <Icon
-                                    name='trash-2'
-                                    width={20}
-                                    fill='#EF4D56'
-                                  />
+                                  Delete Organisation
                                 </Button>
                               </Row>
-                            </FormGroup>
+                            </div>
                           </TabItem>
                         )}
                         {displayedTabs.includes(SettingsTab.Billing) && (

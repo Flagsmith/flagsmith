@@ -1,4 +1,11 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { IonIcon } from '@ionic/react'
 import {
   checkmarkCircle,
@@ -35,7 +42,7 @@ type BreadcrumbSeparatorType = {
   hideSlash?: boolean
   children: ReactNode
   focus?: 'organisation' | 'project'
-  projectId: string | undefined
+  projectId: number | undefined
 }
 
 type ItemListType = {
@@ -124,7 +131,11 @@ const ItemList: FC<ItemListType> = ({
               { hovered: isHovered },
             )}
           >
-            {v.name}
+            <div className='flex-1 overflow-hidden'>
+              <span className='w-100 text-nowrap overflow-ellipsis overflow-hidden'>
+                {v.name}
+              </span>
+            </div>
             {isActive && (
               <IonIcon className='text-primary' icon={checkmarkCircle} />
             )}
@@ -156,7 +167,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const [hoveredOrganisation, setHoveredOrganisation] = useState<Organisation>(
     AccountStore.getOrganisation(),
   )
-  const [hoveredProject, setHoveredProject] = useState<string | undefined>(
+  const [hoveredProject, setHoveredProject] = useState<number | undefined>(
     focus === 'organisation' ? undefined : projectId,
   )
 
@@ -268,12 +279,18 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
     level: 'organisation',
     permission: Utils.getCreateProjectPermission(hoveredOrganisation),
   })
+  const openRef = useRef(false)
+  const toggle = () => {
+    setOpen(!openRef.current) // for some unknown reason !open doesn't work
+    openRef.current = !openRef.current
+  }
+
   return (
     <div className='d-flex align-items-center position-relative gap-1'>
       {children}
       {!hideDropdown && (
         <span
-          onClick={() => setOpen(true)}
+          onClick={toggle}
           className='breadcrumb-link user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
         >
           <IonIcon
@@ -318,7 +335,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
         }}
         containerClassName={'p-0'}
         className={
-          'inline-modal left-0 top-form-item inline-modal--sm max-w-auto'
+          'inline-modal nav-modal top-form-item inline-modal--sm max-w-auto'
         }
       >
         {!!open && (
@@ -331,7 +348,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                       'bg-faint rounded': hoveredSection === 'project',
                     })}
                     onMouseEnter={() => setHoveredSection('organisation')}
-                    style={{ width: 260 }}
+                    style={{ maxWidth: 'calc(50vw)', width: 260 }}
                   >
                     <Input
                       autoFocus={focus === 'organisation'}
@@ -386,7 +403,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                   </div>
                   <div
                     onMouseEnter={() => setHoveredSection('project')}
-                    style={{ width: 260 }}
+                    style={{ maxWidth: 'calc(50vw)', width: 260 }}
                     className={classNames(
                       {
                         'bg-faint rounded': hoveredSection === 'organisation',
