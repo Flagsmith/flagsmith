@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.183.0](https://github.com/Flagsmith/flagsmith/compare/v2.182.0...v2.183.0) (2025-06-10)
+
+
+### Features
+
+* report environment metrics api ([#5430](https://github.com/Flagsmith/flagsmith/issues/5430)) ([ad1f3c1](https://github.com/Flagsmith/flagsmith/commit/ad1f3c1b490b5976a663c3b1abe461f7f02775a7))
+
+
+### Bug Fixes
+
+* Disable e2e tests in draft PRs ([#5549](https://github.com/Flagsmith/flagsmith/issues/5549)) ([a92127d](https://github.com/Flagsmith/flagsmith/commit/a92127d3a954da5796f4a785aaed528d9595044b))
+* Silence warning when receiving analytics for unknown flags ([#5552](https://github.com/Flagsmith/flagsmith/issues/5552)) ([cf303c7](https://github.com/Flagsmith/flagsmith/commit/cf303c78a89998ff568dcf5c2aca10189c28ae36))
+
+
+### Dependency Updates
+
+* bump django from 4.2.21 to 4.2.22 in /api ([#5550](https://github.com/Flagsmith/flagsmith/issues/5550)) ([60662fb](https://github.com/Flagsmith/flagsmith/commit/60662fb4126d974dc6f9913e1634d4799235830d))
+* bump requests from 2.32.3 to 2.32.4 in /api ([#5554](https://github.com/Flagsmith/flagsmith/issues/5554)) ([e1c7a19](https://github.com/Flagsmith/flagsmith/commit/e1c7a192a87c098229217f14056c8b4778e0906b))
+* bump setuptools from 70.0.0 to 78.1.1 in /api ([#5470](https://github.com/Flagsmith/flagsmith/issues/5470)) ([8ebf949](https://github.com/Flagsmith/flagsmith/commit/8ebf949c87a8b226ac9810be76cd50d2a6ea1b57))
+* remove explicit dependency on `packaging` module ([#5538](https://github.com/Flagsmith/flagsmith/issues/5538)) ([0f463cc](https://github.com/Flagsmith/flagsmith/commit/0f463ccad6f30892d422ca11cd9414bc8d6cdccd))
+
 ## [2.182.0](https://github.com/Flagsmith/flagsmith/compare/v2.181.0...v2.182.0) (2025-06-04)
 
 
