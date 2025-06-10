@@ -177,7 +177,7 @@ class AccountSettingsPage extends Component {
                     Log Out
                   </Button>
                 }
-                title={'Account'}
+                title={'Account Settings'}
               />
               <Tabs uncontrolled className='mt-0' history={this.props.history}>
                 <TabItem tabLabel='General'>

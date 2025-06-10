@@ -500,7 +500,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                           </Button>
                         </div>
                       </form>
-                      <SettingTitle>Additional settings</SettingTitle>
+                      <SettingTitle>Additional Settings</SettingTitle>
                       <div className='mt-4'>
                         <Setting
                           onChange={(value) =>

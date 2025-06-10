@@ -310,7 +310,7 @@ const ProjectSettingsPage = class extends Component {
                             </div>
                           </form>
                         </FormGroup>
-                        <SettingTitle>Governance</SettingTitle>
+                        <SettingTitle>Additional Settings</SettingTitle>
                         <FormGroup className='mt-4'>
                           <Setting
                             title='Prevent Flag Defaults'
