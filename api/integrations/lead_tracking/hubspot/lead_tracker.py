@@ -61,33 +61,24 @@ class HubspotLeadTracker(LeadTracker):
     def create_organisation_lead(
         self, user: FFAdminUser, organisation: Organisation | None = None
     ) -> None:
-        hubspot_lead = HubspotLead.objects.filter(user=user).first()
-        if not hubspot_lead:
-            if contact_data := self.client.get_contact(user):
-                hubspot_contact_id = contact_data["id"]
-            else:
-                hubspot_contact_id = self.create_user_hubspot_contact(user)
-            HubspotLead.objects.update_or_create(
-                user=user, defaults={"hubspot_id": hubspot_contact_id}
-            )
-        else:
-            hubspot_contact_id = user.hubspot_contact_id
-
+        hubspot_contact_id = self.get_or_create_user_hubspot_id(user)
         hubspot_org_id = self.get_or_create_organisation_hubspot_id(user, organisation)
         self.client.associate_contact_to_company(
             contact_id=hubspot_contact_id,
             company_id=hubspot_org_id,
         )
-        # response = self.client.create_contact(user, hubspot_org_id)
 
-        # HubspotLead.objects.update_or_create(
-        #     user=user, defaults={"hubspot_id": response["id"]}
-        # )
-
-        # if tracker := HubspotTracker.objects.filter(user=user).first():
-        # self.client.create_lead_form(
-        #     user=user, hubspot_cookie=tracker.hubspot_cookie
-        # )
+    def get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str:
+        hubspot_lead = HubspotLead.objects.filter(user=user).first()
+        if hubspot_lead:
+            hubspot_contact_id = hubspot_lead.hubspot_id
+        else:
+            contact_data = self.client.get_contact(user)
+            if contact_data:
+                hubspot_contact_id = contact_data["id"]
+            else:
+                hubspot_contact_id = self.create_user_hubspot_contact(user)
+        return hubspot_contact_id
 
     def get_or_create_organisation_hubspot_id(
         self,

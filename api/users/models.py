@@ -22,7 +22,7 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_user_contact,
-    track_hubspot_lead_without_organisation,
+    # track_hubspot_lead_without_organisation,
 )
 from organisations.models import (
     Organisation,
@@ -143,17 +143,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def superuser(self, value: bool) -> None:
         self.is_staff = value
         self.is_superuser = value
-
-    @hook(AFTER_CREATE)
-    def schedule_hubspot_tracking(self) -> None:
-        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_lead_without_organisation.delay(
-                kwargs={"user_id": self.id},
-                delay_until=timezone.now()
-                + timedelta(
-                    minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
-                ),
-            )
 
     @hook(AFTER_CREATE)
     def create_hubspot_contact(self) -> None:

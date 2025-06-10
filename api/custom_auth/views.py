@@ -125,8 +125,8 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
-        # request.user = response.data.get("user")
-        # register_hubspot_tracker(request)
+        request.user = self.user
+        register_hubspot_tracker(request)
         if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)
         return response  # type: ignore[no-any-return]
