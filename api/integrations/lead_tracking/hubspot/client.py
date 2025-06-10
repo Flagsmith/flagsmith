@@ -56,7 +56,7 @@ class HubspotClient:
         return results[0]  # type: ignore[no-any-return]
 
     def create_lead_form(
-        self, user: "FFAdminUser", hubspot_cookie: str
+        self, user: "FFAdminUser", hubspot_cookie: str | None = None
     ) -> dict[str, Any]:
         logger.info(
             f"Creating Hubspot lead form for user {user.email} with hubspot cookie {hubspot_cookie}"
@@ -71,11 +71,13 @@ class HubspotClient:
             {"objectTypeId": "0-1", "name": "lastname", "value": user.last_name},
         ]
 
-        context = {
-            "hutk": hubspot_cookie,
-            "pageUri": "www.flagsmith.com",
-            "pageName": "Homepage",
-        }
+        context = {}
+        if hubspot_cookie:
+            context = {
+                "hutk": hubspot_cookie,
+                "pageUri": "www.flagsmith.com",
+                "pageName": "Homepage",
+            }
 
         legal = {
             "consent": {
