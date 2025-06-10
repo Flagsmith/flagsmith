@@ -61,6 +61,7 @@ class HubspotLeadTracker(LeadTracker):
     def create_organisation_lead(
         self, user: FFAdminUser, organisation: Organisation | None = None
     ) -> None:
+        print("plop3")
         hubspot_contact_id = self.get_or_create_user_hubspot_id(user)
         hubspot_org_id = self.get_or_create_organisation_hubspot_id(user, organisation)
         self.client.associate_contact_to_company(

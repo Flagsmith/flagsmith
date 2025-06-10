@@ -32,6 +32,7 @@ def track_hubspot_organisation_lead(user_id: int, organisation_id: int = None) -
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
 def track_hubspot_user_contact(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
+    print("plop1")
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     from users.models import FFAdminUser

@@ -145,7 +145,9 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def create_hubspot_contact(self) -> None:
+        print("plop", settings.ENABLE_HUBSPOT_LEAD_TRACKING)
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            print("here")
             track_hubspot_user_contact.delay(args=(self.id,))
 
     @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]

@@ -208,7 +208,9 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
 
     @hook(AFTER_CREATE)
     def register_hubspot_lead_tracking(self):  # type: ignore[no-untyped-def]
+        print("plop2534", settings.ENABLE_HUBSPOT_LEAD_TRACKING)
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+            print("yallah")
             track_hubspot_organisation_lead.delay(
                 args=(
                     self.user.id,
