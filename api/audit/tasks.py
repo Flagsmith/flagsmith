@@ -96,16 +96,17 @@ def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
     ):
         return
 
-    user_model = get_user_model()
-
     instance = history_instance.instance
     if instance.get_skip_create_audit_log():
         return
 
-    history_user = user_model.objects.filter(id=history_user_id).first()
+    if history_user_id is not None:
+        user_model = get_user_model()
+        history_user = user_model.objects.filter(id=history_user_id).first()
+    else:
+        history_user = instance.get_audit_log_author(history_instance)
 
-    override_author = instance.get_audit_log_author(history_instance)
-    if not (history_user or override_author or history_instance.master_api_key):
+    if not (history_user or history_instance.master_api_key):
         return
 
     environment, project = instance.get_environment_and_project()
@@ -130,7 +131,7 @@ def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
         history_record_class_path=history_record_class_path,
         environment=environment,
         project=project,
-        author=override_author or history_user,
+        author=history_user,
         related_object_id=related_object_id,
         related_object_type=related_object_type.name,
         log=log_message,
