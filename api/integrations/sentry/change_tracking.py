@@ -36,10 +36,10 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
             audit_log_record,
         )
 
-        update_published_at = (
-            feature_state.deleted_at
-            or feature_state.live_from
-            or feature_state.updated_at
+        update_published_at = feature_state.deleted_at or (
+            max(feature_state.live_from, feature_state.updated_at)
+            if feature_state.live_from
+            else feature_state.updated_at
         )
 
         action = {
@@ -61,17 +61,18 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
         if action == "updated":
             inner_payload["change_id"] = str(feature_state.pk)
 
-        return {
-            "data": [inner_payload],
-            "meta": {"version": 1},
-        }
+        return inner_payload
 
     def _track_event(self, event: dict[str, Any]) -> None:
         action = event["action"]
         feature_name = event["flag"]
         logger.debug("Sending '%s' (%s) to Sentry...", feature_name, action)
 
-        json_payload = json.dumps(event, sort_keys=True, cls=DjangoJSONEncoder)
+        payload = {
+            "data": [event],
+            "meta": {"version": 1},
+        }
+        json_payload = json.dumps(payload, sort_keys=True, cls=DjangoJSONEncoder)
 
         headers = {
             "Content-Type": "application/json",

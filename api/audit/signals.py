@@ -79,9 +79,8 @@ def track_only(types: list[RelatedObjectType]):  # type: ignore[no-untyped-def]
     """
 
     def decorator(signal_function):  # type: ignore[no-untyped-def]
-        type_names = (t.name for t in types)
-
         def signal_wrapper(sender, instance: AuditLog, **kwargs):  # type: ignore[no-untyped-def]
+            type_names = (t.name for t in types)
             if instance.related_object_type not in type_names:
                 return None
             return signal_function(sender, instance, **kwargs)
