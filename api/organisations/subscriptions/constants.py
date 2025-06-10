@@ -34,7 +34,7 @@ SUBSCRIPTION_BILLING_STATUSES = [
 
 
 FREE_PLAN_SUBSCRIPTION_METADATA = BaseSubscriptionMetadata(
-    seats=150,
+    seats=MAX_SEATS_IN_FREE_PLAN,
     api_calls=MAX_API_CALLS_IN_FREE_PLAN,
     projects=settings.MAX_PROJECTS_IN_FREE_PLAN,
 )
