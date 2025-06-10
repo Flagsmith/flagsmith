@@ -296,7 +296,7 @@ class AccountSettingsPage extends Component {
                     />
                     <SettingTitle danger>Delete Account</SettingTitle>
                     <Row className='' space>
-                      <div className='col-md-7 pl-0'>
+                      <div className='pl-0'>
                         <p className='fs-small lh-sm mb-0'>
                           Your account data will be permanently deleted.
                         </p>
@@ -319,6 +319,7 @@ class AccountSettingsPage extends Component {
                     </Row>
                   </div>
                 </TabItem>
+
                 <TabItem tabLabel='API Keys'>
                   <div className='mt-6'>
                     <div className='col-md-6'>
