@@ -5,7 +5,7 @@ import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useHistory, withRouter } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
 import {
   checkmarkCircle,
@@ -22,7 +22,6 @@ import Icon from 'components/Icon'
 import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
@@ -34,7 +33,6 @@ import Constants from 'common/constants'
 type HomeAsideType = {
   environmentId: string
   projectId: string
-  history: RouterChildContext['router']['history']
 }
 
 type CustomOptionProps = ComponentProps<typeof components.Option> & {
@@ -110,11 +108,8 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
   )
 }
 
-const HomeAside: FC<HomeAsideType> = ({
-  environmentId,
-  history,
-  projectId,
-}) => {
+const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+  const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
     { skip: !projectId },
@@ -271,9 +266,13 @@ const HomeAside: FC<HomeAsideType> = ({
                     </div>
                   </div>
                   <EnvironmentDropdown
-                    renderRow={(environment: Environment, onClick: any) =>
+                    renderRow={(
+                      environment: Environment,
+                      onClick: any,
+                      index: number,
+                    ) =>
                       environment?.api_key === environmentId && (
-                        <div className='collapsible__content'>
+                        <div className='collapsible__content' key={index}>
                           <Permission
                             level='environment'
                             permission='ADMIN'
@@ -292,7 +291,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                     to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                   >
                                     <span className='mr-2'>
-                                      <Icon name='rocket' fill='#9DA4AE' />
+                                      <Icon name='features' fill='#9DA4AE' />
                                     </span>
                                     Features
                                   </NavLink>
@@ -357,9 +356,9 @@ const HomeAside: FC<HomeAsideType> = ({
                                       to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
                                     >
                                       <IonIcon
+                                        color={'#9DA4AE'}
                                         className='mr-2'
                                         icon={flask}
-                                        color={'#9DA4AE'}
                                       />
                                       Split Tests
                                     </NavLink>
@@ -392,7 +391,6 @@ const HomeAside: FC<HomeAsideType> = ({
                   style={{ width: 260 }}
                   className='text-muted position-fixed bottom-0 p-2 fs-caption d-flex flex-column gap-4'
                 >
-                  <Resources />
                   <BuildVersion />
                 </div>
               </div>
@@ -404,4 +402,4 @@ const HomeAside: FC<HomeAsideType> = ({
   )
 }
 
-export default ConfigProvider(HomeAside)
+export default withRouter(ConfigProvider(HomeAside))

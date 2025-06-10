@@ -51,10 +51,7 @@ interface PermissionControlProps {
   isPermissionEnabled: boolean
   supportsTag: boolean
   onValueChanged: (permissionKey: string, shouldToggle?: boolean) => void
-  onSelectPermissions: (
-    key: string,
-    type: PermissionRoleType,
-  ) => void
+  onSelectPermissions: (key: string, type: PermissionRoleType) => void
 }
 
 const PermissionControl: React.FC<PermissionControlProps> = ({
@@ -129,7 +126,10 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
 
   const isViewRequiredAndNotAllowed =
     isViewPermissionRequired && !isViewPermissionAllowed
-  const isChecked = !disabled && isPermissionEnabled && (!isViewPermissionRequired || isViewPermissionAllowed)
+  const isChecked =
+    !disabled &&
+    isPermissionEnabled &&
+    (!isViewPermissionRequired || isViewPermissionAllowed)
 
   return (
     <Switch

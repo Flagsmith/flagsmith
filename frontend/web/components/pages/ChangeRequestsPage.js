@@ -8,7 +8,7 @@ import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -19,10 +19,6 @@ import PlanBasedAccess, {
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props, context) {
     super(props, context)
@@ -100,7 +96,7 @@ const ChangeRequestsPage = class extends Component {
                   </InfoMessage>
                 ) : null}
               </p>
-              <Tabs urlParam={'tab'}>
+              <Tabs urlParam={'tab'} history={this.props.history}>
                 <TabItem
                   tabLabelString='Open'
                   tabLabel={
@@ -296,4 +292,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(ChangeRequestsPage)
+export default withRouter(ConfigProvider(ChangeRequestsPage))

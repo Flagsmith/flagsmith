@@ -14,6 +14,7 @@ import versioningTests from './tests/versioning-tests'
 import organisationPermissionTest from './tests/organisation-permission-test'
 import projectPermissionTest from './tests/project-permission-test'
 import environmentPermissionTest from './tests/environment-permission-test'
+import flagsmith from 'flagsmith/isomorphic';
 import rolesTest from './tests/roles-test'
 
 require('dotenv').config()
@@ -30,10 +31,16 @@ console.log(
   '\n',
 )
 
+
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
   const token = process.env.E2E_TEST_TOKEN
     ? process.env.E2E_TEST_TOKEN
     : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
+    await flagsmith.init({
+      api:Project.flagsmithClientAPI,
+      environmentID:Project.flagsmith,
+      fetch,
+    })
 
   if (token) {
     await fetch(e2eTestApi, {
@@ -89,7 +96,7 @@ fixture`E2E Tests`.requestHooks(logger).before(async () => {
     await logResults(logger.requests, t)
   })
 
-test('Segment-part-1', testSegment1).meta({ autoLogout: true, category: 'oss' })
+test('Segment-part-1', async () => await testSegment1(flagsmith)).meta({ autoLogout: true, category: 'oss' })
 
 test('Segment-part-2', testSegment2).meta({ autoLogout: true, category: 'oss' })
 

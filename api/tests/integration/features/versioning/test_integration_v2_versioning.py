@@ -612,3 +612,51 @@ def test_v2_versioning_carries_existing_segment_overrides_across(
         feature_segment_list_post_migrate_response_json["results"][0]["id"]
         == feature_segment
     )
+
+
+def test_identities_should_return_default_environment_values_after_deleting_segment_override(
+    feature: int,
+    default_feature_value: str,
+    segment_featurestate: int,
+    identity_with_traits_matching_segment: int,
+    segment: int,
+    environment_v2_versioning: int,
+    environment_api_key: str,
+    admin_client: "APIClient",
+    server_side_sdk_client: "APIClient",
+    get_identity_flags_response_json: GetIdentityFlagsResponseJSONCallable,
+) -> None:
+    # Given
+    data = {
+        "publish_immediately": True,
+        "segment_ids_to_delete_overrides": [segment],
+    }
+    url = reverse(
+        "api-v1:versioning:environment-feature-versions-list",
+        args=[environment_v2_versioning, feature],
+    )
+
+    # When
+    response = admin_client.post(
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    identity_flags_response_json = get_identity_flags_response_json(
+        num_expected_flags=1
+    )
+    assert (
+        identity_flags_response_json["flags"][0]["feature_state_value"]
+        == default_feature_value
+    )
+
+    url = reverse("api-v1:environment-document")
+    environment_document_response_json = server_side_sdk_client.get(url).json()
+    assert (
+        environment_document_response_json["project"]["segments"][0]["feature_states"]
+        == []
+    )
