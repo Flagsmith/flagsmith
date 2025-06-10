@@ -13,7 +13,7 @@ from hubspot.crm.companies import (  # type: ignore[import-untyped]
 from hubspot.crm.contacts import (  # type: ignore[import-untyped]
     BatchReadInputSimplePublicObjectId,
 )
-from hubspot.crm.associations.v4 import AssociationSpec
+from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,

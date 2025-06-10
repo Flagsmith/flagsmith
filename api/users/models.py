@@ -144,12 +144,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self.is_staff = value
         self.is_superuser = value
 
-    @hook(AFTER_CREATE)
+    @hook(AFTER_CREATE)  # type: ignore[misc]
     def create_hubspot_contact(self) -> None:
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
             track_hubspot_user_contact.delay(args=(self.id,))
 
-    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
+    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]
     def send_warning_email(self) -> None:
         from users.tasks import send_email_changed_notification_email
 
@@ -171,7 +171,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
     ):
         if delete_orphan_organisations:
-            self.delete_orphan_organisations()  # type: ignore[no-untyped-call]
+            self.delete_orphan_organisations()
         super().delete()
 
     def set_password(self, raw_password):  # type: ignore[no-untyped-def]

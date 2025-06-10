@@ -44,13 +44,13 @@ class HubspotLeadTracker(LeadTracker):
 
         return True
 
-    def create_user_hubspot_contact(self, user: FFAdminUser) -> str | None:
+    def create_user_hubspot_contact(self, user: FFAdminUser) -> str:
         tracker = HubspotTracker.objects.filter(user=user).first()
         tracker_cookie = tracker.hubspot_cookie if tracker else None
         self.client.create_lead_form(user=user, hubspot_cookie=tracker_cookie)
 
         contact = self.client.get_contact(user)
-        hubspot_id = contact["id"] if contact else None
+        hubspot_id: str = contact["id"]
 
         HubspotLead.objects.update_or_create(
             user=user, defaults={"hubspot_id": hubspot_id}
@@ -78,13 +78,14 @@ class HubspotLeadTracker(LeadTracker):
                 hubspot_contact_id = contact_data["id"]
             else:
                 hubspot_contact_id = self.create_user_hubspot_contact(user)
+
         return hubspot_contact_id
 
     def get_or_create_organisation_hubspot_id(
         self,
         user: FFAdminUser,
-        organisation: Organisation | None = None,  # type: ignore[assignment]
-    ) -> str | None:
+        organisation: Organisation | None = None,
+    ) -> str:
         """
         Return the Hubspot API's id for an organisation.
         """
@@ -111,7 +112,8 @@ class HubspotLeadTracker(LeadTracker):
                 hubspot_id=response["id"],
             )
 
-        return response["id"]  # type: ignore[no-any-return]
+        org_hubspot_id: str = response["id"]
+        return org_hubspot_id
 
     def update_company_active_subscription(
         self, subscription: Subscription

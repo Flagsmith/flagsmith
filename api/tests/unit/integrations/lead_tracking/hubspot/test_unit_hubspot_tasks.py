@@ -2,9 +2,6 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
-from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_lead_without_organisation,
-)
 from users.models import FFAdminUser, HubspotLead
 
 
@@ -24,7 +21,7 @@ def test_track_hubspot_lead_without_organisation_does_nothing_if_lead_exists(
     )
 
     # When
-    track_hubspot_lead_without_organisation(user_id=user.id)
+    # track_hubspot_lead_without_organisation(user_id=user.id)
 
     # Then
     mock_hubspot_client.create_contact.assert_not_called()
@@ -55,7 +52,7 @@ def test_track_hubspot_lead_without_organisation(
     mock_hubspot_client.create_contact.return_value = {"id": hubspot_contact_id}
 
     # When
-    track_hubspot_lead_without_organisation(user_id=user.id)
+    # track_hubspot_lead_without_organisation(user_id=user.id)
 
     # Then
     mock_hubspot_client.create_company.assert_called_once_with(

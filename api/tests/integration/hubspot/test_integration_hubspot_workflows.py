@@ -39,14 +39,14 @@ def mocked_hubspot_lead_tracker(mocker: MockerFixture) -> MagicMock:
 
 
 @pytest.fixture()
-def mock_hubspot_client(request):
+def mock_hubspot_client(request):  # type: ignore[no-untyped-def]
     return request.getfixturevalue(request.param)
 
 
 # TODO: Fix circular imports to allow mocking on the fly
 @pytest.fixture()
 def mock_client_no_contact(mocker: MockerFixture) -> MagicMock:
-    mock_client = mocker.MagicMock()
+    mock_client: MagicMock = mocker.MagicMock()
     mock_client.get_contact.return_value = None
     mock_client.create_contact.return_value = {"id": "123"}
     mock_client.create_lead_form.return_value = None
@@ -60,7 +60,7 @@ def mock_client_no_contact(mocker: MockerFixture) -> MagicMock:
 
 @pytest.fixture()
 def mock_client_existing_contact(mocker: MockerFixture) -> MagicMock:
-    mock_client = mocker.MagicMock()
+    mock_client: MagicMock = mocker.MagicMock()
     mock_client.get_contact.return_value = {"id": "123"}
     mock_client.create_contact.return_value = {"id": "123"}
     mock_client.create_lead_form.return_value = None
@@ -119,7 +119,8 @@ def email_invite(
     response = admin_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
-    return response.json()["hash"]
+    hash: str = response.json()["hash"]
+    return hash
 
 
 @pytest.fixture()
@@ -129,7 +130,8 @@ def invite_link(admin_client: APIClient, organisation: int) -> str:
         args=[organisation],
     )
     response = admin_client.post(url)
-    return response.json()["hash"]
+    hash: str = response.json()["hash"]
+    return hash
 
 
 def test_correct_hubspot_calls_made_when_user_registers_and_joins_organisation_via_email_invite(
@@ -230,6 +232,7 @@ def test_user_signup_triggers_hubspot_create_contact_creation(
     created_user = FFAdminUser.objects.filter(
         email=email, sign_up_type=sign_up_type
     ).first()
+    assert created_user
     assert response.status_code == status.HTTP_201_CREATED
     mock_track_hubspot_user_contact.delay.assert_called_once_with(
         args=(created_user.id,),
@@ -256,7 +259,7 @@ def test_create_lead_form_is_sent_to_hubspot_for_all_user_signing_up(
     user = FFAdminUser.objects.create_user(
         email="test@example.com",
         sign_up_type="NO_INVITE",
-    )
+    )  # type: ignore[no-untyped-call]
     HubspotTracker.objects.update_or_create(
         user=user,
         defaults={"hubspot_cookie": "abc123"},
