@@ -142,7 +142,7 @@ const GettingStartedPage: FC = () => {
         </PageTitle>
         <div className='row row-gap-4'>
           <div className='col-xxl-9 col-xl-8'>
-            <div className='card bg-card py-3 shadow rounded'>
+            <div className='card h-100 bg-card py-3 shadow rounded'>
               <h5 className='mb-3 px-3'>Getting Started</h5>
               <hr className='mt-0 py-0' />
               <div className='row px-3 row-gap-4'>
@@ -168,7 +168,10 @@ const GettingStartedPage: FC = () => {
               <hr className='mt-0 py-0' />
               <h5 className='mb-3 px-3'>Resources</h5>
               <hr className='mt-0 py-0' />
-              <div className='d-flex flex-column gap-4'>
+              <div
+                style={{ maxHeight: 450 }}
+                className='overflow-y-auto custom-scroll d-flex flex-column gap-4'
+              >
                 {resources.map((v) => (
                   <GettingStartedResource key={v.url} {...v} />
                 ))}
