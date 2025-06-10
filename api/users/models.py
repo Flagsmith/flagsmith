@@ -1,7 +1,6 @@
 import logging
 import typing
 import uuid
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager

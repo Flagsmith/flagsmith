@@ -1,10 +1,11 @@
 import json
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import hubspot  # type: ignore[import-untyped]
 import requests
 from django.conf import settings
+from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 from hubspot.crm.companies import (  # type: ignore[import-untyped]
     PublicObjectSearchRequest,
     SimplePublicObjectInput,
@@ -13,7 +14,6 @@ from hubspot.crm.companies import (  # type: ignore[import-untyped]
 from hubspot.crm.contacts import (  # type: ignore[import-untyped]
     BatchReadInputSimplePublicObjectId,
 )
-from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,

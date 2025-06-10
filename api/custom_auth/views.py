@@ -28,11 +28,11 @@ from custom_auth.mfa.trench.responses import ErrorResponse
 from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
-from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
-
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker,
 )
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+
 from .models import UserPasswordResetRequest
 
 

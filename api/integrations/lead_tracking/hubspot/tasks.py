@@ -12,6 +12,7 @@ def track_hubspot_organisation_lead(user_id: int, organisation_id: int = None) -
     # Avoid circular imports.
     from organisations.models import Organisation
     from users.models import FFAdminUser
+
     from .lead_tracker import HubspotLeadTracker
 
     user = FFAdminUser.objects.get(id=user_id)
@@ -34,6 +35,7 @@ def track_hubspot_user_contact(user_id: int, organisation_id: int = None) -> Non
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     from users.models import FFAdminUser
+
     from .lead_tracker import HubspotLeadTracker
 
     user = FFAdminUser.objects.get(id=user_id)

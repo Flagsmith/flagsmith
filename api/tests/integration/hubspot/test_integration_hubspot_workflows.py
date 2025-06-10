@@ -1,19 +1,19 @@
 import json
 from typing import NamedTuple
 from unittest.mock import MagicMock
-from django.test import Client
+
 import pytest
+from django.test import Client
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
-from users.models import FFAdminUser
-from integrations.lead_tracking.hubspot.tasks import track_hubspot_user_contact
-from integrations.lead_tracking.hubspot.lead_tracker import HubspotLeadTracker
 from task_processor.task_run_method import TaskRunMethod
-from integrations.lead_tracking.hubspot.client import HubspotClient
-from users.models import HubspotTracker
+
+from integrations.lead_tracking.hubspot.lead_tracker import HubspotLeadTracker
+from integrations.lead_tracking.hubspot.tasks import track_hubspot_user_contact
+from users.models import FFAdminUser, HubspotTracker
 
 
 @pytest.fixture()
