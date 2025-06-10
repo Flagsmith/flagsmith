@@ -20,7 +20,10 @@ class FeatureSegmentPermissions(IsAuthenticated):
             return True
 
         if view.action == "create":
-            if not (environment_pk := request.data.get("environment")):
+            try:
+                # Validate here because this evaluates prior to the serializer layer
+                environment_pk = int(request.data.get("environment"))
+            except (TypeError, ValueError):
                 return False
 
             try:
