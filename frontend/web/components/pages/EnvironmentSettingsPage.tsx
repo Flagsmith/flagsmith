@@ -49,6 +49,7 @@ import {
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import SettingTitle from 'components/SettingTitle'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -432,7 +433,7 @@ const EnvironmentSettingsPage: React.FC = () => {
           return (
             <>
               <DirtyFormModal />
-              <PageTitle title='Settings' />
+              <PageTitle title='Environment Settings' />
               {isLoading && (
                 <div className='centered-container'>
                   <Loader />
@@ -442,7 +443,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                 <Tabs urlParam='tab' className='mt-0' uncontrolled noFocus>
                   <TabItem tabLabel='General'>
                     <div className='mt-4'>
-                      <h5 className='mb-5'>General Settings</h5>
+                      <SettingTitle>Environment Information</SettingTitle>
                       <JSONReference title={'Environment'} json={env} />
                       <div className='col-md-8'>
                         <form
@@ -468,7 +469,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               currentEnv?.name && currentEnv?.name.length
                             }
                             type='text'
-                            title='Environment Name'
+                            title='Name'
                             placeholder='Environment Name'
                           />
                           <InputGroup
@@ -489,7 +490,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                               currentEnv?.description.length
                             }
                             type='text'
-                            title='Environment Description'
+                            title='Description'
                             placeholder='Environment Description'
                           />
                           <div className='text-right mt-5'>
@@ -591,41 +592,6 @@ const EnvironmentSettingsPage: React.FC = () => {
                           </div>
                         </div>
                       )}
-                      <div className='col-md-8 mt-4'>
-                        <Setting
-                          title='Hide sensitive data'
-                          checked={currentEnv?.hide_sensitive_data}
-                          onChange={(value) => {
-                            confirmToggle(
-                              'Confirm Environment Setting',
-                              'hide_sensitive_data',
-                              value,
-                            )
-                          }}
-                          description={
-                            <div>
-                              Exclude sensitive data from endpoints returning
-                              flags and identity information to the SDKs or via
-                              our REST API.
-                              <br />
-                              For full information on the excluded fields see
-                              documentation{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
-                                target='_blank'
-                                className='fw-normal'
-                              >
-                                here.
-                              </Button>
-                              <div className='text-danger'>
-                                Enabling this feature will change the response
-                                from the API and could break your existing code.
-                              </div>
-                            </div>
-                          }
-                        />
-                      </div>
                       <FormGroup className='mt-4 col-md-8'>
                         <Setting
                           feature='4_EYES'
@@ -821,6 +787,40 @@ const EnvironmentSettingsPage: React.FC = () => {
                                     percentage split segment override via the
                                     API / remote evaluation. Values received in
                                     local evaluation mode will not change.
+                                  </div>
+                                </div>
+                              }
+                            />
+                            <Setting
+                              title='Hide sensitive data'
+                              checked={currentEnv?.hide_sensitive_data}
+                              onChange={(value) => {
+                                confirmToggle(
+                                  'Confirm Environment Setting',
+                                  'hide_sensitive_data',
+                                  value,
+                                )
+                              }}
+                              description={
+                                <div>
+                                  Exclude sensitive data from endpoints
+                                  returning flags and identity information to
+                                  the SDKs or via our REST API.
+                                  <br />
+                                  For full information on the excluded fields
+                                  see documentation{' '}
+                                  <Button
+                                    theme='text'
+                                    href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
+                                    target='_blank'
+                                    className='fw-normal'
+                                  >
+                                    here.
+                                  </Button>
+                                  <div className='text-danger'>
+                                    Enabling this feature will change the
+                                    response from the API and could break your
+                                    existing code.
                                   </div>
                                 </div>
                               }

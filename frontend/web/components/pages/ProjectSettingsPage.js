@@ -27,6 +27,7 @@ import EditHealthProvider from 'components/EditHealthProvider'
 import WarningMessage from 'components/WarningMessage'
 import { withRouter } from 'react-router-dom'
 import Utils from 'common/utils/utils'
+import SettingTitle from 'components/SettingTitle'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -211,6 +212,7 @@ const ProjectSettingsPage = class extends Component {
                           json={project}
                           className='mb-3'
                         />
+                        <SettingTitle>Project Information</SettingTitle>
                         <label>Project Name</label>
                         <FormGroup>
                           <form className='col-md-8' onSubmit={saveProject}>
@@ -308,63 +310,49 @@ const ProjectSettingsPage = class extends Component {
                           </form>
                         </FormGroup>
                       </div>
-                      <hr className='py-0 my-4' />
+                      <SettingTitle>Governance</SettingTitle>
                       <FormGroup className='mt-4 col-md-8'>
-                        <Row className='mb-2'>
-                          <Switch
-                            data-test='js-prevent-flag-defaults'
-                            disabled={isSaving}
-                            onChange={() =>
-                              this.togglePreventDefaults(project, editProject)
-                            }
-                            checked={project.prevent_flag_defaults}
-                          />
-                          <h5 className='mb-0 ml-3'>Prevent flag defaults</h5>
-                        </Row>
-                        <p className='fs-small lh-sm mb-0'>
-                          By default, when you create a feature with a value and
+                        <Setting
+                          title='Prevent Flag Defaults'
+                          data-test='js-prevent-flag-defaults'
+                          disabled={isSaving}
+                          onChange={() =>
+                            this.togglePreventDefaults(project, editProject)
+                          }
+                          checked={project.prevent_flag_defaults}
+                          description={`By default, when you create a feature with a value and
                           enabled state it acts as a default for your other
                           environments. Enabling this setting forces the user to
                           create a feature before setting its values per
-                          environment.
-                        </p>
+                          environment.`}
+                        />
                       </FormGroup>
                       <FormGroup className='mt-4 col-md-8'>
-                        <Row className='mb-2'>
-                          <Switch
-                            data-test='js-flag-case-sensitivity'
-                            disabled={isSaving}
-                            onChange={() =>
-                              this.toggleCaseSensitivity(project, editProject)
-                            }
-                            checked={
-                              !project.only_allow_lower_case_feature_names
-                            }
-                          />
-                          <h5 className='mb-0 ml-3'>Case sensitive features</h5>
-                        </Row>
-                        <p className='fs-small lh-sm mb-0'>
-                          By default, features are lower case in order to
+                        <Setting
+                          data-test='js-flag-case-sensitivity'
+                          disabled={isSaving}
+                          onChange={() =>
+                            this.toggleCaseSensitivity(project, editProject)
+                          }
+                          checked={!project.only_allow_lower_case_feature_names}
+                          title='Case sensitive features'
+                          description={`By default, features are lower case in order to
                           prevent human error. Enabling this will allow you to
-                          use upper case characters when creating features.
-                        </p>
+                          use upper case characters when creating features.`}
+                        />
                       </FormGroup>
                       <FormGroup className='mt-4 col-md-8'>
-                        <Row className='mb-2'>
-                          <Switch
-                            data-test='js-flag-case-sensitivity'
-                            disabled={isSaving}
-                            onChange={() =>
-                              this.toggleFeatureValidation(project, editProject)
-                            }
-                            checked={featureRegexEnabled}
-                          />
-                          <h5 className='mb-0 ml-3'>Feature name RegEx</h5>
-                        </Row>
-                        <p className='fs-small lh-sm mb-0'>
-                          This allows you to define a regular expression that
-                          all feature names must adhere to.
-                        </p>
+                        <Setting
+                          title='Feature name RegEx'
+                          data-test='js-flag-case-sensitivity'
+                          disabled={isSaving}
+                          description={`This allows you to define a regular expression that
+                          all feature names must adhere to.`}
+                          onChange={() =>
+                            this.toggleFeatureValidation(project, editProject)
+                          }
+                          checked={featureRegexEnabled}
+                        />
                         {featureRegexEnabled && (
                           <InputGroup
                             title='Feature Name RegEx'
@@ -492,11 +480,10 @@ const ProjectSettingsPage = class extends Component {
                           </p>
                         </FormGroup>
                       )}
-                      <hr className='py-0 my-4' />
                       <FormGroup className='mt-4 col-md-8'>
+                        <SettingTitle danger>Delete Project</SettingTitle>
                         <Row space>
                           <div className='col-md-7'>
-                            <h5>Delete Project</h5>
                             <p className='fs-small lh-sm mb-0'>
                               This project will be permanently deleted.
                             </p>
@@ -510,9 +497,9 @@ const ProjectSettingsPage = class extends Component {
                                 deleteProject(projectIdFromUrl)
                               })
                             }
-                            className='btn btn-with-icon btn-remove'
+                            theme='danger'
                           >
-                            <Icon name='trash-2' width={20} fill='#EF4D56' />
+                            Delete Project
                           </Button>
                         </Row>
 
