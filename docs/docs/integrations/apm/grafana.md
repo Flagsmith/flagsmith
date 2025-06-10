@@ -47,8 +47,7 @@ Annotations for feature-specific events include project tags, user-defined tags,
 
 :::info
 
-[Feature Health](/advanced-use/feature-health) is an upcoming feature that is not yet available.
-
+[Feature Health](/advanced-use/feature-health) is in Beta, please email support@flagsmith.com or chat with us <a href="#" class="open-chat" data-crisp-chat-message="Hello, I'm interested in joining the feature health beta.">here</a> if you'd like to join. 
 :::
 
 ### In Flagsmith:
