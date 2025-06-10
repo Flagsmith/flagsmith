@@ -37,6 +37,8 @@ import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
+import AccountProvider from 'common/providers/AccountProvider'
+import Nav from './Nav'
 
 const App = class extends Component {
   static propTypes = {
@@ -45,8 +47,6 @@ const App = class extends Component {
 
   state = {
     asideIsVisible: !isMobile,
-    lastEnvironmentId: '',
-    lastProjectId: '',
     pin: '',
     showAnnouncement: true,
   }
@@ -112,19 +112,6 @@ const App = class extends Component {
       this.onLogin()
     }
     window.addEventListener('scroll', this.handleScroll)
-    const updateLastViewed = () => {
-      AsyncStorage.getItem('lastEnv').then((res) => {
-        if (res) {
-          const lastEnv = JSON.parse(res)
-          this.setState({
-            lastEnvironmentId: lastEnv.environmentId,
-            lastProjectId: lastEnv.projectId,
-          })
-        }
-      })
-    }
-    this.props.history.listen(updateLastViewed)
-    updateLastViewed()
   }
 
   componentDidUpdate(prevProps) {
@@ -138,22 +125,6 @@ const App = class extends Component {
       if (isMobile) {
         this.setState({ asideIsVisible: false })
       }
-      this.hideMobileNav()
-      AsyncStorage.getItem('lastEnv').then((res) => {
-        if (res) {
-          const { environmentId, projectId } = JSON.parse(res)
-          this.setState({
-            lastEnvironmentId: environmentId,
-            lastProjectId: projectId,
-          })
-        }
-      })
-    }
-  }
-
-  hideMobileNav = () => {
-    if (this.mobileNav && this.mobileNav.isActive()) {
-      this.mobileNav.toggle()
     }
   }
 
@@ -284,19 +255,10 @@ const App = class extends Component {
     }
     const { location } = this.props
     const pathname = location.pathname
-    const { asideIsVisible, lastEnvironmentId, lastProjectId } = this.state
+
     const projectId = this.getProjectId(this.props)
     const environmentId = this.getEnvironmentId(this.props)
-    const isCreateEnvironment = environmentId === 'create'
-    const isCreateOrganisation = document.location.pathname === '/create'
-    const storageHasParams = lastEnvironmentId || lastProjectId
-    const pageHasAside = environmentId || projectId || storageHasParams
-    const isHomepage =
-      pathname === '/' ||
-      pathname === '/login' ||
-      pathname === '/signup' ||
-      pathname === '/github-setup' ||
-      pathname.includes('/invite')
+
     if (
       AccountStore.getOrganisation() &&
       AccountStore.getOrganisation().block_access_to_admin &&
@@ -332,8 +294,6 @@ const App = class extends Component {
     if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
-    const isOrganisationSelect = document.location.pathname === '/organisations'
-    const integrations = Object.keys(Utils.getIntegrationData())
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -342,42 +302,6 @@ const App = class extends Component {
           onLogin={this.onLogin}
         >
           {({ isSaving, user }, { twoFactorLogin }) => {
-            const inner = (
-              <div>
-                <ButterBar
-                  projectId={projectId}
-                  billingStatus={
-                    AccountStore.getOrganisation()?.subscription.billing_status
-                  }
-                />
-                {projectNotLoaded ? (
-                  <div className='text-center'>
-                    <Loader />
-                  </div>
-                ) : (
-                  <Fragment>
-                    {user && (
-                      <OrganisationLimit
-                        id={AccountStore.getOrganisation()?.id}
-                        organisationPlan={
-                          AccountStore.getOrganisation()?.subscription.plan
-                        }
-                      />
-                    )}
-                    {user && (
-                      <div className='container announcement-container mt-4'>
-                        <div>
-                          <Announcement />
-                          <AnnouncementPerPage pathname={pathname} />
-                        </div>
-                      </div>
-                    )}
-
-                    {this.props.children}
-                  </Fragment>
-                )}
-              </div>
-            )
             return user && user.twoFactorPrompt ? (
               <div className='col-md-6 push-md-3 mt-5'>
                 <TwoFactorPrompt
@@ -396,298 +320,47 @@ const App = class extends Component {
                 />
               </div>
             ) : (
-              <div className='fs-small'>
+              <Nav
+                activeProject={activeProject}
+                projectId={projectId}
+                environmentId={environmentId}
+              >
                 <div>
-                  {!isHomepage &&
-                    (!pageHasAside || !asideIsVisible || !isMobile) && (
-                      <div className='d-flex py-0'>
-                        <Flex className='flex-row px-3 bg-faint'>
-                          {user ? (
-                            <React.Fragment>
-                              <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
-                                <Row className='gap-2'>
-                                  <Link
-                                    data-test='home-link'
-                                    to={'/organisations'}
-                                  >
-                                    <img
-                                      style={{
-                                        height: 24,
-                                        width: 24,
-                                      }}
-                                      src='/static/images/nav-logo.png'
-                                    />
-                                  </Link>
-                                  {!(
-                                    isOrganisationSelect || isCreateOrganisation
-                                  ) && (
-                                    <div className='d-flex gap-1 ml-1 align-items-center'>
-                                      <BreadcrumbSeparator
-                                        projectId={projectId}
-                                        hideSlash={!activeProject}
-                                        focus='organisation'
-                                      >
-                                        <NavLink
-                                          id='organisation-link'
-                                          data-test='organisation-link'
-                                          activeClassName='active'
-                                          className={classNames(
-                                            'breadcrumb-link',
-                                            {
-                                              active: !projectId,
-                                            },
-                                          )}
-                                          to={Utils.getOrganisationHomePage()}
-                                        >
-                                          <div>
-                                            {
-                                              AccountStore.getOrganisation()
-                                                ?.name
-                                            }
-                                          </div>
-                                        </NavLink>
-                                      </BreadcrumbSeparator>
-                                      {!!activeProject && (
-                                        <BreadcrumbSeparator
-                                          projectId={projectId}
-                                          hideSlash
-                                          focus='project'
-                                        >
-                                          <NavLink
-                                            to={`/project/${activeProject.id}`}
-                                            id='project-link'
-                                            activeClassName='active'
-                                            className={'breadcrumb-link active'}
-                                          >
-                                            <div>{activeProject.name}</div>
-                                          </NavLink>
-                                        </BreadcrumbSeparator>
-                                      )}
-                                    </div>
-                                  )}
-                                </Row>
-                                <Row className='gap-3'>
-                                  {Utils.getFlagsmithHasFeature(
-                                    'welcome_page',
-                                  ) && (
-                                    <NavLink
-                                      activeClassName='active'
-                                      to={'/getting-started'}
-                                      className='d-flex lh-1 align-items-center'
-                                    >
-                                      <span className='mr-1'>
-                                        <Icon
-                                          name='rocket'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </span>
-                                      Getting Started
-                                    </NavLink>
-                                  )}
-
-                                  <a
-                                    className='d-flex lh-1 align-items-center'
-                                    href={'https://docs.flagsmith.com'}
-                                  >
-                                    <span className='mr-1'>
-                                      <Icon
-                                        name='file-text'
-                                        width={20}
-                                        fill='#9DA4AE'
-                                      />
-                                    </span>
-                                    Docs
-                                  </a>
-                                  <NavLink
-                                    className='d-flex lh-1 align-items-center'
-                                    id='account-settings-link'
-                                    data-test='account-settings-link'
-                                    activeClassName='active'
-                                    to={'/account'}
-                                  >
-                                    <span className='mr-1'>
-                                      <Icon
-                                        name='person'
-                                        width={20}
-                                        fill='#9DA4AE'
-                                      />
-                                    </span>
-                                    Account
-                                  </NavLink>
-                                  <GithubStar />
-
-                                  <Headway className='cursor-pointer' />
-                                </Row>
-                              </nav>
-                            </React.Fragment>
-                          ) : (
-                            <div />
-                          )}
-                        </Flex>
-                      </div>
-                    )}
-                  {!isOrganisationSelect && !isCreateOrganisation && (
-                    <div className='py-0 bg-faint gap-4 d-flex px-3'>
-                      {activeProject ? (
-                        <>
-                          <NavSubLink
-                            icon={gitBranch}
-                            className={environmentId ? 'active' : ''}
-                            id={`features-link`}
-                            to={`/project/${projectId}/environment/${
-                              lastEnvironmentId || environmentId
-                            }/features`}
-                          >
-                            Environments
-                          </NavSubLink>
-                          <NavSubLink
-                            icon={<SegmentsIcon />}
-                            id={`segments-link`}
-                            to={`/project/${projectId}/segments`}
-                          >
-                            Segments
-                          </NavSubLink>
-                          <Permission
-                            level='project'
-                            permission='VIEW_AUDIT_LOG'
-                            id={projectId}
-                          >
-                            {({ permission }) =>
-                              permission && (
-                                <NavSubLink
-                                  icon={<AuditLogIcon />}
-                                  id='audit-log-link'
-                                  to={`/project/${projectId}/audit-log`}
-                                  data-test='audit-log-link'
-                                >
-                                  Audit Log
-                                </NavSubLink>
-                              )
-                            }
-                          </Permission>
-                          {!!integrations.length && (
-                            <NavSubLink
-                              icon={<Icon name='layers' />}
-                              id='integrations-link'
-                              to={`/project/${projectId}/integrations`}
-                            >
-                              Integrations
-                            </NavSubLink>
-                          )}
-                          <NavSubLink
-                            icon={gitCompare}
-                            id='compare-link'
-                            to={`/project/${projectId}/compare`}
-                          >
-                            Compare
-                          </NavSubLink>
-                          <Permission
-                            level='project'
-                            permission='ADMIN'
-                            id={projectId}
-                          >
-                            {({ permission }) =>
-                              permission && (
-                                <NavSubLink
-                                  icon={<SettingsIcon />}
-                                  id='project-settings-link'
-                                  to={`/project/${projectId}/settings`}
-                                >
-                                  Project Settings
-                                </NavSubLink>
-                              )
-                            }
-                          </Permission>
-                        </>
-                      ) : (
-                        !!AccountStore.getOrganisation() && (
-                          <>
-                            <NavSubLink
-                              icon={apps}
-                              id='projects-link'
-                              to={Utils.getOrganisationHomePage()}
-                            >
-                              Projects
-                            </NavSubLink>
-                            <NavSubLink
-                              data-test='users-and-permissions'
-                              icon={<UsersIcon />}
-                              id='permissions-link'
-                              to={`/organisation/${
-                                AccountStore.getOrganisation().id
-                              }/permissions`}
-                            >
-                              Users and Permissions
-                            </NavSubLink>
-                            {!Project.disableAnalytics &&
-                              AccountStore.isAdmin() && (
-                                <NavSubLink
-                                  icon={statsChart}
-                                  id='permissions-link'
-                                  to={`/organisation/${
-                                    AccountStore.getOrganisation().id
-                                  }/usage`}
-                                >
-                                  Usage
-                                </NavSubLink>
-                              )}
-                            {AccountStore.isAdmin() && (
-                              <>
-                                {Utils.getFlagsmithHasFeature(
-                                  'organisation_integrations',
-                                ) && (
-                                  <NavSubLink
-                                    icon={<Icon name='layers' />}
-                                    id='integrations-link'
-                                    to={`/organisation/${
-                                      AccountStore.getOrganisation().id
-                                    }/integrations`}
-                                  >
-                                    Organisation Integrations
-                                  </NavSubLink>
-                                )}
-                                <NavSubLink
-                                  icon={<SettingsIcon />}
-                                  id='org-settings-link'
-                                  data-test='org-settings-link'
-                                  to={`/organisation/${
-                                    AccountStore.getOrganisation().id
-                                  }/settings`}
-                                >
-                                  Organisation Settings
-                                </NavSubLink>
-                              </>
-                            )}
-                          </>
-                        )
-                      )}
-                    </div>
-                  )}
-                  <hr className='my-0 py-0' />
-                  {/*{!isHomepage && (*/}
-                  {/*  <Aside*/}
-                  {/*    projectId={projectId || lastProjectId}*/}
-                  {/*    environmentId={environmentId || lastEnvironmentId}*/}
-                  {/*    toggleAside={this.toggleAside}*/}
-                  {/*    asideIsVisible={asideIsVisible}*/}
-                  {/*    disabled={!pageHasAside}*/}
-                  {/*  />*/}
-                  {/*)}*/}
-                  {environmentId && !isCreateEnvironment ? (
-                    <div className='d-flex'>
-                      <HomeAside
-                        history={this.props.history}
-                        environmentId={environmentId}
-                        projectId={projectId}
-                      />
-                      <div className='aside-container'>{inner}</div>
+                  <ButterBar
+                    projectId={projectId}
+                    billingStatus={
+                      AccountStore.getOrganisation()?.subscription
+                        .billing_status
+                    }
+                  />
+                  {projectNotLoaded ? (
+                    <div className='text-center'>
+                      <Loader />
                     </div>
                   ) : (
-                    inner
+                    <Fragment>
+                      {user && (
+                        <OrganisationLimit
+                          id={AccountStore.getOrganisation()?.id}
+                          organisationPlan={
+                            AccountStore.getOrganisation()?.subscription.plan
+                          }
+                        />
+                      )}
+                      {user && (
+                        <div className='container announcement-container mt-4'>
+                          <div>
+                            <Announcement />
+                            <AnnouncementPerPage pathname={pathname} />
+                          </div>
+                        </div>
+                      )}
+
+                      {this.props.children}
+                    </Fragment>
                   )}
                 </div>
-              </div>
+              </Nav>
             )
           }}
         </AccountProvider>

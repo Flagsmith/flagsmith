@@ -78,6 +78,11 @@ nav a {
 .border-right {
   border-right:  1px solid $hr-border-color;
 }
+@include media-breakpoint-up(md) {
+  .border-md-right {
+    border-right:  1px solid $hr-border-color;
+  }
+}
 .collapsible__content {
   svg, ion-icon {
     text-align: center;
@@ -147,5 +152,12 @@ nav a {
         fill: $body-color-dark;
       }
     }
+  }
+}
+
+@include media-breakpoint-down(md) {
+  .nav-modal {
+    left: -50px;
+    width: calc(100vw);
   }
 }

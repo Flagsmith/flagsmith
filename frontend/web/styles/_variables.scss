@@ -203,13 +203,14 @@ $font-sm: 14px;
 $font-caption: 13px;
 $font-caption-sm: 12px;
 $font-caption-xs: 11px;
+$font-size-base: 14px;
 $font-sizes: (
+        regular: $font-size-base,
         small: $font-sm,
         caption: $font-caption,
         captionSmall: $font-caption-sm,
         captionXSmall: $font-caption-xs,
 );
-$font-size-base: 14px;
 $h1-font-size: 42px;
 $h1-line-height: 46px;
 $h2-font-size: 34px;
