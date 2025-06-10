@@ -12,6 +12,8 @@ from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
+from integrations.sentry.change_tracking import SentryChangeTracking
+from integrations.sentry.models import SentryChangeTrackingConfiguration
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
 from webhooks.tasks import call_organisation_webhooks
@@ -71,19 +73,32 @@ def call_webhooks(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
         )
 
 
-def track_only_feature_related_events(signal_function):  # type: ignore[no-untyped-def]
-    def signal_wrapper(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-        # Only handle Feature related changes
-        if instance.related_object_type not in [
-            RelatedObjectType.FEATURE.name,
-            RelatedObjectType.FEATURE_STATE.name,
-            RelatedObjectType.SEGMENT.name,
-            RelatedObjectType.EF_VERSION.name,
-        ]:
-            return None
-        return signal_function(sender, instance, **kwargs)
+def track_only(types: list[RelatedObjectType]):  # type: ignore[no-untyped-def]
+    """
+    Restrict an AuditLog signal to a certain list of RelatedObjectType
+    """
 
-    return signal_wrapper
+    def decorator(signal_function):  # type: ignore[no-untyped-def]
+        type_names = (t.name for t in types)
+
+        def signal_wrapper(sender, instance: AuditLog, **kwargs):  # type: ignore[no-untyped-def]
+            if instance.related_object_type not in type_names:
+                return None
+            return signal_function(sender, instance, **kwargs)
+
+        return signal_wrapper
+
+    return decorator
+
+
+def track_only_feature_related_events(signal_function):  # type: ignore[no-untyped-def]
+    allowed_types = [
+        RelatedObjectType.FEATURE,
+        RelatedObjectType.FEATURE_STATE,
+        RelatedObjectType.SEGMENT,
+        RelatedObjectType.EF_VERSION,
+    ]
+    return track_only(allowed_types)(signal_function)
 
 
 def _track_event_async(instance, integration_client):  # type: ignore[no-untyped-def]
@@ -166,3 +181,22 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
         api_token=slack_project_config.api_token, channel_id=env_config.channel_id
     )
     _track_event_async(instance, slack)  # type: ignore[no-untyped-call]
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only([RelatedObjectType.FEATURE_STATE])
+def send_audit_log_event_to_sentry(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
+    try:
+        sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
+            environment=instance.environment,
+            deleted_at__isnull=True,
+        )
+    except SentryChangeTrackingConfiguration.DoesNotExist:
+        return
+
+    sentry_change_tracking = SentryChangeTracking(
+        webhook_url=sentry_configuration.webhook_url,
+        secret=sentry_configuration.secret,
+    )
+
+    _track_event_async(instance, sentry_change_tracking)  # type: ignore[no-untyped-call]
