@@ -166,6 +166,17 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
         )
 
     # Then
+    assert not requests_post.called  # Yet
+
+    # When
+    with freezegun.freeze_time("2199-01-01T01:00:01.500000+00:00"):
+        create_audit_log_from_historical_record(
+            instance=feature_state_obj,
+            history_user=admin_user,
+            history_instance=feature_state_obj.history.first(),
+        )
+
+    # Then
     requests_post.assert_called_once_with(
         url=sentry_configuration.webhook_url,
         headers={

@@ -7,6 +7,9 @@ from django.dispatch import receiver
 
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 from audit.serializers import AuditLogListSerializer
+from audit.services import get_audited_instance_from_audit_log_record
+from features.models import FeatureState
+from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
@@ -184,10 +187,19 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
 
 @receiver(post_save, sender=AuditLog)
 @track_only([RelatedObjectType.FEATURE_STATE])
-def send_audit_log_event_to_sentry(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
+def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
+    feature_state: FeatureState = get_audited_instance_from_audit_log_record(instance)  # type: ignore[assignment]
+    if feature_state.is_scheduled:
+        return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
+
+    feature_state_change_went_live.send(instance, feature_state=feature_state)
+
+
+@receiver(feature_state_change_went_live)
+def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs):  # type: ignore[no-untyped-def]
     try:
         sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
-            environment=instance.environment,
+            environment=sender.environment,
             deleted_at__isnull=True,
         )
     except SentryChangeTrackingConfiguration.DoesNotExist:
@@ -198,4 +210,4 @@ def send_audit_log_event_to_sentry(sender, instance, **kwargs):  # type: ignore[
         secret=sentry_configuration.secret,
     )
 
-    _track_event_async(instance, sentry_change_tracking)  # type: ignore[no-untyped-call]
+    _track_event_async(sender, sentry_change_tracking)  # type: ignore[no-untyped-call]
