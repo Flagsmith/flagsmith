@@ -89,32 +89,40 @@ class HubspotLeadTracker(LeadTracker):
         """
         Return the Hubspot API's id for an organisation.
         """
-        if organisation and getattr(organisation, "hubspot_organisation", None):
+        if not organisation:
+            return ""
+        if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
         if user.email_domain in settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS:
-            domain = None
             return ""
-        else:
-            domain = user.email_domain
 
-        if organisation:
-            response = self.client.create_company(
+        domain = user.email_domain
+        company_kwargs = {"domain": domain}
+        company_kwargs["name"] = organisation.name
+        company_kwargs["organisation_id"] = organisation.id
+        company_kwargs["active_subscription"] = organisation.subscription.plan
+
+        # As Hubspot creates/associates companies based on contact domain
+        # we need to get the hubspot id when this user creates the company for the first time
+        # and update the company name
+        company = self._get_or_create_company_by_domain(**company_kwargs)
+        org_hubspot_id: str = company["id"]
+
+        properties = company.get("properties", {})
+        existing_name = properties.get("name")
+        if existing_name != organisation.name:
+            self.client.update_company_name(
                 name=organisation.name,
-                active_subscription=organisation.subscription.plan,
-                organisation_id=organisation.id,
-                domain=domain,
+                hubspot_company_id=org_hubspot_id,
             )
-            # Store the organisation data in the database since we are
-            # unable to look them up via a unique identifier.
-            HubspotOrganisation.objects.create(
-                organisation=organisation,
-                hubspot_id=response["id"],
-            )
-            org_hubspot_id: str = response["id"]
-        else:
-            company = self._get_or_create_company_by_domain(domain)
-            org_hubspot_id = company["id"]
+
+        # Store the organisation data in the database since we are
+        # unable to look them up via a unique identifier.
+        HubspotOrganisation.objects.create(
+            organisation=organisation,
+            hubspot_id=org_hubspot_id,
+        )
 
         return org_hubspot_id
 
@@ -137,13 +145,24 @@ class HubspotLeadTracker(LeadTracker):
 
         return response  # type: ignore[no-any-return]
 
-    def _get_or_create_company_by_domain(self, domain: str) -> dict:  # type: ignore[type-arg]
+    def _get_or_create_company_by_domain(
+        self,
+        domain: str,
+        name: str | None = None,
+        organisation_id: int | None = None,
+        active_subscription: str | None = None,
+    ) -> dict:  # type: ignore[type-arg]
         company = self.client.get_company_by_domain(domain)
         if not company:
             # Since we don't know the company's name, we pass the domain as
             # both the name and the domain. This can then be manually
             # updated in Hubspot if needed.
-            company = self.client.create_company(name=domain, domain=domain)
+            company = self.client.create_company(
+                name=name or domain,
+                domain=domain,
+                organisation_id=organisation_id,
+                active_subscription=active_subscription,
+            )
 
         return company  # type: ignore[no-any-return]
 

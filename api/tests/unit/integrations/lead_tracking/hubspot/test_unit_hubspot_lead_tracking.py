@@ -112,7 +112,7 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
     mock_client_existing_contact.create_company.assert_not_called()
 
 
-def test_hubspot_creates_company_and_associates_existing_contact_from_hook(
+def test_hubspot_find_company_by_domain_and_creates_organisation_lead_and_associates_existing_contact_from_hook(
     organisation: Organisation,
     enable_hubspot: None,
     mock_client_existing_contact: MagicMock,
@@ -128,6 +128,14 @@ def test_hubspot_creates_company_and_associates_existing_contact_from_hook(
         last_name="Louis",
         marketing_consent_given=True,
     )
+    mock_client_existing_contact.get_company_by_domain.return_value = {
+        "id": HUBSPOT_COMPANY_ID,
+        "properties": {"name": domain},
+    }
+    mock_client_existing_contact.update_company_name.return_value = {
+        "id": HUBSPOT_COMPANY_ID,
+        "properties": {"name": organisation.name},
+    }
 
     HubspotTracker.objects.create(user=user, hubspot_cookie="tracker")
     assert HubspotLead.objects.filter(hubspot_id=HUBSPOT_USER_ID).exists() is False
@@ -139,12 +147,7 @@ def test_hubspot_creates_company_and_associates_existing_contact_from_hook(
     organisation.refresh_from_db()
     assert organisation.hubspot_organisation.hubspot_id == HUBSPOT_COMPANY_ID
 
-    mock_client_existing_contact.create_company.assert_called_once_with(
-        name=organisation.name,
-        domain=domain,
-        active_subscription="free",
-        organisation_id=organisation.id,
-    )
+    mock_client_existing_contact.create_company.assert_not_called()
 
     mock_client_existing_contact.associate_contact_to_company.assert_called_once_with(
         contact_id=HUBSPOT_USER_ID,
@@ -170,7 +173,7 @@ def test_create_organisation_lead_creates_contact_when_not_found(
     mock_client.get_contact.side_effect = [None, {"id": HUBSPOT_USER_ID}]
     mock_client.create_lead_form.return_value = {}
     mock_client.create_company.return_value = {"id": HUBSPOT_COMPANY_ID}
-
+    mock_client.get_company_by_domain.return_value = None
     mocker.patch(
         "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker._get_client",
         return_value=mock_client,
@@ -264,38 +267,3 @@ def test_create_organisation_lead_skips_company_for_filtered_domain(
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
     mock_client_existing_contact.create_company.assert_not_called()
     mock_client_existing_contact.associate_contact_to_company.assert_not_called()
-
-
-def test_create_organisation_lead_without_org_uses_domain_lookup(
-    enable_hubspot: None,
-    db: None,
-    mock_client_existing_contact: MagicMock,
-    mocker: MockerFixture,
-) -> None:
-    # Given
-    domain = "example.com"
-    user = FFAdminUser.objects.create(
-        email=f"new.user@{domain}",
-        first_name="Frank",
-        last_name="Louis",
-        marketing_consent_given=True,
-    )
-
-    mock_company = {"id": HUBSPOT_COMPANY_ID}
-    mocker.patch.object(
-        HubspotLeadTracker,
-        "_get_or_create_company_by_domain",
-        return_value=mock_company,
-    )
-
-    # When
-    tracker = HubspotLeadTracker()
-    tracker.create_organisation_lead(user=user)
-
-    # Then
-    assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
-    mock_client_existing_contact.create_company.assert_not_called()
-    mock_client_existing_contact.associate_contact_to_company.assert_called_once_with(
-        contact_id=HUBSPOT_USER_ID,
-        company_id=HUBSPOT_COMPANY_ID,
-    )

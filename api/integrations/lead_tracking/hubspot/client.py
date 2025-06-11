@@ -215,11 +215,24 @@ class HubspotClient:
 
         return response.to_dict()  # type: ignore[no-any-return]
 
-    def update_company(
+    def update_company_active_subscription(
         self, active_subscription: str, hubspot_company_id: str
     ) -> dict[str, Any]:
         properties = {
             "active_subscription": active_subscription,
+        }
+        simple_public_object_input = SimplePublicObjectInput(properties=properties)
+
+        response = self.client.crm.companies.basic_api.update(
+            company_id=hubspot_company_id,
+            simple_public_object_input=simple_public_object_input,
+        )
+
+        return response.to_dict()  # type: ignore[no-any-return]
+
+    def update_company_name(self, name: str, hubspot_company_id: str) -> dict[str, Any]:
+        properties = {
+            "name": name,
         }
         simple_public_object_input = SimplePublicObjectInput(properties=properties)
 
