@@ -73,6 +73,10 @@ bold, strong {
 .cursor-default {
   cursor: default;
 }
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
 
 .maintenance {
   background: $bg-dark400;
