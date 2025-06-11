@@ -136,25 +136,19 @@ class HubspotClient:
         return response.to_dict()  # type: ignore[no-any-return]
 
     def associate_contact_to_company(self, contact_id: str, company_id: str) -> None:
-        try:
-            association_spec = [
-                AssociationSpec(
-                    association_category="HUBSPOT_DEFINED", association_type_id=1
-                )
-            ]
+        association_spec = [
+            AssociationSpec(
+                association_category="HUBSPOT_DEFINED", association_type_id=1
+            )
+        ]
 
-            self.client.crm.associations.v4.basic_api.create(
-                object_type="contacts",
-                object_id=contact_id,
-                to_object_type="companies",
-                to_object_id=company_id,
-                association_spec=association_spec,
-            )
-        except Exception as e:
-            logger.error(
-                f"Failed to associate contact {contact_id} to company {company_id}: {e}"
-            )
-            raise
+        self.client.crm.associations.v4.basic_api.create(
+            object_type="contacts",
+            object_id=contact_id,
+            to_object_type="companies",
+            to_object_id=company_id,
+            association_spec=association_spec,
+        )
 
     def create_self_hosted_contact(
         self, email: str, first_name: str, last_name: str, hubspot_company_id: str
