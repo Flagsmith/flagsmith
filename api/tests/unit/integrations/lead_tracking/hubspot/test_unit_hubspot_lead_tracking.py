@@ -267,3 +267,20 @@ def test_create_organisation_lead_skips_company_for_filtered_domain(
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
     mock_client_existing_contact.create_company.assert_not_called()
     mock_client_existing_contact.associate_contact_to_company.assert_not_called()
+
+
+def test_get_or_create_organisation_hubspot_id_returns_empty_with_no_org(
+    db: None,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(
+        email="new.user@example.com",
+        first_name="Frank",
+        last_name="Louis",
+        marketing_consent_given=True,
+    )
+    tracker = HubspotLeadTracker()
+
+    result = tracker.get_or_create_organisation_hubspot_id(user=user, organisation=None)
+
+    assert result == ""
