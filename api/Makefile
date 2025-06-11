@@ -104,7 +104,8 @@ run-task-processor:
 
 .PHONY: serve-with-task-processor
 serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
-serve-with-task-processor: serve run-task-processor
+serve-with-task-processor:
+	make -j2 serve run-task-processor
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
