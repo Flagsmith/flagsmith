@@ -1,3 +1,7 @@
+import json
+from datetime import datetime
+from typing import Any
+
 from djoser.serializers import (  # type: ignore[import-untyped]
     UserSerializer as DjoserUserSerializer,
 )
@@ -148,10 +152,66 @@ class UserPermissionGroupSerializerDetail(UserPermissionGroupSerializer):
     users = UserPermissionGroupMembershipSerializer(many=True, read_only=True)
 
 
+class OnboardingToolsSerializer(serializers.Serializer[None]):
+    completed = serializers.BooleanField(required=False, allow_null=True)
+    integrations = serializers.ListField(
+        child=serializers.CharField(), allow_empty=True, required=True
+    )
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        if data.get("completed") is None:
+            data["completed"] = True
+        return data
+
+
+class OnboardingTaskSerializer(serializers.Serializer[None]):
+    name = serializers.CharField()
+    completed_at = serializers.DateTimeField(
+        allow_null=True,
+        required=False,
+        default=lambda: datetime.now(),
+    )
+
+    def validate_completed_at(self, completed_at: datetime | None) -> datetime:
+        return completed_at or datetime.now()
+
+
+class PatchOnboardingSerializer(serializers.Serializer[None]):
+    tasks = OnboardingTaskSerializer(many=True, required=False)
+    tools = OnboardingToolsSerializer(required=False)
+
+    def validate(self, data: dict[str, Any]) -> dict[str, Any]:
+        if "tasks" not in data and "tools" not in data:
+            raise serializers.ValidationError(
+                "At least one of 'tasks' or 'tools' must be provided."
+            )
+        return data
+
+
+class OnboardingResponseTypeSerializer(serializers.Serializer[None]):
+    tasks = OnboardingTaskSerializer(many=True)
+    tools = OnboardingToolsSerializer(required=False)
+
+
 class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
     auth_type = serializers.CharField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
     uuid = serializers.UUIDField(read_only=True)
+
+    def to_representation(self, instance: FFAdminUser) -> dict[str, Any]:
+        rep = super().to_representation(instance)
+
+        if instance.onboarding_data is not None:
+            onboarding_json = json.loads(instance.onboarding_data)
+        else:
+            onboarding_json = None
+
+        rep["onboarding"] = (
+            OnboardingResponseTypeSerializer(onboarding_json).data
+            if onboarding_json
+            else None
+        )
+        return rep  # type: ignore[no-any-return]
 
     class Meta(DjoserUserSerializer.Meta):  # type: ignore[misc]
         fields = DjoserUserSerializer.Meta.fields + (

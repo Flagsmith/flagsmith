@@ -1,6 +1,6 @@
 import { FC, useEffect } from 'react'
 import { withRouter } from 'react-router-dom'
-import { RouteComponentProps } from 'react-router'
+import { RouteComponentProps } from 'react-router-dom'
 
 type ScrollToTopType = RouteComponentProps & {}
 

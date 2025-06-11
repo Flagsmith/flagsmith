@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "metrics",
     "onboarding",
     # 2FA
     "custom_auth.mfa.trench",

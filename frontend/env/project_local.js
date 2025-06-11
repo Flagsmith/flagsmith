@@ -11,7 +11,7 @@ module.exports = global.Project = {
 
   flagsmith: 'ENktaJnfLVbLifybz34JmX',
 
-  flagsmithClientAPI: 'https://api.flagsmith.com/api/v1/',
+  flagsmithClientAPI: 'https://edge.api.flagsmith.com/api/v1/',
 
   flagsmithClientEdgeAPI: 'https://edge.api.flagsmith.com/api/v1/',
   hubspot: '//js-eu1.hs-scripts.com/143451822.js',

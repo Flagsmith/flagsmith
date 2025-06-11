@@ -1,5 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 
+import { StageActionRequest } from './requests'
+
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -239,6 +241,17 @@ export type githubIntegration = {
   organisation: string
 }
 
+export type GettingStartedTask = {
+  name: string
+  completed_at?: string
+}
+export type Onboarding = {
+  tools: {
+    completed: boolean
+    selection: string[]
+  }
+  tasks: GettingStartedTask[]
+}
 export type User = {
   id: number
   email: string
@@ -246,6 +259,7 @@ export type User = {
   last_name: string
   last_login: string
   uuid: string
+  onboarding: Onboarding
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -798,6 +812,52 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
+export enum PipelineStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+}
+
+export type ReleasePipeline = {
+  id: number
+  status: PipelineStatus
+  stages_count: number
+  flags_count: number
+  name: string
+  project: number
+}
+
+export enum StageTriggerType {
+  ON_ENTER = 'ON_ENTER',
+  WAIT_FOR = 'WAIT_FOR',
+}
+
+export type StageTriggerBody = string | null
+
+export type StageTrigger = {
+  trigger_type: StageTriggerType
+  trigger_body: StageTriggerBody
+}
+
+export enum StageActionType {
+  TOGGLE_FEATURE = 'TOGGLE_FEATURE',
+  TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+}
+// TODO: Check if this is correct
+export interface StageActionResponse
+  extends Omit<StageActionRequest, 'action_body'> {
+  action_body: string
+}
+
+export interface PipelineStage {
+  id: number
+  name: string
+  pipeline: number
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageActionResponse[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -935,6 +995,12 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  profile: User
+  onboarding: {}
   userPermissions: UserPermissions
+  releasePipelines: PagedResponse<ReleasePipeline>
+  releasePipeline: ReleasePipeline
+  pipelineStages: PagedResponse<PipelineStage>
+  pipelineStage: PipelineStage
   // END OF TYPES
 }
