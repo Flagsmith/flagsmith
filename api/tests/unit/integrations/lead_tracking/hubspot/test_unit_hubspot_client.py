@@ -3,12 +3,13 @@ import logging
 
 import pytest
 import responses
+from hubspot.crm.associations.v4 import AssociationSpec
 from hubspot.crm.companies import (  # type: ignore[import-untyped]
     SimplePublicObjectInputForCreate,
 )
 from pytest_mock import MockerFixture
 from rest_framework import status
-from hubspot.crm.associations.v4 import AssociationSpec
+
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
