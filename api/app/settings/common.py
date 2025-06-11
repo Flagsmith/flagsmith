@@ -1240,7 +1240,7 @@ HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
 # Number of minutes to wait for a user that has signed up to
 # join or create an organisation before creating a lead in
 # hubspot without a Flagsmith organisation.
-CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 3
+CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
 

@@ -219,22 +219,33 @@ def test_create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
     )
 
 
-def test_associate_contact_to_company_succeeds(mocker: MockerFixture) -> None:
+def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) -> None:
     # Given
-    client = HubspotClient(client=mocker.MagicMock())
+    company_id = "456"
+    contact_id = "123"
 
     # When
-    client.associate_contact_to_company(contact_id="123", company_id="456")
+    hubspot_client.associate_contact_to_company(
+        contact_id=contact_id, company_id=company_id
+    )
 
     # Then
-    client.client.crm.associations.v4.basic_api.create.assert_called_once_with(
+    hubspot_client.client.crm.associations.v4.basic_api.create.assert_called_once_with(
         object_type="contacts",
-        object_id="123",
+        object_id=contact_id,
         to_object_type="companies",
-        to_object_id="456",
+        to_object_id=company_id,
         association_spec=[
             AssociationSpec(
                 association_category="HUBSPOT_DEFINED", association_type_id=1
             )
         ],
     )
+
+
+def test_update_company_name_calls_hubspot_api(hubspot_client: HubspotClient) -> None:
+    # Given / # When
+    hubspot_client.update_company_name(name="NewCo", hubspot_company_id="123")
+
+    # Then
+    hubspot_client.client.crm.companies.basic_api.update.assert_called_once()
