@@ -95,11 +95,11 @@ django-collect-static:
 	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
-serve:
+serve: docker-up
 	poetry run flagsmith start --reload api
 
 .PHONY: run-task-processor
-run-task-processor:
+run-task-processor: docker-up
 	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
 
 .PHONY: serve-with-task-processor
