@@ -108,15 +108,6 @@ class HubspotClient:
             )
         return response.json()  # type: ignore[no-any-return]
 
-    def create_saas_hubspot_contact(self, user: "FFAdminUser") -> dict[str, Any]:
-        properties = {
-            "email": user.email,
-            "firstname": user.first_name,
-            "lastname": user.last_name,
-            "hs_marketable_status": user.marketing_consent_given,
-        }
-        return self._post_create_contact(properties)
-
     def _post_create_contact(
         self,
         properties: dict[str, Any],

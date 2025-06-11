@@ -1,62 +1,78 @@
+import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from users.models import FFAdminUser
+from integrations.lead_tracking.hubspot.tasks import (
+    track_hubspot_organisation_lead,
+    track_hubspot_user_contact,
+)
 
-from integrations.lead_tracking.hubspot.client import HubspotClient
-from users.models import FFAdminUser, HubspotLead
+
+def test_track_hubspot_user_contact_skips_when_tracking_disabled(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = False
+
+    # When / Then
+    with pytest.raises(AssertionError):
+        track_hubspot_user_contact(user_id=admin_user.id)
 
 
-def test_track_hubspot_lead_without_organisation_does_nothing_if_lead_exists(
-    db: None, mocker: MockerFixture, settings: SettingsWrapper
+def test_track_hubspot_user_contact_skips_when_should_track_false(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
-
-    user = FFAdminUser.objects.create(email="test@example.com")
-    HubspotLead.objects.create(user=user, hubspot_id="foo")
-
-    mock_hubspot_client = mocker.MagicMock(spec=HubspotClient)
     mocker.patch(
-        "integrations.lead_tracking.hubspot.lead_tracker.HubspotClient",
-        return_value=mock_hubspot_client,
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.should_track",
+        return_value=False,
+    )
+    mock_create_contact = mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.create_user_hubspot_contact"
     )
 
     # When
-    # track_hubspot_lead_without_organisation(user_id=user.id)
+    track_hubspot_user_contact(user_id=admin_user.id)
 
     # Then
-    mock_hubspot_client.create_contact.assert_not_called()
+    mock_create_contact.assert_not_called()
 
 
-def test_track_hubspot_lead_without_organisation(
-    db: None, mocker: MockerFixture, settings: SettingsWrapper
+def test_track_hubspot_organisation_lead_skips_when_tracking_disabled(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
 ) -> None:
     # Given
-    hubspot_company_id = "company-id"
-    hubspot_contact_id = "contact-id"
-    domain = "example.com"
-    email = f"test@{domain}"
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = False
 
+    # When / Then
+    with pytest.raises(AssertionError):
+        track_hubspot_organisation_lead(user_id=admin_user.id, organisation_id=1)
+
+
+def test_track_hubspot_organisation_lead_skips_when_should_track_false(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
-
-    user = FFAdminUser.objects.create(email=email)
-
-    mock_hubspot_client = mocker.MagicMock(spec=HubspotClient)
     mocker.patch(
-        "integrations.lead_tracking.hubspot.lead_tracker.HubspotClient",
-        return_value=mock_hubspot_client,
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.should_track",
+        return_value=False,
     )
-
-    mock_hubspot_client.get_contact.return_value = None
-    mock_hubspot_client.get_company_by_domain.return_value = None
-    mock_hubspot_client.create_company.return_value = {"id": hubspot_company_id}
-    mock_hubspot_client.create_contact.return_value = {"id": hubspot_contact_id}
+    mock_create_lead = mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.create_organisation_lead"
+    )
 
     # When
-    # track_hubspot_lead_without_organisation(user_id=user.id)
+    track_hubspot_organisation_lead(user_id=admin_user.id, organisation_id=1)
 
     # Then
-    mock_hubspot_client.create_company.assert_called_once_with(
-        name=domain, domain=domain
-    )
-    mock_hubspot_client.create_contact.assert_called_once_with(user, hubspot_company_id)
-    assert HubspotLead.objects.filter(user=user).exists()
+    mock_create_lead.assert_not_called()

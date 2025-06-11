@@ -1,6 +1,9 @@
+from unittest.mock import MagicMock
+
 import pytest
 from common.projects.permissions import VIEW_PROJECT
 from django.db.utils import IntegrityError
+from pytest_django.fixtures import SettingsWrapper
 
 from organisations.models import Organisation, OrganisationRole
 from organisations.permissions.models import UserOrganisationPermission
@@ -263,3 +266,17 @@ def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(  # type
 
 def test_user_email_domain_property():  # type: ignore[no-untyped-def]
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
+
+
+def test_user_create_calls_hubspot_tracking(
+    mocker: MagicMock, db: None, settings: SettingsWrapper
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    track_hubspot_user_contact = mocker.patch("users.models.track_hubspot_user_contact")
+
+    # When
+    user = FFAdminUser.objects.create(
+        email="test@example.com", first_name="John", last_name="Doe"
+    )
+    track_hubspot_user_contact.delay.assert_called_once_with(args=(user.id,))

@@ -2,7 +2,6 @@ from django.conf import settings
 from task_processor.decorators import (
     register_task_handler,
 )
-from task_processor.models import TaskPriority
 
 
 @register_task_handler()
@@ -30,9 +29,8 @@ def track_hubspot_organisation_lead(user_id: int, organisation_id: int = None) -
     hubspot_lead_tracker.create_organisation_lead(**create_lead_kwargs)
 
 
-@register_task_handler(priority=TaskPriority.HIGHEST)
-def track_hubspot_user_contact(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
-    print("plop1")
+@register_task_handler()
+def track_hubspot_user_contact(user_id: int) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     from users.models import FFAdminUser

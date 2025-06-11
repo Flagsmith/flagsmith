@@ -1,3 +1,4 @@
+import json
 import logging
 
 import pytest
@@ -29,12 +30,16 @@ def hubspot_client(mocker: MockerFixture) -> HubspotClient:
 
 
 @responses.activate
+@pytest.mark.parametrize(
+    "hubspot_cookie_body",
+    ["test_hubspot_cookie", None],
+)
 def test_create_lead_form(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
+    hubspot_cookie_body: str | None,
 ) -> None:
     # Given
-    hubspot_cookie = "test_hubspot_cookie"
     url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
     responses.add(
         method="POST",
@@ -44,10 +49,34 @@ def test_create_lead_form(
     )
 
     # When
-    response = hubspot_client.create_lead_form(staff_user, hubspot_cookie)
+    response = hubspot_client.create_lead_form(staff_user, hubspot_cookie_body)
 
     # Then
+    assert len(responses.calls) == 1
     assert response == {"inlineMessage": "Thanks for submitting the form."}
+    call: responses.Call = responses.calls[0]  # type: ignore[assignment]
+    request_body = json.loads(call.request.body)
+    assert response == {"inlineMessage": "Thanks for submitting the form."}
+
+    fields: list[dict[str, str]] = request_body["fields"]
+
+    assert {"objectTypeId": "0-1", "name": "email", "value": staff_user.email} in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "firstname",
+        "value": staff_user.first_name,
+    } in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "lastname",
+        "value": staff_user.last_name,
+    } in fields
+
+    context = request_body.get("context", {})
+    if hubspot_cookie_body is not None:
+        assert context["hutk"] == hubspot_cookie_body
+    else:
+        assert context == {}
 
 
 @responses.activate
@@ -149,39 +178,6 @@ def test_create_company_without_organisation_information(
         "domain": domain,
         "name": name,
     }
-
-
-def test_create_contact(hubspot_client: HubspotClient, admin_user: FFAdminUser) -> None:
-    # Given
-    hubspot_company_id = "111"
-
-    properties = {
-        "email": admin_user.email,
-        "firstname": admin_user.first_name,
-        "lastname": admin_user.last_name,
-        "hs_marketable_status": admin_user.marketing_consent_given,
-    }
-
-    # When
-    hubspot_client.create_saas_hubspot_contact(user=admin_user)
-
-    # Then
-    hubspot_client.client.crm.contacts.basic_api.create.assert_called_once_with(
-        simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
-            properties=properties,
-            associations=[
-                {
-                    "types": [
-                        {
-                            "associationCategory": "HUBSPOT_DEFINED",
-                            "associationTypeId": 1,
-                        }
-                    ],
-                    "to": {"id": hubspot_company_id},
-                }
-            ],
-        )
-    )
 
 
 def test_create_self_hosted_contact(hubspot_client: HubspotClient) -> None:

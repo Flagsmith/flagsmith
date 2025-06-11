@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings
@@ -30,6 +31,7 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 def test_organisation_has_paid_subscription_true(db: None) -> None:
@@ -588,3 +590,23 @@ def test_organisation_has_billing_periods(
 
     # Then
     assert result == expected_result
+
+
+def test_user_organisation_create_calls_hubspot_lead_tracking(
+    mocker: MagicMock, db: None, settings: SettingsWrapper, organisation: Organisation
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    track_hubspot_organisation_lead = mocker.patch(
+        "organisations.models.track_hubspot_organisation_lead"
+    )
+    mocker.patch("users.models.track_hubspot_user_contact")
+    user = FFAdminUser.objects.create(
+        email="test@example.com", first_name="John", last_name="Doe"
+    )
+
+    # When
+    user.add_organisation(organisation)
+    track_hubspot_organisation_lead.delay.assert_called_once_with(
+        args=(user.id, organisation.id)
+    )

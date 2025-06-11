@@ -48,7 +48,6 @@ class HubspotLeadTracker(LeadTracker):
         tracker = HubspotTracker.objects.filter(user=user).first()
         tracker_cookie = tracker.hubspot_cookie if tracker else None
         self.client.create_lead_form(user=user, hubspot_cookie=tracker_cookie)
-
         contact = self.client.get_contact(user)
         hubspot_id: str = contact["id"]
 
@@ -61,13 +60,13 @@ class HubspotLeadTracker(LeadTracker):
     def create_organisation_lead(
         self, user: FFAdminUser, organisation: Organisation | None = None
     ) -> None:
-        print("plop3")
         hubspot_contact_id = self.get_or_create_user_hubspot_id(user)
         hubspot_org_id = self.get_or_create_organisation_hubspot_id(user, organisation)
-        self.client.associate_contact_to_company(
-            contact_id=hubspot_contact_id,
-            company_id=hubspot_org_id,
-        )
+        if hubspot_contact_id and hubspot_org_id:
+            self.client.associate_contact_to_company(
+                contact_id=hubspot_contact_id,
+                company_id=hubspot_org_id,
+            )
 
     def get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str:
         hubspot_lead = HubspotLead.objects.filter(user=user).first()
@@ -95,6 +94,7 @@ class HubspotLeadTracker(LeadTracker):
 
         if user.email_domain in settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS:
             domain = None
+            return ""
         else:
             domain = user.email_domain
 
@@ -105,15 +105,17 @@ class HubspotLeadTracker(LeadTracker):
                 organisation_id=organisation.id,
                 domain=domain,
             )
-
             # Store the organisation data in the database since we are
             # unable to look them up via a unique identifier.
             HubspotOrganisation.objects.create(
                 organisation=organisation,
                 hubspot_id=response["id"],
             )
+            org_hubspot_id: str = response["id"]
+        else:
+            company = self._get_or_create_company_by_domain(domain)
+            org_hubspot_id = company["id"]
 
-        org_hubspot_id: str = response["id"]
         return org_hubspot_id
 
     def update_company_active_subscription(
