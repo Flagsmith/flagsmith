@@ -3,12 +3,13 @@ import logging
 
 import pytest
 import responses
+from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 from hubspot.crm.companies import (  # type: ignore[import-untyped]
     SimplePublicObjectInputForCreate,
 )
 from pytest_mock import MockerFixture
 from rest_framework import status
-from hubspot.crm.associations.v4 import AssociationSpec
+
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
@@ -218,7 +219,7 @@ def test_create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
     )
 
 
-def test_associate_contact_to_company_succeeds(mocker):
+def test_associate_contact_to_company_succeeds(mocker: MockerFixture) -> None:
     # Given
     client = HubspotClient(client=mocker.MagicMock())
 
