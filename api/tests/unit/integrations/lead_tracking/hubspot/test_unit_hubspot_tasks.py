@@ -1,11 +1,12 @@
 import pytest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
-from users.models import FFAdminUser
+
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_organisation_lead,
     track_hubspot_user_contact,
 )
+from users.models import FFAdminUser
 
 
 def test_track_hubspot_user_contact_skips_when_tracking_disabled(
