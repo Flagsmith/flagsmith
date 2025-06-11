@@ -97,7 +97,12 @@ django-collect-static:
 .PHONY: serve
 serve:
 	poetry run flagsmith start --reload api
-		
+
+.PHONY: run-task-processor
+serve-with-task-processor:
+	export TASK_RUN_METHOD="TASK_PROCESSOR"
+	poetry run python manage.py start --reload --bind 0.0.0.0:8001 task-processor &
+	poetry run python manage.py start --reload --bind 0.0.0.0:8000 api
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
