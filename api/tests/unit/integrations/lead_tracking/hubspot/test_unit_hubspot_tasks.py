@@ -5,6 +5,7 @@ from pytest_mock import MockerFixture
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_organisation_lead,
     track_hubspot_user_contact,
+    update_hubspot_active_subscription,
 )
 from users.models import FFAdminUser
 
@@ -77,3 +78,16 @@ def test_track_hubspot_organisation_lead_skips_when_should_track_false(
 
     # Then
     mock_create_lead.assert_not_called()
+
+
+def test_update_hubspot_active_subscription_skips_when_tracking_disabled(
+    settings: SettingsWrapper,
+    admin_user: FFAdminUser,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = False
+
+    # When / Then
+    with pytest.raises(AssertionError):
+        update_hubspot_active_subscription(subscription_id=1)

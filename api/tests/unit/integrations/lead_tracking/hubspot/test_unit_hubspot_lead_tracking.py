@@ -313,3 +313,36 @@ def test_update_company_active_subscription_calls_update_company(
         active_subscription="scaleup",
         hubspot_company_id="hubspot-org-1",
     )
+
+
+def test_update_company_active_subscription_returns_none_when_no_hubspot_org(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = mocker.MagicMock()
+    subscription.plan = "pro"
+    subscription.organisation = mocker.MagicMock()
+    subscription.organisation.hubspot_organisation = None
+
+    # When
+    tracker = HubspotLeadTracker()
+    result = tracker.update_company_active_subscription(subscription)
+
+    # Then
+    assert result is None
+
+
+def test_update_company_active_subscription_returns_none_when_no_plan(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    subscription = mocker.MagicMock()
+    subscription.plan = None
+    subscription.organisation = mocker.MagicMock()
+
+    # When
+    tracker = HubspotLeadTracker()
+    result = tracker.update_company_active_subscription(subscription)
+
+    # Then
+    assert result is None

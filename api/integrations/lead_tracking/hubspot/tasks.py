@@ -48,11 +48,11 @@ def track_hubspot_user_contact(user_id: int) -> None:
 
 @register_task_handler()
 def update_hubspot_active_subscription(subscription_id: int) -> None:
-    assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
-
     from organisations.models import Subscription
 
     from .lead_tracker import HubspotLeadTracker
+
+    assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     subscription = Subscription.objects.get(id=subscription_id)
     hubspot_lead_tracker = HubspotLeadTracker()
