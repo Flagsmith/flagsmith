@@ -188,7 +188,10 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
 @receiver(post_save, sender=AuditLog)
 @track_only([RelatedObjectType.FEATURE_STATE])
 def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-    feature_state: FeatureState = get_audited_instance_from_audit_log_record(instance)  # type: ignore[assignment]
+    feature_state = get_audited_instance_from_audit_log_record(instance)
+    if not (feature_state and isinstance(feature_state, FeatureState)):
+        return
+
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
