@@ -287,7 +287,7 @@ def test_get_or_create_organisation_hubspot_id_returns_empty_with_no_org(
 
 
 def test_update_company_active_subscription_calls_update_company(
-    db: None, mocker
+    db: None, mocker: MockerFixture
 ) -> None:
     # Given
     mock_client = mocker.MagicMock()
