@@ -283,4 +283,4 @@ def test_get_or_create_organisation_hubspot_id_returns_empty_with_no_org(
 
     result = tracker.get_or_create_organisation_hubspot_id(user=user, organisation=None)
 
-    assert result == ""
+    assert result is None
