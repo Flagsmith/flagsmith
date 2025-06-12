@@ -1947,11 +1947,7 @@ const CreateFlag = class extends Component {
                                     data-test='feature_health'
                                     tabLabelString='Feature Health'
                                     tabLabel={
-                                      <Row
-                                        className={`inline-block justify-content-center ${
-                                          true ? 'pr-1' : ''
-                                        }`}
-                                      >
+                                      <Row className='inline-block justify-content-center pr-1'>
                                         Feature Health{' '}
                                         <IonIcon
                                           icon={warning}
