@@ -33,7 +33,9 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
     @staticmethod
     def generate_event_data(audit_log_record: AuditLog) -> dict[str, Any]:
         feature_state = get_audited_instance_from_audit_log_record(audit_log_record)
-        if not (feature_state and isinstance(feature_state, FeatureState)):
+        if not (
+            feature_state and isinstance(feature_state, FeatureState)
+        ):  # pragma: no cover
             raise ValueError(f"{repr(feature_state)} is not a FeatureState object.")
 
         update_published_at = feature_state.deleted_at or (
