@@ -5,6 +5,10 @@ from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
+from audit.serializers import AuditLogListSerializer
+from audit.services import get_audited_instance_from_audit_log_record
 from features.models import FeatureState
 from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
@@ -19,11 +23,6 @@ from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
 from webhooks.tasks import call_organisation_webhooks
 from webhooks.webhooks import WebhookEventType
-
-from .models import AuditLog
-from .related_object_type import RelatedObjectType
-from .serializers import AuditLogListSerializer
-from .services import get_audited_instance_from_audit_log_record
 
 logger = logging.getLogger(__name__)
 
