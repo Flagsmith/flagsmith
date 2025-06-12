@@ -24,7 +24,7 @@ import CreateGroup from 'components/modals/CreateGroup'
 import UserGroupList from 'components/UserGroupList'
 import { useGetRolesQuery } from 'common/services/useRole'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
+import { RouterChildContext, useHistory } from 'react-router-dom'
 import map from 'lodash/map'
 import Input from 'components/base/forms/Input'
 import ErrorMessage from 'components/ErrorMessage'
@@ -45,6 +45,7 @@ import {
   useGetUserInvitesQuery,
   useResendUserInviteMutation,
 } from 'common/services/useInvites'
+import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -77,6 +78,9 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const { data: userInvitesData } = useGetUserInvitesQuery({
     organisationId: organisation.id,
   })
+
+  const history = useHistory()
+
   const [deleteUserInvite] = useDeleteUserInviteMutation()
   const [resendUserInvite] = useResendUserInviteMutation()
 
@@ -158,6 +162,29 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       'p-0 side-modal',
     )
   }
+
+  const inspectPermissions = (user: User, organisationId: number) => {
+    openModal(
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          <TabItem tabLabel='Permissions'>
+            <div className='pt-4'>
+              <InspectPermissions
+                uncontrolled
+                user={user}
+                orgId={organisationId}
+              />
+            </div>
+          </TabItem>
+        </Tabs>
+      </div>,
+      'p-0 side-modal',
+    )
+  }
+
   const formatLastLoggedIn = (last_login: string | undefined) => {
     if (!last_login) return 'Never'
 
@@ -216,6 +243,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const needsUpgradeForAdditionalSeats =
     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
     (!autoSeats && usedSeats)
+
+  const isInspectPermissionsEnabled = Utils.getFlagsmithHasFeature(
+    'inspect_permissions',
+  )
+
   return (
     <div className='app-container container'>
       <JSONReference
@@ -317,7 +349,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                         <a
                                           href='#'
                                           onClick={() => {
-                                            router.history.replace(
+                                            history.replace(
                                               Constants.getUpgradeUrl(),
                                             )
                                           }}
@@ -614,6 +646,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
                                     canEdit={AccountStore.isAdmin()}
+                                    canInspectPermissions={
+                                      isInspectPermissionsEnabled &&
+                                      AccountStore.isAdmin()
+                                    }
+                                    onInspectPermissions={() => {
+                                      inspectPermissions(user, organisation.id)
+                                    }}
                                   />
                                 </div>
                               </Row>

@@ -8,6 +8,7 @@ import {
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
+  projectFlagService,
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
@@ -28,6 +29,7 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
+import { projectService } from 'common/services/useProject'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -133,6 +135,10 @@ const controller = {
               environmentFeatures && _.keyBy(environmentFeatures, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
+
           store.saved({ createdFlag: flag.name })
         }),
       )
@@ -165,6 +171,9 @@ const controller = {
           const index = _.findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
           store.changed()
         }
       })
@@ -449,6 +458,9 @@ const controller = {
               store.model.lastSaved = new Date().valueOf()
             }
             onComplete && onComplete()
+            getStore().dispatch(
+              projectFlagService.util.invalidateTags(['ProjectFlag']),
+            )
             store.saved({})
           })
           .catch((e) => {
@@ -959,6 +971,9 @@ const controller = {
           (f) => f.id !== flag.id,
         )
         store.model.lastSaved = new Date().valueOf()
+        getStore().dispatch(
+          projectFlagService.util.invalidateTags(['ProjectFlag']),
+        )
         store.saved({})
         store.trigger('removed', flag)
       })
@@ -967,7 +982,7 @@ const controller = {
     (search, environmentId, projectId, filter, pageSize) => {
       store.search = encodeURIComponent(search || '')
       controller.getFeatures(
-        projectId,
+        parseInt(projectId),
         environmentId,
         true,
         0,
@@ -1006,7 +1021,7 @@ const store = Object.assign({}, BaseStore, {
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
-
+  const projectId = parseInt(action.projectId)
   switch (action.actionType) {
     case Actions.SEARCH_FLAGS: {
       if (action.sort) {
@@ -1015,7 +1030,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.searchFeatures(
         action.search,
         action.environmentId,
-        action.projectId,
+        projectId,
         action.filter,
         action.pageSize,
       )
@@ -1027,7 +1042,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         store.sort = action.sort
       }
       controller.getFeatures(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.force,
         action.page,
@@ -1037,7 +1052,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.REFRESH_FEATURES:
       if (
-        action.projectId === store.projectId &&
+        projectId === store.projectId &&
         action.environmentId === store.environmentId
       ) {
         controller.getFeatures(
@@ -1051,18 +1066,18 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.GET_FEATURE_USAGE:
       controller.getFeatureUsage(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.flag,
         action.period,
       )
       break
     case Actions.CREATE_FLAG:
-      controller.createFlag(action.projectId, action.environmentId, action.flag)
+      controller.createFlag(projectId, action.environmentId, action.flag)
       break
     case Actions.EDIT_ENVIRONMENT_FLAG:
       controller.editFeatureState(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.flag,
         action.projectFlag,
@@ -1074,7 +1089,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST:
       controller.editFeatureStateChangeRequest(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.flag,
         action.projectFlag,
@@ -1085,13 +1100,13 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       )
       break
     case Actions.EDIT_FEATURE:
-      controller.editFeature(action.projectId, action.flag, action.onComplete)
+      controller.editFeature(projectId, action.flag, action.onComplete)
       break
     case Actions.EDIT_FEATURE_MV:
-      controller.editFeatureMv(action.projectId, action.flag, action.onComplete)
+      controller.editFeatureMv(projectId, action.flag, action.onComplete)
       break
     case Actions.REMOVE_FLAG:
-      controller.removeFlag(action.projectId, action.flag)
+      controller.removeFlag(projectId, action.flag)
       break
     default:
   }

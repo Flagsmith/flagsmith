@@ -15,7 +15,7 @@ from django.core.exceptions import (
 )
 from django.db import models
 from django.db.models import Max, Q, QuerySet
-from django.utils import timezone
+from django.utils import formats, timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
@@ -31,6 +31,7 @@ from simple_history.models import HistoricalRecords  # type: ignore[import-untyp
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
+    FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
@@ -547,15 +548,15 @@ class FeatureState(
         if self.type == other.type:
             if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
                 if (
-                    self.environment_feature_version is None
-                    or other.environment_feature_version is None
+                    self.environment_feature_version_id is None
+                    or other.environment_feature_version_id is None
                 ):
                     raise ValueError(
                         "Cannot compare feature states as they are missing environment_feature_version."
                     )
 
                 return (  # type: ignore[no-any-return]
-                    self.environment_feature_version > other.environment_feature_version
+                    self.environment_feature_version > other.environment_feature_version  # type: ignore[operator]
                 )
             else:
                 # we use live_from here as a priority over the version since
@@ -618,8 +619,8 @@ class FeatureState(
     def is_live(self) -> bool:
         if self.environment.use_v2_feature_versioning:  # type: ignore[union-attr]
             return (
-                self.environment_feature_version is not None
-                and self.environment_feature_version.is_live
+                self.environment_feature_version_id is not None
+                and self.environment_feature_version.is_live  # type: ignore[union-attr]
             )
         else:
             return (
@@ -630,7 +631,7 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from and self.live_from > timezone.now()  # type: ignore[return-value]
+        return bool(self.live_from and self.live_from > timezone.now())
 
     def clone(
         self,
@@ -958,6 +959,13 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        if self.change_request and self.is_scheduled:
+            live_from: datetime.datetime = timezone.localtime(self.live_from)
+            return FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE % (
+                self.feature.name,
+                self.change_request.title,
+                formats.date_format(live_from, settings.DATETIME_FORMAT),
+            )
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,

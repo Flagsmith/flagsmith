@@ -1,13 +1,18 @@
+from typing import get_args
+
 from rest_framework import serializers
 
-from integrations.launch_darkly.models import LaunchDarklyImportRequest
+from integrations.launch_darkly.models import (
+    LaunchDarklyImportRequest,
+    LaunchDarklyImportResult,
+)
 
 
 class LaunchDarklyImportRequestStatusSerializer(serializers.Serializer):  # type: ignore[type-arg]
     requested_environment_count = serializers.IntegerField(read_only=True)
     requested_flag_count = serializers.IntegerField(read_only=True)
     result = serializers.ChoiceField(
-        ["success", "failure"],
+        get_args(LaunchDarklyImportResult),
         read_only=True,
         allow_null=True,
     )

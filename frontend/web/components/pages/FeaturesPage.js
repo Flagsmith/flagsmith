@@ -26,13 +26,11 @@ import ClearFilters from 'components/ClearFilters'
 import Button from 'components/base/forms/Button'
 import { isEqual } from 'lodash'
 import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
+import { withRouter } from 'react-router-dom'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
   getFiltersFromParams = (params) => {
     return {
       group_owners:
@@ -67,16 +65,17 @@ const FeaturesPage = class extends Component {
         typeof params.value_search === 'string' ? params.value_search : '',
     }
   }
-  constructor(props, context) {
-    super(props, context)
+
+  constructor(props) {
+    super(props)
     this.state = {
       ...this.getFiltersFromParams(Utils.fromParam()),
       forceMetricsRefetch: false,
     }
     ES6Component(this)
-
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     AppActions.getFeatures(
-      this.props.match.params.projectId,
+      projectIdFromUrl,
       this.props.match.params.environmentId,
       true,
       this.state.search,
@@ -118,12 +117,13 @@ const FeaturesPage = class extends Component {
   }
 
   newFlag = () => {
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     openModal(
       'New Feature',
       <CreateFlagModal
-        history={this.props.router.history}
+        history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
+        projectId={projectIdFromUrl}
       />,
       'side-modal create-feature-modal',
     )
@@ -161,11 +161,9 @@ const FeaturesPage = class extends Component {
         : this.state.tags.join(','),
     value_search: this.state.value_search ? this.state.value_search : undefined,
   })
+
   onError = (error) => {
-    // Kick user back out to projects
-    this.setState({ error })
     if (!error?.name && !error?.initial_value) {
-      // Could not determine field level error, show generic toast.
       toast(
         error.project ||
           'We could not create this feature, please check the name is not in use.',
@@ -176,17 +174,16 @@ const FeaturesPage = class extends Component {
 
   filter = (page) => {
     const currentParams = Utils.fromParam()
-    // this.props.router.push()
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     this.setState({ page }, () => {
       if (!currentParams.feature) {
-        // don't replace page if we are currently viewing a feature
-        this.props.router.history.replace(
+        this.props.history.replace(
           `${document.location.pathname}?${Utils.toParam(this.getURLParams())}`,
         )
       }
       if (page) {
         AppActions.getFeatures(
-          this.props.match.params.projectId,
+          projectIdFromUrl,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -196,7 +193,7 @@ const FeaturesPage = class extends Component {
         )
       } else {
         AppActions.searchFeatures(
-          this.props.match.params.projectId,
+          projectIdFromUrl,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -208,11 +205,12 @@ const FeaturesPage = class extends Component {
   }
 
   createFeaturePermission(el) {
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     return (
       <Permission
         level='project'
         permission='CREATE_FEATURE'
-        id={this.props.match.params.projectId}
+        id={projectIdFromUrl}
       >
         {({ permission }) =>
           permission
@@ -235,16 +233,18 @@ const FeaturesPage = class extends Component {
     )
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+
     const hasFilters = !isEqual(
       this.getFiltersFromParams({ ...params, page: '1' }),
       this.getFiltersFromParams({ page: '1' }),
     )
     const clearFilters = () => {
-      this.props.router.history.replace(`${document.location.pathname}`)
+      this.props.history.replace(`${document.location.pathname}`)
       const newState = this.getFiltersFromParams({})
       this.setState(newState, () => {
         AppActions.getFeatures(
-          this.props.match.params.projectId,
+          projectIdFromUrl,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -254,6 +254,7 @@ const FeaturesPage = class extends Component {
         )
       })
     }
+
     return (
       <div
         data-test='features-page'
@@ -287,9 +288,11 @@ const FeaturesPage = class extends Component {
               totalFeatures,
               maxFeaturesAllowed,
             )
+
             if (FeatureListStore.hasLoaded && !this.state.loadedOnce) {
               this.state.loadedOnce = true
             }
+
             return (
               <div className='features-page'>
                 {(isLoading || !this.state.loadedOnce) &&
@@ -597,7 +600,7 @@ const FeaturesPage = class extends Component {
                                     environmentFlags={environmentFlags}
                                     projectFlags={projectFlags}
                                     permission={permission}
-                                    history={this.context.router.history}
+                                    history={this.props.history}
                                     environmentId={environmentId}
                                     projectId={projectId}
                                     index={i}
@@ -625,7 +628,7 @@ const FeaturesPage = class extends Component {
                           />
                           <EnvironmentDocumentCodeHelp
                             title='3: Providing feature defaults and support offline'
-                            projectId={this.props.match.params.projectId}
+                            projectId={projectIdFromUrl}
                             environmentId={
                               this.props.match.params.environmentId
                             }
@@ -758,4 +761,4 @@ const FeaturesPage = class extends Component {
 
 FeaturesPage.propTypes = {}
 
-module.exports = ConfigProvider(FeaturesPage)
+export default withRouter(ConfigProvider(FeaturesPage))

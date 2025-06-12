@@ -101,7 +101,7 @@ jobs:
 
       - name: Scan ${{ matrix.image-name }}:main image
         id: trivy
-        uses: Flagsmith/actions/trivy-scan-image@v0.3.0
+        uses: Flagsmith/actions/trivy-scan-image@v0.4.0
         with:
           image-tag: ${{ env.REGISTRY_URL }}/flagsmith/${{ matrix.image-name }}:main
           category: ${{ matrix.image-name }}
@@ -110,3 +110,4 @@ jobs:
           trivy-password: ${{ secrets.GITHUB_TOKEN }}
           trivy-db-repository: ${{ env.TRIVY_DB_REPOSITORY }}
           trivy-java-db-repository: ${{ env.TRIVY_JAVA_DB_REPOSITORY }}
+          artifact-name: ${{ matrix.image-name }}-trivy-report.sarif
