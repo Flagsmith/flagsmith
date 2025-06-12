@@ -49,23 +49,23 @@ class HubspotLeadTracker(LeadTracker):
         tracker_cookie = tracker.hubspot_cookie if tracker else None
         self.client.create_lead_form(user=user, hubspot_cookie=tracker_cookie)
         contact = self.client.get_contact(user)
-        hubspot_id: str | None = contact.get("id")
+        hubspot_contact_id: str | None = contact.get("id")
 
         # Hubspot creates contact asynchronously
         # If not available on the spot, following steps will sync database with Hubspot
-        if hubspot_id is not None:
+        if hubspot_contact_id is not None:
             HubspotLead.objects.update_or_create(
-                user=user, defaults={"hubspot_id": hubspot_id}
+                user=user, defaults={"hubspot_id": hubspot_contact_id}
             )
 
-        return hubspot_id
+        return hubspot_contact_id
 
     def create_organisation_lead(
         self, user: FFAdminUser, organisation: Organisation | None = None
     ) -> None:
         hubspot_contact_id = self.get_or_create_user_hubspot_id(user)
         hubspot_org_id = self.get_or_create_organisation_hubspot_id(user, organisation)
-        if hubspot_contact_id is None or hubspot_org_id is None:
+        if not hubspot_contact_id or not hubspot_org_id:
             return
 
         self.client.associate_contact_to_company(
@@ -88,23 +88,23 @@ class HubspotLeadTracker(LeadTracker):
             else:
                 hubspot_contact_id = self.create_user_hubspot_contact(user)
 
-        return hubspot_contact_id
+        return hubspot_contact_id or None
 
     def get_or_create_organisation_hubspot_id(
         self,
         user: FFAdminUser,
         organisation: Organisation | None = None,
-    ) -> str:
+    ) -> str | None:
         """
         Return the Hubspot API's id for an organisation.
         """
         if not organisation:
-            return ""
+            return None
         if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
         if user.email_domain in settings.HUBSPOT_IGNORE_ORGANISATION_DOMAINS:
-            return ""
+            return None
 
         domain = user.email_domain
         company_kwargs = {"domain": domain}
