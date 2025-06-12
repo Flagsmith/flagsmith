@@ -12,7 +12,6 @@ from audit.services import get_audited_instance_from_audit_log_record
 from features.models import FeatureState
 from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
-from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.grafana.grafana import GrafanaWrapper
@@ -121,11 +120,9 @@ def track_only_feature_related_events(signal_function):  # type: ignore[no-untyp
     return track_only(allowed_types)(signal_function)
 
 
-def _track_event_async(
-    instance: AuditLog,
-    integration_client: AbstractBaseEventIntegrationWrapper,
-) -> None:
+def _track_event_async(instance, integration_client):  # type: ignore[no-untyped-def]
     event_data = integration_client.generate_event_data(audit_log_record=instance)
+
     integration_client.track_event_async(event=event_data)
 
 
@@ -141,7 +138,7 @@ def send_audit_log_event_to_datadog(sender, instance, **kwargs):  # type: ignore
         base_url=data_dog_config.base_url,  # type: ignore[arg-type]
         api_key=data_dog_config.api_key,
     )
-    _track_event_async(instance, data_dog)
+    _track_event_async(instance, data_dog)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
@@ -156,7 +153,7 @@ def send_audit_log_event_to_new_relic(sender, instance, **kwargs):  # type: igno
         api_key=new_relic_config.api_key,
         app_id=new_relic_config.app_id,
     )
-    _track_event_async(instance, new_relic)
+    _track_event_async(instance, new_relic)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
@@ -171,7 +168,7 @@ def send_audit_log_event_to_dynatrace(sender, instance, **kwargs):  # type: igno
         api_key=dynatrace_config.api_key,
         entity_selector=dynatrace_config.entity_selector,
     )
-    _track_event_async(instance, dynatrace)
+    _track_event_async(instance, dynatrace)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
@@ -185,7 +182,7 @@ def send_audit_log_event_to_grafana(sender, instance, **kwargs):  # type: ignore
         base_url=grafana_config.base_url,  # type: ignore[arg-type]
         api_key=grafana_config.api_key,
     )
-    _track_event_async(instance, grafana)
+    _track_event_async(instance, grafana)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
@@ -202,7 +199,7 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
     slack = SlackWrapper(
         api_token=slack_project_config.api_token, channel_id=env_config.channel_id
     )
-    _track_event_async(instance, slack)
+    _track_event_async(instance, slack)  # type: ignore[no-untyped-call]
 
 
 @receiver(post_save, sender=AuditLog)
@@ -233,4 +230,4 @@ def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs: Any) -> None:
         secret=sentry_configuration.secret,
     )
 
-    _track_event_async(sender, sentry_change_tracking)
+    _track_event_async(sender, sentry_change_tracking)  # type: ignore[no-untyped-call]
