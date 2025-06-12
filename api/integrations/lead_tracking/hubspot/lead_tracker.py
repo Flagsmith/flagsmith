@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
