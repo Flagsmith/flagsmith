@@ -284,3 +284,32 @@ def test_get_or_create_organisation_hubspot_id_returns_empty_with_no_org(
     result = tracker.get_or_create_organisation_hubspot_id(user=user, organisation=None)
 
     assert result is None
+
+
+def test_update_company_active_subscription_calls_update_company(
+    db: None, mocker
+) -> None:
+    # Given
+    mock_client = mocker.MagicMock()
+    mock_response = {"id": "123"}
+    mock_client.update_company.return_value = mock_response
+
+    tracker = HubspotLeadTracker()
+    tracker.client = mock_client
+
+    mock_org = mocker.MagicMock()
+    mock_org.hubspot_organisation.hubspot_id = "hubspot-org-1"
+
+    mock_subscription = mocker.MagicMock()
+    mock_subscription.plan = "scaleup"
+    mock_subscription.organisation = mock_org
+
+    # When
+    result = tracker.update_company_active_subscription(subscription=mock_subscription)
+
+    # Then
+    assert result == mock_response
+    mock_client.update_company.assert_called_once_with(
+        active_subscription="scaleup",
+        hubspot_company_id="hubspot-org-1",
+    )

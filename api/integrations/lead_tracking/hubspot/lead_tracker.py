@@ -1,5 +1,5 @@
 import logging
-
+from typing import Any
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
@@ -137,22 +137,22 @@ class HubspotLeadTracker(LeadTracker):
 
     def update_company_active_subscription(
         self, subscription: Subscription
-    ) -> dict | None:  # type: ignore[type-arg]
+    ) -> dict[str, Any] | None:
         if not subscription.plan:
-            return  # type: ignore[return-value]
+            return None
 
         organisation = subscription.organisation
 
         # Check if we're missing the associated hubspot id.
         if not getattr(organisation, "hubspot_organisation", None):
-            return  # type: ignore[return-value]
+            return None
 
-        response = self.client.update_company(
+        response: dict[str, Any] | None = self.client.update_company(
             active_subscription=subscription.plan,
             hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
         )
 
-        return response  # type: ignore[no-any-return]
+        return response
 
     def _get_or_create_company_by_domain(
         self,
