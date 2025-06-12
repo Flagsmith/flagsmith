@@ -7,6 +7,7 @@ from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_user_contact,
     update_hubspot_active_subscription,
 )
+from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
@@ -91,3 +92,25 @@ def test_update_hubspot_active_subscription_skips_when_tracking_disabled(
     # When / Then
     with pytest.raises(AssertionError):
         update_hubspot_active_subscription(subscription_id=1)
+
+
+def test_update_hubspot_active_subscription_is_triggered_when_tracking_enabled(
+    db: None,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+
+    mock_update_company_active_subscription = mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.update_company_active_subscription"
+    )
+
+    # When
+    update_hubspot_active_subscription(organisation.subscription.id)
+
+    # Then
+    mock_update_company_active_subscription.assert_called_once_with(
+        organisation.subscription
+    )
