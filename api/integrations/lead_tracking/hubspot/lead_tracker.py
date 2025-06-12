@@ -44,16 +44,19 @@ class HubspotLeadTracker(LeadTracker):
 
         return True
 
-    def create_user_hubspot_contact(self, user: FFAdminUser) -> str:
+    def create_user_hubspot_contact(self, user: FFAdminUser) -> str | None:
         tracker = HubspotTracker.objects.filter(user=user).first()
         tracker_cookie = tracker.hubspot_cookie if tracker else None
         self.client.create_lead_form(user=user, hubspot_cookie=tracker_cookie)
         contact = self.client.get_contact(user)
-        hubspot_id: str = contact["id"]
+        hubspot_id: str | None = contact.get("id")
 
-        HubspotLead.objects.update_or_create(
-            user=user, defaults={"hubspot_id": hubspot_id}
-        )
+        # Hubspot creates contact asynchronously
+        # If not available on the spot, following steps will sync database with Hubspot
+        if hubspot_id is not None:
+            HubspotLead.objects.update_or_create(
+                user=user, defaults={"hubspot_id": hubspot_id}
+            )
 
         return hubspot_id
 
@@ -62,20 +65,26 @@ class HubspotLeadTracker(LeadTracker):
     ) -> None:
         hubspot_contact_id = self.get_or_create_user_hubspot_id(user)
         hubspot_org_id = self.get_or_create_organisation_hubspot_id(user, organisation)
-        if hubspot_contact_id and hubspot_org_id:
-            self.client.associate_contact_to_company(
-                contact_id=hubspot_contact_id,
-                company_id=hubspot_org_id,
-            )
+        if hubspot_contact_id is None or hubspot_org_id is None:
+            return
 
-    def get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str:
+        self.client.associate_contact_to_company(
+            contact_id=hubspot_contact_id,
+            company_id=hubspot_org_id,
+        )
+
+    def get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str | None:
         hubspot_lead = HubspotLead.objects.filter(user=user).first()
         if hubspot_lead:
-            hubspot_contact_id = hubspot_lead.hubspot_id
+            hubspot_contact_id: str | None = hubspot_lead.hubspot_id
         else:
+            # Fallback to sync database with Hubspot if contact hubspot_id was not saved
             contact_data = self.client.get_contact(user)
             if contact_data:
                 hubspot_contact_id = contact_data["id"]
+                HubspotLead.objects.update_or_create(
+                    user=user, defaults={"hubspot_id": hubspot_contact_id}
+                )
             else:
                 hubspot_contact_id = self.create_user_hubspot_contact(user)
 
