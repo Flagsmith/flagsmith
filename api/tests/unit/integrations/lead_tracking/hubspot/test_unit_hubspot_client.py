@@ -32,13 +32,24 @@ def hubspot_client(mocker: MockerFixture) -> HubspotClient:
 
 @responses.activate
 @pytest.mark.parametrize(
-    "hubspot_cookie_body",
-    ["test_hubspot_cookie", None],
+    "hubspot_cookie_body,expected_context",
+    [
+        (
+            "test_hubspot_cookie",
+            {
+                "hutk": "test_hubspot_cookie",
+                "pageUri": "www.flagsmith.com",
+                "pageName": "Homepage",
+            },
+        ),
+        (None, {}),
+    ],
 )
 def test_create_lead_form(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
     hubspot_cookie_body: str | None,
+    expected_context: dict[str, str],
 ) -> None:
     # Given
     url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
@@ -74,10 +85,7 @@ def test_create_lead_form(
     } in fields
 
     context = request_body.get("context", {})
-    if hubspot_cookie_body is not None:
-        assert context["hutk"] == hubspot_cookie_body
-    else:
-        assert context == {}
+    assert context == expected_context
 
 
 @responses.activate
