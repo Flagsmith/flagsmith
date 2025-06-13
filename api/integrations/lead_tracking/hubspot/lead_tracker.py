@@ -46,6 +46,25 @@ class HubspotLeadTracker(LeadTracker):
 
         return True
 
+    def update_company_active_subscription(
+        self, subscription: Subscription
+    ) -> dict[str, Any] | None:
+        if not subscription.plan:
+            return None
+
+        organisation = subscription.organisation
+
+        # Check if we're missing the associated hubspot id.
+        if not getattr(organisation, "hubspot_organisation", None):
+            return None
+
+        response: dict[str, Any] | None = self.client.update_company(
+            active_subscription=subscription.plan,
+            hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
+        )
+
+        return response
+
     def create_user_hubspot_contact(self, user: FFAdminUser) -> str | None:
         tracker = HubspotTracker.objects.filter(user=user).first()
         tracker_cookie = tracker.hubspot_cookie if tracker else None
@@ -53,18 +72,11 @@ class HubspotLeadTracker(LeadTracker):
 
         # Create lead form creates a contact asynchronously in hubspot but does not return the contact id
         # We need to get the contact id separately and retry 3 times
-        contact = None
-        max_retries = 3
-        for retry in range(max_retries + 1):
-            contact = self.client.get_contact(user)
-            if contact:
-                break
-            backoff = 0.5 * retry  # 3 retries: 0.5s, 1s, 1.5s
-            time.sleep(backoff)
+        contact = self._get_new_contact_with_retry(user, max_retries=3)
         if not contact:
             return None
 
-        hubspot_contact_id: str = contact.get("id")
+        hubspot_contact_id = contact.get("id")
 
         # Hubspot creates contact asynchronously
         # If not available on the spot, following steps will sync database with Hubspot
@@ -89,6 +101,16 @@ class HubspotLeadTracker(LeadTracker):
             contact_id=hubspot_contact_id,
             company_id=hubspot_org_id,
         )
+
+    def _get_new_contact_with_retry(
+        self, user: FFAdminUser, max_retries: int = 3
+    ) -> dict[str, Any] | None:
+        for retry in range(max_retries + 1):
+            contact = self.client.get_contact(user)
+            if contact:
+                return contact  # type: ignore[no-any-return]
+            time.sleep(0.5 * retry)  # 3 retries: 0.5s, 1s, 1.5s
+        return None
 
     def _get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str | None:
         hubspot_lead = HubspotLead.objects.filter(user=user).first()
@@ -149,25 +171,6 @@ class HubspotLeadTracker(LeadTracker):
         )
 
         return org_hubspot_id
-
-    def update_company_active_subscription(
-        self, subscription: Subscription
-    ) -> dict[str, Any] | None:
-        if not subscription.plan:
-            return None
-
-        organisation = subscription.organisation
-
-        # Check if we're missing the associated hubspot id.
-        if not getattr(organisation, "hubspot_organisation", None):
-            return None
-
-        response: dict[str, Any] | None = self.client.update_company(
-            active_subscription=subscription.plan,
-            hubspot_company_id=organisation.hubspot_organisation.hubspot_id,
-        )
-
-        return response
 
     def _get_or_create_hubspot_company(
         self,
