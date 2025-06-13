@@ -16,3 +16,10 @@
   font-weight: 500;
   margin: 0;
 }
+
+.metrics-grid {
+  align-items: stretch;
+  display: grid;
+  justify-content: center;
+  row-gap: 12px;
+}

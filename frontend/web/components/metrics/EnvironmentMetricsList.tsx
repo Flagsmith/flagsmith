@@ -2,6 +2,7 @@ import React, { FC, useEffect } from 'react'
 import AccordionCard from 'components/base/accordion/AccordionCard'
 import { useGetEnvironmentMetricsQuery } from 'common/services/useEnvironment'
 import EnvironmentMetric from './EnvironmentMetric'
+import { getExtraMetricsData } from './constants'
 
 interface EnvironmentMetricsListProps {
   environmentApiKey: string
@@ -21,21 +22,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
   const MAX_COLUMNS = 6
   const columns = Math.min(data?.metrics?.length || 0, MAX_COLUMNS) || 1
 
-  const extraMetricsData: Record<string, { link?: string; tooltip?: string }> =
-    {
-      enabled_features: {
-        tooltip: 'The number of features enabled for this environment',
-      },
-      identity_overrides: {
-        link: `/project/${projectId}/environment/${environmentApiKey}/identities`,
-      },
-      open_change_requests: {
-        link: `/project/${projectId}/environment/${environmentApiKey}/change-requests`,
-      },
-      segment_overrides: {
-        link: `/project/${projectId}/segments`,
-      },
-    }
+  const extraMetricsData = getExtraMetricsData(projectId, environmentApiKey)
 
   useEffect(() => {
     if (forceRefetch) {
@@ -54,11 +41,7 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
           <div
             className='metrics-grid'
             style={{
-              alignItems: 'stretch',
-              display: 'grid',
               gridTemplateColumns: `repeat(${columns}, 1fr)`,
-              justifyContent: 'center',
-              rowGap: 12,
             }}
           >
             {data?.metrics.map((metric) => (
@@ -66,8 +49,8 @@ const EnvironmentMetricsList: FC<EnvironmentMetricsListProps> = ({
                 key={metric.name}
                 label={metric.description}
                 value={metric.value}
-                link={extraMetricsData[metric.name]?.link}
-                tooltip={extraMetricsData[metric.name]?.tooltip}
+                link={extraMetricsData?.[metric.name]?.link}
+                tooltip={extraMetricsData?.[metric.name]?.tooltip}
               />
             ))}
           </div>
