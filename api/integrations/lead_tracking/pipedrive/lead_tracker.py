@@ -137,7 +137,8 @@ class PipedriveLeadTracker(LeadTracker):
             base_url=settings.PIPEDRIVE_BASE_API_URL,
         )
 
+    # TODO: To be deprecated with pipedrive
     def create_user_organisation_association(
         self, user: FFAdminUser, organisation: Organisation
-    ) -> None:
-        pass  # noqa: E501
+    ) -> None:  # pragma: no cover
+        pass
