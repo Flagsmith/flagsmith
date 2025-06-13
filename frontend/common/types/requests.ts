@@ -20,7 +20,6 @@ import {
   IdentityTrait,
   Onboarding,
   StageTrigger,
-  PipelineStatus,
   StageActionType,
 } from './responses'
 
@@ -698,7 +697,10 @@ export type Req = {
     userId: number | undefined
     level: PermissionLevel
   }
-  getProfile: {}
+  getProfile: {
+    id?: number
+  }
+  getUser: { id: number }
   updateOnboarding: Partial<Onboarding>
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
@@ -713,6 +715,15 @@ export type Req = {
     stageId: number
   }
   deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
     projectId: number
     pipelineId: number
   }

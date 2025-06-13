@@ -1,15 +1,18 @@
+import { useGetProfileQuery } from 'common/services/useProfile'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import { ProjectFlag } from 'common/types/responses'
 import { useCallback, useEffect, useState } from 'react'
 type StageFeatureDetailProps = {
   features: number[]
-  projectId: number
+  publishedBy?: number
+  projectId: string
 }
 
 const StageFeatureDetail = ({
   features,
   projectId,
+  publishedBy,
 }: StageFeatureDetailProps) => {
   const [projectFlags, setProjectFlags] = useState<ProjectFlag[]>([])
   const getProjectFlags = useCallback(async () => {
@@ -37,6 +40,13 @@ const StageFeatureDetail = ({
     getProjectFlags()
   }, [getProjectFlags])
 
+  const { data: userData } = useGetProfileQuery(
+    { id: publishedBy },
+    {
+      skip: !publishedBy,
+    },
+  )
+
   return (
     <>
       <h6>Features ({projectFlags.length ?? 0})</h6>
@@ -44,9 +54,16 @@ const StageFeatureDetail = ({
         <p className='text-muted'>No features added to this stage yet.</p>
       )}
       {projectFlags?.map((flag) => (
-        <p key={flag.id} className='text-muted'>
-          <b>{flag.name}</b>
-        </p>
+        <>
+          <div key={flag.id} className='text-muted'>
+            <b>{flag.name}</b>
+          </div>
+          {userData?.first_name && (
+            <div className='text-muted text-small mt-1'>
+              Added by {userData?.first_name} {userData?.last_name}
+            </div>
+          )}
+        </>
       ))}
     </>
   )
