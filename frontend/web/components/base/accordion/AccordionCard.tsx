@@ -28,7 +28,6 @@ const AccordionCard: FC<AccordionCardProps> = ({
         className='d-flex flex-row justify-content-between font-weight-medium'
       >
         {title}
-        {/* </Typography> */}
         <IconButton size='small'>
           <IonIcon
             className='fs-small me-2 text-muted'
