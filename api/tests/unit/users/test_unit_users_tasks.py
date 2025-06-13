@@ -15,7 +15,7 @@ def test_create_pipedrive_lead(mocker, admin_user):  # type: ignore[no-untyped-d
     create_pipedrive_lead(admin_user.id)
 
     # Then
-    mock_lead_tracker.create_lead.assert_called_once_with(admin_user)
+    mock_lead_tracker.create_organisation_lead.assert_called_once_with(admin_user)
 
 
 def test_send_email_changed_notification():  # type: ignore[no-untyped-def]

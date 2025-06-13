@@ -33,7 +33,7 @@ def test_create_lead_adds_to_existing_organization_if_exists(db, mocker, setting
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
     # When
-    lead_tracker.create_lead(user)
+    lead_tracker.create_organisation_lead(user)
 
     # Then
     expected_create_lead_kwargs = {
@@ -74,7 +74,7 @@ def test_create_lead_creates_new_organization_if_not_exists(db, settings, mocker
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
     # When
-    lead_tracker.create_lead(user)
+    lead_tracker.create_organisation_lead(user)
 
     # Then
     expected_create_lead_kwargs = {
@@ -114,7 +114,7 @@ def test_create_lead_throws_exception_if_multiple_organisations_found(  # type: 
 
     # When
     with pytest.raises(MultipleMatchingOrganizationsError):
-        lead_tracker.create_lead(user)
+        lead_tracker.create_organisation_lead(user)
 
     # Then
     mock_pipedrive_client.create_lead.assert_not_called()
@@ -217,7 +217,7 @@ def test_create_lead_creates_person_if_none_found(db, mocker, settings):  # type
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
     # When
-    lead_tracker.create_lead(user)
+    lead_tracker.create_organisation_lead(user)
 
     # Then
     expected_create_lead_kwargs = {
@@ -267,7 +267,7 @@ def test_create_lead_adds_existing_customer_label_if_organisation_is_paid(  # ty
     lead_tracker = PipedriveLeadTracker(client=mock_pipedrive_client)
 
     # When
-    lead_tracker.create_lead(user)
+    lead_tracker.create_organisation_lead(user)
 
     # Then
     expected_create_lead_kwargs = {
