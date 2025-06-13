@@ -21,7 +21,6 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 
 from integrations.lead_tracking.hubspot.tasks import (
     track_hubspot_user_contact,
-    # track_hubspot_lead_without_organisation,
 )
 from organisations.models import (
     Organisation,

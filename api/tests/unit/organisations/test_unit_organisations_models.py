@@ -607,6 +607,8 @@ def test_user_organisation_create_calls_hubspot_lead_tracking(
 
     # When
     user.add_organisation(organisation)
+
+    # Then
     track_hubspot_organisation_lead.delay.assert_called_once_with(
         args=(user.id, organisation.id)
     )

@@ -279,4 +279,6 @@ def test_user_create_calls_hubspot_tracking(
     user = FFAdminUser.objects.create(
         email="test@example.com", first_name="John", last_name="Doe"
     )
+
+    # Then
     track_hubspot_user_contact.delay.assert_called_once_with(args=(user.id,))
