@@ -11,6 +11,7 @@ from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import FeatureState
 from features.signals import feature_state_change_went_live
+from integrations.common.exceptions import InvalidIntegrationParameters
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
@@ -121,7 +122,11 @@ def track_only_feature_related_events(signal_function):  # type: ignore[no-untyp
 
 
 def _track_event_async(instance, integration_client):  # type: ignore[no-untyped-def]
-    event_data = integration_client.generate_event_data(audit_log_record=instance)
+    try:
+        event_data = integration_client.generate_event_data(audit_log_record=instance)
+    except InvalidIntegrationParameters as error:  # pragma: no cover
+        logger.error("Cannot prepare integration: %s", repr(error))
+        return
 
     integration_client.track_event_async(event=event_data)
 
@@ -212,7 +217,7 @@ def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ign
     if feature_state.is_scheduled:
         return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
 
-    feature_state_change_went_live.send(instance, feature_state=feature_state)
+    feature_state_change_went_live.send(instance)
 
 
 @receiver(feature_state_change_went_live)

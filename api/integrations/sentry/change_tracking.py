@@ -9,6 +9,7 @@ from audit.models import AuditLog
 from audit.services import get_audited_instance_from_audit_log_record
 from core.signing import sign_payload
 from features.models import FeatureState
+from integrations.common.exceptions import InvalidIntegrationParameters
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,9 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
         if not (
             feature_state and isinstance(feature_state, FeatureState)
         ):  # pragma: no cover
-            raise ValueError(f"{repr(feature_state)} is not a FeatureState object.")
+            raise InvalidIntegrationParameters(
+                f"{repr(feature_state)} is not a FeatureState object."
+            )
 
         update_published_at = feature_state.deleted_at or (
             max(feature_state.live_from, feature_state.updated_at)
