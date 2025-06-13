@@ -136,7 +136,7 @@ class HubspotLeadTracker(LeadTracker):
         properties = company.get("properties", {})
         existing_name = properties.get("name")
         if existing_name != organisation.name:
-            self.client.update_company_name(
+            self.client.update_company(
                 name=organisation.name,
                 hubspot_company_id=org_hubspot_id,
             )

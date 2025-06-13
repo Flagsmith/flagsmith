@@ -108,33 +108,6 @@ class HubspotClient:
             )
         return response.json()  # type: ignore[no-any-return]
 
-    def _post_create_contact(
-        self,
-        properties: dict[str, Any],
-        hubspot_company_id: str | None = None,
-    ) -> dict[str, str]:
-        create_params = {
-            "simple_public_object_input_for_create": SimplePublicObjectInputForCreate(
-                properties=properties,
-            )
-        }
-
-        if hubspot_company_id:
-            create_params["simple_public_object_input_for_create"].associations = [
-                {
-                    "types": [
-                        {
-                            "associationCategory": "HUBSPOT_DEFINED",
-                            "associationTypeId": 1,
-                        }
-                    ],
-                    "to": {"id": hubspot_company_id},
-                }
-            ]
-
-        response = self.client.crm.contacts.basic_api.create(**create_params)
-        return response.to_dict()  # type: ignore[no-any-return]
-
     def associate_contact_to_company(self, contact_id: str, company_id: str) -> None:
         association_spec = [
             AssociationSpec(
@@ -159,7 +132,28 @@ class HubspotClient:
             "lastname": last_name,
             "api_lead_source": HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
         }
-        self._post_create_contact(properties, hubspot_company_id)
+
+        create_params = {
+            "simple_public_object_input_for_create": SimplePublicObjectInputForCreate(
+                properties=properties,
+            )
+        }
+
+        if hubspot_company_id:
+            create_params["simple_public_object_input_for_create"].associations = [
+                {
+                    "types": [
+                        {
+                            "associationCategory": "HUBSPOT_DEFINED",
+                            "associationTypeId": 1,
+                        }
+                    ],
+                    "to": {"id": hubspot_company_id},
+                }
+            ]
+
+        response = self.client.crm.contacts.basic_api.create(**create_params)
+        return response.to_dict()  # type: ignore[no-any-return]
 
     def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
         """
@@ -215,25 +209,18 @@ class HubspotClient:
 
         return response.to_dict()  # type: ignore[no-any-return]
 
-    def update_company_active_subscription(
-        self, active_subscription: str, hubspot_company_id: str
+    def update_company(
+        self,
+        hubspot_company_id: str,
+        name: str | None = None,
+        active_subscription: str | None = None,
     ) -> dict[str, Any]:
-        properties = {
-            "active_subscription": active_subscription,
-        }
-        simple_public_object_input = SimplePublicObjectInput(properties=properties)
+        properties = {}
+        if name is not None:
+            properties["name"] = name
+        if active_subscription is not None:
+            properties["active_subscription"] = active_subscription
 
-        response = self.client.crm.companies.basic_api.update(
-            company_id=hubspot_company_id,
-            simple_public_object_input=simple_public_object_input,
-        )
-
-        return response.to_dict()  # type: ignore[no-any-return]
-
-    def update_company_name(self, name: str, hubspot_company_id: str) -> dict[str, Any]:
-        properties = {
-            "name": name,
-        }
         simple_public_object_input = SimplePublicObjectInput(properties=properties)
 
         response = self.client.crm.companies.basic_api.update(

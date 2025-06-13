@@ -253,7 +253,7 @@ def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) ->
 
 def test_update_company_name_calls_hubspot_api(hubspot_client: HubspotClient) -> None:
     # Given / # When
-    hubspot_client.update_company_name(name="NewCo", hubspot_company_id="123")
+    hubspot_client.update_company(name="NewCo", hubspot_company_id="123")
 
     # Then
     hubspot_client.client.crm.companies.basic_api.update.assert_called_once()

@@ -132,7 +132,7 @@ def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_association
         "id": HUBSPOT_COMPANY_ID,
         "properties": {"name": domain},
     }
-    mock_client_existing_contact.update_company_name.return_value = {
+    mock_client_existing_contact.update_company.return_value = {
         "id": HUBSPOT_COMPANY_ID,
         "properties": {"name": organisation.name},
     }
