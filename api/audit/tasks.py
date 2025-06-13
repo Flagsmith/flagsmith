@@ -75,10 +75,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
     )
     if log_created:
-        feature_state_change_went_live.send(
-            audit_log,
-            feature_state=feature_state,
-        )
+        feature_state_change_went_live.send(feature_state, audit_log=audit_log)
     else:
         logger.info(
             "FeatureState update audit log already exists. "
