@@ -1,3 +1,4 @@
+import typing
 from unittest.mock import MagicMock
 
 import pytest
@@ -105,7 +106,7 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
         hubspot_id=HUBSPOT_COMPANY_ID,
     )
     tracker = HubspotLeadTracker()
-    tracker.create_organisation_lead(user=user, organisation=organisation)
+    tracker.create_user_organisation_association(user=user, organisation=organisation)
 
     mock_client_existing_contact.get_contact.assert_not_called()
     mock_client_existing_contact.create_lead_form.assert_not_called()
@@ -120,7 +121,7 @@ def test_hubspot_find_company_by_domain_and_creates_organisation_lead_and_associ
 ) -> None:
     # Given
     domain = "example.com"
-    mocker.patch("users.models.track_hubspot_user_contact")
+    mocker.patch("users.models.create_hubspot_contact_for_user")
 
     user = FFAdminUser.objects.create(
         email=f"new.user@{domain}",
@@ -181,7 +182,7 @@ def test_create_organisation_lead_creates_contact_when_not_found(
 
     # When
     tracker = HubspotLeadTracker()
-    tracker.create_organisation_lead(user=user, organisation=organisation)
+    tracker.create_user_organisation_association(user=user, organisation=organisation)
 
     # Then
     hubspot_lead = HubspotLead.objects.get(user=user)
@@ -228,7 +229,7 @@ def test_create_organisation_lead_creates_contact_for_existing_org(
 
     # When
     tracker = HubspotLeadTracker()
-    tracker.create_organisation_lead(user=user, organisation=organisation)
+    tracker.create_user_organisation_association(user=user, organisation=organisation)
 
     # Then
     assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
@@ -260,32 +261,13 @@ def test_create_organisation_lead_skips_company_for_filtered_domain(
 
     # When
     tracker = HubspotLeadTracker()
-    tracker.create_organisation_lead(user=user, organisation=organisation)
+    tracker.create_user_organisation_association(user=user, organisation=organisation)
 
     # Then
     assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
     mock_client_existing_contact.create_company.assert_not_called()
     mock_client_existing_contact.associate_contact_to_company.assert_not_called()
-
-
-def test_get_or_create_organisation_hubspot_id_returns_empty_with_no_org(
-    db: None,
-) -> None:
-    # Given
-    user = FFAdminUser.objects.create(
-        email="new.user@example.com",
-        first_name="Frank",
-        last_name="Louis",
-        marketing_consent_given=True,
-    )
-    tracker = HubspotLeadTracker()
-
-    result = tracker._get_or_create_organisation_hubspot_id(
-        user=user, organisation=None
-    )
-
-    assert result is None
 
 
 def test_update_company_active_subscription_calls_update_company(
@@ -348,3 +330,43 @@ def test_update_company_active_subscription_returns_none_when_no_plan(
 
     # Then
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "get_contact_return_values, expected_call_count, expected_hubspot_id, hubspot_leads_exists",
+    [
+        ([{"id": HUBSPOT_USER_ID}, None, None], 1, HUBSPOT_USER_ID, True),
+        ([None, {"id": HUBSPOT_USER_ID}, None, None], 2, HUBSPOT_USER_ID, True),
+        ([None, None, {"id": HUBSPOT_USER_ID}, None], 3, HUBSPOT_USER_ID, True),
+        ([None, None, None, None], 4, None, False),
+    ],
+)
+def test_create_user_hubspot_contact_retries(
+    db: None,
+    mocker: MockerFixture,
+    get_contact_return_values: list[dict[str, typing.Any] | None],
+    expected_call_count: int,
+    expected_hubspot_id: str | None,
+    hubspot_leads_exists: bool,
+) -> None:
+    # Given
+    user = FFAdminUser.objects.create(
+        email="test@example.com", first_name="John", last_name="Doe"
+    )
+
+    mock_client = mocker.MagicMock()
+    mock_client.get_contact.side_effect = get_contact_return_values
+    mocker.patch("time.sleep", return_value=None)
+    tracker = HubspotLeadTracker()
+    tracker.client = mock_client
+
+    # When
+    hubspot_id = tracker.create_user_hubspot_contact(user)
+
+    # Then
+    assert hubspot_id == expected_hubspot_id
+    assert (
+        HubspotLead.objects.filter(hubspot_id=hubspot_id).exists()
+        is hubspot_leads_exists
+    )
+    assert mock_client.get_contact.call_count == expected_call_count

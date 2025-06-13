@@ -273,7 +273,9 @@ def test_user_create_calls_hubspot_tracking(
 ) -> None:
     # Given
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
-    track_hubspot_user_contact = mocker.patch("users.models.track_hubspot_user_contact")
+    create_hubspot_contact_for_user = mocker.patch(
+        "users.models.create_hubspot_contact_for_user"
+    )
 
     # When
     user = FFAdminUser.objects.create(
@@ -281,4 +283,4 @@ def test_user_create_calls_hubspot_tracking(
     )
 
     # Then
-    track_hubspot_user_contact.delay.assert_called_once_with(args=(user.id,))
+    create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))

@@ -3,6 +3,7 @@ import typing
 
 if typing.TYPE_CHECKING:
     from users.models import FFAdminUser
+    from organisations.models import Organisation
 
 
 class LeadTracker(abc.ABC):
@@ -15,7 +16,9 @@ class LeadTracker(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_organisation_lead(self, user: "FFAdminUser"):  # type: ignore[no-untyped-def]
+    def create_user_organisation_association(
+        self, user: "FFAdminUser", organisation: "Organisation"
+    ) -> None:
         pass
 
     @abc.abstractmethod

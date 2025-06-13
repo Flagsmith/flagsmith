@@ -3,15 +3,15 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_organisation_lead,
-    track_hubspot_user_contact,
+    track_hubspot_user_organisation_association,
+    create_hubspot_contact_for_user,
     update_hubspot_active_subscription,
 )
 from organisations.models import Organisation
 from users.models import FFAdminUser
 
 
-def test_track_hubspot_user_contact_skips_when_tracking_disabled(
+def test_create_hubspot_contact_for_user_skips_when_tracking_disabled(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -21,10 +21,10 @@ def test_track_hubspot_user_contact_skips_when_tracking_disabled(
 
     # When / Then
     with pytest.raises(AssertionError):
-        track_hubspot_user_contact(user_id=admin_user.id)
+        create_hubspot_contact_for_user(user_id=admin_user.id)
 
 
-def test_track_hubspot_user_contact_skips_when_should_track_false(
+def test_create_hubspot_contact_for_user_skips_when_should_track_false(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -40,13 +40,13 @@ def test_track_hubspot_user_contact_skips_when_should_track_false(
     )
 
     # When
-    track_hubspot_user_contact(user_id=admin_user.id)
+    create_hubspot_contact_for_user(user_id=admin_user.id)
 
     # Then
     mock_create_contact.assert_not_called()
 
 
-def test_track_hubspot_organisation_lead_skips_when_tracking_disabled(
+def test_track_hubspot_user_organisation_association_skips_when_tracking_disabled(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -56,10 +56,12 @@ def test_track_hubspot_organisation_lead_skips_when_tracking_disabled(
 
     # When / Then
     with pytest.raises(AssertionError):
-        track_hubspot_organisation_lead(user_id=admin_user.id, organisation_id=1)
+        track_hubspot_user_organisation_association(
+            user_id=admin_user.id, organisation_id=1
+        )
 
 
-def test_track_hubspot_organisation_lead_skips_when_should_track_false(
+def test_track_hubspot_user_organisation_association_skips_when_should_track_false(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -70,15 +72,17 @@ def test_track_hubspot_organisation_lead_skips_when_should_track_false(
         "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.should_track",
         return_value=False,
     )
-    mock_create_lead = mocker.patch(
-        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.create_organisation_lead"
+    mock_create_user_organisation_association = mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.create_user_organisation_association"
     )
 
     # When
-    track_hubspot_organisation_lead(user_id=admin_user.id, organisation_id=1)
+    track_hubspot_user_organisation_association(
+        user_id=admin_user.id, organisation_id=1
+    )
 
     # Then
-    mock_create_lead.assert_not_called()
+    mock_create_user_organisation_association.assert_not_called()
 
 
 def test_update_hubspot_active_subscription_skips_when_tracking_disabled(

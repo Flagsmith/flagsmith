@@ -4,6 +4,7 @@ import typing
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
+from organisations.models import Organisation
 from users.models import FFAdminUser
 
 from .client import PipedriveAPIClient
@@ -135,3 +136,8 @@ class PipedriveLeadTracker(LeadTracker):
             api_token=settings.PIPEDRIVE_API_TOKEN,  # type: ignore[arg-type]
             base_url=settings.PIPEDRIVE_BASE_API_URL,
         )
+
+    def create_user_organisation_association(
+        self, user: FFAdminUser, organisation: Organisation
+    ) -> None:
+        pass

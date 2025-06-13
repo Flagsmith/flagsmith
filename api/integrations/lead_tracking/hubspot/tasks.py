@@ -5,7 +5,9 @@ from task_processor.decorators import (
 
 
 @register_task_handler()
-def track_hubspot_organisation_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
+def track_hubspot_user_organisation_association(
+    user_id: int, organisation_id: int
+) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
@@ -26,11 +28,11 @@ def track_hubspot_organisation_lead(user_id: int, organisation_id: int = None) -
             id=organisation_id
         )
 
-    hubspot_lead_tracker.create_organisation_lead(**create_lead_kwargs)
+    hubspot_lead_tracker.create_user_organisation_association(**create_lead_kwargs)
 
 
 @register_task_handler()
-def track_hubspot_user_contact(user_id: int) -> None:
+def create_hubspot_contact_for_user(user_id: int) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     from users.models import FFAdminUser

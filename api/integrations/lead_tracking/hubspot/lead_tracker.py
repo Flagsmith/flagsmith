@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import Any
 
 from django.conf import settings
@@ -49,8 +50,21 @@ class HubspotLeadTracker(LeadTracker):
         tracker = HubspotTracker.objects.filter(user=user).first()
         tracker_cookie = tracker.hubspot_cookie if tracker else None
         self.client.create_lead_form(user=user, hubspot_cookie=tracker_cookie)
-        contact = self.client.get_contact(user)
-        hubspot_contact_id: str | None = contact.get("id")
+
+        # Create lead form creates a contact asynchronously in hubspot but does not return the contact id
+        # We need to get the contact id separately and retry 3 times
+        contact = None
+        max_retries = 3
+        for retry in range(max_retries + 1):
+            contact = self.client.get_contact(user)
+            if contact:
+                break
+            backoff = 0.5 * retry  # 3 retries: 0.5s, 1s, 1.5s
+            time.sleep(backoff)
+        if not contact:
+            return None
+
+        hubspot_contact_id: str = contact.get("id")
 
         # Hubspot creates contact asynchronously
         # If not available on the spot, following steps will sync database with Hubspot
@@ -61,12 +75,14 @@ class HubspotLeadTracker(LeadTracker):
 
         return hubspot_contact_id
 
-    def create_organisation_lead(
-        self, user: FFAdminUser, organisation: Organisation | None = None
+    def create_user_organisation_association(
+        self, user: FFAdminUser, organisation: Organisation
     ) -> None:
         hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
+        if not hubspot_contact_id:
+            return
         hubspot_org_id = self._get_or_create_organisation_hubspot_id(user, organisation)
-        if not hubspot_contact_id or not hubspot_org_id:
+        if not hubspot_org_id:
             return
 
         self.client.associate_contact_to_company(
@@ -94,13 +110,11 @@ class HubspotLeadTracker(LeadTracker):
     def _get_or_create_organisation_hubspot_id(
         self,
         user: FFAdminUser,
-        organisation: Organisation | None = None,
+        organisation: Organisation,
     ) -> str | None:
         """
         Return the Hubspot API's id for an organisation.
         """
-        if not organisation:
-            return None
         if getattr(organisation, "hubspot_organisation", None):
             return organisation.hubspot_organisation.hubspot_id
 
@@ -116,7 +130,7 @@ class HubspotLeadTracker(LeadTracker):
         # As Hubspot creates/associates companies based on contact domain
         # we need to get the hubspot id when this user creates the company for the first time
         # and update the company name
-        company = self._get_or_create_company_by_domain(**company_kwargs)
+        company = self._get_or_create_hubspot_company(**company_kwargs)
         org_hubspot_id: str = company["id"]
 
         properties = company.get("properties", {})
@@ -155,20 +169,17 @@ class HubspotLeadTracker(LeadTracker):
 
         return response
 
-    def _get_or_create_company_by_domain(
+    def _get_or_create_hubspot_company(
         self,
         domain: str,
-        name: str | None = None,
-        organisation_id: int | None = None,
+        organisation_id: int,
+        name: str,
         active_subscription: str | None = None,
-    ) -> dict:  # type: ignore[type-arg]
+    ) -> dict[str, Any]:
         company = self.client.get_company_by_domain(domain)
         if not company:
-            # Since we don't know the company's name, we pass the domain as
-            # both the name and the domain. This can then be manually
-            # updated in Hubspot if needed.
             company = self.client.create_company(
-                name=name or domain,
+                name=name,
                 domain=domain,
                 organisation_id=organisation_id,
                 active_subscription=active_subscription,

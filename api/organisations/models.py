@@ -21,7 +21,7 @@ from simple_history.models import HistoricalRecords  # type: ignore[import-untyp
 from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_organisation_lead,
+    track_hubspot_user_organisation_association,
     update_hubspot_active_subscription,
 )
 from organisations.chargebee import (  # type: ignore[attr-defined]
@@ -209,7 +209,7 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     @hook(AFTER_CREATE)
     def register_hubspot_lead_tracking(self):  # type: ignore[no-untyped-def]
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_organisation_lead.delay(
+            track_hubspot_user_organisation_association.delay(
                 args=(
                     self.user.id,
                     self.organisation.id,

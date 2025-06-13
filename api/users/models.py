@@ -20,7 +20,7 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 )
 
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_user_contact,
+    create_hubspot_contact_for_user,
 )
 from organisations.models import (
     Organisation,
@@ -145,7 +145,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     @hook(AFTER_CREATE)  # type: ignore[misc]
     def create_hubspot_contact(self) -> None:
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_user_contact.delay(args=(self.id,))
+            create_hubspot_contact_for_user.delay(args=(self.id,))
 
     @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]
     def send_warning_email(self) -> None:
