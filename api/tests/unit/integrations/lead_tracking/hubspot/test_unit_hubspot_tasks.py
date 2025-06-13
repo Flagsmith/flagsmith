@@ -3,8 +3,8 @@ from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_user_organisation_association,
     create_hubspot_contact_for_user,
+    track_hubspot_user_organisation_association,
     update_hubspot_active_subscription,
 )
 from organisations.models import Organisation

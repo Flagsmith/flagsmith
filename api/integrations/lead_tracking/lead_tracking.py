@@ -2,8 +2,8 @@ import abc
 import typing
 
 if typing.TYPE_CHECKING:
-    from users.models import FFAdminUser
     from organisations.models import Organisation
+    from users.models import FFAdminUser
 
 
 class LeadTracker(abc.ABC):
