@@ -54,6 +54,7 @@ const ReleasePipelinesList = ({
   pageSize,
   projectId,
 }: ReleasePipelinesListProps) => {
+  const history = useHistory()
   const [
     deleteReleasePipeline,
     {
@@ -130,7 +131,13 @@ const ReleasePipelinesList = ({
       nextPage={() => onPageChange(page + 1)}
       prevPage={() => onPageChange(page - 1)}
       goToPage={(page: number) => onPageChange(page)}
-      renderRow={({ features_count, id, name, stages_count, published_at }: ReleasePipeline) => {
+      renderRow={({
+        features_count,
+        id,
+        name,
+        published_at,
+        stages_count,
+      }: ReleasePipeline) => {
         const isPublished = !!published_at
 
         return (

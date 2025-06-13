@@ -603,10 +603,9 @@ const CreateFlag = class extends Component {
 
   openReleasePipelineModal = () => {
     openModal2(
-      'Add To Release Pipeline',
+      `Add ${this.state.name} To Release Pipeline`,
       <AddToReleasePipelineModal
         projectId={this.props.projectId}
-        featureName={this.state.name}
         featureId={this.props.projectFlag.id}
       />,
     )
@@ -1182,18 +1181,17 @@ const CreateFlag = class extends Component {
                                       </strong>
                                     </div>
                                     <div className='text-right'>
-                                      {createFeature &&
-                                        showReleasePipelineButton && (
-                                          <Button
-                                            className='mr-2'
-                                            theme='secondary'
-                                            onClick={
-                                              this.openReleasePipelineModal
-                                            }
-                                          >
-                                            Add to Release Pipeline
-                                          </Button>
-                                        )}
+                                      {createFeature && true && (
+                                        <Button
+                                          className='mr-2'
+                                          theme='secondary'
+                                          onClick={
+                                            this.openReleasePipelineModal
+                                          }
+                                        >
+                                          Add to Release Pipeline
+                                        </Button>
+                                      )}
                                       <Permission
                                         level='environment'
                                         tags={projectFlag?.tags}

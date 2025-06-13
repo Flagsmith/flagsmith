@@ -4,7 +4,7 @@ import { StageActionBody, StageActionType } from 'common/types/responses'
 type FlagActionDetailProps = {
   actionType: StageActionType
   actionBody: StageActionBody
-  projectId: number
+  projectId: string
 }
 
 const FlagActionDetail = ({
@@ -15,7 +15,7 @@ const FlagActionDetail = ({
   const { data: segmentData, isLoading: isSegmentLoading } = useGetSegmentQuery(
     {
       id: `${actionBody.segment_id}`,
-      projectId: `${projectId}`,
+      projectId: projectId,
     },
     {
       skip:

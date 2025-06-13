@@ -697,7 +697,10 @@ export type Req = {
     userId: number | undefined
     level: PermissionLevel
   }
-  getProfile: {}
+  getProfile: {
+    id?: number
+  }
+  getUser: { id: number }
   updateOnboarding: Partial<Onboarding>
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }

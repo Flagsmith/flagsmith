@@ -7,17 +7,14 @@ import { ReleasePipeline } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
-import AccountStore from 'common/stores/account-store'
 
 type AddToReleasePipelineModalProps = {
   projectId: string
-  featureName: string
   featureId: number
 }
 
 const AddToReleasePipelineModal = ({
   featureId,
-  featureName,
   projectId,
 }: AddToReleasePipelineModalProps) => {
   const [selectedReleasePipeline, setSelectedReleasePipeline] =
