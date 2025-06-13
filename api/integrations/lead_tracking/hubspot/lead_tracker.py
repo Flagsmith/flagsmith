@@ -64,8 +64,8 @@ class HubspotLeadTracker(LeadTracker):
     def create_organisation_lead(
         self, user: FFAdminUser, organisation: Organisation | None = None
     ) -> None:
-        hubspot_contact_id = self.get_or_create_user_hubspot_id(user)
-        hubspot_org_id = self.get_or_create_organisation_hubspot_id(user, organisation)
+        hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
+        hubspot_org_id = self._get_or_create_organisation_hubspot_id(user, organisation)
         if not hubspot_contact_id or not hubspot_org_id:
             return
 
@@ -74,7 +74,7 @@ class HubspotLeadTracker(LeadTracker):
             company_id=hubspot_org_id,
         )
 
-    def get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str | None:
+    def _get_or_create_user_hubspot_id(self, user: FFAdminUser) -> str | None:
         hubspot_lead = HubspotLead.objects.filter(user=user).first()
         if hubspot_lead:
             hubspot_contact_id: str | None = hubspot_lead.hubspot_id
@@ -91,7 +91,7 @@ class HubspotLeadTracker(LeadTracker):
 
         return hubspot_contact_id or None
 
-    def get_or_create_organisation_hubspot_id(
+    def _get_or_create_organisation_hubspot_id(
         self,
         user: FFAdminUser,
         organisation: Organisation | None = None,
