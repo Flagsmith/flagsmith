@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.184.0](https://github.com/Flagsmith/flagsmith/compare/v2.183.0...v2.184.0) (2025-06-13)
+
+
+### Features
+
+* Add `make` shortcut to run both API and worker ([#5565](https://github.com/Flagsmith/flagsmith/issues/5565)) ([c1eed05](https://github.com/Flagsmith/flagsmith/commit/c1eed0563ba479fa1eee6f1ca728b8d09dbdaf1c))
+* Release Pipelines UI ([#5509](https://github.com/Flagsmith/flagsmith/issues/5509)) ([461e30b](https://github.com/Flagsmith/flagsmith/commit/461e30b6967b6503886ec879e62dc8c67ee57b43))
+
+
+### Bug Fixes
+
+* Handle bad input before checking permission ([#5502](https://github.com/Flagsmith/flagsmith/issues/5502)) ([68f6847](https://github.com/Flagsmith/flagsmith/commit/68f6847c44e5aefa6b8d6a184727c75aee8e653f))
+* use-query-from-workflow-list-change-request ([#5568](https://github.com/Flagsmith/flagsmith/issues/5568)) ([54131af](https://github.com/Flagsmith/flagsmith/commit/54131af71389381241f8cbaa33e130823d34a13d))
+
 ## [2.183.0](https://github.com/Flagsmith/flagsmith/compare/v2.182.0...v2.183.0) (2025-06-10)
 
 
