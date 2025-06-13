@@ -140,4 +140,4 @@ class PipedriveLeadTracker(LeadTracker):
     def create_user_organisation_association(
         self, user: FFAdminUser, organisation: Organisation
     ) -> None:
-        pass
+        pass  # noqa: E501

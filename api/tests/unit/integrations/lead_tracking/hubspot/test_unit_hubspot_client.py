@@ -1,5 +1,6 @@
 import json
 import logging
+import typing
 
 import pytest
 import responses
@@ -251,9 +252,32 @@ def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) ->
     )
 
 
-def test_update_company_name_calls_hubspot_api(hubspot_client: HubspotClient) -> None:
-    # Given / # When
-    hubspot_client.update_company(name="NewCo", hubspot_company_id="123")
+@pytest.mark.parametrize(
+    "kwargs, expected_properties",
+    [
+        ({"name": "Test Organisation"}, {"name": "Test Organisation"}),
+        (
+            {"name": "Test Organisation", "active_subscription": "scaleup"},
+            {"name": "Test Organisation", "active_subscription": "scaleup"},
+        ),
+        ({"active_subscription": "scaleup"}, {"active_subscription": "scaleup"}),
+        ({"name": None, "active_subscription": None}, {}),
+    ],
+)
+def test_update_company_calls_hubspot_api(
+    hubspot_client: HubspotClient,
+    kwargs: dict[str, typing.Any],
+    expected_properties: dict[str, typing.Any],
+) -> None:
+    # Given / When
+    mock_update_company = hubspot_client.client.crm.companies.basic_api.update
+
+    hubspot_client.update_company(hubspot_company_id="123", **kwargs)
 
     # Then
-    hubspot_client.client.crm.companies.basic_api.update.assert_called_once()
+    mock_update_company.assert_called_once()
+    _, call_kwargs = mock_update_company.call_args
+    assert call_kwargs["company_id"] == "123"
+
+    simple_input = call_kwargs["simple_public_object_input"]
+    assert simple_input.properties == expected_properties
