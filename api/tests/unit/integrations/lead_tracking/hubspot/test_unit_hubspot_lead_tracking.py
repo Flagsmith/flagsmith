@@ -46,7 +46,7 @@ def mock_client_existing_contact(mocker: MockerFixture) -> MagicMock:
         "id": HUBSPOT_COMPANY_ID,
     }
     mocker.patch(
-        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker._get_client",
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotClient",
         return_value=mock_client,
     )
     return mock_client
@@ -92,7 +92,6 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
     db: None,
     organisation: Organisation,
     mock_client_existing_contact: MagicMock,
-    mocker: MockerFixture,
 ) -> None:
     user = FFAdminUser.objects.create(
         email="existing.lead@example.com",
@@ -113,7 +112,7 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
     mock_client_existing_contact.create_company.assert_not_called()
 
 
-def test_hubspot_find_company_by_domain_and_creates_organisation_lead_and_associates_existing_contact_from_hook(
+def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_associations(
     organisation: Organisation,
     enable_hubspot: None,
     mock_client_existing_contact: MagicMock,
@@ -339,6 +338,7 @@ def test_update_company_active_subscription_returns_none_when_no_plan(
         ([None, {"id": HUBSPOT_USER_ID}, None, None], 2, HUBSPOT_USER_ID, True),
         ([None, None, {"id": HUBSPOT_USER_ID}, None], 3, HUBSPOT_USER_ID, True),
         ([None, None, None, None], 4, None, False),
+        ([None, None, None, None, None, None, None, None], 4, None, False),
     ],
 )
 def test_create_user_hubspot_contact_retries(
@@ -370,3 +370,35 @@ def test_create_user_hubspot_contact_retries(
         is hubspot_leads_exists
     )
     assert mock_client.get_contact.call_count == expected_call_count
+
+
+@pytest.mark.parametrize(
+    "hubspot_contact_id, hubspot_org_id",
+    [
+        (None, "org_123"),
+        ("contact_123", None),
+    ],
+)
+def test_create_user_organisation_association_skips_on_missing_ids(
+    mocker: MockerFixture,
+    hubspot_contact_id: str | None,
+    hubspot_org_id: str | None,
+    staff_user: FFAdminUser,
+    organisation: Organisation,
+) -> None:
+    # Given
+    mock_client = mocker.MagicMock()
+    tracker = HubspotLeadTracker()
+
+    mocker.patch.object(
+        tracker, "_get_or_create_user_hubspot_id", return_value=hubspot_contact_id
+    )
+    mocker.patch.object(
+        tracker, "_get_or_create_organisation_hubspot_id", return_value=hubspot_org_id
+    )
+
+    # When
+    tracker.create_user_organisation_association(staff_user, organisation)
+
+    # Then
+    mock_client.associate_contact_to_company.assert_not_called()
