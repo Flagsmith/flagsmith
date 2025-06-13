@@ -347,6 +347,9 @@ const App = class extends Component {
     const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
       'environment_metrics',
     )
+    const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
+      'project_metrics_tooltip',
+    )
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -613,13 +616,17 @@ const App = class extends Component {
                           >
                             Compare
                           </NavSubLink>
-                          {environmentMetricsEnabled && (
+                          {projectMetricsTooltipEnabled && (
                             <NavSubLink
                               icon={gitCompare}
                               to=''
                               id='reporting-link'
                               disabled
-                              tooltip='Coming soon'
+                              tooltip={
+                                Utils.getFlagsmithValue(
+                                  'project_metrics_tooltip',
+                                ) || 'Coming soon - fallback'
+                              }
                             >
                               Reporting
                             </NavSubLink>

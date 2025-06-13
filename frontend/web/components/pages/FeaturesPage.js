@@ -231,6 +231,7 @@ const FeaturesPage = class extends Component {
     const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
       'environment_metrics',
     )
+
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
     const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
