@@ -27,7 +27,6 @@ const AccordionCard: FC<AccordionCardProps> = ({
         onClick={() => setOpen(!open)}
         className='d-flex flex-row justify-content-between font-weight-medium'
       >
-        {/* <Typography variant='subtitle1' style={{ color: '#fff' }}> */}
         {title}
         {/* </Typography> */}
         <IconButton size='small'>
