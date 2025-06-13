@@ -1174,9 +1174,16 @@ def test_environment_metric_query_helpers_match_expected_counts(
         version += 1
 
     for i in range(scheduled_change_count):
+        cr = ChangeRequest.objects.create(
+            environment=env,
+            title=f"Scheduled-CR-{i}",
+            user_id=admin_user.id,
+            committed_at=timezone.now(),
+        )
         FeatureState.objects.update_or_create(
             feature=random.choice(features),
             environment=env,
+            change_request=cr,
             identity=None,
             enabled=True,
             live_from=timezone.now() + timedelta(days=5),
