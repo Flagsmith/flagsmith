@@ -432,27 +432,28 @@ class Environment(
     def get_scheduled_metrics_queryset(self) -> QuerySet[FeatureState]:
         from features.workflows.core.models import ChangeRequest
 
-        change_requests: QuerySet["ChangeRequest"] = (
-            ChangeRequest.objects.filter(
-                environment=self,
-                committed_at__isnull=False,
-                deleted_at__isnull=True,
+        qs = ChangeRequest.objects.filter(
+            environment=self,
+            committed_at__isnull=False,
+            deleted_at__isnull=True,
+        )
+        scheduled_q = (
+            Q(
+                Q(feature_states__deleted_at__isnull=True)
+                & Q(feature_states__live_from__gt=timezone.now())
             )
-            .filter(
-                Q(
-                    Q(feature_states__deleted_at__isnull=True)
-                    & Q(feature_states__live_from__gt=timezone.now())
-                )
-                | Q(
-                    Q(environment_feature_versions__deleted_at__isnull=True)
-                    & Q(environment_feature_versions__live_from__gt=timezone.now())
-                )
-                | Q(
-                    Q(change_sets__deleted_at__isnull=True)
-                    & Q(change_sets__live_from__gt=timezone.now())
-                )
+            | Q(
+                Q(environment_feature_versions__deleted_at__isnull=True)
+                & Q(environment_feature_versions__live_from__gt=timezone.now())
             )
-            .distinct()
+            | Q(
+                Q(change_sets__deleted_at__isnull=True)
+                & Q(change_sets__live_from__gt=timezone.now())
+            )
+        )
+
+        change_requests: QuerySet["ChangeRequest"] = qs.filter(
+            id__in=qs.filter(scheduled_q).values_list("id", flat=True)
         )
         return change_requests
 
