@@ -17,7 +17,6 @@ from app_analytics.constants import (
 )
 from app_analytics.dataclasses import UsageData
 from app_analytics.models import FeatureEvaluationRaw
-from app_analytics.views import SDKAnalyticsFlags
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.models import Feature
@@ -27,25 +26,34 @@ from organisations.models import (
 )
 
 
-def test_sdk_analytics_does_not_allow_bad_data(mocker, settings, environment):  # type: ignore[no-untyped-def]
+def test_sdk_analytics_ignores_bad_data(
+    mocker: MockerFixture,
+    environment: Environment,
+    feature: Feature,
+    api_client: APIClient,
+) -> None:
     # Given
-    settings.INFLUXDB_TOKEN = "some-token"
+    api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
 
-    data = {"bad": "data"}
-    request = mocker.MagicMock(data=data, environment=environment)
-
-    view = SDKAnalyticsFlags(request=request)
-
+    data = {"invalid_feature_name": 20, feature.name: 2}
     mocked_feature_eval_cache = mocker.patch(
         "app_analytics.views.feature_evaluation_cache"
     )
 
+    url = reverse("api-v1:analytics-flags")
+
     # When
-    response = view.post(request)  # type: ignore[no-untyped-call]
+    response = api_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    mocked_feature_eval_cache.track_feature_evaluation.assert_not_called()
+    assert mocked_feature_eval_cache.track_feature_evaluation.call_count == 1
+
+    mocked_feature_eval_cache.track_feature_evaluation.assert_called_once_with(
+        environment.id, feature.name, data[feature.name]
+    )
 
 
 def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-untyped-def]
@@ -387,7 +395,12 @@ def test_set_sdk_analytics_flags_without_identifier(
                 "feature_name": feature.name,
                 "count": feature_request_count,
                 "enabled_when_evaluated": True,
-            }
+            },
+            {
+                "feature_name": "invalid_feature_name",
+                "count": 10,
+                "enabled_when_evaluated": True,
+            },
         ]
     }
 
@@ -433,7 +446,13 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
                 "identity_identifier": identity.identifier,
                 "count": feature_request_count,
                 "enabled_when_evaluated": True,
-            }
+            },
+            {
+                "feature_name": "invalid_feature_name",
+                "identity_identifier": identity.identifier,
+                "count": 10,
+                "enabled_when_evaluated": True,
+            },
         ]
     }
 
