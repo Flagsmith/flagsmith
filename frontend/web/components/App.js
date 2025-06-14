@@ -127,16 +127,6 @@ const App = class extends Component {
     updateLastViewed()
   }
 
-  toggleDarkMode = () => {
-    const newValue = !Utils.getFlagsmithHasFeature('dark_mode')
-    flagsmith.setTrait('dark_mode', newValue)
-    if (newValue) {
-      document.body.classList.add('dark')
-    } else {
-      document.body.classList.remove('dark')
-    }
-  }
-
   componentDidUpdate(prevProps) {
     if (prevProps.location.pathname !== this.props.location.pathname) {
       const newProjectId = this.getProjectId(this.props)
@@ -528,24 +518,6 @@ const App = class extends Component {
                                   <GithubStar />
 
                                   <Headway className='cursor-pointer' />
-                                  <Tooltip
-                                    place='bottom'
-                                    title={
-                                      <div className='dark-mode mt-0'>
-                                        <Switch
-                                          checked={Utils.getFlagsmithHasFeature(
-                                            'dark_mode',
-                                          )}
-                                          onChange={this.toggleDarkMode}
-                                          darkMode
-                                        />
-                                      </div>
-                                    }
-                                  >
-                                    {Utils.getFlagsmithHasFeature('dark_mode')
-                                      ? 'Light Mode'
-                                      : 'Dark Mode'}
-                                  </Tooltip>
                                 </Row>
                               </nav>
                             </React.Fragment>
