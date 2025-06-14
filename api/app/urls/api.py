@@ -1,49 +1,41 @@
 import importlib
 
-from common.core.urls import urlpatterns as core_urlpatterns
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic.base import TemplateView
 
+from app import views
+from app.urls.common import urlpatterns as common_urlpatterns
 from users.views import password_reset_redirect
 
-from . import views
-
 urlpatterns = [
-    *core_urlpatterns,
-    path("processor/", include("task_processor.urls")),
+    *common_urlpatterns,
+    re_path(r"^api/v1/", include("api.urls.deprecated", namespace="api-deprecated")),
+    re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
+    re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
+    re_path(r"^admin/", admin.site.urls),
+    re_path(
+        r"^sales-dashboard/",
+        include("sales_dashboard.urls", namespace="sales_dashboard"),
+    ),
+    # this url is used to generate email content for the password reset workflow
+    re_path(
+        r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"
+        r"13}-[0-9A-Za-z]{1,20})/$",
+        password_reset_redirect,
+        name="password_reset_confirm",
+    ),
+    re_path(
+        r"^config/project-overrides",
+        views.project_overrides,
+        name="project_overrides",
+    ),
+    path(
+        "robots.txt",
+        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+    ),
 ]
-
-if not settings.TASK_PROCESSOR_MODE:
-    urlpatterns += [
-        re_path(
-            r"^api/v1/", include("api.urls.deprecated", namespace="api-deprecated")
-        ),
-        re_path(r"^api/v1/", include("api.urls.v1", namespace="api-v1")),
-        re_path(r"^api/v2/", include("api.urls.v2", namespace="api-v2")),
-        re_path(r"^admin/", admin.site.urls),
-        re_path(
-            r"^sales-dashboard/",
-            include("sales_dashboard.urls", namespace="sales_dashboard"),
-        ),
-        # this url is used to generate email content for the password reset workflow
-        re_path(
-            r"^password-reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,"
-            r"13}-[0-9A-Za-z]{1,20})/$",
-            password_reset_redirect,
-            name="password_reset_confirm",
-        ),
-        re_path(
-            r"^config/project-overrides",
-            views.project_overrides,
-            name="project_overrides",
-        ),
-        path(
-            "robots.txt",
-            TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
-        ),
-    ]
 
 if settings.DEBUG:
     urlpatterns = [
