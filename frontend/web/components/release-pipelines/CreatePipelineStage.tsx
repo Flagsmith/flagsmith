@@ -3,20 +3,26 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { useGetSegmentsQuery } from 'common/services/useSegment'
-import { StageActionType, StageTrigger } from 'common/types/responses'
+import {
+  StageActionType,
+  StageTrigger,
+  StageTriggerType,
+} from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
-import { FLAG_ACTIONS, TRIGGER_OPTIONS } from './constants'
-import { StageActionRequest, PipelineStageRequest } from 'common/types/requests'
+import {
+  FLAG_ACTION_OPTIONS,
+  TIME_UNIT_OPTIONS,
+  TRIGGER_OPTIONS,
+} from './constants'
+import { StageAction } from 'common/types/responses'
+import moment from 'moment'
+import Input from 'components/base/forms/Input'
+import { PipelineStageRequest } from 'common/types/requests'
 
-type DraftStageType = Omit<PipelineStageRequest, 'id' | 'pipeline' | 'project'>
+type DraftStageType = PipelineStageRequest
 
-const getFlagActions = (trigger: string | undefined) => {
-  if (trigger === 'ON_ENTER') {
-    return FLAG_ACTIONS.ON_ENTER
-  }
-  return []
-}
+type TimeUnit = 'days' | 'hours' | 'minutes'
 
 const CreatePipelineStage = ({
   onChange,
@@ -32,6 +38,8 @@ const CreatePipelineStage = ({
   onRemove?: () => void
 }) => {
   const [searchInput, setSearchInput] = useState('')
+  const [amountOfTime, setAmountOfTime] = useState(1)
+  const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnit>('days')
   const [selectedAction, setSelectedAction] = useState<{
     label: string
     value: string
@@ -83,9 +91,21 @@ const CreatePipelineStage = ({
 
   const handleOnChange = (
     fieldName: keyof DraftStageType,
-    value: string | number | StageTrigger | StageActionRequest[],
+    value: string | number | StageTrigger | Omit<StageAction, 'id'>[],
   ) => {
     onChange({ ...stageData, [fieldName]: value })
+  }
+
+  function formatDurationToHHMMSS(duration: moment.Duration) {
+    const totalSeconds = duration.asSeconds()
+
+    const hours = Math.floor(totalSeconds / 3600)
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+    const seconds = Math.floor(totalSeconds % 60)
+
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(
+      seconds,
+    ).padStart(2, '0')}`
   }
 
   useEffect(() => {
@@ -110,7 +130,7 @@ const CreatePipelineStage = ({
         return action
       })
 
-      handleOnChange('actions', actions as StageActionRequest[])
+      handleOnChange('actions', actions)
     }
   }
 
@@ -134,6 +154,40 @@ const CreatePipelineStage = ({
     handleOnChange('actions', [{ action_body, action_type }])
   }
 
+  useEffect(() => {
+    if (selectedSegment?.value) {
+      const actions = stageData.actions.map((action) => {
+        if (action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT) {
+          return {
+            ...action,
+            action_body: { enabled: true, segment_id: selectedSegment?.value },
+          }
+        }
+        return action
+      })
+
+      handleOnChange('actions', actions as StageAction[])
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSegment])
+
+  useEffect(() => {
+    if (
+      selectedTrigger?.value === StageTriggerType.WAIT_FOR &&
+      amountOfTime >= 1 &&
+      !!selectedTimeUnit
+    ) {
+      const duration = moment.duration(amountOfTime, selectedTimeUnit)
+      const formatted = formatDurationToHHMMSS(duration)
+      handleOnChange('trigger', {
+        trigger_body: { wait_for: formatted },
+        trigger_type: selectedTrigger?.value,
+      } as StageTrigger)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTrigger, selectedTimeUnit, amountOfTime])
+
   return (
     <div
       className='p-3 border-1 rounded position-relative'
@@ -151,6 +205,7 @@ const CreatePipelineStage = ({
           title='Stage Name'
           inputProps={{ className: 'full-width' }}
           value={stageData.name}
+          isValid={!!stageData.name.length}
           onChange={(e: SyntheticEvent<HTMLInputElement>) => {
             handleOnChange('name', e.currentTarget.value)
           }}
@@ -196,6 +251,34 @@ const CreatePipelineStage = ({
           }
         />
       </FormGroup>
+      {selectedTrigger?.value === StageTriggerType.WAIT_FOR && (
+        <FormGroup className='pl-4 d-flex align-items-center'>
+          <div className='flex-1 mr-3'>
+            <Input
+              value={`${amountOfTime}`}
+              inputClassName='input flex-1'
+              name='amount-of-time'
+              isValid={amountOfTime > 0}
+              min={1}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = Utils.safeParseEventValue(e)
+                setAmountOfTime(Number(value) || 1)
+              }}
+              type='number'
+              placeholder='Amount of time'
+            />
+          </div>
+          <div className='w-50'>
+            <Select
+              value={Utils.toSelectedValue(selectedTimeUnit, TIME_UNIT_OPTIONS)}
+              options={TIME_UNIT_OPTIONS}
+              onChange={(option: { value: string; label: string }) =>
+                setSelectedTimeUnit(option.value as TimeUnit)
+              }
+            />
+          </div>
+        </FormGroup>
+      )}
       <Row>
         <div className='flex-1 and-divider__line' />
         <div className='mx-2'>Then</div>
@@ -209,7 +292,7 @@ const CreatePipelineStage = ({
               menuPortalTarget={document.body}
               maxMenuHeight={120}
               value={selectedAction}
-              options={getFlagActions(selectedTrigger?.value)}
+              options={FLAG_ACTION_OPTIONS}
               onChange={handleActionChange}
             />
           }
