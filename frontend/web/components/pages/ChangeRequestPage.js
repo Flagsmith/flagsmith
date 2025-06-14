@@ -25,6 +25,7 @@ import NewVersionWarning from 'components/NewVersionWarning'
 import WarningMessage from 'components/WarningMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { Component } from 'react'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -37,7 +38,7 @@ const ChangeRequestsPage = class extends Component {
 
   constructor(props) {
     super(props)
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+    const projectId = this.context?.projectId
     this.state = {
       showArchived: false,
       tags: [],
@@ -51,7 +52,7 @@ const ChangeRequestsPage = class extends Component {
     )
     AppActions.getChangeRequest(
       this.props.match.params.id,
-      projectIdFromUrl,
+      projectId,
       this.props.match.params.environmentId,
     )
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
@@ -97,11 +98,11 @@ const ChangeRequestsPage = class extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+    const projectId = this.context.projectId
     if (prevProps.match.params.id !== this.props.match.params.id) {
       AppActions.getChangeRequest(
         this.props.match.params.id,
-        projectIdFromUrl,
+        projectId,
         this.props.match.params.environmentId,
       )
     }
@@ -121,7 +122,7 @@ const ChangeRequestsPage = class extends Component {
       onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
           this.props.history.replace(
-            `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
+            `/project/${this.props.routeContext.projectId}/environment/${this.props.routeContext.environmentId}/change-requests`,
           )
         })
       },
@@ -133,13 +134,13 @@ const ChangeRequestsPage = class extends Component {
   editChangeRequest = (projectFlag, environmentFlag) => {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+    const projectId = this.context.projectId
     openModal(
       'Edit Change Request',
       <CreateFlagModal
         history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={projectIdFromUrl}
+        projectId={projectId}
         changeRequest={ChangeRequestStore.model[id]}
         projectFlag={projectFlag}
         multivariate_options={
@@ -228,7 +229,7 @@ const ChangeRequestsPage = class extends Component {
           'commit',
           () => {
             AppActions.refreshFeatures(
-              Utils.getProjectIdFromUrl(this.props.match),
+              this.context.projectId,
               this.props.match.params.environmentId,
               true,
             )
@@ -281,7 +282,7 @@ const ChangeRequestsPage = class extends Component {
         </div>
       )
     }
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+    const projectId = this.context.projectId
     const orgUsers = OrganisationStore.model && OrganisationStore.model.users
     const orgGroups = this.state.groups || []
     const ownerUsers =
@@ -523,11 +524,9 @@ const ChangeRequestsPage = class extends Component {
                         <a
                           target='_blank'
                           className='btn-link font-weight-medium'
-                          href={`/project/${
-                            this.props.match.params.projectId
-                          }/environment/${
-                            this.props.match.params.environmentId
-                          }/features?feature=${projectFlag && projectFlag.id}`}
+                          href={`/project/${projectId}/environment/${projectId}/features?feature=${
+                            projectFlag && projectFlag.id
+                          }`}
                           rel='noreferrer'
                         >
                           {projectFlag && projectFlag.name}
@@ -546,7 +545,7 @@ const ChangeRequestsPage = class extends Component {
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
                     feature={projectFlag.id}
-                    projectId={projectIdFromUrl}
+                    projectId={projectId}
                   />
                 </div>
                 <JSONReference
@@ -627,6 +626,11 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
+const ChangeRequestsPageWithContext = (props) => {
+  const context = useRouteContext()
+  return <ChangeRequestsPage {...props} routeContext={context} />
+}
+
 export default withRouter(
-  ConfigProvider(withSegmentOverrides(ChangeRequestsPage)),
+  ConfigProvider(withSegmentOverrides(ChangeRequestsPageWithContext)),
 )
