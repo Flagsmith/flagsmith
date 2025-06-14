@@ -323,6 +323,11 @@ global.API = {
           .set('organisation', selectedOrgName)
           .set('role', selectedRole)
           .set('plan', selectedPlanName)
+          .set(
+            'tasks',
+            (user.onboarding?.tasks || [])?.map((v) => v.name),
+          )
+          .set('integrations', user.onboarding?.tools?.selection || [])
 
         amplitude.identify(identify)
       }
