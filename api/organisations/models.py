@@ -120,6 +120,9 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
 
+    def has_enterprise_subscription(self) -> bool:
+        return self.is_paid and self.subscription.is_enterprise()
+
     @property
     def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
         return f"org.{self.id}"
@@ -278,6 +281,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def subscription_plan_family(self) -> SubscriptionPlanFamily:
         return SubscriptionPlanFamily.get_by_plan_id(self.plan)  # type: ignore[arg-type]
+
+    def is_enterprise(self) -> bool:
+        return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
