@@ -9,6 +9,19 @@
 .hidden {
     display: none !important;
 }
+.button--sm {
+  font-size: 0.95rem; /* Increase from 0.75-0.85rem to improve readability */
+  padding: 0.6rem 1.2rem; /* More breathing room */
+  border-radius: 0.5rem; /* More rounded corners */
+  line-height: 1.4;
+}
+.cardFooter {
+  display: flex;
+  align-items: center;  /* Vertically centers content */
+  justify-content: center; /* Horizontally centers (optional) */
+  height: 100%;  /* Ensures it uses full height if needed */
+  padding: 1rem 0; /* Adds breathing space */
+}
 
 @font-face {
     font-family: 'Open Sans Regular';

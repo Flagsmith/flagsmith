@@ -2,59 +2,126 @@
 sidebar_position: 3
 ---
 
+import Card from '@site/src/components/Card';
+import CardHeader from '@site/src/components/Card/CardHeader';
+import CardBody from '@site/src/components/Card/CardBody';
+import CardFooter from '@site/src/components/Card/CardFooter';
+
 # Version Comparison
 
-You are free to run the Open Source version of Flagsmith however you see fit! There are some differences between the
-Open Source, SaaS hosted and Enterprise versions:
+Choose the right Flagsmith version for your needs. Compare our Open Source, SaaS, and Enterprise offerings:
 
-- The Open Source version has **no** API request or Identity limits - you can run as many API instances in a cluster as
-  you wish.
-- The Open Source version has **no** Dashboard User limits.
-- The Open Source version has **no** Environment limits.
-- The Open Source version is limited to a single Project.
-- The SaaS and Enterprise versions have [Change Requests and Flag Scheduling](advanced-use/change-requests.md).
-- The SaaS and Enterprise versions have [Role-Based Access Control](/system-administration/rbac).
-- The SaaS and Enterprise versions have [Audit Logs](/system-administration/audit-logs).
-- The SaaS and Enterprise versions have additional Authentication Providers:
-  - [Okta](/system-administration/authentication/Okta)
-  - [LDAP](/system-administration/authentication/LDAP)
-  - [SAML](/system-administration/authentication/SAML)
-  - [ADFS](/system-administration/authentication/ADFS)
+## Feature Comparison
 
-:::tip
+|  | Free | Saas | Enterprise |
+|---------|:-------------:|:------:|:------------:|
+| **Core Features** |
+| Feature Flags | ✅ | ✅ | ✅ |
+| Remote Config | ✅ | ✅ | ✅ |
+| User Segments | ✅ | ✅ | ✅ |
+| A/B Testing | ✅ | ✅ | ✅ |
+| 3rd Party Integrations | ✅ | ✅ | ✅ |
+| **Scaling** |
+| API Request Limits | 50k/month | 1M/month | 5M+/month |
+| Team Members | 1 | 3 | 20+ |
+| Projects | Single | Unlimited | Unlimited |
+| Environments | Unlimited | Unlimited | Unlimited |
+| **Advanced Features** |
+| Change Requests | ❌ | ✅ | ✅ |
+| Flag Scheduling | ❌ | ✅ | ✅ |
+| Role-Based Access Control | ❌ | ✅ | ✅ |
+| Audit Logs | ❌ | ✅ | ✅ |
+| Two-Factor Authentication | ❌ | ✅ | ✅ |
+| Priority Support | ❌ | Email | Slack/Discord |
+| **Enterprise Features** |
+| Custom SLA | ❌ | ❌ | ✅ |
+| On-Boarding and Training | ❌ | ❌ | ✅ |
+| Custom Fields | ❌ | ❌ | ✅ |
+| **Authentication** |
+| Email/Password | ✅ | ✅ | ✅ |
+| OAuth | ✅ | ✅ | ✅ |
+| SAML/SSO | ❌ | ❌ | ✅ |
+| LDAP | ❌ | ❌ | ✅ |
+| Okta | ❌ | ❌ | ✅ |
+| **Infrastructure** |
+| Self-hosted | ✅ | ❌ | Optional |
+| Cloud Hosted | ❌ | ✅ | Optional |
+| Private Cloud | ❌ | ❌ | ✅ |
+| Edge API | ❌ | ✅ | Optional |
+| Database Options | PostgreSQL | PostgreSQL | PostgreSQL, Oracle, MySQL |
 
-You can switch between SaaS and Self Hosted Flagsmith using our
-[Import and Export tools](system-administration/importing-and-exporting/organisations).
+## Deployment Options
 
+<div className="row">
+  <div className="col col--4">
+    <Card>
+      <CardHeader>
+        <h3>🚀 Free </h3>
+      </CardHeader>
+      <CardBody>
+        <ul>
+          <li>Up to 50,000 Requests/Month</li>
+          <li>1 Team Member</li>
+          <li>Unlimited Feature Flags</li>
+          <li>Unlimited Environments</li>
+          <li>A/B and MVT Testing</li>
+          <li>API Access</li>
+        </ul>
+      </CardBody>
+      <CardFooter>
+        <a href="/deployment" className="button button--primary button--sm">
+          View Deployment Guide
+        </a>
+      </CardFooter>
+    </Card>
+  </div>
+  
+  <div className="col col--4">
+    <Card>  
+      <CardHeader>
+        <h3>☁️ Start-Up</h3>
+      </CardHeader>
+      <CardBody>
+        <ul>
+          <li>Up to 1,000,000 Requests/Month</li>
+          <li>3 Team Members</li>
+          <li>Unlimited Projects</li>
+          <li>Email Technical Support</li>
+          <li>Scheduled Flags</li>
+          <li>Global Edge API</li>
+        </ul>
+      </CardBody>
+      <CardFooter>
+        <a href="https://app.flagsmith.com/signup" className="button button--primary button--sm">
+          Start Free Trial
+        </a>
+      </CardFooter>
+    </Card>
+  </div>
+
+  <div className="col col--4">
+    <Card>
+      <CardHeader>
+        <h3>🏢 Enterprise</h3>
+      </CardHeader>
+      <CardBody>
+        <ul>
+          <li>5,000,000+ Requests/Month</li>
+          <li>20+ Team Members</li>
+          <li>Advanced Hosting Options</li>
+          <li>Priority Support via Slack/Discord</li>
+          <li>Custom SLA</li>
+        </ul>
+      </CardBody>
+      <CardFooter>
+        <a href="https://flagsmith.com/contact-us" className="button button--primary button--sm">
+          Contact Sales
+        </a>
+      </CardFooter>
+    </Card>
+  </div>
+</div>
+
+:::tip Migration
+You can easily switch between SaaS and Self Hosted Flagsmith using our [Import and Export tools](system-administration/importing-and-exporting/organisations).
 :::
-
-## SaaS Benefits
-
-Our SaaS platform has a number of benefits:
-
-- You can get up and running right away.
-- Our global [Edge API](advanced-use/edge-api.md) provides global low latency flags. We aim to serve all flag requests
-  in < 150ms, globally.
-- Get real-time flag updates to your clients, the moment they are changed in the dashboard.
-- We deal with platform upgrades, security patches, scaling and backups.
-
-## Enterprise Benefits
-
-You can run our Enterprise version either on-premise, or we can provide private cloud instance dedicated to your
-organisation.
-
-- [Role Based Access Control](/system-administration/rbac).
-- [Custom fields](/advanced-use/custom-fields.md) for features, segments and environments.
-- [Okta](/system-administration/authentication/Okta), [LDAP](/system-administration/authentication/LDAP),
-  [SAML](/system-administration/authentication/SAML) and [ADFS](/system-administration/authentication/ADFS)
-  authentication, as well as the ability to lock authentication to a single provider.
-- Additional database engines: Oracle and MySQL.
-- Additional deployment and orchestration options as detailed below.
-
-## Open Source Benefits
-
-- Completely Free!
-- The Open Source version has **no** API request or Identity limits - you can run as many API instances in a cluster as
-  you wish.
-- The Open Source version has **no** Dashboard User limits - you can have as many team members as you wish.
-- Deploy with one click to a number of different [IaaS and PaaS providers](/deployment#one-click-installers).
