@@ -10,7 +10,7 @@ import FlagActionDetail from './FlagActionDetail'
 type StageInfoProps = {
   environmentName: string
   stageData: PipelineStage
-  projectId: number
+  projectId: string
 }
 
 const getTriggerText = (
