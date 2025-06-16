@@ -604,19 +604,35 @@ def test_delete_all_identities__deletes_all_identities_documents_from_dynamodb(
 
 
 @pytest.mark.parametrize(
-    "identity_features",
+    "identity_features, expected_counts",
     [
-        [[1, 2, 3], [99], []],
-        [[1, 2, 3], [99], [1, 2, 3, 99]],
-        [[], [], []],
-        [[], [1, 2, 3], []],
-        [[4], [4, 25, 18, 19, 85, 100], [4]],
+        (
+            [[1, 2, 3], [99], []],
+            {1: 1, 2: 1, 3: 1, 99: 1},
+        ),
+        (
+            [[1, 2, 3], [99], [1, 2, 3, 99]],
+            {1: 2, 2: 2, 3: 2, 99: 2},
+        ),
+        (
+            [[], [], []],
+            {},
+        ),
+        (
+            [[], [1, 2, 3], []],
+            {1: 1, 2: 1, 3: 1},
+        ),
+        (
+            [[4], [4, 25, 18, 19, 85, 100], [4]],
+            {4: 3, 25: 1, 18: 1, 19: 1, 85: 1, 100: 1},
+        ),
     ],
 )
-def test_get_identity_overrides_count_dynamo_returns_correct_total(
+def test_get_identity_override_feature_counts_dynamo_returns_correct_total(
     flagsmith_identities_table: Table,
     dynamodb_identity_wrapper: DynamoIdentityWrapper,
     identity_features: list[list[int]],
+    expected_counts: dict[int, int],
 ) -> None:
     environment_api_key = "env_test"
 
@@ -624,29 +640,35 @@ def test_get_identity_overrides_count_dynamo_returns_correct_total(
         "composite_key": f"{environment_api_key}_identity1",
         "environment_api_key": environment_api_key,
         "identifier": "user1",
-        "identity_features": identity_features[0],
+        "identity_features": [
+            {"feature": {"id": feature_id}} for feature_id in identity_features[0]
+        ],
     }
 
     identity_two = {
         "composite_key": f"{environment_api_key}_identity2",
         "environment_api_key": environment_api_key,
         "identifier": "user2",
-        "identity_features": identity_features[1],
+        "identity_features": [
+            {"feature": {"id": feature_id}} for feature_id in identity_features[1]
+        ],
     }
 
     identity_three = {
         "composite_key": f"{environment_api_key}_identity3",
         "environment_api_key": environment_api_key,
         "identifier": "user3",
-        "identity_features": identity_features[2],
+        "identity_features": [
+            {"feature": {"id": feature_id}} for feature_id in identity_features[2]
+        ],
     }
 
     flagsmith_identities_table.put_item(Item=identity_one)
     flagsmith_identities_table.put_item(Item=identity_two)
     flagsmith_identities_table.put_item(Item=identity_three)
 
-    result = dynamodb_identity_wrapper.get_identity_overrides_count(environment_api_key)
-
-    assert result == len(identity_features[0]) + len(identity_features[1]) + len(
-        identity_features[2]
+    result = dynamodb_identity_wrapper.get_identity_override_feature_counts(
+        environment_api_key
     )
+
+    assert result == expected_counts
