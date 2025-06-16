@@ -1,17 +1,23 @@
 import logging
-import typing
+from typing import Any, Callable, Literal, Protocol, Type
 
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
+from audit.models import AuditLog
+from audit.related_object_type import RelatedObjectType
 from audit.serializers import AuditLogListSerializer
+from audit.services import get_audited_instance_from_audit_log_record
+from features.models import FeatureState
+from features.signals import feature_state_change_went_live
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
 from integrations.grafana.grafana import GrafanaWrapper
 from integrations.new_relic.new_relic import NewRelicWrapper
+from integrations.sentry.change_tracking import SentryChangeTracking
+from integrations.sentry.models import SentryChangeTrackingConfiguration
 from integrations.slack.slack import SlackWrapper
 from organisations.models import OrganisationWebhook
 from webhooks.tasks import call_organisation_webhooks
@@ -20,13 +26,25 @@ from webhooks.webhooks import WebhookEventType
 logger = logging.getLogger(__name__)
 
 
-AuditLogIntegrationAttrName = typing.Literal[
+AuditLogIntegrationAttrName = Literal[
     "data_dog_config",
     "dynatrace_config",
     "grafana_config",
     "new_relic_config",
     "slack_config",
 ]
+
+
+class _AuditLogSignalHandler(Protocol):
+    def __call__(
+        self,
+        sender: Type[AuditLog],
+        instance: AuditLog,
+        **kwargs: Any,
+    ) -> None: ...
+
+
+_DecoratedSignal = Callable[[_AuditLogSignalHandler], _AuditLogSignalHandler]
 
 
 def _get_integration_config(
@@ -71,25 +89,41 @@ def call_webhooks(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
         )
 
 
-def track_only_feature_related_events(signal_function):  # type: ignore[no-untyped-def]
-    def signal_wrapper(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
-        # Only handle Feature related changes
-        if instance.related_object_type not in [
-            RelatedObjectType.FEATURE.name,
-            RelatedObjectType.FEATURE_STATE.name,
-            RelatedObjectType.SEGMENT.name,
-            RelatedObjectType.EF_VERSION.name,
-        ]:
-            return None
-        return signal_function(sender, instance, **kwargs)
+def track_only(types: list[RelatedObjectType]) -> _DecoratedSignal:
+    """
+    Restrict an AuditLog signal to a certain list of RelatedObjectType
+    """
 
-    return signal_wrapper
+    def decorator(signal_function: _AuditLogSignalHandler) -> _AuditLogSignalHandler:
+        def signal_wrapper(
+            sender: Type[AuditLog],
+            instance: AuditLog,
+            **kwargs: Any,
+        ) -> None:
+            type_names = (t.name for t in types)
+            if instance.related_object_type not in type_names:
+                return None
+            return signal_function(sender, instance, **kwargs)
+
+        return signal_wrapper
+
+    return decorator
+
+
+def track_only_feature_related_events(signal_function):  # type: ignore[no-untyped-def]
+    allowed_types = [
+        RelatedObjectType.FEATURE,
+        RelatedObjectType.FEATURE_STATE,
+        RelatedObjectType.SEGMENT,
+        RelatedObjectType.EF_VERSION,
+    ]
+    return track_only(allowed_types)(signal_function)
 
 
 def _track_event_async(instance, integration_client):  # type: ignore[no-untyped-def]
-    event_data = integration_client.generate_event_data(audit_log_record=instance)
-
-    integration_client.track_event_async(event=event_data)
+    if event_data := integration_client.generate_event_data(audit_log_record=instance):
+        integration_client.track_event_async(event=event_data)
+        return
 
 
 @receiver(post_save, sender=AuditLog)
@@ -166,3 +200,34 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
         api_token=slack_project_config.api_token, channel_id=env_config.channel_id
     )
     _track_event_async(instance, slack)  # type: ignore[no-untyped-call]
+
+
+@receiver(post_save, sender=AuditLog)
+@track_only([RelatedObjectType.FEATURE_STATE])
+def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
+    feature_state = get_audited_instance_from_audit_log_record(instance)
+    if not isinstance(feature_state, FeatureState):
+        return
+
+    if feature_state.is_scheduled:
+        return  # This is handled by audit.tasks.create_feature_state_went_live_audit_log
+
+    feature_state_change_went_live.send(instance)
+
+
+@receiver(feature_state_change_went_live)
+def send_audit_log_event_to_sentry(sender: AuditLog, **kwargs: Any) -> None:
+    try:
+        sentry_configuration = SentryChangeTrackingConfiguration.objects.get(
+            environment=sender.environment,
+            deleted_at__isnull=True,
+        )
+    except SentryChangeTrackingConfiguration.DoesNotExist:
+        return
+
+    sentry_change_tracking = SentryChangeTracking(
+        webhook_url=sentry_configuration.webhook_url,
+        secret=sentry_configuration.secret,
+    )
+
+    _track_event_async(sender, sentry_change_tracking)  # type: ignore[no-untyped-call]

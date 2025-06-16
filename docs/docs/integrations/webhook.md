@@ -14,7 +14,7 @@ more. The process is as follows:
 
 ## Integration Setup
 
-1. Write an endpoint that accepts the [JSON schema](#webhook-json-schema) defined below
+1. Write an endpoint that accepts the [JSON schema](#webhook-json-schema) defined below.
 2. Add the integration in Flagsmith, providing your URL created in the step above.
 3. You can also provide a Secret which will be [hashed and included in the HTTP header](#webhook-signature). This will
    allow you to verify that the Webhook has come from Flagsmith.
