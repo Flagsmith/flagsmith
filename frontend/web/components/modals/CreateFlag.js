@@ -1177,18 +1177,28 @@ const CreateFlag = class extends Component {
                                       </strong>
                                     </div>
                                     <div className='text-right'>
-                                      {createFeature &&
-                                        isReleasePipelineEnabled && (
-                                          <Button
-                                            className='mr-2'
-                                            theme='secondary'
-                                            onClick={
-                                              this.openReleasePipelineModal
-                                            }
-                                          >
-                                            Add to Release Pipeline
-                                          </Button>
-                                        )}
+                                      <Permission
+                                        level='environment'
+                                        permission={'UPDATE_FEATURE_STATE'}
+                                        id={this.props.environmentId}
+                                      >
+                                        {({
+                                          permission: updateFeatureState,
+                                        }) => {
+                                          isReleasePipelineEnabled &&
+                                            updateFeatureState && (
+                                              <Button
+                                                className='mr-2'
+                                                theme='secondary'
+                                                onClick={
+                                                  this.openReleasePipelineModal
+                                                }
+                                              >
+                                                Add to Release Pipeline
+                                              </Button>
+                                            )
+                                        }}
+                                      </Permission>
                                       <Permission
                                         level='environment'
                                         tags={projectFlag?.tags}
