@@ -383,9 +383,11 @@ class Environment(
         base_qs = FeatureState.objects.get_live_feature_states(
             environment=self,
             **(filter_kwargs or {}),
+        ).filter(
+            feature__is_archived=False,
         )
 
-        group_fields = ["feature_id"]
+        group_fields = ["feature_id", "environment_id"]
         if extra_group_by_fields is not None:
             group_fields.append(extra_group_by_fields)
 
