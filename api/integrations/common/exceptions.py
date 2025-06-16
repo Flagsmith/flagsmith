@@ -1,2 +1,0 @@
-class InvalidIntegrationParameters(Exception):
-    pass

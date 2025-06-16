@@ -11,7 +11,6 @@ from audit.serializers import AuditLogListSerializer
 from audit.services import get_audited_instance_from_audit_log_record
 from features.models import FeatureState
 from features.signals import feature_state_change_went_live
-from integrations.common.exceptions import InvalidIntegrationParameters
 from integrations.common.models import IntegrationsModel
 from integrations.datadog.datadog import DataDogWrapper
 from integrations.dynatrace.dynatrace import DynatraceWrapper
@@ -122,13 +121,9 @@ def track_only_feature_related_events(signal_function):  # type: ignore[no-untyp
 
 
 def _track_event_async(instance, integration_client):  # type: ignore[no-untyped-def]
-    try:
-        event_data = integration_client.generate_event_data(audit_log_record=instance)
-    except InvalidIntegrationParameters as error:  # pragma: no cover
-        logger.error("Cannot prepare integration: %s", repr(error))
+    if event_data := integration_client.generate_event_data(audit_log_record=instance):
+        integration_client.track_event_async(event=event_data)
         return
-
-    integration_client.track_event_async(event=event_data)
 
 
 @receiver(post_save, sender=AuditLog)
@@ -211,7 +206,7 @@ def send_audit_log_event_to_slack(sender, instance, **kwargs):  # type: ignore[n
 @track_only([RelatedObjectType.FEATURE_STATE])
 def send_feature_flag_went_live_signal(sender, instance, **kwargs):  # type: ignore[no-untyped-def]
     feature_state = get_audited_instance_from_audit_log_record(instance)
-    if not (feature_state and isinstance(feature_state, FeatureState)):
+    if not isinstance(feature_state, FeatureState):
         return
 
     if feature_state.is_scheduled:
