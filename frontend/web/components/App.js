@@ -24,7 +24,7 @@ import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 import classNames from 'classnames'
 import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
-import NavSubLink from './NavSubLink'
+import NavSubLink from './navigation/NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
 import BreadcrumbSeparator from './BreadcrumbSeparator'
@@ -344,6 +344,12 @@ const App = class extends Component {
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'
     const integrations = Object.keys(Utils.getIntegrationData())
+    const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
+      'environment_metrics',
+    )
+    const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
+      'project_metrics_tooltip',
+    )
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -610,6 +616,21 @@ const App = class extends Component {
                           >
                             Compare
                           </NavSubLink>
+                          {projectMetricsTooltipEnabled && (
+                            <NavSubLink
+                              icon={gitCompare}
+                              to=''
+                              id='reporting-link'
+                              disabled
+                              tooltip={
+                                Utils.getFlagsmithValue(
+                                  'project_metrics_tooltip',
+                                ) || 'Coming soon - fallback'
+                              }
+                            >
+                              Reporting
+                            </NavSubLink>
+                          )}
                           <Permission
                             level='project'
                             permission='ADMIN'

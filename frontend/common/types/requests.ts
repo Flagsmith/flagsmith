@@ -684,6 +684,7 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getEnvironmentMetrics: { id: string }
   getUserEnvironmentPermissions: {
     environmentId: string
     userId: string
