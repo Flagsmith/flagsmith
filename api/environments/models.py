@@ -412,9 +412,15 @@ class Environment(
                 identity_id__isnull=True,
                 feature_segment_id__isnull=False,
             ),
-        ).values_list("id", flat=True)
+        ).filter(feature__is_archived=False)
 
-        return list(feature_states_qs)
+        return list(
+            feature_states_qs.values(
+                "feature_id", "feature_segment_id", "environment_id"
+            )
+            .annotate(id=Max("id"))
+            .values_list("id", flat=True)
+        )
 
     def get_segment_metrics_queryset(self) -> QuerySet[FeatureState]:
         ids = self._get_latest_segment_state_ids_subquery()
