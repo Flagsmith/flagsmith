@@ -31,7 +31,8 @@ const StageFeatureDetail = ({
     } catch (error) {
       console.error(error)
     }
-  }, [features, projectId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [features?.join(','), projectId])
 
   useEffect(() => {
     getProjectFlags()

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import CreatePipelineStage, { DraftStageType } from './CreatePipelineStage'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
@@ -8,7 +8,7 @@ import Utils from 'common/utils/utils'
 import { StageActionType, StageTriggerType } from 'common/types/responses'
 import Icon from 'components/Icon'
 import { useCreateReleasePipelineMutation } from 'common/services/useReleasePipelines'
-import { useHistory, useParams } from 'react-router'
+import { useHistory, useParams } from 'react-router-dom'
 import StageArrow from './StageArrow'
 import { ReleasePipelineRequest } from 'common/types/requests'
 
@@ -47,17 +47,16 @@ function CreateReleasePipeline() {
     !pipelineData?.name?.length,
   )
 
-  const handleSuccess = () => {
+  const handleSuccess = useCallback(() => {
     history.push(`/project/${projectId}/release-pipelines`)
     toast('Release pipeline created successfully')
-  }
+  }, [history, projectId])
 
   useEffect(() => {
     if (isCreatingPipelineSuccess) {
       return handleSuccess()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreatingPipelineSuccess])
+  }, [isCreatingPipelineSuccess, handleSuccess])
 
   useEffect(() => {
     if (isCreatingPipelineError) {
