@@ -1083,10 +1083,6 @@ const CreateFlag = class extends Component {
 
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
-              // TODO: Check correct permission
-              const showReleasePipelineButton =
-                Utils.getPlansPermission('FLAG_OWNERS') &&
-                isReleasePipelineEnabled
 
               return (
                 <Permission
@@ -1181,17 +1177,18 @@ const CreateFlag = class extends Component {
                                       </strong>
                                     </div>
                                     <div className='text-right'>
-                                      {createFeature && true && (
-                                        <Button
-                                          className='mr-2'
-                                          theme='secondary'
-                                          onClick={
-                                            this.openReleasePipelineModal
-                                          }
-                                        >
-                                          Add to Release Pipeline
-                                        </Button>
-                                      )}
+                                      {createFeature &&
+                                        isReleasePipelineEnabled && (
+                                          <Button
+                                            className='mr-2'
+                                            theme='secondary'
+                                            onClick={
+                                              this.openReleasePipelineModal
+                                            }
+                                          >
+                                            Add to Release Pipeline
+                                          </Button>
+                                        )}
                                       <Permission
                                         level='environment'
                                         tags={projectFlag?.tags}
