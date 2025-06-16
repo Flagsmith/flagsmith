@@ -7,47 +7,48 @@ type FlagActionDetailProps = {
   projectId: number
 }
 
+const renderActionDetail = (
+  actionType: StageActionType,
+  enabled: boolean,
+  segmentName?: string,
+) => {
+  const actionPrefixText = enabled ? 'Enable' : 'Disable'
+  switch (actionType) {
+    case StageActionType.TOGGLE_FEATURE_FOR_SEGMENT:
+      return (
+        <span>
+          {actionPrefixText} flag for segment <b>{segmentName}</b>
+        </span>
+      )
+    case StageActionType.TOGGLE_FEATURE:
+      return (
+        <span>
+          {actionPrefixText} flag for <b>everyone</b>
+        </span>
+      )
+    default:
+      return null
+  }
+}
+
 const FlagActionDetail = ({
   actionBody,
   actionType,
   projectId,
 }: FlagActionDetailProps) => {
-  const { data: segmentData, isLoading: isSegmentLoading } = useGetSegmentQuery(
+  const isSegmentAction =
+    actionType === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT
+  const { data: segmentData } = useGetSegmentQuery(
     {
       id: `${actionBody.segment_id}`,
       projectId: `${projectId}`,
     },
     {
-      skip:
-        !actionBody.segment_id ||
-        actionType !== StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
+      skip: !actionBody.segment_id || !isSegmentAction,
     },
   )
 
-  if (isSegmentLoading) {
-    return null
-  }
-
-  if (
-    actionType === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT &&
-    actionBody.segment_id
-  ) {
-    return (
-      <span>
-        Enable flag for a segment: <b>{segmentData?.name}</b>
-      </span>
-    )
-  }
-
-  if (actionType === StageActionType.TOGGLE_FEATURE) {
-    return (
-      <span>
-        {actionBody.enabled ? 'Enable' : 'Disable'} flag for <b>everyone</b>
-      </span>
-    )
-  }
-
-  return null
+  return renderActionDetail(actionType, actionBody.enabled, segmentData?.name)
 }
 
 export default FlagActionDetail
