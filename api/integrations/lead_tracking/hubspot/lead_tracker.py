@@ -79,7 +79,7 @@ class HubspotLeadTracker(LeadTracker):
         hubspot_contact_id = contact.get("id")
 
         # Hubspot creates contact asynchronously
-        # If not available on the spot, following steps will sync database with Hubspot
+        # If not available on the spot, later steps will sync database with Hubspot
         if hubspot_contact_id is not None:
             HubspotLead.objects.update_or_create(
                 user=user, defaults={"hubspot_id": hubspot_contact_id}
