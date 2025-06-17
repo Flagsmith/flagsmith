@@ -136,8 +136,18 @@ nav a {
 }
 
 @include media-breakpoint-down(md) {
+  .nav-sub-link {
+    border-bottom: none !important;
+    &.active {
+      color: $primary;
+      path {
+        fill: $primary;
+      }
+    }
+  }
   .nav-modal {
     left: -50px;
     width: calc(100vw);
   }
 }
+

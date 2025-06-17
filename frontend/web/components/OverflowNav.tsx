@@ -36,12 +36,14 @@ const OverflowNav: FC<OverflowNavProps> = ({
   const itemsContainerRef = useRef<HTMLDivElement>(null)
 
   const [open, setOpen] = useState(false)
+  const openRef = useRef(false)
   const [visibleCount, setVisibleCount] = useState(items.length)
   const [widths, setWidths] = useState<number[]>([])
   const history = useHistory()
   useEffect(() => {
     const updateLastViewed = () => {
       setOpen(false)
+      openRef.current = false
     }
     const unlisten = history.listen(updateLastViewed)
     return () => unlisten()
@@ -73,7 +75,6 @@ const OverflowNav: FC<OverflowNavProps> = ({
         return totalWidths + totalGaps
       }
 
-      // FIX: Use the outer container's width as the total available space.
       const containerWidth = outerCont.clientWidth
 
       if (sumWidths(widths.length) <= containerWidth) {
@@ -111,10 +112,9 @@ const OverflowNav: FC<OverflowNavProps> = ({
 
   const visible = items.slice(0, visibleCount)
   const overflow = items.slice(visibleCount)
-  const openRef = useRef(false)
   return (
     <div
-      ref={outerContainerRef} // Ref for the outer container
+      ref={outerContainerRef}
       className={classNames(
         'd-flex align-items-center',
         overflow.length > 0
@@ -124,7 +124,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
       )}
     >
       <div
-        ref={itemsContainerRef} // Ref for the inner items wrapper
+        ref={itemsContainerRef}
         className={classNames(
           className,
           gap ? `gap-${gap}` : undefined,
@@ -144,6 +144,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
             onClick={(e) => {
               e.stopPropagation()
               setOpen(!openRef.current)
+              // for some reason setOpen(!open) does not work (old React bug?), so we keep a ref
               openRef.current = !openRef.current
               return false
             }}
