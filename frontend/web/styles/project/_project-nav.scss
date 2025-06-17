@@ -80,49 +80,6 @@ nav a {
     }
   }
 }
-.dark-mode {
-  .rc-switch {
-    svg {
-      height: 16px;
-      margin-right: 0;
-      z-index: 1000;
-    }
-    width: $switch-dark-mode-width;
-    height: $switch-dark-mode-height;
-    border-radius: $border-radius;
-    background-color: $switch-dark-mode-bg;
-    &:after {
-      width: $switcher-dark-mode-width;
-      height: $switcher-dark-mode-width;
-      top: 4px;
-      left: 4px;
-      z-index: 100;
-      border-radius: $border-radius;
-      box-shadow: 0px 2px 2px 0px rgba(100, 116, 139, 0.12);
-    }
-    &:focus {
-      border: none;
-      box-shadow: none;
-    }
-    &:hover {
-      background-color: $switch-dark-mode-bg;
-    }
-    &-checked {
-      &:after {
-        left: 36px;
-        background-color: $switch-dark-mode-bg-dark;
-        box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.16);
-        &:hover {
-          background-color: $switcher-checked-dark-mode-bg;
-        }
-      }
-      &:hover {
-        background-color: $switcher-checked-dark-mode-bg;
-      }
-      background-color: $switcher-checked-dark-mode-bg;
-    }
-  }
-}
 .border-1 {
   border: 1px solid $hr-border-color;
 }
