@@ -111,6 +111,6 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
 
         log.warning(
             "integration-error",
-            status_code=response.status_code,
-            body=response.text,
+            sentry_response_status=response.status_code,
+            sentry_response_body=response.text,
         )

@@ -1,7 +1,8 @@
 import json
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any, Protocol
+from typing import Any
+from unittest.mock import ANY
 
 import freezegun
 import pytest
@@ -26,28 +27,11 @@ def sentry_configuration(environment: int) -> SentryChangeTrackingConfiguration:
     return configuration
 
 
-class AssertLogsCallable(Protocol):
-    def __call__(self, *expected_logs: tuple[str, str, str, str]) -> None: ...
-
-
-@pytest.fixture
-def assert_logs(log: StructuredLogCapture) -> AssertLogsCallable:
-    def _assert_logs(*expected_logs: tuple[str, str, str, str]) -> None:
-        logs = (
-            (e["level"], e["event"], e["sentry_action"], e["feature_name"])
-            for e in log.events
-        )
-        for event in expected_logs:
-            assert event in logs
-
-    return _assert_logs
-
-
 def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    assert_logs: AssertLogsCallable,
     feature_name: str,
+    log: StructuredLogCapture,
     project: int,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
@@ -85,19 +69,32 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
         ],
         "meta": {"version": 1},
     }
-    assert_logs(
-        ("debug", "sending", "created", feature_name),
-        ("info", "success", "created", feature_name),
-    )
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "created",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "created",
+        },
+    ]
 
 
 def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    assert_logs: AssertLogsCallable,
     environment_api_key: str,
     feature_name: str,
     feature_state: int,
+    log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
@@ -131,17 +128,30 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
         ],
         "meta": {"version": 1},
     }
-    assert_logs(
-        ("debug", "sending", "updated", feature_name),
-        ("info", "success", "updated", feature_name),
-    )
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "updated",
+        },
+    ]
 
 
 def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
     admin_user: FFAdminUser,
-    assert_logs: AssertLogsCallable,
     feature_name: str,
     feature_state: int,
+    log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
@@ -190,19 +200,32 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
         ],
         "meta": {"version": 1},
     }
-    assert_logs(
-        ("debug", "sending", "updated", feature_name),
-        ("info", "success", "updated", feature_name),
-    )
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "updated",
+        },
+    ]
 
 
 def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    assert_logs: AssertLogsCallable,
     environment_api_key: str,
     feature_name: str,
     feature_state: int,
+    log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
@@ -234,32 +257,52 @@ def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
         ],
         "meta": {"version": 1},
     }
-    assert_logs(
-        ("debug", "sending", "deleted", feature_name),
-        ("info", "success", "deleted", feature_name),
-    )
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "deleted",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "deleted",
+        },
+    ]
 
 
 @pytest.mark.parametrize(
-    "error_log_event, sentry_response",
+    "error_log, sentry_response",
     [
         (
-            "request-failure",
+            {"event": "request-failure", "error": ANY},
             {"status": 502},
         ),
         (
-            "integration-error",
-            {"status": 200, "body": '{"data":[{"change_id":["Field is required."]}]}'},
+            {
+                "event": "integration-error",
+                "sentry_response_body": '{"data":[{"change_id":["Field is required."]}]}',
+                "sentry_response_status": 200,
+            },
+            {
+                "status": 200,
+                "body": '{"data":[{"change_id":["Field is required."]}]}',
+            },
         ),
     ],
 )
 def test_sentry_change_tracking__failing_integration__fails_gracefully(
     admin_client: APIClient,
-    assert_logs: AssertLogsCallable,
     environment_api_key: str,
-    error_log_event: str,
+    error_log: dict[str, Any],
     feature_name: str,
     feature_state: int,
+    log: StructuredLogCapture,
     responses: RequestsMock,
     sentry_response: dict[str, Any],
     sentry_configuration: SentryChangeTrackingConfiguration,
@@ -277,7 +320,20 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
     # Then
     assert response.status_code == 200, response.content
     assert len(responses.calls) == 1
-    assert_logs(
-        ("debug", "sending", "updated", feature_name),
-        ("warning", error_log_event, "updated", feature_name),
-    )
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "feature_name": feature_name,
+            "level": "warning",
+            "sentry_action": "updated",
+            **error_log,
+        },
+    ]
