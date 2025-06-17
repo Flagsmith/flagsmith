@@ -41,6 +41,7 @@ class FeatureStateManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager):  # typ
                     environment.id
                 )
             )
+
             latest_version_uuids = [efv.uuid for efv in latest_versions]
 
             # Note that since identity overrides aren't part of the versioning system,
