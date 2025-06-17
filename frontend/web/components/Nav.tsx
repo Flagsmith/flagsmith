@@ -20,7 +20,6 @@ import AuditLogIcon from './svg/AuditLogIcon'
 import UsersIcon from './svg/UsersIcon'
 import HomeAside from './pages/HomeAside'
 import Utils from 'common/utils/utils'
-import { useGetProfileQuery } from 'common/services/useProfile'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
 import Project from 'common/project'
@@ -40,7 +39,6 @@ const Nav: FC<NavType> = ({
   header,
   projectId,
 }) => {
-  const { data: user } = useGetProfileQuery({})
   const [lastEnvironmentId, setLastEnvironmentId] = useState()
   const [lastProjectId, setLastProjectId] = useState()
 
@@ -77,6 +75,11 @@ const Nav: FC<NavType> = ({
     pathname === '/github-setup' ||
     pathname.includes('/invite')
 
+  const showNav =
+    !isOrganisationSelect &&
+    !isCreateOrganisation &&
+    !!AccountStore.getOrganisation()?.id
+
   const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
     'project_metrics_tooltip',
   )
@@ -86,7 +89,7 @@ const Nav: FC<NavType> = ({
         {!isHomepage && (!pageHasAside || !asideIsVisible) && (
           <div className='d-flex bg-faint pt-1 py-0'>
             <Flex className='flex-row px-2 '>
-              {user ? (
+              {AccountStore.getUser() ? (
                 <React.Fragment>
                   <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
                     <Row className='gap-2'>
@@ -197,10 +200,10 @@ const Nav: FC<NavType> = ({
             </Flex>
           </div>
         )}
-        {!isOrganisationSelect && !isCreateOrganisation && (
+        {showNav && (
           <OverflowNav
             gap={3}
-            key={activeProject ? 'project' : 'organisation'}
+            key={activeProject ? 'project' : AccountStore.getOrganisation()?.id}
             containerClassName='px-2 bg-faint'
             className='py-0 d-flex'
           >
@@ -301,65 +304,63 @@ const Nav: FC<NavType> = ({
                 )}
               </>
             ) : (
-              !!AccountStore.getOrganisation() && (
-                <>
+              <>
+                <NavSubLink
+                  icon={apps}
+                  id='projects-link'
+                  to={Utils.getOrganisationHomePage()}
+                >
+                  Projects
+                </NavSubLink>
+                <NavSubLink
+                  data-test='users-and-permissions'
+                  icon={<UsersIcon />}
+                  id='permissions-link'
+                  to={`/organisation/${
+                    AccountStore.getOrganisation().id
+                  }/permissions`}
+                >
+                  Users and Permissions
+                </NavSubLink>
+                {!Project.disableAnalytics && AccountStore.isAdmin() && (
                   <NavSubLink
-                    icon={apps}
-                    id='projects-link'
-                    to={Utils.getOrganisationHomePage()}
-                  >
-                    Projects
-                  </NavSubLink>
-                  <NavSubLink
-                    data-test='users-and-permissions'
-                    icon={<UsersIcon />}
+                    icon={statsChart}
                     id='permissions-link'
                     to={`/organisation/${
                       AccountStore.getOrganisation().id
-                    }/permissions`}
+                    }/usage`}
                   >
-                    Users and Permissions
+                    Usage
                   </NavSubLink>
-                  {!Project.disableAnalytics && AccountStore.isAdmin() && (
-                    <NavSubLink
-                      icon={statsChart}
-                      id='permissions-link'
-                      to={`/organisation/${
-                        AccountStore.getOrganisation().id
-                      }/usage`}
-                    >
-                      Usage
-                    </NavSubLink>
-                  )}
-                  {AccountStore.isAdmin() && (
-                    <>
-                      {Utils.getFlagsmithHasFeature(
-                        'organisation_integrations',
-                      ) && (
-                        <NavSubLink
-                          icon={<Icon name='layers' />}
-                          id='integrations-link'
-                          to={`/organisation/${
-                            AccountStore.getOrganisation().id
-                          }/integrations`}
-                        >
-                          Organisation Integrations
-                        </NavSubLink>
-                      )}
+                )}
+                {AccountStore.isAdmin() && (
+                  <>
+                    {Utils.getFlagsmithHasFeature(
+                      'organisation_integrations',
+                    ) && (
                       <NavSubLink
-                        icon={<Icon name='setting' width={24} />}
-                        id='org-settings-link'
-                        data-test='org-settings-link'
+                        icon={<Icon name='layers' />}
+                        id='integrations-link'
                         to={`/organisation/${
                           AccountStore.getOrganisation().id
-                        }/settings`}
+                        }/integrations`}
                       >
-                        Organisation Settings
+                        Organisation Integrations
                       </NavSubLink>
-                    </>
-                  )}
-                </>
-              )
+                    )}
+                    <NavSubLink
+                      icon={<Icon name='setting' width={24} />}
+                      id='org-settings-link'
+                      data-test='org-settings-link'
+                      to={`/organisation/${
+                        AccountStore.getOrganisation().id
+                      }/settings`}
+                    >
+                      Organisation Settings
+                    </NavSubLink>
+                  </>
+                )}
+              </>
             )}
           </OverflowNav>
         )}
