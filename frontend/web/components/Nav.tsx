@@ -160,7 +160,9 @@ const Nav: FC<NavType> = ({
                           <span>
                             <Icon name='file-text' width={20} fill='#9DA4AE' />
                           </span>
-                          <span className='d-none d-md-block'>Docs</span>
+                          <span className='d-none d-md-block'>
+                            Getting Started
+                          </span>
                         </NavLink>
                       ) : (
                         <a
