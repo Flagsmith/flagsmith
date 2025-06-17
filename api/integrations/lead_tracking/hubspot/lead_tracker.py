@@ -74,22 +74,19 @@ class HubspotLeadTracker(LeadTracker):
         # We need to get the contact id separately and retry 3 times
         contact = self._get_new_contact_with_retry(user, max_retries=3)
         if not contact:
+            # Hubspot creates contact asynchronously
+            # If not available on the spot, following steps will sync database with Hubspot
+            logger.error(f"Failed to create contact for user {user.email}")
             return None
 
         hubspot_contact_id = contact.get("id")
-
-        # Hubspot creates contact asynchronously
-        # If not available on the spot, following steps will sync database with Hubspot
-        if hubspot_contact_id is not None:
-            HubspotLead.objects.update_or_create(
-                user=user, defaults={"hubspot_id": hubspot_contact_id}
-            )
+        HubspotLead.objects.update_or_create(
+            user=user, defaults={"hubspot_id": hubspot_contact_id}
+        )
 
         return hubspot_contact_id
 
-    def create_user_organisation_association(
-        self, user: FFAdminUser, organisation: Organisation
-    ) -> None:
+    def create_lead(self, user: FFAdminUser, organisation: Organisation) -> None:
         hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
         if not hubspot_contact_id:
             return
@@ -127,7 +124,7 @@ class HubspotLeadTracker(LeadTracker):
             else:
                 hubspot_contact_id = self.create_user_hubspot_contact(user)
 
-        return hubspot_contact_id or None
+        return hubspot_contact_id
 
     def _get_or_create_organisation_hubspot_id(
         self,

@@ -105,7 +105,7 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
         hubspot_id=HUBSPOT_COMPANY_ID,
     )
     tracker = HubspotLeadTracker()
-    tracker.create_user_organisation_association(user=user, organisation=organisation)
+    tracker.create_lead(user=user, organisation=organisation)
 
     mock_client_existing_contact.get_contact.assert_not_called()
     mock_client_existing_contact.create_lead_form.assert_not_called()
@@ -181,7 +181,7 @@ def test_create_organisation_lead_creates_contact_when_not_found(
 
     # When
     tracker = HubspotLeadTracker()
-    tracker.create_user_organisation_association(user=user, organisation=organisation)
+    tracker.create_lead(user=user, organisation=organisation)
 
     # Then
     hubspot_lead = HubspotLead.objects.get(user=user)
@@ -228,7 +228,7 @@ def test_create_organisation_lead_creates_contact_for_existing_org(
 
     # When
     tracker = HubspotLeadTracker()
-    tracker.create_user_organisation_association(user=user, organisation=organisation)
+    tracker.create_lead(user=user, organisation=organisation)
 
     # Then
     assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
@@ -260,7 +260,7 @@ def test_create_organisation_lead_skips_company_for_filtered_domain(
 
     # When
     tracker = HubspotLeadTracker()
-    tracker.create_user_organisation_association(user=user, organisation=organisation)
+    tracker.create_lead(user=user, organisation=organisation)
 
     # Then
     assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
@@ -379,7 +379,7 @@ def test_create_user_hubspot_contact_retries(
         ("contact_123", None),
     ],
 )
-def test_create_user_organisation_association_skips_on_missing_ids(
+def test_create_leads_skips_association_on_missing_ids(
     mocker: MockerFixture,
     hubspot_contact_id: str | None,
     hubspot_org_id: str | None,
@@ -398,7 +398,7 @@ def test_create_user_organisation_association_skips_on_missing_ids(
     )
 
     # When
-    tracker.create_user_organisation_association(staff_user, organisation)
+    tracker.create_lead(staff_user, organisation)
 
     # Then
     mock_client.associate_contact_to_company.assert_not_called()

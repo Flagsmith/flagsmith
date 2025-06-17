@@ -5,9 +5,7 @@ from task_processor.decorators import (
 
 
 @register_task_handler()
-def track_hubspot_user_organisation_association(
-    user_id: int, organisation_id: int
-) -> None:
+def track_create_lead(user_id: int, organisation_id: int) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
@@ -28,7 +26,7 @@ def track_hubspot_user_organisation_association(
             id=organisation_id
         )
 
-    hubspot_lead_tracker.create_user_organisation_association(**create_lead_kwargs)
+    hubspot_lead_tracker.create_lead(**create_lead_kwargs)
 
 
 @register_task_handler()

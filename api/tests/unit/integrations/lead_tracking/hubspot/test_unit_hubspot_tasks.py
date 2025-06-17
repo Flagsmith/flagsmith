@@ -4,7 +4,7 @@ from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
-    track_hubspot_user_organisation_association,
+    track_create_lead,
     update_hubspot_active_subscription,
 )
 from organisations.models import Organisation
@@ -46,7 +46,7 @@ def test_create_hubspot_contact_for_user_skips_when_should_track_false(
     mock_create_contact.assert_not_called()
 
 
-def test_track_hubspot_user_organisation_association_skips_when_tracking_disabled(
+def test_track_create_lead_skips_when_tracking_disabled(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -56,12 +56,10 @@ def test_track_hubspot_user_organisation_association_skips_when_tracking_disable
 
     # When / Then
     with pytest.raises(AssertionError):
-        track_hubspot_user_organisation_association(
-            user_id=admin_user.id, organisation_id=1
-        )
+        track_create_lead(user_id=admin_user.id, organisation_id=1)
 
 
-def test_track_hubspot_user_organisation_association_skips_when_should_track_false(
+def test_track_create_lead_skips_when_should_track_false(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -72,17 +70,15 @@ def test_track_hubspot_user_organisation_association_skips_when_should_track_fal
         "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.should_track",
         return_value=False,
     )
-    mock_create_user_organisation_association = mocker.patch(
-        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.create_user_organisation_association"
+    mock_create_lead = mocker.patch(
+        "integrations.lead_tracking.hubspot.lead_tracker.HubspotLeadTracker.create_lead"
     )
 
     # When
-    track_hubspot_user_organisation_association(
-        user_id=admin_user.id, organisation_id=1
-    )
+    track_create_lead(user_id=admin_user.id, organisation_id=1)
 
     # Then
-    mock_create_user_organisation_association.assert_not_called()
+    mock_create_lead.assert_not_called()
 
 
 def test_update_hubspot_active_subscription_skips_when_tracking_disabled(

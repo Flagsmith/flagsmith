@@ -138,7 +138,7 @@ class PipedriveLeadTracker(LeadTracker):
         )
 
     # TODO: To be deprecated with pipedrive
-    def create_user_organisation_association(
+    def create_lead(
         self, user: FFAdminUser, organisation: Organisation
     ) -> None:  # pragma: no cover
         pass

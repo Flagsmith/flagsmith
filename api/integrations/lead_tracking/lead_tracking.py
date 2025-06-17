@@ -16,9 +16,7 @@ class LeadTracker(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def create_user_organisation_association(
-        self, user: "FFAdminUser", organisation: "Organisation"
-    ) -> None:
+    def create_lead(self, user: "FFAdminUser", organisation: "Organisation") -> None:
         pass
 
     @abc.abstractmethod
