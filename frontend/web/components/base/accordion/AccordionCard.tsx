@@ -7,13 +7,15 @@ interface AccordionCardProps {
   children?: React.ReactNode
   title?: string
   className?: string
+  defaultOpen?: boolean
 }
 
 const AccordionCard: FC<AccordionCardProps> = ({
   children,
+  defaultOpen = false,
   title = 'Summary',
 }) => {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
 
   return (
     <div className='d-flex flex-column px-3 py-3 accordion-card m-0'>

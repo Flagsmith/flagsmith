@@ -27,6 +27,8 @@ import Button from 'components/base/forms/Button'
 import { isEqual } from 'lodash'
 import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
 import { withRouter } from 'react-router-dom'
+import { getReleasePipelines } from 'common/services/useReleasePipelines'
+import { getStore } from 'common/store'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -49,6 +51,7 @@ const FeaturesPage = class extends Component {
           ? params.owners.split(',').map((v) => parseInt(v))
           : [],
       page: params.page ? parseInt(params.page) - 1 : 1,
+      releasePipelines: [],
       search: params.search || null,
       showArchived: params.is_archived === 'true',
       sort: {
@@ -114,6 +117,14 @@ const FeaturesPage = class extends Component {
         projectId: params.projectId,
       }),
     )
+
+    getReleasePipelines(getStore(), {
+      page: 1,
+      page_size: 100,
+      projectId: params.projectId,
+    }).then((resp) => {
+      this.setState({ releasePipelines: resp?.data?.results })
+    })
   }
 
   newFlag = () => {
@@ -223,6 +234,13 @@ const FeaturesPage = class extends Component {
         }
       </Permission>
     )
+  }
+
+  getReleasePipelineId = (featureId) => {
+    const releasePipeline = this.state.releasePipelines.find(
+      (pipeline) => pipeline.feature_id === featureId,
+    )
+    return releasePipeline?.id
   }
 
   render() {
@@ -599,6 +617,9 @@ const FeaturesPage = class extends Component {
                                 {({ permission }) => (
                                   <FeatureRow
                                     environmentFlags={environmentFlags}
+                                    releasePipelineId={this.getReleasePipelineId(
+                                      projectFlag?.id,
+                                    )}
                                     projectFlags={projectFlags}
                                     permission={permission}
                                     history={this.props.history}

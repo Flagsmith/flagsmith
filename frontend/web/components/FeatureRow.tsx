@@ -50,6 +50,7 @@ interface FeatureRowProps {
   fadeValue?: boolean
   hideAudit?: boolean
   hideRemove?: boolean
+  releasePipelineId?: number
   onCloseEditModal?: () => void
 }
 
@@ -71,6 +72,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
   projectFlag,
   projectId,
   readOnly = false,
+  releasePipelineId,
   removeFlag,
   style,
   toggleFlag,
@@ -196,6 +198,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
         environmentFlag={environmentFlag}
         tab={tab}
         flagId={environmentFlag?.id}
+        releasePipelineId={releasePipelineId}
       />,
       'side-modal create-feature-modal',
       () => {

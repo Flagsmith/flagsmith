@@ -2,25 +2,24 @@ import Breadcrumb from 'components/Breadcrumb'
 
 import PageTitle from 'components/PageTitle'
 
-import {
-  useGetPipelineStagesQuery,
-  useGetReleasePipelineQuery,
-} from 'common/services/useReleasePipelines'
-import { withRouter, RouteComponentProps } from 'react-router'
+import { useGetReleasePipelineQuery } from 'common/services/useReleasePipelines'
+import { useParams } from 'react-router-dom'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import Icon from 'components/Icon'
 import StageCard from './StageCard'
 import StageInfo from './StageInfo'
 import { PipelineStage } from 'common/types/responses'
 import { Environment } from 'common/types/responses'
+import StageFeatureDetail from './StageFeatureDetail'
+import Tag from 'components/tags/Tag'
 
-type ReleasePipelineDetailType = {
+const LaunchedCard = ({
+  completedFeatures,
+  projectId,
+}: {
+  completedFeatures: number[]
   projectId: string
-  id: string
-} & RouteComponentProps
-
-const LaunchedCard = () => {
-  // TODO: Add the logic to get the features that completed this pipeline in the last 30 days
+}) => {
   return (
     <StageCard>
       <Row className=' gap-2 align-items-center mb-2'>
@@ -30,31 +29,17 @@ const LaunchedCard = () => {
       <p className='text-muted'>
         Features that completed this pipeline in the last 30 days
       </p>
-      <h6>Features (1)</h6>
-      <p className='text-muted'>
-        Finished 3h ago by <b>John Doe</b>
-      </p>
+      <StageFeatureDetail features={completedFeatures} projectId={projectId} />
     </StageCard>
   )
 }
 
-function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
+function ReleasePipelineDetail() {
+  const { id, projectId } = useParams<{ projectId: string; id: string }>()
+
   const { data: pipelineData, isLoading: isLoadingPipeline } =
     useGetReleasePipelineQuery(
       {
-        pipelineId: Number(id),
-        projectId: Number(projectId),
-      },
-      {
-        skip: !id || !projectId,
-      },
-    )
-
-  const { data: stagesData, isLoading: isLoadingStages } =
-    useGetPipelineStagesQuery(
-      {
-        page: 1,
-        page_size: 100,
         pipelineId: Number(id),
         projectId: Number(projectId),
       },
@@ -88,7 +73,7 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
     </div>
   )
 
-  if (isLoadingPipeline || isLoadingStages || isLoadingEnvironments) {
+  if (isLoadingPipeline || isLoadingEnvironments) {
     return (
       <HeaderWrapper>
         <div className='text-center'>
@@ -111,15 +96,30 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
 
   return (
     <HeaderWrapper>
-      <PageTitle title={pipelineData?.name ?? ''} />
-      {stagesData?.results?.length === 0 && (
+      <PageTitle
+        title={
+          <div className='d-flex'>
+            {pipelineData?.name}
+            <div className='ml-3 mt-auto' style={{ marginBottom: '5px' }}>
+              <Tag
+                className='chip--xs'
+                tag={{
+                  color: pipelineData?.published_at ? '#6837FC' : '#9DA4AE',
+                  label: pipelineData?.published_at ? 'Published' : 'Draft',
+                }}
+              />
+            </div>
+          </div>
+        }
+      />
+      {pipelineData?.stages?.length === 0 && (
         <Row>
           <span>This release pipeline has no stages.</span>
         </Row>
       )}
       <div className='px-2 pb-4 overflow-auto'>
         <Row className='no-wrap align-items-start'>
-          {stagesData?.results?.map((stageData) => (
+          {pipelineData?.stages?.map((stageData) => (
             <StageInfo
               key={stageData?.id}
               stageData={stageData}
@@ -127,14 +127,19 @@ function ReleasePipelineDetail({ id, projectId }: ReleasePipelineDetailType) {
                 environmentsData?.results,
                 stageData,
               )}
-              projectId={Number(projectId)}
+              projectId={projectId}
             />
           ))}
-          {!!stagesData?.results?.length && <LaunchedCard />}
+          {!!pipelineData?.stages?.length && (
+            <LaunchedCard
+              completedFeatures={pipelineData?.completed_features}
+              projectId={projectId}
+            />
+          )}
         </Row>
       </div>
     </HeaderWrapper>
   )
 }
 
-export default withRouter(ReleasePipelineDetail)
+export default ReleasePipelineDetail
