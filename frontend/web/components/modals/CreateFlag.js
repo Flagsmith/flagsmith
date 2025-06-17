@@ -1106,14 +1106,17 @@ const CreateFlag = class extends Component {
                           <div id='create-feature-modal'>
                             {isEdit && !identity ? (
                               <>
-                                <div className='m-4'>
-                                  <FeaturePipelineStatus
-                                    releasePipelineId={
-                                      this.props.releasePipelineId
-                                    }
-                                    projectId={this.props.projectId}
-                                  />
-                                </div>
+                                {isReleasePipelineEnabled &&
+                                  this.props.releasePipelineId && (
+                                    <div className='m-4'>
+                                      <FeaturePipelineStatus
+                                        releasePipelineId={
+                                          this.props.releasePipelineId
+                                        }
+                                        projectId={this.props.projectId}
+                                      />
+                                    </div>
+                                  )}
                                 <Tabs
                                   onChange={() => this.forceUpdate()}
                                   urlParam='tab'

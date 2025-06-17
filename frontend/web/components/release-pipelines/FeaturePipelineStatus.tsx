@@ -89,10 +89,15 @@ const FeaturePipelineStatus = ({
   projectId,
   releasePipelineId,
 }: FeaturePipelineStatusProps) => {
-  const { data: releasePipeline } = useGetReleasePipelineQuery({
-    pipelineId: releasePipelineId,
-    projectId: Number(projectId),
-  })
+  const { data: releasePipeline } = useGetReleasePipelineQuery(
+    {
+      pipelineId: releasePipelineId,
+      projectId: Number(projectId),
+    },
+    {
+      skip: !releasePipelineId,
+    },
+  )
 
   const stages = releasePipeline?.stages
   const totalStages = (stages?.length ?? 0) + 1
