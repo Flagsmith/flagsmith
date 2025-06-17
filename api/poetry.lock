@@ -4033,6 +4033,24 @@ pytest = ">=5.0"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
+name = "pytest-responses"
+version = "0.5.1"
+description = "py.test integration for responses"
+optional = false
+python-versions = "*"
+groups = ["dev"]
+files = [
+    {file = "pytest_responses-0.5.1-py2.py3-none-any.whl", hash = "sha256:4172e565b94ac1ea3b10aba6e40855ad60cd7f141476b2d8a47e4b5f250be734"},
+]
+
+[package.dependencies]
+pytest = ">=2.5"
+responses = "*"
+
+[package.extras]
+tests = ["flake8"]
+
+[[package]]
 name = "pytest-structlog"
 version = "1.1"
 description = "Structured logging assertions"
@@ -5351,4 +5369,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "7e3ddff579a22aee98b12f5d76b547fc9a070ae336c4e9010bcebe3ed7d4fd7a"
+content-hash = "f444be832e2a8c763f0b624e10847aa57536272d082988b3060f714e89f078fa"
