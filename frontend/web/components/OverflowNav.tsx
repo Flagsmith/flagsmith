@@ -1,35 +1,32 @@
 import React, {
   FC,
   ReactNode,
+  useEffect,
+  useLayoutEffect,
   useRef,
   useState,
-  useLayoutEffect,
-  useEffect,
 } from 'react'
 import InlineModal from './InlineModal'
 import { IonIcon } from '@ionic/react'
 import { ellipsisHorizontal } from 'ionicons/icons'
 import Button from './base/forms/Button'
 import classNames from 'classnames'
-import { AsyncStorage } from 'polyfill-react-native'
 import { useHistory } from 'react-router-dom'
 
 type OverflowNavProps = {
-  /** Nav items as children */
   children: ReactNode
-  /** Classes for the outer flex container */
   containerClassName?: string
-  /** Classes for the inner div that wraps the visible items */
   className?: string
-  /** Bootstrap gap value (e.g. gap=3 for .gap-3) */
   gap?: number
+  icon?: string
 }
-
+const buttonWidth = 34
 const OverflowNav: FC<OverflowNavProps> = ({
   children: _children,
   className = '',
   containerClassName,
   gap,
+  icon = ellipsisHorizontal,
 }) => {
   const items = React.Children.toArray(
     (_children as React.ReactElement)?.props?.children || _children,
@@ -65,7 +62,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
       const itemsCont = itemsContainerRef.current
       if (!outerCont || !itemsCont || widths.length === 0) return
 
-      const gapPx = gap * 4
+      const gapPx = gap * 8
 
       const sumWidths = (count: number) => {
         if (count === 0) return 0
@@ -86,7 +83,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
         return
       }
 
-      const overflowBtnWidth = 34 + 12 // + 12 due to the padding
+      const overflowBtnWidth = buttonWidth + 24 // + 12 due to the padding
       const reserve = overflowBtnWidth + gapPx
       const maxWidth = containerWidth - reserve
 
@@ -114,7 +111,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
 
   const visible = items.slice(0, visibleCount)
   const overflow = items.slice(visibleCount)
-
+  const openRef = useRef(false)
   return (
     <div
       ref={outerContainerRef} // Ref for the outer container
@@ -141,14 +138,19 @@ const OverflowNav: FC<OverflowNavProps> = ({
       </div>
 
       {overflow.length > 0 && (
-        <div className='nav-item dropdown position-relative'>
+        <div className='ms-2 nav-item dropdown position-relative'>
           <Button
-            style={{ height: 30, width: 34 }}
-            onClick={() => setOpen((o) => !o)}
+            style={{ height: buttonWidth, width: buttonWidth }}
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpen(!openRef.current)
+              openRef.current = !openRef.current
+              return false
+            }}
             theme='secondary'
             className='d-flex align-items-center justify-content-center m-0 p-0'
           >
-            <IonIcon className='fs-small' icon={ellipsisHorizontal} />
+            <IonIcon className='fs-small' icon={icon} />
           </Button>
           <InlineModal
             relativeToParent

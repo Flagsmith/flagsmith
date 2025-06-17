@@ -1,38 +1,22 @@
 import React, { Component, Fragment } from 'react'
-import { Link, withRouter, matchPath } from 'react-router-dom'
+import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
-import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
 import Maintenance from './Maintenance'
 import Blocked from './Blocked'
 import AppLoader from './AppLoader'
 import ButterBar from './ButterBar'
 import AccountSettingsPage from './pages/AccountSettingsPage'
-import Headway from './Headway'
 import ProjectStore from 'common/stores/project-store'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Button from './base/forms/Button'
-import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
-import GithubStar from './GithubStar'
-import Tooltip from './Tooltip'
-import classNames from 'classnames'
-import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
-import NavSubLink from './NavSubLink'
-import SettingsIcon from './svg/SettingsIcon'
-import UsersIcon from './svg/UsersIcon'
-import BreadcrumbSeparator from './BreadcrumbSeparator'
 import OrganisationStore from 'common/stores/organisation-store'
-import SegmentsIcon from './svg/SegmentsIcon'
-import AuditLogIcon from './svg/AuditLogIcon'
-import Permission from 'common/providers/Permission'
-import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
@@ -321,43 +305,44 @@ const App = class extends Component {
               </div>
             ) : (
               <Nav
+                header={
+                  <>
+                    <ButterBar
+                      projectId={projectId}
+                      billingStatus={
+                        AccountStore.getOrganisation()?.subscription
+                          .billing_status
+                      }
+                    />
+                    {user && (
+                      <OrganisationLimit
+                        id={AccountStore.getOrganisation()?.id}
+                        organisationPlan={
+                          AccountStore.getOrganisation()?.subscription.plan
+                        }
+                      />
+                    )}
+                    {user && (
+                      <div className='container announcement-container'>
+                        <div>
+                          <Announcement />
+                          <AnnouncementPerPage pathname={pathname} />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                }
                 activeProject={activeProject}
                 projectId={projectId}
                 environmentId={environmentId}
               >
                 <div>
-                  <ButterBar
-                    projectId={projectId}
-                    billingStatus={
-                      AccountStore.getOrganisation()?.subscription
-                        .billing_status
-                    }
-                  />
                   {projectNotLoaded ? (
                     <div className='text-center'>
                       <Loader />
                     </div>
                   ) : (
-                    <Fragment>
-                      {user && (
-                        <OrganisationLimit
-                          id={AccountStore.getOrganisation()?.id}
-                          organisationPlan={
-                            AccountStore.getOrganisation()?.subscription.plan
-                          }
-                        />
-                      )}
-                      {user && (
-                        <div className='container announcement-container mt-4'>
-                          <div>
-                            <Announcement />
-                            <AnnouncementPerPage pathname={pathname} />
-                          </div>
-                        </div>
-                      )}
-
-                      {this.props.children}
-                    </Fragment>
+                    this.props.children
                   )}
                 </div>
               </Nav>

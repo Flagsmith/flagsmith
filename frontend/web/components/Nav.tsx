@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink, useHistory, useLocation } from 'react-router-dom'
 import BreadcrumbSeparator from './BreadcrumbSeparator'
 import classNames from 'classnames'
@@ -11,7 +11,6 @@ import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
 import SegmentsIcon from './svg/SegmentsIcon'
 import Permission from 'common/providers/Permission'
 import AuditLogIcon from './svg/AuditLogIcon'
-import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
 import HomeAside from './pages/HomeAside'
 import Utils from 'common/utils/utils'
@@ -19,11 +18,12 @@ import { useGetProfileQuery } from 'common/services/useProfile'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
 import Project from 'common/project'
-import Tooltip from './Tooltip'
 import OverflowNav from './OverflowNav'
+
 type NavType = {
   environmentId: string | undefined
   projectId: number
+  header?: ReactNode
   activeProject: ProjectType | undefined
 }
 
@@ -31,6 +31,7 @@ const Nav: FC<NavType> = ({
   activeProject,
   children,
   environmentId,
+  header,
   projectId,
 }) => {
   const { data: user } = useGetProfileQuery({})
@@ -73,8 +74,8 @@ const Nav: FC<NavType> = ({
     <div className='fs-small'>
       <div>
         {!isHomepage && (!pageHasAside || !asideIsVisible) && (
-          <div className='d-flex py-0'>
-            <Flex className='flex-row px-3 bg-faint'>
+          <div className='d-flex bg-faint pt-1 py-0'>
+            <Flex className='flex-row px-2 '>
               {user ? (
                 <React.Fragment>
                   <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
@@ -137,61 +138,45 @@ const Nav: FC<NavType> = ({
                       )}
                     </Row>
                     <Row className='align-items-center'>
-                      <GithubStar />
-                      <Tooltip
-                        place='bottom'
-                        title={
-                          Utils.getFlagsmithHasFeature('welcome_page') ? (
-                            <NavLink
-                              activeClassName='active'
-                              to={'/getting-started'}
-                              className='d-flex px-3 text-end lh-1 align-items-center'
-                            >
-                              <span>
-                                <Icon
-                                  name='file-text'
-                                  width={20}
-                                  fill='#9DA4AE'
-                                />
-                              </span>
-                            </NavLink>
-                          ) : (
-                            <a
-                              className='d-flex ps-3 text-end lh-1 align-items-center'
-                              href={'https://docs.flagsmith.com'}
-                            >
-                              <span>
-                                <Icon
-                                  name='file-text'
-                                  width={20}
-                                  fill='#9DA4AE'
-                                />
-                              </span>
-                            </a>
-                          )
-                        }
-                      >
-                        {'Docs'}
-                      </Tooltip>
+                      <div className='me-3'>
+                        <GithubStar />
+                      </div>
+                      {Utils.getFlagsmithHasFeature('welcome_page') ? (
+                        <NavLink
+                          activeClassName='active'
+                          to={'/getting-started'}
+                          className='d-flex gap-1 text-end lh-1 align-items-center'
+                        >
+                          <span>
+                            <Icon name='file-text' width={20} fill='#9DA4AE' />
+                          </span>
+                          <span className='d-none d-md-block'>Docs</span>
+                        </NavLink>
+                      ) : (
+                        <a
+                          className='d-flex gap-1 text-end lh-1 align-items-center'
+                          href={'https://docs.flagsmith.com'}
+                        >
+                          <span>
+                            <Icon name='file-text' width={20} fill='#9DA4AE' />
+                          </span>
+                          <span className='d-none d-md-block'>Docs</span>
+                        </a>
+                      )}
                       <Headway className='cursor-pointer' />
-                      <Tooltip
-                        place='bottom'
-                        title={
-                          <NavLink
-                            className='d-flex ps-3 lh-1 align-items-center'
-                            id='account-settings-link'
-                            data-test='account-settings-link'
-                            activeClassName='active'
-                            to={'/account'}
-                          >
-                            <span className='mr-1'>
-                              <Icon name='person' width={20} fill='#9DA4AE' />
-                            </span>
-                          </NavLink>
-                        }
+
+                      <NavLink
+                        className='d-flex ps-3 lh-1 align-items-center'
+                        id='account-settings-link'
+                        data-test='account-settings-link'
+                        activeClassName='active'
+                        to={'/account'}
                       >
-                        {'Account'}
-                      </Tooltip>
+                        <span className='mr-1'>
+                          <Icon name='person' width={20} fill='#9DA4AE' />
+                        </span>
+                        <span className='d-none d-md-block'>Account</span>
+                      </NavLink>
                     </Row>
                   </nav>
                 </React.Fragment>
@@ -203,10 +188,10 @@ const Nav: FC<NavType> = ({
         )}
         {!isOrganisationSelect && !isCreateOrganisation && (
           <OverflowNav
-            gap={2}
+            gap={3}
             key={activeProject ? 'project' : 'organisation'}
             containerClassName='px-2 bg-faint'
-            className='py-0 gap-md-4 d-flex'
+            className='py-0 d-flex'
           >
             {activeProject ? (
               <>
@@ -265,7 +250,7 @@ const Nav: FC<NavType> = ({
                   {({ permission }) =>
                     permission && (
                       <NavSubLink
-                        icon={<SettingsIcon />}
+                        icon={<Icon name='setting' width={24} />}
                         id='project-settings-link'
                         to={`/project/${projectId}/settings`}
                       >
@@ -322,7 +307,7 @@ const Nav: FC<NavType> = ({
                         </NavSubLink>
                       )}
                       <NavSubLink
-                        icon={<SettingsIcon />}
+                        icon={<Icon name='setting' width={24} />}
                         id='org-settings-link'
                         data-test='org-settings-link'
                         to={`/organisation/${
@@ -341,6 +326,7 @@ const Nav: FC<NavType> = ({
         <hr className='my-0 py-0' />
         {environmentId && !isCreateEnvironment ? (
           <div className='d-md-flex'>
+            {header}
             <HomeAside
               history={history}
               environmentId={environmentId}
@@ -349,7 +335,10 @@ const Nav: FC<NavType> = ({
             <div className='aside-container'>{children}</div>
           </div>
         ) : (
-          children
+          <>
+            {header}
+            {children}
+          </>
         )}
       </div>
     </div>
