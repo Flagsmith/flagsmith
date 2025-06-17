@@ -1,6 +1,6 @@
 import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
-import { useHistory } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import DropdownMenu from 'components/base/DropdownMenu'
@@ -81,9 +81,14 @@ const ReleasePipelinesList = ({
       nextPage={() => onPageChange(page + 1)}
       prevPage={() => onPageChange(page - 1)}
       goToPage={(page: number) => onPageChange(page)}
-      renderRow={({ flags_count, id, name, stages_count }: ReleasePipeline) => {
+      renderRow={({
+        features_count,
+        id,
+        name,
+        stages_count,
+      }: ReleasePipeline) => {
         return (
-          <Row className='list-item'>
+          <Row key={id} className='list-item'>
             <Row
               className='clickable flex-grow-1 p-3'
               onClick={() => {
@@ -97,9 +102,8 @@ const ReleasePipelinesList = ({
                 <div className='fw-bold'>{stages_count ?? 0}</div>
                 <div>Stages</div>
               </div>
-              {/* TODO: Add flags count */}
               <div className='text-center'>
-                <div className='fw-bold'>{flags_count ?? 0}</div>
+                <div className='fw-bold'>{features_count ?? 0}</div>
                 <div>Flags</div>
               </div>
               <DropdownMenu
