@@ -7,7 +7,13 @@ import GithubStar from './GithubStar'
 import Icon from './Icon'
 import Headway from './Headway'
 import NavSubLink from './NavSubLink'
-import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
+import {
+  apps,
+  barChart,
+  gitBranch,
+  gitCompare,
+  statsChart,
+} from 'ionicons/icons'
 import SegmentsIcon from './svg/SegmentsIcon'
 import Permission from 'common/providers/Permission'
 import AuditLogIcon from './svg/AuditLogIcon'
@@ -70,6 +76,10 @@ const Nav: FC<NavType> = ({
     pathname === '/signup' ||
     pathname === '/github-setup' ||
     pathname.includes('/invite')
+
+  const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
+    'project_metrics_tooltip',
+  )
   return (
     <div className='fs-small'>
       <div>
@@ -239,6 +249,20 @@ const Nav: FC<NavType> = ({
                     Integrations
                   </NavSubLink>
                 )}
+                {projectMetricsTooltipEnabled && (
+                  <NavSubLink
+                    icon={barChart}
+                    to={`/project/${projectId}/reporting`}
+                    id='reporting-link'
+                    disabled
+                    tooltip={
+                      Utils.getFlagsmithValue('project_metrics_tooltip') ||
+                      'Coming soon - fallback'
+                    }
+                  >
+                    Reporting
+                  </NavSubLink>
+                )}
                 <NavSubLink
                   icon={gitCompare}
                   id='compare-link'
@@ -259,6 +283,21 @@ const Nav: FC<NavType> = ({
                     )
                   }
                 </Permission>
+                {Utils.getFlagsmithHasFeature('release_pipelines') && (
+                  <Permission level='project' permission='ADMIN' id={projectId}>
+                    {({ permission }) =>
+                      permission && (
+                        <NavSubLink
+                          icon={<Icon name='flash' />}
+                          id='release-pipelines-link'
+                          to={`/project/${projectId}/release-pipelines`}
+                        >
+                          Release Pipelines
+                        </NavSubLink>
+                      )
+                    }
+                  </Permission>
+                )}
               </>
             ) : (
               !!AccountStore.getOrganisation() && (
@@ -327,14 +366,16 @@ const Nav: FC<NavType> = ({
         {environmentId && !isCreateEnvironment ? (
           <div className='d-md-flex'>
             <div>
-              {header}
               <HomeAside
                 history={history}
                 environmentId={environmentId}
                 projectId={projectId}
               />
             </div>
-            <div className='aside-container'>{children}</div>
+            <div className='aside-container'>
+              {header}
+              {children}
+            </div>
           </div>
         ) : (
           <div>
