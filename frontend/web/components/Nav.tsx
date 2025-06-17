@@ -155,7 +155,7 @@ const Nav: FC<NavType> = ({
                         <NavLink
                           activeClassName='active'
                           to={'/getting-started'}
-                          className='d-flex gap-1 d-none d-md-block text-end lh-1 align-items-center'
+                          className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
                         >
                           <span>
                             <Icon name='rocket' width={20} fill='#9DA4AE' />
