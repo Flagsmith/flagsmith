@@ -116,6 +116,7 @@ $side-width: 750px;
       overflow-y: hidden;
     }
     &.overflow-y-auto {
+      overflow-y: hidden;
       .modal-body {
         overflow-y: auto;
       }

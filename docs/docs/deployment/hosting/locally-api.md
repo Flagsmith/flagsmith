@@ -13,7 +13,7 @@ found in the following section entitled 'Databases'.
 cd api
 make install
 make django-migrate
-make serve
+make serve-with-task-processor  # Or `make serve` for API + synchronous tasks (limited functionality)
 ```
 
 You can now visit `http://<your-server-domain:8000>/api/v1/users/config/init/` to create an initial Superuser and

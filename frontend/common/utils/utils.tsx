@@ -686,6 +686,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       .replace(/[\s_]+/g, '-')
       .toLowerCase(),
 
+  toSelectedValue: (
+    value: string,
+    options: { label: string; value: string }[],
+    defaultValue?: string,
+  ) => {
+    return options?.find((option) => option.value === value) ?? defaultValue
+  },
+
   validateMetadataType(type: string, value: any) {
     switch (type) {
       case 'int': {
