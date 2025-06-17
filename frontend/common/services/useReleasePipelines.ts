@@ -7,32 +7,19 @@ export const releasePipelinesService = service
   .enhanceEndpoints({ addTagTypes: ['ReleasePipelines'] })
   .injectEndpoints({
     endpoints: (builder) => ({
-      createPipelineStages: builder.mutation<
-        Res['pipelineStage'],
-        Req['createPipelineStage']
-      >({
-        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
-        query: (query: Req['createPipelineStage']) => ({
-          body: {
-            actions: query.actions,
-            environment: query.environment,
-            name: query.name,
-            order: query.order,
-            trigger: query.trigger,
-          },
-          method: 'POST',
-          url: `projects/${query.project}/release-pipelines/${query.pipeline}/stages/`,
-        }),
-      }),
       createReleasePipeline: builder.mutation<
         Res['releasePipeline'],
         Req['createReleasePipeline']
       >({
         invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
         query: (query: Req['createReleasePipeline']) => ({
-          body: { name: query.name },
+          body: {
+            description: query.description,
+            name: query.name,
+            stages: query.stages,
+          },
           method: 'POST',
-          url: `projects/${query.projectId}/release-pipelines/`,
+          url: `projects/${query.project}/release-pipelines/`,
         }),
       }),
       deleteReleasePipeline: builder.mutation<{}, Req['deleteReleasePipeline']>(
@@ -131,25 +118,9 @@ export async function getPipelineStages(
   )
 }
 
-export async function createPipelineStages(
-  store: any,
-  data: Req['createPipelineStage'],
-  options?: Parameters<
-    typeof releasePipelinesService.endpoints.createPipelineStages.initiate
-  >[1],
-) {
-  return store.dispatch(
-    releasePipelinesService.endpoints.createPipelineStages.initiate(
-      data,
-      options,
-    ),
-  )
-}
-
 // END OF FUNCTION_EXPORTS
 
 export const {
-  useCreatePipelineStagesMutation,
   useCreateReleasePipelineMutation,
   useDeleteReleasePipelineMutation,
   useGetPipelineStageQuery,
