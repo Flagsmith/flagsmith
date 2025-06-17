@@ -15,7 +15,7 @@ import {
   statsChart,
 } from 'ionicons/icons'
 import SegmentsIcon from './svg/SegmentsIcon'
-import Permission from 'common/providers/Permission'
+import Permission, { useHasPermission } from 'common/providers/Permission'
 import AuditLogIcon from './svg/AuditLogIcon'
 import UsersIcon from './svg/UsersIcon'
 import HomeAside from './pages/HomeAside'
@@ -63,7 +63,12 @@ const Nav: FC<NavType> = ({
     updateLastViewed()
     return () => unlisten()
   }, [history])
-
+  const { permission: projectAdmin } = useHasPermission({
+    id: projectId,
+    level: 'project',
+    permission: 'ADMIN',
+  })
+  console.log(projectAdmin)
   const isCreateEnvironment = environmentId === 'create'
   const isCreateOrganisation = document.location.pathname === '/create'
   const storageHasParams = lastEnvironmentId || lastProjectId
@@ -274,33 +279,25 @@ const Nav: FC<NavType> = ({
                 >
                   Compare
                 </NavSubLink>
-                <Permission level='project' permission='ADMIN' id={projectId}>
-                  {({ permission }) =>
-                    permission && (
+                {projectAdmin && (
+                  <>
+                    {Utils.getFlagsmithHasFeature('release_pipelines') && (
                       <NavSubLink
-                        icon={<Icon name='setting' width={24} />}
-                        id='project-settings-link'
-                        to={`/project/${projectId}/settings`}
+                        icon={<Icon name='flash' />}
+                        id='release-pipelines-link'
+                        to={`/project/${projectId}/release-pipelines`}
                       >
-                        Project Settings
+                        Release Pipelines
                       </NavSubLink>
-                    )
-                  }
-                </Permission>
-                {Utils.getFlagsmithHasFeature('release_pipelines') && (
-                  <Permission level='project' permission='ADMIN' id={projectId}>
-                    {({ permission }) =>
-                      permission && (
-                        <NavSubLink
-                          icon={<Icon name='flash' />}
-                          id='release-pipelines-link'
-                          to={`/project/${projectId}/release-pipelines`}
-                        >
-                          Release Pipelines
-                        </NavSubLink>
-                      )
-                    }
-                  </Permission>
+                    )}
+                    <NavSubLink
+                      icon={<Icon name='setting' width={24} />}
+                      id='project-settings-link'
+                      to={`/project/${projectId}/settings`}
+                    >
+                      Project Settings
+                    </NavSubLink>
+                  </>
                 )}
               </>
             ) : (

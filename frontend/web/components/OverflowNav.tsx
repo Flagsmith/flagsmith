@@ -25,7 +25,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
   children: _children,
   className = '',
   containerClassName,
-  gap,
+  gap = 2,
   icon = ellipsisHorizontal,
 }) => {
   const items = React.Children.toArray(
@@ -36,88 +36,89 @@ const OverflowNav: FC<OverflowNavProps> = ({
   const itemsContainerRef = useRef<HTMLDivElement>(null)
 
   const [open, setOpen] = useState(false)
-  const openRef = useRef(false)
   const [visibleCount, setVisibleCount] = useState(items.length)
   const [widths, setWidths] = useState<number[]>([])
   const history = useHistory()
+
   useEffect(() => {
-    const updateLastViewed = () => {
+    const unlisten = history.listen(() => {
       setOpen(false)
-      openRef.current = false
-    }
-    const unlisten = history.listen(updateLastViewed)
+    })
     return () => unlisten()
   }, [history])
+
+  useEffect(() => {
+    setWidths([])
+    setVisibleCount(items.length)
+  }, [_children])
+
   useLayoutEffect(() => {
     const itemsCont = itemsContainerRef.current
-    if (!itemsCont || widths.length > 0) return
+    if (!itemsCont || widths.length > 0 || items.length === 0) {
+      return
+    }
 
     const childEls = Array.from(itemsCont.children) as HTMLElement[]
-    const w = childEls.map((el) => el.offsetWidth)
-    setWidths(w)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length])
+    const newWidths = childEls.map((el) => el.offsetWidth)
+    setWidths(newWidths)
+  }, [items.length, widths]) // It runs when items change and widths have been reset.
 
   useLayoutEffect(() => {
-    const calculateVisibleCount = () => {
+    const calculate = () => {
       const outerCont = outerContainerRef.current
-      const itemsCont = itemsContainerRef.current
-      if (!outerCont || !itemsCont || widths.length === 0) return
+      if (!outerCont || widths.length === 0) {
+        return
+      }
 
-      const gapPx = gap * 8
+      const gapPx = gap * 4 // Assuming a spacer unit of 4px. Adjust if needed.
 
       const sumWidths = (count: number) => {
         if (count === 0) return 0
         const totalWidths = widths
           .slice(0, count)
           .reduce((acc, w) => acc + w, 0)
-        const totalGaps = (count - 1) * gapPx
+        const totalGaps = (count > 1 ? count - 1 : 0) * gapPx
         return totalWidths + totalGaps
       }
 
       const containerWidth = outerCont.clientWidth
 
       if (sumWidths(widths.length) <= containerWidth) {
-        if (visibleCount !== widths.length) {
-          setVisibleCount(widths.length)
-        }
+        setVisibleCount(widths.length)
         return
       }
 
-      const overflowBtnWidth = buttonWidth + 24 // + 12 due to the padding
-      const reserve = overflowBtnWidth + gapPx
+      const reserve = buttonWidth + gapPx
       const maxWidth = containerWidth - reserve
 
       let count = 0
       while (count < widths.length && sumWidths(count + 1) <= maxWidth) {
         count++
       }
-
-      if (count !== visibleCount) {
-        setVisibleCount(count)
-      }
+      setVisibleCount(count)
     }
 
-    calculateVisibleCount()
+    calculate()
 
-    const ro = new ResizeObserver(calculateVisibleCount)
-    if (outerContainerRef.current) ro.observe(outerContainerRef.current)
-    window.addEventListener('resize', calculateVisibleCount)
-
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', calculateVisibleCount)
+    const ro = new ResizeObserver(calculate)
+    if (outerContainerRef.current) {
+      ro.observe(outerContainerRef.current)
     }
-  }, [widths, visibleCount, gap, items.length])
+    return () => ro.disconnect()
+  }, [widths, gap, items.length]) // Re-calculate when widths or container size changes.
 
   const visible = items.slice(0, visibleCount)
   const overflow = items.slice(visibleCount)
+
+  const isMeasuring = widths.length === 0 && items.length > 0
+
   return (
     <div
       ref={outerContainerRef}
+      style={{ visibility: isMeasuring ? 'hidden' : 'visible' }} // Hide container while measuring
       className={classNames(
-        'd-flex align-items-center',
-        overflow.length > 0
+        'd-flex align-items-center w-100',
+        overflow.length > 0 && !isMeasuring
           ? 'justify-content-between'
           : 'justify-content-start',
         containerClassName,
@@ -127,26 +128,22 @@ const OverflowNav: FC<OverflowNavProps> = ({
         ref={itemsContainerRef}
         className={classNames(
           className,
-          gap ? `gap-${gap}` : undefined,
+          `gap-${gap}`,
           'd-flex align-items-center',
-          overflow.length > 0 ? 'flex-1' : '',
         )}
       >
-        {visible.map((child, idx) => (
+        {(isMeasuring ? items : visible).map((child, idx) => (
           <React.Fragment key={idx}>{child}</React.Fragment>
         ))}
       </div>
 
-      {overflow.length > 0 && (
-        <div className='ms-2 nav-item dropdown position-relative'>
+      {overflow.length > 0 && !isMeasuring && (
+        <div className='ms-2 nav-item dropdown position-relative flex-shrink-0'>
           <Button
             style={{ height: buttonWidth, width: buttonWidth }}
             onClick={(e) => {
               e.stopPropagation()
-              setOpen(!openRef.current)
-              // for some reason setOpen(!open) does not work (old React bug?), so we keep a ref
-              openRef.current = !openRef.current
-              return false
+              setOpen((prevOpen) => !prevOpen)
             }}
             theme='secondary'
             className='d-flex align-items-center justify-content-center m-0 p-0'
