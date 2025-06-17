@@ -63,7 +63,7 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
             ]
         }
 
-    def save(self, **kwargs: typing.Any) -> typing.Any:
+    def save(self, **kwargs: typing.Any) -> None:
         environment: Environment = kwargs["environment"]
 
         if settings.USE_POSTGRES_FOR_ANALYTICS:
