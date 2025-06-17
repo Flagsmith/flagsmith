@@ -237,8 +237,8 @@ const FeaturesPage = class extends Component {
   }
 
   getReleasePipelineId = (featureId) => {
-    const releasePipeline = this.state.releasePipelines.find(
-      (pipeline) => pipeline.feature_id === featureId,
+    const releasePipeline = this.state.releasePipelines.find((pipeline) =>
+      pipeline.features.includes(featureId),
     )
     return releasePipeline?.id
   }
