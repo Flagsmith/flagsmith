@@ -151,30 +151,29 @@ const Nav: FC<NavType> = ({
                       <div className='me-3'>
                         <GithubStar />
                       </div>
-                      {Utils.getFlagsmithHasFeature('welcome_page') ? (
+                      {Utils.getFlagsmithHasFeature('welcome_page') && (
                         <NavLink
                           activeClassName='active'
                           to={'/getting-started'}
-                          className='d-flex gap-1 text-end lh-1 align-items-center'
+                          className='d-flex gap-1 d-none d-md-block text-end lh-1 align-items-center'
                         >
                           <span>
-                            <Icon name='file-text' width={20} fill='#9DA4AE' />
+                            <Icon name='rocket' width={20} fill='#9DA4AE' />
                           </span>
                           <span className='d-none d-md-block'>
                             Getting Started
                           </span>
                         </NavLink>
-                      ) : (
-                        <a
-                          className='d-flex gap-1 text-end lh-1 align-items-center'
-                          href={'https://docs.flagsmith.com'}
-                        >
-                          <span>
-                            <Icon name='file-text' width={20} fill='#9DA4AE' />
-                          </span>
-                          <span className='d-none d-md-block'>Docs</span>
-                        </a>
                       )}
+                      <a
+                        className='d-flex gap-1 ps-3 text-end lh-1 align-items-center'
+                        href={'https://docs.flagsmith.com'}
+                      >
+                        <span>
+                          <Icon name='file-text' width={20} fill='#9DA4AE' />
+                        </span>
+                        <span className='d-none d-md-block'>Docs</span>
+                      </a>
                       <Headway className='cursor-pointer' />
 
                       <NavLink
