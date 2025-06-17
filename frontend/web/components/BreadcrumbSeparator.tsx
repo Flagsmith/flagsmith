@@ -335,20 +335,20 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
         }}
         containerClassName={'p-0'}
         className={
-          'inline-modal nav-modal top-form-item inline-modal--sm max-w-auto'
+          'inline-modal nav-modal top-form-item mt-1 inline-modal--sm max-w-auto'
         }
       >
         {!!open && (
           <AccountProvider>
             {({ user }: { user: User }) => {
               return (
-                <div className='d-flex'>
+                <div className='d-flex px-2'>
                   <div
                     className={classNames({
-                      'bg-faint rounded': hoveredSection === 'project',
+                      'bg-faint h-100 rounded': hoveredSection === 'project',
                     })}
                     onMouseEnter={() => setHoveredSection('organisation')}
-                    style={{ maxWidth: 'calc(50vw)', width: 260 }}
+                    style={{ maxWidth: 'calc(50vw - 10px)', width: 260 }}
                   >
                     <Input
                       autoFocus={focus === 'organisation'}
@@ -391,10 +391,6 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                               )
                             }}
                           >
-                            <IonIcon
-                              className='fs-small'
-                              icon={createOutline}
-                            />
                             Create Organisation
                           </Button>
                         )

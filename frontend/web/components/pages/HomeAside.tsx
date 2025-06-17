@@ -141,7 +141,14 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
     environmentId === 'create'
       ? null
       : (ProjectStore.getEnvironment(environmentId) as any)
-
+  const changeRequest = Utils.changeRequestsEnabled(
+    environment?.minimum_change_request_approvals,
+  )
+    ? ChangeRequestStore.model[environmentId]
+    : null
+  const changeRequests = changeRequest?.count || 0
+  const scheduled =
+    (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
   const onProjectSave = () => {
     AppActions.refreshOrganisation()
   }
