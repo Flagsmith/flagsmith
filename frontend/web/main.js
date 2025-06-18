@@ -27,7 +27,7 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = Project.cookieAuthEnabled ? 'true' : API.getCookie('t')
+const res = API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {
@@ -74,8 +74,14 @@ setTimeout(() => {
     basename: Project.basename || '',
   })
 
+  const isAuthenticated = Project.cookieAuthEnabled
+    ? !!res
+    : AccountStore.getUser()
+  console.log({ isAuthenticated, loaded: AccountStore.getUser() })
+
   // redirect before login
   if (!isPublicURL() && !AccountStore.getUser()) {
+    console.log('redirecting')
     API.setRedirect(
       document.location.pathname + (document.location.search || ''),
     )
