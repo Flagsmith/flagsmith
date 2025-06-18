@@ -6,6 +6,7 @@ import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock import MockerFixture
 
 from environments.identities.models import Identity
@@ -451,6 +452,53 @@ def test_feature_state_gt_operator_throws_value_error_if_different_identities(
     # When / Then - exception raised
     with pytest.raises(ValueError):
         feature_state_identity_1 > feature_state_identity_2
+
+
+def test_feature_state_gt_operator__environment_default__returns_expected(
+    environment: Environment,
+    feature: Feature,
+    identity: Identity,
+    feature_segment: FeatureSegment,
+) -> None:
+    # When
+    feature_state = FeatureState.objects.get(feature=feature, environment=environment)
+    feature_state_identity = FeatureState.objects.create(
+        feature=feature, environment=environment, identity=identity
+    )
+    feature_state_segment = FeatureState.objects.create(
+        feature=feature,
+        environment=environment,
+        feature_segment=feature_segment,
+    )
+
+    # Then
+    assert not feature_state > feature_state_identity
+    assert not feature_state > feature_state_segment
+
+
+@pytest.mark.parametrize(
+    "feature_identity, expected_result",
+    [
+        (
+            lazy_fixture("identity"),
+            "Identity test_identity - Project Test Project - Environment Test Environment - Feature Test Feature1 - Enabled: False",
+        ),
+        (
+            None,
+            "Project Test Project - Environment Test Environment - Feature Test Feature1 - Enabled: False",
+        ),
+    ],
+)
+def test_feature_state_str__returns_expected(
+    feature_state: FeatureState,
+    feature_identity: Identity | None,
+    expected_result: str,
+) -> None:
+    # Given
+    feature_state.identity = feature_identity
+
+    # When & Then
+    assert str(feature_state) == expected_result
 
 
 @mock.patch("features.signals.trigger_feature_state_change_webhooks")

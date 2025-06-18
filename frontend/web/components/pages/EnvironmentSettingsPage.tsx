@@ -19,7 +19,7 @@ import { getStore } from 'common/store'
 import { getRoles } from 'common/services/useRole'
 import { getRoleEnvironmentPermissions } from 'common/services/useRolePermission'
 import AccountStore from 'common/stores/account-store'
-import { Link, RouterChildContext } from 'react-router-dom'
+import { Link, useHistory, useRouteMatch } from 'react-router-dom'
 import { enableFeatureVersioning } from 'common/services/useEnableFeatureVersioning'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
@@ -49,6 +49,7 @@ import {
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import SettingTitle from 'components/SettingTitle'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -56,26 +57,18 @@ const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Enabled', value: true },
 ]
 
-interface EnvironmentSettingsPageProps {
-  // Router props
-  match: {
-    params: {
-      projectId: string
-      environmentId: string
-    }
-  }
-  router: RouterChildContext['router']
-}
-
-const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
-  match,
-  router,
-}) => {
+const EnvironmentSettingsPage: React.FC = () => {
   const [createWebhook] = useCreateWebhookMutation()
   const [deleteWebhook] = useDeleteWebhookMutation()
   const [saveWebhook] = useUpdateWebhookMutation()
 
   const store = getStore()
+  const history = useHistory()
+  const match = useRouteMatch<{
+    projectId: string
+    environmentId: string
+  }>()
+  const projectIdFromUrl = Utils.getProjectIdFromUrl(match)
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [environmentContentType, setEnvironmentContentType] =
@@ -106,10 +99,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     }
   }
 
-  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal(
-    router.history,
-    { onDiscard: onDiscard },
-  )
+  const [DirtyFormModal, setIsDirty, isDirty] = useFormNotSavedModal({
+    onDiscard: onDiscard,
+  })
 
   const {
     data: environmentData,
@@ -169,8 +161,8 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
   }, [store, env])
 
   useEffect(() => {
-    AppActions.getProject(match.params.projectId)
-  }, [match.params.projectId])
+    AppActions.getProject(projectIdFromUrl)
+  }, [projectIdFromUrl])
 
   useEffect(() => {
     getEnvironment()
@@ -216,7 +208,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
 
   const onRemove = () => {
     toast('Your project has been removed')
-    router.history.replace(Utils.getOrganisationHomePage())
+    history.replace(Utils.getOrganisationHomePage())
   }
 
   const confirmRemove = (environment: Environment, callback: () => void) => {
@@ -230,14 +222,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
   const onRemoveEnvironment = (environment: Environment) => {
     const envs = ProjectStore.getEnvs() as Environment[] | null
     if (envs && envs?.length > 0) {
-      router.history.replace(
+      history.replace(
         `/project/${match.params.projectId}/environment` +
           `/${envs[0].api_key}/features`,
       )
     } else {
-      router.history.replace(
-        `/project/${match.params.projectId}/environment/create`,
-      )
+      history.replace(`/project/${match.params.projectId}/environment/create`)
     }
     toast(
       <div>
@@ -299,9 +289,8 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     openModal(
       'New Webhook',
       <CreateWebhookModal
-        router={router}
         environmentId={match.params.environmentId}
-        projectId={match.params.projectId}
+        projectId={projectIdFromUrl}
         save={(webhook: Webhook) =>
           createWebhook({
             ...webhook,
@@ -317,11 +306,10 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     openModal(
       'Edit Webhook',
       <CreateWebhookModal
-        router={router}
         webhook={webhook}
         isEdit
         environmentId={match.params.environmentId}
-        projectId={match.params.projectId}
+        projectId={projectIdFromUrl}
         save={(webhook: Webhook) =>
           saveWebhook({ ...webhook, environmentId: match.params.environmentId })
         }
@@ -335,7 +323,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
       'Remove Webhook',
       <ConfirmRemoveWebhook
         environmentId={match.params.environmentId}
-        projectId={match.params.projectId}
+        projectId={projectIdFromUrl}
         url={webhook.url}
         cb={() =>
           deleteWebhook({
@@ -401,7 +389,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
     <div className='app-container container'>
       <ProjectProvider
         onRemoveEnvironment={onRemoveEnvironment}
-        id={match.params.projectId}
+        id={projectIdFromUrl}
         onRemove={onRemove}
         onSave={onSave}
       >
@@ -445,7 +433,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
           return (
             <>
               <DirtyFormModal />
-              <PageTitle title='Settings' />
+              <PageTitle title='Environment Settings' />
               {isLoading && (
                 <div className='centered-container'>
                   <Loader />
@@ -454,70 +442,66 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
               {!isLoading && (
                 <Tabs urlParam='tab' className='mt-0' uncontrolled noFocus>
                   <TabItem tabLabel='General'>
-                    <div className='mt-4'>
-                      <h5 className='mb-5'>General Settings</h5>
+                    <div className='mt-4 col-md-8'>
+                      <SettingTitle>Environment Information</SettingTitle>
                       <JSONReference title={'Environment'} json={env} />
-                      <div className='col-md-8'>
-                        <form
-                          onSubmit={(e) => {
-                            e.preventDefault()
-                            saveEnv()
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          saveEnv()
+                        }}
+                      >
+                        <InputGroup
+                          value={currentEnv?.name}
+                          inputProps={{
+                            className: 'full-width',
+                            name: 'env-name',
                           }}
-                        >
-                          <InputGroup
-                            value={currentEnv?.name}
-                            inputProps={{
-                              className: 'full-width',
-                              name: 'env-name',
-                            }}
-                            className='full-width'
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => {
-                              const value = Utils.safeParseEventValue(e)
-                              updateCurrentEnv({ name: value }, false)
-                            }}
-                            isValid={
-                              currentEnv?.name && currentEnv?.name.length
-                            }
-                            type='text'
-                            title='Environment Name'
-                            placeholder='Environment Name'
-                          />
-                          <InputGroup
-                            textarea
-                            // ref={(e) => (this.input = e)}
-                            value={currentEnv?.description ?? ''}
-                            inputProps={{
-                              className: 'input--wide textarea-lg',
-                            }}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) => {
-                              const value = Utils.safeParseEventValue(e)
-                              updateCurrentEnv({ description: value })
-                            }}
-                            isValid={
-                              currentEnv?.description &&
-                              currentEnv?.description.length
-                            }
-                            type='text'
-                            title='Environment Description'
-                            placeholder='Environment Description'
-                          />
-                          <div className='text-right mt-5'>
-                            <Button
-                              id='save-env-btn'
-                              type='submit'
-                              disabled={saveDisabled}
-                            >
-                              {isSaving ? 'Updating' : 'Update'}
-                            </Button>
-                          </div>
-                        </form>
-                      </div>
-                      <hr className='py-0 my-4' />
-                      <div className='col-md-8 mt-4'>
+                          className='full-width'
+                          onChange={(
+                            e: React.ChangeEvent<HTMLInputElement>,
+                          ) => {
+                            const value = Utils.safeParseEventValue(e)
+                            updateCurrentEnv({ name: value }, false)
+                          }}
+                          isValid={currentEnv?.name && currentEnv?.name.length}
+                          type='text'
+                          title='Name'
+                          placeholder='Environment Name'
+                        />
+                        <InputGroup
+                          textarea
+                          // ref={(e) => (this.input = e)}
+                          value={currentEnv?.description ?? ''}
+                          inputProps={{
+                            className: 'input--wide textarea-lg',
+                          }}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLInputElement>,
+                          ) => {
+                            const value = Utils.safeParseEventValue(e)
+                            updateCurrentEnv({ description: value })
+                          }}
+                          isValid={
+                            currentEnv?.description &&
+                            currentEnv?.description.length
+                          }
+                          type='text'
+                          title='Description'
+                          placeholder='Environment Description'
+                        />
+                        <div className='text-right mt-5'>
+                          <Button
+                            id='save-env-btn'
+                            type='submit'
+                            disabled={saveDisabled}
+                          >
+                            {isSaving ? 'Updating' : 'Update'}
+                          </Button>
+                        </div>
+                      </form>
+                      <SettingTitle>Additional Settings</SettingTitle>
+                      <div className='mt-4'>
                         <Setting
                           onChange={(value) =>
                             updateCurrentEnv(
@@ -573,7 +557,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                       </div>
                       {Utils.getFlagsmithHasFeature('feature_versioning') && (
                         <div>
-                          <div className='col-md-8 mt-4'>
+                          <div className='mt-4'>
                             <Setting
                               title={'Feature Versioning'}
                               description={
@@ -604,42 +588,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                           </div>
                         </div>
                       )}
-                      <div className='col-md-8 mt-4'>
-                        <Setting
-                          title='Hide sensitive data'
-                          checked={currentEnv?.hide_sensitive_data}
-                          onChange={(value) => {
-                            confirmToggle(
-                              'Confirm Environment Setting',
-                              'hide_sensitive_data',
-                              value,
-                            )
-                          }}
-                          description={
-                            <div>
-                              Exclude sensitive data from endpoints returning
-                              flags and identity information to the SDKs or via
-                              our REST API.
-                              <br />
-                              For full information on the excluded fields see
-                              documentation{' '}
-                              <Button
-                                theme='text'
-                                href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
-                                target='_blank'
-                                className='fw-normal'
-                              >
-                                here.
-                              </Button>
-                              <div className='text-danger'>
-                                Enabling this feature will change the response
-                                from the API and could break your existing code.
-                              </div>
-                            </div>
-                          }
-                        />
-                      </div>
-                      <FormGroup className='mt-4 col-md-8'>
+                      <FormGroup className='mt-4'>
                         <Setting
                           feature='4_EYES'
                           checked={
@@ -710,15 +659,12 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                             </div>
                           )}
                       </FormGroup>
-                      <hr className='py-0 my-4' />
-                      <FormGroup className='mt-4 col-md-8'>
+                      <SettingTitle danger>Delete Environment</SettingTitle>
+                      <FormGroup className='mt-4'>
                         <Row space>
-                          <div className='col-md-7'>
-                            <h5>Delete Environment</h5>
-                            <p className='fs-small lh-sm mb-0'>
-                              This environment will be permanently deleted.
-                            </p>
-                          </div>
+                          <p className='fs-small lh-sm mb-0'>
+                            This environment will be permanently deleted.
+                          </p>
                           <Button
                             id='delete-env-btn'
                             onClick={() => {
@@ -733,9 +679,9 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                                 deleteEnv(envToRemove)
                               })
                             }}
-                            className='btn btn-with-icon btn-remove'
+                            theme='danger'
                           >
-                            <Icon name='trash-2' width={20} fill='#EF4D56' />
+                            Delete Environment
                           </Button>
                         </Row>
                       </FormGroup>
@@ -748,128 +694,158 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                         json={env}
                         className='mb-4'
                       />
-                      <div className='col-md-8'>
-                        <form onSubmit={() => saveEnv()}>
-                          <div>
-                            <h5 className='mb-2'>
-                              Hide disabled flags from SDKs
-                            </h5>
-                            <Select
-                              value={
-                                showDisabledFlagOptions.find(
-                                  (option) =>
-                                    option.value ===
-                                    currentEnv?.hide_disabled_flags,
-                                ) || showDisabledFlagOptions[0]
-                              }
-                              onChange={(option: {
-                                label: string
-                                value: boolean | null
-                              }) => {
-                                updateCurrentEnv(
-                                  { hide_disabled_flags: option.value },
-                                  true,
-                                )
-                              }}
-                              options={showDisabledFlagOptions}
-                              data-test='js-hide-disabled-flags'
-                              disabled={isSaving}
-                              className='full-width react-select mb-2'
-                            />
-                            <p className='mb-0 fs-small lh-sm'>
-                              To prevent letting your users know about your
-                              upcoming features and to cut down on payload,
-                              enabling this will prevent the API from returning
-                              features that are disabled. You can also manage
-                              this in{' '}
-                              <Link
-                                to={`/project/${match.params.projectId}/settings`}
-                              >
-                                Project settings
-                              </Link>
-                              .
-                            </p>
-                          </div>
+                      <form onSubmit={() => saveEnv()}>
+                        <div>
+                          <h5 className='mb-2'>
+                            Hide disabled flags from SDKs
+                          </h5>
+                          <Select
+                            value={
+                              showDisabledFlagOptions.find(
+                                (option) =>
+                                  option.value ===
+                                  currentEnv?.hide_disabled_flags,
+                              ) || showDisabledFlagOptions[0]
+                            }
+                            onChange={(option: {
+                              label: string
+                              value: boolean | null
+                            }) => {
+                              updateCurrentEnv(
+                                { hide_disabled_flags: option.value },
+                                true,
+                              )
+                            }}
+                            options={showDisabledFlagOptions}
+                            data-test='js-hide-disabled-flags'
+                            disabled={isSaving}
+                            className='full-width react-select mb-2'
+                          />
+                          <p className='mb-0 fs-small lh-sm'>
+                            To prevent letting your users know about your
+                            upcoming features and to cut down on payload,
+                            enabling this will prevent the API from returning
+                            features that are disabled. You can also manage this
+                            in{' '}
+                            <Link
+                              to={`/project/${match.params.projectId}/settings`}
+                            >
+                              Project settings
+                            </Link>
+                            .
+                          </p>
+                        </div>
+                        <div className='mt-4'>
+                          <Setting
+                            title='Persist traits when using client-side SDK keys'
+                            description={
+                              'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'
+                            }
+                            checked={currentEnv?.allow_client_traits}
+                            onChange={(value) => {
+                              updateCurrentEnv(
+                                { allow_client_traits: value },
+                                true,
+                              )
+                            }}
+                          />
+                        </div>
+                        <div className='mt-4'>
+                          <Setting
+                            checked={
+                              currentEnv?.use_identity_composite_key_for_hashing
+                            }
+                            onChange={(value) =>
+                              updateCurrentEnv(
+                                {
+                                  use_identity_composite_key_for_hashing: value,
+                                },
+                                true,
+                              )
+                            }
+                            title={`Use consistent hashing`}
+                            description={
+                              <div>
+                                Enabling this setting will ensure that
+                                multivariate and percentage split evaluations
+                                made by the API are consistent with those made
+                                by local evaluation mode in our server side
+                                SDKs.
+                                <div className='text-danger'>
+                                  Toggling this setting will mean that some
+                                  users will start receiving different values
+                                  for multivariate flags and flags with a
+                                  percentage split segment override via the API
+                                  / remote evaluation. Values received in local
+                                  evaluation mode will not change.
+                                </div>
+                              </div>
+                            }
+                          />
+                          <Setting
+                            title='Hide sensitive data'
+                            checked={currentEnv?.hide_sensitive_data}
+                            onChange={(value) => {
+                              confirmToggle(
+                                'Confirm Environment Setting',
+                                'hide_sensitive_data',
+                                value,
+                              )
+                            }}
+                            description={
+                              <div>
+                                Exclude sensitive data from endpoints returning
+                                flags and identity information to the SDKs or
+                                via our REST API.
+                                <br />
+                                For full information on the excluded fields see
+                                documentation{' '}
+                                <Button
+                                  theme='text'
+                                  href='https://docs.flagsmith.com/system-administration/security#hide-sensitive-data'
+                                  target='_blank'
+                                  className='fw-normal'
+                                >
+                                  here.
+                                </Button>
+                                <div className='text-danger'>
+                                  Enabling this feature will change the response
+                                  from the API and could break your existing
+                                  code.
+                                </div>
+                              </div>
+                            }
+                          />
+                        </div>
+                        {Utils.getFlagsmithHasFeature(
+                          'use_identity_overrides_in_local_eval',
+                        ) && (
                           <div className='mt-4'>
                             <Setting
-                              title='Persist traits when using client-side SDK keys'
-                              description={
-                                'If enabled, Flagsmith will persist any non-transient traits sent by SDKs using client-side keys when remotely evaluating flags.'
+                              title='Use identity overrides in local evaluation'
+                              description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
+                              checked={
+                                !!currentEnv?.use_identity_overrides_in_local_eval
                               }
-                              checked={currentEnv?.allow_client_traits}
                               onChange={(value) => {
                                 updateCurrentEnv(
-                                  { allow_client_traits: value },
-                                  true,
-                                )
-                              }}
-                            />
-                          </div>
-                          <div className='mt-4'>
-                            <Setting
-                              checked={
-                                currentEnv?.use_identity_composite_key_for_hashing
-                              }
-                              onChange={(value) =>
-                                updateCurrentEnv(
                                   {
-                                    use_identity_composite_key_for_hashing:
-                                      value,
+                                    use_identity_overrides_in_local_eval: value,
                                   },
                                   true,
                                 )
-                              }
-                              title={`Use consistent hashing`}
-                              description={
-                                <div>
-                                  Enabling this setting will ensure that
-                                  multivariate and percentage split evaluations
-                                  made by the API are consistent with those made
-                                  by local evaluation mode in our server side
-                                  SDKs.
-                                  <div className='text-danger'>
-                                    Toggling this setting will mean that some
-                                    users will start receiving different values
-                                    for multivariate flags and flags with a
-                                    percentage split segment override via the
-                                    API / remote evaluation. Values received in
-                                    local evaluation mode will not change.
-                                  </div>
-                                </div>
-                              }
+                              }}
                             />
                           </div>
-                          {Utils.getFlagsmithHasFeature(
-                            'use_identity_overrides_in_local_eval',
-                          ) && (
-                            <div className='mt-4'>
-                              <Setting
-                                title='Use identity overrides in local evaluation'
-                                description={`This determines whether server-side SDKs running in local evaluation mode receive identity overrides in the environment document.`}
-                                checked={
-                                  !!currentEnv?.use_identity_overrides_in_local_eval
-                                }
-                                onChange={(value) => {
-                                  updateCurrentEnv(
-                                    {
-                                      use_identity_overrides_in_local_eval:
-                                        value,
-                                    },
-                                    true,
-                                  )
-                                }}
-                              />
-                            </div>
-                          )}
-                        </form>
-                      </div>
+                        )}
+                      </form>
                     </div>
                   </TabItem>
                   <TabItem tabLabel='Permissions'>
                     <FormGroup>
                       <EditPermissions
                         tabClassName='flat-panel'
-                        parentId={match.params.projectId}
+                        parentId={projectIdFromUrl}
                         parentLevel='project'
                         parentSettingsLink={`/project/${match.params.projectId}/settings`}
                         id={match.params.environmentId}
@@ -877,7 +853,6 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                         level='environment'
                         roleTabTitle='Environment Permissions'
                         roles={roles}
-                        router={router}
                       />
                     </FormGroup>
                   </TabItem>
@@ -1007,7 +982,7 @@ const EnvironmentSettingsPage: React.FC<EnvironmentSettingsPageProps> = ({
                           component={
                             <AddMetadataToEntity
                               organisationId={AccountStore.getOrganisation().id}
-                              projectId={match.params.projectId}
+                              projectId={projectIdFromUrl}
                               entityId={currentEnv?.api_key ?? ''}
                               envName={currentEnv?.name}
                               entityContentType={environmentContentType?.id}

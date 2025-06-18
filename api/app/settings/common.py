@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "metrics",
     "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
@@ -1146,6 +1147,10 @@ TASK_DELETE_RUN_EVERY = env.timedelta(
 )
 RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
     "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
+)
+TASK_BACKOFF_DEFAULT_DELAY_SECONDS = env.int(
+    "TASK_BACKOFF_DEFAULT_DELAY_SECONDS",
+    default=5,
 )
 
 # Webhook settings

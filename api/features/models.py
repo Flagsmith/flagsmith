@@ -15,7 +15,7 @@ from django.core.exceptions import (
 )
 from django.db import models
 from django.db.models import Max, Q, QuerySet
-from django.utils import timezone
+from django.utils import formats, timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
@@ -31,6 +31,7 @@ from simple_history.models import HistoricalRecords  # type: ignore[import-untyp
 from audit.constants import (
     FEATURE_CREATED_MESSAGE,
     FEATURE_DELETED_MESSAGE,
+    FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE,
     FEATURE_STATE_UPDATED_MESSAGE,
     FEATURE_STATE_VALUE_UPDATED_MESSAGE,
     FEATURE_UPDATED_MESSAGE,
@@ -579,11 +580,11 @@ class FeatureState(
         # it has a feature_segment or an identity
         return not (other.feature_segment_id or other.identity_id)
 
-    def __str__(self):  # type: ignore[no-untyped-def]
+    def __str__(self) -> str:
         s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
         if self.environment is not None:
             s = f"{self.environment} - {s}"
-        elif self.identity is not None:
+        if self.identity is not None:
             s = f"Identity {self.identity.identifier} - {s}"
         return s
 
@@ -630,7 +631,7 @@ class FeatureState(
 
     @property
     def is_scheduled(self) -> bool:
-        return self.live_from and self.live_from > timezone.now()  # type: ignore[return-value]
+        return bool(self.live_from and self.live_from > timezone.now())
 
     def clone(
         self,
@@ -958,6 +959,13 @@ class FeatureState(
         return audit_helpers.get_environment_feature_state_created_audit_message(self)
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        if self.change_request and self.is_scheduled:
+            live_from: datetime.datetime = timezone.localtime(self.live_from)
+            return FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE % (
+                self.feature.name,
+                self.change_request.title,
+                formats.date_format(live_from, settings.DATETIME_FORMAT),
+            )
         if self.identity:
             return IDENTITY_FEATURE_STATE_UPDATED_MESSAGE % (
                 self.feature.name,

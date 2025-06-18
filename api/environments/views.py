@@ -1,10 +1,11 @@
 import logging
+from typing import Any, Generic, Type, TypeVar
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
@@ -15,7 +16,10 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
+from rest_framework.viewsets import GenericViewSet
 
+from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -27,6 +31,8 @@ from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
 )
+from metrics.metrics_service import EnvironmentMetricsService
+from metrics.serializers import EnvironmentMetricsSerializer
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -35,7 +41,6 @@ from permissions.serializers import (
 )
 from projects.models import Project
 from users.models import FFAdminUser
-from webhooks.mixins import TriggerSampleWebhookMixin
 from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
@@ -56,6 +61,8 @@ from .serializers import (
     EnvironmentSerializerWithMetadata,
     WebhookSerializer,
 )
+
+T = TypeVar("T", bound=AbstractBaseExportableModel)
 
 logger = logging.getLogger(__name__)
 
@@ -307,43 +314,44 @@ class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-class NestedEnvironmentViewSet(viewsets.GenericViewSet):  # type: ignore[type-arg]
-    model_class = None
+class NestedEnvironmentViewSet(Generic[T], viewsets.GenericViewSet[T]):
+    model_class: Type[T]
     webhook_type = WebhookType.ENVIRONMENT
 
-    def get_queryset(self):  # type: ignore[no-untyped-def]
-        return self.model_class.objects.filter(  # type: ignore[attr-defined]
+    def get_queryset(self) -> QuerySet[T]:
+        return self.model_class.objects.filter(
             environment__api_key=self.kwargs.get("environment_api_key")
         )
 
-    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
-        serializer.save(environment=self._get_environment())  # type: ignore[no-untyped-call]
+    def perform_create(self, serializer: BaseSerializer[T]) -> None:
+        serializer.save(environment=self._get_environment())
 
-    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
-        serializer.save(environment=self._get_environment())  # type: ignore[no-untyped-call]
+    def perform_update(self, serializer: BaseSerializer[T]) -> None:
+        serializer.save(environment=self._get_environment())
 
-    def _get_environment(self):  # type: ignore[no-untyped-def]
-        return Environment.objects.get(api_key=self.kwargs.get("environment_api_key"))
+    def _get_environment(self) -> Environment:
+        environment: Environment = Environment.objects.get(
+            api_key=self.kwargs.get("environment_api_key")
+        )
+        return environment
 
 
 class WebhookViewSet(
-    NestedEnvironmentViewSet,
+    NestedEnvironmentViewSet[Webhook],
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-    model_class = Webhook  # type: ignore[assignment]
-
-    webhook_type = WebhookType.ENVIRONMENT  # type: ignore[assignment]
+    model_class: Type[Webhook] = Webhook
+    webhook_type: WebhookType = WebhookType.ENVIRONMENT
 
 
 class EnvironmentAPIKeyViewSet(
-    NestedEnvironmentViewSet,
+    NestedEnvironmentViewSet[EnvironmentAPIKey],
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -352,4 +360,23 @@ class EnvironmentAPIKeyViewSet(
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
-    model_class = EnvironmentAPIKey  # type: ignore[assignment]
+    model_class: Type[EnvironmentAPIKey] = EnvironmentAPIKey
+
+
+class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
+    permission_classes = [IsAuthenticated, EnvironmentPermissions]
+    lookup_field = "api_key"
+    lookup_url_kwarg = "environment_api_key"
+    serializer_class: type[BaseSerializer[Any]] = EnvironmentMetricsSerializer
+    queryset = Environment.objects.all()
+
+    @swagger_auto_schema(  # type: ignore[misc]
+        operation_description="Get metrics for this environment.",
+        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
+    )
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        environment: Environment = self.get_object()
+        metrics_service = EnvironmentMetricsService(environment)
+        metrics = metrics_service.get_metrics_payload()
+        serializer = self.get_serializer({"metrics": metrics})
+        return Response(serializer.data, status=status.HTTP_200_OK)
