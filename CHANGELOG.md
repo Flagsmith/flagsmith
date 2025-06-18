@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.184.0](https://github.com/Flagsmith/flagsmith/compare/v2.183.0...v2.184.0) (2025-06-18)
+
+
+### Features
+
+* Add `make` shortcut to run both API and worker ([#5565](https://github.com/Flagsmith/flagsmith/issues/5565)) ([c1eed05](https://github.com/Flagsmith/flagsmith/commit/c1eed0563ba479fa1eee6f1ca728b8d09dbdaf1c))
+* Add wait for trigger to release pipelines ([#5523](https://github.com/Flagsmith/flagsmith/issues/5523)) ([c9a287d](https://github.com/Flagsmith/flagsmith/commit/c9a287d7ecbe27e62379ee4e25fb357459e3f00a))
+* frontend-report-environment-metrics ([#5447](https://github.com/Flagsmith/flagsmith/issues/5447)) ([9182c41](https://github.com/Flagsmith/flagsmith/commit/9182c416e1d416f66c9bdeded5e85bd1102053b2))
+* Integrate with Sentry feature flag Change Tracking ([#5531](https://github.com/Flagsmith/flagsmith/issues/5531)) ([4d415a1](https://github.com/Flagsmith/flagsmith/commit/4d415a10cf3e1b171dca9f9b982dd1c3c09f3e01))
+* Release Pipelines UI ([#5509](https://github.com/Flagsmith/flagsmith/issues/5509)) ([461e30b](https://github.com/Flagsmith/flagsmith/commit/461e30b6967b6503886ec879e62dc8c67ee57b43))
+
+
+### Bug Fixes
+
+* deduplicate metrics live features states ([#5571](https://github.com/Flagsmith/flagsmith/issues/5571)) ([7cb3758](https://github.com/Flagsmith/flagsmith/commit/7cb3758ec6d057230d678b2b0df3aa38d9697c59))
+* Fix Sentry Change Tracking response handling ([#5573](https://github.com/Flagsmith/flagsmith/issues/5573)) ([982f0d8](https://github.com/Flagsmith/flagsmith/commit/982f0d861f6b6e3d5db07c000240192716fe9957))
+* handle (ignore) unrecognised analytics data ([#5564](https://github.com/Flagsmith/flagsmith/issues/5564)) ([a2164a6](https://github.com/Flagsmith/flagsmith/commit/a2164a6aa7f020f9f89ff202753ddda58421e384))
+* Handle bad input before checking permission ([#5502](https://github.com/Flagsmith/flagsmith/issues/5502)) ([68f6847](https://github.com/Flagsmith/flagsmith/commit/68f6847c44e5aefa6b8d6a184727c75aee8e653f))
+* use-query-from-workflow-list-change-request ([#5568](https://github.com/Flagsmith/flagsmith/issues/5568)) ([54131af](https://github.com/Flagsmith/flagsmith/commit/54131af71389381241f8cbaa33e130823d34a13d))
+
+
+### Dependency Updates
+
+* bump protobuf from 4.23.4 to 4.25.8 in /api ([#5574](https://github.com/Flagsmith/flagsmith/issues/5574)) ([449ec6f](https://github.com/Flagsmith/flagsmith/commit/449ec6f9e3c0dbbc0eff6022a321ebc83e9e2902))
+
 ## [2.183.0](https://github.com/Flagsmith/flagsmith/compare/v2.182.0...v2.183.0) (2025-06-10)
 
 
