@@ -1,8 +1,8 @@
 import json
-import logging
 from typing import Any
 
 import requests
+import structlog
 from django.core.serializers.json import DjangoJSONEncoder
 
 from audit.models import AuditLog
@@ -11,7 +11,7 @@ from core.signing import sign_payload
 from features.models import FeatureState
 from integrations.common.wrapper import AbstractBaseEventIntegrationWrapper
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger("sentry_change_tracking")
 
 
 class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
@@ -59,17 +59,19 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
                 "id": getattr(audit_log_record.author, "email", "app@flagsmith.com"),
                 "type": "email",
             },
+            "change_id": str(feature_state.pk),
         }
-
-        if action == "updated":
-            inner_payload["change_id"] = str(feature_state.pk)
 
         return inner_payload
 
     def _track_event(self, event: dict[str, Any]) -> None:
         action = event["action"]
         feature_name = event["flag"]
-        logger.debug("Sending '%s' (%s) to Sentry...", feature_name, action)
+
+        log = logger.bind(
+            sentry_action=action,
+            feature_name=feature_name,
+        )
 
         payload = {
             "data": [event],
@@ -82,21 +84,33 @@ class SentryChangeTracking(AbstractBaseEventIntegrationWrapper):
             "X-Sentry-Signature": sign_payload(json_payload, self.secret),
         }
 
-        response = requests.post(
+        log.debug(
+            "sending",
             url=self.webhook_url,
             headers=headers,
-            data=json_payload,
+            payload=payload,
         )
 
         try:
-            response.raise_for_status()
-        except requests.exceptions.RequestException as error:
-            # TODO: Should we retry, or ultimately notify the admin of a persisting issue?
-            logger.error(
-                "Error sending '%s' (%s) to Sentry: %s",
-                feature_name,
-                action,
-                repr(error),
+            response = requests.post(
+                url=self.webhook_url,
+                headers=headers,
+                data=json_payload,
             )
-        else:
-            logger.debug("Sent '%s' (%s) to Sentry", feature_name, action)
+            response.raise_for_status()  # NOTE: This is for future-proofing, as Sentry won't respond 4xx.
+        except requests.exceptions.RequestException as error:
+            log.warning(
+                "request-failure",
+                error=error,
+            )
+            return
+
+        if not response.text:  # This is fragile and undocumented. ¯\_(ツ)_/¯
+            log.info("success")
+            return
+
+        log.warning(
+            "integration-error",
+            sentry_response_status=response.status_code,
+            sentry_response_body=response.text,
+        )

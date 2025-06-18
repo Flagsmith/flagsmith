@@ -1,24 +1,22 @@
 import json
-import logging
 import re
 from datetime import UTC, datetime, timedelta
-from unittest.mock import Mock
+from typing import Any
+from unittest.mock import ANY
 
 import freezegun
 import pytest
-from pytest import LogCaptureFixture
-from pytest_mock import MockerFixture
-from requests.exceptions import RequestException
+from pytest_structlog import StructuredLogCapture
+from responses import RequestsMock
 from rest_framework.test import APIClient
 
 from core.signals import create_audit_log_from_historical_record
 from features.models import FeatureState
-from integrations.sentry.change_tracking import requests  # type: ignore[attr-defined]
 from integrations.sentry.models import SentryChangeTrackingConfiguration
 from users.models import FFAdminUser
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def sentry_configuration(environment: int) -> SentryChangeTrackingConfiguration:
     configuration = SentryChangeTrackingConfiguration(
         environment_id=environment,
@@ -29,23 +27,17 @@ def sentry_configuration(environment: int) -> SentryChangeTrackingConfiguration:
     return configuration
 
 
-@pytest.fixture
-def requests_post(mocker: MockerFixture) -> Mock:
-    return mocker.patch.object(requests, "post")
-
-
 def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    caplog: LogCaptureFixture,
     feature_name: str,
-    mocker: MockerFixture,
+    log: StructuredLogCapture,
     project: int,
-    requests_post: Mock,
+    responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
-    caplog.set_level(logging.DEBUG)
+    responses.post(sentry_configuration.webhook_url, status=200, body="")
 
     # When
     with freezegun.freeze_time("2199-01-01T00:00:00.500000+00:00"):
@@ -58,48 +50,56 @@ def test_sentry_change_tracking__flag_created__sends_update_to_sentry(
         )
 
     # Then
-    assert response.status_code == 201
-    requests_post.assert_called_once_with(
-        url=sentry_configuration.webhook_url,
-        headers={
-            "Content-Type": "application/json",
-            "X-Sentry-Signature": mocker.ANY,
-        },
-        data=json.dumps(
+    assert response.status_code == 201, response.content
+    assert len(responses.calls) == 1
+    create_request = responses.calls[0].request  # type: ignore[union-attr]
+    assert create_request.url == sentry_configuration.webhook_url
+    assert create_request.headers["Content-Type"] == "application/json"
+    assert re.match(r"^[0-9a-f]{64}$", create_request.headers["X-Sentry-Signature"])
+    feature_state_obj = FeatureState.objects.get(feature_id=response.json()["id"])
+    assert json.loads(create_request.body) == {
+        "data": [
             {
-                "data": [
-                    {
-                        "action": "created",
-                        "created_at": "2199-01-01T00:00:00+00:00",
-                        "created_by": {"id": admin_user.email, "type": "email"},
-                        "flag": feature_name,
-                    },
-                ],
-                "meta": {"version": 1},
+                "action": "created",
+                "created_at": "2199-01-01T00:00:00+00:00",
+                "created_by": {"id": admin_user.email, "type": "email"},
+                "change_id": str(feature_state_obj.pk),
+                "flag": feature_name,
             },
-            sort_keys=True,
-        ),
-    )
-    signature = requests_post.call_args[1]["headers"]["X-Sentry-Signature"]
-    assert re.match(r"^[0-9a-f]{64}$", signature)
-    logs = ((record.levelname, record.message) for record in caplog.records)
-    assert ("DEBUG", f"Sending '{feature_name}' (created) to Sentry...") in logs
-    assert ("DEBUG", f"Sent '{feature_name}' (created) to Sentry") in logs
+        ],
+        "meta": {"version": 1},
+    }
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "created",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "created",
+        },
+    ]
 
 
 def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    caplog: LogCaptureFixture,
     environment_api_key: str,
     feature_name: str,
     feature_state: int,
-    mocker: MockerFixture,
-    requests_post: Mock,
+    log: StructuredLogCapture,
+    responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
-    caplog.set_level(logging.DEBUG)
+    responses.post(sentry_configuration.webhook_url, status=200, body="")
 
     # When
     with freezegun.freeze_time("2199-01-01T00:00:00.500000+00:00"):
@@ -110,48 +110,54 @@ def test_sentry_change_tracking__flag_state_change__sends_update_to_sentry(
         )
 
     # Then
-    assert response.status_code == 200
-    requests_post.assert_called_once_with(
-        url=sentry_configuration.webhook_url,
-        headers={
-            "Content-Type": "application/json",
-            "X-Sentry-Signature": mocker.ANY,
-        },
-        data=json.dumps(
+    assert response.status_code == 200, response.content
+    assert len(responses.calls) == 1
+    update_request = responses.calls[0].request  # type: ignore[union-attr]
+    assert update_request.url == sentry_configuration.webhook_url
+    assert update_request.headers["Content-Type"] == "application/json"
+    assert re.match(r"^[0-9a-f]{64}$", update_request.headers["X-Sentry-Signature"])
+    assert json.loads(update_request.body) == {
+        "data": [
             {
-                "data": [
-                    {
-                        "action": "updated",
-                        "created_at": "2199-01-01T00:00:00+00:00",
-                        "created_by": {"id": admin_user.email, "type": "email"},
-                        "change_id": str(feature_state),
-                        "flag": feature_name,
-                    },
-                ],
-                "meta": {"version": 1},
+                "action": "updated",
+                "created_at": "2199-01-01T00:00:00+00:00",
+                "created_by": {"id": admin_user.email, "type": "email"},
+                "change_id": str(feature_state),
+                "flag": feature_name,
             },
-            sort_keys=True,
-        ),
-    )
-    signature = requests_post.call_args[1]["headers"]["X-Sentry-Signature"]
-    assert re.match(r"^[0-9a-f]{64}$", signature)
-    logs = ((record.levelname, record.message) for record in caplog.records)
-    assert ("DEBUG", f"Sending '{feature_name}' (updated) to Sentry...") in logs
-    assert ("DEBUG", f"Sent '{feature_name}' (updated) to Sentry") in logs
+        ],
+        "meta": {"version": 1},
+    }
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "updated",
+        },
+    ]
 
 
 def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
     admin_user: FFAdminUser,
-    caplog: LogCaptureFixture,
     feature_name: str,
     feature_state: int,
-    mocker: MockerFixture,
-    requests_post: Mock,
+    log: StructuredLogCapture,
+    responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
-    caplog.set_level(logging.DEBUG)
     feature_state_obj = FeatureState.objects.get(pk=feature_state)
+    responses.post(sentry_configuration.webhook_url, status=200, body="")
 
     # When
     with freezegun.freeze_time("2199-01-01T00:00:00.500000+00:00"):
@@ -166,7 +172,7 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
         )
 
     # Then
-    assert not requests_post.called  # Yet
+    assert len(responses.calls) == 0  # Not yet
 
     # When
     with freezegun.freeze_time("2199-01-01T01:00:01.500000+00:00"):
@@ -177,99 +183,132 @@ def test_sentry_change_tracking__flag_state_schedule__sends_update_to_sentry(
         )
 
     # Then
-    requests_post.assert_called_once_with(
-        url=sentry_configuration.webhook_url,
-        headers={
-            "Content-Type": "application/json",
-            "X-Sentry-Signature": mocker.ANY,
-        },
-        data=json.dumps(
+    assert len(responses.calls) == 1
+    update_request = responses.calls[0].request  # type: ignore[union-attr]
+    assert update_request.url == sentry_configuration.webhook_url
+    assert update_request.headers["Content-Type"] == "application/json"
+    assert re.match(r"^[0-9a-f]{64}$", update_request.headers["X-Sentry-Signature"])
+    assert json.loads(update_request.body) == {
+        "data": [
             {
-                "data": [
-                    {
-                        "action": "updated",
-                        "created_at": "2199-01-01T01:00:00+00:00",
-                        "created_by": {"id": admin_user.email, "type": "email"},
-                        "change_id": str(feature_state),
-                        "flag": feature_name,
-                    },
-                ],
-                "meta": {"version": 1},
+                "action": "updated",
+                "created_at": "2199-01-01T01:00:00+00:00",
+                "created_by": {"id": admin_user.email, "type": "email"},
+                "change_id": str(feature_state),
+                "flag": feature_name,
             },
-            sort_keys=True,
-        ),
-    )
-    signature = requests_post.call_args[1]["headers"]["X-Sentry-Signature"]
-    assert re.match(r"^[0-9a-f]{64}$", signature)
-    logs = ((record.levelname, record.message) for record in caplog.records)
-    assert ("DEBUG", f"Sending '{feature_name}' (updated) to Sentry...") in logs
-    assert ("DEBUG", f"Sent '{feature_name}' (updated) to Sentry") in logs
+        ],
+        "meta": {"version": 1},
+    }
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "updated",
+        },
+    ]
 
 
 def test_sentry_change_tracking__flag_deleted__sends_update_to_sentry(
     admin_client: APIClient,
     admin_user: FFAdminUser,
-    caplog: LogCaptureFixture,
     environment_api_key: str,
     feature_name: str,
     feature_state: int,
-    mocker: MockerFixture,
-    requests_post: Mock,
+    log: StructuredLogCapture,
+    responses: RequestsMock,
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
-    caplog.set_level(logging.DEBUG)
+    responses.post(sentry_configuration.webhook_url, status=200, body="")
 
     # When
-    with freezegun.freeze_time("2199-01-01T01:00:00+00:00"):
+    with freezegun.freeze_time("2199-01-01T00:00:00+00:00"):
         response = admin_client.delete(
             path=f"/api/v1/environments/{environment_api_key}/featurestates/{feature_state}/",
         )
 
     # Then
-    assert response.status_code == 204
-    requests_post.assert_called_once_with(
-        url=sentry_configuration.webhook_url,
-        headers={
-            "Content-Type": "application/json",
-            "X-Sentry-Signature": mocker.ANY,
-        },
-        data=json.dumps(
+    assert response.status_code == 204, response.content
+    assert len(responses.calls) == 1
+    delete_request = responses.calls[0].request  # type: ignore[union-attr]
+    assert delete_request.url == sentry_configuration.webhook_url
+    assert delete_request.headers["Content-Type"] == "application/json"
+    assert re.match(r"^[0-9a-f]{64}$", delete_request.headers["X-Sentry-Signature"])
+    assert json.loads(delete_request.body) == {
+        "data": [
             {
-                "data": [
-                    {
-                        "action": "deleted",
-                        "created_at": "2199-01-01T01:00:00+00:00",
-                        "created_by": {"id": admin_user.email, "type": "email"},
-                        "flag": feature_name,
-                    },
-                ],
-                "meta": {"version": 1},
+                "action": "deleted",
+                "created_at": "2199-01-01T00:00:00+00:00",
+                "created_by": {"id": admin_user.email, "type": "email"},
+                "change_id": str(feature_state),
+                "flag": feature_name,
             },
-            sort_keys=True,
+        ],
+        "meta": {"version": 1},
+    }
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "deleted",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "event": "success",
+            "feature_name": feature_name,
+            "level": "info",
+            "sentry_action": "deleted",
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    "error_log, sentry_response",
+    [
+        (
+            {"event": "request-failure", "error": ANY},
+            {"status": 502},
         ),
-    )
-    signature = requests_post.call_args[1]["headers"]["X-Sentry-Signature"]
-    assert re.match(r"^[0-9a-f]{64}$", signature)
-    logs = ((record.levelname, record.message) for record in caplog.records)
-    assert ("DEBUG", f"Sending '{feature_name}' (deleted) to Sentry...") in logs
-    assert ("DEBUG", f"Sent '{feature_name}' (deleted) to Sentry") in logs
-
-
+        (
+            {
+                "event": "integration-error",
+                "sentry_response_body": '{"data":[{"change_id":["Field is required."]}]}',
+                "sentry_response_status": 200,
+            },
+            {
+                "status": 200,
+                "body": '{"data":[{"change_id":["Field is required."]}]}',
+            },
+        ),
+    ],
+)
 def test_sentry_change_tracking__failing_integration__fails_gracefully(
     admin_client: APIClient,
-    caplog: LogCaptureFixture,
     environment_api_key: str,
+    error_log: dict[str, Any],
     feature_name: str,
     feature_state: int,
-    mocker: MockerFixture,
-    requests_post: Mock,
+    log: StructuredLogCapture,
+    responses: RequestsMock,
+    sentry_response: dict[str, Any],
     sentry_configuration: SentryChangeTrackingConfiguration,
 ) -> None:
     # Given
-    caplog.set_level(logging.DEBUG)
-    sentry_error = RequestException("Bad Sentry")
-    requests_post.return_value.raise_for_status.side_effect = sentry_error
+    responses.post(sentry_configuration.webhook_url, **sentry_response)
 
     # When
     response = admin_client.patch(
@@ -279,11 +318,22 @@ def test_sentry_change_tracking__failing_integration__fails_gracefully(
     )
 
     # Then
-    assert response.status_code == 200
-    assert requests_post.called
-    logs = ((record.levelname, record.message) for record in caplog.records)
-    assert ("DEBUG", f"Sending '{feature_name}' (updated) to Sentry...") in logs
-    assert (
-        "ERROR",
-        f"Error sending '{feature_name}' (updated) to Sentry: RequestException('Bad Sentry')",
-    ) in logs
+    assert response.status_code == 200, response.content
+    assert len(responses.calls) == 1
+    assert log.events == [
+        {
+            "event": "sending",
+            "feature_name": feature_name,
+            "headers": ANY,
+            "level": "debug",
+            "payload": ANY,
+            "sentry_action": "updated",
+            "url": sentry_configuration.webhook_url,
+        },
+        {
+            "feature_name": feature_name,
+            "level": "warning",
+            "sentry_action": "updated",
+            **error_log,
+        },
+    ]
