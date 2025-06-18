@@ -1,4 +1,4 @@
-from typing import Callable, Literal
+from typing import Callable, Literal, Protocol
 
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
@@ -17,3 +17,16 @@ WithEnvironmentPermissionsCallable = Callable[
 ]
 
 AdminClientAuthType = Literal["user", "master_api_key"]
+
+
+class GetEnvironmentFlagsResponseJSONCallable(Protocol):
+    def __call__(self, num_expected_flags: int) -> dict: ...  # type: ignore[type-arg]
+
+
+class GetIdentityFlagsResponseJSONCallable(Protocol):
+    def __call__(  # type: ignore[no-untyped-def]
+        self,
+        num_expected_flags: int,
+        identity_identifier: str = "test-identity",
+        **traits,
+    ) -> dict: ...  # type: ignore[type-arg]
