@@ -1,8 +1,12 @@
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Literal
 
+from django.db.models import Q
 from django.utils import timezone
 
 from environments.tasks import rebuild_environment_document
+from features.models import FeatureState
+from features.tasks import trigger_feature_state_change_webhooks
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.signals import environment_feature_version_published
 from features.versioning.tasks import trigger_update_version_webhooks
@@ -10,9 +14,15 @@ from features.workflows.core.exceptions import ChangeRequestNotApprovedError
 from segments.models import Segment
 from segments.services import SegmentCloneService
 
+logger = logging.getLogger(__name__)
+
 if TYPE_CHECKING:
     from features.workflows.core.models import ChangeRequest
     from users.models import FFAdminUser
+
+FeatureStateDiff = dict[
+    Literal["new_feature_state", "previous_feature_state"], FeatureState
+]
 
 
 class ChangeRequestCommitService:
@@ -25,14 +35,59 @@ class ChangeRequestCommitService:
                 "Change request has not been approved by all required approvers."
             )
 
+        logger.debug("Committing change request #%d", self.change_request.id)
+
+        feature_states_to_notify = self._get_committed_feature_states_diff()
         self._publish_feature_states()
         self._publish_environment_feature_versions(committed_by)
         self._publish_change_sets(committed_by)
         self._publish_segments()
+        self._notify_committed_changes_webhooks(feature_states_to_notify)
 
         self.change_request.committed_at = timezone.now()
         self.change_request.committed_by = committed_by
         self.change_request.save()
+
+    def _notify_committed_changes_webhooks(
+        self, feature_states: list[FeatureStateDiff]
+    ) -> None:
+        for diff in feature_states:
+            prev = diff["previous_feature_state"]
+
+            trigger_feature_state_change_webhooks(
+                instance=diff["new_feature_state"],
+                previous_instance=prev.history.first(),
+            )
+
+    def _get_committed_feature_states_diff(self) -> list[FeatureStateDiff]:
+        return [
+            {
+                "new_feature_state": fs,
+                "previous_feature_state": prev_fs,
+            }
+            for fs in self.change_request.feature_states.all()
+            if (prev_fs := self._get_previous_version_instance(fs))
+            and prev_fs.version != fs.version
+        ]
+
+    def _get_previous_version_instance(
+        self, feature_state: FeatureState
+    ) -> FeatureState | None:
+        assert feature_state.environment is not None
+        fs_live_version = (
+            FeatureState.objects.get_live_feature_states(
+                environment=feature_state.environment,
+                additional_filters=Q(
+                    feature_id=feature_state.feature_id,
+                    feature_segment_id=feature_state.feature_segment_id,
+                    identity_id=feature_state.identity_id,
+                ),
+            )
+            .order_by("-live_from")
+            .first()
+        )
+
+        return fs_live_version
 
     def _publish_feature_states(self) -> None:
         now = timezone.now()
@@ -49,8 +104,9 @@ class ChangeRequestCommitService:
                 identity_id=fs.identity_id,  # type: ignore[arg-type]
             )
 
-        if feature_states:
-            type(fs).objects.bulk_update(feature_states, ["live_from", "version"])
+        FeatureState.objects.bulk_update(
+            feature_states, fields=["live_from", "version"]
+        )
 
     def _publish_environment_feature_versions(
         self, published_by: "FFAdminUser"
