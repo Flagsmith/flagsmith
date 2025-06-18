@@ -76,7 +76,6 @@ setTimeout(() => {
 
   // redirect before login
   if (!isPublicURL() && !AccountStore.getUser()) {
-    console.log('redirecting')
     API.setRedirect(
       document.location.pathname + (document.location.search || ''),
     )
