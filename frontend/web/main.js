@@ -74,11 +74,6 @@ setTimeout(() => {
     basename: Project.basename || '',
   })
 
-  const isAuthenticated = Project.cookieAuthEnabled
-    ? !!res
-    : AccountStore.getUser()
-  console.log({ isAuthenticated, loaded: AccountStore.getUser() })
-
   // redirect before login
   if (!isPublicURL() && !AccountStore.getUser()) {
     console.log('redirecting')
