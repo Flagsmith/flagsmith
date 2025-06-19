@@ -84,7 +84,31 @@ def test_write_handles_errors(
     # Then
     # The write API was called
     mock_write_api.write.assert_called()
-    # but the exception was not raised
+
+
+def test_influx_db_wrapper_query__http_error__logs_expected(
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    expected_exception = HTTPError("HTTP error occurred")
+    mock_query_api = mocker.patch(
+        "app_analytics.influxdb_wrapper.influxdb_client.query_api",
+        autospec=True,
+    )
+    mock_query_api.return_value.query.side_effect = expected_exception
+    capture_exception_mock = mocker.patch(
+        "app_analytics.influxdb_wrapper.capture_exception",
+        autospec=True,
+    )
+
+    influxdb = InfluxDBWrapper("name")  # type: ignore[no-untyped-call]
+
+    # When
+    result = influxdb.influx_query_manager()
+
+    # Then
+    assert result == []
+    capture_exception_mock.assert_called_once_with(expected_exception)
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -226,10 +250,6 @@ def test_influx_db_query_when_get_multiple_events_for_organisation_then_query_ap
             query=expected_query,
         )
     ]
-
-    # call = mock_query_api.query.mock_calls[0]
-    # assert call[2]["org"] == influx_org
-    # assert call[2]["query"].replace(" ", "").replace("\n", "") == expected_query
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
