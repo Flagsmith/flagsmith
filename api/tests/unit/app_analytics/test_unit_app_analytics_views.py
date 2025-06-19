@@ -2,7 +2,6 @@ import json
 from datetime import date, timedelta
 
 import pytest
-from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
@@ -177,6 +176,7 @@ def test_get_usage_data__previous_billing_period(
     mocker: MockerFixture,
     admin_client_new: APIClient,
     organisation: Organisation,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     settings.INFLUXDB_TOKEN = "test-token"
@@ -356,10 +356,7 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(  # type: ignore[n
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics DB is not configured",
-)
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["default", "analytics"])
 def test_set_sdk_analytics_flags_with_identifier(
     api_client: APIClient,
@@ -401,10 +398,7 @@ def test_set_sdk_analytics_flags_with_identifier(
     assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics DB is not configured",
-)
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["default", "analytics"])
 def test_set_sdk_analytics_flags_without_identifier(
     api_client: APIClient,
