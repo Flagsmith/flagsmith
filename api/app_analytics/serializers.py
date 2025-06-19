@@ -1,4 +1,4 @@
-from typing import Any, get_args
+from typing import TYPE_CHECKING, Any, get_args
 
 from django.conf import settings
 from rest_framework import serializers
@@ -12,31 +12,13 @@ from app_analytics.types import Labels, PeriodType
 from environments.models import Environment
 from features.models import FeatureState
 
-
-class LabelsSerializer(serializers.Serializer[Labels]):
-    def get_fields(self) -> dict[str, serializers.Field[Any, Any, Any, Any]]:
-        return _get_label_fields()
-
-
-class UsageDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
-    flags = serializers.IntegerField()
-    identities = serializers.IntegerField()
-    traits = serializers.IntegerField()
-    environment_document = serializers.IntegerField()
-    day = serializers.CharField()
-    labels = LabelsSerializer(allow_null=True, required=False)
+if TYPE_CHECKING:
+    _SerializerType = serializers.Serializer[Any]
+else:
+    _SerializerType = object
 
 
-class UsageDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
-    project_id = serializers.IntegerField(required=False)
-    environment_id = serializers.IntegerField(required=False)
-    period = serializers.ChoiceField(
-        choices=get_args(PeriodType),
-        allow_null=True,
-        default=None,
-        required=False,
-    )
-
+class LabelsQuerySerializerMixin(_SerializerType):
     def get_fields(self) -> dict[str, serializers.Field[Any, Any, Any, Any]]:
         return {**super().get_fields(), **_get_label_fields()}
 
@@ -53,6 +35,31 @@ class UsageDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg
         }:
             attrs["labels_filter"] = labels_filter
         return attrs
+
+
+class LabelsSerializer(serializers.Serializer[Labels]):
+    def get_fields(self) -> dict[str, serializers.Field[Any, Any, Any, Any]]:
+        return _get_label_fields()
+
+
+class UsageDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
+    flags = serializers.IntegerField()
+    identities = serializers.IntegerField()
+    traits = serializers.IntegerField()
+    environment_document = serializers.IntegerField()
+    day = serializers.CharField()
+    labels = LabelsSerializer(allow_null=True, required=False)
+
+
+class UsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
+    project_id = serializers.IntegerField(required=False)
+    environment_id = serializers.IntegerField(required=False)
+    period = serializers.ChoiceField(
+        choices=get_args(PeriodType),
+        allow_null=True,
+        default=None,
+        required=False,
+    )
 
 
 class UsageTotalCountSerializer(serializers.Serializer):  # type: ignore[type-arg]
