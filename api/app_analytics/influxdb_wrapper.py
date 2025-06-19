@@ -1,3 +1,4 @@
+import json
 import logging
 import typing
 from collections import defaultdict
@@ -7,13 +8,19 @@ from django.conf import settings
 from django.utils import timezone
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.exceptions import InfluxDBError
+from influxdb_client.client.flux_table import FluxTable
 from influxdb_client.client.write_api import SYNCHRONOUS
 from sentry_sdk import capture_exception
 from urllib3 import Retry
 from urllib3.exceptions import HTTPError
 
-from .dataclasses import FeatureEvaluationData, UsageData
-from .influxdb_schema import FeatureEvaluationDataSchema, UsageDataSchema
+from app_analytics.constants import LABELS
+from app_analytics.dataclasses import FeatureEvaluationData, UsageData
+from app_analytics.mappers import (
+    map_flux_tables_to_feature_evaluation_data,
+    map_flux_tables_to_usage_data,
+)
+from app_analytics.types import Labels
 
 logger = logging.getLogger(__name__)
 
@@ -88,14 +95,14 @@ class InfluxDBWrapper:
             )
 
     @staticmethod
-    def influx_query_manager(  # type: ignore[no-untyped-def]
+    def influx_query_manager(
         date_start: datetime | None = None,
         date_stop: datetime | None = None,
-        drop_columns: typing.Tuple[str, ...] = DEFAULT_DROP_COLUMNS,
+        drop_columns: tuple[str, ...] = DEFAULT_DROP_COLUMNS,
         filters: str = "|> filter(fn:(r) => r._measurement == 'api_call')",
         extra: str = "",
         bucket: str = read_bucket,
-    ):
+    ) -> list[FluxTable]:
         now = timezone.now()
         if date_start is None:
             date_start = now - timedelta(days=30)
@@ -114,14 +121,13 @@ class InfluxDBWrapper:
             f'from(bucket:"{bucket}")'
             f" |> range(start: {date_start.isoformat()}, stop: {date_stop.isoformat()})"
             f" {filters}"
-            f" |> drop(columns: {drop_columns_input})"
+            f" |> drop(columns: {drop_columns_input}) "
             f"{extra}"
         )
         logger.debug("Running query in influx: \n\n %s", query)
 
         try:
-            result = query_api.query(org=influx_org, query=query)
-            return result
+            return query_api.query(org=influx_org, query=query)
         except HTTPError as e:
             capture_exception(e)
             return []
@@ -193,8 +199,10 @@ def get_event_list_for_organisation(
         date_stop = now
 
     results = InfluxDBWrapper.influx_query_manager(
-        filters=f'|> filter(fn:(r) => r._measurement == "api_call") \
-                  |> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")',
+        filters=(
+            '|> filter(fn:(r) => r._measurement == "api_call") '
+            f'|> filter(fn: (r) => r["organisation_id"] == "{organisation_id}")'
+        ),
         extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
         date_start=date_start,
         date_stop=date_stop,
@@ -214,10 +222,11 @@ def get_event_list_for_organisation(
 
 def get_multiple_event_list_for_organisation(
     organisation_id: int,
-    project_id: int = None,  # type: ignore[assignment]
-    environment_id: int = None,  # type: ignore[assignment]
+    project_id: int | None = None,
+    environment_id: int | None = None,
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
+    labels_filter: Labels | None = None,
 ) -> list[UsageData]:
     """
     Query influx db for usage for given organisation id
@@ -246,23 +255,20 @@ def get_multiple_event_list_for_organisation(
     if environment_id:
         filters.append(f'r["environment_id"] == "{environment_id}"')
 
+    if labels_filter:
+        filters += [f'r["{key}"] == "{value}"' for key, value in labels_filter.items()]
+
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
         date_stop=date_stop,
         filters=build_filter_string(filters),
-        extra='|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")',
+        extra=(
+            f"|> group(columns: {json.dumps(LABELS)}) "
+            '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
+        ),
     )
-    if not results:
-        return results  # type: ignore[no-any-return]
 
-    dataset = [{} for _ in range(len(results[0].records))]  # type: ignore[var-annotated]
-
-    for result in results:
-        for i, record in enumerate(result.records):
-            dataset[i][record.values["resource"].capitalize()] = record.values["_value"]
-            dataset[i]["name"] = record.values["_time"].strftime("%Y-%m-%d")
-
-    return dataset  # type: ignore[return-value]
+    return map_flux_tables_to_usage_data(results)
 
 
 def get_usage_data(
@@ -271,6 +277,7 @@ def get_usage_data(
     environment_id: int | None = None,
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
+    labels_filter: Labels | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
     if date_start is None:
@@ -279,14 +286,14 @@ def get_usage_data(
     if date_stop is None:
         date_stop = now
 
-    events_list = get_multiple_event_list_for_organisation(
+    return get_multiple_event_list_for_organisation(
         organisation_id=organisation_id,
-        project_id=project_id,  # type: ignore[arg-type]
-        environment_id=environment_id,  # type: ignore[arg-type]
+        project_id=project_id,
+        environment_id=environment_id,
         date_start=date_start,
         date_stop=date_stop,
+        labels_filter=labels_filter,
     )
-    return UsageDataSchema(many=True).load(events_list)  # type: ignore[no-any-return,arg-type]
 
 
 def get_multiple_event_list_for_feature(
@@ -294,22 +301,11 @@ def get_multiple_event_list_for_feature(
     feature_name: str,
     date_start: datetime | None = None,
     aggregate_every: str = "24h",
-) -> list[dict]:  # type: ignore[type-arg]
+    labels_filter: Labels | None = None,
+) -> list[FeatureEvaluationData]:
     """
     Get aggregated request data for the given feature in a given environment across
     all time, aggregated into time windows of length defined by the period argument.
-
-    Example data structure
-    [
-        {
-            "first_feature_name": 13,  // feature name and number of requests
-            "datetime": '2020-12-18'
-        },
-        {
-            "first_feature_name": 15,
-            "datetime": '2020-11-18'  // 30 days prior
-        }
-    ]
 
     :param environment_id: an id of the environment to get usage for
     :param feature_name: the name of the feature to get usage for
@@ -322,42 +318,46 @@ def get_multiple_event_list_for_feature(
     if date_start is None:
         date_start = now - timedelta(days=30)
 
+    filters = (
+        '|> filter(fn:(r) => r._measurement == "feature_evaluation") '
+        '|> filter(fn: (r) => r["_field"] == "request_count") '
+        f'|> filter(fn: (r) => r["environment_id"] == "{environment_id}") '
+        f'|> filter(fn: (r) => r["feature_id"] == "{feature_name}")'
+    )
+
+    if labels_filter:
+        filters += " " + build_filter_string(
+            [f'r["{key}"] == "{value}"' for key, value in labels_filter.items()]
+        )
+
     results = InfluxDBWrapper.influx_query_manager(
         date_start=date_start,
-        filters=f'|> filter(fn:(r) => r._measurement == "feature_evaluation") \
-                  |> filter(fn: (r) => r["_field"] == "request_count") \
-                  |> filter(fn: (r) => r["environment_id"] == "{environment_id}") \
-                  |> filter(fn: (r) => r["feature_id"] == "{feature_name}")',
-        extra=f'|> aggregateWindow(every: {aggregate_every}, fn: sum, createEmpty: false, timeSrc: "_start") \
-                   |> yield(name: "sum")',
+        filters=filters,
+        extra=(
+            f"|> group(columns: {json.dumps(LABELS)}) "
+            f'|> aggregateWindow(every: {aggregate_every}, fn: sum, createEmpty: false, timeSrc: "_start") '
+            '|> yield(name: "sum")'
+        ),
     )
-    if not results:
-        return []
 
-    dataset = [{} for _ in range(len(results[0].records))]  # type: ignore[var-annotated]
-
-    # Iterating over Influx data looking for feature_id, and adding proper requests value and datetime to it
-    # todo move it to marshmallow schema
-    for result in results:
-        for i, record in enumerate(result.records):
-            dataset[i][record.values["feature_id"]] = record.values["_value"]
-            dataset[i]["datetime"] = record.values["_time"].strftime("%Y-%m-%d")
-
-    return dataset
+    return map_flux_tables_to_feature_evaluation_data(results)
 
 
 def get_feature_evaluation_data(
-    feature_name: str, environment_id: int, period: str = "30d"
-) -> typing.List[FeatureEvaluationData]:
+    feature_name: str,
+    environment_id: int,
+    period: str = "30d",
+    labels_filter: Labels | None = None,
+) -> list[FeatureEvaluationData]:
     assert period.endswith("d")
     days = int(period[:-1])
     date_start = timezone.now() - timedelta(days=days)
-    data = get_multiple_event_list_for_feature(
+    return get_multiple_event_list_for_feature(
         feature_name=feature_name,
         environment_id=environment_id,
         date_start=date_start,
+        labels_filter=labels_filter,
     )
-    return FeatureEvaluationDataSchema(many=True).load(data)  # type: ignore[no-any-return]
 
 
 def get_top_organisations(

@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 from django.conf import settings
 from django.db.models import Q, Sum
+from django.db.models.query import QuerySet
 from django.utils import timezone
 from task_processor.decorators import (
     register_recurring_task,
@@ -18,13 +19,15 @@ from app_analytics.models import (
     Resource,
 )
 from app_analytics.track import (
-    track_feature_evaluation_influxdb as track_feature_evaluation_influxdb_service,
+    track_feature_evaluation_influxdb,
+    track_request_influxdb,
 )
 from app_analytics.track import (
     track_feature_evaluation_influxdb_v2 as track_feature_evaluation_influxdb_v2_service,
 )
-from app_analytics.track import (
-    track_request_influxdb,
+from app_analytics.types import (
+    FeatureEvaluationKey,
+    Labels,
 )
 from environments.models import Environment
 
@@ -37,11 +40,11 @@ if settings.USE_POSTGRES_FOR_ANALYTICS:  # pragma: no cover
             "run_every": 60,
         },
     )
-    def populate_bucket(  # type: ignore[no-untyped-def]
+    def populate_bucket(
         bucket_size: int,
         run_every: int,
-        source_bucket_size: int = None,  # type: ignore[assignment]
-    ):
+        source_bucket_size: int | None = None,
+    ) -> None:
         populate_api_usage_bucket(bucket_size, run_every, source_bucket_size)
         populate_feature_evaluation_bucket(bucket_size, run_every, source_bucket_size)
 
@@ -91,20 +94,27 @@ def track_feature_evaluation_v2(
 
 
 @register_task_handler()
-def track_feature_evaluation(
+def track_feature_evaluations_by_environment(
     environment_id: int,
-    feature_evaluations: dict[str, int],
+    feature_evaluations: list[tuple[FeatureEvaluationKey, int]],
 ) -> None:
-    feature_evaluation_objects = []
-    for feature_name, evaluation_count in feature_evaluations.items():
-        feature_evaluation_objects.append(
-            FeatureEvaluationRaw(
-                feature_name=feature_name,
-                environment_id=environment_id,
-                evaluation_count=evaluation_count,
+    if settings.USE_POSTGRES_FOR_ANALYTICS:
+        feature_evaluation_objects = []
+        for (feature_name, labels), evaluation_count in feature_evaluations:
+            feature_evaluation_objects.append(
+                FeatureEvaluationRaw(
+                    feature_name=feature_name,
+                    environment_id=environment_id,
+                    evaluation_count=evaluation_count,
+                    labels=dict(labels),
+                )
             )
+        FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
+    elif settings.INFLUXDB_TOKEN:
+        track_feature_evaluation_influxdb(
+            environment_id=environment_id,
+            feature_evaluations=feature_evaluations,
         )
-    FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
 
 
 @register_task_handler()
@@ -113,15 +123,18 @@ def track_request(
     host: str,
     environment_key: str,
     count: int = 1,
+    labels: Labels | None = None,
 ) -> None:
     if environment := Environment.get_from_cache(environment_key):
         resource = Resource(resource)
+        labels = labels or {}
         if settings.USE_POSTGRES_FOR_ANALYTICS:
             APIUsageRaw.objects.create(
                 resource=resource,
                 host=host,
                 environment_id=environment.id,
                 count=count,
+                labels=labels,
             )
         elif settings.INFLUXDB_TOKEN:
             track_request_influxdb(
@@ -129,12 +142,9 @@ def track_request(
                 host=host,
                 environment=environment,
                 count=count,
+                labels=labels,
             )
 
-
-track_feature_evaluation_influxdb = register_task_handler()(
-    track_feature_evaluation_influxdb_service
-)
 
 track_feature_evaluation_influxdb_v2 = register_task_handler()(
     track_feature_evaluation_influxdb_v2_service
@@ -163,18 +173,18 @@ def get_time_buckets(
     for i in range(num_of_buckets):
         # NOTE: we start processing from `current - 1` buckets since the current bucket is
         # still open
-        end_time = start_of_first_bucket - timezone.timedelta(minutes=bucket_size * i)  # type: ignore[attr-defined]
-        start_time = end_time - timezone.timedelta(minutes=bucket_size)  # type: ignore[attr-defined]
+        end_time = start_of_first_bucket - timedelta(minutes=bucket_size * i)
+        start_time = end_time - timedelta(minutes=bucket_size)
         time_buckets.append((start_time, end_time))
 
     return time_buckets
 
 
-def populate_api_usage_bucket(  # type: ignore[no-untyped-def]
+def populate_api_usage_bucket(
     bucket_size: int,
     run_every: int,
-    source_bucket_size: int = None,  # type: ignore[assignment]
-):
+    source_bucket_size: int | None = None,
+) -> None:
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_api_usage_source_data(
             bucket_start_time, bucket_end_time, source_bucket_size
@@ -186,14 +196,15 @@ def populate_api_usage_bucket(  # type: ignore[no-untyped-def]
                 resource=row["resource"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
+                labels=row["labels"],
             )
 
 
-def populate_feature_evaluation_bucket(  # type: ignore[no-untyped-def]
+def populate_feature_evaluation_bucket(
     bucket_size: int,
     run_every: int,
-    source_bucket_size: int = None,  # type: ignore[assignment]
-):
+    source_bucket_size: int | None = None,
+) -> None:
     for bucket_start_time, bucket_end_time in get_time_buckets(bucket_size, run_every):
         data = _get_feature_evaluation_source_data(
             bucket_start_time, bucket_end_time, source_bucket_size
@@ -205,50 +216,53 @@ def populate_feature_evaluation_bucket(  # type: ignore[no-untyped-def]
                 feature_name=row["feature_name"],
                 bucket_size=bucket_size,
                 created_at=bucket_start_time,
+                labels=row["labels"],
             )
 
 
 def _get_api_usage_source_data(
     process_from: datetime,
     process_till: datetime,
-    source_bucket_size: int = None,  # type: ignore[assignment]
-) -> dict:  # type: ignore[type-arg]
+    source_bucket_size: int | None = None,
+) -> QuerySet[APIUsageRaw | APIUsageBucket, dict[str, Any]]:
     filters = Q(
         created_at__lte=process_till,
         created_at__gt=process_from,
     )
     if source_bucket_size:
         return (
-            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)  # type: ignore[return-value]
-            .values("environment_id", "resource")
+            APIUsageBucket.objects.filter(filters, bucket_size=source_bucket_size)
+            .values("environment_id", "resource", "labels")
             .annotate(count=Sum("total_count"))
         )
     return (
-        APIUsageRaw.objects.filter(filters)  # type: ignore[return-value]
-        .values("environment_id", "resource")
-        .annotate(count=Sum("count"))
+        APIUsageRaw.objects.filter(filters)
+        .values("environment_id", "resource", "labels")
+        .annotate(
+            count=Sum("count"),
+        )
     )
 
 
 def _get_feature_evaluation_source_data(
     process_from: datetime,
     process_till: datetime,
-    source_bucket_size: int = None,  # type: ignore[assignment]
-) -> dict:  # type: ignore[type-arg]
+    source_bucket_size: int | None = None,
+) -> QuerySet[FeatureEvaluationRaw | FeatureEvaluationBucket, dict[str, Any]]:
     filters = Q(
         created_at__lte=process_till,
         created_at__gt=process_from,
     )
     if source_bucket_size:
         return (
-            FeatureEvaluationBucket.objects.filter(  # type: ignore[return-value]
+            FeatureEvaluationBucket.objects.filter(
                 filters, bucket_size=source_bucket_size
             )
-            .values("environment_id", "feature_name")
+            .values("environment_id", "feature_name", "labels")
             .annotate(count=Sum("total_count"))
         )
     return (
-        FeatureEvaluationRaw.objects.filter(filters)  # type: ignore[return-value]
-        .values("environment_id", "feature_name")
+        FeatureEvaluationRaw.objects.filter(filters)
+        .values("environment_id", "feature_name", "labels")
         .annotate(count=Sum("evaluation_count"))
     )

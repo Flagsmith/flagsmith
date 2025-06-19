@@ -52,7 +52,10 @@ def test_sdk_analytics_ignores_bad_data(
     assert mocked_feature_eval_cache.track_feature_evaluation.call_count == 1
 
     mocked_feature_eval_cache.track_feature_evaluation.assert_called_once_with(
-        environment.id, feature.name, data[feature.name]
+        environment_id=environment.id,
+        feature_name=feature.name,
+        evaluation_count=data[feature.name],
+        labels={},
     )
 
 
@@ -81,6 +84,7 @@ def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
         {
             "flags": 10,
@@ -88,6 +92,7 @@ def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
     ]
     mocked_get_usage_data.assert_called_once_with(organisation, period=None)
@@ -95,11 +100,14 @@ def test_get_usage_data(mocker, admin_client, organisation):  # type: ignore[no-
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
 def test_get_usage_data__current_billing_period(
+    settings: SettingsWrapper,
     mocker: MockerFixture,
     admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
+    settings.INFLUXDB_TOKEN = "test-token"
+
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
     url += f"?period={CURRENT_BILLING_PERIOD}"
 
@@ -108,7 +116,11 @@ def test_get_usage_data__current_billing_period(
         autospec=True,
         return_value=[
             UsageData(flags=10, day=date.today()),
-            UsageData(flags=10, day=date.today() - timedelta(days=1)),
+            UsageData(
+                flags=10,
+                day=date.today() - timedelta(days=1),
+                labels={"client_application_name": "test-app"},
+            ),
         ],
     )
 
@@ -135,6 +147,7 @@ def test_get_usage_data__current_billing_period(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
         {
             "flags": 10,
@@ -142,6 +155,10 @@ def test_get_usage_data__current_billing_period(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": {
+                "client_application_name": "test-app",
+                "client_application_version": None,
+            },
         },
     ]
 
@@ -151,6 +168,7 @@ def test_get_usage_data__current_billing_period(
         project_id=None,
         date_start=four_weeks_ago,
         date_stop=now,
+        labels_filter=None,
     )
 
 
@@ -161,6 +179,8 @@ def test_get_usage_data__previous_billing_period(
     organisation: Organisation,
 ) -> None:
     # Given
+    settings.INFLUXDB_TOKEN = "test-token"
+
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
     url += f"?period={PREVIOUS_BILLING_PERIOD}"
 
@@ -197,6 +217,7 @@ def test_get_usage_data__previous_billing_period(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
         {
             "flags": 10,
@@ -204,6 +225,7 @@ def test_get_usage_data__previous_billing_period(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
     ]
 
@@ -213,16 +235,20 @@ def test_get_usage_data__previous_billing_period(
         project_id=None,
         date_start=target_start_at,
         date_stop=four_weeks_ago,
+        labels_filter=None,
     )
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
 def test_get_usage_data__ninety_day_period(
+    settings: SettingsWrapper,
     mocker: MockerFixture,
     admin_client_new: APIClient,
     organisation: Organisation,
 ) -> None:
     # Given
+    settings.INFLUXDB_TOKEN = "test-token"
+
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
     url += f"?period={NINETY_DAY_PERIOD}"
 
@@ -259,6 +285,7 @@ def test_get_usage_data__ninety_day_period(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
         {
             "flags": 10,
@@ -266,6 +293,7 @@ def test_get_usage_data__ninety_day_period(
             "identities": 0,
             "traits": 0,
             "environment_document": 0,
+            "labels": None,
         },
     ]
 
@@ -275,6 +303,7 @@ def test_get_usage_data__ninety_day_period(
         project_id=None,
         date_start=ninety_days_ago,
         date_stop=now,
+        labels_filter=None,
     )
 
 
@@ -495,5 +524,8 @@ def test_sdk_analytics_flags_v1(
     # Then
     assert response.status_code == status.HTTP_200_OK
     mocked_feature_evaluation_cache.track_feature_evaluation.assert_called_once_with(
-        environment.id, feature.name, feature_request_count
+        environment_id=environment.id,
+        feature_name=feature.name,
+        evaluation_count=feature_request_count,
+        labels={},
     )

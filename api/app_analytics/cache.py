@@ -6,15 +6,20 @@ from django.utils import timezone
 
 from app_analytics.models import Resource
 from app_analytics.tasks import (
-    track_feature_evaluation,
-    track_feature_evaluation_influxdb,
+    track_feature_evaluations_by_environment,
     track_request,
+)
+from app_analytics.types import (
+    APIUsageCacheKey,
+    FeatureEvaluationCacheKey,
+    FeatureEvaluationKey,
+    Labels,
 )
 
 
 class APIUsageCache:
     def __init__(self) -> None:
-        self._cache: dict[tuple[Resource, str, str], int] = {}
+        self._cache: dict[APIUsageCacheKey, int] = {}
         self._last_flushed_at = timezone.now()
         self._lock = Lock()
 
@@ -22,10 +27,11 @@ class APIUsageCache:
         for key, value in self._cache.items():
             track_request.run_in_thread(
                 kwargs={
-                    "resource": key[0].value,
-                    "host": key[1],
-                    "environment_key": key[2],
+                    "resource": key.resource.value,
+                    "host": key.host,
+                    "environment_key": key.environment_key,
                     "count": value,
+                    "labels": dict(key.labels),
                 }
             )
 
@@ -37,8 +43,14 @@ class APIUsageCache:
         resource: Resource,
         host: str,
         environment_key: str,
+        labels: Labels,
     ) -> None:
-        key = (resource, host, environment_key)
+        key = APIUsageCacheKey(
+            resource=resource,
+            host=host,
+            environment_key=environment_key,
+            labels=tuple(sorted(labels.items())),
+        )
         with self._lock:
             if key not in self._cache:
                 self._cache[key] = 1
@@ -51,40 +63,47 @@ class APIUsageCache:
 
 
 class FeatureEvaluationCache:
-    def __init__(self):  # type: ignore[no-untyped-def]
-        self._cache = {}
+    def __init__(self) -> None:
+        self._cache: dict[FeatureEvaluationCacheKey, int] = {}
         self._last_flushed_at = timezone.now()
         self._lock = Lock()
 
-    def _flush(self):  # type: ignore[no-untyped-def]
-        evaluation_data = defaultdict(dict)  # type: ignore[var-annotated]
-        for (environment_id, feature_name), eval_count in self._cache.items():
-            evaluation_data[environment_id][feature_name] = eval_count
+    def _flush(self) -> None:
+        evaluation_data: dict[int, dict[FeatureEvaluationKey, int]] = defaultdict(dict)
+        for (
+            cache_key,
+            eval_count,
+        ) in self._cache.items():
+            key = FeatureEvaluationKey(
+                feature_name=cache_key.feature_name,
+                labels=cache_key.labels,
+            )
+            evaluation_data[cache_key.environment_id][key] = eval_count
 
+        # Schedule evaluation tracking by environment
         for environment_id, feature_evaluations in evaluation_data.items():
-            if settings.USE_POSTGRES_FOR_ANALYTICS:
-                track_feature_evaluation.delay(
-                    kwargs={
-                        "environment_id": environment_id,
-                        "feature_evaluations": feature_evaluations,
-                    }
-                )
-
-            elif settings.INFLUXDB_TOKEN:
-                track_feature_evaluation_influxdb.delay(
-                    kwargs={
-                        "environment_id": environment_id,
-                        "feature_evaluations": feature_evaluations,
-                    }
-                )
+            track_feature_evaluations_by_environment.delay(
+                kwargs={
+                    "environment_id": environment_id,
+                    "feature_evaluations": list(feature_evaluations.items()),
+                }
+            )
 
         self._cache = {}
         self._last_flushed_at = timezone.now()
 
-    def track_feature_evaluation(  # type: ignore[no-untyped-def]
-        self, environment_id: int, feature_name: str, evaluation_count: int
-    ):
-        key = (environment_id, feature_name)
+    def track_feature_evaluation(
+        self,
+        environment_id: int,
+        feature_name: str,
+        evaluation_count: int,
+        labels: Labels,
+    ) -> None:
+        key = FeatureEvaluationCacheKey(
+            feature_name=feature_name,
+            environment_id=environment_id,
+            labels=tuple((sorted(labels.items()))),
+        )
         with self._lock:
             if key not in self._cache:
                 self._cache[key] = evaluation_count
@@ -94,4 +113,4 @@ class FeatureEvaluationCache:
             if (
                 timezone.now() - self._last_flushed_at
             ).seconds > settings.FEATURE_EVALUATION_CACHE_SECONDS:
-                self._flush()  # type: ignore[no-untyped-call]
+                self._flush()
