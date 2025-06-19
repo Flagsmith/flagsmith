@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import pytest
-from django.conf import settings
 from django.utils import timezone
 from freezegun.api import FrozenDateTimeFactory
 from pytest_django.fixtures import SettingsWrapper
@@ -24,10 +23,7 @@ from app_analytics.tasks import (
 from app_analytics.types import FeatureEvaluationKey
 from environments.models import Environment
 
-if "analytics" not in settings.DATABASES:
-    pytest.skip(
-        "Skip test if analytics database is configured", allow_module_level=True
-    )
+pytestmark = pytest.mark.skip_if_no_analytics_db
 
 
 def _create_api_usage_event(environment_id: int, when: datetime) -> APIUsageRaw:
