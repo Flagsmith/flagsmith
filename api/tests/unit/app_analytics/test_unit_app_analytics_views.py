@@ -307,6 +307,55 @@ def test_get_usage_data__ninety_day_period(
     )
 
 
+def test_get_usage_data__labels_filter__returns_expected(
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    today = date.today()
+
+    url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
+    url += "?client_application_name=test-app"
+
+    mocked_get_usage_data = mocker.patch(
+        "app_analytics.views.get_usage_data",
+        autospec=True,
+        return_value=[
+            UsageData(
+                flags=10,
+                day=today,
+                labels={"client_application_name": "test-app"},
+            ),
+        ],
+    )
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "flags": 10,
+            "day": str(today),
+            "identities": 0,
+            "traits": 0,
+            "environment_document": 0,
+            "labels": {
+                "client_application_name": "test-app",
+                "client_application_version": None,
+            },
+        },
+    ]
+
+    mocked_get_usage_data.assert_called_once_with(
+        organisation=organisation,
+        period=None,
+        labels_filter={"client_application_name": "test-app"},
+    )
+
+
 def test_get_usage_data_for_non_admin_user_returns_403(  # type: ignore[no-untyped-def]
     mocker, test_user_client, organisation
 ):
