@@ -1,7 +1,6 @@
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
-from django.conf import settings
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -14,10 +13,8 @@ from app_analytics.analytics_db_service import (
     get_usage_data,
     get_usage_data_from_local_db,
 )
-from app_analytics.constants import (
-    CURRENT_BILLING_PERIOD,
-    PREVIOUS_BILLING_PERIOD,
-)
+from app_analytics.constants import CURRENT_BILLING_PERIOD, PREVIOUS_BILLING_PERIOD
+from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.models import (
     APIUsageBucket,
     FeatureEvaluationBucket,
@@ -47,10 +44,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
     )
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics database is configured",
-)
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
     environment_id = environment.id
@@ -108,10 +102,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):  # t
         assert data.day == today - timedelta(days=29 - count)
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics database is configured",
-)
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]
     organisation: Organisation,
@@ -159,10 +150,127 @@ def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-unty
     assert list(usage_data_for_project_two)[0].flags == total_count  # 1 environment
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics database is configured",
-)
+@pytest.mark.skip_if_no_analytics_db
+@pytest.mark.django_db(databases=["analytics", "default"])
+def test_get_usage_data_from_local_db__environment_filter__returns_expected(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    environment_id = environment.id
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+
+    bucket_created_at = now - timedelta(days=1)
+    earlier_bucket_created_at = bucket_created_at - timedelta(minutes=read_bucket_size)
+
+    APIUsageBucket.objects.create(
+        environment_id=environment_id,
+        resource=Resource.FLAGS,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=bucket_created_at,
+    )
+    APIUsageBucket.objects.create(
+        environment_id=99999,
+        resource=Resource.FLAGS,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=earlier_bucket_created_at,
+    )
+
+    # When
+    usage_data_list = get_usage_data_from_local_db(organisation, environment_id)
+
+    # Then
+    assert usage_data_list == [
+        UsageData(
+            day=bucket_created_at.date(),
+            flags=10,
+            traits=0,
+            identities=0,
+            environment_document=0,
+            labels={},
+        ),
+    ]
+
+
+@pytest.mark.skip_if_no_analytics_db
+@pytest.mark.django_db(databases=["analytics", "default"])
+def test_get_usage_data_from_local_db__labels_filter__returns_expected(
+    organisation: Organisation,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    environment_id = environment.id
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+
+    bucket_created_at = now - timedelta(days=1)
+    earlier_bucket_created_at = bucket_created_at - timedelta(minutes=read_bucket_size)
+
+    APIUsageBucket.objects.create(
+        environment_id=environment_id,
+        resource=Resource.FLAGS,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=bucket_created_at,
+        labels={
+            "client_application_name": "test-app",
+            "client_application_version": "1.0.0",
+        },
+    )
+    APIUsageBucket.objects.create(
+        environment_id=environment_id,
+        resource=Resource.FLAGS,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=earlier_bucket_created_at,
+        labels={"client_application_name": "test-app"},
+    )
+    APIUsageBucket.objects.create(
+        environment_id=environment_id,
+        resource=Resource.FLAGS,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=earlier_bucket_created_at,
+        labels={"client_application_name": "another-test-app"},
+    )
+
+    # When
+    usage_data_list = get_usage_data_from_local_db(
+        organisation, labels_filter={"client_application_name": "test-app"}
+    )
+
+    # Then
+    assert usage_data_list == [
+        UsageData(
+            day=bucket_created_at.date(),
+            flags=10,
+            traits=0,
+            identities=0,
+            environment_document=0,
+            labels={"client_application_name": "test-app"},
+        ),
+        UsageData(
+            day=earlier_bucket_created_at.date(),
+            flags=10,
+            traits=0,
+            identities=0,
+            environment_document=0,
+            labels={
+                "client_application_name": "test-app",
+                "client_application_version": "1.0.0",
+            },
+        ),
+    ]
+
+
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -214,14 +322,13 @@ def test_get_total_events_count(organisation, environment, settings):  # type: i
     assert total_events_count == 20 * len(Resource) * 30
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics database is configured",
-)
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["analytics", "default"])
-def test_get_feature_evaluation_data_from_local_db(  # type: ignore[no-untyped-def]
-    feature: Feature, environment: Environment, settings: SettingsWrapper
-):
+def test_get_feature_evaluation_data_from_local_db(
+    feature: Feature,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
     environment_id = environment.id
     feature_name = feature.name
     now = timezone.now()
@@ -284,6 +391,76 @@ def test_get_feature_evaluation_data_from_local_db(  # type: ignore[no-untyped-d
         assert data.day == today - timedelta(days=29 - i)
 
 
+@pytest.mark.skip_if_no_analytics_db
+@pytest.mark.django_db(databases=["analytics", "default"])
+def test_get_feature_evaluation_data_from_local_db__labels_filter__returns_expected(
+    feature: Feature,
+    environment: Environment,
+    settings: SettingsWrapper,
+) -> None:
+    # Given
+    environment_id = environment.id
+    feature_name = feature.name
+    now = timezone.now()
+    read_bucket_size = 15
+    settings.ANALYTICS_BUCKET_SIZE = read_bucket_size
+
+    bucket_created_at = now - timedelta(days=1)
+    earlier_bucket_created_at = bucket_created_at - timedelta(minutes=read_bucket_size)
+
+    FeatureEvaluationBucket.objects.create(
+        environment_id=environment_id,
+        feature_name=feature_name,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=bucket_created_at,
+        labels={
+            "client_application_name": "test-app",
+            "client_application_version": "1.0.0",
+        },
+    )
+    FeatureEvaluationBucket.objects.create(
+        environment_id=environment_id,
+        feature_name=feature_name,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=earlier_bucket_created_at,
+        labels={"client_application_name": "test-app"},
+    )
+    FeatureEvaluationBucket.objects.create(
+        environment_id=environment_id,
+        feature_name=feature_name,
+        total_count=10,
+        bucket_size=read_bucket_size,
+        created_at=earlier_bucket_created_at,
+        labels={"client_application_name": "another-test-app"},
+    )
+
+    # When
+    usage_data_list = get_feature_evaluation_data_from_local_db(
+        feature,
+        environment_id,
+        labels_filter={"client_application_name": "test-app"},
+    )
+
+    # Then
+    assert usage_data_list == [
+        FeatureEvaluationData(
+            day=earlier_bucket_created_at.date(),
+            count=10,
+            labels={"client_application_name": "test-app"},
+        ),
+        FeatureEvaluationData(
+            day=bucket_created_at.date(),
+            count=10,
+            labels={
+                "client_application_name": "test-app",
+                "client_application_version": "1.0.0",
+            },
+        ),
+    ]
+
+
 def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -335,6 +512,33 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_config
         date_stop=None,
         labels_filter=None,
     )
+
+
+def test_get_usage_data__no_analytics_configured__no_calls_expected(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    organisation: Organisation,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = None
+
+    mocked_get_usage_data_from_influxdb = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_influxdb",
+        autospec=True,
+    )
+    mocked_get_usage_data_from_local_db = mocker.patch(
+        "app_analytics.analytics_db_service.get_usage_data_from_local_db",
+        autospec=True,
+    )
+
+    # When
+    result = get_usage_data(organisation)
+
+    # Then
+    assert result == []
+    mocked_get_usage_data_from_influxdb.assert_not_called()
+    mocked_get_usage_data_from_local_db.assert_not_called()
 
 
 def test_get_total_events_count_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
