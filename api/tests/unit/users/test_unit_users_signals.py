@@ -1,6 +1,5 @@
 import pytest
 
-from users.models import FFAdminUser
 from users.signals import warn_insecure
 
 
