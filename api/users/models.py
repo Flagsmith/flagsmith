@@ -1,7 +1,7 @@
 import logging
 import typing
 import uuid
-
+from users.constants import ALLOWED_UTM_KEYS
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -469,6 +469,38 @@ class HubspotTracker(models.Model):
         related_name="hubspot_tracker",
         on_delete=models.CASCADE,
     )
-    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
+    hubspot_cookie = models.CharField(
+        unique=True,
+        max_length=100,
+        null=True,
+        blank=True,
+    )
+    utm_source = models.CharField(max_length=256, null=True, blank=True)
+    utm_medium = models.CharField(max_length=256, null=True, blank=True)
+    utm_campaign = models.CharField(max_length=256, null=True, blank=True)
+    utm_term = models.CharField(max_length=256, null=True, blank=True)
+    utm_content = models.CharField(max_length=256, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def build_utm_data(utm_dict: dict[str, str] | None) -> dict[str, str]:
+        if not utm_dict:
+            return {}
+        return {
+            key: utm_value
+            for key, utm_value in utm_dict.items()
+            if key in ALLOWED_UTM_KEYS and utm_value
+        }
+
+    @property
+    def utm_data(self) -> dict[str, str]:
+        return {
+            key: getattr(self, key) for key in ALLOWED_UTM_KEYS if getattr(self, key)
+        }
+
+    @utm_data.setter
+    def utm_data(self, value: dict[str, str]) -> None:
+        for key in ALLOWED_UTM_KEYS:
+            setattr(self, key, value.get(key))

@@ -32,8 +32,9 @@ from custom_auth.serializers import CustomUserDelete
 from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker,
 )
+
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
-from users.models import FFAdminUser
+from users.models import FFAdminUser, HubspotTracker
 from users.serializers import PatchOnboardingSerializer
 
 from .models import UserPasswordResetRequest

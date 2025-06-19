@@ -1,7 +1,7 @@
 import logging
 
 from rest_framework.request import Request
-
+from users.constants import ALLOWED_UTM_KEYS
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
@@ -12,15 +12,20 @@ from users.models import FFAdminUser, HubspotTracker
 logger = logging.getLogger(__name__)
 
 
-def register_hubspot_tracker(request: Request, user: FFAdminUser | None = None) -> None:
+def register_hubspot_tracker(
+    request: Request,
+    user: FFAdminUser | None = None,
+) -> None:
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
+    utm_data = HubspotTracker.build_utm_data(request.data)
     track_user = user if user else request.user
-    if not hubspot_cookie:
+    if not hubspot_cookie and not utm_data:
         logger.info(f"Request did not included Hubspot data for user {track_user.id}")
         return
 
     if (
-        HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)  # type: ignore[misc]
+        hubspot_cookie
+        and HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)  # type: ignore[misc]
         .exclude(user=track_user)
         .exists()
     ):
@@ -29,11 +34,11 @@ def register_hubspot_tracker(request: Request, user: FFAdminUser | None = None) 
             f" due to cookie conflict with cookie {hubspot_cookie}"
         )
         return
-
     HubspotTracker.objects.update_or_create(
         user=track_user,
         defaults={
             "hubspot_cookie": hubspot_cookie,
+            **utm_data,
         },
     )
     logger.info(
