@@ -1,7 +1,7 @@
 import logging
 
 from rest_framework.request import Request
-from users.constants import ALLOWED_UTM_KEYS
+
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,

@@ -3,7 +3,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import hubspot  # type: ignore[import-untyped]
-from users.constants import ALLOWED_UTM_KEYS
 import requests
 from django.conf import settings
 from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
@@ -22,6 +21,7 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
+from users.constants import ALLOWED_UTM_KEYS
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser

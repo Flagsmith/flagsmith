@@ -14,6 +14,9 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker,
+)
 from organisations.invites.exceptions import InviteExpiredError
 from organisations.invites.models import Invite, InviteLink
 from organisations.invites.serializers import (
@@ -39,6 +42,7 @@ def join_organisation_from_email(request, hash):  # type: ignore[no-untyped-def]
     invite = get_object_or_404(Invite, hash=hash)
     try:
         request.user.join_organisation_from_invite_email(invite)
+        register_hubspot_tracker(request)
 
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
@@ -61,6 +65,8 @@ def join_organisation_from_link(request, hash):  # type: ignore[no-untyped-def]
 
     if invite.is_expired:
         raise InviteExpiredError()
+
+    register_hubspot_tracker(request)
 
     request.user.join_organisation_from_invite_link(invite)
 

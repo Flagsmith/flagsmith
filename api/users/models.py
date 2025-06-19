@@ -1,7 +1,7 @@
 import logging
 import typing
 import uuid
-from users.constants import ALLOWED_UTM_KEYS
+
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
@@ -41,7 +41,7 @@ from permissions.permission_service import (
 from projects.models import Project
 from users.abc import UserABC
 from users.auth_type import AuthType
-from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+from users.constants import ALLOWED_UTM_KEYS, DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 
 if typing.TYPE_CHECKING:
