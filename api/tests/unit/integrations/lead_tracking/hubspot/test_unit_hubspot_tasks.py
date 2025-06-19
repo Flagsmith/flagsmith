@@ -4,7 +4,7 @@ from pytest_mock import MockerFixture
 
 from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
-    track_create_lead,
+    track_hubspot_lead_v2,
     update_hubspot_active_subscription,
 )
 from organisations.models import Organisation
@@ -46,7 +46,7 @@ def test_create_hubspot_contact_for_user_skips_when_should_track_false(
     mock_create_contact.assert_not_called()
 
 
-def test_track_create_lead_skips_when_tracking_disabled(
+def test_track_hubspot_lead_skips_when_tracking_disabled(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -56,10 +56,10 @@ def test_track_create_lead_skips_when_tracking_disabled(
 
     # When / Then
     with pytest.raises(AssertionError):
-        track_create_lead(user_id=admin_user.id, organisation_id=1)
+        track_hubspot_lead_v2(user_id=admin_user.id, organisation_id=1)
 
 
-def test_track_create_lead_skips_when_should_track_false(
+def test_track_hubspot_lead_skips_when_should_track_false(
     settings: SettingsWrapper,
     admin_user: FFAdminUser,
     mocker: MockerFixture,
@@ -75,7 +75,7 @@ def test_track_create_lead_skips_when_should_track_false(
     )
 
     # When
-    track_create_lead(user_id=admin_user.id, organisation_id=1)
+    track_hubspot_lead_v2(user_id=admin_user.id, organisation_id=1)
 
     # Then
     mock_create_lead.assert_not_called()

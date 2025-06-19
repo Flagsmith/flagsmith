@@ -597,7 +597,7 @@ def test_user_organisation_create_calls_hubspot_lead_tracking(
 ) -> None:
     # Given
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
-    track_create_lead = mocker.patch("organisations.models.track_create_lead")
+    track_hubspot_lead = mocker.patch("organisations.models.track_hubspot_lead_v2")
     mocker.patch("users.models.create_hubspot_contact_for_user")
     user = FFAdminUser.objects.create(
         email="test@example.com", first_name="John", last_name="Doe"
@@ -607,4 +607,4 @@ def test_user_organisation_create_calls_hubspot_lead_tracking(
     user.add_organisation(organisation)
 
     # Then
-    track_create_lead.delay.assert_called_once_with(args=(user.id, organisation.id))
+    track_hubspot_lead.delay.assert_called_once_with(args=(user.id, organisation.id))

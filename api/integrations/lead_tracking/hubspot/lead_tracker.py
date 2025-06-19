@@ -122,6 +122,9 @@ class HubspotLeadTracker(LeadTracker):
                     user=user, defaults={"hubspot_id": hubspot_contact_id}
                 )
             else:
+                logger.error(
+                    f"Fallback creating contact for user {user.email} when associating with organisation"
+                )
                 hubspot_contact_id = self.create_user_hubspot_contact(user)
 
         return hubspot_contact_id
