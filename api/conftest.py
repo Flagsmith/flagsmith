@@ -14,6 +14,9 @@ from common.environments.permissions import (
 )
 from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.signals import (
+    register_type_handlers,
+)
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
 from django.test.utils import setup_databases
@@ -22,6 +25,7 @@ from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pyfakefs.fake_filesystem import FakeFilesystem
 from pytest import FixtureRequest
+from pytest_django import DjangoDbBlocker
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
@@ -158,7 +162,10 @@ def fs(fs: FakeFilesystem) -> FakeFilesystem:
 
 
 @pytest.fixture(scope="session")
-def django_db_setup(request: pytest.FixtureRequest) -> None:
+def django_db_setup(
+    request: pytest.FixtureRequest,
+    django_db_blocker: DjangoDbBlocker,
+) -> None:
     if (
         request.config.option.ci
         # xdist worker id is either `gw[0-9]+` or `master`
@@ -176,6 +183,16 @@ def django_db_setup(request: pytest.FixtureRequest) -> None:
     for db_settings in settings.DATABASES.values():
         test_db_name = f"{TEST_DATABASE_PREFIX}{db_settings['NAME']}_{test_db_suffix}"
         db_settings["NAME"] = test_db_name
+
+    from django.db import connections
+
+    if request.config.option.ci:
+        # Ensure psycopg type handlers are registered.
+        # This is necessary for tests that involve `HStoreField`.
+        for connection in connections.all():
+            if connection.vendor == "postgresql":
+                with django_db_blocker.unblock():
+                    register_type_handlers(connection)
 
 
 @pytest.fixture(autouse=True)
