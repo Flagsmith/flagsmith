@@ -1,8 +1,14 @@
-.home-aside {
-  bottom: 0;
-  height: 100vh;
-  max-height: 100vh;
-  position: sticky;
-  top: 0;
-  width: 280px;
+
+@include media-breakpoint-up(md) {
+  .home-aside {
+    bottom: 0;
+    height: 100vh;
+    max-height: 100vh;
+    position: sticky;
+    top: 0;
+    width: 280px;
+  }
+  .aside-container {
+    width: calc(100vw - 300px);
+  }
 }

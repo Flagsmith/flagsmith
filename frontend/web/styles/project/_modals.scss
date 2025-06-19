@@ -35,7 +35,10 @@
 .modal-caption {
   color: $body-color;
 }
-
+.inline-modal-right {
+  left: auto;
+  right: 0;
+}
 $side-width: 750px;
 .dark {
   .inline-modal {

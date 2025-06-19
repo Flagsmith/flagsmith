@@ -15,7 +15,7 @@ const NavSubLink: FC<NavSubLinkType> = ({ children, icon, ...rest }) => {
       activeClassName='active'
       className={classNames(rest.className, 'pt-2 nav-sub-link')}
     >
-      <div className='d-flex gap-2 nav-sub-link-inner align-items-center'>
+      <div className='d-flex gap-2 text-nowrap nav-sub-link-inner align-items-center'>
         {typeof icon === 'string' ? <IonIcon icon={icon} /> : icon}
         {children}
       </div>
