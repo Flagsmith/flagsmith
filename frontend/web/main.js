@@ -27,7 +27,7 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = Project.cookieAuthEnabled ? 'true' : API.getCookie('t')
+const res = API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {

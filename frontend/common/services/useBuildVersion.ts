@@ -12,28 +12,37 @@ export const buildVersionService = service
       getBuildVersion: builder.query<Version, Req['getBuildVersion']>({
         providesTags: () => [{ id: 'BuildVersion', type: 'BuildVersion' }],
         queryFn: async (args, _, _2, baseQuery) => {
-          const [frontendRes, backendRes] = await Promise.all([
-            data.get(`/version/`).catch(() => ({})),
-            data.get(`${Project.api.replace('api/v1/', '')}version/`),
-          ])
+          try {
+            const [frontendRes, backendRes] = await Promise.all([
+              data.get(`/version/`).catch(() => ({})),
+              data.get(`${Project.api.replace('api/v1/', '')}version/`),
+            ])
 
-          const frontend = (frontendRes || {}) as Version['frontend']
-          const backend =
-            (backendRes as Version['backend']) || ({} as Version['backend'])
+            const frontend = (frontendRes || {}) as Version['frontend']
+            const backend =
+              (backendRes as Version['backend']) || ({} as Version['backend'])
 
-          const tag = backend?.image_tag || defaultVersionTag
-          const backend_sha = backend?.ci_commit_sha || defaultVersionTag
-          const frontend_sha = frontend?.ci_commit_sha || defaultVersionTag
+            const tag = backend?.image_tag || defaultVersionTag
+            const backend_sha = backend?.ci_commit_sha || defaultVersionTag
+            const frontend_sha = frontend?.ci_commit_sha || defaultVersionTag
 
-          const result: Version = {
-            backend,
-            backend_sha,
-            frontend,
-            frontend_sha,
-            tag,
+            const result: Version = {
+              backend,
+              backend_sha,
+              frontend,
+              frontend_sha,
+              tag,
+            }
+
+            return { data: result }
+          } catch (error) {
+            return {
+              error: {
+                error: error instanceof Error ? error.message : String(error),
+                status: 'VERSION_FETCH_ERROR',
+              },
+            }
           }
-
-          return { data: result }
         },
       }),
       // END OF ENDPOINTS
