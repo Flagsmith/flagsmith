@@ -18,9 +18,10 @@ from app_analytics.tasks import (
     clean_up_old_analytics_data,
     populate_api_usage_bucket,
     populate_feature_evaluation_bucket,
-    track_feature_evaluation,
+    track_feature_evaluations_by_environment,
     track_request,
 )
+from app_analytics.types import FeatureEvaluationKey
 from environments.models import Environment
 
 if "analytics" not in settings.DATABASES:
@@ -199,20 +200,22 @@ def test_track_request__influx__calls_expected(
         host=host,
         environment=environment,
         count=1,
+        labels={},
     )
 
 
 @pytest.mark.django_db(databases=["analytics"])
-def test_track_feature_evaluation():  # type: ignore[no-untyped-def]
+def test_track_feature_evaluation(settings: SettingsWrapper) -> None:
     # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = 1
-    feature_evaluations = {
-        "feature1": 10,
-        "feature2": 20,
-    }
+    feature_evaluations = [
+        (FeatureEvaluationKey("feature1", ()), 10),
+        (FeatureEvaluationKey("feature2", ()), 20),
+    ]
 
     # When
-    track_feature_evaluation(environment_id, feature_evaluations)
+    track_feature_evaluations_by_environment(environment_id, feature_evaluations)
 
     # Then
     assert (

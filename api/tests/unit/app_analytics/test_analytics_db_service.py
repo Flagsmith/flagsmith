@@ -23,6 +23,7 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
+from app_analytics.types import PeriodType
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import (
@@ -283,11 +284,14 @@ def test_get_feature_evaluation_data_from_local_db(  # type: ignore[no-untyped-d
         assert data.day == today - timedelta(days=29 - i)
 
 
-def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(  # type: ignore[no-untyped-def]
-    mocker, settings, organisation
-):
+def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_configured(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = "test-token"
     mocked_get_usage_data_from_influxdb = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_influxdb", autospec=True
     )
@@ -298,13 +302,20 @@ def test_get_usage_data_calls_get_usage_data_from_influxdb_if_postgres_not_confi
     # Then
     assert usage_data == mocked_get_usage_data_from_influxdb.return_value
     mocked_get_usage_data_from_influxdb.assert_called_once_with(
-        organisation_id=organisation.id, environment_id=None, project_id=None
+        organisation_id=organisation.id,
+        environment_id=None,
+        project_id=None,
+        date_start=None,
+        date_stop=None,
+        labels_filter=None,
     )
 
 
-def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(  # type: ignore[no-untyped-def]
-    mocker, settings, organisation
-):
+def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_configured(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
@@ -317,7 +328,12 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_if_postgres_is_config
     # Then
     assert usage_data == mocked_get_usage_data_from_local_db.return_value
     mocked_get_usage_data_from_local_db.assert_called_once_with(
-        organisation=organisation, environment_id=None, project_id=None
+        organisation=organisation,
+        environment_id=None,
+        project_id=None,
+        date_start=None,
+        date_stop=None,
+        labels_filter=None,
     )
 
 
@@ -340,11 +356,16 @@ def test_get_total_events_count_calls_influx_method_if_postgres_not_configured( 
     )
 
 
-def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(  # type: ignore[no-untyped-def]
-    mocker, settings, organisation, feature, environment
-):
+def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configured(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    organisation: Organisation,
+    feature: Feature,
+    environment: Environment,
+) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = "test-token"
     mocked_get_feature_evaluation_data_from_influxdb = mocker.patch(
         "app_analytics.analytics_db_service.get_feature_evaluation_data_from_influxdb",
         autospec=True,
@@ -359,13 +380,47 @@ def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configu
         == mocked_get_feature_evaluation_data_from_influxdb.return_value
     )
     mocked_get_feature_evaluation_data_from_influxdb.assert_called_once_with(
-        feature_name=feature.name, environment_id=environment.id, period="30d"
+        feature_name=feature.name,
+        environment_id=environment.id,
+        period="30d",
+        labels_filter=None,
     )
 
 
-def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(  # type: ignore[no-untyped-def]  # noqa: E501
-    mocker, settings, organisation, feature, environment
-):
+def test_get_feature_evaluation_data__no_analytics_configured__no_calls_expected(
+    settings: SettingsWrapper,
+    mocker: MockerFixture,
+    feature: Feature,
+    environment: Environment,
+) -> None:
+    # Given
+    settings.USE_POSTGRES_FOR_ANALYTICS = False
+    settings.INFLUXDB_TOKEN = None
+
+    mocked_get_feature_evaluation_data_from_influxdb = mocker.patch(
+        "app_analytics.analytics_db_service.get_feature_evaluation_data_from_influxdb",
+        autospec=True,
+    )
+    mocked_get_feature_evaluation_data_from_local_db = mocker.patch(
+        "app_analytics.analytics_db_service.get_feature_evaluation_data_from_local_db",
+        autospec=True,
+    )
+
+    # When
+    result = get_feature_evaluation_data(feature, environment.id)
+
+    # Then
+    assert result == []
+    mocked_get_feature_evaluation_data_from_influxdb.assert_not_called()
+    mocked_get_feature_evaluation_data_from_local_db.assert_not_called()
+
+
+def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_local_db_if_configured(
+    mocker: MockerFixture,
+    settings: SettingsWrapper,
+    feature: Feature,
+    environment: Environment,
+) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_feature_evaluation_data_from_local_db = mocker.patch(
@@ -382,7 +437,10 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
         == mocked_get_feature_evaluation_data_from_local_db.return_value
     )
     mocked_get_feature_evaluation_data_from_local_db.assert_called_once_with(
-        feature=feature, environment_id=environment.id, period=30
+        feature=feature,
+        environment_id=environment.id,
+        period=30,
+        labels_filter=None,
     )
 
 
@@ -392,7 +450,7 @@ def test_get_usage_data_returns_404_when_organisation_has_no_billing_periods(
     mocker: MockerFixture,
     settings: SettingsWrapper,
     organisation: Organisation,
-    period: str,
+    period: PeriodType,
 ) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -417,7 +475,6 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
     cache: OrganisationSubscriptionInformationCache,
 ) -> None:
     # Given
-    period: str = CURRENT_BILLING_PERIOD
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
@@ -426,7 +483,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
     assert getattr(organisation, "subscription_information_cache", None) == cache
 
     # When
-    get_usage_data(organisation, period=period)
+    get_usage_data(organisation, period=CURRENT_BILLING_PERIOD)
 
     # Then
     mocked_get_usage_data_from_local_db.assert_called_once_with(
@@ -435,6 +492,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         project_id=None,
         date_start=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
         date_stop=datetime(2023, 1, 19, 9, 9, 47, 325132, tzinfo=UTC),
+        labels_filter=None,
     )
 
 
@@ -446,8 +504,6 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
     cache: OrganisationSubscriptionInformationCache,
 ) -> None:
     # Given
-    period: str = PREVIOUS_BILLING_PERIOD
-
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     mocked_get_usage_data_from_local_db = mocker.patch(
         "app_analytics.analytics_db_service.get_usage_data_from_local_db", autospec=True
@@ -456,7 +512,7 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
     assert getattr(organisation, "subscription_information_cache", None) == cache
 
     # When
-    get_usage_data(organisation, period=period)
+    get_usage_data(organisation, period=PREVIOUS_BILLING_PERIOD)
 
     # Then
     mocked_get_usage_data_from_local_db.assert_called_once_with(
@@ -465,4 +521,5 @@ def test_get_usage_data_calls_get_usage_data_from_local_db_with_set_period_start
         project_id=None,
         date_start=datetime(2022, 11, 30, 9, 9, 47, 325132, tzinfo=UTC),
         date_stop=datetime(2022, 12, 30, 9, 9, 47, 325132, tzinfo=UTC),
+        labels_filter=None,
     )

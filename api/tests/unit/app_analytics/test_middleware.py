@@ -44,6 +44,7 @@ def test_api_usage_middleware__calls_expected(
         resource=Resource.get_from_name(resource_name),
         host="testserver",
         environment_key=environment_key,
+        labels={},
     )
 
 
@@ -83,6 +84,7 @@ def test_api_usage_middleware__no_cache__calls_expected(
             "resource": Resource.get_from_name(resource_name),
             "environment_key": environment_key,
             "host": "testserver",
+            "labels": {},
         }
     )
 
