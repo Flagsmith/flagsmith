@@ -543,11 +543,30 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
     influx_db_wrapper_mock.write.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "optional_headers,expected_labels",
+    [
+        ({}, {}),
+        (
+            {
+                "Flagsmith-Application-Name": "web",
+                "Flagsmith-Application-Version": "1.0",
+                "Unrelated-Header": "value",
+            },
+            {
+                "client_application_name": "web",
+                "client_application_version": "1.0",
+            },
+        ),
+    ],
+)
 def test_sdk_analytics_flags_v1(
     api_client: APIClient,
     environment: Environment,
     feature: Feature,
     mocker: MockerFixture,
+    optional_headers: dict[str, str],
+    expected_labels: dict[str, str],
 ) -> None:
     # Given
     url = reverse("api-v1:analytics-flags")
@@ -561,7 +580,10 @@ def test_sdk_analytics_flags_v1(
 
     # When
     response = api_client.post(
-        url, data=json.dumps(data), content_type="application/json"
+        url,
+        data=json.dumps(data),
+        content_type="application/json",
+        headers=optional_headers,
     )
 
     # Then
@@ -570,5 +592,5 @@ def test_sdk_analytics_flags_v1(
         environment_id=environment.id,
         feature_name=feature.name,
         evaluation_count=feature_request_count,
-        labels={},
+        labels=expected_labels,
     )
