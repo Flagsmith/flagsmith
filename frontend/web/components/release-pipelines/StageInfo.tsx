@@ -1,8 +1,11 @@
-import { StageTriggerType, Segment } from 'common/types/responses'
+import { StageTriggerBody, StageTriggerType } from 'common/types/responses'
 
 import { PipelineStage } from 'common/types/responses'
 import StageCard from './StageCard'
 import StageArrow from './StageArrow'
+import moment from 'moment'
+import StageFeatureDetail from './StageFeatureDetail'
+import FlagActionDetail from './FlagActionDetail'
 
 type StageInfoProps = {
   environmentName: string
@@ -12,21 +15,26 @@ type StageInfoProps = {
 
 const getTriggerText = (
   triggerType: StageTriggerType,
-  segmentData?: Segment,
+  triggerBody: StageTriggerBody,
 ) => {
   if (triggerType === StageTriggerType.ON_ENTER) {
+    return <span>When flag is added to this stage</span>
+  }
+
+  if (triggerType === StageTriggerType.WAIT_FOR) {
     return (
-      <span>
-        When flag is added to this stage, enable flag for{' '}
-        <b>{segmentData?.name ?? 'everyone'}</b>
-      </span>
+      <span>Wait for {moment.duration(triggerBody?.wait_for).humanize()}</span>
     )
   }
 
   return null
 }
 
-const StageInfo = ({ environmentName, stageData }: StageInfoProps) => {
+const StageInfo = ({
+  environmentName,
+  projectId,
+  stageData,
+}: StageInfoProps) => {
   return (
     <Row>
       <Row className='align-items-start no-wrap'>
@@ -35,12 +43,26 @@ const StageInfo = ({ environmentName, stageData }: StageInfoProps) => {
             <h5>{stageData?.name}</h5>
             <p>{environmentName}</p>
             <p className='text-muted'>
-              {/* TODO: Add segment data */}
-              {getTriggerText(stageData?.trigger?.trigger_type, undefined)}
+              {getTriggerText(
+                stageData?.trigger?.trigger_type,
+                stageData?.trigger?.trigger_body,
+              )}
+              {stageData?.actions?.map((action) => {
+                return (
+                  <div key={action.id}>
+                    <FlagActionDetail
+                      actionBody={action.action_body}
+                      actionType={action.action_type}
+                      projectId={projectId}
+                    />
+                  </div>
+                )
+              })}
             </p>
-            {/* TODO: Add features count */}
-            <h6>Features (0)</h6>
-            <p className='text-muted'>No features added to this stage yet.</p>
+            <StageFeatureDetail
+              features={stageData?.features}
+              projectId={projectId}
+            />
           </div>
         </StageCard>
         <div className='flex-1'>

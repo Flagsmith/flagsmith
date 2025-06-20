@@ -155,6 +155,7 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
     ? ChangeRequestStore.model[environmentId]
     : null
   const changeRequests = changeRequest?.count || 0
+
   const scheduled =
     (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
   const onProjectSave = () => {

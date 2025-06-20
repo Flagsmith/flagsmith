@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from environments.models import Environment
+from features.models import Feature
 from metrics.metrics_service import EnvironmentMetricsService
 from metrics.types import EnvMetricsName
 
@@ -82,6 +83,13 @@ def test_dynamo_identity_metric_used(
     monkeypatch.setattr(
         environment, "get_segment_metrics_queryset", lambda: MagicMock(count=lambda: 1)
     )
+    Feature.objects.create(
+        id=10,
+        project=environment.project,
+        name="feature-10",
+        is_archived=False,
+        deleted_at=None,
+    )
     identity_count_mock = MagicMock(return_value=1)
     monkeypatch.setattr(
         environment,
@@ -89,9 +97,9 @@ def test_dynamo_identity_metric_used(
         lambda: MagicMock(count=identity_count_mock),
     )
 
-    dynamo_mock = MagicMock(return_value=99)
+    dynamo_mock = MagicMock(return_value={10: 99})
     monkeypatch.setattr(
-        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper.get_identity_overrides_count",
+        "edge_api.identities.models.EdgeIdentity.dynamo_wrapper.get_identity_override_feature_counts",
         dynamo_mock,
     )
     # When

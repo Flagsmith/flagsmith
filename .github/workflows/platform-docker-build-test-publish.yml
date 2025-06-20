@@ -200,6 +200,33 @@ jobs:
     needs: [docker-publish-api, docker-publish-frontend, docker-publish-unified]
     runs-on: depot-ubuntu-latest
     steps:
+      - name: Close prior open PRs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.FLAGSMITH_CHARTS_GITHUB_TOKEN }}
+          script: |
+            const owner = "flagsmith";
+            const repo = "flagsmith-charts";
+
+            const prs = await github.paginate(
+              github.rest.pulls.list,
+              {
+                owner, repo,
+                state: "open",
+              }
+            );
+      
+            for (const pr of prs) {
+              const labels = pr.labels.map(label => label.name);
+              if (labels.includes("yaml-updates")) {
+                await github.rest.pulls.update({
+                  owner, repo,
+                  pull_number: pr.number,
+                  state: "closed",
+                });
+              }
+            }
+
       - name: Checkout Target Charts Repository to update yaml
         uses: actions/checkout@v4
         with:
