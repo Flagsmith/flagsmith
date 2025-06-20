@@ -2,12 +2,13 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
+from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Prefetch, Q
+from django.db.models import Max, Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
@@ -56,6 +57,10 @@ from util.mappers import (
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
+
+if TYPE_CHECKING:
+    from features.workflows.core.models import ChangeRequest
+
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +200,10 @@ class Environment(
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return (self.api_key,)
+
+    @property
+    def is_workflow_enabled(self) -> bool:
+        return self.minimum_change_request_approvals is not None
 
     def clone(
         self,
@@ -357,6 +366,104 @@ class Environment(
                 self.feature_states.filter(**filter_kwargs),
             )
         )
+
+    def get_identity_overrides_queryset(self) -> QuerySet[FeatureState]:
+        ids = self._get_active_feature_states_ids(
+            "identity_id",
+            {"identity__isnull": False, "feature_segment__isnull": True},
+        )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
+    def _get_active_feature_states_ids(
+        self,
+        extra_group_by_fields: Literal["identity_id"] | None = None,
+        filter_kwargs: dict[str, typing.Any] | None = None,
+    ) -> list[int]:
+        base_qs = FeatureState.objects.get_live_feature_states(
+            environment=self,
+            **(filter_kwargs or {}),
+        ).filter(
+            feature__is_archived=False,
+        )
+
+        group_fields = ["feature_id", "environment_id"]
+        if extra_group_by_fields is not None:
+            group_fields.append(extra_group_by_fields)
+
+        return list(
+            base_qs.values(*group_fields)
+            .annotate(id=Max("id"))
+            .values_list("id", flat=True)
+        )
+
+    def get_features_metrics_queryset(self) -> QuerySet[FeatureState]:
+        ids = self._get_active_feature_states_ids(
+            None,
+            {"identity__isnull": True, "feature_segment__isnull": True},
+        )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
+    def _get_latest_segment_state_ids_subquery(self) -> list[int]:
+        feature_states_qs = FeatureState.objects.get_live_feature_states(
+            environment=self,
+            additional_filters=Q(
+                identity_id__isnull=True,
+                feature_segment_id__isnull=False,
+            ),
+        ).filter(feature__is_archived=False)
+
+        return list(
+            feature_states_qs.values(
+                "feature_id", "feature_segment_id", "environment_id"
+            )
+            .annotate(id=Max("id"))
+            .values_list("id", flat=True)
+        )
+
+    def get_segment_metrics_queryset(self) -> QuerySet[FeatureState]:
+        ids = self._get_latest_segment_state_ids_subquery()
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
+    def get_change_requests_metrics_queryset(self) -> QuerySet["ChangeRequest"]:
+        from features.workflows.core.models import ChangeRequest
+
+        result: QuerySet["ChangeRequest"] = ChangeRequest.objects.filter(
+            environment=self,
+            committed_at__isnull=True,
+            deleted_at__isnull=True,
+        )
+        return result
+
+    def get_scheduled_metrics_queryset(self) -> QuerySet[FeatureState]:
+        from features.workflows.core.models import ChangeRequest
+
+        qs = ChangeRequest.objects.filter(
+            environment=self,
+            committed_at__isnull=False,
+            deleted_at__isnull=True,
+        )
+        scheduled_q = (
+            Q(
+                Q(feature_states__deleted_at__isnull=True)
+                & Q(feature_states__live_from__gt=timezone.now())
+            )
+            | Q(
+                Q(environment_feature_versions__deleted_at__isnull=True)
+                & Q(environment_feature_versions__live_from__gt=timezone.now())
+            )
+            | Q(
+                Q(change_sets__deleted_at__isnull=True)
+                & Q(change_sets__live_from__gt=timezone.now())
+            )
+        )
+
+        change_requests: QuerySet["ChangeRequest"] = qs.filter(
+            id__in=qs.filter(scheduled_q).values_list("id", flat=True)
+        )
+        return change_requests
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:

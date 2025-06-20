@@ -25,6 +25,7 @@ import classNames from 'classnames'
 import ClearFilters from 'components/ClearFilters'
 import Button from 'components/base/forms/Button'
 import { isEqual } from 'lodash'
+import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
 import { withRouter } from 'react-router-dom'
 import { useRouteContext } from 'components/providers/RouteContext'
 
@@ -68,7 +69,10 @@ const FeaturesPage = class extends Component {
 
   constructor(props) {
     super(props)
-    this.state = this.getFiltersFromParams(Utils.fromParam())
+    this.state = {
+      ...this.getFiltersFromParams(Utils.fromParam()),
+      forceMetricsRefetch: false,
+    }
     ES6Component(this)
     const projectId = this.props.routeContext.projectId
     AppActions.getFeatures(
@@ -124,6 +128,12 @@ const FeaturesPage = class extends Component {
       />,
       'side-modal create-feature-modal',
     )
+  }
+
+  toggleForceMetricsRefetch = () => {
+    this.setState((prevState) => ({
+      forceMetricsRefetch: !prevState.forceMetricsRefetch,
+    }))
   }
 
   getURLParams = () => ({
@@ -215,6 +225,10 @@ const FeaturesPage = class extends Component {
   render() {
     const { environmentId, projectId } = this.props.match.params
     const readOnly = Utils.getFlagsmithHasFeature('read_only_mode')
+    const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
+      'environment_metrics',
+    )
+
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
 
@@ -245,14 +259,15 @@ const FeaturesPage = class extends Component {
         className='app-container container'
       >
         <FeatureListProvider
-          onRemove={(feature) =>
-            toast(
+          onRemove={(feature) => {
+            this.toggleForceMetricsRefetch()
+            return toast(
               <div>
                 Removed feature: <strong>{feature.name}</strong>
               </div>,
             )
-          }
-          onSave={this.onSave}
+          }}
+          onSave={this.toggleForceMetricsRefetch}
           onError={this.onError}
         >
           {(
@@ -296,6 +311,13 @@ const FeaturesPage = class extends Component {
                             'features',
                             featureLimitAlert.percentage,
                           )}
+                        {environmentMetricsEnabled && (
+                          <EnvironmentMetricsList
+                            environmentApiKey={environment?.api_key}
+                            forceRefetch={this.state.forceMetricsRefetch}
+                            projectId={projectId}
+                          />
+                        )}
                         <PageTitle
                           title={'Features'}
                           cta={

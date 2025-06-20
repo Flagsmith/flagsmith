@@ -1,5 +1,5 @@
 import logging
-from typing import Generic, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
+from rest_framework.viewsets import GenericViewSet
 
 from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
@@ -30,6 +31,8 @@ from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
 )
+from metrics.metrics_service import EnvironmentMetricsService
+from metrics.serializers import EnvironmentMetricsSerializer
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
@@ -358,3 +361,22 @@ class EnvironmentAPIKeyViewSet(
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
     model_class: Type[EnvironmentAPIKey] = EnvironmentAPIKey
+
+
+class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
+    permission_classes = [IsAuthenticated, EnvironmentPermissions]
+    lookup_field = "api_key"
+    lookup_url_kwarg = "environment_api_key"
+    serializer_class: type[BaseSerializer[Any]] = EnvironmentMetricsSerializer
+    queryset = Environment.objects.all()
+
+    @swagger_auto_schema(  # type: ignore[misc]
+        operation_description="Get metrics for this environment.",
+        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
+    )
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        environment: Environment = self.get_object()
+        metrics_service = EnvironmentMetricsService(environment)
+        metrics = metrics_service.get_metrics_payload()
+        serializer = self.get_serializer({"metrics": metrics})
+        return Response(serializer.data, status=status.HTTP_200_OK)
