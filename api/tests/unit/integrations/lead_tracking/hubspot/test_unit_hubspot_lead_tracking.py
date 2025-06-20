@@ -189,7 +189,9 @@ def test_create_organisation_lead_creates_contact_when_not_found(
     assert hubspot_lead.hubspot_id == HUBSPOT_USER_ID
 
     assert mock_client.get_contact.call_count == 2
-    mock_client.create_lead_form.assert_called_once_with(user=user, hubspot_cookie=None)
+    mock_client.create_lead_form.assert_called_once_with(
+        user=user, hubspot_cookie=None, utm_data=None
+    )
     mock_client.create_company.assert_called_once_with(
         name=organisation.name,
         active_subscription="free",
@@ -234,7 +236,9 @@ def test_create_organisation_lead_creates_contact_for_existing_org(
     assert HubspotLead.objects.filter(user=user, hubspot_id=HUBSPOT_USER_ID).exists()
     mock_client.create_company.assert_not_called()
     assert mock_client.get_contact.call_count == 2
-    mock_client.create_lead_form.assert_called_once_with(user=user, hubspot_cookie=None)
+    mock_client.create_lead_form.assert_called_once_with(
+        user=user, hubspot_cookie=None, utm_data=None
+    )
     mock_client.associate_contact_to_company.assert_called_once_with(
         contact_id=HUBSPOT_USER_ID,
         company_id=HUBSPOT_COMPANY_ID,

@@ -27,6 +27,7 @@ import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
+import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 
 const semver = require('semver')
 
@@ -593,13 +594,22 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   },
 
+  getUtmsFromUrl(): UtmsType {
+    const params = Utils.fromParam() as Record<string, string>
+    return TRACKED_UTMS.reduce((utms, key) => {
+      if (params[key]) {
+        utms[key] = params[key]
+      }
+      return utms
+    }, {} as UtmsType)
+  },
+
   openChat() {
     if (typeof $crisp !== 'undefined') {
       $crisp.push(['do', 'chat:open'])
     }
     Utils.setupCrisp()
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -612,6 +622,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
@@ -675,11 +686,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
-
   tagDisabled: (tag: Tag | undefined) => {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
+
   toKebabCase: (string: string) =>
     string
       .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -709,7 +720,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return true
     }
   },
-
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
     if (rule.delete) {

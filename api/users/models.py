@@ -41,7 +41,7 @@ from permissions.permission_service import (
 from projects.models import Project
 from users.abc import UserABC
 from users.auth_type import AuthType
-from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+from users.constants import ALLOWED_UTM_KEYS, DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
 
 if typing.TYPE_CHECKING:
@@ -469,6 +469,33 @@ class HubspotTracker(models.Model):
         related_name="hubspot_tracker",
         on_delete=models.CASCADE,
     )
-    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
+    hubspot_cookie = models.CharField(
+        unique=True,
+        max_length=100,
+        null=True,
+        blank=True,
+    )
+    utm_source = models.CharField(max_length=256, null=True, blank=True)
+    utm_medium = models.CharField(max_length=256, null=True, blank=True)
+    utm_campaign = models.CharField(max_length=256, null=True, blank=True)
+    utm_term = models.CharField(max_length=256, null=True, blank=True)
+    utm_content = models.CharField(max_length=256, null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @staticmethod
+    def build_utm_data(utm_dict: dict[str, str] | None) -> dict[str, str]:
+        if not utm_dict:
+            return {}
+        return {
+            key: utm_value
+            for key, utm_value in utm_dict.items()
+            if key in ALLOWED_UTM_KEYS and utm_value
+        }
+
+    @property
+    def utm_data(self) -> dict[str, str]:
+        return {
+            key: getattr(self, key) for key in ALLOWED_UTM_KEYS if getattr(self, key)
+        }
