@@ -14,7 +14,7 @@ from users.models import FFAdminUser
 def create_pipedrive_lead(user_id: int):  # type: ignore[no-untyped-def]
     pipedrive = PipedriveLeadTracker()
     user = FFAdminUser.objects.get(id=user_id)
-    pipedrive.create_lead(user)
+    pipedrive.create_organisation_lead(user)
 
 
 @register_task_handler()

@@ -7,37 +7,37 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
     HUBSPOT_COOKIE_NAME,
 )
-from users.models import HubspotTracker
+from users.models import FFAdminUser, HubspotTracker
 
 logger = logging.getLogger(__name__)
 
 
-def register_hubspot_tracker(request: Request) -> None:
+def register_hubspot_tracker(request: Request, user: FFAdminUser | None = None) -> None:
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
-
+    track_user = user if user else request.user
     if not hubspot_cookie:
-        logger.info(f"Request did not included Hubspot data for user {request.user.id}")
+        logger.info(f"Request did not included Hubspot data for user {track_user.id}")
         return
 
     if (
         HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)  # type: ignore[misc]
-        .exclude(user=request.user)
+        .exclude(user=track_user)
         .exists()
     ):
         logger.info(
-            f"HubspotTracker could not be created for user {request.user.id}"
+            f"HubspotTracker could not be created for user {track_user.id}"
             f" due to cookie conflict with cookie {hubspot_cookie}"
         )
         return
 
     HubspotTracker.objects.update_or_create(
-        user=request.user,
+        user=track_user,
         defaults={
             "hubspot_cookie": hubspot_cookie,
         },
     )
     logger.info(
-        f"Created HubspotTracker instance for user {request.user.id} with cookie {hubspot_cookie}"
+        f"Created HubspotTracker instance for user {track_user.id} with cookie {hubspot_cookie}"
     )
 
 

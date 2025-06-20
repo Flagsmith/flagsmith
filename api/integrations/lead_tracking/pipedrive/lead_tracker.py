@@ -4,6 +4,7 @@ import typing
 from django.conf import settings
 
 from integrations.lead_tracking.lead_tracking import LeadTracker
+from organisations.models import Organisation
 from users.models import FFAdminUser
 
 from .client import PipedriveAPIClient
@@ -49,7 +50,7 @@ class PipedriveLeadTracker(LeadTracker):
 
         return True
 
-    def create_lead(self, user: FFAdminUser) -> PipedriveLead:
+    def create_organisation_lead(self, user: FFAdminUser) -> PipedriveLead:
         email_domain = user.email.split("@")[-1]
 
         try:
@@ -135,3 +136,9 @@ class PipedriveLeadTracker(LeadTracker):
             api_token=settings.PIPEDRIVE_API_TOKEN,  # type: ignore[arg-type]
             base_url=settings.PIPEDRIVE_BASE_API_URL,
         )
+
+    # TODO: To be deprecated with pipedrive
+    def create_lead(
+        self, user: FFAdminUser, organisation: Organisation
+    ) -> None:  # pragma: no cover
+        pass
