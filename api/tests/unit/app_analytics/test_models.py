@@ -1,5 +1,4 @@
 import pytest
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -9,10 +8,7 @@ from app_analytics.models import (
     Resource,
 )
 
-if "analytics" not in settings.DATABASES:
-    pytest.skip(
-        "Skip test if analytics database is not configured", allow_module_level=True
-    )
+pytestmark = pytest.mark.skip_if_no_analytics_db
 
 
 @pytest.mark.django_db(databases=["analytics"])
@@ -29,9 +25,10 @@ def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore
         total_count=10,
         environment_id=environment_id,
         created_at=created_at,
+        labels={"key": "value", "key2": "value2"},
     )
 
-    # When
+    # When & Then
     with pytest.raises(ValidationError):
         APIUsageBucket.objects.create(
             resource=Resource.FLAGS,
@@ -39,9 +36,8 @@ def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore
             total_count=100,
             environment_id=environment_id,
             created_at=created_at,
+            labels={"key": "value"},
         )
-
-    # Then - ValidationError is raised
 
 
 @pytest.mark.django_db(databases=["analytics"])
@@ -59,9 +55,10 @@ def test_creating_overlapping_feature_evaluation_bucket_raises_error(db):  # typ
         total_count=10,
         environment_id=environment_id,
         created_at=created_at,
+        labels={"key": "value", "key2": "value2"},
     )
 
-    # When
+    # When & Then
     with pytest.raises(ValidationError):
         FeatureEvaluationBucket.objects.create(
             feature_name=feature_name,
@@ -69,6 +66,5 @@ def test_creating_overlapping_feature_evaluation_bucket_raises_error(db):  # typ
             total_count=100,
             environment_id=environment_id,
             created_at=created_at,
+            labels={"key": "value"},
         )
-
-    # Then - ValidationError is raised
