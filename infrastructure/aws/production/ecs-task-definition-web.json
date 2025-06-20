@@ -6,9 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": [
-                "serve"
-            ],
+            "command": ["serve"],
             "cpu": 0,
             "portMappings": [
                 {
@@ -184,14 +182,6 @@
                     "value": "https://origin.realtime.flagsmith.com"
                 },
                 {
-                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
-                    "value": "True"
-                },
-                {
-                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
                     "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
                     "value": "True"
                 },
@@ -276,9 +266,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }
