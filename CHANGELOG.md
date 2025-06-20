@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.184.1](https://github.com/Flagsmith/flagsmith/compare/v2.184.0...v2.184.1) (2025-06-20)
+
+
+### Bug Fixes
+
+* fix cookie validation in authentication  ([#5621](https://github.com/Flagsmith/flagsmith/issues/5621)) ([30a7c8c](https://github.com/Flagsmith/flagsmith/commit/30a7c8c64bfeedd1b8f2d066f2742eb0dcf0b9ec))
+* hubspot attribution issues ([#5560](https://github.com/Flagsmith/flagsmith/issues/5560)) ([251508a](https://github.com/Flagsmith/flagsmith/commit/251508a71d5a052c216138d21bf1b00c72efd929))
+
+
+### Dependency Updates
+
+* bump urllib3 from 2.3.0 to 2.5.0 in /api ([#5622](https://github.com/Flagsmith/flagsmith/issues/5622)) ([23aa20f](https://github.com/Flagsmith/flagsmith/commit/23aa20f89c62c2f9d9161b4771f7342e7e08814e))
+
 ## [2.184.0](https://github.com/Flagsmith/flagsmith/compare/v2.183.0...v2.184.0) (2025-06-18)
 
 
