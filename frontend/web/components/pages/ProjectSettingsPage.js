@@ -27,6 +27,8 @@ import EditHealthProvider from 'components/EditHealthProvider'
 import WarningMessage from 'components/WarningMessage'
 import { withRouter } from 'react-router-dom'
 import Utils from 'common/utils/utils'
+import SettingTitle from 'components/SettingTitle'
+import ProjectProvider from 'common/providers/ProjectProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -205,15 +207,16 @@ const ProjectSettingsPage = class extends Component {
                 {
                   <Tabs urlParam='tab' className='mt-0' uncontrolled>
                     <TabItem tabLabel='General'>
-                      <div className='mt-4'>
+                      <div className='mt-4 col-md-8'>
                         <JSONReference
                           title='Project'
                           json={project}
                           className='mb-3'
                         />
+                        <SettingTitle>Project Information</SettingTitle>
                         <label>Project Name</label>
                         <FormGroup>
-                          <form className='col-md-8' onSubmit={saveProject}>
+                          <form onSubmit={saveProject}>
                             <Row className='align-items-start'>
                               <Flex className='ml-0'>
                                 <Input
@@ -307,31 +310,25 @@ const ProjectSettingsPage = class extends Component {
                             </div>
                           </form>
                         </FormGroup>
-                      </div>
-                      <hr className='py-0 my-4' />
-                      <FormGroup className='mt-4 col-md-8'>
-                        <Row className='mb-2'>
-                          <Switch
+                        <SettingTitle>Additional Settings</SettingTitle>
+                        <FormGroup className='mt-4'>
+                          <Setting
+                            title='Prevent Flag Defaults'
                             data-test='js-prevent-flag-defaults'
                             disabled={isSaving}
                             onChange={() =>
                               this.togglePreventDefaults(project, editProject)
                             }
                             checked={project.prevent_flag_defaults}
-                          />
-                          <h5 className='mb-0 ml-3'>Prevent flag defaults</h5>
-                        </Row>
-                        <p className='fs-small lh-sm mb-0'>
-                          By default, when you create a feature with a value and
+                            description={`By default, when you create a feature with a value and
                           enabled state it acts as a default for your other
                           environments. Enabling this setting forces the user to
                           create a feature before setting its values per
-                          environment.
-                        </p>
-                      </FormGroup>
-                      <FormGroup className='mt-4 col-md-8'>
-                        <Row className='mb-2'>
-                          <Switch
+                          environment.`}
+                          />
+                        </FormGroup>
+                        <FormGroup className='mt-4'>
+                          <Setting
                             data-test='js-flag-case-sensitivity'
                             disabled={isSaving}
                             onChange={() =>
@@ -340,187 +337,176 @@ const ProjectSettingsPage = class extends Component {
                             checked={
                               !project.only_allow_lower_case_feature_names
                             }
-                          />
-                          <h5 className='mb-0 ml-3'>Case sensitive features</h5>
-                        </Row>
-                        <p className='fs-small lh-sm mb-0'>
-                          By default, features are lower case in order to
+                            title='Case sensitive features'
+                            description={`By default, features are lower case in order to
                           prevent human error. Enabling this will allow you to
-                          use upper case characters when creating features.
-                        </p>
-                      </FormGroup>
-                      <FormGroup className='mt-4 col-md-8'>
-                        <Row className='mb-2'>
-                          <Switch
+                          use upper case characters when creating features.`}
+                          />
+                        </FormGroup>
+                        <FormGroup className='mt-4'>
+                          <Setting
+                            title='Feature name RegEx'
                             data-test='js-flag-case-sensitivity'
                             disabled={isSaving}
+                            description={`This allows you to define a regular expression that
+                          all feature names must adhere to.`}
                             onChange={() =>
                               this.toggleFeatureValidation(project, editProject)
                             }
                             checked={featureRegexEnabled}
                           />
-                          <h5 className='mb-0 ml-3'>Feature name RegEx</h5>
-                        </Row>
-                        <p className='fs-small lh-sm mb-0'>
-                          This allows you to define a regular expression that
-                          all feature names must adhere to.
-                        </p>
-                        {featureRegexEnabled && (
-                          <InputGroup
-                            title='Feature Name RegEx'
-                            className='mt-4'
-                            component={
-                              <form
-                                onSubmit={(e) => {
-                                  e.preventDefault()
-                                  if (regexValid) {
-                                    this.updateFeatureNameRegex(
-                                      project,
-                                      editProject,
-                                    )
-                                  }
-                                }}
-                              >
-                                <Row>
-                                  <Flex>
-                                    <Input
-                                      ref={(e) => (this.input = e)}
-                                      value={this.state.feature_name_regex}
-                                      inputClassName='input input--wide'
-                                      name='feature-name-regex'
-                                      onClick={this.forceSelectionRange}
-                                      onKeyUp={this.forceSelectionRange}
-                                      showSuccess
-                                      onChange={(e) => {
-                                        let newRegex =
-                                          Utils.safeParseEventValue(e).replace(
-                                            '$',
-                                            '',
-                                          )
-                                        if (!newRegex.startsWith('^')) {
-                                          newRegex = `^${newRegex}`
-                                        }
-                                        if (!newRegex.endsWith('$')) {
-                                          newRegex = `${newRegex}$`
-                                        }
-                                        this.setState({
-                                          feature_name_regex: newRegex,
-                                        })
-                                      }}
-                                      isValid={regexValid}
-                                      type='text'
-                                      placeholder='Regular Expression'
-                                    />
-                                  </Flex>
-                                  <Button
-                                    className='ml-2'
-                                    type='submit'
-                                    disabled={!regexValid || isLoading}
-                                  >
-                                    Save
-                                  </Button>
-                                  <Button
-                                    theme='text'
-                                    type='button'
-                                    onClick={() => {
-                                      openModal(
-                                        <span>RegEx Tester</span>,
-                                        <RegexTester
-                                          regex={this.state.feature_name_regex}
-                                          onChange={(feature_name_regex) =>
-                                            this.setState({
-                                              feature_name_regex,
-                                            })
-                                          }
-                                        />,
+                          {featureRegexEnabled && (
+                            <InputGroup
+                              title='Feature Name RegEx'
+                              className='mt-4'
+                              component={
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault()
+                                    if (regexValid) {
+                                      this.updateFeatureNameRegex(
+                                        project,
+                                        editProject,
                                       )
-                                    }}
-                                    className='ml-2'
-                                    disabled={!regexValid || isLoading}
-                                  >
-                                    Test RegEx
-                                  </Button>
-                                </Row>
-                              </form>
-                            }
-                          />
+                                    }
+                                  }}
+                                >
+                                  <Row>
+                                    <Flex>
+                                      <Input
+                                        ref={(e) => (this.input = e)}
+                                        value={this.state.feature_name_regex}
+                                        inputClassName='input input--wide'
+                                        name='feature-name-regex'
+                                        onClick={this.forceSelectionRange}
+                                        onKeyUp={this.forceSelectionRange}
+                                        showSuccess
+                                        onChange={(e) => {
+                                          let newRegex =
+                                            Utils.safeParseEventValue(
+                                              e,
+                                            ).replace('$', '')
+                                          if (!newRegex.startsWith('^')) {
+                                            newRegex = `^${newRegex}`
+                                          }
+                                          if (!newRegex.endsWith('$')) {
+                                            newRegex = `${newRegex}$`
+                                          }
+                                          this.setState({
+                                            feature_name_regex: newRegex,
+                                          })
+                                        }}
+                                        isValid={regexValid}
+                                        type='text'
+                                        placeholder='Regular Expression'
+                                      />
+                                    </Flex>
+                                    <Button
+                                      className='ml-2'
+                                      type='submit'
+                                      disabled={!regexValid || isLoading}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      theme='text'
+                                      type='button'
+                                      onClick={() => {
+                                        openModal(
+                                          <span>RegEx Tester</span>,
+                                          <RegexTester
+                                            regex={
+                                              this.state.feature_name_regex
+                                            }
+                                            onChange={(feature_name_regex) =>
+                                              this.setState({
+                                                feature_name_regex,
+                                              })
+                                            }
+                                          />,
+                                        )
+                                      }}
+                                      className='ml-2'
+                                      disabled={!regexValid || isLoading}
+                                    >
+                                      Test RegEx
+                                    </Button>
+                                  </Row>
+                                </form>
+                              }
+                            />
+                          )}
+                        </FormGroup>
+                        {!Utils.getIsEdge() && !!Utils.isSaas() && (
+                          <FormGroup className='mt-4'>
+                            <Row className='mb-2'>
+                              <h5 className='mb-0 mr-3'>
+                                Global Edge API Opt in
+                              </h5>
+                              <Button
+                                disabled={isSaving || Utils.isMigrating()}
+                                onClick={() =>
+                                  openConfirm({
+                                    body: 'This will migrate your project to the Global Edge API.',
+                                    onYes: () => {
+                                      this.migrate(project)
+                                    },
+                                    title: 'Migrate to Global Edge API',
+                                  })
+                                }
+                                size='xSmall'
+                                theme='outline'
+                              >
+                                {this.state.migrating || Utils.isMigrating()
+                                  ? 'Migrating to Edge'
+                                  : 'Start Migration'}{' '}
+                                <Icon
+                                  name='arrow-right'
+                                  width={16}
+                                  fill='#6837FC'
+                                />
+                              </Button>
+                            </Row>
+                            <p className='fs-small lh-sm'>
+                              Migrate your project onto our Global Edge API.
+                              Existing Core API endpoints will continue to work
+                              whilst the migration takes place. Find out more{' '}
+                              <a
+                                target='_blank'
+                                href='https://docs.flagsmith.com/advanced-use/edge-api'
+                                className='btn-link'
+                                rel='noreferrer'
+                              >
+                                here
+                              </a>
+                              .
+                            </p>
+                          </FormGroup>
                         )}
-                      </FormGroup>
-                      {!Utils.getIsEdge() && !!Utils.isSaas() && (
-                        <FormGroup className='mt-4 col-md-8'>
-                          <Row className='mb-2'>
-                            <h5 className='mb-0 mr-3'>
-                              Global Edge API Opt in
-                            </h5>
+                        <FormGroup>
+                          <SettingTitle danger>Delete Project</SettingTitle>
+                          <Row space>
+                            <div className=''>
+                              <p className='fs-small lh-sm mb-0'>
+                                This project will be permanently deleted.
+                              </p>
+                            </div>
                             <Button
-                              disabled={isSaving || Utils.isMigrating()}
                               onClick={() =>
-                                openConfirm({
-                                  body: 'This will migrate your project to the Global Edge API.',
-                                  onYes: () => {
-                                    this.migrate(project)
-                                  },
-                                  title: 'Migrate to Global Edge API',
+                                this.confirmRemove(project, () => {
+                                  this.props.history.replace(
+                                    Utils.getOrganisationHomePage(),
+                                  )
+                                  deleteProject(projectIdFromUrl)
                                 })
                               }
-                              size='xSmall'
-                              theme='outline'
+                              theme='danger'
                             >
-                              {this.state.migrating || Utils.isMigrating()
-                                ? 'Migrating to Edge'
-                                : 'Start Migration'}{' '}
-                              <Icon
-                                name='arrow-right'
-                                width={16}
-                                fill='#6837FC'
-                              />
+                              Delete Project
                             </Button>
                           </Row>
-                          <p className='fs-small lh-sm'>
-                            Migrate your project onto our Global Edge API.
-                            Existing Core API endpoints will continue to work
-                            whilst the migration takes place. Find out more{' '}
-                            <a
-                              target='_blank'
-                              href='https://docs.flagsmith.com/advanced-use/edge-api'
-                              className='btn-link'
-                              rel='noreferrer'
-                            >
-                              here
-                            </a>
-                            .
-                          </p>
                         </FormGroup>
-                      )}
-                      <hr className='py-0 my-4' />
-                      <FormGroup className='mt-4 col-md-8'>
-                        <Row space>
-                          <div className='col-md-7'>
-                            <h5>Delete Project</h5>
-                            <p className='fs-small lh-sm mb-0'>
-                              This project will be permanently deleted.
-                            </p>
-                          </div>
-                          <Button
-                            onClick={() =>
-                              this.confirmRemove(project, () => {
-                                this.props.history.replace(
-                                  Utils.getOrganisationHomePage(),
-                                )
-                                deleteProject(projectIdFromUrl)
-                              })
-                            }
-                            className='btn btn-with-icon btn-remove'
-                          >
-                            <Icon name='trash-2' width={20} fill='#EF4D56' />
-                          </Button>
-                        </Row>
-
-                        <div className='row'>
-                          <div className='col-md-10'></div>
-                          <div className='col-md-2 text-right'></div>
-                        </div>
-                      </FormGroup>
+                      </div>
                     </TabItem>
                     <TabItem
                       data-test='js-sdk-settings'

@@ -7,6 +7,7 @@ from django.db.models import Q
 
 from edge_api.identities.models import EdgeIdentity
 from environments.models import Environment
+from features.models import Feature
 from metrics.constants import DEFAULT_METRIC_DEFINITIONS, WORKFLOW_METRIC_DEFINITIONS
 from metrics.types import EnvMetricsName, EnvMetricsPayload, MetricDefinition
 
@@ -75,13 +76,32 @@ class EnvironmentMetricsService:
         """
         return {
             EnvMetricsName.IDENTITY_OVERRIDES: (
-                lambda: EdgeIdentity.dynamo_wrapper.get_identity_overrides_count(
-                    self.environment.api_key
-                )
+                lambda: self._get_active_identity_edge_overrides_count()
             )
             if self.uses_dynamo
             else (lambda: self.environment.get_identity_overrides_queryset().count()),
         }
+
+    def _get_active_identity_edge_overrides_count(self) -> int:
+        override_feature_id_counts = (
+            EdgeIdentity.dynamo_wrapper.get_identity_override_feature_counts(
+                self.environment.api_key
+            )
+        )
+
+        valid_feature_ids = set(
+            Feature.objects.filter(
+                project=self.environment.project,
+                is_archived=False,
+                deleted_at__isnull=True,
+            ).values_list("id", flat=True)
+        )
+
+        return sum(
+            count
+            for feature_id, count in override_feature_id_counts.items()
+            if feature_id in valid_feature_ids
+        )
 
     def _get_feature_metrics(
         self,
