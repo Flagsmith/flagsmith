@@ -499,8 +499,3 @@ class HubspotTracker(models.Model):
         return {
             key: getattr(self, key) for key in ALLOWED_UTM_KEYS if getattr(self, key)
         }
-
-    @utm_data.setter
-    def utm_data(self, value: dict[str, str]) -> None:
-        for key in ALLOWED_UTM_KEYS:
-            setattr(self, key, value.get(key))
