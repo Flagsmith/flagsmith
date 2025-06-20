@@ -237,33 +237,6 @@ def test_delete_user():  # type: ignore[no-untyped-def]
     assert Organisation.objects.filter(name="org1").count() == 1
 
 
-def test_user_create_calls_pipedrive_tracking(mocker, db, settings):  # type: ignore[no-untyped-def]
-    # Given
-    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
-    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
-
-    # When
-    FFAdminUser.objects.create(email="test@example.com")
-
-    # Then
-    mocked_create_pipedrive_lead.delay.assert_called()
-
-
-def test_user_create_does_not_call_pipedrive_tracking_if_ignored_domain(  # type: ignore[no-untyped-def]
-    mocker, db, settings
-):
-    # Given
-    mocked_create_pipedrive_lead = mocker.patch("users.signals.create_pipedrive_lead")
-    settings.ENABLE_PIPEDRIVE_LEAD_TRACKING = True
-    settings.PIPEDRIVE_IGNORE_DOMAINS = ["example.com"]
-
-    # When
-    FFAdminUser.objects.create(email="test@example.com")
-
-    # Then
-    mocked_create_pipedrive_lead.delay.assert_not_called()
-
-
 def test_user_email_domain_property():  # type: ignore[no-untyped-def]
     assert FFAdminUser(email="test@example.com").email_domain == "example.com"
 
