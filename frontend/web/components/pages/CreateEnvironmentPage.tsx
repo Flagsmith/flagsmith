@@ -18,7 +18,7 @@ import API from 'project/api'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
-
+import { useRouteContext } from 'components/providers/RouteContext'
 interface RouteParams {
   environmentId: string
   projectId: string
@@ -34,7 +34,7 @@ const CreateEnvironmentPage: React.FC = () => {
 
   const history = useHistory()
   const match = useRouteMatch<RouteParams>()
-  const projectIdFromUrl = Utils.getProjectIdFromUrl(match)
+  const { projectId } = useRouteContext()
   const onSave = (environment: Environment) => {
     history.push(
       `/project/${match.params.projectId}/environment/${environment.api_key}/features`,
@@ -74,7 +74,7 @@ const CreateEnvironmentPage: React.FC = () => {
           description,
           metadata,
           name,
-          projectId: projectIdFromUrl,
+          projectId,
         })
       }
     }
@@ -87,13 +87,13 @@ const CreateEnvironmentPage: React.FC = () => {
       <Permission
         level='project'
         permission='CREATE_ENVIRONMENT'
-        id={projectIdFromUrl}
+        id={projectId}
       >
         {({ isLoading, permission }) =>
           isLoading ? (
             <Loader />
           ) : permission ? (
-            <ProjectProvider id={projectIdFromUrl} onSave={onSave}>
+            <ProjectProvider id={projectId} onSave={onSave}>
               {({ createEnv, error, isSaving, project }) => (
                 <form
                   id='create-env-modal'
@@ -181,7 +181,7 @@ const CreateEnvironmentPage: React.FC = () => {
                                 organisationId={
                                   AccountStore.getOrganisation().id
                                 }
-                                projectId={projectIdFromUrl}
+                                projectId={projectId}
                                 entityId={selectedEnv?.api_key}
                                 envName={name}
                                 entityContentType={envContentType.id}
