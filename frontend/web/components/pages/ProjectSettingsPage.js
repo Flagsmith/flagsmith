@@ -36,18 +36,17 @@ const ProjectSettingsPage = class extends Component {
 
   constructor(props) {
     super(props)
+    this.projectId = this.props.routeContext.projectId
     this.state = {
       roles: [],
     }
-    AppActions.getProject(this.props.routeContext.projectId)
+    AppActions.getProject(this.projectId)
     this.getPermissions()
   }
 
   getPermissions = () => {
     _data
-      .get(
-        `${Project.api}projects/${this.props.routeContext.projectId}/user-permissions/`,
-      )
+      .get(`${Project.api}projects/${this.projectId}/user-permissions/`)
       .then((permissions) => {
         this.setState({ permissions })
       })
@@ -74,7 +73,7 @@ const ProjectSettingsPage = class extends Component {
   }
   componentDidUpdate(prevProps) {
     if (this.props.projectId !== prevProps.projectId) {
-      AppActions.getProject(this.props.routeContext.projectId)
+      AppActions.getProject(this.projectId)
     }
   }
   confirmRemove = (project, cb) => {
@@ -144,7 +143,7 @@ const ProjectSettingsPage = class extends Component {
   }
 
   migrate = () => {
-    AppActions.migrateProject(this.props.routeContext.projectId)
+    AppActions.migrateProject(this.projectId)
   }
 
   forceSelectionRange = (e) => {
@@ -162,10 +161,7 @@ const ProjectSettingsPage = class extends Component {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return (
       <div className='app-container container'>
-        <ProjectProvider
-          id={this.props.routeContext.projectId}
-          onSave={this.onSave}
-        >
+        <ProjectProvider id={this.projectId} onSave={this.onSave}>
           {({ deleteProject, editProject, isLoading, isSaving, project }) => {
             if (
               !this.state.stale_flags_limit_days &&
@@ -500,9 +496,7 @@ const ProjectSettingsPage = class extends Component {
                                   this.props.history.replace(
                                     Utils.getOrganisationHomePage(),
                                   )
-                                  deleteProject(
-                                    this.props.routeContext.projectId,
-                                  )
+                                  deleteProject(this.projectId)
                                 })
                               }
                               theme='danger'
@@ -559,9 +553,7 @@ const ProjectSettingsPage = class extends Component {
                       </div>
                     </TabItem>
                     <TabItem tabLabel='Usage'>
-                      <ProjectUsage
-                        projectId={this.props.routeContext.projectId}
-                      />
+                      <ProjectUsage projectId={this.projectId} />
                     </TabItem>
                     {Utils.getFlagsmithHasFeature('feature_health') && (
                       <TabItem
@@ -569,7 +561,7 @@ const ProjectSettingsPage = class extends Component {
                         tabLabel='Feature Health'
                       >
                         <EditHealthProvider
-                          projectId={this.props.routeContext.projectId}
+                          projectId={this.projectId}
                           tabClassName='flat-panel'
                         />
                       </TabItem>
@@ -581,7 +573,7 @@ const ProjectSettingsPage = class extends Component {
                         }}
                         permissions={this.state.permissions}
                         tabClassName='flat-panel'
-                        id={this.props.routeContext.projectId}
+                        id={this.projectId}
                         level='project'
                         roleTabTitle='Project Permissions'
                         role
@@ -616,16 +608,14 @@ const ProjectSettingsPage = class extends Component {
                       <TabItem data-test='js-import-page' tabLabel='Import'>
                         <ImportPage
                           environmentId={this.props.routeContext.environmentId}
-                          projectId={this.props.routeContext.projectId}
+                          projectId={this.projectId}
                           projectName={project.name}
                         />
                       </TabItem>
                     )}
                     {!!ProjectStore.getEnvs()?.length && (
                       <TabItem tabLabel='Export'>
-                        <FeatureExport
-                          projectId={this.props.routeContext.projectId}
-                        />
+                        <FeatureExport projectId={this.projectId} />
                       </TabItem>
                     )}
                   </Tabs>

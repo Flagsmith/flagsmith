@@ -74,9 +74,9 @@ const FeaturesPage = class extends Component {
       forceMetricsRefetch: false,
     }
     ES6Component(this)
-    const projectId = this.props.routeContext.projectId
+    this.projectId = this.props.routeContext.projectId
     AppActions.getFeatures(
-      projectId,
+      this.projectId,
       this.props.match.params.environmentId,
       true,
       this.state.search,
@@ -118,13 +118,12 @@ const FeaturesPage = class extends Component {
   }
 
   newFlag = () => {
-    const projectId = this.props.routeContext.projectId
     openModal(
       'New Feature',
       <CreateFlagModal
         history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={projectId}
+        projectId={this.projectId}
       />,
       'side-modal create-feature-modal',
     )
@@ -175,7 +174,6 @@ const FeaturesPage = class extends Component {
 
   filter = (page) => {
     const currentParams = Utils.fromParam()
-    const projectId = this.props.routeContext.projectId
     this.setState({ page }, () => {
       if (!currentParams.feature) {
         this.props.history.replace(
@@ -184,7 +182,7 @@ const FeaturesPage = class extends Component {
       }
       if (page) {
         AppActions.getFeatures(
-          projectId,
+          this.projectId,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -194,7 +192,7 @@ const FeaturesPage = class extends Component {
         )
       } else {
         AppActions.searchFeatures(
-          projectId,
+          this.projectId,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -206,9 +204,12 @@ const FeaturesPage = class extends Component {
   }
 
   createFeaturePermission(el) {
-    const projectId = this.props.routeContext.projectId
     return (
-      <Permission level='project' permission='CREATE_FEATURE' id={projectId}>
+      <Permission
+        level='project'
+        permission='CREATE_FEATURE'
+        id={this.projectId}
+      >
         {({ permission }) =>
           permission
             ? el(permission)

@@ -67,7 +67,7 @@ const CreateEnvironmentPage: React.FC = () => {
   const handleCreateEnv =
     (createEnv: CreateEnvType, isSaving: boolean) => (e: React.FormEvent) => {
       e.preventDefault()
-      if (name && !isSaving) {
+      if (name && !isSaving && projectId) {
         createEnv({
           cloneFeatureStatesAsync: true,
           cloneId: selectedEnv?.api_key,
