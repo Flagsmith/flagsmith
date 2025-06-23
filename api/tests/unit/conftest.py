@@ -1,13 +1,17 @@
 import typing
+from unittest.mock import MagicMock
 
 import pytest
+from django.core.cache import BaseCache
 from flag_engine.environments.models import EnvironmentModel
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from flag_engine.organisations.models import OrganisationModel
 from flag_engine.projects.models import ProjectModel
 from flagsmith.offline_handlers import BaseOfflineHandler
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
+from environments.enums import EnvironmentDocumentCacheMode
 from environments.models import Environment
 from features.feature_types import STANDARD
 from features.models import Feature
@@ -16,79 +20,80 @@ from projects.models import Project
 from projects.tags.models import Tag
 from tests.types import TestFlagData
 from users.models import FFAdminUser
+from util.mappers import map_environment_to_environment_document
 
 
 @pytest.fixture()
-def organisation_one(db):
+def organisation_one(db):  # type: ignore[no-untyped-def]
     return Organisation.objects.create(name="Test organisation 1")
 
 
 @pytest.fixture()
-def organisation_two(db):
+def organisation_two(db):  # type: ignore[no-untyped-def]
     return Organisation.objects.create(name="Test organisation 2")
 
 
 @pytest.fixture()
-def organisation_one_project_one(organisation_one):
+def organisation_one_project_one(organisation_one):  # type: ignore[no-untyped-def]
     return Project.objects.create(name="Test Project 1", organisation=organisation_one)
 
 
 @pytest.fixture()
-def organisation_one_project_two(organisation_one):
+def organisation_one_project_two(organisation_one):  # type: ignore[no-untyped-def]
     return Project.objects.create(name="Test Project 2", organisation=organisation_one)
 
 
 @pytest.fixture()
-def organisation_two_project_one(organisation_two):
+def organisation_two_project_one(organisation_two):  # type: ignore[no-untyped-def]
     return Project.objects.create(name="Test Project 1", organisation=organisation_two)
 
 
 @pytest.fixture()
-def organisation_two_project_two(organisation_two):
+def organisation_two_project_two(organisation_two):  # type: ignore[no-untyped-def]
     return Project.objects.create(name="Test Project 2", organisation=organisation_two)
 
 
 @pytest.fixture()
-def organisation_one_project_one_environment_one(organisation_one_project_one):
+def organisation_one_project_one_environment_one(organisation_one_project_one):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Test Environment 1", project=organisation_one_project_one
     )
 
 
 @pytest.fixture()
-def organisation_one_project_one_environment_two(organisation_one_project_one):
+def organisation_one_project_one_environment_two(organisation_one_project_one):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Test Environment 2", project=organisation_one_project_one
     )
 
 
 @pytest.fixture()
-def organisation_two_project_one_environment_one(organisation_two_project_one):
+def organisation_two_project_one_environment_one(organisation_two_project_one):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Test Environment 1", project=organisation_two_project_one
     )
 
 
 @pytest.fixture()
-def organisation_two_project_one_environment_two(organisation_two_project_one):
+def organisation_two_project_one_environment_two(organisation_two_project_one):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Test Environment 2", project=organisation_two_project_one
     )
 
 
 @pytest.fixture()
-def user_one():
+def user_one():  # type: ignore[no-untyped-def]
     return FFAdminUser.objects.create(email="test@example.com")
 
 
 @pytest.fixture()
-def organisation_one_user(user_one, organisation_one):
+def organisation_one_user(user_one, organisation_one):  # type: ignore[no-untyped-def]
     user_one.add_organisation(organisation_one)
     return user_one
 
 
 @pytest.fixture()
-def organisation_one_admin_user(organisation_one):
+def organisation_one_admin_user(organisation_one):  # type: ignore[no-untyped-def]
     organisation_one_admin_user = FFAdminUser.objects.create(
         email="org1_admin@example.com"
     )
@@ -99,7 +104,7 @@ def organisation_one_admin_user(organisation_one):
 
 
 @pytest.fixture()
-def organisation_one_project_one_feature_one(organisation_one_project_one):
+def organisation_one_project_one_feature_one(organisation_one_project_one):  # type: ignore[no-untyped-def]
     return Feature.objects.create(
         project=organisation_one_project_one,
         name="feature_1",
@@ -108,7 +113,7 @@ def organisation_one_project_one_feature_one(organisation_one_project_one):
 
 
 @pytest.fixture()
-def dynamo_enabled_project(organisation):
+def dynamo_enabled_project(organisation):  # type: ignore[no-untyped-def]
     return Project.objects.create(
         name="Dynamo enabled project",
         organisation=organisation,
@@ -117,7 +122,7 @@ def dynamo_enabled_project(organisation):
 
 
 @pytest.fixture()
-def realtime_enabled_project(organisation_one):
+def realtime_enabled_project(organisation_one):  # type: ignore[no-untyped-def]
     return Project.objects.create(
         name="Realtime enabled project",
         organisation=organisation_one,
@@ -126,7 +131,7 @@ def realtime_enabled_project(organisation_one):
 
 
 @pytest.fixture()
-def realtime_enabled_project_environment_one(realtime_enabled_project):
+def realtime_enabled_project_environment_one(realtime_enabled_project):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Env 1 realtime",
         project=realtime_enabled_project,
@@ -135,7 +140,7 @@ def realtime_enabled_project_environment_one(realtime_enabled_project):
 
 
 @pytest.fixture()
-def realtime_enabled_project_environment_two(realtime_enabled_project):
+def realtime_enabled_project_environment_two(realtime_enabled_project):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Env 2 realtime",
         project=realtime_enabled_project,
@@ -144,21 +149,21 @@ def realtime_enabled_project_environment_two(realtime_enabled_project):
 
 
 @pytest.fixture()
-def dynamo_enabled_project_environment_one(dynamo_enabled_project):
+def dynamo_enabled_project_environment_one(dynamo_enabled_project):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Env 1", project=dynamo_enabled_project, api_key="env-1-key"
     )
 
 
 @pytest.fixture()
-def dynamo_enabled_project_environment_two(dynamo_enabled_project):
+def dynamo_enabled_project_environment_two(dynamo_enabled_project):  # type: ignore[no-untyped-def]
     return Environment.objects.create(
         name="Env 2", project=dynamo_enabled_project, api_key="env-2-key"
     )
 
 
 @pytest.fixture()
-def tag_one(project):
+def tag_one(project):  # type: ignore[no-untyped-def]
     return Tag.objects.create(
         label="Test Tag",
         color="#fffff",
@@ -168,7 +173,7 @@ def tag_one(project):
 
 
 @pytest.fixture()
-def tag_two(project):
+def tag_two(project):  # type: ignore[no-untyped-def]
     return Tag.objects.create(
         label="Test Tag2",
         color="#fffff",
@@ -190,25 +195,50 @@ def tagged_feature(
 
 @pytest.fixture()
 def project_two(organisation: Organisation) -> Project:
-    return Project.objects.create(name="Test Project Two", organisation=organisation)
+    return Project.objects.create(name="Test Project Two", organisation=organisation)  # type: ignore[no-any-return]
 
 
 @pytest.fixture()
 def environment_two(project: Project) -> Environment:
-    return Environment.objects.create(name="Test Environment two", project=project)
+    return Environment.objects.create(name="Test Environment two", project=project)  # type: ignore[no-any-return]
 
 
 @pytest.fixture
 def project_two_environment(project_two: Project) -> Environment:
-    return Environment.objects.create(
+    return Environment.objects.create(  # type: ignore[no-any-return]
         name="Test Project two Environment", project=project_two
     )
 
 
 @pytest.fixture
 def project_two_feature(project_two: Project) -> Feature:
-    return Feature.objects.create(
+    return Feature.objects.create(  # type: ignore[no-any-return]
         name="project_two_feature", project=project_two, initial_value="initial_value"
+    )
+
+
+@pytest.fixture()
+def persistent_environment_document_cache(
+    settings: SettingsWrapper, mocker: MockerFixture
+) -> MagicMock:
+    settings.CACHE_ENVIRONMENT_DOCUMENT_MODE = EnvironmentDocumentCacheMode.PERSISTENT
+
+    mock_environment_document_cache: MagicMock = mocker.MagicMock(spec=BaseCache)
+    mocker.patch(
+        "environments.models.environment_document_cache",
+        mock_environment_document_cache,
+    )
+    mock_environment_document_cache.get.return_value = None
+
+    return mock_environment_document_cache
+
+
+@pytest.fixture()
+def populate_environment_document_cache(
+    persistent_environment_document_cache: MagicMock, environment: Environment
+) -> None:
+    persistent_environment_document_cache.get.return_value = (
+        map_environment_to_environment_document(environment)
     )
 
 
@@ -217,7 +247,7 @@ def set_flagsmith_client_flags(
     mocker: MockerFixture,
 ) -> typing.Callable[[list[TestFlagData]], None]:
     class TestOfflineHandler(BaseOfflineHandler):
-        def __init__(self):
+        def __init__(self) -> None:
             self.environment = EnvironmentModel(
                 id=1,
                 api_key="flagsmith-environment-key",

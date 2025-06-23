@@ -1,8 +1,9 @@
 import typing
 
 import pytest
-from core.helpers import get_current_site_url
 from django.contrib.sites.models import Site
+
+from core.helpers import get_current_site_url
 
 if typing.TYPE_CHECKING:
     from pytest_django.fixtures import DjangoAssertNumQueries, SettingsWrapper

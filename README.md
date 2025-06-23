@@ -1,22 +1,39 @@
-[![Feature Flag, Remote Config and A/B Testing platform, Flagsmith](static-files/hero.png)](https://www.flagsmith.com/)
+[![Feature Flag, Remote Config and A/B Testing platform, Flagsmith](static-files/flagsmith-cover.png)](https://www.flagsmith.com/)
 
 [![Stars](https://img.shields.io/github/stars/flagsmith/flagsmith)](https://github.com/Flagsmith/flagsmith/stargazers)
 [![Docker Pulls](https://img.shields.io/docker/pulls/flagsmith/flagsmith)](https://hub.docker.com/u/flagsmith)
 [![Docker Image Size](https://img.shields.io/docker/image-size/flagsmith/flagsmith)](https://hub.docker.com/r/flagsmith/flagsmith)
 [![Join the Discord chat](https://img.shields.io/discord/517647859495993347)](https://discord.gg/hFhxNtXzgm)
 [![Coverage](https://codecov.io/gh/Flagsmith/flagsmith/branch/main/graph/badge.svg?token=IyGii7VSdc)](https://codecov.io/gh/Flagsmith/flagsmith)
+[![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 <a href="https://depot.dev?utm_source=Flagsmith"><img src="https://depot.dev/badges/built-with-depot.svg" alt="Built with Depot" height="20"></a>
 
-[Flagsmith](https://flagsmith.com/) is an open source, fully featured, Feature Flag and Remote Config service. Use our
-hosted API, deploy to your own private cloud, or run on-premise.
+<p align="center">
+  <a href="https://www.flagsmith.com/demo">
+  <img width="75%" height="75%" src="static-files/ReadMe_Demo.gif" alt="Try our interactive demo">
+</p>
+<p align="center">
+  <a href="https://www.flagsmith.com/demo">Try our interactive demo </a>
+</p>
 
-# Flagsmith
 
-Flagsmith makes it easy to create and manage features flags across web, mobile, and server side applications. Just wrap
+# [Flagsmith](https://flagsmith.com/) is an Open-Source Feature Flagging Tool to Ship Faster & Control Releases 
+
+Change the way your team releases software. Roll out, segment, and optimise—with granular control. Stay secure with on-premise and private cloud hosting.
+
+* Feature flags: Release features behind the safety of a feature flag
+* Make changes remotely: Easily toggle individual features on and off, and make changes without deploying new code
+* A/B testing: Use segments to run A/B and multivariate tests on new features
+* Segments: Release features to beta testers, collect feedback, and iterate 
+* Organisation management: Stay organised with orgs, projects, and roles for team members
+* SDKs & frameworks: Choose from 15+ popular languages like Typescript, .NET, Java, and more. Integrate with any framework, including React, Next.js, and more
+* Integrations: Use your favourite tools with Flagsmith
+
+Flagsmith makes it easy to create and manage feature flags across web, mobile, and server side applications. Just wrap
 a section of code with a flag, and then use Flagsmith to toggle that feature on or off for different environments, users
 or user segments.
 
-Get up and running in less than a minute:
+## Get up and running in less than a minute:
 
 ```bash
 curl -o docker-compose.yml https://raw.githubusercontent.com/Flagsmith/flagsmith/main/docker-compose.yml
@@ -31,56 +48,46 @@ Superuser "admin@example.com" created successfully.
 Please go to the following page and choose a password: http://localhost:8000/password-reset/confirm/.../...
 ```
 
-Note: This setup uses http:// for local development. If you've configured SSL for your local environment, you may use
-https:// instead. For any production deployment, always use https://.
-
 ![Flagsmith Screenshot](static-files/screenshot.png)
 
-## Features
+## Flagsmith Open Source
 
-- **Feature flags**. Release features with confidence through phased roll-outs.
-- **Remote config**. Easily toggle individual features on and off, and make changes without deploying new code.
-- **A/B and Multivariate Testing**. Use segments to run A/B and multivariate tests on new features. With segments, you
-  can also introduce beta programs to get early user feedback.
-- **Organization Management**. Organizations, projects, and roles for team members help keep your deployment organized.
-- **Integrations**. Easily enhance Flagsmith with your favourite tools.
+The Flagsmith repository is comprised of two core components - the [REST API](https://github.com/Flagsmith/flagsmith/tree/main/api) and the [frontend dashboard](https://github.com/Flagsmith/flagsmith/tree/main/frontend).
 
-## Trying Flagsmith
+Further documentation for these can be found at: 
 
-### Flagsmith hosted SaaS
+* [API](https://docs.flagsmith.com/deployment/hosting/locally-api)
+* [Frontend](https://docs.flagsmith.com/deployment/hosting/locally-frontend)
 
-You can try our hosted version for free at https://flagsmith.com/
+## Flagsmith hosted SaaS
+You can try our hosted version for free at https://flagsmith.com
 
-### Flagsmith Open Source
+## Community Resources + Contribution Guidelines
 
-The Flagsmith API is built using Python 3, Django 2, and DjangoRestFramework 3. You can try the application out using:
+* [Visit our docs](https://docs.flagsmith.com/)
+* [Chat with other developers on Discord](https://discord.com/invite/hFhxNtXzgm)
+* If you need help getting up and running, please [get in touch](https://www.flagsmith.com/contact-us)
 
-- [Docker](https://github.com/Flagsmith/flagsmith/blob/main/docker-compose.yml)
-- [Kubernetes](https://github.com/Flagsmith/flagsmith-charts)
-- [Redhat OpenShift](https://operatorhub.io/operator/flagsmith)
+We love contributions from the community and are always looking to improve! Here are our [contribution guidelines](https://docs.flagsmith.com/platform/contributing). 
 
-We also have options for deploying to AWS, GCP, Azure and On-Premise. If you need help getting up and running, please
-[get in touch!](mailto:support@flagsmith.com)
+## Open Source Philosophy
 
-## Overview
+The majority of our platform is open source under the [BSD-3-Clause license](https://github.com/Flagsmith/flagsmith?tab=BSD-3-Clause-1-ov-file#readme). A small number of repositories are under the MIT license.
 
-This repository is formed of 2 core components, the REST API (found in `/api`) and the web-based administrator dashboard
-(found in `/frontend`) that you can use to manage Flagsmith. Technical documentation for each component can be found at
-the [API](https://docs.flagsmith.com/deployment/locally-api) and
-[Frontend](https://docs.flagsmith.com/deployment/locally-frontend) pages within our
-[Documentation](https://docs.flagsmith.com/)
+We built Flagsmith as the open source feature flag tool we needed but couldn't find on GitHub. Our core functionality stays open, always. Read our [open letter to developers](https://www.flagsmith.com/about-us).
 
-These two components run as separate applications. The web-based dashboard is a single page app that communicates via
-REST calls to the API.
+## Open Source vs Paid
 
-## Resources
+With our core functionality being open, you can use our open-source feature flag and remote config management platform no matter what. Enterprise-level governance and management features are available with a valid Flagsmith Enterprise license.
 
-- [Website](https://flagsmith.com/)
-- [Documentation](https://docs.flagsmith.com/)
-- If you have any questions about our projects you can email [support@flagsmith.com](mailto:support@flagsmith.com)
+To learn more, [contact us](https://www.flagsmith.com/contact-us) or see our [version comparison](https://docs.flagsmith.com/version-comparison).
 
-## Acknowledgements
+## Contributors
 
-Thank you to [Uffizzi](https://www.uffizzi.com) for providing ephemeral environments to preview pull requests.
+Thank you to the open source community for your contributions and for building this with us!  
 
-<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=e9b19423-eb7d-4b03-b325-481d10d1a9a4" />
+<a href="https://github.com/flagsmith/flagsmith/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=flagsmith/flagsmith" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).

@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react'
-import { matchPath } from 'react-router'
-import { Link, withRouter } from 'react-router-dom'
+import { Link, withRouter, matchPath } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
+import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
 import { sessionReplayPlugin } from '@amplitude/plugin-session-replay-browser'
 import NavLink from 'react-router-dom/NavLink'
 import TwoFactorPrompt from './SimpleTwoFactor/prompt'
@@ -12,7 +12,6 @@ import ButterBar from './ButterBar'
 import AccountSettingsPage from './pages/AccountSettingsPage'
 import Headway from './Headway'
 import ProjectStore from 'common/stores/project-store'
-import getBuildVersion from 'project/getBuildVersion'
 import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
@@ -25,7 +24,7 @@ import GithubStar from './GithubStar'
 import Tooltip from './Tooltip'
 import classNames from 'classnames'
 import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
-import NavSubLink from './NavSubLink'
+import NavSubLink from './navigation/NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
 import BreadcrumbSeparator from './BreadcrumbSeparator'
@@ -37,14 +36,11 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
+import { getBuildVersion } from 'common/services/useBuildVersion'
 
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
-  }
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
   }
 
   state = {
@@ -98,13 +94,14 @@ const App = class extends Component {
         defaultTracking: true,
         serverZone: 'EU',
       })
+      amplitude.add(engagementPlugin())
       const sessionReplayTracking = sessionReplayPlugin({
         sampleRate: 0.5,
         serverZone: 'EU',
       })
       amplitude.add(sessionReplayTracking)
     }
-    getBuildVersion()
+    getBuildVersion(getStore(), {})
     this.state.projectId = this.getProjectId(this.props)
     if (this.state.projectId) {
       AppActions.getProject(this.state.projectId)
@@ -128,16 +125,6 @@ const App = class extends Component {
     }
     this.props.history.listen(updateLastViewed)
     updateLastViewed()
-  }
-
-  toggleDarkMode = () => {
-    const newValue = !Utils.getFlagsmithHasFeature('dark_mode')
-    flagsmith.setTrait('dark_mode', newValue)
-    if (newValue) {
-      document.body.classList.add('dark')
-    } else {
-      document.body.classList.remove('dark')
-    }
   }
 
   componentDidUpdate(prevProps) {
@@ -198,7 +185,7 @@ const App = class extends Component {
 
     if (!AccountStore.getOrganisation() && !invite) {
       // If user has no organisation redirect to /create
-      this.context.router.history.replace(`/create${query}`)
+      this.props.history.replace(`/create${query}`)
       return
     }
 
@@ -213,13 +200,11 @@ const App = class extends Component {
     ) {
       if (redirect) {
         API.setRedirect('')
-        this.context.router.history.replace(redirect)
+        this.props.history.replace(redirect)
       } else {
         AsyncStorage.getItem('lastEnv').then((res) => {
-          if (
-            this.props.location.search.includes('github-redirect')
-          ) {
-            this.context.router.history.replace(
+          if (this.props.location.search.includes('github-redirect')) {
+            this.props.history.replace(
               `/github-setup${this.props.location.search}`,
             )
             return
@@ -230,7 +215,7 @@ const App = class extends Component {
               id: lastEnv.orgId,
             })
             if (!lastOrg) {
-              this.context.router.history.replace('/organisations')
+              this.props.history.replace('/organisations')
               return
             }
 
@@ -243,13 +228,20 @@ const App = class extends Component {
               AppActions.getOrganisation(lastOrg.id)
             }
 
-            this.context.router.history.replace(
+            this.props.history.replace(
               `/project/${lastEnv.projectId}/environment/${lastEnv.environmentId}/features`,
             )
             return
           }
 
-          this.context.router.history.replace(Utils.getOrganisationHomePage())
+          if (
+            Utils.getFlagsmithHasFeature('welcome_page') &&
+            AccountStore.getUser()?.isGettingStarted
+          ) {
+            this.props.history.replace('/getting-started')
+          } else {
+            this.props.history.replace(Utils.getOrganisationHomePage())
+          }
         })
       }
     }
@@ -275,7 +267,7 @@ const App = class extends Component {
     if (document.location.href.includes('saml?')) {
       return
     }
-    this.context.router.history.replace('/')
+    this.props.history.replace('/')
   }
 
   closeAnnouncement = (announcementId) => {
@@ -337,11 +329,17 @@ const App = class extends Component {
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
-    if (document.location.href.includes('widget')) {
+    if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'
     const integrations = Object.keys(Utils.getIntegrationData())
+    const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
+      'environment_metrics',
+    )
+    const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
+      'project_metrics_tooltip',
+    )
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -373,7 +371,7 @@ const App = class extends Component {
                       />
                     )}
                     {user && (
-                      <div className='container mt-4'>
+                      <div className='container announcement-container mt-4'>
                         <div>
                           <Announcement />
                           <AnnouncementPerPage pathname={pathname} />
@@ -432,13 +430,12 @@ const App = class extends Component {
                                     <div className='d-flex gap-1 ml-1 align-items-center'>
                                       <BreadcrumbSeparator
                                         projectId={projectId}
-                                        router={this.context.router}
                                         hideSlash={!activeProject}
                                         focus='organisation'
                                       >
                                         <NavLink
-                                          id='org-settings-link'
-                                          data-test='org-settings-link'
+                                          id='organisation-link'
+                                          data-test='organisation-link'
                                           activeClassName='active'
                                           className={classNames(
                                             'breadcrumb-link',
@@ -459,7 +456,6 @@ const App = class extends Component {
                                       {!!activeProject && (
                                         <BreadcrumbSeparator
                                           projectId={projectId}
-                                          router={this.context.router}
                                           hideSlash
                                           focus='project'
                                         >
@@ -477,7 +473,40 @@ const App = class extends Component {
                                   )}
                                 </Row>
                                 <Row className='gap-3'>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'welcome_page',
+                                  ) && (
+                                    <NavLink
+                                      activeClassName='active'
+                                      to={'/getting-started'}
+                                      className='d-flex lh-1 align-items-center'
+                                    >
+                                      <span className='mr-1'>
+                                        <Icon
+                                          name='rocket'
+                                          width={20}
+                                          fill='#9DA4AE'
+                                        />
+                                      </span>
+                                      Getting Started
+                                    </NavLink>
+                                  )}
+
+                                  <a
+                                    className='d-flex lh-1 align-items-center'
+                                    href={'https://docs.flagsmith.com'}
+                                  >
+                                    <span className='mr-1'>
+                                      <Icon
+                                        name='file-text'
+                                        width={20}
+                                        fill='#9DA4AE'
+                                      />
+                                    </span>
+                                    Docs
+                                  </a>
                                   <NavLink
+                                    className='d-flex lh-1 align-items-center'
                                     id='account-settings-link'
                                     data-test='account-settings-link'
                                     activeClassName='active'
@@ -493,43 +522,8 @@ const App = class extends Component {
                                     Account
                                   </NavLink>
                                   <GithubStar />
-                                  <Tooltip
-                                    place='bottom'
-                                    title={
-                                      <Button
-                                        href='https://docs.flagsmith.com'
-                                        target='_blank'
-                                        className='btn btn-with-icon'
-                                        size='small'
-                                      >
-                                        <Icon
-                                          name='file-text'
-                                          width={20}
-                                          fill='#9DA4AE'
-                                        />
-                                      </Button>
-                                    }
-                                  >
-                                    Docs
-                                  </Tooltip>
 
                                   <Headway className='cursor-pointer' />
-                                  <Tooltip
-                                    place='bottom'
-                                    title={
-                                      <div className='dark-mode mt-0'>
-                                        <Switch
-                                          checked={Utils.getFlagsmithHasFeature(
-                                            'dark_mode',
-                                          )}
-                                          onChange={this.toggleDarkMode}
-                                          darkMode
-                                        />
-                                      </div>
-                                    }
-                                  >
-                                    Dark Mode
-                                  </Tooltip>
                                 </Row>
                               </nav>
                             </React.Fragment>
@@ -594,6 +588,21 @@ const App = class extends Component {
                           >
                             Compare
                           </NavSubLink>
+                          {projectMetricsTooltipEnabled && (
+                            <NavSubLink
+                              icon={gitCompare}
+                              to=''
+                              id='reporting-link'
+                              disabled
+                              tooltip={
+                                Utils.getFlagsmithValue(
+                                  'project_metrics_tooltip',
+                                ) || 'Coming soon - fallback'
+                              }
+                            >
+                              Reporting
+                            </NavSubLink>
+                          )}
                           <Permission
                             level='project'
                             permission='ADMIN'
@@ -611,6 +620,27 @@ const App = class extends Component {
                               )
                             }
                           </Permission>
+                          {Utils.getFlagsmithHasFeature(
+                            'release_pipelines',
+                          ) && (
+                            <Permission
+                              level='project'
+                              permission='ADMIN'
+                              id={projectId}
+                            >
+                              {({ permission }) =>
+                                permission && (
+                                  <NavSubLink
+                                    icon={<Icon name='flash' />}
+                                    id='release-pipelines-link'
+                                    to={`/project/${projectId}/release-pipelines`}
+                                  >
+                                    Release Pipelines
+                                  </NavSubLink>
+                                )
+                              }
+                            </Permission>
+                          )}
                         </>
                       ) : (
                         !!AccountStore.getOrganisation() && (
@@ -662,7 +692,7 @@ const App = class extends Component {
                                 <NavSubLink
                                   icon={<SettingsIcon />}
                                   id='org-settings-link'
-                                data-test='org-settings-link'
+                                  data-test='org-settings-link'
                                   to={`/organisation/${
                                     AccountStore.getOrganisation().id
                                   }/settings`}
@@ -689,7 +719,7 @@ const App = class extends Component {
                   {environmentId && !isCreateEnvironment ? (
                     <div className='d-flex'>
                       <HomeAside
-                        history={this.context.router.history}
+                        history={this.props.history}
                         environmentId={environmentId}
                         projectId={projectId}
                       />
@@ -712,6 +742,7 @@ const App = class extends Component {
 App.propTypes = {
   history: RequiredObject,
   location: RequiredObject,
+  match: RequiredObject,
 }
 
 export default withRouter(ConfigProvider(App))

@@ -70,14 +70,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       env,
     })
   },
-  deleteIdentityTrait(envId, identity, id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.DELETE_IDENTITY_TRAIT,
-      envId,
-      id,
-      identity,
-    })
-  },
   deleteInvite(id) {
     Dispatcher.handleViewAction({
       actionType: Actions.DELETE_INVITE,
@@ -188,12 +180,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       project,
     })
   },
-  editTrait(params) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.EDIT_TRAIT,
-      ...params,
-    })
-  },
   editUserFlag(params) {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_USER_FLAG,
@@ -260,13 +246,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
       id,
     })
   },
-  getIdentitySegments(projectId, id) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.GET_IDENTITY_SEGMENTS,
-      id,
-      projectId,
-    })
-  },
   getOrganisation(organisationId) {
     Dispatcher.handleViewAction({
       actionType: Actions.GET_ORGANISATION,
@@ -283,12 +262,6 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     Dispatcher.handleViewAction({
       actionType: Actions.INVALIDATE_INVITE_LINK,
       link,
-    })
-  },
-  inviteUsers(invites) {
-    Dispatcher.handleViewAction({
-      actionType: Actions.INVITE_USERS,
-      invites,
     })
   },
   migrateProject(projectId) {

@@ -1,14 +1,14 @@
 import logging
 
-from core.models import SoftDeleteExportableModel
 from django.db import models
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_SAVE,
     AFTER_UPDATE,
     LifecycleModelMixin,
     hook,
 )
 
+from core.models import SoftDeleteExportableModel
 from environments.models import Environment
 
 logger = logging.getLogger(__name__)
@@ -22,12 +22,12 @@ class IntegrationsModel(SoftDeleteExportableModel):
         abstract = True
 
 
-class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):
+class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):  # type: ignore[misc]
     class Meta:
         abstract = True
 
     @hook(AFTER_SAVE)
-    def write_environment_to_dynamodb(self):
+    def write_environment_to_dynamodb(self):  # type: ignore[no-untyped-def]
         if not hasattr(self, "environment_id"):
             logger.warning(
                 "Failed to write environment to DynamoDB. "
@@ -35,8 +35,8 @@ class EnvironmentIntegrationModel(LifecycleModelMixin, IntegrationsModel):
                 self.__class__.__name__,
             )
             return
-        Environment.write_environments_to_dynamodb(environment_id=self.environment_id)
+        Environment.write_environment_documents(environment_id=self.environment_id)
 
     @hook(AFTER_UPDATE)
-    def clear_environment_cache(self):
+    def clear_environment_cache(self):  # type: ignore[no-untyped-def]
         self.environment.clear_environment_cache()

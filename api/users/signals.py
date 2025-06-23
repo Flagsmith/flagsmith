@@ -1,18 +1,14 @@
 import warnings
 
-from django.db.models.signals import post_migrate, post_save
+from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from django.urls import reverse
 
-from integrations.lead_tracking.pipedrive.lead_tracker import (
-    PipedriveLeadTracker,
-)
 from users.models import FFAdminUser
-from users.tasks import create_pipedrive_lead
 
 
 @receiver(post_migrate, sender=FFAdminUser)
-def warn_insecure(sender, **kwargs):
+def warn_insecure(sender, **kwargs):  # type: ignore[no-untyped-def]
     if sender.objects.count() == 0:
         path = reverse("api-v1:users:config-init")
         warnings.warn(
@@ -20,16 +16,3 @@ def warn_insecure(sender, **kwargs):
             " TO CREATE A SUPER USER",
             RuntimeWarning,
         )
-
-
-@receiver(post_save, sender=FFAdminUser)
-def create_pipedrive_lead_signal(sender, instance, created, **kwargs):
-    user: FFAdminUser = instance
-
-    if not created:
-        return False
-
-    if not PipedriveLeadTracker.should_track(user):
-        return
-
-    create_pipedrive_lead.delay(args=(user.id,))

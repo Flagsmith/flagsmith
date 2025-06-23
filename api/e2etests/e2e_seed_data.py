@@ -63,40 +63,40 @@ def teardown() -> None:
 def seed_data() -> None:
     # create user and organisation for e2e test by front end
     organisation: Organisation = Organisation.objects.create(name="Bullet Train Ltd")
-    org_admin: FFAdminUser = FFAdminUser.objects.create_user(
+    org_admin: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
         email=settings.E2E_USER,
         password=PASSWORD,
         username=settings.E2E_USER,
     )
-    org_admin.add_organisation(organisation, OrganisationRole.ADMIN)
-    non_admin_user_with_org_permissions: FFAdminUser = FFAdminUser.objects.create_user(
+    org_admin.add_organisation(organisation, OrganisationRole.ADMIN)  # type: ignore[no-untyped-call]
+    non_admin_user_with_org_permissions: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
         email=settings.E2E_NON_ADMIN_USER_WITH_ORG_PERMISSIONS,
         password=PASSWORD,
     )
     non_admin_user_with_project_permissions: FFAdminUser = (
-        FFAdminUser.objects.create_user(
+        FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
             email=settings.E2E_NON_ADMIN_USER_WITH_PROJECT_PERMISSIONS,
             password=PASSWORD,
         )
     )
-    non_admin_user_with_env_permissions: FFAdminUser = FFAdminUser.objects.create_user(
+    non_admin_user_with_env_permissions: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]  # noqa: E501
         email=settings.E2E_NON_ADMIN_USER_WITH_ENV_PERMISSIONS,
         password=PASSWORD,
     )
-    non_admin_user_with_a_role: FFAdminUser = FFAdminUser.objects.create_user(
+    non_admin_user_with_a_role: FFAdminUser = FFAdminUser.objects.create_user(  # type: ignore[no-untyped-call]
         email=settings.E2E_NON_ADMIN_USER_WITH_A_ROLE,
         password=PASSWORD,
     )
-    non_admin_user_with_org_permissions.add_organisation(
+    non_admin_user_with_org_permissions.add_organisation(  # type: ignore[no-untyped-call]
         organisation,
     )
-    non_admin_user_with_project_permissions.add_organisation(
+    non_admin_user_with_project_permissions.add_organisation(  # type: ignore[no-untyped-call]
         organisation,
     )
-    non_admin_user_with_env_permissions.add_organisation(
+    non_admin_user_with_env_permissions.add_organisation(  # type: ignore[no-untyped-call]
         organisation,
     )
-    non_admin_user_with_a_role.add_organisation(
+    non_admin_user_with_a_role.add_organisation(  # type: ignore[no-untyped-call]
         organisation,
     )
 

@@ -1,8 +1,16 @@
 from datetime import date, datetime, timedelta
-from typing import List
+from typing import TYPE_CHECKING, List
+
+from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.db.models import Sum
+from django.utils import timezone
+from rest_framework.exceptions import NotFound
 
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
-from app_analytics.influxdb_wrapper import get_events_for_organisation
+from app_analytics.influxdb_wrapper import (
+    get_events_for_organisation,
+)
 from app_analytics.influxdb_wrapper import (
     get_feature_evaluation_data as get_feature_evaluation_data_from_influxdb,
 )
@@ -14,11 +22,6 @@ from app_analytics.models import (
     FeatureEvaluationBucket,
     Resource,
 )
-from dateutil.relativedelta import relativedelta
-from django.conf import settings
-from django.db.models import Sum
-from django.utils import timezone
-
 from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation
@@ -34,35 +37,37 @@ def get_usage_data(
     period: PERIOD_TYPE | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
-
     date_start = date_stop = None
+    sub_cache = getattr(organisation, "subscription_information_cache", None)
+
+    is_subscription_valid = (
+        sub_cache is not None and sub_cache.is_billing_terms_dates_set()
+    )
+
+    if period in (constants.CURRENT_BILLING_PERIOD, constants.PREVIOUS_BILLING_PERIOD):
+        if not is_subscription_valid:
+            raise NotFound("No billing periods found for this organisation.")
+
+    if TYPE_CHECKING:
+        assert sub_cache is not None
 
     match period:
         case constants.CURRENT_BILLING_PERIOD:
-            if not getattr(organisation, "subscription_information_cache", None):
-                starts_at = now - timedelta(days=30)
-            else:
-                sub_cache = organisation.subscription_information_cache
-                starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                    days=30
-                )
+            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                days=30
+            )
             month_delta = relativedelta(now, starts_at).months
             date_start = relativedelta(months=month_delta) + starts_at
             date_stop = now
 
         case constants.PREVIOUS_BILLING_PERIOD:
-            if not getattr(organisation, "subscription_information_cache", None):
-                starts_at = now - timedelta(days=30)
-            else:
-                sub_cache = organisation.subscription_information_cache
-                starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                    days=30
-                )
+            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                days=30
+            )
             month_delta = relativedelta(now, starts_at).months - 1
             month_delta += relativedelta(now, starts_at).years * 12
             date_start = relativedelta(months=month_delta) + starts_at
             date_stop = relativedelta(months=month_delta + 1) + starts_at
-
         case constants.NINETY_DAY_PERIOD:
             date_start = now - relativedelta(days=90)
             date_stop = now
@@ -73,13 +78,12 @@ def get_usage_data(
             "environment_id": environment_id,
             "project_id": project_id,
         }
-
         if date_start:
             assert date_stop
-            kwargs["date_start"] = date_start
-            kwargs["date_stop"] = date_stop
+            kwargs["date_start"] = date_start  # type: ignore[assignment]
+            kwargs["date_stop"] = date_stop  # type: ignore[assignment]
 
-        return get_usage_data_from_local_db(**kwargs)
+        return get_usage_data_from_local_db(**kwargs)  # type: ignore[arg-type]
 
     kwargs = {
         "organisation_id": organisation.id,
@@ -89,10 +93,10 @@ def get_usage_data(
 
     if date_start:
         assert date_stop
-        kwargs["date_start"] = date_start
-        kwargs["date_stop"] = date_stop
+        kwargs["date_start"] = date_start  # type: ignore[assignment]
+        kwargs["date_stop"] = date_stop  # type: ignore[assignment]
 
-    return get_usage_data_from_influxdb(**kwargs)
+    return get_usage_data_from_influxdb(**kwargs)  # type: ignore[arg-type]
 
 
 def get_usage_data_from_local_db(
@@ -124,7 +128,7 @@ def get_usage_data_from_local_db(
         qs = qs.filter(environment_id=environment_id)
 
     qs = (
-        qs.filter(
+        qs.filter(  # type: ignore[assignment]
             created_at__date__lte=date_stop,
             created_at__date__gt=date_start,
         )
@@ -133,20 +137,21 @@ def get_usage_data_from_local_db(
         .annotate(count=Sum("total_count"))
     )
     data_by_day = {}
-    for row in qs:
+    for row in qs:  # TODO Write proper mappers for this?
         day = row["created_at__date"]
         if day not in data_by_day:
             data_by_day[day] = UsageData(day=day)
-        setattr(
-            data_by_day[day],
-            Resource.get_lowercased_name(row["resource"]),
-            row["count"],
-        )
+        if column_name := Resource(row["resource"]).column_name:
+            setattr(
+                data_by_day[day],
+                column_name,
+                row["count"],
+            )
 
-    return data_by_day.values()
+    return data_by_day.values()  # type: ignore[return-value]
 
 
-def get_total_events_count(organisation) -> int:
+def get_total_events_count(organisation) -> int:  # type: ignore[no-untyped-def]
     """
     Return total number of events for an organisation in the last 30 days
     """
@@ -159,7 +164,7 @@ def get_total_events_count(organisation) -> int:
         ).aggregate(total_count=Sum("total_count"))["total_count"]
     else:
         count = get_events_for_organisation(organisation.id)
-    return count
+    return count  # type: ignore[no-any-return]
 
 
 def get_feature_evaluation_data(
@@ -200,7 +205,7 @@ def get_feature_evaluation_data_from_local_db(
     return usage_list
 
 
-def _get_environment_ids_for_org(organisation) -> List[int]:
+def _get_environment_ids_for_org(organisation) -> List[int]:  # type: ignore[no-untyped-def]
     # We need to do this to prevent Django from generating a query that
     # references the environments and projects tables,
     # as they do not exist in the analytics database.

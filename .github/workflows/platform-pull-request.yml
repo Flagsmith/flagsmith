@@ -10,7 +10,7 @@ on:
 jobs:
   permissions-check:
     name: Check actor permissions
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     outputs:
       can-write: ${{ steps.check.outputs.require-result }}
     steps:
@@ -23,7 +23,7 @@ jobs:
     if: needs.permissions-check.outputs.can-write == 'true'
     name: Add Conventional Commit labels
     needs: permissions-check
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pull-requests: write
     steps:
@@ -49,7 +49,7 @@ jobs:
     if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
     name: Prepare Docker report comment
     needs: permissions-check
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pull-requests: write
     steps:
@@ -129,50 +129,50 @@ jobs:
       secrets: |
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
+  docker-build-split-testing:
+    if: github.event.pull_request.draft == false && needs.permissions-check.outputs.can-write == 'true'
+    needs: [permissions-check, docker-prepare-report-comment]
+    name: Build Split Testing Image
+    uses: ./.github/workflows/.reusable-docker-build.yml
+    with:
+      target: private-cloud-unified
+      image-name: flagsmith-private-cloud-split-testing
+      build-args: |
+        WITH=saml,auth-controller,ldap,workflows,licensing,split-testing
+    secrets:
+      secrets: |
+        github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
+
   run-e2e-tests:
-    if: '!cancelled()'
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-build-api, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-api.outputs.image }}
-      concurrency: ${{ matrix.args.concurrency }}
-      tests: ${{ matrix.args.tests }}
+      args: --meta-filter category=oss
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, ARM64-2c]
-        args:
-          - tests: segment-part-1 environment
-            concurrency: 1
-          - tests: segment-part-2
-            concurrency: 1
-          - tests: segment-part-3 signup flag invite project
-            concurrency: 2
-          - tests: versioning
-            concurrency: 1
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
 
   run-e2e-tests-private-cloud:
-    if: needs.permissions-check.outputs.can-write == 'true' && !cancelled()
+    if: github.event.pull_request.draft == false && !cancelled() && needs.permissions-check.outputs.can-write == 'true'
     needs: [permissions-check, docker-build-private-cloud, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
       runs-on: ${{ matrix.runs-on }}
       e2e-image: ${{ needs.docker-build-e2e.outputs.image }}
       api-image: ${{ needs.docker-build-private-cloud.outputs.image }}
-      concurrency: ${{ matrix.args.concurrency }}
-      tests: ${{ matrix.args.tests }}
+      args: --meta-filter category=enterprise
     secrets:
       GCR_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.GITHUB_TOKEN || '' }}
       SLACK_TOKEN: ${{ needs.permissions-check.outputs.can-write == 'true' && secrets.SLACK_TOKEN || '' }}
 
     strategy:
       matrix:
-        runs-on: [ubuntu-latest, ARM64-2c]
-        args:
-          - tests: organisation-permission environment-permission project-permission roles
-            concurrency: 1
+        runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]

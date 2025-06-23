@@ -5,7 +5,7 @@ from environments.models import Environment
 
 
 class OauthInitPermission(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):
             return False
 
@@ -16,7 +16,7 @@ class OauthInitPermission(IsAuthenticated):
 
 
 class SlackGetChannelPermissions(IsAuthenticated):
-    def has_permission(self, request, view):
+    def has_permission(self, request, view):  # type: ignore[no-untyped-def]
         if not super().has_permission(request, view):  # pragma: no cover
             return False
 

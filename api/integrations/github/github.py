@@ -3,10 +3,10 @@ import typing
 from dataclasses import asdict
 from typing import Any
 
-from core.helpers import get_current_site_url
 from django.db.models import Q
 from django.utils.formats import get_format
 
+from core.helpers import get_current_site_url
 from features.models import Feature, FeatureState, FeatureStateValue
 from integrations.github.constants import (
     DELETED_FEATURE_TEXT,
@@ -51,7 +51,6 @@ tag_by_event_type = {
 def tag_feature_per_github_event(
     event_type: str, action: str, metadata: dict[str, Any], repo_full_name: str
 ) -> None:
-
     # Get Feature with external resource of type GITHUB and url matching the resource URL
     feature = Feature.objects.filter(
         Q(external_resources__type="GITHUB_PR")
@@ -131,7 +130,6 @@ def generate_body_comment(
     feature_states: list[dict[str, typing.Any]],
     segment_name: str | None = None,
 ) -> str:
-
     is_removed = event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
     is_segment_override_deleted = (
         event_type == GitHubEventType.SEGMENT_OVERRIDE_DELETED.value
@@ -209,13 +207,13 @@ def generate_data(
                 feature_env_data["feature_state_value"] = feature_state_value
 
             if type is not GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value:
-                feature_env_data["environment_name"] = feature_state.environment.name
+                feature_env_data["environment_name"] = feature_state.environment.name  # type: ignore[union-attr]
                 feature_env_data["enabled"] = feature_state.enabled
                 feature_env_data["last_updated"] = feature_state.updated_at.strftime(
                     get_format("DATETIME_INPUT_FORMATS")[0]
                 )
                 feature_env_data["environment_api_key"] = (
-                    feature_state.environment.api_key
+                    feature_state.environment.api_key  # type: ignore[union-attr]
                 )
             if (
                 hasattr(feature_state, "feature_segment")
@@ -250,7 +248,6 @@ def call_github_task(
     url: str | None,
     feature_states: typing.Union[list[typing.Any], list[typing.Any]] | None,
 ) -> None:
-
     github_configuration = GithubConfiguration.objects.get(
         organisation_id=organisation_id
     )

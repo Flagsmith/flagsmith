@@ -40,7 +40,7 @@ class APIKeyUser(UserABC):
 
     @property
     def organisations(self) -> QuerySet[Organisation]:
-        return Organisation.objects.filter(id=self.key.organisation_id)
+        return Organisation.objects.filter(id=self.key.organisation_id)  # type: ignore[no-any-return]
 
     def belongs_to(self, organisation_id: int) -> bool:
         return self.key.organisation_id == organisation_id
@@ -73,7 +73,10 @@ class APIKeyUser(UserABC):
         return False
 
     def has_project_permission(
-        self, permission: str, project: "Project", tag_ids: typing.List[int] = None
+        self,
+        permission: str,
+        project: "Project",
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> bool:
         return project in self.get_permitted_projects(permission, tag_ids)
 
@@ -81,7 +84,7 @@ class APIKeyUser(UserABC):
         self,
         permission: str,
         environment: "Environment",
-        tag_ids: typing.List[int] = None,
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> bool:
         return environment in self.get_permitted_environments(
             permission, environment.project, tag_ids
@@ -95,7 +98,9 @@ class APIKeyUser(UserABC):
         )
 
     def get_permitted_projects(
-        self, permission_key: str, tag_ids: typing.List[int] = None
+        self,
+        permission_key: str,
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
     ) -> QuerySet["Project"]:
         return get_permitted_projects_for_master_api_key(
             self.key, permission_key, tag_ids
@@ -105,7 +110,7 @@ class APIKeyUser(UserABC):
         self,
         permission_key: str,
         project: "Project",
-        tag_ids: typing.List[int] = None,
+        tag_ids: typing.List[int] = None,  # type: ignore[assignment]
         prefetch_metadata: bool = False,
     ) -> QuerySet["Environment"]:
         return get_permitted_environments_for_master_api_key(

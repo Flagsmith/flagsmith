@@ -3,7 +3,6 @@ from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from django.utils import timezone
 from flag_engine.segments.evaluator import evaluate_identity_in_segment
 
 from environments.identities.managers import IdentityManager
@@ -12,6 +11,7 @@ from environments.models import Environment
 from environments.sdk.types import SDKTraitData
 from features.models import FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from features.versioning.versioning_service import get_environment_flags_list
 from segments.models import Segment
 from util.mappers.engine import (
     map_identity_to_engine,
@@ -41,11 +41,11 @@ class Identity(models.Model):
         # we can provide them the SQL to add it manually in a small window of downtime.
         index_together = (("environment", "created_date"),)
 
-    def natural_key(self):
+    def natural_key(self):  # type: ignore[no-untyped-def]
         return self.identifier, self.environment.api_key
 
     @property
-    def composite_key(self):
+    def composite_key(self):  # type: ignore[no-untyped-def]
         return f"{self.environment.api_key}_{self.identifier}"
 
     def get_hash_key(self, use_identity_composite_key_for_hashing: bool = False) -> str:
@@ -72,7 +72,7 @@ class Identity(models.Model):
         :return: (list) flags for an identity with the correct values based on
             identity / segment priorities
         """
-        segments = self.get_segments(traits=traits, overrides_only=True)
+        segments = self.get_segments(traits=traits, overrides_only=True)  # type: ignore[arg-type]
 
         # define sub queries
         belongs_to_environment_query = Q(environment=self.environment)
@@ -81,6 +81,7 @@ class Identity(models.Model):
         else:
             # skip identity overrides for transient identities
             overridden_for_identity_query = Q()
+
         overridden_for_segment_query = Q(
             feature_segment__segment__in=segments,
             feature_segment__environment=self.environment,
@@ -94,40 +95,21 @@ class Identity(models.Model):
             | environment_default_query
         )
 
-        if self.environment.use_v2_feature_versioning:
-            full_query &= Q(
-                Q(identity=self)  # identity overrides are not versioned
-                | Q(
-                    environment_feature_version__live_from__isnull=False,
-                    environment_feature_version__live_from__lte=timezone.now(),
-                ),
-            )
-        else:
-            full_query &= Q(live_from__lte=timezone.now(), version__isnull=False)
-
         if additional_filters:
             full_query &= additional_filters
 
-        select_related_args = [
-            "environment",
-            "feature",
-            "feature_state_value",
-            "feature_segment",
-            "feature_segment__segment",
-            "identity",
-        ]
-
-        all_flags = (
-            FeatureState.objects.select_related(*select_related_args)
-            .prefetch_related(
+        all_flags = get_environment_flags_list(
+            environment=self.environment,
+            additional_filters=full_query,
+            additional_select_related_args=["feature_segment__segment", "identity"],
+            additional_prefetch_related_args=[
                 Prefetch(
                     "multivariate_feature_state_values",
                     queryset=MultivariateFeatureStateValue.objects.select_related(
                         "multivariate_feature_option"
                     ),
                 )
-            )
-            .filter(full_query)
+            ],
         )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
@@ -157,7 +139,9 @@ class Identity(models.Model):
         return {fs.feature_id: fs for fs in self.identity_features.all()}
 
     def get_segments(
-        self, traits: typing.List[Trait] = None, overrides_only: bool = False
+        self,
+        traits: typing.List[Trait] = None,  # type: ignore[assignment]
+        overrides_only: bool = False,
     ) -> typing.List[Segment]:
         """
         Get the list of segments this identity is a part of.
@@ -195,11 +179,11 @@ class Identity(models.Model):
 
         return matching_segments
 
-    def get_all_user_traits(self):
+    def get_all_user_traits(self):  # type: ignore[no-untyped-def]
         # this is pointless, we should probably replace all uses with the below code
         return self.identity_traits.all()
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Account %s" % self.identifier
 
     def generate_traits(

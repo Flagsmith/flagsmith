@@ -4,36 +4,39 @@ from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_task_handler,
+)
 from task_processor.models import TaskPriority
 
 from audit.constants import (
     FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE,
     FEATURE_STATE_WENT_LIVE_MESSAGE,
 )
-from audit.models import AuditLog, RelatedObjectType
+from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
-def create_feature_state_went_live_audit_log(feature_state_id: int):
+def create_feature_state_went_live_audit_log(feature_state_id: int):  # type: ignore[no-untyped-def]
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_WENT_LIVE_MESSAGE
     )
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
-def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):
+def create_feature_state_updated_by_change_request_audit_log(feature_state_id: int):  # type: ignore[no-untyped-def]
     _create_feature_state_audit_log_for_change_request(
         feature_state_id, FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE
     )
 
 
-def _create_feature_state_audit_log_for_change_request(
+def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyped-def]
     feature_state_id: int, msg_template: str
 ):
     from features.models import FeatureState
+    from features.signals import feature_state_change_went_live
 
     feature_state = FeatureState.objects.filter(id=feature_state_id).first()
 
@@ -46,29 +49,48 @@ def _create_feature_state_audit_log_for_change_request(
     if not feature_state.change_request:
         raise RuntimeError("Feature state must have a change request")
 
-    log = msg_template % (
+    if feature_state.is_scheduled:
+        logger.info(
+            "FeatureState is not due to go live. "
+            "Likely the change request was rescheduled to a later date."
+        )
+        create_feature_state_went_live_audit_log.delay(
+            delay_until=feature_state.live_from,
+            args=(feature_state.id,),
+        )
+        return
+
+    log_message = msg_template % (
         feature_state.feature.name,
         feature_state.change_request.title,
     )
-    AuditLog.objects.create(
+    # NOTE: This NEEDS to leverage btree indexes on AuditLog
+    audit_log, log_created = AuditLog.objects.get_or_create(
+        created_date=feature_state.live_from,
+        environment=feature_state.environment,
+        is_system_event=True,
+        log=log_message,
+        project=feature_state.environment.project,
         related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        environment=feature_state.environment,
-        project=feature_state.environment.project,
-        log=log,
-        is_system_event=True,
-        created_date=feature_state.live_from,
     )
+    if log_created:
+        feature_state_change_went_live.send(audit_log)
+    else:
+        logger.info(
+            "FeatureState update audit log already exists. "
+            "Likely the change request was rescheduled to an earlier date.",
+        )
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
-def create_audit_log_from_historical_record(
+def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
     history_instance_id: int,
     history_user_id: typing.Optional[int],
     history_record_class_path: str,
 ):
     model_class = AuditLog.get_history_record_model_class(history_record_class_path)
-    history_instance = model_class.objects.get(history_id=history_instance_id)
+    history_instance = model_class.objects.get(history_id=history_instance_id)  # type: ignore[attr-defined]
 
     if (
         history_instance.history_type == "~"
@@ -77,16 +99,17 @@ def create_audit_log_from_historical_record(
     ):
         return
 
-    user_model = get_user_model()
-
     instance = history_instance.instance
     if instance.get_skip_create_audit_log():
         return
 
-    history_user = user_model.objects.filter(id=history_user_id).first()
+    if history_user_id is not None:
+        user_model = get_user_model()
+        history_user = user_model.objects.filter(id=history_user_id).first()
+    else:
+        history_user = instance.get_audit_log_author(history_instance)
 
-    override_author = instance.get_audit_log_author(history_instance)
-    if not (history_user or override_author or history_instance.master_api_key):
+    if not (history_user or history_instance.master_api_key):
         return
 
     environment, project = instance.get_environment_and_project()
@@ -111,7 +134,7 @@ def create_audit_log_from_historical_record(
         history_record_class_path=history_record_class_path,
         environment=environment,
         project=project,
-        author=override_author or history_user,
+        author=history_user,
         related_object_id=related_object_id,
         related_object_type=related_object_type.name,
         log=log_message,
@@ -122,12 +145,12 @@ def create_audit_log_from_historical_record(
 
 
 @register_task_handler()
-def create_segment_priorities_changed_audit_log(
+def create_segment_priorities_changed_audit_log(  # type: ignore[no-untyped-def]
     previous_id_priority_pairs: typing.List[typing.Tuple[int, int]],
     feature_segment_ids: typing.List[int],
-    user_id: int = None,
-    master_api_key_id: int = None,
-    changed_at: str = None,
+    user_id: int = None,  # type: ignore[assignment]
+    master_api_key_id: int = None,  # type: ignore[assignment]
+    changed_at: str = None,  # type: ignore[assignment]
 ):
     """
     This needs to be a separate task called by the view itself. This is because the OrderedModelBase class

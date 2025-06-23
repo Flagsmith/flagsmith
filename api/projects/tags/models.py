@@ -1,6 +1,6 @@
-from core.models import AbstractBaseExportableModel
 from django.db import models
 
+from core.models import AbstractBaseExportableModel
 from projects.models import Project
 
 
@@ -37,5 +37,5 @@ class Tag(AbstractBaseExportableModel):
     class Meta:
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Tag %s" % self.label

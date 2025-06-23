@@ -223,6 +223,8 @@
     filter: blur(5px);
 }
 
+.overflow-y-auto{ overflow-y: auto}
+
 .user-select-none {
     user-select: none;
 }
@@ -232,4 +234,24 @@
 
 .bg-primary-opacity-5 {
     background-color: transparentize($primary, 0.95);
+}
+
+.border-primary {
+  border-color: $primary !important;
+}
+
+.bg-card {
+    background-color: white;
+}
+.dark {
+    .bg-card {
+        background-color: $bg-dark200;
+    }
+}
+
+.full-screen {
+  .announcement-container {
+    display: none;
+  }
+  background-color: $bg-light200;
 }

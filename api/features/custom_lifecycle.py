@@ -1,9 +1,9 @@
 import typing
 
-from django_lifecycle import LifecycleModelMixin, NotSet
+from django_lifecycle import LifecycleModelMixin, NotSet  # type: ignore[import-untyped]
 
 
-class CustomLifecycleModelMixin(LifecycleModelMixin):
+class CustomLifecycleModelMixin(LifecycleModelMixin):  # type: ignore[misc]
     """
     Since we have an attribute named `initial_value` on the Feature model which
     needs access to the LifecycleModel functionality, we need to define a custom
@@ -23,14 +23,14 @@ class CustomLifecycleModelMixin(LifecycleModelMixin):
 
         return None
 
-    def _check_was_condition(self, field_name: str, specs: dict) -> bool:
+    def _check_was_condition(self, field_name: str, specs: dict) -> bool:  # type: ignore[type-arg]
         return specs["was"] in (self.lifecycle_initial_value(field_name), "*")
 
-    def _check_was_not_condition(self, field_name: str, specs: dict) -> bool:
+    def _check_was_not_condition(self, field_name: str, specs: dict) -> bool:  # type: ignore[type-arg]
         was_not = specs["was_not"]
         return was_not is NotSet or self.lifecycle_initial_value(field_name) != was_not
 
-    def _check_changes_to_condition(self, field_name: str, specs: dict) -> bool:
+    def _check_changes_to_condition(self, field_name: str, specs: dict) -> bool:  # type: ignore[type-arg]
         changes_to = specs["changes_to"]
         return any(
             [

@@ -1,23 +1,14 @@
 repos:
-  - repo: https://github.com/PyCQA/isort
-    rev: 6.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.11.11
     hooks:
-      - id: isort
-        name: isort (python)
-
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
-    hooks:
-      - id: black
-        language_version: python3
-        exclude: migrations
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
-        name: flake8
-        args: [--config, api/.flake8]
+      # Run the linter.
+      - id: ruff
+        args: [--config, api/pyproject.toml, --config, "src = ['api']", --fix]
+      # Run the formatter.
+      - id: ruff-format
+        args: [--config, api/pyproject.toml, --config, "src = ['api']"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -37,21 +28,26 @@ repos:
         args:
           - --check
         types: [javascript, jsx, ts, tsx, markdown, mdx, html, css, json, yaml]
-
+      - id: generate-docs
+        name: generate-docs
+        language: system
+        entry: make -C api generate-docs
+        pass_filenames: false
+        types: [python,toml]
       - id: python-typecheck
         name: python-typecheck
         language: system
-        entry: poetry -C api run python scripts/typecheck.py
+        entry: poetry -C api run mypy .
         require_serial: true
         pass_filenames: false
         types: [python]
 
   - repo: https://github.com/python-poetry/poetry
-    rev: 2.0.1
+    rev: 2.1.3
     hooks:
       - id: poetry-check
         args: ["-C", "api"]
 
 ci:
-  skip: [python-typecheck]
+  skip: [generate-docs, python-typecheck]
   autoupdate_commit_msg: "ci: pre-commit autoupdate"

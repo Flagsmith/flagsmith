@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 @pytest.fixture()
-def identity_without_overrides(environment):
+def identity_without_overrides(environment):  # type: ignore[no-untyped-def]
     return Identity.objects.create(
         identifier="test_identity_without_overrides", environment=environment
     )
@@ -83,7 +83,6 @@ def test_map_environment_to_sdk_document__return_expected(
                 ],
                 "identity_traits": [],
                 "identity_uuid": mocker.ANY,
-                "dashboard_alias": None,
             }
         ],
         "hide_disabled_flags": None,

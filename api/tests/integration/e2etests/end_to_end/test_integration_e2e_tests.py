@@ -9,7 +9,7 @@ from organisations.subscriptions.constants import ENTERPRISE
 from users.models import FFAdminUser
 
 
-def test_e2e_teardown(settings, db) -> None:
+def test_e2e_teardown(settings, db) -> None:  # type: ignore[no-untyped-def]
     # TODO: tidy up this hack to fix throttle rates
     settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"] = "1000/min"
     token = "test-token"
@@ -47,7 +47,7 @@ def test_e2e_teardown(settings, db) -> None:
         assert subscription.subscription_id == "test_subscription_id"
 
 
-def test_e2e_teardown_with_incorrect_token(settings, db):
+def test_e2e_teardown_with_incorrect_token(settings, db):  # type: ignore[no-untyped-def]
     # Given
     os.environ["E2E_TEST_AUTH_TOKEN"] = "expected-token"
     url = reverse("api-v1:e2etests:teardown")

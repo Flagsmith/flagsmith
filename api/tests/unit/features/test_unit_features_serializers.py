@@ -1,6 +1,6 @@
 import pytest
-from core.constants import STRING
 
+from core.constants import STRING
 from features.models import FeatureState
 from features.multivariate.models import (
     MultivariateFeatureOption,
@@ -12,7 +12,7 @@ from features.serializers import FeatureStateSerializerBasic
 @pytest.mark.parametrize(
     "percentage_value, expected_is_valid", ((90, True), (100, True), (110, False))
 )
-def test_feature_state_serializer_basic_validates_mv_percentage_values(
+def test_feature_state_serializer_basic_validates_mv_percentage_values(  # type: ignore[no-untyped-def]
     feature, environment, percentage_value, expected_is_valid
 ):
     # Given

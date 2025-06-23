@@ -5,8 +5,10 @@ from datetime import datetime
 from typing import Any
 
 from django.conf import settings
-from gunicorn.config import Config
-from gunicorn.instrument.statsd import Statsd as GunicornLogger
+from gunicorn.config import Config  # type: ignore[import-untyped]
+from gunicorn.instrument.statsd import (  # type: ignore[import-untyped]
+    Statsd as GunicornLogger,
+)
 
 
 class JsonFormatter(logging.Formatter):
@@ -33,25 +35,25 @@ class JsonFormatter(logging.Formatter):
 class GunicornAccessLogJsonFormatter(JsonFormatter):
     def get_json_record(self, record: logging.LogRecord) -> dict[str, Any]:
         args = record.args
-        url = args["U"]
-        if q := args["q"]:
-            url += f"?{q}"
+        url = args["U"]  # type: ignore[call-overload,index]
+        if q := args["q"]:  # type: ignore[call-overload,index]
+            url += f"?{q}"  # type: ignore[operator]
 
         return {
             **super().get_json_record(record),
-            "time": datetime.strptime(args["t"], "[%d/%b/%Y:%H:%M:%S %z]").isoformat(),
+            "time": datetime.strptime(args["t"], "[%d/%b/%Y:%H:%M:%S %z]").isoformat(),  # type: ignore[arg-type,call-overload,index]  # noqa: E501  # noqa: E501
             "path": url,
-            "remote_ip": args["h"],
-            "method": args["m"],
-            "status": str(args["s"]),
-            "user_agent": args["a"],
-            "referer": args["f"],
-            "duration_in_ms": args["M"],
-            "pid": args["p"],
+            "remote_ip": args["h"],  # type: ignore[call-overload,index]
+            "method": args["m"],  # type: ignore[call-overload,index]
+            "status": str(args["s"]),  # type: ignore[call-overload,index]
+            "user_agent": args["a"],  # type: ignore[call-overload,index]
+            "referer": args["f"],  # type: ignore[call-overload,index]
+            "duration_in_ms": args["M"],  # type: ignore[call-overload,index]
+            "pid": args["p"],  # type: ignore[call-overload,index]
         }
 
 
-class GunicornJsonCapableLogger(GunicornLogger):
+class GunicornJsonCapableLogger(GunicornLogger):  # type: ignore[misc]
     def setup(self, cfg: Config) -> None:
         super().setup(cfg)
         if getattr(settings, "LOG_FORMAT", None) == "json":

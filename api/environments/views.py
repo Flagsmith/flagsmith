@@ -1,13 +1,14 @@
 import logging
+from typing import Any, Generic, Type, TypeVar
 
 from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
-from drf_yasg import openapi
-from drf_yasg.utils import no_body, swagger_auto_schema
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -15,7 +16,10 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
+from rest_framework.viewsets import GenericViewSet
 
+from core.models import AbstractBaseExportableModel
 from environments.permissions.permissions import (
     EnvironmentAdminPermission,
     EnvironmentPermissions,
@@ -27,13 +31,16 @@ from features.versioning.tasks import (
     disable_v2_versioning,
     enable_v2_versioning,
 )
+from metrics.metrics_service import EnvironmentMetricsService
+from metrics.serializers import EnvironmentMetricsSerializer
 from permissions.permissions_calculator import get_environment_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
+    UserDetailedPermissionsSerializer,
     UserObjectPermissionsSerializer,
 )
 from projects.models import Project
-from webhooks.mixins import TriggerSampleWebhookMixin
+from users.models import FFAdminUser
 from webhooks.webhooks import WebhookType
 
 from .identities.traits.models import Trait
@@ -55,6 +62,8 @@ from .serializers import (
     WebhookSerializer,
 )
 
+T = TypeVar("T", bound=AbstractBaseExportableModel)
+
 logger = logging.getLogger(__name__)
 
 
@@ -72,11 +81,11 @@ logger = logging.getLogger(__name__)
         ]
     ),
 )
-class EnvironmentViewSet(viewsets.ModelViewSet):
+class EnvironmentViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     lookup_field = "api_key"
     permission_classes = [EnvironmentPermissions]
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action == "trait_keys":
             return TraitKeysSerializer
         if self.action == "delete_traits":
@@ -89,13 +98,13 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             return CreateUpdateEnvironmentSerializer
         return EnvironmentSerializerWithMetadata
 
-    def get_serializer_context(self):
+    def get_serializer_context(self):  # type: ignore[no-untyped-def]
         context = super(EnvironmentViewSet, self).get_serializer_context()
         if self.kwargs.get("api_key"):
             context["environment"] = self.get_object()
         return context
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if self.action == "list":
             project_id = self.request.query_params.get(
                 "project"
@@ -106,7 +115,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             except Project.DoesNotExist:
                 raise ValidationError("Invalid or missing value for project parameter.")
 
-            return self.request.user.get_permitted_environments(
+            return self.request.user.get_permitted_environments(  # type: ignore[union-attr]
                 "VIEW_ENVIRONMENT", project=project, prefetch_metadata=True
             )
 
@@ -139,10 +148,10 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         environment = serializer.save()
         if getattr(self.request.user, "is_master_api_key_user", False) is False:
-            UserEnvironmentPermission.objects.create(
+            UserEnvironmentPermission.objects.create(  # type: ignore[misc]
                 user=self.request.user, environment=environment, admin=True
             )
 
@@ -151,8 +160,8 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
         methods=["get"],
     )
-    def get_by_uuid(self, request, uuid):
-        qs = self.get_queryset()
+    def get_by_uuid(self, request, uuid):  # type: ignore[no-untyped-def]
+        qs = self.get_queryset()  # type: ignore[no-untyped-call]
         environment = get_object_or_404(qs, uuid=uuid)
         if not request.user.has_environment_permission(VIEW_ENVIRONMENT, environment):
             raise PermissionDenied()
@@ -161,7 +170,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=True, methods=["GET"], url_path="trait-keys")
-    def trait_keys(self, request, *args, **kwargs):
+    def trait_keys(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         keys = [
             trait_key
             for trait_key in Trait.objects.filter(
@@ -184,23 +193,23 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
             )
 
     @action(detail=True, methods=["POST"])
-    def clone(self, request, *args, **kwargs):
+    def clone(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         clone = serializer.save(source_env=self.get_object())
 
         if getattr(request.user, "is_master_api_key_user", False) is False:
-            UserEnvironmentPermission.objects.create(
+            UserEnvironmentPermission.objects.create(  # type: ignore[misc]
                 user=self.request.user, environment=clone, admin=True
             )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["POST"], url_path="delete-traits")
-    def delete_traits(self, request, *args, **kwargs):
+    def delete_traits(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.delete()
+            serializer.delete()  # type: ignore[attr-defined]
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(
@@ -210,7 +219,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(responses={200: PermissionModelSerializer(many=True)})
     @action(detail=False, methods=["GET"])
-    def permissions(self, *args, **kwargs):
+    def permissions(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         return Response(
             PermissionModelSerializer(
                 instance=EnvironmentPermissionModel.objects.all(),
@@ -226,7 +235,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         url_path="my-permissions",
         url_name="my-permissions",
     )
-    def user_permissions(self, request, *args, **kwargs):
+    def user_permissions(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         if getattr(request.user, "is_master_api_key_user", False) is True:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
@@ -243,15 +252,44 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
-    @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})
+    @swagger_auto_schema(
+        responses={200: UserDetailedPermissionsSerializer},
+    )  # type: ignore[misc]
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
+        url_name="user-detailed-permissions",
+    )
+    def detailed_permissions(
+        self, request: Request, api_key: str, user_id: str
+    ) -> Response:
+        environment = self.get_object()
+        user = request.user
+        user_id_int = int(user_id)
+
+        if request.user.id != user_id_int:
+            if not request.user.is_environment_admin(environment):  # type: ignore[union-attr]
+                # Only environment admin can get permissions of other users
+                raise PermissionDenied()
+
+            user = get_object_or_404(FFAdminUser, id=user_id_int)
+
+        permission_data = get_environment_permission_data(environment, user)  # type: ignore[arg-type]
+        serializer = UserDetailedPermissionsSerializer(
+            permission_data.to_detailed_permissions_data()
+        )
+        return Response(serializer.data)
+
+    @swagger_auto_schema(responses={200: SDKEnvironmentDocumentModel})  # type: ignore[misc]
     @action(detail=True, methods=["GET"], url_path="document")
-    def get_document(self, request, api_key: str):
+    def get_document(self, request, api_key: str):  # type: ignore[no-untyped-def]
         environment = (
             self.get_object()
         )  # use get_object to ensure permissions check is performed
         return Response(Environment.get_environment_document(environment.api_key))
 
-    @swagger_auto_schema(request_body=no_body, responses={202: ""})
+    @swagger_auto_schema(request_body=no_body, responses={202: ""})  # type: ignore[misc]
     @action(detail=True, methods=["POST"], url_path="enable-v2-versioning")
     def enable_v2_versioning(self, request: Request, api_key: str) -> Response:
         environment = self.get_object()
@@ -263,7 +301,7 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         enable_v2_versioning.delay(kwargs={"environment_id": environment.id})
         return Response(status=status.HTTP_202_ACCEPTED)
 
-    @swagger_auto_schema(request_body=no_body, responses={202: ""})
+    @swagger_auto_schema(request_body=no_body, responses={202: ""})  # type: ignore[misc]
     @action(detail=True, methods=["POST"], url_path="disable-v2-versioning")
     def disable_v2_versioning(self, request: Request, api_key: str) -> Response:
         environment = self.get_object()
@@ -276,43 +314,44 @@ class EnvironmentViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_202_ACCEPTED)
 
 
-class NestedEnvironmentViewSet(viewsets.GenericViewSet):
-    model_class = None
+class NestedEnvironmentViewSet(Generic[T], viewsets.GenericViewSet[T]):
+    model_class: Type[T]
     webhook_type = WebhookType.ENVIRONMENT
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[T]:
         return self.model_class.objects.filter(
             environment__api_key=self.kwargs.get("environment_api_key")
         )
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: BaseSerializer[T]) -> None:
         serializer.save(environment=self._get_environment())
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer: BaseSerializer[T]) -> None:
         serializer.save(environment=self._get_environment())
 
-    def _get_environment(self):
-        return Environment.objects.get(api_key=self.kwargs.get("environment_api_key"))
+    def _get_environment(self) -> Environment:
+        environment: Environment = Environment.objects.get(
+            api_key=self.kwargs.get("environment_api_key")
+        )
+        return environment
 
 
 class WebhookViewSet(
-    NestedEnvironmentViewSet,
+    NestedEnvironmentViewSet[Webhook],
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
-    TriggerSampleWebhookMixin,
 ):
     serializer_class = WebhookSerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, NestedEnvironmentPermissions]
-    model_class = Webhook
-
-    webhook_type = WebhookType.ENVIRONMENT
+    model_class: Type[Webhook] = Webhook
+    webhook_type: WebhookType = WebhookType.ENVIRONMENT
 
 
 class EnvironmentAPIKeyViewSet(
-    NestedEnvironmentViewSet,
+    NestedEnvironmentViewSet[EnvironmentAPIKey],
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
@@ -321,4 +360,23 @@ class EnvironmentAPIKeyViewSet(
     serializer_class = EnvironmentAPIKeySerializer
     pagination_class = None
     permission_classes = [IsAuthenticated, EnvironmentAdminPermission]
-    model_class = EnvironmentAPIKey
+    model_class: Type[EnvironmentAPIKey] = EnvironmentAPIKey
+
+
+class EnvironmentMetricsViewSet(GenericViewSet[Environment]):
+    permission_classes = [IsAuthenticated, EnvironmentPermissions]
+    lookup_field = "api_key"
+    lookup_url_kwarg = "environment_api_key"
+    serializer_class: type[BaseSerializer[Any]] = EnvironmentMetricsSerializer
+    queryset = Environment.objects.all()
+
+    @swagger_auto_schema(  # type: ignore[misc]
+        operation_description="Get metrics for this environment.",
+        responses={200: openapi.Response("Metrics", EnvironmentMetricsSerializer)},
+    )
+    def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        environment: Environment = self.get_object()
+        metrics_service = EnvironmentMetricsService(environment)
+        metrics = metrics_service.get_metrics_payload()
+        serializer = self.get_serializer({"metrics": metrics})
+        return Response(serializer.data, status=status.HTTP_200_OK)

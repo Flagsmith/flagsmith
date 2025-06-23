@@ -1,12 +1,21 @@
 import json
+from datetime import datetime
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+from freezegun import freeze_time
+from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from audit.models import AuditLog
+from core.signals import create_audit_log_from_historical_record
+from features.models import FeatureState
+from features.workflows.core.models import ChangeRequest
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 @pytest.fixture(autouse=True)
@@ -20,7 +29,7 @@ def _subscription_metadata(mocker: MockerFixture) -> None:
     )
 
 
-def test_get_audit_logs_makes_expected_queries(
+def test_get_audit_logs_makes_expected_queries(  # type: ignore[no-untyped-def]
     admin_client,
     project,
     environment,
@@ -121,6 +130,90 @@ def test_retrieve_audit_log_for_feature_state_enabled_change(
     assert retrieve_response_json["change_details"][0]["field"] == "enabled"
     assert retrieve_response_json["change_details"][0]["new"] is True
     assert retrieve_response_json["change_details"][0]["old"] is False
+
+
+def test_creates_audit_log_for_feature_state_update(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    environment_api_key: str,
+    environment: int,
+    feature_state: int,
+    feature: int,
+) -> None:
+    # Given
+    feature_state_obj = FeatureState.objects.get(pk=feature_state)
+    feature_state_obj.enabled = True
+    feature_state_obj.save()
+    history_instance = feature_state_obj.history.first()
+    assert history_instance.history_type == "~"
+
+    # When
+    create_audit_log_from_historical_record(
+        instance=feature_state_obj,
+        history_user=admin_user,
+        history_instance=history_instance,
+    )
+
+    # Then
+    audit_log = AuditLog.objects.first()
+    feature_name = feature_state_obj.feature.name
+    assert audit_log.log == f"Flag state updated for feature: {feature_name}"
+
+
+# Future people please bump this up when it's due
+@freeze_time("2199-04-14T12:30:00+00:00")
+@pytest.mark.parametrize(
+    "tz_name, django_datetime_format, expected_ts",
+    [
+        ("America/Los_Angeles", "Y-m-d H:i (T)", "2199-04-15 05:30 (PDT)"),
+        ("UTC", "D j M Y H:i (T)", "Mon 15 Apr 2199 12:30 (UTC)"),
+        ("Asia/Tokyo", "Y年n月j日 H:i (T)", "2199年4月15日 21:30 (JST)"),
+    ],
+)
+def test_creates_audit_log_for_scheduled_feature_state_update(
+    admin_client: APIClient,
+    admin_user: FFAdminUser,
+    django_datetime_format: str,
+    environment_api_key: str,
+    environment: int,
+    expected_ts: str,
+    feature_state: int,
+    feature: int,
+    settings: SettingsWrapper,
+    tz_name: str,
+) -> None:
+    # Given
+    settings.DATETIME_FORMAT = django_datetime_format
+    settings.TIME_ZONE = tz_name
+    future = datetime.fromisoformat("2199-04-15T12:30:00+00:00")
+    change_request = ChangeRequest.objects.create(
+        environment_id=environment,
+        title="Test",
+        committed_at=timezone.now(),
+        committed_by=admin_user,
+    )
+    feature_state_obj = FeatureState.objects.get(pk=feature_state)
+    feature_state_obj.change_request = change_request
+    feature_state_obj.enabled = True
+    feature_state_obj.live_from = future
+    feature_state_obj.save()
+    history_instance = feature_state_obj.history.first()
+    assert history_instance.history_type == "~"
+
+    # When
+    create_audit_log_from_historical_record(
+        instance=feature_state_obj,
+        history_user=admin_user,
+        history_instance=history_instance,
+    )
+
+    # Then
+    audit_log = AuditLog.objects.first()
+    feature_name = feature_state_obj.feature.name
+    assert (
+        audit_log.log
+        == f"Flag state for feature '{feature_name}' scheduled for update by Change Request '{change_request.title}' at {expected_ts}."
+    )
 
 
 def test_retrieve_audit_log_for_feature_state_value_change(

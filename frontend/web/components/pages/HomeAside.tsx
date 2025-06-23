@@ -1,13 +1,19 @@
-import React, { ComponentProps, FC, useEffect, useMemo, useState } from 'react'
+import React, { ComponentProps, FC, useEffect, useState } from 'react'
 import ProjectStore from 'common/stores/project-store'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useHistory, withRouter } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
-import { checkmarkCircle, code, createOutline, warning } from 'ionicons/icons'
+import {
+  checkmarkCircle,
+  code,
+  createOutline,
+  flask,
+  warning,
+} from 'ionicons/icons'
 import EnvironmentDropdown from 'components/EnvironmentDropdown'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
@@ -16,17 +22,17 @@ import Icon from 'components/Icon'
 import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import Resources from 'components/Resources'
+import Constants from 'common/constants'
 
 type HomeAsideType = {
   environmentId: string
   projectId: string
-  history: RouterChildContext['router']['history']
 }
 
 type CustomOptionProps = ComponentProps<typeof components.Option> & {
@@ -102,14 +108,11 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
   )
 }
 
-const HomeAside: FC<HomeAsideType> = ({
-  environmentId,
-  history,
-  projectId,
-}) => {
+const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+  const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
-    { refetchOnFocus: false, skip: !projectId },
+    { skip: !projectId },
   )
 
   useEffect(() => {
@@ -152,6 +155,7 @@ const HomeAside: FC<HomeAsideType> = ({
     ? ChangeRequestStore.model[environmentId]
     : null
   const changeRequests = changeRequest?.count || 0
+
   const scheduled =
     (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
   const onProjectSave = () => {
@@ -199,7 +203,7 @@ const HomeAside: FC<HomeAsideType> = ({
                               container: (base: any) => ({
                                 ...base,
                                 border: hasUnhealthyEnvironments
-                                  ? '1px solid #D35400'
+                                  ? `1px solid ${Constants.featureHealth.unhealthyColor}`
                                   : 'none',
                                 borderRadius: 6,
                                 padding: 0,
@@ -263,9 +267,13 @@ const HomeAside: FC<HomeAsideType> = ({
                     </div>
                   </div>
                   <EnvironmentDropdown
-                    renderRow={(environment: Environment, onClick: any) =>
+                    renderRow={(
+                      environment: Environment,
+                      onClick: any,
+                      index: number,
+                    ) =>
                       environment?.api_key === environmentId && (
-                        <div className='collapsible__content'>
+                        <div className='collapsible__content' key={index}>
                           <Permission
                             level='environment'
                             permission='ADMIN'
@@ -284,7 +292,7 @@ const HomeAside: FC<HomeAsideType> = ({
                                     to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                   >
                                     <span className='mr-2'>
-                                      <Icon name='rocket' fill='#9DA4AE' />
+                                      <Icon name='features' fill='#9DA4AE' />
                                     </span>
                                     Features
                                   </NavLink>
@@ -340,6 +348,22 @@ const HomeAside: FC<HomeAsideType> = ({
                                     />
                                     SDK Keys
                                   </NavLink>
+                                  {Utils.getFlagsmithHasFeature(
+                                    'split_testing',
+                                  ) && (
+                                    <NavLink
+                                      id='split-tests-link'
+                                      exact
+                                      to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
+                                    >
+                                      <IonIcon
+                                        color={'#9DA4AE'}
+                                        className='mr-2'
+                                        icon={flask}
+                                      />
+                                      Split Tests
+                                    </NavLink>
+                                  )}
                                   {environmentAdmin && (
                                     <NavLink
                                       id='env-settings-link'
@@ -364,8 +388,12 @@ const HomeAside: FC<HomeAsideType> = ({
                     clearableValue={false}
                   />
                 </div>
-
-                <BuildVersion />
+                <div
+                  style={{ width: 260 }}
+                  className='text-muted position-fixed bottom-0 p-2 fs-caption d-flex flex-column gap-4'
+                >
+                  <BuildVersion />
+                </div>
               </div>
             )
           }}
@@ -375,4 +403,4 @@ const HomeAside: FC<HomeAsideType> = ({
   )
 }
 
-export default ConfigProvider(HomeAside)
+export default withRouter(ConfigProvider(HomeAside))

@@ -3,7 +3,7 @@ import typing
 import pytest
 from django.contrib.auth.models import AbstractUser
 from django.test import RequestFactory
-from djoser.serializers import TokenCreateSerializer
+from djoser.serializers import TokenCreateSerializer  # type: ignore[import-untyped]
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.exceptions import PermissionDenied
@@ -53,7 +53,7 @@ def test_CustomUserCreateSerializer_does_case_insensitive_lookup_with_email(
     assert serializer.errors["email"][0] == "Email already exists. Please log in."
 
 
-def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(
+def test_CustomUserCreateSerializer_calls_is_authentication_method_valid_correctly_if_auth_controller_is_installed(  # type: ignore[no-untyped-def]  # noqa: E501
     db, settings, mocker, rf
 ):
     # Given

@@ -1,4 +1,4 @@
-import React, { Component, useMemo } from 'react'
+import { withRouter } from 'react-router-dom'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import OrganisationStore from 'common/stores/organisation-store'
 import FeatureListStore from 'common/stores/feature-list-store'
@@ -22,24 +22,22 @@ import Breadcrumb from 'components/Breadcrumb'
 import SettingsButton from 'components/SettingsButton'
 import DiffChangeRequest from 'components/diff/DiffChangeRequest'
 import NewVersionWarning from 'components/NewVersionWarning'
-import { mergeChangeSets } from 'common/services/useChangeRequest'
 import WarningMessage from 'components/WarningMessage'
 import ErrorMessage from 'components/ErrorMessage'
+import { Component } from 'react'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
   getApprovals = (users, approvals) =>
     users?.filter((v) => approvals?.includes(v.id))
 
   getGroupApprovals = (groups, approvals) =>
     groups.filter((v) => approvals.find((a) => a.group === v.id))
 
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     this.state = {
       showArchived: false,
       tags: [],
@@ -53,7 +51,7 @@ const ChangeRequestsPage = class extends Component {
     )
     AppActions.getChangeRequest(
       this.props.match.params.id,
-      this.props.match.params.projectId,
+      projectIdFromUrl,
       this.props.match.params.environmentId,
     )
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
@@ -99,10 +97,11 @@ const ChangeRequestsPage = class extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     if (prevProps.match.params.id !== this.props.match.params.id) {
       AppActions.getChangeRequest(
         this.props.match.params.id,
-        this.props.match.params.projectId,
+        projectIdFromUrl,
         this.props.match.params.environmentId,
       )
     }
@@ -121,7 +120,7 @@ const ChangeRequestsPage = class extends Component {
       destructive: true,
       onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
-          this.context.router.history.replace(
+          this.props.history.replace(
             `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
           )
         })
@@ -134,13 +133,13 @@ const ChangeRequestsPage = class extends Component {
   editChangeRequest = (projectFlag, environmentFlag) => {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
-
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     openModal(
       'Edit Change Request',
       <CreateFlagModal
-        history={this.props.router.history}
+        history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={this.props.match.params.projectId}
+        projectId={projectIdFromUrl}
         changeRequest={ChangeRequestStore.model[id]}
         projectFlag={projectFlag}
         multivariate_options={
@@ -229,7 +228,7 @@ const ChangeRequestsPage = class extends Component {
           'commit',
           () => {
             AppActions.refreshFeatures(
-              this.props.match.params.projectId,
+              Utils.getProjectIdFromUrl(this.props.match),
               this.props.match.params.environmentId,
               true,
             )
@@ -282,6 +281,7 @@ const ChangeRequestsPage = class extends Component {
         </div>
       )
     }
+    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     const orgUsers = OrganisationStore.model && OrganisationStore.model.users
     const orgGroups = this.state.groups || []
     const ownerUsers =
@@ -329,10 +329,12 @@ const ChangeRequestsPage = class extends Component {
     const isVersioned = environment?.use_v2_feature_versioning
     const minApprovals = environment.minimum_change_request_approvals || 0
     const isYourChangeRequest = changeRequest.user === AccountStore.getUser().id
+
     return (
       <Permission
         level='environment'
-        permission={Utils.getApproveChangeRequestPermission(true)}
+        permission={'APPROVE_CHANGE_REQUEST'}
+        tags={projectFlag?.tags}
         id={this.props.match.params.environmentId}
       >
         {({ permission: approvePermission }) => (
@@ -544,7 +546,7 @@ const ChangeRequestsPage = class extends Component {
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
                     feature={projectFlag.id}
-                    projectId={this.props.match.params.projectId}
+                    projectId={projectIdFromUrl}
                   />
                 </div>
                 <JSONReference
@@ -625,4 +627,6 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(withSegmentOverrides(ChangeRequestsPage))
+export default withRouter(
+  ConfigProvider(withSegmentOverrides(ChangeRequestsPage)),
+)

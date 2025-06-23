@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from rest_framework import serializers
 
-from organisations.chargebee import (
+from organisations.chargebee import (  # type: ignore[attr-defined]
     get_hosted_page_url_for_subscription_upgrade,
     get_subscription_data_from_hosted_page,
 )
@@ -22,13 +22,18 @@ from .subscriptions.constants import CHARGEBEE
 logger = logging.getLogger(__name__)
 
 
-class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
+    has_active_billing_periods = serializers.SerializerMethodField()
+
     class Meta:
         model = Subscription
         exclude = ("organisation",)
 
+    def get_has_active_billing_periods(self, obj):  # type: ignore[no-untyped-def]
+        return obj.has_active_billing_periods
 
-class OrganisationSerializerFull(serializers.ModelSerializer):
+
+class OrganisationSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
     subscription = SubscriptionSerializer(required=False)
     role = serializers.SerializerMethodField()
 
@@ -57,19 +62,19 @@ class OrganisationSerializerFull(serializers.ModelSerializer):
             "block_access_to_admin",
         )
 
-    def get_role(self, instance):
+    def get_role(self, instance):  # type: ignore[no-untyped-def]
         if self.context.get("request"):
             user = self.context["request"].user
             return user.get_organisation_role(instance)
 
 
-class OrganisationSerializerBasic(serializers.ModelSerializer):
+class OrganisationSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Organisation
         fields = ("id", "name")
 
 
-class UserOrganisationSerializer(serializers.ModelSerializer):
+class UserOrganisationSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     organisation = OrganisationSerializerBasic(read_only=True)
 
     class Meta:
@@ -77,8 +82,8 @@ class UserOrganisationSerializer(serializers.ModelSerializer):
         fields = ("role", "organisation")
 
 
-class InviteSerializerFull(serializers.ModelSerializer):
-    class InvitedBySerializer(serializers.ModelSerializer):
+class InviteSerializerFull(serializers.ModelSerializer):  # type: ignore[type-arg]
+    class InvitedBySerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
         class Meta:
             model = FFAdminUser
             fields = ("id", "email", "first_name", "last_name")
@@ -97,14 +102,14 @@ class InviteSerializerFull(serializers.ModelSerializer):
         )
 
 
-class InviteSerializer(serializers.ModelSerializer):
+class InviteSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = Invite
         fields = ("id", "email", "role", "date_created", "permission_groups")
         read_only_fields = ("id", "date_created")
 
-    def validate(self, attrs):
-        if Invite.objects.filter(
+    def validate(self, attrs):  # type: ignore[no-untyped-def]
+        if Invite.objects.filter(  # type: ignore[misc]
             email=attrs["email"], organisation__id=self.context.get("organisation")
         ).exists():
             raise serializers.ValidationError(
@@ -113,13 +118,13 @@ class InviteSerializer(serializers.ModelSerializer):
         return super(InviteSerializer, self).validate(attrs)
 
 
-class MultiInvitesSerializer(serializers.Serializer):
+class MultiInvitesSerializer(serializers.Serializer):  # type: ignore[type-arg]
     invites = InviteSerializer(many=True, required=False)
-    emails = serializers.ListSerializer(child=serializers.EmailField(), required=False)
+    emails = serializers.ListSerializer(child=serializers.EmailField(), required=False)  # type: ignore[var-annotated]
 
-    def create(self, validated_data):
-        organisation = self._get_organisation()
-        user = self._get_invited_by()
+    def create(self, validated_data):  # type: ignore[no-untyped-def]
+        organisation = self._get_organisation()  # type: ignore[no-untyped-call]
+        user = self._get_invited_by()  # type: ignore[no-untyped-call]
 
         invites = validated_data.get("invites", [])
 
@@ -143,13 +148,13 @@ class MultiInvitesSerializer(serializers.Serializer):
         # return the created_invites to serialize the data back to the front end
         return created_invites
 
-    def to_representation(self, instance):
+    def to_representation(self, instance):  # type: ignore[no-untyped-def]
         # Return the invites in a dictionary since the serializer expects a single instance to be returned, not a list
         return {"invites": [InviteSerializerFull(invite).data for invite in instance]}
 
-    def validate(self, attrs):
+    def validate(self, attrs):  # type: ignore[no-untyped-def]
         for email in attrs.get("emails", []):
-            if Invite.objects.filter(
+            if Invite.objects.filter(  # type: ignore[misc]
                 email=email, organisation__id=self.context.get("organisation")
             ).exists():
                 raise serializers.ValidationError(
@@ -157,27 +162,27 @@ class MultiInvitesSerializer(serializers.Serializer):
                 )
         return super(MultiInvitesSerializer, self).validate(attrs)
 
-    def _get_invited_by(self):
-        return self.context.get("request").user if self.context.get("request") else None
+    def _get_invited_by(self):  # type: ignore[no-untyped-def]
+        return self.context.get("request").user if self.context.get("request") else None  # type: ignore[union-attr]
 
-    def _get_organisation(self):
+    def _get_organisation(self):  # type: ignore[no-untyped-def]
         try:
             return Organisation.objects.get(pk=self.context.get("organisation"))
         except Organisation.DoesNotExist:
             raise serializers.ValidationError({"emails": "Invalid organisation."})
 
 
-class UpdateSubscriptionSerializer(serializers.Serializer):
+class UpdateSubscriptionSerializer(serializers.Serializer):  # type: ignore[type-arg]
     hosted_page_id = serializers.CharField()
 
-    def create(self, validated_data):
+    def create(self, validated_data):  # type: ignore[no-untyped-def]
         """
         Get the subscription data from Chargebee hosted page and store in the subscription
         """
-        organisation = self._get_organisation()
+        organisation = self._get_organisation()  # type: ignore[no-untyped-call]
 
         if settings.ENABLE_CHARGEBEE:
-            subscription_data = get_subscription_data_from_hosted_page(
+            subscription_data = get_subscription_data_from_hosted_page(  # type: ignore[no-untyped-call]
                 hosted_page_id=validated_data["hosted_page_id"]
             )
 
@@ -196,50 +201,50 @@ class UpdateSubscriptionSerializer(serializers.Serializer):
 
         return organisation
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data):  # type: ignore[no-untyped-def]
         pass
 
-    def _get_organisation(self):
+    def _get_organisation(self):  # type: ignore[no-untyped-def]
         try:
             return Organisation.objects.get(pk=self.context.get("organisation"))
         except Organisation.DoesNotExist:
             raise serializers.ValidationError("Invalid organisation.")
 
 
-class PortalUrlSerializer(serializers.Serializer):
+class PortalUrlSerializer(serializers.Serializer):  # type: ignore[type-arg]
     url = serializers.URLField()
 
 
-class OrganisationWebhookSerializer(serializers.ModelSerializer):
+class OrganisationWebhookSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
     class Meta:
         model = OrganisationWebhook
         fields = ("id", "url", "enabled", "secret", "created_at", "updated_at")
         read_only_fields = ("id",)
 
 
-class InfluxDataSerializer(serializers.Serializer):
+class InfluxDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
     # todo this have to be changed after moving influxdb_wrapper to marshmallow
-    events_list = serializers.ListSerializer(child=serializers.DictField())
+    events_list = serializers.ListSerializer(child=serializers.DictField())  # type: ignore[var-annotated]
 
 
-class InfluxDataQuerySerializer(serializers.Serializer):
+class InfluxDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
 
 
-class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):
+class GetHostedPageForSubscriptionUpgradeSerializer(serializers.Serializer):  # type: ignore[type-arg]
     plan_id = serializers.CharField(write_only=True)
     subscription_id = serializers.CharField(write_only=True)
 
     url = serializers.URLField(read_only=True)
 
-    def save(self, **kwargs):
+    def save(self, **kwargs):  # type: ignore[no-untyped-def]
         url = get_hosted_page_url_for_subscription_upgrade(**self.validated_data)
         self.validated_data["url"] = url
         return self.validated_data
 
 
-class SubscriptionDetailsSerializer(serializers.Serializer):
+class SubscriptionDetailsSerializer(serializers.Serializer):  # type: ignore[type-arg]
     max_seats = serializers.IntegerField(source="seats")
     max_api_calls = serializers.IntegerField(source="api_calls")
     max_projects = serializers.IntegerField(source="projects", allow_null=True)
@@ -252,7 +257,7 @@ class SubscriptionDetailsSerializer(serializers.Serializer):
     audit_log_visibility_days = serializers.IntegerField(allow_null=True)
 
 
-class OrganisationAPIUsageNotificationSerializer(serializers.Serializer):
+class OrganisationAPIUsageNotificationSerializer(serializers.Serializer):  # type: ignore[type-arg]
     organisation_id = serializers.IntegerField()
     percent_usage = serializers.IntegerField()
     notified_at = serializers.DateTimeField()

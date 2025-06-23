@@ -66,7 +66,7 @@ def get_core_overrides_data(
         elif skip_identity_overrides:
             continue
         elif feature_state.identity_id:
-            env_feature_overrides_data.add_identity_override()
+            env_feature_overrides_data.add_identity_override()  # type: ignore[no-untyped-call]
 
     return all_overrides_data
 
@@ -104,11 +104,10 @@ def get_edge_overrides_data(
         if feature_state.feature_segment_id:
             env_feature_overrides_data.num_segment_overrides += 1
     for identity_overrides_v2_list in get_overrides_data_future.result():
-
         for identity_override in identity_overrides_v2_list.identity_overrides:
             # Only override features that exists in core
             if identity_override.feature_state.feature.id in all_overrides_data:
-                all_overrides_data[
+                all_overrides_data[  # type: ignore[no-untyped-call]
                     identity_override.feature_state.feature.id
                 ].add_identity_override()
                 all_overrides_data[

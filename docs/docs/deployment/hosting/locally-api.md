@@ -13,7 +13,7 @@ found in the following section entitled 'Databases'.
 cd api
 make install
 make django-migrate
-make serve
+make serve-with-task-processor  # Or `make serve` for API + synchronous tasks (limited functionality)
 ```
 
 You can now visit `http://<your-server-domain:8000>/api/v1/users/config/init/` to create an initial Superuser and
@@ -175,6 +175,7 @@ the below variables will be ignored.
   `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 - `ALLOW_REGISTRATION_WITHOUT_INVITE`: Determines whether users can register without an invite. Defaults to True. Set to
   False or 0 to disable. Note that if disabled, new users must be invited via email.
+- `PREVENT_SIGNUP`: Determines whether to prevent new signups.
 - `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 - `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 - `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
@@ -224,6 +225,10 @@ the below variables will be ignored.
 - `ENABLE_API_USAGE_TRACKING`: Enable tracking of all API requests in Postgres / Influx. Default is True. Setting to
   False will mean that the Usage tab in the Organisation Settings will not show any data. Useful when using Postgres for
   analytics in high traffic environments to limit the size of database.
+- `USE_CACHE_FOR_USAGE_DATA`: If enabled, this will use in-process caching to track usage data. Defaults to true.
+- `API_USAGE_CACHE_SECONDS`: Controls how frequently the usage cache is flushed. Defaults to 60 seconds
+- `PROMETHEUS_ENABLED`: Enables the Prometheus `/metrics` endpoint. Default is False.
+- `PROMETHEUS_HISTOGRAM_BUCKETS`: Allows to specify your bucket sizes for Prometheus histograms, e.g., `"0.5,0.6,1.0,Inf"`. Defaults to Python Prometheus client default histogram sizes.
 
 #### Security Environment Variables
 
@@ -383,6 +388,8 @@ The application makes use of caching in a couple of locations:
 4. Flags and Identities endpoint caching - the application provides the ability to cache the responses to the GET /flags
    and GET /identities endpoints. The application exposes the configuration to allow the caching to be handled in a
    manner chosen by the developer. The configuration options are explained in more detail below.
+5. Environment document - when making heavy use of the environment document, it is often wise to utilise caching to
+   reduce the load on the database. Details are provided below. 
 
 ### Flags & Identities endpoint caching
 
@@ -418,6 +425,63 @@ cache will be cleared automatically by certain actions in the platform when the 
 | `ENVIRONMENT_CACHE_SECONDS`  | Number of seconds to cache the environment for                                                                                 | `60`                                                   | `86400` ( = 24h)                              |
 | `ENVIRONMENT_CACHE_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/). | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.dummy.DummyCache` |
 | `ENVIRONMENT_CACHE_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                     | `127.0.0.1:11211`                                      | `environment-objects`                         |
+
+
+### Environment document caching
+
+When configuring the environment document caching, there are 2 options: persistent or expiring. The expiring cache
+will expire after a configurable period. The benefit of this option is that it can be used with all cache 
+backends, including those without a centralised storage mechanism. Bear in mind that this will mean, however, that 
+changes will take up to the configured timeout to be reflected in your Flagsmith clients. The persistent cache instead 
+makes use of an automated process to rebuild the cache whenever a change is made.
+
+:::warning
+
+Persistent cache should only be used with cache backends that offer a centralised cache. It should not be used with 
+e.g. LocMemCache. 
+
+:::
+
+:::info
+
+When using a persistent cache, a change can take a few seconds to update the cache. This can also be optimised by 
+increasing the performance of your task processor. 
+
+:::
+
+
+| Environment Variable                  | Description                                                                                                                                                                                       | Example value                                          | Default                                       |
+|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------|
+| `CACHE_ENVIRONMENT_DOCUMENT_MODE`     | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                           | `EXPIRING`                                    |
+| `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                    | `60`                                                   | `0` ( = don't cache)                          |
+| `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                    | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
+| `CACHE_ENVIRONMENT_DOCUMENT_LOCATION` | The location for the cache. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                                        | `127.0.0.1:11211`                                      | `environment-documents`                       |
+| `CACHE_ENVIRONMENT_DOCUMENT_OPTIONS`  | JSON object representing any additional options required by the specific cache backend. See [here](https://docs.djangoproject.com/en/4.2/topics/cache/#cache-arguments) for further information.  | `{"PASSWORD": "securepassword"}`                       | {}                                            |
+
+
+
+#### Example 1. Expiring local memory cache with 60 second timeout
+
+The following environment variables provide an example for specifying a cache local to each API instance that 
+expires after 60 seconds. This can be useful in deployments with just a few environments, where there is flexibility 
+on how long a change to the flags should take to propagate to the clients. 
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_SECONDS: "60"
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND:  "django.core.cache.backends.locmem.LocMemCache"
+```
+
+#### Example 2. Persistent redis cache
+
+The following environment variables provide an example for specifying a cache, stored in redis, that is automatically
+updated whenever a flag is changed. 
+
+```
+CACHE_ENVIRONMENT_DOCUMENT_MODE: "PERSISTENT"
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND: "django_redis.cache.RedisCache"
+CACHE_ENVIRONMENT_DOCUMENT_LOCATION: "redis://127.0.0.1:6379/1"
+CACHE_ENVIRONMENT_DOCUMENT_OPTIONS: "{\"PASSWORD\": \"myredispassword\"}"
+```
 
 ## Unified Front End and Back End Build
 

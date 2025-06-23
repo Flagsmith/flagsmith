@@ -1,20 +1,19 @@
 import json
-import typing
 from datetime import timedelta
 
 import pytest
-from chargebee import APIError as ChargebeeAPIError
+from chargebee import APIError as ChargebeeAPIError  # type: ignore[import-untyped]
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from pytest_mock.plugin import MockerFixture
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
-from users.models import FFAdminUser, HubspotTracker
+from users.models import FFAdminUser, HubspotTracker, UserPermissionGroup
 
 
 def test_create_invite_link(
@@ -136,7 +135,7 @@ def test_delete_invite_link_for_organisation_return_400_if_seats_are_over(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_update_invite_link_returns_405(invite_link, admin_client, organisation):
+def test_update_invite_link_returns_405(invite_link, admin_client, organisation):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invite-links-detail",
@@ -154,7 +153,7 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_join_organisation_with_permission_groups(
+def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-def]
     test_user, test_user_client, organisation, user_permission_group, subscription
 ):
     # Given
@@ -175,7 +174,7 @@ def test_join_organisation_with_permission_groups(
     # Then
     assert response.status_code == status.HTTP_200_OK
     hubspot_tracker = HubspotTracker.objects.first()
-    assert hubspot_tracker.user == test_user
+    assert hubspot_tracker.user == test_user  # type: ignore[union-attr]
 
     assert organisation in test_user.organisations.all()
     assert user_permission_group in test_user.permission_groups.all()
@@ -184,13 +183,18 @@ def test_join_organisation_with_permission_groups(
         invite.refresh_from_db()
 
 
+@pytest.mark.saas_mode
 def test_create_invite_with_permission_groups(
-    admin_client, organisation, user_permission_group, admin_user, subscription
-):
+    admin_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    admin_user: FFAdminUser,
+    chargebee_subscription: Subscription,
+) -> None:
     # Given
     # update subscription to add another seat
-    subscription.max_seats = 2
-    subscription.save()
+    chargebee_subscription.max_seats = 2
+    chargebee_subscription.save()
 
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
@@ -204,7 +208,7 @@ def test_create_invite_with_permission_groups(
         url, data=json.dumps(data), content_type="application/json"
     )
     # Then
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
     # and
     invite = Invite.objects.get(email=email)
     assert invite.permission_groups.first() == user_permission_group
@@ -212,15 +216,11 @@ def test_create_invite_with_permission_groups(
 
 
 def test_create_invite_returns_400_if_seats_are_over(
-    admin_client,
-    organisation,
-    user_permission_group,
-    admin_user,
-    subscription,
-    settings,
-):
+    admin_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+) -> None:
     # Given
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(
         "api-v1:organisations:organisation-invites-list",
         args=[organisation.pk],
@@ -240,7 +240,7 @@ def test_create_invite_returns_400_if_seats_are_over(
     )
 
 
-def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):
+def test_retrieve_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -252,7 +252,7 @@ def test_retrieve_invite(admin_client, organisation, user_permission_group, invi
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_invite(admin_client, organisation, user_permission_group, invite):
+def test_delete_invite(admin_client, organisation, user_permission_group, invite):  # type: ignore[no-untyped-def]
     # Given
     url = reverse(
         "api-v1:organisations:organisation-invites-detail",
@@ -264,7 +264,7 @@ def test_delete_invite(admin_client, organisation, user_permission_group, invite
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
-def test_update_invite_returns_405(
+def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
     admin_client, organisation, user_permission_group, invite
 ):
     # Given
@@ -289,17 +289,13 @@ def test_update_invite_returns_405(
     ],
 )
 def test_join_organisation_returns_400_if_exceeds_plan_limit(
-    test_user_client,
-    organisation,
-    admin_user,
-    invite_object,
-    url,
-    subscription,
-    settings,
-):
+    test_user_client: APIClient,
+    invite_object: Invite | InviteLink,
+    url: str,
+    settings: SettingsWrapper,
+) -> None:
     # Given
     settings.ENABLE_CHARGEBEE = True
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
     url = reverse(url, args=[invite_object.hash])
     # When
     response = test_user_client.post(url)
@@ -312,6 +308,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     )
 
 
+@pytest.mark.saas_mode
 @pytest.mark.parametrize(
     "invite_object, url",
     [
@@ -321,17 +318,14 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
 )
 def test_join_organisation_returns_400_if_payment_fails(
     test_user_client: APIClient,
-    organisation: Organisation,
-    admin_user: FFAdminUser,
-    invite_object: typing.Union[Invite, InviteLink],
+    invite_object: Invite | InviteLink,
     url: str,
     subscription: Subscription,
     settings: SettingsWrapper,
     mocker: MockerFixture,
-):
+) -> None:
     # Given
     settings.ENABLE_CHARGEBEE = True
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
 
     url = reverse(url, args=[invite_object.hash])
 
@@ -367,7 +361,7 @@ def test_join_organisation_returns_400_if_payment_fails(
     )
 
 
-def test_join_organisation_from_link_returns_403_if_invite_links_disabled(
+def test_join_organisation_from_link_returns_403_if_invite_links_disabled(  # type: ignore[no-untyped-def]
     test_user_client, organisation, invite_link, settings
 ):
     # Given

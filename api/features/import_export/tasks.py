@@ -174,7 +174,7 @@ def _save_feature_state_value_with_type(
     if feature_state_value.type == INTEGER:
         feature_state_value.integer_value = value
     elif feature_state_value.type == BOOLEAN:
-        feature_state_value.boolean_value = value
+        feature_state_value.boolean_value = value  # type: ignore[assignment]
     else:
         assert feature_state_value.type == STRING
         feature_state_value.string_value = value
@@ -196,7 +196,7 @@ def _create_multivariate_feature_option(
     if mvfo.type == INTEGER:
         mvfo.integer_value = value
     elif mvfo.type == BOOLEAN:
-        mvfo.boolean_value = value
+        mvfo.boolean_value = value  # type: ignore[assignment]
     else:
         assert mvfo.type == STRING
         mvfo.string_value = value
@@ -221,23 +221,23 @@ def _create_new_feature(
         environment=environment,
     )
 
-    for mv_data in feature_data["multivariate"]:
+    for mv_data in feature_data["multivariate"]:  # type: ignore[union-attr]
         mv_feature_option = _create_multivariate_feature_option(
-            value=mv_data["value"],
-            type=mv_data["type"],
+            value=mv_data["value"],  # type: ignore[index]
+            type=mv_data["type"],  # type: ignore[index]
             feature=feature,
-            default_percentage_allocation=mv_data["default_percentage_allocation"],
+            default_percentage_allocation=mv_data["default_percentage_allocation"],  # type: ignore[arg-type,index]
         )
         mv_feature_state_value = feature_state.multivariate_feature_state_values.filter(
             multivariate_feature_option=mv_feature_option
         ).first()
-        mv_feature_state_value.percentage_allocation = mv_data["percentage_allocation"]
+        mv_feature_state_value.percentage_allocation = mv_data["percentage_allocation"]  # type: ignore[index]
         mv_feature_state_value.save()
 
     feature_state_value = feature_state.feature_state_value
     _save_feature_state_value_with_type(
         value=feature_data["value"],
-        type=feature_data["type"],
+        type=feature_data["type"],  # type: ignore[arg-type]
         feature_state_value=feature_state_value,
     )
     feature_state.enabled = feature_data["enabled"]
@@ -253,12 +253,12 @@ if (
     @register_recurring_task(
         run_every=timedelta(hours=24),
     )
-    def create_flagsmith_on_flagsmith_feature_export_task():
+    def create_flagsmith_on_flagsmith_feature_export_task():  # type: ignore[no-untyped-def]
         # Defined in a one off function for testing import.
-        _create_flagsmith_on_flagsmith_feature_export()
+        _create_flagsmith_on_flagsmith_feature_export()  # type: ignore[no-untyped-call]
 
 
-def _create_flagsmith_on_flagsmith_feature_export():
+def _create_flagsmith_on_flagsmith_feature_export():  # type: ignore[no-untyped-def]
     """
     This is called by create_flagsmith_on_flagsmith_feature_export_task
     and by tests. Should not be used by normal applications.
@@ -266,14 +266,14 @@ def _create_flagsmith_on_flagsmith_feature_export():
     environment_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_ENVIRONMENT_ID
     tag_id = settings.FLAGSMITH_ON_FLAGSMITH_FEATURE_EXPORT_TAG_ID
 
-    feature_export = FeatureExport.objects.create(
+    feature_export = FeatureExport.objects.create(  # type: ignore[misc]
         environment_id=environment_id,
         status=PROCESSING,
     )
 
     export_features_for_environment(
         feature_export_id=feature_export.id,
-        tag_ids=[tag_id],
+        tag_ids=[tag_id],  # type: ignore[list-item]
     )
 
     feature_export.refresh_from_db()

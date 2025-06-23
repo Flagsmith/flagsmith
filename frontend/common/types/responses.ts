@@ -1,22 +1,18 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
 }
-export type Approval =
-  | {
-      user: number
-    }
-  | {
-      group: number
-    }
+export type Approval = {
+  user?: number
+  group?: number
+}
 export type PagedResponse<T> = {
   count?: number
   next?: string
   previous?: string
   results: T[]
 }
+
 export interface GitHubPagedResponse<T> extends PagedResponse<T> {
   incomplete_results: boolean
 }
@@ -56,6 +52,12 @@ export type SegmentCondition = {
   property: string
   value: string | number | null
 }
+
+export type SegmentConditionsError = {
+  property?: string[]
+  value?: string[]
+}
+
 export type SegmentRule = {
   type: string
   rules: SegmentRule[]
@@ -79,16 +81,23 @@ export type Environment = {
   is_creating: boolean
   api_key: string
   description?: string
-  banner_text?: string
+  banner_text?: string | null
   banner_colour?: string
   project: number
-  minimum_change_request_approvals?: number
+  minimum_change_request_approvals?: number | null
   allow_client_traits: boolean
   hide_sensitive_data: boolean
   total_segment_overrides?: number
   use_v2_feature_versioning: boolean
   metadata: Metadata[] | []
+  use_identity_overrides_in_local_eval: boolean
+  use_identity_composite_key_for_hashing: boolean
+  hide_disabled_flags: boolean | null
+  use_mv_v2_evaluation: boolean
+  show_disabled_flags: boolean
+  enabledFeatureVersioning?: boolean
 }
+
 export type Project = {
   id: number
   uuid: string
@@ -228,14 +237,25 @@ export type githubIntegration = {
   organisation: string
 }
 
+export type GettingStartedTask = {
+  name: string
+  completed_at?: string
+}
+export type Onboarding = {
+  tools: {
+    completed: boolean
+    selection: string[]
+  }
+  tasks: GettingStartedTask[]
+}
 export type User = {
   id: number
   email: string
-  last_login?: string
   first_name: string
   last_name: string
-  role: 'ADMIN' | 'USER'
-  date_joined: string
+  last_login: string
+  uuid: string
+  onboarding: Onboarding
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -260,6 +280,30 @@ export type UserPermission = {
   admin: boolean
   id: number
   role?: number
+}
+
+export type DerivedPermission = {
+  groups: {
+    name: string
+    id: number
+  }[]
+  roles: {
+    name: string
+    id: number
+  }[]
+}
+
+export type Permission = {
+  is_directly_granted: boolean
+  permission_key: string
+  tags: number[]
+  derived_from: DerivedPermission
+}
+export type UserPermissions = {
+  admin: boolean
+  is_directly_granted: boolean
+  derived_from: DerivedPermission
+  permissions: Permission[]
 }
 
 export type RolePermission = Omit<UserPermission, 'permissions'> & {
@@ -323,7 +367,7 @@ export type Organisation = {
   restrict_project_create_to_admin: boolean
 }
 export type Identity = {
-  id?: string
+  id: string
   identifier: string
   identity_uuid?: string
   dashboard_alias?: string
@@ -390,6 +434,8 @@ export type IdentityFeatureState = {
     name: string
     type: FeatureType
   }
+  identity?: string
+  identity_uuid?: string
   enabled: boolean
   feature_state_value: FlagsmithValue
   segment: null
@@ -403,26 +449,26 @@ export type IdentityFeatureState = {
 }
 
 export type FeatureState = {
-  id: number
-  feature_state_value: FlagsmithValue
-  multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  identity?: string
-  uuid: string
-  enabled: boolean
+  change_request?: number
   created_at: string
-  updated_at: string
-  environment_feature_version: string
-  version?: number
-  live_from?: string
-  feature: number
+  enabled: boolean
   environment: number
+  environment_feature_version: string
+  feature: number
   feature_segment?: {
     id: number
     priority: number
     segment: number
     uuid: string
   }
-  change_request?: number
+  feature_state_value: FlagsmithValue
+  id: number
+  identity?: number
+  live_from?: string
+  multivariate_feature_state_values: MultivariateFeatureStateValue[]
+  updated_at: string
+  uuid: string
+  version?: number
   //Added by FE
   toRemove?: boolean
 }
@@ -455,18 +501,17 @@ export type ProjectFlag = {
 
 export type FeatureListProviderData = {
   projectFlags: ProjectFlag[] | null
-  environmentFlags: FeatureState[] | null
+  environmentFlags: Record<number, FeatureState> | undefined
   error: boolean
   isLoading: boolean
 }
 
 export type FeatureListProviderActions = {
   toggleFlag: (
-    index: number,
-    environments: Environment[],
-    comment: string | null,
-    environmentFlags: FeatureState[],
-    projectFlags: ProjectFlag[],
+    projectId: string,
+    environmentId: string,
+    projectFlag: ProjectFlag,
+    environmentFlags: FeatureState | undefined,
   ) => void
   removeFlag: (projectId: string, projectFlag: ProjectFlag) => void
 }
@@ -482,7 +527,7 @@ export type Invite = {
   email: string
   date_created: string
   invited_by: User
-  link: string
+  link?: string
   permission_groups: number[]
 }
 
@@ -613,7 +658,6 @@ export type ContentType = {
 
 export type isRequiredFor = {
   content_type: number
-  object_id: number
 }
 
 export type MetadataModelField = {
@@ -638,15 +682,45 @@ export type SAMLAttributeMapping = {
   django_attribute_name: AttributeName
   idp_attribute_name: string
 }
+export type ServersideSplitTestResult = {
+  conversion_count: number
+  evaluation_count: number
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  pvalue: number
+  value_data: FeatureStateValue
+}
 
 export type HealthEventType = 'HEALTHY' | 'UNHEALTHY'
+
+export type FeatureHealthEventReasonTextBlock = {
+  text: string
+  title?: string
+}
+
+export type FeatureHealthEventReasonUrlBlock = {
+  url: string
+  title?: string
+}
+
+export type HealthEventReason = {
+  text_blocks: FeatureHealthEventReasonTextBlock[]
+  url_blocks: FeatureHealthEventReasonUrlBlock[]
+}
 
 export type HealthEvent = {
   created_at: string
   environment: number
   feature: number
   provider_name: string
-  reason: string
+  reason: HealthEventReason | null
   type: HealthEventType
 }
 
@@ -658,6 +732,63 @@ export type HealthProvider = {
   webhook_url: number
 }
 
+export type Version = {
+  tag: string
+  backend_sha: string
+  frontend_sha: string
+  frontend: {
+    ci_commit_sha?: string
+    image_tag?: string
+  }
+  backend: {
+    ci_commit_sha: string
+    image_tag: string
+    has_email_provider: boolean
+    is_enterprise: boolean
+    is_saas: boolean
+    'self_hosted_data'?: {
+      'has_users': boolean
+      'has_logins': boolean
+    }
+  }
+}
+
+export type PConfidence =
+  | 'VERY_LOW'
+  | 'LOW'
+  | 'REASONABLE'
+  | 'HIGH'
+  | 'VERY_HIGH'
+export type SplitTestResult = {
+  results: {
+    conversion_count: number
+    evaluation_count: number
+    conversion_percentage: number
+    pvalue: number
+    confidence: PConfidence
+    value_data: FeatureStateValue
+  }[]
+  feature: {
+    created_date: string
+    default_enabled: boolean
+    description: any
+    id: number
+    initial_value: string
+    name: string
+    type: string
+  }
+  max_conversion_percentage: number
+  max_conversion_count: number
+  conversion_variance: number
+  max_conversion_pvalue: number
+}
+
+export type ConversionEvent = {
+  id: number
+  name: string
+  updated_at: string
+  created_at: string
+}
 export type Webhook = {
   id: number
   url: string
@@ -665,6 +796,72 @@ export type Webhook = {
   enabled: boolean
   created_at: string
   updated_at: string
+}
+
+export type AccountModel = User & {
+  organisations: Organisation[]
+}
+
+export type IdentityTrait = {
+  id: number | string
+  trait_key: string
+  trait_value: FlagsmithValue
+}
+
+export enum PipelineStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+}
+
+export interface ReleasePipeline {
+  id: number
+  name: string
+  project: number
+  description: string
+  stages_count: number
+  published_at: string
+  published_by: number
+  features_count: number
+}
+
+export interface SingleReleasePipeline extends ReleasePipeline {
+  stages: PipelineStage[]
+  completed_features: number[]
+}
+
+export enum StageTriggerType {
+  ON_ENTER = 'ON_ENTER',
+  WAIT_FOR = 'WAIT_FOR',
+}
+
+export type StageTriggerBody = { wait_for?: string } | null
+
+export type StageTrigger = {
+  trigger_type: StageTriggerType
+  trigger_body: StageTriggerBody
+}
+
+export enum StageActionType {
+  TOGGLE_FEATURE = 'TOGGLE_FEATURE',
+  TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+}
+
+export type StageActionBody = { enabled: boolean; segment_id?: number }
+export interface StageAction {
+  id: number
+  action_type: StageActionType
+  action_body: StageActionBody
+}
+
+export type PipelineStage = {
+  id: number
+  name: string
+  pipeline: number
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageAction[]
+  features: number[]
 }
 
 export type Res = {
@@ -709,8 +906,10 @@ export type Res = {
   account: Account
   userEmail: {}
   groupAdmin: { id: string }
-  groups: PagedResponse<UserGroupSummary>
+  groups: PagedResponse<UserGroup>
   group: UserGroup
+  userInvites: PagedResponse<Invite>
+  createdUserInvite: Invite[]
   myGroups: PagedResponse<UserGroupSummary>
   createSegmentOverride: {
     id: number
@@ -784,7 +983,7 @@ export type Res = {
   featureImports: PagedResponse<FeatureImport>
   serversideEnvironmentKeys: APIKey[]
   userGroupPermissions: GroupPermission[]
-  identityFeatureStates: PagedResponse<FeatureState>
+  identityFeatureStates: IdentityFeatureState[]
   cloneidentityFeatureStates: IdentityFeatureState
   featureStates: PagedResponse<FeatureState>
   samlConfiguration: SAMLConfiguration
@@ -795,5 +994,28 @@ export type Res = {
     metadata_xml: string
   }
   samlAttributeMapping: PagedResponse<SAMLAttributeMapping>
+  identitySegments: PagedResponse<Segment>
+  organisationWebhooks: PagedResponse<Webhook>
+  identityTrait: { id: string }
+  identityTraits: IdentityTrait[]
+  conversionEvents: PagedResponse<ConversionEvent>
+  splitTest: PagedResponse<SplitTestResult>
+  onboardingSupportOptIn: { id: string }
+  environmentMetrics: {
+    metrics: {
+      value: number
+      description: string
+      name: string
+      entity: 'features' | 'identities' | 'segments' | 'workflows'
+      rank: number
+    }[]
+  }
+  profile: User
+  onboarding: {}
+  userPermissions: UserPermissions
+  releasePipelines: PagedResponse<ReleasePipeline>
+  releasePipeline: SingleReleasePipeline
+  pipelineStages: PagedResponse<PipelineStage>
+  pipelineStage: PipelineStage
   // END OF TYPES
 }

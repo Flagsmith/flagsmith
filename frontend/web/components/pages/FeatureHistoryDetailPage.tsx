@@ -1,6 +1,6 @@
 import React, { FC, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { RouterChildContext } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import {
   useGetFeatureVersionQuery,
@@ -17,22 +17,17 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import Breadcrumb from 'components/Breadcrumb'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-
-type FeatureHistoryPageType = {
-  router: RouterChildContext['router']
-
-  match: {
-    params: {
-      id: string
-      environmentId: string
-      projectId: string
-    }
-  }
+import { useHistory } from 'react-router-dom'
+interface RouteParams {
+  id: string
+  environmentId: string
+  projectId: string
 }
 
-const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
+const FeatureHistoryPage: FC = () => {
   const [open, setOpen] = useState(false)
-
+  const match = useRouteMatch<RouteParams>()
+  const history = useHistory()
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
   ) as any

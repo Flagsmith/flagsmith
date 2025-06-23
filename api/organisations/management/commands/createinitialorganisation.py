@@ -40,7 +40,7 @@ class Command(BaseCommand):
             return
         organisation = Organisation.objects.create(name=organisation_name)
         initial_superuser = get_initial_superuser(admin_email)
-        initial_superuser.add_organisation(organisation, OrganisationRole.ADMIN)
+        initial_superuser.add_organisation(organisation, OrganisationRole.ADMIN)  # type: ignore[union-attr]
         self.stdout.write(
             self.style.SUCCESS(
                 'Organisation "%s" created successfully.' % organisation.name

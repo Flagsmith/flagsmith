@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { RouterChildContext } from 'react-router'
+import { useHistory, useLocation } from 'react-router-dom'
 
 import Utils from 'common/utils/utils'
 import Constants from 'common/constants'
@@ -17,18 +17,18 @@ import AppActions from 'common/dispatcher/app-actions'
 import CreateProjectModal from './modals/CreateProject'
 
 type SegmentsPageType = {
-  router: RouterChildContext['router']
   organisationId: number | null
 }
 
-const ProjectManageWidget: FC<SegmentsPageType> = ({
-  organisationId,
-  router,
-}) => {
+const ProjectManageWidget: FC<SegmentsPageType> = ({ organisationId }) => {
+  const history = useHistory()
+  const location = useLocation()
   const isAdmin = AccountStore.isAdmin()
   const create = Utils.fromParam()?.create
   const { data: organisations } = useGetOrganisationsQuery({})
+
   const organisation = useMemo(
+    // TODO: FIX organisationId is not a number
     () => organisations?.results?.find((v) => v.id === organisationId),
     [organisations, organisationId],
   )
@@ -43,21 +43,22 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
     if (create && canCreateProject && organisation) {
       handleCreateProjectClick()
     }
+    //eslint-disable-next-line
   }, [organisationId, organisation, canCreateProject, create])
   const handleCreateProjectClick = useCallback(() => {
     openModal(
       'Create Project',
-      <CreateProjectModal history={router.history} />,
+      <CreateProjectModal history={history} />,
       'p-0 side-modal',
     )
-  }, [router.history])
+  }, [history])
 
   useEffect(() => {
-    const { state } = router.route.location as { state: { create?: boolean } }
+    const { state } = location as { state: { create?: boolean } }
     if (state && state.create) {
       handleCreateProjectClick()
     }
-  }, [handleCreateProjectClick, router.route.location])
+  }, [handleCreateProjectClick, location])
   useEffect(() => {
     if (organisationId) {
       AppActions.getOrganisation(organisationId)
@@ -113,10 +114,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                       </div>
                     }
                     items={projects}
-                    renderRow={(
-                      { environments, id, name }: Project,
-                      i: number,
-                    ) => {
+                    renderRow={({ environments, id, name }, i) => {
                       return (
                         <>
                           {i === 0 && (
@@ -152,6 +150,7 @@ const ProjectManageWidget: FC<SegmentsPageType> = ({
                           <Link
                             key={id}
                             id={`project-select-${i}`}
+                            data-test={`project-${Utils.toKebabCase(name)}`}
                             to={`/project/${id}/environment/${
                               environments && environments[0]
                                 ? `${environments[0].api_key}/features`

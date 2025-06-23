@@ -3,12 +3,16 @@ import re
 from collections import ChainMap
 
 import pyotp
+import pytest
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 from pytest_mock import MockerFixture
 from rest_framework import status
-from rest_framework.test import APIClient, override_settings
+from rest_framework.test import (  # type: ignore[attr-defined]
+    APIClient,
+    override_settings,
+)
 from rest_framework_simplejwt.tokens import SlidingToken
 
 from organisations.invites.models import Invite
@@ -58,7 +62,7 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
     # verify that the user has been emailed with their reset code
     assert len(mail.outbox) == 1
     # get the url and grab the uid and token
-    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
+    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]  # type: ignore[arg-type]
     split_url = url.split("/")
     uid = split_url[-2]
     token = split_url[-1]
@@ -89,7 +93,7 @@ def test_register_and_login_workflows(db: None, api_client: APIClient) -> None:
     assert new_login_response.json()["key"]
 
 
-@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
+@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
 def test_cannot_register_without_invite_if_disabled(
     db: None, api_client: APIClient
 ) -> None:
@@ -111,7 +115,7 @@ def test_cannot_register_without_invite_if_disabled(
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)
+@override_settings(ALLOW_REGISTRATION_WITHOUT_INVITE=False)  # type: ignore[misc]
 def test_can_register_with_invite_if_registration_disabled_without_invite(
     db: None,
     api_client: APIClient,
@@ -137,8 +141,8 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
     assert response.status_code == status.HTTP_201_CREATED
 
 
-@override_settings(
-    DJOSER=ChainMap(
+@override_settings(  # type: ignore[misc]
+    DJOSER=ChainMap(  # type: ignore[misc]
         {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
         settings.DJOSER,
     )
@@ -191,7 +195,7 @@ def test_registration_and_login_with_user_activation_flow(
     # and extract uid and token for account activation
     assert len(mail.outbox) == 1
     # get the url and grab the uid and token
-    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]
+    url = re.findall(r"http\:\/\/.*", mail.outbox[0].body)[0]  # type: ignore[arg-type]
     split_url = url.split("/")
     uid = split_url[-2]
     token = split_url[-1]
@@ -287,7 +291,7 @@ def test_login_workflow_with_mfa_enabled(
     assert current_user_response.json()["email"] == email
 
 
-@override_settings(COOKIE_AUTH_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
 def test_register_and_login_workflows__jwt_cookie(
     db: None,
     api_client: APIClient,
@@ -357,7 +361,7 @@ def test_register_and_login_workflows__jwt_cookie(
     assert new_jwt_access_cookie != jwt_access_cookie
 
 
-@override_settings(COOKIE_AUTH_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
 def test_login_workflow__jwt_cookie__mfa_enabled(
     db: None,
     api_client: APIClient,
@@ -413,7 +417,7 @@ def test_login_workflow__jwt_cookie__mfa_enabled(
 # changes default CORS setting values.
 # Due to how Django settings are loaded for tests,
 # we have to override CORS settings manually.
-@override_settings(
+@override_settings(  # type: ignore[misc]
     COOKIE_AUTH_ENABLED=True,
     DOMAIN_OVERRIDE="testhost.com",
     CORS_ORIGIN_ALLOW_ALL=False,
@@ -447,7 +451,7 @@ def test_login_workflow__jwt_cookie__cors_headers_expected(
     assert response.headers["Access-Control-Allow-Origin"] == "http://testhost.com"
 
 
-@override_settings(COOKIE_AUTH_ENABLED=True)
+@override_settings(COOKIE_AUTH_ENABLED=True)  # type: ignore[misc]
 def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     db: None,
     api_client: APIClient,
@@ -468,7 +472,7 @@ def test_login_workflow__jwt_cookie__invalid_token__no_cookies_expected(
     jwt_access_cookie = response.cookies.get("jwt")
 
     # cookie is invalidated server-side but is still attached to the client
-    SlidingToken(jwt_access_cookie.value).blacklist()
+    SlidingToken(jwt_access_cookie.value).blacklist()  # type: ignore[union-attr]
 
     # When
     response = api_client.get(protected_resource_url)
@@ -486,7 +490,7 @@ def test_throttle_login_workflows(
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
-    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )
@@ -528,7 +532,7 @@ def test_throttle_signup(
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
-    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )
@@ -555,7 +559,7 @@ def test_throttle_signup(
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
 
 
-def test_get_user_is_not_throttled(
+def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
     admin_client: APIClient, reset_cache: None, mocker: MockerFixture
 ):
     # Given
@@ -570,7 +574,7 @@ def test_get_user_is_not_throttled(
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_token(test_user, auth_token):
+def test_delete_token(test_user, auth_token):  # type: ignore[no-untyped-def]
     # Given
     url = reverse("api-v1:custom_auth:delete-token")
     client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token.key}")
@@ -586,7 +590,7 @@ def test_delete_token(test_user, auth_token):
     assert client.delete(url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_register_with_sign_up_type(client, db, settings):
+def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]
     # Given
     password = FFAdminUser.objects.make_random_password()
     sign_up_type = "NO_INVITE"
@@ -614,3 +618,115 @@ def test_register_with_sign_up_type(client, db, settings):
     assert response_json["sign_up_type"] == sign_up_type
 
     assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
+
+
+def test_can_create_superuser(
+    db: None, api_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("custom_auth.serializers.is_saas", return_value=False)
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "superuser": True,
+        "other_field": "meh",
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    user = FFAdminUser.objects.get(email=email)
+    assert user.superuser is True
+
+
+def test_cannot_create_superuser_on_saas_build(
+    db: None, api_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("custom_auth.serializers.is_saas", return_value=True)
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "superuser": True,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    user = FFAdminUser.objects.get(email=email)
+    assert user.superuser is False
+
+
+def test_cannot_create_superuser_if_any_user_exists(
+    admin_user: FFAdminUser, api_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("custom_auth.serializers.is_saas", return_value=False)
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "superuser": True,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["superuser"] == [
+        "A superuser can only be created through this  endpoint if no other users exist."
+    ]
+    assert FFAdminUser.objects.filter(email=email).exists() is False
+
+
+@pytest.mark.parametrize("marketing_consent_given", [None, True, False])
+def test_marketing_consent_given_defaults_to_true(
+    api_client: APIClient,
+    marketing_consent_given: bool | None,
+    db: None,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": "test@example.com",
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "marketing_consent_given": marketing_consent_given,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(register_data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["marketing_consent_given"] is True

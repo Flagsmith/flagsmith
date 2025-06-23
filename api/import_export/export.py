@@ -53,10 +53,15 @@ logger = logging.getLogger(__name__)
 
 
 class S3OrganisationExporter:
-    def __init__(self, s3_client=None):
+    def __init__(self, s3_client=None):  # type: ignore[no-untyped-def]
         self.s3_client = s3_client or boto3.client("s3")
 
-    def export_to_s3(self, organisation_id: int, bucket_name: str, key: str):
+    def export_to_s3(
+        self,
+        organisation_id: int,
+        bucket_name: str,
+        key: str,
+    ) -> None:
         data = full_export(organisation_id)
         logger.debug("Got data export for organisation.")
 
@@ -69,7 +74,7 @@ class S3OrganisationExporter:
         logger.info("Finished writing data export to s3.")
 
 
-def full_export(organisation_id: int) -> typing.List[dict]:
+def full_export(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     return [
         *export_organisation(organisation_id),
         *export_projects(organisation_id),
@@ -81,7 +86,7 @@ def full_export(organisation_id: int) -> typing.List[dict]:
     ]
 
 
-def export_organisation(organisation_id: int) -> typing.List[dict]:
+def export_organisation(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     """
     Serialize an organisation and all its related objects.
     """
@@ -93,7 +98,7 @@ def export_organisation(organisation_id: int) -> typing.List[dict]:
     )
 
 
-def export_metadata(organisation_id: int) -> typing.List[dict]:
+def export_metadata(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     return _export_entities(
         _EntityExportConfig(MetadataField, Q(organisation__id=organisation_id)),
         _EntityExportConfig(
@@ -109,44 +114,55 @@ def export_metadata(organisation_id: int) -> typing.List[dict]:
     )
 
 
-def export_projects(organisation_id: int) -> typing.List[dict]:
+def export_projects(
+    organisation_id: int,
+) -> typing.List[dict]:  # type: ignore[type-arg]
     default_filter = Q(project__organisation__id=organisation_id)
 
-    return _export_entities(
+    exported_projects = _export_entities(
         _EntityExportConfig(Project, Q(organisation__id=organisation_id)),
-        _EntityExportConfig(
-            Segment, Q(project__organisation__id=organisation_id, id=F("version_of"))
-        ),
-        _EntityExportConfig(
-            SegmentRule,
-            Q(
-                segment__project__organisation__id=organisation_id,
-                segment_id=F("segment__version_of"),
-            )
-            | Q(
-                rule__segment__project__organisation__id=organisation_id,
-                rule__segment_id=F("rule__segment__version_of"),
-            ),
-        ),
-        _EntityExportConfig(
-            Condition,
-            Q(
-                rule__segment__project__organisation__id=organisation_id,
-                rule__segment_id=F("rule__segment__version_of"),
-            )
-            | Q(
-                rule__rule__segment__project__organisation__id=organisation_id,
-                rule__rule__segment_id=F("rule__rule__segment__version_of"),
-            ),
-        ),
-        _EntityExportConfig(Tag, default_filter),
-        _EntityExportConfig(DataDogConfiguration, default_filter),
-        _EntityExportConfig(NewRelicConfiguration, default_filter),
-        _EntityExportConfig(SlackConfiguration, default_filter),
     )
+    for project in exported_projects:
+        project["fields"]["enable_dynamo_db"] = False
+
+    return [
+        *exported_projects,
+        *_export_entities(
+            _EntityExportConfig(
+                Segment,
+                Q(project__organisation__id=organisation_id, id=F("version_of")),
+            ),
+            _EntityExportConfig(
+                SegmentRule,
+                Q(
+                    segment__project__organisation__id=organisation_id,
+                    segment_id=F("segment__version_of"),
+                )
+                | Q(
+                    rule__segment__project__organisation__id=organisation_id,
+                    rule__segment_id=F("rule__segment__version_of"),
+                ),
+            ),
+            _EntityExportConfig(
+                Condition,
+                Q(
+                    rule__segment__project__organisation__id=organisation_id,
+                    rule__segment_id=F("rule__segment__version_of"),
+                )
+                | Q(
+                    rule__rule__segment__project__organisation__id=organisation_id,
+                    rule__rule__segment_id=F("rule__rule__segment__version_of"),
+                ),
+            ),
+            _EntityExportConfig(Tag, default_filter),
+            _EntityExportConfig(DataDogConfiguration, default_filter),
+            _EntityExportConfig(NewRelicConfiguration, default_filter),
+            _EntityExportConfig(SlackConfiguration, default_filter),
+        ),
+    ]
 
 
-def export_environments(organisation_id: int) -> typing.List[dict]:
+def export_environments(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     default_filter = Q(environment__project__organisation__id=organisation_id)
 
     return _export_entities(
@@ -162,7 +178,7 @@ def export_environments(organisation_id: int) -> typing.List[dict]:
     )
 
 
-def export_identities(organisation_id: int) -> typing.List[dict]:
+def export_identities(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     traits = _export_entities(
         _EntityExportConfig(
             Trait,
@@ -190,7 +206,7 @@ def export_identities(organisation_id: int) -> typing.List[dict]:
     return [*identities, *traits]
 
 
-def export_edge_identities(organisation_id: int) -> typing.List[dict]:
+def export_edge_identities(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     identities = []
     traits = []
     identity_overrides = []
@@ -207,7 +223,7 @@ def export_edge_identities(organisation_id: int) -> typing.List[dict]:
     return [*identities, *traits, *identity_overrides]
 
 
-def export_features(organisation_id: int) -> typing.List[dict]:
+def export_features(organisation_id: int) -> typing.List[dict]:  # type: ignore[type-arg]
     """
     Export all features and related entities, except ChangeRequests.
     """
@@ -261,14 +277,14 @@ def export_features(organisation_id: int) -> typing.List[dict]:
 
 @dataclass
 class _EntityExportConfig:
-    model_class: type(Model)
+    model_class: type(Model)  # type: ignore[valid-type]
     qs_filter: Q
-    exclude_fields: typing.List[str] = None
+    exclude_fields: typing.List[str] = None  # type: ignore[assignment]
 
 
 def _export_entities(
     *export_configs: _EntityExportConfig,
-) -> typing.List[dict]:
+) -> typing.List[dict]:  # type: ignore[type-arg]
     entities = []
     for config in export_configs:
         args = ("python", config.model_class.objects.filter(config.qs_filter))
@@ -279,7 +295,7 @@ def _export_entities(
                 for f in config.model_class._meta.get_fields()
                 if f.name not in config.exclude_fields
             ]
-        entities.extend(_serialize_natural(*args, **kwargs))
+        entities.extend(_serialize_natural(*args, **kwargs))  # type: ignore[arg-type]
     return entities
 
 

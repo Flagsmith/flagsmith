@@ -3,6 +3,7 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
+import { withRouter } from 'react-router-dom'
 
 class CreateOrganisationPage extends Component {
   static displayName = 'CreateOrganisastionPage'
@@ -12,14 +13,10 @@ class CreateOrganisationPage extends Component {
     this.state = { name: '' }
   }
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   componentDidMount = () => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
     this.focusTimeout = setTimeout(() => {
-      this.input.focus()
+      this.input?.focus()
       this.focusTimeout = null
     }, 500)
   }
@@ -33,7 +30,11 @@ class CreateOrganisationPage extends Component {
   onSave = (id) => {
     AppActions.selectOrganisation(id)
     API.setCookie('organisation', `${id}`)
-    this.context.router.history.push(Utils.getOrganisationHomePage(id))
+    if (Utils.getFlagsmithHasFeature('welcome_page')) {
+      this.props.history.push('/getting-started')
+    } else {
+      this.props.history.push(Utils.getOrganisationHomePage(id))
+    }
   }
 
   render() {
@@ -103,4 +104,4 @@ class CreateOrganisationPage extends Component {
   }
 }
 
-export default ConfigProvider(CreateOrganisationPage)
+export default withRouter(ConfigProvider(CreateOrganisationPage))

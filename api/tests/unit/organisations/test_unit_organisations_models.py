@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings
@@ -30,6 +31,7 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 def test_organisation_has_paid_subscription_true(db: None) -> None:
@@ -59,7 +61,7 @@ def test_organisation_has_paid_subscription_missing_subscription_id(db: None) ->
 
 
 @mock.patch("organisations.models.cancel_chargebee_subscription")
-def test_organisation_cancel_subscription_cancels_chargebee_subscription(
+def test_organisation_cancel_subscription_cancels_chargebee_subscription(  # type: ignore[no-untyped-def]
     mocked_cancel_chargebee_subscription,
     organisation: Organisation,
 ):
@@ -89,7 +91,7 @@ def test_organisation_cancel_subscription_cancels_chargebee_subscription(
     assert subscription.plan == FREE_PLAN_ID
 
 
-def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed(  # type: ignore[no-untyped-def]
     environment: Environment, organisation: Organisation, mocker: MockerFixture
 ):
     # Given
@@ -108,7 +110,7 @@ def test_organisation_rebuild_environment_document_on_stop_serving_flags_changed
     )
 
 
-def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(
+def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchanged(  # type: ignore[no-untyped-def]
     environment: Environment, organisation: Organisation, mocker: MockerFixture
 ):
     # Given
@@ -124,7 +126,7 @@ def test_organisation_rebuild_environment_document_on_stop_serving_flags_unchang
     mocked_rebuild_environment_document.delay.assert_not_called()
 
 
-def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(
+def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats_limit(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation, chargebee_subscription, mocker
 ):
     # Given
@@ -139,7 +141,7 @@ def test_organisation_over_plan_seats_limit_returns_false_if_not_over_plan_seats
     mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
-def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limit(
+def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limit(  # type: ignore[no-untyped-def]
     organisation, chargebee_subscription, mocker, admin_user
 ):
     # Given
@@ -154,7 +156,7 @@ def test_organisation_over_plan_seats_limit_returns_true_if_over_plan_seats_limi
     mocked_get_subscription_metadata.assert_called_once_with(chargebee_subscription)
 
 
-def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):
+def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admin_user):  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     organisation.subscription.max_seats = 0
     organisation.subscription.save()
@@ -168,11 +170,13 @@ def test_organisation_over_plan_seats_no_subscription(organisation, mocker, admi
     mocked_get_subscription_metadata.assert_not_called()
 
 
-def test_organisation_is_auto_seat_upgrade_available(organisation, settings):
+@pytest.mark.saas_mode
+def test_organisation_is_auto_seat_upgrade_available(
+    organisation: Organisation,
+) -> None:
     # Given
     plan = "Scale-Up"
     subscription_id = "subscription-id"
-    settings.AUTO_SEAT_UPGRADE_PLANS = [plan]
 
     Subscription.objects.filter(organisation=organisation).update(
         subscription_id=subscription_id, plan=plan
@@ -195,21 +199,21 @@ def test_organisation_default_subscription_have_one_max_seat(
     assert subscription.max_seats == 1
 
 
-def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):
+def test_organisation_is_paid_returns_false_if_subscription_does_not_exists(db):  # type: ignore[no-untyped-def]
     # Given
     organisation = Organisation.objects.create(name="Test org")
     # Then
     assert organisation.is_paid is False
 
 
-def test_organisation_is_paid_returns_true_if_active_subscription_exists(
+def test_organisation_is_paid_returns_true_if_active_subscription_exists(  # type: ignore[no-untyped-def]
     organisation, chargebee_subscription
 ):
     # When/Then
     assert organisation.is_paid is True
 
 
-def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
+def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(  # type: ignore[no-untyped-def]
     organisation, chargebee_subscription
 ):
     # Given
@@ -221,7 +225,7 @@ def test_organisation_is_paid_returns_false_if_cancelled_subscription_exists(
     assert organisation.is_paid is False
 
 
-def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(
+def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata_for_cb_subscription(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation: Organisation,
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -257,7 +261,7 @@ def test_organisation_subscription_get_subscription_metadata_returns_cb_metadata
     assert subscription_metadata == expected_metadata
 
 
-def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versions_when_released(
+def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versions_when_released(  # type: ignore[no-untyped-def]  # noqa: E501
     organisation: Organisation,
     mocker: MockerFixture,
     settings: SettingsWrapper,
@@ -306,7 +310,7 @@ def test_get_subscription_metadata_returns_unlimited_values_for_audit_and_versio
     assert subscription_metadata == expected_metadata
 
 
-def test_organisation_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(
+def test_organisation_subscription_get_subscription_metadata_returns_xero_metadata_for_xero_sub(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker: MockerFixture,
 ):
     # Given
@@ -325,7 +329,7 @@ def test_organisation_subscription_get_subscription_metadata_returns_xero_metada
     assert subscription_metadata == expected_metadata
 
 
-def test_organisation_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():
+def test_organisation_subscription_get_subscription_metadata_returns_free_plan_metadata_for_no_plan():  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     subscription = Subscription()
 
@@ -413,12 +417,11 @@ def test_organisation_get_subscription_metadata_for_self_hosted_open_source(
     assert subscription_metadata == FREE_PLAN_SUBSCRIPTION_METADATA
 
 
-def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(
-    mocker, settings
-):
+@pytest.mark.saas_mode
+def test_organisation_subscription_add_single_seat_calls_correct_chargebee_method_for_upgradable_plan(  # noqa: E501
+    mocker: MockerFixture,
+) -> None:
     # Given
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
-
     subscription_id = "subscription-id"
     subscription = Subscription(subscription_id=subscription_id, plan="scale-up")
 
@@ -426,18 +429,16 @@ def test_organisation_subscription_add_single_seat_calls_correct_chargebee_metho
         "organisations.models.add_single_seat", autospec=True
     )
     # When
-    subscription.add_single_seat()
+    subscription.add_single_seat()  # type: ignore[no-untyped-call]
 
     # Then
     mocked_add_single_seat.assert_called_once_with(subscription_id)
 
 
-def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(
-    mocker, settings
-):
+def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradable_plan(  # noqa: E501
+    mocker: MockerFixture,
+) -> None:
     # Given
-    settings.AUTO_SEAT_UPGRADE_PLANS = ["scale-up"]
-
     subscription_id = "subscription-id"
     subscription = Subscription(
         subscription_id=subscription_id, plan="not-a-scale-up-plan"
@@ -449,13 +450,13 @@ def test_organisation_subscription_add_single_seat_raises_error_for_non_upgradab
 
     # When
     with pytest.raises(SubscriptionDoesNotSupportSeatUpgrade):
-        subscription.add_single_seat()
+        subscription.add_single_seat()  # type: ignore[no-untyped-call]
 
     # and add_single_seat was not called
     mocked_add_single_seat.assert_not_called()
 
 
-def test_organisation_update_clears_environment_caches(
+def test_organisation_update_clears_environment_caches(  # type: ignore[no-untyped-def]
     mocker, organisation, environment
 ):
     # Given
@@ -547,3 +548,63 @@ def test_subscription_plan_family(
     plan_id: str, expected_plan_family: SubscriptionPlanFamily
 ) -> None:
     assert Subscription(plan=plan_id).subscription_plan_family == expected_plan_family
+
+
+@pytest.mark.parametrize(
+    "billing_term_starts_at, billing_term_ends_at, expected_result",
+    [
+        (None, None, False),
+        (
+            timezone.now() - timedelta(hours=1),
+            timezone.now() + timedelta(days=30),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() + timedelta(hours=1),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() - timedelta(days=5),
+            False,
+        ),
+    ],
+)
+def test_organisation_has_billing_periods(
+    organisation: Organisation,
+    billing_term_starts_at: datetime,
+    billing_term_ends_at: datetime,
+    expected_result: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=billing_term_starts_at,
+        current_billing_term_ends_at=billing_term_ends_at,
+    )
+
+    organisation.refresh_from_db()
+    # When
+    result = organisation.subscription.has_active_billing_periods
+
+    # Then
+    assert result == expected_result
+
+
+def test_user_organisation_create_calls_hubspot_lead_tracking(
+    mocker: MagicMock, db: None, settings: SettingsWrapper, organisation: Organisation
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    track_hubspot_lead = mocker.patch("organisations.models.track_hubspot_lead_v2")
+    mocker.patch("users.models.create_hubspot_contact_for_user")
+    user = FFAdminUser.objects.create(
+        email="test@example.com", first_name="John", last_name="Doe"
+    )
+
+    # When
+    user.add_organisation(organisation)
+
+    # Then
+    track_hubspot_lead.delay.assert_called_once_with(args=(user.id, organisation.id))

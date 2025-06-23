@@ -81,7 +81,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
           prevPage={() => setPage(page + 1)}
           goToPage={setPage}
           dateProperty={'live_from'}
-          renderRow={(v: TFeatureVersion, i: number) => {
+          renderRow={(v, i) => {
             const user = users?.find((user) => v.published_by === user.id)
 
             return (

@@ -29,7 +29,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
   projectId,
   useApiKey,
 }) => {
-  const [search, setSearch] = useState()
+  const [search, setSearch] = useState<string>()
 
   const { data: organisations, isLoading: organisationsLoading } =
     useGetOrganisationsQuery({})
@@ -154,7 +154,6 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
             organisationsLoading || projectsLoading || environmentsLoading
           }
           id='segment-list'
-          icon='ion-ios-globe'
           title={`${Format.camelCase(level)} Search`}
           items={sortBy(items, (v) => {
             return v.name
@@ -164,7 +163,7 @@ const OrgEnvironmentSelect: FC<OrgProjectSelectType> = ({
           }
           onChange={setSearch}
           search={search}
-          renderRow={({ api_key, id, name }: Environment) => (
+          renderRow={({ api_key, id, name }) => (
             <a
               className='list-item clickable flex flex-1 flex-row px-4'
               onClick={() => {

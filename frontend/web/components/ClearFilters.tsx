@@ -10,7 +10,7 @@ const ClearFilters: FC<ClearFiltersType> = ({ onClick }) => {
   return (
     <div
       onClick={onClick}
-      className='fw-semibold cursor-pointer text-primary  d-flex align-items-center ms-2 gap-1'
+      className='fw-semibold cursor-pointer text-primary  d-flex align-items-center mx-3 gap-1'
     >
       <IonIcon className='h6 mb-0' color='#6837fc' icon={closeCircle} />
       Clear all

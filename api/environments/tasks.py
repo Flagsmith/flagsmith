@@ -1,4 +1,6 @@
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_task_handler,
+)
 from task_processor.models import TaskPriority
 
 from audit.models import AuditLog
@@ -9,7 +11,7 @@ from environments.models import (
     environment_wrapper,
 )
 from features.versioning.models import EnvironmentFeatureVersion
-from sse import (
+from sse import (  # type: ignore[attr-defined]
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
 )
@@ -17,15 +19,15 @@ from sse import (
 
 @register_task_handler(priority=TaskPriority.HIGH)
 def rebuild_environment_document(environment_id: int) -> None:
-    Environment.write_environments_to_dynamodb(environment_id=environment_id)
+    Environment.write_environment_documents(environment_id=environment_id)
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
-def process_environment_update(audit_log_id: int):
+def process_environment_update(audit_log_id: int):  # type: ignore[no-untyped-def]
     audit_log = AuditLog.objects.get(id=audit_log_id)
 
     # Send environment document to dynamodb
-    Environment.write_environments_to_dynamodb(
+    Environment.write_environment_documents(
         environment_id=audit_log.environment_id, project_id=audit_log.project_id
     )
 
@@ -37,7 +39,7 @@ def process_environment_update(audit_log_id: int):
 
 
 @register_task_handler()
-def delete_environment_from_dynamo(api_key: str, environment_id: str):
+def delete_environment_from_dynamo(api_key: str, environment_id: str):  # type: ignore[no-untyped-def]
     # Delete environment
     environment_wrapper.delete_environment(api_key)
 
@@ -46,7 +48,7 @@ def delete_environment_from_dynamo(api_key: str, environment_id: str):
     identity_wrapper.delete_all_identities(api_key)
 
     # Delete environment_v2 documents
-    environment_v2_wrapper.delete_environment(environment_id)
+    environment_v2_wrapper.delete_environment(environment_id)  # type: ignore[arg-type]
 
 
 @register_task_handler()

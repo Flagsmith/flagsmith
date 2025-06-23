@@ -12,6 +12,9 @@ ENVIRONMENT_UPDATED_MESSAGE = "Environment updated: %s"
 FEATURE_STATE_SCHEDULED_MESSAGE = (
     "Flag state / Remote Config value update scheduled for %s for feature: %s"
 )
+FEATURE_STATE_SCHEDULED_TO_UPDATE_MESSAGE = (
+    "Flag state for feature '%s' scheduled for update by Change Request '%s' at %s."
+)
 FEATURE_STATE_UPDATED_MESSAGE = "Flag state updated for feature: %s"
 FEATURE_STATE_UPDATED_BY_CHANGE_REQUEST_MESSAGE = (
     "Flag state / Remote config updated for feature: %s by Change Request: %s"

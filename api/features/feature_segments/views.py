@@ -2,7 +2,7 @@ import logging
 
 from common.projects.permissions import VIEW_PROJECT
 from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -30,15 +30,15 @@ logger = logging.getLogger(__name__)
     decorator=swagger_auto_schema(query_serializer=FeatureSegmentQuerySerializer()),
 )
 class FeatureSegmentViewSet(
-    viewsets.ModelViewSet,
+    viewsets.ModelViewSet,  # type: ignore[type-arg]
 ):
     permission_classes = [FeatureSegmentPermissions]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return FeatureSegment.objects.none()
 
-        permitted_projects = self.request.user.get_permitted_projects(
+        permitted_projects = self.request.user.get_permitted_projects(  # type: ignore[union-attr]
             permission_key=VIEW_PROJECT
         )
 
@@ -66,7 +66,7 @@ class FeatureSegmentViewSet(
 
         return queryset
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         if self.action in ["create", "update", "partial_update"]:
             return FeatureSegmentCreateSerializer
 
@@ -81,7 +81,7 @@ class FeatureSegmentViewSet(
         responses={200: FeatureSegmentListSerializer(many=True)},
     )
     @action(detail=False, methods=["POST"], url_path="update-priorities")
-    def update_priorities(self, request, *args, **kwargs):
+    def update_priorities(self, request, *args, **kwargs):  # type: ignore[no-untyped-def]
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         feature_segments = serializer.save()
@@ -94,8 +94,8 @@ class FeatureSegmentViewSet(
         url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
         methods=["get"],
     )
-    def get_by_uuid(self, request, uuid):
-        qs = self.get_queryset()
+    def get_by_uuid(self, request, uuid):  # type: ignore[no-untyped-def]
+        qs = self.get_queryset()  # type: ignore[no-untyped-call]
         feature_segment = get_object_or_404(qs, uuid=uuid)
         serializer = self.get_serializer(feature_segment)
         return Response(serializer.data)

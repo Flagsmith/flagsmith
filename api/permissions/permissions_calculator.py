@@ -13,13 +13,12 @@ from organisations.permissions.models import (
     UserPermissionGroupOrganisationPermission,
 )
 from projects.models import (
+    Project,
     UserPermissionGroupProjectPermission,
     UserProjectPermission,
 )
 
-from .permission_service import is_user_project_admin
-from .rbac_wrapper import (
-    RolePermissionData,
+from .rbac_wrapper import (  # type: ignore[attr-defined]
     get_roles_permission_data_for_environment,
     get_roles_permission_data_for_organisation,
     get_roles_permission_data_for_project,
@@ -28,7 +27,6 @@ from .rbac_wrapper import (
 if typing.TYPE_CHECKING:
     from environments.models import Environment
     from users.models import FFAdminUser
-
 
 UserPermissionType = typing.Union[
     UserProjectPermission, UserEnvironmentPermission, UserOrganisationPermission
@@ -43,7 +41,7 @@ GroupPermissionQs = QuerySet[
 ]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class _PermissionDataBase:
     admin: bool = False
     permissions: typing.Set[str] = field(default_factory=set)
@@ -53,6 +51,20 @@ class _PermissionDataBase:
 class GroupData:
     id: int
     name: str
+
+
+@dataclass
+class RoleData:
+    id: int
+    name: str
+    tags: typing.Set[int]
+
+
+@dataclass
+class RolePermissionData(
+    _PermissionDataBase,
+):
+    role: RoleData
 
 
 @dataclass
@@ -71,6 +83,27 @@ class GroupPermissionData(_PermissionDataBase, _GroupPermissionBase):
 
 
 @dataclass
+class PermissionDerivedFromData:
+    groups: typing.List[GroupData] = field(default_factory=list)
+    roles: typing.List[RoleData] = field(default_factory=list)
+
+
+@dataclass
+class DetailedPermissionsData:
+    permission_key: str
+    is_directly_granted: bool
+    derived_from: PermissionDerivedFromData
+
+
+@dataclass
+class UserDetailedPermissionsData:
+    admin: bool
+    derived_from: PermissionDerivedFromData
+    is_directly_granted: bool
+    permissions: typing.List[DetailedPermissionsData]
+
+
+@dataclass
 class PermissionData:
     """
     Dataclass to hold the permissions of a user w.r.t. a project, environment or organisation.
@@ -78,20 +111,24 @@ class PermissionData:
 
     user: UserPermissionData
     groups: typing.List[GroupPermissionData]
-    roles: typing.List[
-        "RolePermissionData" if "RolePermissionData" in globals() else typing.Any
-    ]
+    roles: typing.List[RolePermissionData]
     is_organisation_admin: bool = False
     admin_override: bool = False
+    inherited_admin_groups: typing.List[GroupPermissionData] = field(
+        default_factory=list
+    )
+    inherited_admin_roles: typing.List[RolePermissionData] = field(default_factory=list)
 
     @property
     def admin(self) -> bool:
-        return (
+        return bool(
             self.is_organisation_admin
             or self.user.admin
             or any(group.admin for group in self.groups)
             or any(role.admin for role in self.roles)
             or self.admin_override
+            or self.inherited_admin_groups
+            or self.inherited_admin_roles
         )
 
     @property
@@ -100,13 +137,13 @@ class PermissionData:
         # group permissions, and role permissions.
         return self.user.permissions.union(
             reduce(
-                lambda a, b: a.union(b),
+                lambda a, b: a.union(b),  # type: ignore[arg-type,return-value]
                 [group.permissions for group in self.groups],
                 set(),
             )
         ).union(
             reduce(
-                lambda a, b: a.union(b),
+                lambda a, b: a.union(b),  # type: ignore[attr-defined]
                 [
                     role_permission.permissions
                     for role_permission in self.roles
@@ -117,7 +154,7 @@ class PermissionData:
         )
 
     @property
-    def tag_based_permissions(self) -> list[dict]:
+    def tag_based_permissions(self) -> list[dict]:  # type: ignore[type-arg]
         return [
             {
                 "permissions": role_permission.permissions,
@@ -127,14 +164,77 @@ class PermissionData:
             if role_permission.role.tags
         ]
 
+    def to_detailed_permissions_data(self) -> UserDetailedPermissionsData:  # noqa: C901
+        return _UserDetailedPermissionBuilder(self).build()
 
-def get_project_permission_data(project_id: int, user_id: int) -> PermissionData:
-    project_permission_svc = _ProjectPermissionService(project_id, user_id)
-    return PermissionData(
-        groups=get_groups_permission_data(project_permission_svc.group_qs),
-        user=get_user_permission_data(project_permission_svc.user_permission),
-        roles=get_roles_permission_data_for_project(project_id, user_id),
-    )
+
+class _UserDetailedPermissionBuilder:
+    def __init__(self, permission_data: PermissionData):
+        self.permission_data = permission_data
+        self.permission_map: dict[str, DetailedPermissionsData] = {}
+        self.is_direct_admin = False
+        self.admin_derived_from = PermissionDerivedFromData(
+            groups=[gp.group for gp in permission_data.inherited_admin_groups],
+            roles=[rp.role for rp in permission_data.inherited_admin_roles],
+        )
+
+    def build(self) -> UserDetailedPermissionsData:
+        self._add_user_permissions()
+        self._add_group_permissions()
+        self._add_role_permissions()
+        self._check_is_direct_admin()
+
+        return UserDetailedPermissionsData(
+            admin=self.permission_data.admin,
+            is_directly_granted=self.is_direct_admin,
+            derived_from=self.admin_derived_from,
+            permissions=list(self.permission_map.values()),
+        )
+
+    def _add_permission(
+        self,
+        permission_key: str,
+        group: typing.Optional[GroupData] = None,
+        role: typing.Optional[RoleData] = None,
+    ) -> None:
+        if permission_key not in self.permission_map:
+            self.permission_map[permission_key] = DetailedPermissionsData(
+                permission_key=permission_key,
+                is_directly_granted=group is None and role is None,
+                derived_from=PermissionDerivedFromData(),
+            )
+        if group:
+            self.permission_map[permission_key].derived_from.groups.append(group)
+        if role:
+            self.permission_map[permission_key].derived_from.roles.append(role)
+
+    def _add_user_permissions(self) -> None:
+        for permission_key in self.permission_data.user.permissions:
+            if self.permission_data.user.admin:
+                self.is_direct_admin = True
+            self._add_permission(permission_key)
+
+    def _add_group_permissions(self) -> None:
+        for group_permission in self.permission_data.groups:
+            if group_permission.admin:
+                self.admin_derived_from.groups.append(group_permission.group)
+            for permission_key in group_permission.permissions:
+                self._add_permission(permission_key, group=group_permission.group)
+
+    def _add_role_permissions(self) -> None:
+        for role_permission in self.permission_data.roles:
+            if role_permission.admin:
+                self.admin_derived_from.roles.append(role_permission.role)
+            for permission_key in role_permission.permissions:
+                self._add_permission(permission_key, role=role_permission.role)
+
+    def _check_is_direct_admin(self) -> None:
+        if (
+            self.permission_data.is_organisation_admin
+            or self.permission_data.user.admin
+            or self.permission_data.admin_override
+        ):
+            self.is_direct_admin = True
 
 
 def get_organisation_permission_data(
@@ -144,25 +244,48 @@ def get_organisation_permission_data(
     return PermissionData(
         is_organisation_admin=user.is_organisation_admin(organisation_id),
         groups=get_groups_permission_data(org_permission_svc.group_qs),
-        user=get_user_permission_data(org_permission_svc.user_permission),
-        roles=get_roles_permission_data_for_organisation(organisation_id, user.id),
+        user=get_user_permission_data(org_permission_svc.user_permission),  # type: ignore[arg-type]
+        roles=org_permission_svc.roles,
+    )
+
+
+def get_project_permission_data(
+    project: Project, user: "FFAdminUser"
+) -> PermissionData:
+    project_permission_svc = _ProjectPermissionService(project.id, user.id)
+    return PermissionData(
+        is_organisation_admin=user.is_organisation_admin(project.organisation_id),
+        groups=get_groups_permission_data(project_permission_svc.group_qs),
+        user=get_user_permission_data(project_permission_svc.user_permission),  # type: ignore[arg-type]
+        roles=project_permission_svc.roles,
     )
 
 
 def get_environment_permission_data(
     environment: "Environment", user: "FFAdminUser"
 ) -> PermissionData:
-    environment_permission_svc = _EnvironmentPermissionService(environment.id, user.id)
+    project_permission_svc = _ProjectPermissionService(environment.project_id, user.id)
+    environment_permission_svc = _EnvironmentPermissionService(
+        environment.id, user.id, project_permission_svc=project_permission_svc
+    )
+
     return PermissionData(
+        is_organisation_admin=user.is_organisation_admin(
+            environment.project.organisation_id
+        ),
         groups=get_groups_permission_data(environment_permission_svc.group_qs),
-        user=get_user_permission_data(environment_permission_svc.user_permission),
-        roles=get_roles_permission_data_for_environment(environment.id, user.id),
-        admin_override=is_user_project_admin(user, project=environment.project),
+        user=get_user_permission_data(environment_permission_svc.user_permission),  # type: ignore[arg-type]
+        roles=environment_permission_svc.roles_data,
+        inherited_admin_groups=get_groups_permission_data(
+            environment_permission_svc.inherited_admin_group_qs
+        ),
+        inherited_admin_roles=environment_permission_svc.inherited_admin_roles,
+        admin_override=environment_permission_svc.inherited_user_admin,
     )
 
 
 def get_user_permission_data(
-    user_permission: UserPermissionType = None,
+    user_permission: UserPermissionType = None,  # type: ignore[assignment]
 ) -> UserPermissionData:
     user_permission_data = UserPermissionData()
     if not user_permission:
@@ -222,23 +345,14 @@ class _OrganisationPermissionService:
             group__users=self.user_id, organisation=self.organisation_id
         )
 
-
-@dataclass
-class _EnvironmentPermissionService:
-    environment_id: int
-    user_id: int
-
     @property
-    def user_permission(self) -> typing.Optional[UserEnvironmentPermission]:
-        return UserEnvironmentPermission.objects.filter(
-            user_id=self.user_id, environment_id=self.environment_id
-        ).first()
-
-    @property
-    def group_qs(self) -> GroupPermissionQs:
-        return UserPermissionGroupEnvironmentPermission.objects.filter(
-            group__users=self.user_id, environment=self.environment_id
+    def roles(self) -> typing.List[RolePermissionData]:
+        roles_permission_data: typing.List[RolePermissionData] = (
+            get_roles_permission_data_for_organisation(
+                self.organisation_id, self.user_id
+            )
         )
+        return roles_permission_data
 
 
 @dataclass
@@ -257,3 +371,50 @@ class _ProjectPermissionService:
         return UserPermissionGroupProjectPermission.objects.filter(
             group__users=self.user_id, project=self.project_id
         )
+
+    @property
+    def roles(self) -> typing.List[RolePermissionData]:
+        roles_permission_data: typing.List[RolePermissionData] = (
+            get_roles_permission_data_for_project(self.project_id, self.user_id)
+        )
+        return roles_permission_data
+
+
+@dataclass
+class _EnvironmentPermissionService:
+    environment_id: int
+    user_id: int
+    project_permission_svc: _ProjectPermissionService
+
+    @property
+    def user_permission(self) -> typing.Optional[UserEnvironmentPermission]:
+        return UserEnvironmentPermission.objects.filter(
+            user_id=self.user_id, environment_id=self.environment_id
+        ).first()
+
+    @property
+    def group_qs(self) -> GroupPermissionQs:
+        return UserPermissionGroupEnvironmentPermission.objects.filter(
+            group__users=self.user_id, environment=self.environment_id
+        )
+
+    @property
+    def roles_data(self) -> typing.List[RolePermissionData]:
+        roles_permission_data: typing.List[RolePermissionData] = (
+            get_roles_permission_data_for_environment(self.environment_id, self.user_id)
+        )
+        return roles_permission_data
+
+    @property
+    def inherited_user_admin(self) -> bool:
+        if user_permission := self.project_permission_svc.user_permission:
+            return user_permission.admin
+        return False
+
+    @property
+    def inherited_admin_group_qs(self) -> GroupPermissionQs:
+        return self.project_permission_svc.group_qs.filter(admin=True)
+
+    @property
+    def inherited_admin_roles(self) -> typing.List[RolePermissionData]:
+        return [role for role in self.project_permission_svc.roles if role.admin]

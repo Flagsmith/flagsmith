@@ -1,9 +1,6 @@
 import React, { Component } from 'react'
 import ConfirmRemoveOrganisation from 'components/modals/ConfirmRemoveOrganisation'
 import Payment from 'components/modals/Payment'
-import withAuditWebhooks from 'common/providers/withAuditWebhooks'
-import CreateAuditWebhookModal from 'components/modals/CreateAuditWebhook'
-import ConfirmRemoveAuditWebhook from 'components/modals/ConfirmRemoveAuditWebhook'
 import Button from 'components/base/forms/Button'
 import AdminAPIKeys from 'components/AdminAPIKeys'
 import Tabs from 'components/base/forms/Tabs'
@@ -20,9 +17,13 @@ import Setting from 'components/Setting'
 import AccountProvider from 'common/providers/AccountProvider'
 import LicensingTabContent from 'components/LicensingTabContent'
 import Utils from 'common/utils/utils'
-
+import AuditLogWebhooks from 'components/modals/AuditLogWebhooks'
+import MetadataPage from 'components/metadata/MetadataPage'
+import { withRouter } from 'react-router-dom'
+import SettingTitle from 'components/SettingTitle'
 const SettingsTab = {
   'Billing': 'billing',
+  'CustomFields': 'custom-fields',
   'General': 'general',
   'Keys': 'keys',
   'Licensing': 'licensing',
@@ -32,14 +33,10 @@ const SettingsTab = {
 }
 
 const OrganisationSettingsPage = class extends Component {
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   static displayName = 'OrganisationSettingsPage'
 
-  constructor(props, context) {
-    super(props, context)
+  constructor(props) {
+    super(props)
     this.state = {
       manageSubscriptionLoaded: true,
       permissions: [],
@@ -48,7 +45,6 @@ const OrganisationSettingsPage = class extends Component {
       return
     }
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
-    this.props.getWebhooks()
 
     this.getOrganisationPermissions(AccountStore.getOrganisation().id)
   }
@@ -67,10 +63,6 @@ const OrganisationSettingsPage = class extends Component {
     })
   }
 
-  onChange = () => {
-    this.props.getWebhooks()
-  }
-
   confirmRemove = (organisation, cb) => {
     openModal(
       'Delete Organisation',
@@ -82,9 +74,9 @@ const OrganisationSettingsPage = class extends Component {
   onRemove = () => {
     toast('Your organisation has been removed')
     if (AccountStore.getOrganisation()) {
-      this.context.router.history.replace(Utils.getOrganisationHomePage())
+      this.props.history.replace(Utils.getOrganisationHomePage())
     } else {
-      this.context.router.history.replace('/create')
+      this.props.history.replace('/create')
     }
   }
 
@@ -165,41 +157,6 @@ const OrganisationSettingsPage = class extends Component {
     )
   }
 
-  createWebhook = () => {
-    openModal(
-      'New Webhook',
-      <CreateAuditWebhookModal
-        router={this.context.router}
-        save={this.props.createWebhook}
-      />,
-      'side-modal',
-    )
-  }
-
-  editWebhook = (webhook) => {
-    openModal(
-      'Edit Webhook',
-      <CreateAuditWebhookModal
-        router={this.context.router}
-        webhook={webhook}
-        isEdit
-        save={this.props.saveWebhook}
-      />,
-      'side-modal',
-    )
-  }
-
-  deleteWebhook = (webhook) => {
-    openModal(
-      'Remove Webhook',
-      <ConfirmRemoveAuditWebhook
-        url={webhook.url}
-        cb={() => this.props.deleteWebhook(webhook)}
-      />,
-      'p-0',
-    )
-  }
-
   getOrganisationPermissions = (id) => {
     if (this.state.permissions.length) return
 
@@ -210,18 +167,11 @@ const OrganisationSettingsPage = class extends Component {
   }
 
   render() {
-    const {
-      props: { webhooks, webhooksLoading },
-    } = this
     const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
 
     return (
       <div className='app-container container'>
-        <AccountProvider
-          onSave={this.onSave}
-          onRemove={this.onRemove}
-          onChange={this.onChange}
-        >
+        <AccountProvider onSave={this.onSave} onRemove={this.onRemove}>
           {({ isSaving, organisation }, { deleteOrganisation }) =>
             !!organisation && (
               <OrganisationProvider id={AccountStore.getOrganisation()?.id}>
@@ -231,6 +181,7 @@ const OrganisationSettingsPage = class extends Component {
                   const { chargebee_email } = subscriptionMeta || {}
 
                   const displayedTabs = []
+                  //todo: replace with RTK when this is a functional component
                   const isEnterprise = Utils.isEnterpriseImage()
                   if (
                     AccountStore.getUser() &&
@@ -241,6 +192,7 @@ const OrganisationSettingsPage = class extends Component {
                         SettingsTab.General,
                         paymentsEnabled && !isAWS ? SettingsTab.Billing : null,
                         isEnterprise ? SettingsTab.Licensing : null,
+                        SettingsTab.CustomFields,
                         SettingsTab.Keys,
                         SettingsTab.Webhooks,
                         SettingsTab.SAML,
@@ -256,94 +208,91 @@ const OrganisationSettingsPage = class extends Component {
                   return (
                     <div>
                       <PageTitle title={'Organisation Settings'} />
-                      <Tabs hideNavOnSingleTab urlParam='tab' className='mt-0'>
+                      <Tabs
+                        hideNavOnSingleTab
+                        urlParam='tab'
+                        className='mt-0'
+                        history={this.props.history}
+                      >
                         {displayedTabs.includes(SettingsTab.General) && (
                           <TabItem tabLabel='General'>
-                            <FormGroup className='mt-4'>
-                              <h5 className='mb-5'>General Settings</h5>
+                            <div className='col-md-8'>
+                              <SettingTitle>
+                                Organisation Information
+                              </SettingTitle>
                               <JSONReference
                                 title={'Organisation'}
                                 json={organisation}
                               />
                               <div className='mt-2'>
-                                <div className='col-md-8'>
-                                  <form
-                                    key={organisation.id}
-                                    onSubmit={this.save}
-                                  >
-                                    <Row>
-                                      <Flex>
-                                        <InputGroup
-                                          ref={(e) => (this.input = e)}
-                                          data-test='organisation-name'
-                                          value={
-                                            this.state.name || organisation.name
-                                          }
-                                          onChange={(e) =>
-                                            this.setState({
-                                              name: Utils.safeParseEventValue(
-                                                e,
-                                              ),
-                                            })
-                                          }
-                                          isValid={name && name.length}
-                                          type='text'
-                                          inputClassName='input--wide'
-                                          placeholder='My Organisation'
-                                          title='Organisation Name'
-                                          inputProps={{
-                                            className: 'full-width',
-                                          }}
-                                        />
-                                      </Flex>
-                                      <Button
-                                        type='submit'
-                                        disabled={this.saveDisabled()}
-                                        className='ml-3'
-                                      >
-                                        {isSaving ? 'Updating' : 'Update Name'}
-                                      </Button>
-                                    </Row>
-                                  </form>
-                                </div>
-                                <hr className='mt-0 mb-4' />
-                                <div className='col-md-8'>
-                                  <Setting
-                                    feature={'FORCE_2FA'}
-                                    checked={organisation.force_2fa}
-                                    onChange={this.save2FA}
-                                  />
-                                </div>
+                                <form
+                                  key={organisation.id}
+                                  onSubmit={this.save}
+                                >
+                                  <Row>
+                                    <Flex>
+                                      <InputGroup
+                                        ref={(e) => (this.input = e)}
+                                        data-test='organisation-name'
+                                        value={
+                                          this.state.name || organisation.name
+                                        }
+                                        onChange={(e) =>
+                                          this.setState({
+                                            name: Utils.safeParseEventValue(e),
+                                          })
+                                        }
+                                        isValid={name && name.length}
+                                        type='text'
+                                        inputClassName='input--wide'
+                                        placeholder='My Organisation'
+                                        title='Organisation Name'
+                                        inputProps={{
+                                          className: 'full-width',
+                                        }}
+                                      />
+                                    </Flex>
+                                    <Button
+                                      type='submit'
+                                      disabled={this.saveDisabled()}
+                                      className='ml-3'
+                                    >
+                                      {isSaving ? 'Updating' : 'Update Name'}
+                                    </Button>
+                                  </Row>
+                                </form>
+                                <SettingTitle>Admin Settings</SettingTitle>
+                                <Setting
+                                  feature={'FORCE_2FA'}
+                                  checked={organisation.force_2fa}
+                                  onChange={this.save2FA}
+                                />
                                 {Utils.getFlagsmithHasFeature(
                                   'restrict_project_create_to_admin',
                                 ) && (
-                                  <FormGroup className='mt-4 col-md-8'>
-                                    <h5>Admin Settings</h5>
-                                    <Row className='mb-2'>
-                                      <Switch
-                                        checked={
-                                          organisation.restrict_project_create_to_admin
-                                        }
-                                        onChange={() =>
-                                          this.setAdminCanCreateProject(
-                                            !organisation.restrict_project_create_to_admin,
-                                          )
-                                        }
-                                      />
-                                      <p className='fs-small ml-3 mb-0 lh-sm'>
-                                        Only allow organisation admins to create
-                                        projects
-                                      </p>
-                                    </Row>
+                                  <FormGroup className='mt-4'>
+                                    <Setting
+                                      title='Restrict Project Creation'
+                                      checked={
+                                        organisation.restrict_project_create_to_admin
+                                      }
+                                      onChange={() =>
+                                        this.setAdminCanCreateProject(
+                                          !organisation.restrict_project_create_to_admin,
+                                        )
+                                      }
+                                      description={
+                                        'Only allow organisation admins to create projects'
+                                      }
+                                    />
                                   </FormGroup>
                                 )}
                               </div>
-                            </FormGroup>
-                            <hr className='my-4' />
-                            <FormGroup className='mt-4 col-md-8'>
+                              <SettingTitle danger>
+                                Delete Organisation
+                              </SettingTitle>
                               <Row space>
                                 <div className='col-md-7'>
-                                  <h5 className='mn-2'>Delete Organisation</h5>
                                   <p className='fs-small lh-sm'>
                                     This organisation will be permanently
                                     deleted, along with all projects and
@@ -357,16 +306,12 @@ const OrganisationSettingsPage = class extends Component {
                                       deleteOrganisation()
                                     })
                                   }
-                                  className='btn-with-icon btn-remove'
+                                  theme='danger'
                                 >
-                                  <Icon
-                                    name='trash-2'
-                                    width={20}
-                                    fill='#EF4D56'
-                                  />
+                                  Delete Organisation
                                 </Button>
                               </Row>
-                            </FormGroup>
+                            </div>
                           </TabItem>
                         )}
                         {displayedTabs.includes(SettingsTab.Billing) && (
@@ -474,7 +419,13 @@ const OrganisationSettingsPage = class extends Component {
                             />
                           </TabItem>
                         )}
-
+                        {displayedTabs.includes(SettingsTab.CustomFields) && (
+                          <TabItem tabLabel='Custom Fields'>
+                            <MetadataPage
+                              organisationId={AccountStore.getOrganisation().id}
+                            />
+                          </TabItem>
+                        )}
                         {displayedTabs.includes(SettingsTab.Keys) && (
                           <TabItem tabLabel='API Keys'>
                             <AdminAPIKeys organisationId={organisation.id} />
@@ -484,123 +435,11 @@ const OrganisationSettingsPage = class extends Component {
                         {displayedTabs.includes(SettingsTab.Webhooks) && (
                           <TabItem tabLabel='Webhooks'>
                             <FormGroup className='mt-4'>
-                              <JSONReference
-                                title={'Webhooks'}
-                                json={webhooks}
+                              <AuditLogWebhooks
+                                organisationId={
+                                  AccountStore.getOrganisation().id
+                                }
                               />
-
-                              <Column className='mb-3 ml-0 col-md-8'>
-                                <h5 className='mb-2'>Audit Webhooks</h5>
-                                <p className='fs-small lh-sm mb-4'>
-                                  Audit webhooks let you know when audit logs
-                                  occur, you can configure 1 or more audit
-                                  webhooks per organisation.{' '}
-                                  <Button
-                                    theme='text'
-                                    href='https://docs.flagsmith.com/system-administration/webhooks'
-                                    className='fw-normal'
-                                  >
-                                    Learn about Audit Webhooks.
-                                  </Button>
-                                </p>
-                                <Button onClick={this.createWebhook}>
-                                  Create audit webhook
-                                </Button>
-                              </Column>
-                              {webhooksLoading && !webhooks ? (
-                                <Loader />
-                              ) : (
-                                <PanelSearch
-                                  id='webhook-list'
-                                  title={
-                                    <Tooltip
-                                      title={
-                                        <h5 className='mb-0'>
-                                          Webhooks <Icon name='info' />
-                                        </h5>
-                                      }
-                                      place='right'
-                                    >
-                                      {Constants.strings.WEBHOOKS_DESCRIPTION}
-                                    </Tooltip>
-                                  }
-                                  items={webhooks}
-                                  renderRow={(webhook) => (
-                                    <Row
-                                      onClick={() => {
-                                        this.editWebhook(webhook)
-                                      }}
-                                      space
-                                      className='list-item clickable cursor-pointer'
-                                      key={webhook.id}
-                                    >
-                                      <Flex className='table-column px-3'>
-                                        <div className='font-weight-medium mb-1'>
-                                          {webhook.url}
-                                        </div>
-                                        {webhook.created_at ? (
-                                          <div className='list-item-description'>
-                                            Created{' '}
-                                            {moment(webhook.created_at).format(
-                                              'DD/MMM/YYYY',
-                                            )}
-                                          </div>
-                                        ) : null}
-                                      </Flex>
-                                      <div className='table-column'>
-                                        <Switch checked={webhook.enabled} />
-                                      </div>
-                                      <div className='table-column'>
-                                        <Button
-                                          id='delete-invite'
-                                          type='button'
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            e.preventDefault()
-                                            this.deleteWebhook(webhook)
-                                          }}
-                                          className='btn btn-with-icon'
-                                        >
-                                          <Icon
-                                            name='trash-2'
-                                            width={20}
-                                            fill='#656D7B'
-                                          />
-                                        </Button>
-                                      </div>
-                                    </Row>
-                                  )}
-                                  renderNoResults={
-                                    <Panel
-                                      className='no-pad'
-                                      title={
-                                        <Tooltip
-                                          title={
-                                            <h5 className='mb-0'>
-                                              Webhooks{' '}
-                                              <Icon name='info-outlined' />
-                                            </h5>
-                                          }
-                                          place='right'
-                                        >
-                                          {
-                                            Constants.strings
-                                              .AUDIT_WEBHOOKS_DESCRIPTION
-                                          }
-                                        </Tooltip>
-                                      }
-                                    >
-                                      <div className='search-list'>
-                                        <Row className='list-item p-3 text-muted'>
-                                          You currently have no webhooks
-                                          configured for this organisation.
-                                        </Row>
-                                      </div>
-                                    </Panel>
-                                  }
-                                  isLoading={this.props.webhookLoading}
-                                />
-                              )}
                             </FormGroup>
                           </TabItem>
                         )}
@@ -624,4 +463,4 @@ const OrganisationSettingsPage = class extends Component {
 
 OrganisationSettingsPage.propTypes = {}
 
-module.exports = ConfigProvider(withAuditWebhooks(OrganisationSettingsPage))
+export default withRouter(ConfigProvider(OrganisationSettingsPage))

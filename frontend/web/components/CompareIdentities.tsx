@@ -3,13 +3,13 @@ import IdentitySelect, { IdentitySelectType } from './IdentitySelect'
 import Utils from 'common/utils/utils'
 import EnvironmentSelect from './EnvironmentSelect'
 import {
-  useGetIdentityFeatureStatesAllQuery,
   useCreateCloneIdentityFeatureStatesMutation,
+  useGetIdentityFeatureStatesAllQuery,
 } from 'common/services/useIdentityFeatureState'
 import { useGetProjectFlagsQuery } from 'common/services/useProjectFlag'
 import Tag from './tags/Tag'
 import PanelSearch from './PanelSearch'
-import { ProjectFlag, Res } from 'common/types/responses'
+import { IdentityFeatureState } from 'common/types/responses'
 import Icon from './Icon'
 import Switch from './Switch'
 import FeatureValue from './FeatureValue'
@@ -32,8 +32,8 @@ const featureNameWidth = 300
 
 const calculateFeatureDifference = (
   projectFlagId: number,
-  leftUser: Res['identityFeatureStates'] | undefined,
-  rightUser: Res['identityFeatureStates'] | undefined,
+  leftUser: IdentityFeatureState[] | undefined,
+  rightUser: IdentityFeatureState[] | undefined,
 ) => {
   const featureStateLeft = leftUser?.find((v) => v.feature.id === projectFlagId)
   const featureStateRight = rightUser?.find(
@@ -271,7 +271,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
               </Row>
             }
             items={filteredItems}
-            renderRow={(data: ProjectFlag) => {
+            renderRow={(data) => {
               const { description, id, name } = data
               const {
                 enabledDifferent,
@@ -325,9 +325,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     <Switch checked={featureStateLeft?.enabled} />
                   </div>
-                  <Flex
+                  <div
                     onClick={goUserLeft}
                     className={`table-column ${!valueDifferent && 'faded'}`}
+                    style={{ width: '220px' }}
                   >
                     {featureStateLeft && (
                       <FeatureValue
@@ -335,7 +336,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                         value={featureStateLeft?.feature_state_value}
                       />
                     )}
-                  </Flex>
+                  </div>
                   <div
                     onClick={goUserRight}
                     className={`table-column ${!enabledDifferent && 'faded'}`}
@@ -343,9 +344,10 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                   >
                     <Switch checked={featureStateRight?.enabled} />
                   </div>
-                  <Flex
+                  <div
                     onClick={goUserRight}
-                    className={`table-column ${!valueDifferent && 'faded'}`}
+                    className={`table-column  ${!valueDifferent && 'faded'}`}
+                    style={{ width: '220px' }}
                   >
                     {featureStateRight && (
                       <FeatureValue
@@ -353,7 +355,7 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
                         value={featureStateRight?.feature_state_value}
                       />
                     )}
-                  </Flex>
+                  </div>
                 </Flex>
               )
             }}

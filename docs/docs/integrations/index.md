@@ -68,7 +68,7 @@ analysis. [Learn more](/integrations/analytics/rudderstack).
 You can integrate Flagsmith with your own Analytics Platform/Data Warehouse. Send your Identity flag states into
 Snowflake, RedShift or anywhere else for further downstream analysis! [Learn more](/integrations/webhook).
 
-## Application Monitoring and Performance
+## Observability
 
 ---
 
@@ -90,6 +90,7 @@ You can integrate Flagsmith with Dynatrace. Send flag change events from Flagsmi
 
 You can integrate Flagsmith with Grafana. Send flag change events from Flagsmith into Grafana as annotations.
 [Learn more](/integrations/apm/grafana).
+**Coming soon**: Integrate your Grafana and Prometheus alerts with Feature Health.
 
 ---
 

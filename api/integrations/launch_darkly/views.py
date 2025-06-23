@@ -1,8 +1,11 @@
-from common.projects.permissions import CREATE_ENVIRONMENT, VIEW_PROJECT
+from common.projects.permissions import (
+    CREATE_ENVIRONMENT,
+    VIEW_PROJECT,
+)
 from django.db.models import QuerySet
 from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
@@ -26,7 +29,7 @@ class LaunchDarklyImportRequestViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
-    viewsets.GenericViewSet,
+    viewsets.GenericViewSet,  # type: ignore[type-arg]
 ):
     serializer_class = LaunchDarklyImportRequestSerializer
     pagination_class = None  # set here to ensure documentation is correct
@@ -44,16 +47,16 @@ class LaunchDarklyImportRequestViewSet(
 
     def get_queryset(self) -> QuerySet[LaunchDarklyImportRequest]:
         if getattr(self, "swagger_fake_view", False):
-            return self.model_class.objects.none()
+            return self.model_class.objects.none()  # type: ignore[no-any-return]
 
         project = get_object_or_404(Project, pk=self.kwargs["project_pk"])
-        return self.model_class.objects.filter(project=project)
+        return self.model_class.objects.filter(project=project)  # type: ignore[no-any-return]
 
-    @swagger_auto_schema(
+    @swagger_auto_schema(  # type: ignore[misc]
         request_body=CreateLaunchDarklyImportRequestSerializer,
         responses={status.HTTP_201_CREATED: LaunchDarklyImportRequestSerializer()},
     )
-    def create(self, request: Request, *args, **kwargs) -> Response:
+    def create(self, request: Request, *args, **kwargs) -> Response:  # type: ignore[no-untyped-def]
         request_serializer = CreateLaunchDarklyImportRequestSerializer(
             data=request.data
         )
@@ -64,7 +67,7 @@ class LaunchDarklyImportRequestViewSet(
         try:
             instance = create_import_request(
                 project=project,
-                user=self.request.user,
+                user=self.request.user,  # type: ignore[arg-type]
                 ld_token=request_serializer.validated_data["token"],
                 ld_project_key=request_serializer.validated_data["project_key"],
             )

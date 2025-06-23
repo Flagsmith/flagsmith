@@ -5,7 +5,6 @@ from unittest import mock
 import freezegun
 import pytest
 import responses
-from core.constants import STRING
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -13,6 +12,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from rest_framework.exceptions import ValidationError
 
+from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment, Webhook
 from features.models import Feature, FeatureSegment, FeatureState
@@ -134,7 +134,7 @@ def test_disable_v2_versioning(
 
     assert latest_feature_states.count() == 3
     assert (
-        latest_feature_states.filter(
+        latest_feature_states.filter(  # type: ignore[union-attr]
             feature=feature, feature_segment__isnull=True, identity__isnull=True
         )
         .first()
@@ -142,13 +142,13 @@ def test_disable_v2_versioning(
         is True
     )
     assert (
-        latest_feature_states.filter(feature=feature, feature_segment__segment=segment)
+        latest_feature_states.filter(feature=feature, feature_segment__segment=segment)  # type: ignore[union-attr]
         .first()
         .enabled
         is True
     )
     assert (
-        latest_feature_states.filter(feature=feature, identity=identity).first().enabled
+        latest_feature_states.filter(feature=feature, identity=identity).first().enabled  # type: ignore[union-attr]
         is True
     )
 
@@ -176,8 +176,8 @@ def test_trigger_update_version_webhooks(
 
     # Then
     assert len(responses.calls) == 1
-    assert responses.calls[0].request.url == webhook_url
-    assert json.loads(responses.calls[0].request.body) == {
+    assert responses.calls[0].request.url == webhook_url  # type: ignore[union-attr]
+    assert json.loads(responses.calls[0].request.body) == {  # type: ignore[union-attr]
         "data": {
             "uuid": str(version.uuid),
             "feature": {"id": feature.id, "name": feature.name},
@@ -239,7 +239,7 @@ def test_enable_v2_versioning_for_scheduled_changes(
     # where enabling feature versioning 'stole' scheduled feature states from other
     # projects.
     another_organisation = Organisation.objects.create(name="another organisation")
-    staff_user.add_organisation(another_organisation)
+    staff_user.add_organisation(another_organisation)  # type: ignore[no-untyped-call]
     another_project = Project.objects.create(
         name="another project", organisation=another_organisation
     )
@@ -434,7 +434,7 @@ def test_publish_version_change_set_raises_error_when_segment_override_does_not_
         )
 
     # Then
-    assert e.value.detail["message"] == (
+    assert e.value.detail["message"] == (  # type: ignore[call-overload]
         f"An unresolvable conflict occurred: segment override does not exist for segment '{segment.name}'."
     )
 
@@ -480,7 +480,7 @@ def test_publish_version_change_set_uses_current_time_for_version_live_from(
 ) -> None:
     # Given
     now = timezone.now()
-    five_minutes_ago = now - timezone.timedelta(minutes=5)
+    five_minutes_ago = now - timezone.timedelta(minutes=5)  # type: ignore[attr-defined]
 
     # a version change_set that sets a live_from a short time in the past
     VersionChangeSet.objects.create(
@@ -522,7 +522,7 @@ def test_scheduled_versioning_change_set_with_ignore_conflicts_sends_email_if_va
 ) -> None:
     # Given
     now = timezone.now()
-    five_minutes_from_now = now + timezone.timedelta(minutes=5)
+    five_minutes_from_now = now + timezone.timedelta(minutes=5)  # type: ignore[attr-defined]
 
     change_request = ChangeRequest.objects.create(
         title="Test CR",

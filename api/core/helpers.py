@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from django.conf import settings
 from django.contrib.sites import models as sites_models
@@ -7,7 +8,7 @@ from rest_framework.request import Request
 
 INSECURE_DOMAINS = ("localhost", "127.0.0.1")
 
-_insecure_domain_pattern = re.compile(rf'({"|".join(INSECURE_DOMAINS)})(:\d+)?')
+_insecure_domain_pattern = re.compile(rf"({'|'.join(INSECURE_DOMAINS)})(:\d+)?")
 
 
 def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
@@ -34,7 +35,7 @@ def get_current_site_url(request: HttpRequest | Request | None = None) -> str:
     return f"{scheme}://{domain}"
 
 
-def get_ip_address_from_request(request):
+def get_ip_address_from_request(request: Request) -> Any | None:
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     return (
         x_forwarded_for.split(",")[0]

@@ -19,7 +19,7 @@ class FeatureExport(models.Model):
     """
 
     # The environment the export came from.
-    environment = models.ForeignKey(
+    environment = models.ForeignKey(  # type: ignore[call-arg]
         "environments.Environment",
         related_name="feature_imports",
         on_delete=models.CASCADE,
@@ -53,7 +53,7 @@ class FeatureImport(models.Model):
     """
 
     # The environment the features are being imported to.
-    environment = models.ForeignKey(
+    environment = models.ForeignKey(  # type: ignore[call-arg]
         "environments.Environment",
         related_name="feature_exports",
         on_delete=models.CASCADE,

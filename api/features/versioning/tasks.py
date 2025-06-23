@@ -5,7 +5,9 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_task_handler,
+)
 
 from audit.constants import ENVIRONMENT_FEATURE_VERSION_PUBLISHED_MESSAGE
 from audit.models import AuditLog
@@ -81,7 +83,7 @@ def disable_v2_versioning(environment_id: int) -> None:
     environment.save()
 
 
-def _create_initial_feature_versions(environment: "Environment"):
+def _create_initial_feature_versions(environment: "Environment"):  # type: ignore[no-untyped-def]
     from features.models import Feature, FeatureSegment
 
     now = timezone.now()

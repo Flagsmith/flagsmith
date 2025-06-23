@@ -2,7 +2,6 @@ import logging
 from datetime import timedelta
 
 import requests
-from app_analytics.influxdb_wrapper import influxdb_client
 from django.conf import settings
 from influxdb_client import Point, WriteOptions
 from task_processor.decorators import (
@@ -10,6 +9,7 @@ from task_processor.decorators import (
     register_task_handler,
 )
 
+from app_analytics.influxdb_wrapper import influxdb_client
 from environments.models import Environment
 from projects.models import Project
 from sse import sse_service
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 @register_task_handler()
-def send_environment_update_message_for_project(
+def send_environment_update_message_for_project(  # type: ignore[no-untyped-def]
     project_id: int,
 ):
     project = Project.objects.get(id=project_id)
@@ -32,10 +32,10 @@ def send_environment_update_message_for_project(
 
 
 @register_task_handler()
-def send_environment_update_message(environment_key: str, updated_at):
+def send_environment_update_message(environment_key: str, updated_at):  # type: ignore[no-untyped-def]
     url = f"{settings.SSE_SERVER_BASE_URL}/sse/environments/{environment_key}/queue-change"
     payload = {"updated_at": updated_at}
-    response = requests.post(url, headers=get_auth_header(), json=payload, timeout=2)
+    response = requests.post(url, headers=get_auth_header(), json=payload, timeout=2)  # type: ignore[no-untyped-call]
     response.raise_for_status()
 
 
@@ -44,7 +44,7 @@ if settings.AWS_SSE_LOGS_BUCKET_NAME:
     @register_recurring_task(
         run_every=timedelta(minutes=5),
     )
-    def update_sse_usage():
+    def update_sse_usage():  # type: ignore[no-untyped-def]
         agg_request_count: dict[str, int] = {}
         agg_last_event_generated_at: dict[str, str] = {}
 
@@ -83,7 +83,7 @@ if settings.AWS_SSE_LOGS_BUCKET_NAME:
                 write_api.write(bucket=settings.INFLUXDB_BUCKET, record=record)
 
 
-def get_auth_header():
+def get_auth_header():  # type: ignore[no-untyped-def]
     if not settings.SSE_AUTHENTICATION_TOKEN:
         raise SSEAuthTokenNotSet()
 

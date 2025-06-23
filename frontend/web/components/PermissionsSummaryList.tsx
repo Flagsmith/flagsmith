@@ -28,7 +28,7 @@ const PermissionsSummaryList: FC<PermissionsSummaryListType> = ({
     const sortedPermissions = sortBy(permissions, (v) => -v.tags?.length)
 
     const items =
-        sortedPermissions && sortedPermissions.length
+      sortedPermissions && sortedPermissions.length
         ? sortedPermissions.slice(0, numberToTruncate)
         : []
 

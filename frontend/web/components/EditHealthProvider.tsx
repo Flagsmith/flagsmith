@@ -12,6 +12,7 @@ import {
   useGetHealthProvidersQuery,
 } from 'common/services/useHealthProvider'
 import { components } from 'react-select'
+import InfoMessage from './InfoMessage'
 
 type EditHealthProviderType = {
   projectId: number
@@ -32,7 +33,6 @@ const CreateHealthProviderForm = ({ projectId }: { projectId: number }) => {
   const [createProvider, { error, isError, isLoading, isSuccess }] =
     useCreateHealthProviderMutation()
 
-  // TODO: Replace from list of provider options from API
   const providers = [{ name: 'Sample' }, { name: 'Grafana' }]
 
   const providerOptions = providers.map((provider) => ({
@@ -76,17 +76,17 @@ const CreateHealthProviderForm = ({ projectId }: { projectId: number }) => {
             options={providerOptions}
           />
         </Flex>
+        <div className='text-right'>
+          <Button
+            type='submit'
+            id='save-proj-btn'
+            disabled={isLoading || !selected}
+            className='ml-3'
+          >
+            {isLoading ? 'Creating' : 'Create'}
+          </Button>
+        </div>
       </Row>
-      <div className='text-right mt-4'>
-        <Button
-          type='submit'
-          id='save-proj-btn'
-          disabled={isLoading || !selected}
-          className='ml-3'
-        >
-          {isLoading ? 'Creating' : 'Create'}
-        </Button>
-      </div>
     </form>
   )
 }
@@ -137,13 +137,38 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
         unhealthy state in different environments.{' '}
         <Button
           theme='text'
-          href='' // TODO: Add docs
+          href='https://docs.flagsmith.com/advanced-use/feature-health'
           target='_blank'
           className='fw-normal'
         >
           Learn about Feature Health.
         </Button>
       </p>
+      <InfoMessage>
+        <div>
+          <strong>
+            Follow the documentation to configure alerting using the supported
+            providers.
+          </strong>
+        </div>
+        <div>
+          <span>
+            Sample provider:{' '}
+            <a href='https://docs.flagsmith.com/advanced-use/feature-health#sample-provider'>
+              https://docs.flagsmith.com/advanced-use/feature-health#sample-provider
+            </a>
+          </span>
+        </div>
+        <div>
+          <span>
+            Grafana provider:{' '}
+            <a href='https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1'>
+              {' '}
+              https://docs.flagsmith.com/integrations/apm/grafana/#in-grafana-1
+            </a>
+          </span>
+        </div>
+      </InfoMessage>
 
       <label>Provider Name</label>
       <CreateHealthProviderForm projectId={projectId} />
@@ -169,7 +194,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
                   <Flex className='table-column'>Webhook URL</Flex>
                 </Row>
               }
-              renderRow={(provider: HealthProvider) => {
+              renderRow={(provider) => {
                 const { name, webhook_url: webhook } = provider
                 const matchingPermissions = {
                   admin: true,

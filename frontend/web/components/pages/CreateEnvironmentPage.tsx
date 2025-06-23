@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
@@ -9,30 +9,22 @@ import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { getSupportedContentType } from 'common/services/useSupportedContentType'
 import { getStore } from 'common/store'
 import ProjectProvider, {
-  CreateEnvType
+  CreateEnvType,
 } from 'common/providers/ProjectProvider'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { RouterChildContext } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import API from 'project/api'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 
-type CreateEnvironmentPageProps = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
 
-const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
-  match,
-  router,
-}) => {
+const CreateEnvironmentPage: React.FC = () => {
   const [envContentType, setEnvContentType] = useState<Record<string, any>>({})
   const [metadata, setMetadata] = useState<any[]>([])
   const [name, setName] = useState<string>('')
@@ -40,8 +32,11 @@ const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
   const [selectedEnv, setSelectedEnv] = useState<any | undefined>()
   const inputRef = useRef<HTMLInputElement | null>(null)
 
+  const history = useHistory()
+  const match = useRouteMatch<RouteParams>()
+  const projectIdFromUrl = Utils.getProjectIdFromUrl(match)
   const onSave = (environment: Environment) => {
-    router.history.push(
+    history.push(
       `/project/${match.params.projectId}/environment/${environment.api_key}/features`,
     )
   }
@@ -79,7 +74,7 @@ const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
           description,
           metadata,
           name,
-          projectId: match.params.projectId,
+          projectId: projectIdFromUrl,
         })
       }
     }
@@ -92,13 +87,13 @@ const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
       <Permission
         level='project'
         permission='CREATE_ENVIRONMENT'
-        id={match.params.projectId}
+        id={projectIdFromUrl}
       >
         {({ isLoading, permission }) =>
           isLoading ? (
             <Loader />
           ) : permission ? (
-            <ProjectProvider id={match.params.projectId} onSave={onSave}>
+            <ProjectProvider id={projectIdFromUrl} onSave={onSave}>
               {({ createEnv, error, isSaving, project }) => (
                 <form
                   id='create-env-modal'
@@ -186,7 +181,7 @@ const CreateEnvironmentPage: React.FC<CreateEnvironmentPageProps> = ({
                                 organisationId={
                                   AccountStore.getOrganisation().id
                                 }
-                                projectId={match.params.projectId}
+                                projectId={projectIdFromUrl}
                                 entityId={selectedEnv?.api_key}
                                 envName={name}
                                 entityContentType={envContentType.id}

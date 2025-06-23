@@ -3,7 +3,7 @@ import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useSearchThrottle from 'common/useSearchThrottle'
-import { Link, withRouter } from 'react-router-dom'
+import { Link, useRouteMatch } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import Button from './base/forms/Button'
 import Tag from './tags/Tag'
@@ -24,12 +24,6 @@ type AuditLogType = {
   onPageChange?: (page: number) => void
   searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
 }
 
 const widths = [210, 310, 150]
@@ -173,9 +167,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
           <div>
             {author?.first_name} {author?.last_name}
           </div>
-          <div className="list-item-subtitle">
-            {author?.email}
-          </div>
+          <div className='list-item-subtitle'>{author?.email}</div>
         </div>
         {environment?.name ? (
           <Link
@@ -240,7 +232,7 @@ const AuditLog: FC<AuditLogType> = (props) => {
         filter={envFilter}
         search={searchInput}
         searchPanel={props.searchPanel}
-        onChange={(e: InputEvent) => {
+        onChange={(e) => {
           setSearchInput(Utils.safeParseEventValue(e))
         }}
         paging={{
@@ -300,4 +292,4 @@ const AuditLogWrapper: FC<AuditLogWrapperType> = (props) => {
   )
 }
 
-export default withRouter(AuditLogWrapper as any)
+export default AuditLogWrapper

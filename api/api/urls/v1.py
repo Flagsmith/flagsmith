@@ -1,10 +1,10 @@
-from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from django.conf import settings
 from django.urls import include, path, re_path
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
+from drf_yasg import openapi  # type: ignore[import-untyped]
+from drf_yasg.views import get_schema_view  # type: ignore[import-untyped]
 from rest_framework import authentication, permissions, routers
 
+from app_analytics.views import SDKAnalyticsFlags, SelfHostedTelemetryAPIView
 from environments.identities.traits.views import SDKTraits
 from environments.identities.views import SDKIdentities
 from environments.sdk.views import SDKEnvironmentAPIView
@@ -56,6 +56,7 @@ urlpatterns = [
         feature_health_webhook,
         name="feature-health-webhook",
     ),
+    re_path(r"^onboarding/", include("onboarding.urls", namespace="onboarding")),
     # Client SDK urls
     re_path(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     re_path(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
@@ -79,10 +80,12 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    # Test webhook url
+    re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
 ]
 
 if settings.SPLIT_TESTING_INSTALLED:
-    from split_testing.views import (
+    from split_testing.views import (  # type: ignore[import-not-found]
         ConversionEventTypeView,
         CreateConversionEventView,
         SplitTestViewSet,

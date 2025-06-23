@@ -27,7 +27,7 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = Project.cookieAuthEnabled ? 'true' : API.getCookie('t')
+const res = API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {
@@ -47,20 +47,35 @@ if (res && !isInvite && !isOauth) {
   AppActions.setToken(res)
 }
 
+function isPublicURL() {
+  const pathname = document.location.pathname
+
+  const publicPaths = [
+    '/',
+    '/404',
+    '/home',
+    '/password-reset',
+    '/maintenance',
+    '/github-setup',
+    '/oauth',
+    '/register',
+    '/saml',
+    '/signup',
+    '/login',
+  ]
+
+  return publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  )
+}
+
 setTimeout(() => {
   const browserHistory = createBrowserHistory({
     basename: Project.basename || '',
   })
 
   // redirect before login
-  // todo: move to util to decide if url is public
-  if (
-    (document.location.pathname.indexOf('/project/') !== -1 ||
-      document.location.pathname.indexOf('/create') !== -1 ||
-      document.location.pathname.indexOf('/invite') !== -1 ||
-      document.location.pathname.indexOf('/organisation-settings') !== -1) &&
-    !AccountStore.getUser()
-  ) {
+  if (!isPublicURL() && !AccountStore.getUser()) {
     API.setRedirect(
       document.location.pathname + (document.location.search || ''),
     )

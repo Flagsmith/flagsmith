@@ -11,31 +11,31 @@ from .models import Tag
 from .permissions import TagPermissions
 
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     serializer_class = serializers.TagSerializer
     permission_classes = [IsAuthenticated, TagPermissions]
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Tag.objects.none()
 
         project = get_object_or_404(
-            self.request.user.get_permitted_projects(VIEW_PROJECT),
+            self.request.user.get_permitted_projects(VIEW_PROJECT),  # type: ignore[union-attr]
             pk=self.kwargs["project_pk"],
         )
         queryset = project.tags.all()
 
         return queryset
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
 
-    def perform_update(self, serializer):
+    def perform_update(self, serializer):  # type: ignore[no-untyped-def]
         project_id = int(self.kwargs["project_pk"])
         serializer.save(project_id=project_id)
 
-    def destroy(self, request: Request, *args, **kwargs):
+    def destroy(self, request: Request, *args, **kwargs):  # type: ignore[no-untyped-def]
         instance = self.get_object()
 
         if instance.is_system_tag:
@@ -52,8 +52,8 @@ class TagViewSet(viewsets.ModelViewSet):
         url_path=r"get-by-uuid/(?P<uuid>[0-9a-f-]+)",
         methods=["get"],
     )
-    def get_by_uuid(self, request: Request, project_pk: int, uuid: str):
-        qs = self.get_queryset()
+    def get_by_uuid(self, request: Request, project_pk: int, uuid: str):  # type: ignore[no-untyped-def]
+        qs = self.get_queryset()  # type: ignore[no-untyped-call]
         tag = get_object_or_404(qs, uuid=uuid)
         serializer = self.get_serializer(tag)
         return Response(serializer.data)

@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import {
   FeatureConflict,
-  FeatureState,
   FeatureStateWithConflict,
 } from 'common/types/responses'
 import Tabs from 'components/base/forms/Tabs'
@@ -45,7 +44,10 @@ const DiffFeature: FC<FeatureDiffType> = ({
   projectId,
   tabTheme,
 }) => {
-  const {data:projectFlag} = useGetProjectFlagQuery({project:projectId, id: featureId})
+  const { data: projectFlag } = useGetProjectFlagQuery({
+    id: featureId,
+    project: projectId,
+  })
 
   const oldEnv = oldState?.find((v) => !v.feature_segment)
   const newEnv = newState?.find((v) => !v.feature_segment)
@@ -179,7 +181,10 @@ const DiffFeature: FC<FeatureDiffType> = ({
                   </div>
                 }
               >
-                <DiffVariations projectFlag={projectFlag} diffs={variationDiffs.diffs} />
+                <DiffVariations
+                  projectFlag={projectFlag}
+                  diffs={variationDiffs.diffs}
+                />
               </TabItem>
             )}
             {!!segmentDiffs?.diffs.length && (

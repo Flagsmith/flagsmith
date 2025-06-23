@@ -134,16 +134,10 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
       tags: tags?.length ? tags : undefined,
     })
   }, [projectId, tags])
-  const {
-    featureStates,
-    projectFlags,
-  }: {
-    projectFlags: ProjectFlag[] | null
-    featureStates: FeatureState[] | null
-  } = useMemo(() => {
+  const { featureStates, projectFlags } = useMemo(() => {
     if (fileData) {
       const createdDate = new Date().toISOString()
-      const existingFlags: ProjectFlag[] =
+      const existingFlags =
         !!fileData &&
         !!currentFeatureStates &&
         currentProjectflags?.map((projectFlag, i) => {
@@ -422,13 +416,11 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                 </div>
               </Row>
             }
-            renderRow={(projectFlag: ProjectFlag, i: number) => (
+            renderRow={(projectFlag, i) => (
               <FeatureRow
                 hideAudit
                 disableControls
-                size='sm'
-                environmentFlags={featureStates}
-                projectFlags={filteredProjectFlags}
+                environmentFlags={featureStates ?? undefined}
                 environmentId={previewEnvironment}
                 projectId={projectId}
                 index={projectFlag?.id || i}

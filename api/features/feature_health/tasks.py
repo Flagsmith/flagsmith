@@ -1,4 +1,6 @@
-from task_processor.decorators import register_task_handler
+from task_processor.decorators import (
+    register_task_handler,
+)
 
 from features.feature_health import services
 from features.models import Feature

@@ -1,23 +1,25 @@
 import hashlib
 import hmac
 import json
-from typing import Type
+from typing import Callable, Type
 from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+import requests
 import responses
-from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from django.core.serializers.json import DjangoJSONEncoder
+from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from requests.exceptions import ConnectionError, Timeout
+from rest_framework import status
+from rest_framework.test import APIClient
 
+from core.constants import FLAGSMITH_SIGNATURE_HEADER
+from core.signing import sign_payload
 from environments.models import Environment, Webhook
 from organisations.models import Organisation, OrganisationWebhook
-from webhooks.sample_webhook_data import (
-    environment_webhook_data,
-    organisation_webhook_data,
-)
 from webhooks.webhooks import (
     WebhookEventType,
     WebhookType,
@@ -25,7 +27,7 @@ from webhooks.webhooks import (
     call_integration_webhook,
     call_organisation_webhooks,
     call_webhook_with_failure_mail_after_retries,
-    trigger_sample_webhook,
+    generate_environment_sample_webhook_data,
 )
 
 
@@ -78,31 +80,6 @@ def test_webhooks_request_not_made_to_disabled_webhook(
 
     # Then
     mock_requests.post.assert_not_called()
-
-
-@mock.patch("webhooks.webhooks.requests")
-def test_trigger_sample_webhook_makes_correct_post_request_for_environment(
-    mock_request: MagicMock,
-) -> None:
-    url = "http://test.test"
-    webhook = Webhook(url=url)
-    trigger_sample_webhook(webhook, WebhookType.ENVIRONMENT)
-    args, kwargs = mock_request.post.call_args
-    assert json.loads(kwargs["data"]) == environment_webhook_data
-    assert args[0] == url
-
-
-@mock.patch("webhooks.webhooks.requests")
-def test_trigger_sample_webhook_makes_correct_post_request_for_organisation(
-    mock_request: MagicMock,
-) -> None:
-    url = "http://test.test"
-    webhook = OrganisationWebhook(url=url)
-
-    trigger_sample_webhook(webhook, WebhookType.ORGANISATION)
-    args, kwargs = mock_request.post.call_args
-    assert json.loads(kwargs["data"]) == organisation_webhook_data
-    assert args[0] == url
 
 
 @mock.patch("webhooks.webhooks.WebhookSerializer")
@@ -187,7 +164,7 @@ def test_call_environment_webhooks__multiple_webhooks__failure__calls_expected(
         environment=environment,
     )
 
-    expected_data = {}
+    expected_data = {}  # type: ignore[var-annotated]
     expected_event_type = WebhookEventType.FLAG_UPDATED.value
     expected_send_failure_email_data = {
         "event_type": expected_event_type,
@@ -248,7 +225,7 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
         url="http://url.2.com", enabled=True, organisation=organisation
     )
 
-    expected_data = {}
+    expected_data = {}  # type: ignore[var-annotated]
     expected_event_type = WebhookEventType.FLAG_UPDATED.value
     expected_send_failure_email_data = {
         "event_type": expected_event_type,
@@ -288,13 +265,13 @@ def test_call_organisation_webhooks__multiple_webhooks__failure__calls_expected(
     )
 
 
-def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():
+def test_call_webhook_with_failure_mail_after_retries_raises_error_on_invalid_args():  # type: ignore[no-untyped-def]
     try_count = 10
     with pytest.raises(ValueError):
         call_webhook_with_failure_mail_after_retries(0, {}, "", try_count=try_count)
 
 
-def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_using_processor(
+def test_call_webhook_with_failure_mail_after_retries_does_not_retry_if_not_using_processor(  # type: ignore[no-untyped-def]  # noqa: E501
     mocker: MockerFixture, organisation: Organisation, settings: SettingsWrapper
 ):
     # Given
@@ -345,3 +322,192 @@ def test_call_integration_webhook_does_not_raise_error_on_backoff_give_up(
     # we don't get a result from the function (as expected), and no exception is
     # raised
     assert result is None
+
+
+@pytest.mark.parametrize(
+    "external_api_response_status, external_api_error_text, expected_final_status, expected_response_body",
+    [
+        (200, "", 200, {"detail": "Webhook test successful", "status": 200}),
+        (
+            400,
+            "wrong-payload",
+            400,
+            {
+                "detail": "Webhook returned invalid status",
+                "status": 400,
+                "body": "wrong-payload",
+            },
+        ),
+        (
+            401,
+            "invalid-signature",
+            400,
+            {
+                "detail": "Webhook returned invalid status",
+                "status": 401,
+                "body": "invalid-signature",
+            },
+        ),
+        (
+            500,
+            "internal-server-error",
+            400,
+            {
+                "detail": "Webhook returned invalid status",
+                "status": 500,
+                "body": "internal-server-error",
+            },
+        ),
+    ],
+)
+def test_send_test_request_to_webhook_returns_correct_response(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    external_api_response_status: int,
+    expected_final_status: int,
+    external_api_error_text: str,
+    organisation: Organisation,
+    expected_response_body: dict[str, str | int],
+) -> None:
+    # Given
+    webhook_url = "http://test.webhook.com"
+    mock_post = mocker.patch("requests.post")
+    mock_response = MagicMock()
+    mock_response.status_code = external_api_response_status
+    mock_response.text = external_api_error_text
+    mock_post.return_value = mock_response
+
+    url = reverse("api-v1:webhooks:webhooks-test")
+
+    data = {
+        "webhook_url": webhook_url,
+        "secret": "some-secret",
+        "scope": {"type": "organisation", "id": organisation.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == expected_final_status
+    mock_post.assert_called_once()
+    assert response.json() == expected_response_body
+
+
+@pytest.mark.parametrize(
+    "secret, header_assertion",
+    [
+        (
+            "some-secret",
+            lambda headers, expected_signature: (
+                FLAGSMITH_SIGNATURE_HEADER in headers
+                and headers[FLAGSMITH_SIGNATURE_HEADER] == expected_signature
+            ),
+        ),
+        (
+            "some-other-secret",
+            lambda headers, expected_signature: (
+                FLAGSMITH_SIGNATURE_HEADER in headers
+                and headers[FLAGSMITH_SIGNATURE_HEADER] == expected_signature
+            ),
+        ),
+        (
+            "",
+            lambda headers, expected_signature: FLAGSMITH_SIGNATURE_HEADER
+            not in headers,
+        ),
+    ],
+)
+def test_send_test_request_to_webhook_returns_has_correct_payload(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    header_assertion: Callable[[dict[str, str], str], bool],
+    environment: Environment,
+    secret: str,
+) -> None:
+    # Given
+    webhook_url = "http://test.webhook.com"
+    mock_post = mocker.patch("requests.post")
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_post.return_value = mock_response
+
+    url = reverse("api-v1:webhooks:webhooks-test")
+
+    data = {
+        "webhook_url": webhook_url,
+        "secret": secret,
+        "scope": {"type": "environment", "id": environment.api_key},
+    }
+
+    expected_signature = sign_payload(
+        json.dumps(
+            generate_environment_sample_webhook_data(),
+            sort_keys=True,
+            cls=DjangoJSONEncoder,
+        ),
+        secret,
+    )
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    call_kwargs = mock_post.call_args.kwargs
+    assert header_assertion(call_kwargs["headers"], expected_signature)
+    assert response.status_code == 200
+
+
+def test_send_test_request_to_webhook_handles_request_exception(
+    mocker: MockerFixture,
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    webhook_url = "http://test.webhook.com"
+    mock_post = mocker.patch("requests.post")
+    mock_post.side_effect = requests.exceptions.RequestException("Connection refused")
+
+    url = reverse("api-v1:webhooks:webhooks-test")
+
+    data = {
+        "webhook_url": webhook_url,
+        "secret": "some-secret",
+        "scope": {"type": "organisation", "id": organisation.id},
+    }
+
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "detail": "Could not connect to webhook URL",
+        "body": "Connection refused",
+    }
+
+
+def test_should_return_bad_request_when_webhook_url_is_missing(
+    admin_client: APIClient,
+    organisation: Organisation,
+) -> None:
+    # Given
+    url = reverse("api-v1:webhooks:webhooks-test")
+    data = {
+        "webhook_url": "",
+        "secret": "some-secret",
+        "scope": {"type": "organisation", "id": organisation.id},
+    }
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {"webhook_url": ["This field may not be blank."]}

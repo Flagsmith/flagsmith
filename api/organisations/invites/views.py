@@ -38,7 +38,7 @@ from users.exceptions import InvalidInviteError
 
 
 @api_view(["POST"])
-def join_organisation_from_email(request, hash):
+def join_organisation_from_email(request, hash):  # type: ignore[no-untyped-def]
     invite = get_object_or_404(Invite, hash=hash)
     try:
         request.user.join_organisation_from_invite_email(invite)
@@ -58,7 +58,7 @@ def join_organisation_from_email(request, hash):
 
 
 @api_view(["POST"])
-def join_organisation_from_link(request, hash):
+def join_organisation_from_link(request, hash):  # type: ignore[no-untyped-def]
     if settings.DISABLE_INVITE_LINKS:
         raise PermissionDenied("Invite links are disabled.")
 
@@ -83,13 +83,13 @@ class InviteLinkViewSet(
     ListModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
-    GenericViewSet,
+    GenericViewSet,  # type: ignore[type-arg]
 ):
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
     serializer_class = InviteLinkSerializer
     pagination_class = None
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return InviteLink.objects.none()
 
@@ -105,10 +105,10 @@ class InviteLinkViewSet(
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
         return InviteLink.objects.filter(
-            organisation__in=user.organisations.all()
+            organisation__in=user.organisations.all()  # type: ignore[union-attr]
         ).filter(organisation__pk=organisation_pk)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         serializer.save(organisation_id=self.kwargs.get("organisation_pk"))
 
 
@@ -116,43 +116,42 @@ class InviteViewSet(
     ListModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
-    GenericViewSet,
+    GenericViewSet,  # type: ignore[type-arg]
     RetrieveModelMixin,
 ):
     permission_classes = [IsAuthenticated, NestedOrganisationEntityPermission]
     throttle_scope = "invite"
 
-    def get_serializer_class(self):
+    def get_serializer_class(self):  # type: ignore[no-untyped-def]
         return {
             "list": InviteListSerializer,
             "retrieve": InviteListSerializer,
             "create": InviteSerializer,
         }.get(self.action, InviteListSerializer)
 
-    def get_queryset(self):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Invite.objects.none()
 
         organisation_pk = self.kwargs.get("organisation_pk")
         user = self.request.user
 
-        return Invite.objects.filter(organisation__in=user.organisations.all()).filter(
+        return Invite.objects.filter(organisation__in=user.organisations.all()).filter(  # type: ignore[misc,union-attr]  # noqa: E501
             organisation__id=organisation_pk
         )
 
     @action(detail=True, methods=["POST"], throttle_classes=[ScopedRateThrottle])
-    def resend(self, request, organisation_pk, pk):
+    def resend(self, request, organisation_pk, pk):  # type: ignore[no-untyped-def]
         invite = self.get_object()
         invite.send_invite_mail()
         return Response(status=status.HTTP_200_OK)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # type: ignore[no-untyped-def]
         organisation = Organisation.objects.get(id=self.kwargs.get("organisation_pk"))
         subscription_metadata = organisation.subscription.get_subscription_metadata()
 
         if (
-            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
-            and organisation.num_seats >= subscription_metadata.seats
+            organisation.num_seats >= subscription_metadata.seats
             and not organisation.subscription.can_auto_upgrade_seats
         ):
             raise SubscriptionDoesNotSupportSeatUpgrade()

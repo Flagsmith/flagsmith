@@ -82,7 +82,7 @@ the Flag Engine, and the engine runs within your server environment within the F
 ![Local Evaluation Diagram](/img/sdk-local-evaluation.svg)
 
 You have to configure the SDK to run in Local Evaluation mode. See the
-[SDK configuration options](server-side#configuring-the-sdk) for details on how to do that in your particular language.
+[SDK configuration options](/clients/server-side#configuring-the-sdk) for details on how to do that in your particular language.
 
 When the SDK is initialised in Local Evaluation mode, it grabs the entire set of details about the Environment from the
 Flagsmith API. For a given Environment, this includes:
@@ -362,14 +362,14 @@ are all computed locally.
 
 ```bash
 curl https://edge.api.flagsmith.com/api/v1/environment-document \
-  -H 'x-environment-key: <Your Server-Side Env Key>' \
+  -H 'X-Environment-Key: <Your server-side environment key>' \
   --verbose
 ```
 
 The `link` response header will contain the url to next page:
 
 ```
-content-type: application/json
+Content-Type: application/json
 ...
 link: </api/v1/environment-document/?page_id=identity_override%3A60074%lastreadid>; rel="next"
 ...

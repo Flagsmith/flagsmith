@@ -13,7 +13,6 @@ import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
 import { IonIcon } from '@ionic/react'
 import { informationCircle } from 'ionicons/icons'
-import AppActions from 'common/dispatcher/app-actions'
 import { GroupUser, Role, User, UserGroupSummary } from 'common/types/responses'
 import { differenceBy, find, intersectionBy, sortBy } from 'lodash'
 import filter from 'lodash/filter'
@@ -143,9 +142,10 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         orgId,
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
-        usersToRemove: getUsersToRemove(groupData.users).map((v) => v.id),
+        usersToRemove: getUsersToRemove(groupData!.users).map((v) => v.id),
         usersToRemoveAdmin: (usersToRemoveAdmin || []).map((user) => user.id),
       }).then((data) => {
+        // @ts-ignore
         if (!data.error) {
           toast('Updated Group')
           closeModal()
@@ -163,6 +163,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
         users: users as any,
         usersToAddAdmin: (usersToAddAdmin || []).map((user) => user.id),
       }).then((data) => {
+        // @ts-ignore
         if (!data.error) {
           toast('Created Group')
           closeModal()
@@ -305,7 +306,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                   </div>
 
                   <PanelSearch
-                    noResultsText={(search: string) =>
+                    noResultsText={(search) =>
                       search ? (
                         <Flex className='text-center'>
                           No results found for <strong>{search}</strong>
@@ -321,7 +322,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                     className='mt-4 no-pad overflow-visible'
                     renderSearchWithNoResults
                     items={sortBy(activeUsers, 'first_name')}
-                    filterRow={(item: GroupUser, search: string) => {
+                    filterRow={(item, search) => {
                       const strToSearch = `${item.first_name} ${item.last_name} ${item.email} ${item.id}`
                       return (
                         strToSearch
@@ -359,12 +360,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
                         </Row>
                       </>
                     }
-                    renderRow={({
-                      email,
-                      first_name,
-                      id,
-                      last_name,
-                    }: GroupUser) => {
+                    renderRow={({ email, first_name, id, last_name }) => {
                       const matchingUser = users.find((v) => v.id === id)
                       const isGroupAdmin = matchingUser?.group_admin
                       const userEdited = matchingUser?.edited
@@ -454,7 +450,7 @@ const CreateGroup: FC<CreateGroupType> = ({ group, orgId, roles }) => {
     </div>
   )
   return isEdit ? (
-    <Tabs uncontrolled tabClassName='px-0'>
+    <Tabs uncontrolled className='px-0'>
       <TabItem
         tabLabel={
           <div>

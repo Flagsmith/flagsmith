@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import withSegmentOverrides from 'common/providers/withSegmentOverrides'
+import moment from 'moment'
 import Constants from 'common/constants'
 import data from 'common/data/base/_data'
 import ProjectStore from 'common/stores/project-store'
@@ -47,6 +48,11 @@ import PlanBasedBanner from 'components/PlanBasedAccess'
 import FeatureHistory from 'components/FeatureHistory'
 import WarningMessage from 'components/WarningMessage'
 import { getPermission } from 'common/services/usePermission'
+import { getChangeRequests } from 'common/services/useChangeRequest'
+import FeatureHealthTabContent from './FeatureHealthTabContent'
+import { IonIcon } from '@ionic/react'
+import { warning } from 'ionicons/icons'
+import { withRouter } from 'react-router-dom'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -73,11 +79,13 @@ const CreateFlag = class extends Component {
         }
     const { allowEditDescription } = this.props
     const hideTags = this.props.hideTags || []
+
     if (this.props.projectFlag) {
-      this.userOverridesPage(1)
+      this.userOverridesPage(1, true)
     }
     this.state = {
       allowEditDescription,
+      changeRequests: [],
       default_enabled: enabled,
       description,
       enabledIndentity: false,
@@ -106,6 +114,7 @@ const CreateFlag = class extends Component {
       multivariate_options: _.cloneDeep(multivariate_options),
       name,
       period: 30,
+      scheduledChangeRequests: [],
       selectedIdentity: null,
       tags: tags?.filter((tag) => !hideTags.includes(tag)) || [],
     }
@@ -201,6 +210,9 @@ const CreateFlag = class extends Component {
       })
     }
 
+    this.fetchChangeRequests()
+    this.fetchScheduledChangeRequests()
+
     getGithubIntegration(getStore(), {
       organisation_id: AccountStore.getOrganisation().id,
     }).then((res) => {
@@ -217,14 +229,18 @@ const CreateFlag = class extends Component {
     }
   }
 
-  userOverridesPage = (page) => {
+  userOverridesPage = (page, forceRefetch) => {
     if (Utils.getIsEdge()) {
       if (!Utils.getShouldHideIdentityOverridesTab(ProjectStore.model)) {
-        getPermission(getStore(), {
-          id: this.props.environmentId,
-          level: 'environment',
-          permissions: 'VIEW_IDENTITIES',
-        }).then((permissions) => {
+        getPermission(
+          getStore(),
+          {
+            id: this.props.environmentId,
+            level: 'environment',
+            permissions: 'VIEW_IDENTITIES',
+          },
+          { forceRefetch },
+        ).then((permissions) => {
           if (permissions?.length) {
             data
               .get(
@@ -321,7 +337,7 @@ const CreateFlag = class extends Component {
             enabled: default_enabled,
             feature_state_value: hasMultivariate
               ? this.props.environmentFlag.feature_state_value
-              : initial_value,
+              : this.cleanInputValue(initial_value),
             multivariate_options: this.state.identityVariations,
           }),
           projectFlag,
@@ -337,7 +353,7 @@ const CreateFlag = class extends Component {
           {
             default_enabled,
             description,
-            initial_value,
+            initial_value: this.cleanInputValue(initial_value),
             is_archived,
             is_server_key_only,
             metadata:
@@ -424,6 +440,12 @@ const CreateFlag = class extends Component {
       featureError = ''
     }
     return { featureError, featureWarning }
+  }
+  cleanInputValue = (value) => {
+    if (value && typeof value === 'string') {
+      return value.trim()
+    }
+    return value
   }
   drawChart = (data) => {
     return data?.length ? (
@@ -543,6 +565,42 @@ const CreateFlag = class extends Component {
     this.forceUpdate()
   }
 
+  fetchChangeRequests = (forceRefetch) => {
+    const { environmentId, projectFlag } = this.props
+    if (!projectFlag?.id) return
+
+    getChangeRequests(
+      getStore(),
+      {
+        committed: false,
+        environmentId,
+        feature_id: projectFlag?.id,
+      },
+      { forceRefetch },
+    ).then((res) => {
+      this.setState({ changeRequests: res.data?.results })
+    })
+  }
+
+  fetchScheduledChangeRequests = (forceRefetch) => {
+    const { environmentId, projectFlag } = this.props
+    if (!projectFlag?.id) return
+
+    const date = moment().toISOString()
+
+    getChangeRequests(
+      getStore(),
+      {
+        environmentId,
+        feature_id: projectFlag.id,
+        live_from_after: date,
+      },
+      { forceRefetch },
+    ).then((res) => {
+      this.setState({ scheduledChangeRequests: res.data?.results })
+    })
+  }
+
   render() {
     const {
       default_enabled,
@@ -604,7 +662,6 @@ const CreateFlag = class extends Component {
                 tooltip={Constants.strings.TAGS_DESCRIPTION}
                 component={
                   <AddEditTags
-                    hideTagsByType={['UNHEALTHY']}
                     readOnly={!!identity || !createFeature}
                     projectId={`${this.props.projectId}`}
                     value={this.state.tags}
@@ -745,13 +802,17 @@ const CreateFlag = class extends Component {
 
     const Value = (error, projectAdmin, createFeature, hideValue) => {
       const { featureError, featureWarning } = this.parseError(error)
+      const { changeRequests, scheduledChangeRequests } = this.state
       return (
         <>
-          {!!isEdit && (
+          {!!isEdit && !identity && (
             <ExistingChangeRequestAlert
               className='mb-4'
-              featureId={projectFlag.id}
+              editingChangeRequest={this.props.changeRequest}
+              projectId={this.props.projectId}
               environmentId={this.props.environmentId}
+              changeRequests={changeRequests}
+              scheduledChangeRequests={scheduledChangeRequests}
             />
           )}
           {!isEdit && (
@@ -886,6 +947,11 @@ const CreateFlag = class extends Component {
                 this.props.projectId,
                 this.props.environmentId,
               )
+
+              if (is4Eyes && !identity) {
+                this.fetchChangeRequests(true)
+                this.fetchScheduledChangeRequests(true)
+              }
             }}
           >
             {(
@@ -910,6 +976,7 @@ const CreateFlag = class extends Component {
                       : 'New Change Request',
                     <ChangeRequestModal
                       showAssignees={is4Eyes}
+                      isScheduledChange={schedule}
                       changeRequest={this.props.changeRequest}
                       onSave={({
                         approvals,
@@ -1026,8 +1093,8 @@ const CreateFlag = class extends Component {
                             {isEdit && !identity ? (
                               <Tabs
                                 onChange={() => this.forceUpdate()}
-                                history={this.props.history}
                                 urlParam='tab'
+                                history={this.props.history}
                               >
                                 <TabItem
                                   data-test='value'
@@ -1846,6 +1913,34 @@ const CreateFlag = class extends Component {
                                     </InfoMessage>
                                   </TabItem>
                                 )}
+                                {this.props.hasUnhealthyEvents && (
+                                  <TabItem
+                                    data-test='feature_health'
+                                    tabLabelString='Feature Health'
+                                    tabLabel={
+                                      <Row
+                                        className={`inline-block justify-content-center ${
+                                          true ? 'pr-1' : ''
+                                        }`}
+                                      >
+                                        Feature Health{' '}
+                                        <IonIcon
+                                          icon={warning}
+                                          style={{
+                                            color:
+                                              Constants.featureHealth
+                                                .unhealthyColor,
+                                            marginBottom: -2,
+                                          }}
+                                        />
+                                      </Row>
+                                    }
+                                  >
+                                    <FeatureHealthTabContent
+                                      projectId={projectFlag.project}
+                                    />
+                                  </TabItem>
+                                )}
                                 {hasIntegrationWithGithub &&
                                   projectFlag?.id && (
                                     <TabItem
@@ -2052,10 +2147,6 @@ CreateFlag.propTypes = {}
 //This will remount the modal when a feature is created
 const FeatureProvider = (WrappedComponent) => {
   class HOC extends Component {
-    static contextTypes = {
-      router: propTypes.object.isRequired,
-    }
-
     constructor(props) {
       super(props)
       this.state = {
@@ -2070,7 +2161,13 @@ const FeatureProvider = (WrappedComponent) => {
       this.listenTo(
         FeatureListStore,
         'saved',
-        ({ changeRequest, createdFlag, error, isCreate } = {}) => {
+        ({
+          changeRequest,
+          createdFlag,
+          error,
+          isCreate,
+          updatedChangeRequest,
+        } = {}) => {
           if (error?.data?.metadata) {
             error.data.metadata?.forEach((m) => {
               if (Object.keys(m).length > 0) {
@@ -2081,11 +2178,23 @@ const FeatureProvider = (WrappedComponent) => {
             toast('Error updating the Flag', 'danger')
             return
           } else {
-            toast(
-              `${createdFlag || isCreate ? 'Created' : 'Updated'} ${
-                changeRequest ? 'Change Request' : 'Feature'
-              }`,
-            )
+            const operation = createdFlag || isCreate ? 'Created' : 'Updated'
+            const type = changeRequest ? 'Change Request' : 'Feature'
+
+            const toastText = `${operation} ${type}`
+            const toastAction = changeRequest
+              ? {
+                  buttonText: 'Open',
+                  onClick: () => {
+                    closeModal()
+                    this.props.history.push(
+                      `/project/${this.props.projectId}/environment/${this.props.environmentId}/change-requests/${updatedChangeRequest?.id}`,
+                    )
+                  },
+                }
+              : undefined
+
+            toast(toastText, 'success', undefined, toastAction)
           }
           const envFlags = FeatureListStore.getEnvironmentFlags()
 
@@ -2137,4 +2246,6 @@ const FeatureProvider = (WrappedComponent) => {
   return HOC
 }
 
-export default FeatureProvider(ConfigProvider(withSegmentOverrides(CreateFlag)))
+const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(CreateFlag))
+
+export default FeatureProvider(WrappedCreateFlag)

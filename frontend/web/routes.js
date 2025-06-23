@@ -29,7 +29,6 @@ import WidgetPage from './components/pages/WidgetPage'
 import BrokenPage from './components/pages/BrokenPage'
 import GitHubSetupPage from './components/pages/GitHubSetupPage'
 import AuditLogItemPage from './components/pages/AuditLogItemPage'
-import Utils from 'common/utils/utils'
 import ProjectsPage from './components/ProjectsPage'
 import OrganisationSettingsRedirectPage from './components/pages/OrganisationSettingsRedirectPage'
 import OrganisationUsagePage from './components/pages/OrganisationUsagePage'
@@ -39,8 +38,13 @@ import ProjectRedirectPage from './components/pages/ProjectRedirectPage'
 import SDKKeysPage from './components/SDKKeysPage'
 import { ParameterizedRoute } from './components/base/higher-order/ParameterizedRoute'
 import FeatureHistoryDetailPage from './components/pages/FeatureHistoryDetailPage'
+import SplitTestPage from './components/pages/SplitTestPage'
 import OrganisationIntegrationsPage from './components/pages/OrganisationIntegrationsPage'
+import GettingStartedPage from './components/pages/GettingStartedPage'
 
+import ReleasePipelinesPage from './components/pages/ReleasePipelinesPage'
+import CreateReleasePipelinePage from './components/pages/CreateReleasePipelinePage'
+import ReleasePipelineDetailPage from './components/pages/ReleasePipelineDetailPage'
 export const routes = {
   'account': '/account',
   'account-settings': '/project/:projectId/environment/:environmentId/account',
@@ -54,12 +58,14 @@ export const routes = {
   'compare': '/project/:projectId/compare',
   'create-environment': '/project/:projectId/environment/create',
   'create-organisation': '/create',
+  'create-release-pipeline': '/project/:projectId/release-pipelines/create',
   'environment-settings':
     '/project/:projectId/environment/:environmentId/settings',
   'feature-history': '/project/:projectId/environment/:environmentId/history',
   'feature-history-detail':
     '/project/:projectId/environment/:environmentId/history/:id/',
   'features': '/project/:projectId/environment/:environmentId/features',
+  'gettingStarted': '/getting-started',
   'github-setup': '/github-setup',
   'home': '/home',
   'integrations': '/project/:projectId/integrations',
@@ -82,6 +88,8 @@ export const routes = {
   'project-settings': '/project/:projectId/settings',
   'project-settings-in-environment':
     '/project/:projectId/environment/:environmentId/project-settings',
+  'release-pipelines': '/project/:projectId/release-pipelines',
+  'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
   'root': '/',
   'saml': '/saml',
   'scheduled-change':
@@ -91,6 +99,7 @@ export const routes = {
   'sdk-keys': '/project/:projectId/environment/:environmentId/sdk-keys',
   'segments': '/project/:projectId/segments',
   'signup': '/signup',
+  'split-tests': '/project/:projectId/environment/:environmentId/split-tests',
   'user': '/project/:projectId/environment/:environmentId/users/:identity/:id',
   'user-id': '/project/:projectId/environment/:environmentId/users/:identity',
   'users': '/project/:projectId/environment/:environmentId/users',
@@ -144,6 +153,11 @@ export default (
         component={EnvironmentSettingsPage}
       />
       <ParameterizedRoute
+        path={routes['split-tests']}
+        exact
+        component={SplitTestPage}
+      />
+      <ParameterizedRoute
         path={routes['sdk-keys']}
         exact
         component={SDKKeysPage}
@@ -169,6 +183,11 @@ export default (
         path={routes['create-environment']}
         exact
         component={CreateEnvironmentPage}
+      />
+      <ParameterizedRoute
+        path={routes.gettingStarted}
+        exact
+        component={GettingStartedPage}
       />
       <ParameterizedRoute
         path={routes['project-settings-in-environment']}
@@ -230,6 +249,26 @@ export default (
         path={routes['project-redirect']}
         exact
         component={ProjectRedirectPage}
+      />
+      <ParameterizedRoute
+        path={routes['release-pipelines']}
+        exact
+        component={ReleasePipelinesPage}
+      />
+      <ParameterizedRoute
+        path={routes['create-release-pipeline']}
+        exact
+        component={CreateReleasePipelinePage}
+      />
+      <ParameterizedRoute
+        path={routes['release-pipelines-detail']}
+        exact
+        component={ReleasePipelineDetailPage}
+      />
+      <ParameterizedRoute
+        path={routes['audit-log-item']}
+        exact
+        component={AuditLogItemPage}
       />
       <Route path={routes.account} exact component={AccountSettingsPage} />
       <ParameterizedRoute

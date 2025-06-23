@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from core.models import SoftDeleteExportableModel
+from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
-from django_lifecycle import (
+from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_SAVE,
     BEFORE_DELETE,
     LifecycleModelMixin,
     hook,
 )
-from simple_history.models import HistoricalRecords
+from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
-from app.utils import is_enterprise, is_saas
+from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_lead,
+    track_hubspot_lead_v2,
     update_hubspot_active_subscription,
 )
-from organisations.chargebee import (
+from organisations.chargebee import (  # type: ignore[attr-defined]
     get_customer_id_from_subscription_id,
     get_max_api_calls_for_plan,
     get_max_seats_for_plan,
@@ -64,7 +64,7 @@ class OrganisationRole(models.TextChoices):
     USER = ("USER", "User")
 
 
-class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
+class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
     name = models.CharField(max_length=2000)
     has_requested_features = models.BooleanField(default=False)
     webhook_notification_email = models.EmailField(null=True, blank=True)
@@ -93,15 +93,15 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
     class Meta:
         ordering = ["id"]
 
-    def __str__(self):
+    def __str__(self):  # type: ignore[no-untyped-def]
         return "Org %s (#%s)" % (self.name, self.id)
 
     # noinspection PyTypeChecker
-    def get_unique_slug(self):
+    def get_unique_slug(self):  # type: ignore[no-untyped-def]
         return str(self.id) + "-" + self.name
 
     @property
-    def num_seats(self):
+    def num_seats(self):  # type: ignore[no-untyped-def]
         return self.users.count()
 
     def has_paid_subscription(self) -> bool:
@@ -115,16 +115,16 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         )
 
     @property
-    def is_paid(self):
+    def is_paid(self):  # type: ignore[no-untyped-def]
         return (
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
 
     @property
-    def flagsmith_identifier(self):
+    def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
         return f"org.{self.id}"
 
-    def over_plan_seats_limit(self, additional_seats: int = 0):
+    def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
             return self.num_seats + additional_seats > susbcription_metadata.seats
@@ -133,32 +133,29 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
             self.subscription, "max_seats", MAX_SEATS_IN_FREE_PLAN
         )
 
-    def reset_alert_status(self):
+    def reset_alert_status(self):  # type: ignore[no-untyped-def]
         self.alerted_over_plan_limit = False
         self.save()
 
     def is_auto_seat_upgrade_available(self) -> bool:
-        return (
-            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
-            and self.subscription.can_auto_upgrade_seats
-        )
+        return self.subscription.can_auto_upgrade_seats
 
     @hook(BEFORE_DELETE)
-    def cancel_subscription(self):
+    def cancel_subscription(self):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
             self.subscription.prepare_for_cancel()
 
     @hook(AFTER_CREATE)
-    def create_subscription(self):
+    def create_subscription(self):  # type: ignore[no-untyped-def]
         Subscription.objects.create(organisation=self)
 
     @hook(AFTER_CREATE)
-    def create_subscription_cache(self):
+    def create_subscription_cache(self):  # type: ignore[no-untyped-def]
         if is_saas() and not self.has_subscription_information_cache():
             OrganisationSubscriptionInformationCache.objects.create(organisation=self)
 
     @hook(AFTER_SAVE)
-    def clear_environment_caches(self):
+    def clear_environment_caches(self):  # type: ignore[no-untyped-def]
         from environments.models import Environment
 
         environment_cache.delete_many(
@@ -170,7 +167,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         )
 
     @hook(AFTER_SAVE, when="stop_serving_flags", has_changed=True)
-    def rebuild_environments(self):
+    def rebuild_environments(self):  # type: ignore[no-untyped-def]
         # Avoid circular imports.
         from environments.models import Environment
         from environments.tasks import rebuild_environment_document
@@ -180,7 +177,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
         ).values_list("id", flat=True):
             rebuild_environment_document.delay(args=(environment_id,))
 
-    def cancel_users(self):
+    def cancel_users(self):  # type: ignore[no-untyped-def]
         remaining_seat_holder = (
             UserOrganisation.objects.filter(
                 organisation=self,
@@ -192,10 +189,12 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):
 
         UserOrganisation.objects.filter(
             organisation=self,
-        ).exclude(id=remaining_seat_holder.id).delete()
+        ).exclude(
+            id=remaining_seat_holder.id  # type: ignore[union-attr]
+        ).delete()
 
 
-class UserOrganisation(LifecycleModelMixin, models.Model):
+class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     user = models.ForeignKey("users.FFAdminUser", on_delete=models.CASCADE)
     organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -208,9 +207,9 @@ class UserOrganisation(LifecycleModelMixin, models.Model):
         )
 
     @hook(AFTER_CREATE)
-    def register_hubspot_lead_tracking(self):
+    def register_hubspot_lead_tracking(self):  # type: ignore[no-untyped-def]
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_lead.delay(
+            track_hubspot_lead_v2.delay(
                 args=(
                     self.user.id,
                     self.organisation.id,
@@ -218,7 +217,7 @@ class UserOrganisation(LifecycleModelMixin, models.Model):
             )
 
 
-class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
+class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ignore[misc]
     # Even though it is not enforced at the database level,
     # every organisation has a subscription.
     organisation = models.OneToOneField(
@@ -250,8 +249,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
     # Intentionally avoid the AuditLog for subscriptions.
     history = HistoricalRecords()
 
-    def update_plan(self, plan_id):
-        plan_metadata = get_plan_meta_data(plan_id)
+    def update_plan(self, plan_id):  # type: ignore[no-untyped-def]
+        plan_metadata = get_plan_meta_data(plan_id)  # type: ignore[no-untyped-call]
         self.cancellation_date = None
         self.plan = plan_id
         self.max_seats = get_max_seats_for_plan(plan_metadata)
@@ -260,7 +259,17 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def can_auto_upgrade_seats(self) -> bool:
-        return self.plan in settings.AUTO_SEAT_UPGRADE_PLANS
+        return (
+            is_saas()
+            and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        )
+
+    @property
+    def has_active_billing_periods(self) -> bool:
+        return (
+            self.organisation.has_subscription_information_cache()
+            and self.organisation.subscription_information_cache.has_active_billing_periods()
+        )
 
     @property
     def is_free_plan(self) -> bool:
@@ -268,10 +277,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
     @property
     def subscription_plan_family(self) -> SubscriptionPlanFamily:
-        return SubscriptionPlanFamily.get_by_plan_id(self.plan)
+        return SubscriptionPlanFamily.get_by_plan_id(self.plan)  # type: ignore[arg-type]
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
-    def update_api_limit_access_block(self):
+    def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
         if not getattr(self.organisation, "api_limit_access_block", None):
             return
 
@@ -281,13 +290,13 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.organisation.save()
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
-    def update_hubspot_active_subscription(self):
+    def update_hubspot_active_subscription(self):  # type: ignore[no-untyped-def]
         if not settings.ENABLE_HUBSPOT_LEAD_TRACKING:
             return
 
         update_hubspot_active_subscription.delay(args=(self.id,))
 
-    def save_as_free_subscription(self):
+    def save_as_free_subscription(self):  # type: ignore[no-untyped-def]
         """
         Wipes a subscription to a normal free plan.
 
@@ -308,10 +317,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if not getattr(self.organisation, "subscription_information_cache", None):
             return
 
-        self.organisation.subscription_information_cache.reset_to_defaults()
+        self.organisation.subscription_information_cache.reset_to_defaults()  # type: ignore[no-untyped-call]
         self.organisation.subscription_information_cache.save()
 
-    def prepare_for_cancel(
+    def prepare_for_cancel(  # type: ignore[no-untyped-def]
         self, cancellation_date=timezone.now(), update_chargebee=True
     ) -> None:
         """
@@ -324,7 +333,7 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         from organisations.tasks import send_org_subscription_cancelled_alert
 
         if self.payment_method == CHARGEBEE and update_chargebee:
-            cancel_chargebee_subscription(self.subscription_id)
+            cancel_chargebee_subscription(self.subscription_id)  # type: ignore[arg-type]
 
         send_org_subscription_cancelled_alert.delay(
             kwargs={
@@ -337,8 +346,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         if cancellation_date <= timezone.now():
             # Since the date is immediate, wipe data right away.
-            self.organisation.cancel_users()
-            self.save_as_free_subscription()
+            self.organisation.cancel_users()  # type: ignore[no-untyped-call]
+            self.save_as_free_subscription()  # type: ignore[no-untyped-call]
             return
 
         # Since the date is in the future, a task takes it.
@@ -346,16 +355,16 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         self.billing_status = None
         self.save()
 
-    def get_portal_url(self, redirect_url):
+    def get_portal_url(self, redirect_url):  # type: ignore[no-untyped-def]
         if not self.subscription_id:
             return None
 
         if not self.customer_id:
-            self.customer_id = get_customer_id_from_subscription_id(
+            self.customer_id = get_customer_id_from_subscription_id(  # type: ignore[no-untyped-call]
                 self.subscription_id
             )
             self.save()
-        return get_portal_url(self.customer_id, redirect_url)
+        return get_portal_url(self.customer_id, redirect_url)  # type: ignore[no-untyped-call]
 
     def get_subscription_metadata(self) -> BaseSubscriptionMetadata:
         if self.is_free_plan:
@@ -384,7 +393,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         # Note that Free plans are caught in the parent method above.
         if self.organisation.has_subscription_information_cache():
             return self.organisation.subscription_information_cache.as_base_subscription_metadata(
-                seats=self.max_seats, api_calls=self.max_api_calls
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
             )
         return BaseSubscriptionMetadata(
             seats=self.max_seats, api_calls=self.max_api_calls
@@ -394,11 +404,9 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
         if self.organisation.has_subscription_information_cache():
             # Getting the data from the subscription information cache because
             # data is guaranteed to be up to date by using a Chargebee webhook.
-            cb_metadata = (
-                self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
-            )
+            cb_metadata = self.organisation.subscription_information_cache.as_chargebee_subscription_metadata()
         else:
-            cb_metadata = get_subscription_metadata_from_id(self.subscription_id)
+            cb_metadata = get_subscription_metadata_from_id(self.subscription_id)  # type: ignore[assignment,arg-type]
 
         if self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP and (
             settings.VERSIONING_RELEASE_DATE is None
@@ -439,11 +447,11 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):
 
         return FREE_PLAN_SUBSCRIPTION_METADATA
 
-    def add_single_seat(self):
+    def add_single_seat(self):  # type: ignore[no-untyped-def]
         if not self.can_auto_upgrade_seats:
             raise SubscriptionDoesNotSupportSeatUpgrade()
 
-        add_single_seat(self.subscription_id)
+        add_single_seat(self.subscription_id)  # type: ignore[arg-type]
 
     def is_in_trial(self) -> bool:
         return self.subscription_id == TRIAL_SUBSCRIPTION_ID
@@ -462,7 +470,7 @@ class OrganisationWebhook(AbstractBaseExportableWebhookModel):
         ordering = ("id",)  # explicit ordering to prevent pagination warnings
 
 
-class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model):
+class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     """
     Model to hold a cache of an organisation's API usage and their Chargebee plan limits.
     """
@@ -494,10 +502,10 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
     chargebee_email = models.EmailField(blank=True, max_length=254, null=True)
 
     @hook(AFTER_SAVE, when="allowed_30d_api_calls", has_changed=True)
-    def erase_api_notifications(self):
+    def erase_api_notifications(self):  # type: ignore[no-untyped-def]
         self.organisation.api_usage_notifications.all().delete()
 
-    def upgrade_to_enterprise(self, seats: int, api_calls: int):
+    def upgrade_to_enterprise(self, seats: int, api_calls: int):  # type: ignore[no-untyped-def]
         self.allowed_seats = seats
         self.allowed_30d_api_calls = api_calls
 
@@ -505,7 +513,7 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
         self.audit_log_visibility_days = None
         self.feature_history_visibility_days = None
 
-    def reset_to_defaults(self):
+    def reset_to_defaults(self):  # type: ignore[no-untyped-def]
         """
         Resets all limits and CB related data to the defaults, leaving the
         usage data intact.
@@ -521,14 +529,14 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
 
         self.chargebee_email = None
 
-    def as_base_subscription_metadata(self, **overrides) -> BaseSubscriptionMetadata:
+    def as_base_subscription_metadata(self, **overrides) -> BaseSubscriptionMetadata:  # type: ignore[no-untyped-def]
         kwargs = {
             **self._get_default_subscription_metadata_kwargs(),
             **overrides,
         }
         return BaseSubscriptionMetadata(**kwargs)
 
-    def as_chargebee_subscription_metadata(self, **overrides) -> ChargebeeObjMetadata:
+    def as_chargebee_subscription_metadata(self, **overrides) -> ChargebeeObjMetadata:  # type: ignore[no-untyped-def]
         kwargs = {
             **self._get_default_subscription_metadata_kwargs(),
             "chargebee_email": self.chargebee_email,
@@ -544,6 +552,30 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             "audit_log_visibility_days": self.audit_log_visibility_days,
             "feature_history_visibility_days": self.feature_history_visibility_days,
         }
+
+    def is_billing_terms_dates_set(self) -> bool:
+        return (
+            self.current_billing_term_starts_at is not None
+            and self.current_billing_term_ends_at is not None
+        )
+
+    def has_active_billing_periods(self) -> bool:
+        """
+        Returns True if current date is within the billing term.
+        If either start or end date is None, returns False.
+        """
+        if not self.is_billing_terms_dates_set():
+            return False
+
+        if TYPE_CHECKING:
+            assert self.current_billing_term_starts_at is not None
+            assert self.current_billing_term_ends_at is not None
+
+        starts_at = self.current_billing_term_starts_at
+        ends_at = self.current_billing_term_ends_at
+        now = timezone.now()
+
+        return starts_at <= now <= ends_at
 
 
 class OrganisationAPIUsageNotification(models.Model):

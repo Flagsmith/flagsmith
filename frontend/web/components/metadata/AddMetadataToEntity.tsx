@@ -208,7 +208,26 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
     metadataModelFieldListLoaded,
     projectFeatureDataLoaded,
     projectFeatureData,
+    entityId,
+    envData,
+    envDataLoaded,
+    segmentData,
+    segmentDataLoaded,
   ])
+
+  const getMetadataErrors = (error: any) => {
+    const nonFieldErrors =
+      error?.data?.metadata?.map(
+        (metadata: any) => metadata?.non_field_errors,
+      ) || []
+    const fieldErrors =
+      error?.data?.metadata?.map((metadata: any) => metadata) || []
+
+    const allErrors = [...nonFieldErrors, ...fieldErrors]
+
+    return allErrors.join('\n')
+  }
+
   return (
     <>
       <FormGroup className='setting'>
@@ -221,7 +240,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             </Row>
           }
           items={metadataFieldsAssociatedtoEntity}
-          renderRow={(m: CustomMetadata) => {
+          renderRow={(m) => {
             return (
               <MetadataRow
                 metadata={m}
@@ -246,14 +265,14 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
           }}
           renderNoResults={
             <FormGroup>
-              No custom fields configured for {entity}s. Add custom fields
-              in your{' '}
+              No custom fields configured for {entity}s. Add custom fields in
+              your{' '}
               <a
-                href={`/project/${projectId}/settings?tab=custom-fields`}
+                href={`/organisation/${organisationId}/settings?tab=custom-fields`}
                 target='_blank'
                 rel='noreferrer'
               >
-                Project Settings
+                Organisation Settings
               </a>
               .
             </FormGroup>
@@ -264,12 +283,15 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
             <Button
               theme='primary'
               className='mt-2'
+              disabled={
+                !metadataFieldsAssociatedtoEntity?.length || !metadataChanged
+              }
               onClick={() => {
                 updateEnvironment({
                   body: {
                     metadata: metadataFieldsAssociatedtoEntity
-                      ?.filter((m) => m.metadataEntity)
-                      .map((i) => {
+                      ?.filter((i) => i.metadataEntity)
+                      ?.map((i) => {
                         const { field_value, ...rest } = i
                         return {
                           field_value,
@@ -283,7 +305,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
                   id: entityId,
                 }).then((res) => {
                   if (res?.error) {
-                    toast(res?.error?.data.metadata[0], 'danger')
+                    toast(getMetadataErrors(res?.error), 'danger')
                   } else {
                     toast('Environment Field Updated')
                   }
@@ -300,7 +322,7 @@ const AddMetadataToEntity: FC<AddMetadataToEntityType> = ({
 }
 
 type MetadataRowType = {
-  metadata: CustomMetadata
+  metadata: CustomMetadataField
   getMetadataValue?: (metadata: CustomMetadata) => void
   entity: string
 }
@@ -309,22 +331,28 @@ const MetadataRow: FC<MetadataRowType> = ({
   getMetadataValue,
   metadata,
 }) => {
-  const [metadataValue, setMetadataValue] = useState<string | boolean>(() => {
-    if (metadata?.type === 'bool') {
-      return metadata?.field_value === 'true' ? true : false
-    } else {
-      return metadata?.field_value !== undefined ? metadata?.field_value : ''
-    }
-  })
-  const saveMetadata = () => {
+  const [metadataValueChanged, setMetadataValueChanged] =
+    useState<boolean>(false)
+  const metadataValue =
+    metadata?.type === 'bool'
+      ? metadata?.field_value === 'true'
+      : metadata?.field_value || ''
+
+  const handleChange = (newMetadataValue: string | boolean) => {
     setMetadataValueChanged(false)
     const updatedMetadataObject = { ...metadata }
     updatedMetadataObject.field_value =
-      metadata?.type === 'bool' ? `${!metadataValue}` : `${metadataValue}`
+      metadata?.type === 'bool' ? `${!newMetadataValue}` : `${newMetadataValue}`
     getMetadataValue?.(updatedMetadataObject as CustomMetadata)
   }
-  const [metadataValueChanged, setMetadataValueChanged] =
-    useState<boolean>(false)
+
+  const isRequiredForAndCorrectType =
+    metadata?.isRequiredFor &&
+    Utils.validateMetadataType(metadata?.type, metadataValue)
+  const isNotRequiredAndCorrectType =
+    !!metadataValue && Utils.validateMetadataType(metadata?.type, metadataValue)
+  const isEmptyAuthorized = !metadataValue && !metadata?.isRequiredFor
+
   return (
     <Row className='space list-item clickable py-2'>
       {metadataValueChanged && entity !== 'segment' && (
@@ -336,11 +364,10 @@ const MetadataRow: FC<MetadataRowType> = ({
       {metadata?.type === 'bool' ? (
         <Flex className='flex-row'>
           <Switch
-            checked={!!metadataValue}
+            checked={[true, 'true'].includes(metadataValue)}
             onChange={() => {
-              setMetadataValue(!metadataValue)
               setMetadataValueChanged(true)
-              saveMetadata()
+              handleChange(!metadataValue)
             }}
           />
         </Flex>
@@ -348,7 +375,6 @@ const MetadataRow: FC<MetadataRowType> = ({
         <Flex className='flex-row mt-1' style={{ minWidth: '300px' }}>
           <InputGroup
             textarea={metadata?.type === 'multiline_str'}
-            onBlur={saveMetadata}
             value={metadataValue}
             inputProps={{
               style: {
@@ -357,10 +383,14 @@ const MetadataRow: FC<MetadataRowType> = ({
               },
             }}
             noMargin
-            isValid={Utils.validateMetadataType(metadata?.type, metadataValue)}
+            isValid={
+              isRequiredForAndCorrectType ||
+              isNotRequiredAndCorrectType ||
+              isEmptyAuthorized
+            }
             onChange={(e: InputEvent) => {
-              setMetadataValue(Utils.safeParseEventValue(e))
               setMetadataValueChanged(true)
+              handleChange(Utils.safeParseEventValue(e))
             }}
             type='text'
           />

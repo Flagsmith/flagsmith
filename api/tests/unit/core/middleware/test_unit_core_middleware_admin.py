@@ -1,16 +1,17 @@
 from unittest import mock
 
 import pytest
-from core.middleware.admin import AdminWhitelistMiddleware
 from django.core.exceptions import PermissionDenied
 from django.test import override_settings
+
+from core.middleware.admin import AdminWhitelistMiddleware
 
 allowed_ip_address = "10.0.0.1"
 not_allowed_ip_address = "11.0.0.1"
 
 
 @override_settings(ALLOWED_ADMIN_IP_ADDRESSES=[allowed_ip_address])
-def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_ip_not_allowed():
+def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_ip_not_allowed():  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     mock_get_response = mock.MagicMock()
 
@@ -18,7 +19,7 @@ def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_
     mock_request.path = "/admin/login"
     mock_request.META = {"REMOTE_ADDR": not_allowed_ip_address}
 
-    middleware = AdminWhitelistMiddleware(mock_get_response)
+    middleware = AdminWhitelistMiddleware(mock_get_response)  # type: ignore[no-untyped-call]
 
     # When
     with pytest.raises(PermissionDenied):
@@ -28,7 +29,7 @@ def test_admin_whitelist_middleware_raises_permission_denied_for_admin_pages_if_
 
 
 @override_settings(ALLOWED_ADMIN_IP_ADDRESSES=[allowed_ip_address])
-def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_allowed():
+def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_allowed():  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     mock_get_response = mock.MagicMock()
     mock_get_response_return = mock.MagicMock()
@@ -38,7 +39,7 @@ def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_a
     mock_request.path = "/admin/login"
     mock_request.META = {"REMOTE_ADDR": allowed_ip_address}
 
-    middleware = AdminWhitelistMiddleware(mock_get_response)
+    middleware = AdminWhitelistMiddleware(mock_get_response)  # type: ignore[no-untyped-call]
 
     # When
     response = middleware(mock_request)
@@ -49,7 +50,7 @@ def test_admin_whitelist_middleware_returns_get_response_for_admin_pages_if_ip_a
 
 
 @override_settings(ALLOWED_ADMIN_IP_ADDRESSES=[allowed_ip_address])
-def test_admin_whitelist_middleware_returns_get_response_for_non_admin_request_if_ip_not_allowed():
+def test_admin_whitelist_middleware_returns_get_response_for_non_admin_request_if_ip_not_allowed():  # type: ignore[no-untyped-def]  # noqa: E501
     # Given
     mock_get_response = mock.MagicMock()
     mock_get_response_return = mock.MagicMock()
@@ -59,7 +60,7 @@ def test_admin_whitelist_middleware_returns_get_response_for_non_admin_request_i
     mock_request.path = "/api/v1/flags"
     mock_request.META = {"REMOTE_ADDR": not_allowed_ip_address}
 
-    middleware = AdminWhitelistMiddleware(mock_get_response)
+    middleware = AdminWhitelistMiddleware(mock_get_response)  # type: ignore[no-untyped-call]
 
     # When
     response = middleware(mock_request)
