@@ -154,22 +154,6 @@ const CreatePipelineStage = ({
     handleOnChange('actions', [{ action_body, action_type }])
   }
 
-  useEffect(() => {
-    if (
-      selectedTrigger?.value === StageTriggerType.WAIT_FOR &&
-      amountOfTime >= 1 &&
-      !!selectedTimeUnit
-    ) {
-      const duration = moment.duration(amountOfTime, selectedTimeUnit)
-      const formatted = formatDurationToHHMMSS(duration)
-      handleOnChange('trigger', {
-        trigger_body: { wait_for: formatted },
-        trigger_type: selectedTrigger?.value,
-      } as StageTrigger)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTrigger, selectedTimeUnit, amountOfTime])
-
   const setWaitForTrigger = (time: number, unit: TimeUnit) => {
     const duration = moment.duration(time, unit)
     const formatted = formatDurationToHHMMSS(duration)
