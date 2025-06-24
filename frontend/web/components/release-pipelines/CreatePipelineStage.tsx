@@ -1,4 +1,4 @@
-import { SyntheticEvent, useEffect, useMemo, useState } from 'react'
+import React, { SyntheticEvent, useEffect, useMemo, useState } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
@@ -40,6 +40,7 @@ const CreatePipelineStage = ({
   const [searchInput, setSearchInput] = useState('')
   const [amountOfTime, setAmountOfTime] = useState(1)
   const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnit>('days')
+  console.log('selectedTimeUnit', selectedTimeUnit, amountOfTime)
   const [selectedAction, setSelectedAction] = useState<{
     label: string
     value: string
@@ -162,15 +163,14 @@ const CreatePipelineStage = ({
       trigger_body: { wait_for: formatted },
       trigger_type: StageTriggerType.WAIT_FOR,
     } as StageTrigger)
+    setAmountOfTime(time)
+    setSelectedTimeUnit(unit)
   }
 
   const handleTriggerChange = (option: { value: string; label: string }) => {
     if (option.value === StageTriggerType.WAIT_FOR) {
       const time = 1
       const unit = 'days'
-
-      setAmountOfTime(time)
-      setSelectedTimeUnit(unit)
 
       setWaitForTrigger(time, unit)
 
@@ -251,6 +251,7 @@ const CreatePipelineStage = ({
               isValid={amountOfTime > 0}
               min={1}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                console.log('yolo')
                 const value = Utils.safeParseEventValue(e)
                 setWaitForTrigger(Number(value) || 1, selectedTimeUnit)
               }}
@@ -311,4 +312,13 @@ const CreatePipelineStage = ({
 }
 
 export type { DraftStageType }
-export default CreatePipelineStage
+function areEqual(prevProps: any, nextProps: any) {
+  // Only re-render if stageData or other relevant props actually changed
+  return (
+    prevProps.stageData === nextProps.stageData &&
+    prevProps.showRemoveButton === nextProps.showRemoveButton &&
+    prevProps.projectId === nextProps.projectId
+  )
+}
+
+export default React.memo(CreatePipelineStage, areEqual)

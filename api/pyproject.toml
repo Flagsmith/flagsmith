@@ -243,6 +243,7 @@ types-python-dateutil = "^2.9.0.20241206"
 types-pytz = "^2025.1.0.20250204"
 ruff = "^0.9.7"
 flagsmith-common = { version = "*", extras = ["test-tools"] }
+pytest-responses = "^0.5.1"
 
 [build-system]
 requires = ["poetry>=2.0.0"]

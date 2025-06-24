@@ -6,9 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": [
-                "serve"
-            ],
+            "command": ["serve"],
             "cpu": 0,
             "portMappings": [
                 {
@@ -18,10 +16,7 @@
                 }
             ],
             "healthCheck": {
-                "command": [
-                    "CMD-SHELL",
-                    "flagsmith healthcheck tcp"
-                ],
+                "command": ["CMD-SHELL", "flagsmith healthcheck tcp"],
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
@@ -170,10 +165,6 @@
                     "value": "https://origin.realtime-staging.flagsmith.com"
                 },
                 {
-                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
-                    "value": "True"
-                },
-                {
                     "name": "USE_POSTGRES_FOR_ANALYTICS",
                     "value": "False"
                 },
@@ -294,9 +285,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }

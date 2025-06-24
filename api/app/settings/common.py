@@ -1202,35 +1202,6 @@ CORS_ALLOW_HEADERS = [
     "X-E2E-Test-Auth-Token",
 ]
 
-# use a separate boolean setting so that we add it to the API containers in environments
-# where we're running the task processor, so we avoid creating unnecessary tasks
-ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
-PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
-PIPEDRIVE_BASE_API_URL = env.str(
-    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
-)
-PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
-    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
-)
-PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_VALUE", "App Sign-up"
-)
-PIPEDRIVE_IGNORE_DOMAINS = env.list(
-    "PIPEDRIVE_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
-PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
-    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
-)
-
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)

@@ -96,22 +96,7 @@ function ReleasePipelineDetail() {
 
   return (
     <HeaderWrapper>
-      <PageTitle
-        title={
-          <div className='d-flex'>
-            {pipelineData?.name}
-            <div className='ml-3 mt-auto' style={{ marginBottom: '5px' }}>
-              <Tag
-                className='chip--xs'
-                tag={{
-                  color: pipelineData?.published_at ? '#6837FC' : '#9DA4AE',
-                  label: pipelineData?.published_at ? 'Published' : 'Draft',
-                }}
-              />
-            </div>
-          </div>
-        }
-      />
+      <PageTitle title={pipelineData?.name ?? ''} />
       {pipelineData?.stages?.length === 0 && (
         <Row>
           <span>This release pipeline has no stages.</span>
