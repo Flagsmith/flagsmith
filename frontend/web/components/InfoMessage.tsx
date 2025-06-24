@@ -61,18 +61,20 @@ const InfoMessage: FC<InfoMessageType> = ({
       <div className={'flex-fill flex-column gap-2'}>
         <div className='d-flex'>
           <div
-            className='user-select-none flex-fill align-items-center d-flex gap-2'
+            className='user-select-none flex-fill align-items-center d-flex flex-column flex-md-row gap-2'
             onClick={handleToggleCollapse}
             style={{ cursor: 'pointer' }}
           >
             <div className='flex-fill'>
               <div className='d-flex gap-2 align-items-center'>
-                <Icon
-                  width={22}
-                  height={22}
-                  fill={'#0AADDF'}
-                  name={icon || 'info'}
-                />
+                <span className='d-none d-md-block'>
+                  <Icon
+                    width={22}
+                    height={22}
+                    fill={'#0AADDF'}
+                    name={icon || 'info'}
+                  />
+                </span>
                 <div className='title'>{title}</div>
               </div>
               {!isCollapsed && <div>{children}</div>}
@@ -80,7 +82,9 @@ const InfoMessage: FC<InfoMessageType> = ({
             {!isCollapsed && (
               <>
                 {url && buttonText && (
-                  <Button onClick={handleOpenNewWindow}>{buttonText}</Button>
+                  <Button className='w-100' onClick={handleOpenNewWindow}>
+                    {buttonText}
+                  </Button>
                 )}
               </>
             )}
