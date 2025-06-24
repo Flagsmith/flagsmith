@@ -53,11 +53,10 @@ const StageFeatureDetail = ({
     return (
       <>
         <h6>Features (0)</h6>
-        <p className='text-muted'>No features added to this stage yet.</p>
+        <p className='text-muted'>No features at this stage.</p>
       </>
     )
   }
-
 
   return (
     <>
