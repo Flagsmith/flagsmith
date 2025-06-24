@@ -53,6 +53,7 @@ import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import AddToReleasePipelineModal from 'components/release-pipelines/AddToReleasePipelineModal'
+import { getReleasePipelines } from 'common/services/useReleasePipelines'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -107,6 +108,7 @@ const CreateFlag = class extends Component {
         typeof feature_state_value === 'undefined'
           ? undefined
           : Utils.getTypedValue(feature_state_value),
+      hasPublishedReleasePipelines: false,
       isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
@@ -212,6 +214,7 @@ const CreateFlag = class extends Component {
 
     this.fetchChangeRequests()
     this.fetchScheduledChangeRequests()
+    this.fetchReleasePipelines()
 
     getGithubIntegration(getStore(), {
       organisation_id: AccountStore.getOrganisation().id,
@@ -227,6 +230,18 @@ const CreateFlag = class extends Component {
     if (this.focusTimeout) {
       clearTimeout(this.focusTimeout)
     }
+  }
+
+  fetchReleasePipelines = () => {
+    getReleasePipelines(getStore(), {
+      projectId: this.props.projectId,
+    }).then((res) => {
+      const pipelines = res.data.results
+      const hasPublishedReleasePipelines =
+        pipelines?.some((pipeline) => pipeline?.published_by) ?? false
+
+      this.setState({ hasPublishedReleasePipelines })
+    })
   }
 
   userOverridesPage = (page, forceRefetch) => {
@@ -1081,8 +1096,7 @@ const CreateFlag = class extends Component {
                 )
               const { featureError, featureWarning } = this.parseError(error)
 
-              const isReleasePipelineEnabled =
-                Utils.getFlagsmithHasFeature('release_pipelines')
+              const isReleasePipelineEnabled = true //Utils.getFlagsmithHasFeature('release_pipelines')
 
               return (
                 <Permission
@@ -1182,22 +1196,22 @@ const CreateFlag = class extends Component {
                                         permission={'UPDATE_FEATURE_STATE'}
                                         id={this.props.environmentId}
                                       >
-                                        {({
-                                          permission: updateFeatureState,
-                                        }) => {
+                                        {({ permission: updateFeatureState }) =>
                                           isReleasePipelineEnabled &&
-                                            updateFeatureState && (
-                                              <Button
-                                                className='mr-2'
-                                                theme='secondary'
-                                                onClick={
-                                                  this.openReleasePipelineModal
-                                                }
-                                              >
-                                                Add to Release Pipeline
-                                              </Button>
-                                            )
-                                        }}
+                                          updateFeatureState &&
+                                          this.state
+                                            .hasPublishedReleasePipelines && (
+                                            <Button
+                                              className='mr-2'
+                                              theme='secondary'
+                                              onClick={
+                                                this.openReleasePipelineModal
+                                              }
+                                            >
+                                              Add to Release Pipeline
+                                            </Button>
+                                          )
+                                        }
                                       </Permission>
                                       <Permission
                                         level='environment'

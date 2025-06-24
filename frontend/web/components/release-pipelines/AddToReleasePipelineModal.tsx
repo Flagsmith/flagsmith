@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useAddFeatureToReleasePipelineMutation,
   useGetReleasePipelinesQuery,
@@ -9,7 +9,7 @@ import Button from 'components/base/forms/Button'
 import InputGroup from 'components/base/forms/InputGroup'
 
 type AddToReleasePipelineModalProps = {
-  projectId: string
+  projectId: number
   featureId: number
 }
 
@@ -17,12 +17,13 @@ const AddToReleasePipelineModal = ({
   featureId,
   projectId,
 }: AddToReleasePipelineModalProps) => {
-  const [selectedReleasePipeline, setSelectedReleasePipeline] =
-    useState<string>('')
+  const [selectedReleasePipeline, setSelectedReleasePipeline] = useState<
+    number | null
+  >(null)
   const { data: releasePipelines } = useGetReleasePipelinesQuery({
     page: 1,
     page_size: 100,
-    projectId: Number(projectId),
+    projectId,
   })
 
   const [
@@ -30,14 +31,18 @@ const AddToReleasePipelineModal = ({
     { error, isError, isLoading, isSuccess },
   ] = useAddFeatureToReleasePipelineMutation()
 
-  const releasePipelinesOptions = releasePipelines?.results?.map(
-    (pipeline: ReleasePipeline) => ({
-      label: pipeline.name,
-      value: pipeline.id,
-    }),
+  const releasePipelinesOptions = useMemo(
+    () =>
+      releasePipelines?.results
+        ?.filter((pipeline) => !!pipeline.published_by)
+        ?.map((pipeline: ReleasePipeline) => ({
+          label: pipeline.name,
+          value: pipeline.id,
+        })),
+    [releasePipelines],
   )
 
-  const handleSelect = (option: { label: string; value: string }) => {
+  const handleSelect = (option: { label: string; value: number }) => {
     setSelectedReleasePipeline(option.value)
   }
 
@@ -45,7 +50,7 @@ const AddToReleasePipelineModal = ({
     const data = {
       featureId: Number(featureId),
       pipelineId: Number(selectedReleasePipeline),
-      projectId: Number(projectId),
+      projectId,
     }
     addFeatureToReleasePipeline(data)
   }
@@ -77,7 +82,7 @@ const AddToReleasePipelineModal = ({
             value={Utils.toSelectedValue(
               selectedReleasePipeline,
               releasePipelinesOptions,
-              { label: 'Select Release Pipeline', value: '' },
+              { label: 'Select Release Pipeline', value: null },
             )}
           />
         }

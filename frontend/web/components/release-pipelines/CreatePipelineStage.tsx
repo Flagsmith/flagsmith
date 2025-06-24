@@ -124,7 +124,7 @@ const CreatePipelineStage = ({
         if (action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT) {
           return {
             ...action,
-            action_body: { enabled: true, segment_id: option?.value },
+            action_body: { ...action.action_body, segment_id: option?.value },
           }
         }
         return action
