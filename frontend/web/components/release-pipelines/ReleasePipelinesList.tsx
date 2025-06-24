@@ -71,7 +71,6 @@ const ReleasePipelinesList = ({
       isLoading={isLoading}
       items={pipelinesList}
       className='no-pad'
-      title=' '
       filterRow={(item, search) => {
         return item.name.toLowerCase().includes(search.toLowerCase())
       }}
