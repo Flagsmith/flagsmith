@@ -41,11 +41,9 @@ const OverflowNav: FC<OverflowNavProps> = ({
   const [visibleCount, setVisibleCount] = useState(force ? 0 : items.length)
   const [widths, setWidths] = useState<number[]>([])
   const history = useHistory()
-  const openRef = useRef(false)
   useEffect(() => {
     const unlisten = history.listen(() => {
       setOpen(false)
-      openRef.current = false
     })
     return () => unlisten()
   }, [history])
@@ -153,10 +151,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
           <Button
             style={{ height: buttonWidth, width: buttonWidth }}
             onClick={(e) => {
-              e.stopPropagation()
-
-              setOpen(!openRef.current)
-              openRef.current = !openRef.current
+              setOpen(!open)
             }}
             theme='secondary'
             className='d-flex align-items-center justify-content-center m-0 p-0'
@@ -171,7 +166,6 @@ const OverflowNav: FC<OverflowNavProps> = ({
             className='inline-modal-right'
             onClose={() => {
               setOpen(false)
-              openRef.current = false
             }}
           >
             <div className='d-flex flex-column no-wrap'>
