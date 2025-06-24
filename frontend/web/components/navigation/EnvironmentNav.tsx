@@ -90,7 +90,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
                 </div>
               </EnvironmentLink>
               <EnvironmentLink
-                id={mobile ? 'users-link' : undefined}
+                id={mobile ? undefined : 'users-link'}
                 exact
                 icon='people'
                 to={`/project/${projectId}/environment/${environmentId}/users`}
