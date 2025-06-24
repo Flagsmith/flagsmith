@@ -223,6 +223,8 @@
     filter: blur(5px);
 }
 
+.overflow-y-auto{ overflow-y: auto}
+
 .user-select-none {
     user-select: none;
 }
@@ -253,6 +255,7 @@
   }
   background-color: $bg-light200;
 }
+
 .overflow-x-hidden{
-    overflow-x: hidden !important;
+  overflow-x: hidden !important;
 }

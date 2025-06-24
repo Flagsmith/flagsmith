@@ -15,7 +15,7 @@ import {
 import map from 'lodash/map'
 import Button from './base/forms/Button'
 import Utils from 'common/utils/utils'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import each from 'lodash/each'
 
 const GITHUB_INSTALLATION_SETUP = 'install'
@@ -249,15 +249,6 @@ const Integration: FC<IntegrationProps> = (props) => {
 }
 
 interface IntegrationListProps {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-      id: string
-      identity: string
-    }
-  }
   integrations: string[]
   projectId?: string
   organisationId: string
@@ -269,7 +260,7 @@ const IntegrationList: FC<IntegrationListProps> = (props) => {
   const [installationId, setInstallationId] = useState<string>('')
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [activeIntegrations, setActiveIntegrations] = useState<any[]>([])
-  const history = props.router.history
+  const history = useHistory()
 
   const organisationId = props.organisationId
 

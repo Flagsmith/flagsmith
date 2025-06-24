@@ -5,7 +5,7 @@ import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Permission from 'common/providers/Permission'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useHistory, withRouter } from 'react-router-dom'
 import { IonIcon } from '@ionic/react'
 import {
   checkmarkCircle,
@@ -22,7 +22,6 @@ import Icon from 'components/Icon'
 import { AsyncStorage } from 'polyfill-react-native'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
 import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
@@ -30,12 +29,10 @@ import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Resources from 'components/Resources'
 import Constants from 'common/constants'
-import SidebarLink from 'components/SidebarLink'
 
 type HomeAsideType = {
   environmentId: string
   projectId: string
-  history: RouterChildContext['router']['history']
 }
 
 type CustomOptionProps = ComponentProps<typeof components.Option> & {
@@ -111,11 +108,8 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
   )
 }
 
-const HomeAside: FC<HomeAsideType> = ({
-  environmentId,
-  history,
-  projectId,
-}) => {
+const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+  const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
     { skip: !projectId },
@@ -161,6 +155,7 @@ const HomeAside: FC<HomeAsideType> = ({
     ? ChangeRequestStore.model[environmentId]
     : null
   const changeRequests = changeRequest?.count || 0
+
   const scheduled =
     (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
   const onProjectSave = () => {
@@ -181,7 +176,7 @@ const HomeAside: FC<HomeAsideType> = ({
                   permission && (
                     <Link
                       id='create-env-link'
-                      className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex align-items-center btn--outline'
+                      className='btn mt-1 mb-2 ml-2 mr-2 d-flex justify-content-center btn-xsm d-flex gap-1 align-items-center btn--outline'
                       to={`/project/${projectId}/environment/create`}
                     >
                       <IonIcon className='fs-small' icon={createOutline} />
@@ -272,9 +267,13 @@ const HomeAside: FC<HomeAsideType> = ({
                     </div>
                   </div>
                   <EnvironmentDropdown
-                    renderRow={(environment: Environment, onClick: any) =>
+                    renderRow={(
+                      environment: Environment,
+                      onClick: any,
+                      index: number,
+                    ) =>
                       environment?.api_key === environmentId && (
-                        <div className='collapsible__content'>
+                        <div className='collapsible__content' key={index}>
                           <Permission
                             level='environment'
                             permission='ADMIN'
@@ -287,73 +286,95 @@ const HomeAside: FC<HomeAsideType> = ({
                                 </div>
                               ) : (
                                 <div className='list-unstyled aside-nav d-flex flex-column gap-1 ms-3 mb-2 mt-1'>
-                                  <SidebarLink
+                                  <NavLink
+                                    activeClassName='active'
                                     id='features-link'
-                                    icon={<Icon name='features' />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/features`}
                                   >
+                                    <span className='mr-2'>
+                                      <Icon name='features' fill='#9DA4AE' />
+                                    </span>
                                     Features
-                                  </SidebarLink>
-                                  <SidebarLink
+                                  </NavLink>
+                                  <NavLink
+                                    activeClassName='active'
                                     id='change-requests-link'
-                                    icon={<Icon name='timer' />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/scheduled-changes/`}
                                   >
+                                    <span className='mr-2'>
+                                      <Icon name='timer' fill='#9DA4AE' />
+                                    </span>
                                     Scheduling
                                     {scheduled ? (
                                       <span className='ml-1 unread d-inline'>
                                         {scheduled}
                                       </span>
                                     ) : null}
-                                  </SidebarLink>
-                                  <SidebarLink
-                                    icon={<Icon name='request' />}
+                                  </NavLink>
+                                  <NavLink
+                                    activeClassName='active'
                                     id='change-requests-link'
                                     to={`/project/${project.id}/environment/${environment.api_key}/change-requests/`}
                                   >
+                                    <span className='mr-2'>
+                                      <Icon name='request' fill='#9DA4AE' />
+                                    </span>
                                     Change Requests{' '}
                                     {changeRequests ? (
                                       <span className='ms-1 unread d-inline'>
                                         {changeRequests}
                                       </span>
                                     ) : null}
-                                  </SidebarLink>
-                                  <SidebarLink
+                                  </NavLink>
+                                  <NavLink
                                     id='users-link'
                                     exact
-                                    icon={<Icon name='people' />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/users`}
                                   >
+                                    <span className='mr-2'>
+                                      <Icon name='people' fill={'#9DA4AE'} />
+                                    </span>
                                     Identities
-                                  </SidebarLink>
-                                  <SidebarLink
+                                  </NavLink>
+                                  <NavLink
                                     id='sdk-keys-link'
                                     exact
-                                    icon={<IonIcon icon={code} />}
                                     to={`/project/${project.id}/environment/${environment.api_key}/sdk-keys`}
                                   >
+                                    <IonIcon
+                                      color={'#9DA4AE'}
+                                      className='mr-2'
+                                      icon={code}
+                                    />
                                     SDK Keys
-                                  </SidebarLink>
+                                  </NavLink>
                                   {Utils.getFlagsmithHasFeature(
                                     'split_testing',
                                   ) && (
-                                    <SidebarLink
+                                    <NavLink
                                       id='split-tests-link'
                                       exact
-                                      icon={<IonIcon icon={flask} />}
                                       to={`/project/${project.id}/environment/${environment.api_key}/split-tests`}
                                     >
+                                      <IonIcon
+                                        color={'#9DA4AE'}
+                                        className='mr-2'
+                                        icon={flask}
+                                      />
                                       Split Tests
-                                    </SidebarLink>
+                                    </NavLink>
                                   )}
                                   {environmentAdmin && (
-                                    <SidebarLink
-                                      icon={<SettingsIcon />}
+                                    <NavLink
                                       id='env-settings-link'
+                                      className='aside__environment-list-item'
                                       to={`/project/${project.id}/environment/${environment.api_key}/settings`}
                                     >
+                                      <span className='mr-2'>
+                                        <SettingsIcon />
+                                      </span>
                                       Environment Settings
-                                    </SidebarLink>
+                                    </NavLink>
                                   )}
                                 </div>
                               )
@@ -382,4 +403,4 @@ const HomeAside: FC<HomeAsideType> = ({
   )
 }
 
-export default ConfigProvider(HomeAside)
+export default withRouter(ConfigProvider(HomeAside))

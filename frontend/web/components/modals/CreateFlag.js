@@ -52,6 +52,7 @@ import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
+import { withRouter } from 'react-router-dom'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -810,7 +811,6 @@ const CreateFlag = class extends Component {
               editingChangeRequest={this.props.changeRequest}
               projectId={this.props.projectId}
               environmentId={this.props.environmentId}
-              history={this.props.history}
               changeRequests={changeRequests}
               scheduledChangeRequests={scheduledChangeRequests}
             />
@@ -1093,8 +1093,8 @@ const CreateFlag = class extends Component {
                             {isEdit && !identity ? (
                               <Tabs
                                 onChange={() => this.forceUpdate()}
-                                history={this.props.history}
                                 urlParam='tab'
+                                history={this.props.history}
                               >
                                 <TabItem
                                   data-test='value'
@@ -2147,10 +2147,6 @@ CreateFlag.propTypes = {}
 //This will remount the modal when a feature is created
 const FeatureProvider = (WrappedComponent) => {
   class HOC extends Component {
-    static contextTypes = {
-      router: propTypes.object.isRequired,
-    }
-
     constructor(props) {
       super(props)
       this.state = {
@@ -2250,4 +2246,6 @@ const FeatureProvider = (WrappedComponent) => {
   return HOC
 }
 
-export default FeatureProvider(ConfigProvider(withSegmentOverrides(CreateFlag)))
+const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(CreateFlag))
+
+export default FeatureProvider(WrappedCreateFlag)

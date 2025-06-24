@@ -1,4 +1,4 @@
-import { matchPath } from 'react-router'
+import { matchPath } from 'react-router-dom'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -252,9 +252,11 @@ const controller = {
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
+
     return data
       .post(`${Project.api}auth/users/`, {
         ...user,
+        hubspotutk: API.getCookie('hubspotutk'),
         invite_hash: API.getInvite() || undefined,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),

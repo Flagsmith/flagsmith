@@ -1,17 +1,14 @@
 import { FC } from 'react'
 import OrganisationUsage from 'components/OrganisationUsage'
-import { RouterChildContext } from 'react-router'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import { useRouteMatch } from 'react-router-dom'
 
-type OrganisationUsagePageType = {
-  match: {
-    params: {
-      organisationId: string
-    }
-  }
+interface RouteParams {
+  organisationId: string
 }
 
-const OrganisationUsagePage: FC<OrganisationUsagePageType> = ({ match }) => {
+const OrganisationUsagePage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
   return (
     <div className='container app-container'>
       <div className='col-xl-8'>

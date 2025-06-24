@@ -1,7 +1,6 @@
 import logging
 import typing
 import uuid
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -21,7 +20,7 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 )
 
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_lead_without_organisation,
+    create_hubspot_contact_for_user,
 )
 from organisations.models import (
     Organisation,
@@ -111,7 +110,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
-
+    onboarding_data = models.TextField(blank=True, null=True)
     # Default to True, since it is covered in our Terms of Service.
     marketing_consent_given = models.BooleanField(
         default=True,
@@ -144,18 +143,12 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self.is_superuser = value
 
     @hook(AFTER_CREATE)  # type: ignore[misc]
-    def schedule_hubspot_tracking(self) -> None:
+    def create_hubspot_contact(self) -> None:
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_lead_without_organisation.delay(
-                kwargs={"user_id": self.id},
-                delay_until=timezone.now()
-                + timedelta(
-                    minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
-                ),
-            )
+            create_hubspot_contact_for_user.delay(args=(self.id,))
 
-    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
-    def send_warning_email(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]
+    def send_warning_email(self) -> None:
         from users.tasks import send_email_changed_notification_email
 
         send_email_changed_notification_email.delay(
@@ -166,7 +159,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             )
         )
 
-    def delete_orphan_organisations(self):  # type: ignore[no-untyped-def]
+    def delete_orphan_organisations(self) -> None:
         Organisation.objects.filter(
             id__in=self.organisations.values_list("id", flat=True)
         ).annotate(users_count=Count("users")).filter(users_count=1).delete()
@@ -176,7 +169,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
     ):
         if delete_orphan_organisations:
-            self.delete_orphan_organisations()  # type: ignore[no-untyped-call]
+            self.delete_orphan_organisations()
         super().delete()
 
     def set_password(self, raw_password):  # type: ignore[no-untyped-def]

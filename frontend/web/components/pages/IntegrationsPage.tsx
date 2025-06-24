@@ -4,18 +4,14 @@ import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
-import { Link } from 'react-router-dom'
+import { Link, useRouteMatch } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
 
-type IntegrationsPageType = {
-  match: {
-    params: {
-      projectId: string
-    }
-  }
+interface RouteParams {
+  projectId: string
 }
 
 export const integrationCategories = [
@@ -39,7 +35,8 @@ export type IntegrationCategoryDescription = {
   description: string
 }
 
-const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
+const IntegrationsPage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)
   }, [])
