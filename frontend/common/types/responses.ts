@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-
-import { StageActionRequest } from './requests'
 
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
@@ -817,13 +814,20 @@ export enum PipelineStatus {
   ACTIVE = 'ACTIVE',
 }
 
-export type ReleasePipeline = {
+export interface ReleasePipeline {
   id: number
-  status: PipelineStatus
-  stages_count: number
-  flags_count: number
   name: string
   project: number
+  description: string
+  stages_count: number
+  published_at: string
+  published_by: number
+  features_count: number
+}
+
+export interface SingleReleasePipeline extends ReleasePipeline {
+  stages: PipelineStage[]
+  completed_features: number[]
 }
 
 export enum StageTriggerType {
@@ -831,7 +835,7 @@ export enum StageTriggerType {
   WAIT_FOR = 'WAIT_FOR',
 }
 
-export type StageTriggerBody = string | null
+export type StageTriggerBody = { wait_for?: string } | null
 
 export type StageTrigger = {
   trigger_type: StageTriggerType
@@ -842,20 +846,23 @@ export enum StageActionType {
   TOGGLE_FEATURE = 'TOGGLE_FEATURE',
   TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
 }
-// TODO: Check if this is correct
-export interface StageActionResponse
-  extends Omit<StageActionRequest, 'action_body'> {
-  action_body: string
+
+export type StageActionBody = { enabled: boolean; segment_id?: number }
+export interface StageAction {
+  id: number
+  action_type: StageActionType
+  action_body: StageActionBody
 }
 
-export interface PipelineStage {
+export type PipelineStage = {
   id: number
   name: string
   pipeline: number
   environment: number
   order: number
   trigger: StageTrigger
-  actions: StageActionResponse[]
+  actions: StageAction[]
+  features: number[]
 }
 
 export type Res = {
@@ -995,11 +1002,20 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  environmentMetrics: {
+    metrics: {
+      value: number
+      description: string
+      name: string
+      entity: 'features' | 'identities' | 'segments' | 'workflows'
+      rank: number
+    }[]
+  }
   profile: User
   onboarding: {}
   userPermissions: UserPermissions
   releasePipelines: PagedResponse<ReleasePipeline>
-  releasePipeline: ReleasePipeline
+  releasePipeline: SingleReleasePipeline
   pipelineStages: PagedResponse<PipelineStage>
   pipelineStage: PipelineStage
   // END OF TYPES

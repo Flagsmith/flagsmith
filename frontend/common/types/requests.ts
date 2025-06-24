@@ -20,7 +20,6 @@ import {
   IdentityTrait,
   Onboarding,
   StageTrigger,
-  PipelineStatus,
   StageActionType,
 } from './responses'
 
@@ -78,11 +77,16 @@ export interface StageActionRequest {
   action_body: { enabled: boolean; segment_id?: number }
 }
 
+export type ReleasePipelineRequest = {
+  project: number
+  name: string
+  description?: string
+  stages: PipelineStageRequest[]
+}
+
 export type PipelineStageRequest = {
   name: string
-  project: number
   environment: number
-  pipeline: number
   order: number
   trigger: StageTrigger
   actions: StageActionRequest[]
@@ -684,6 +688,7 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getEnvironmentMetrics: { id: string }
   getUserEnvironmentPermissions: {
     environmentId: string
     userId: string
@@ -693,15 +698,14 @@ export type Req = {
     userId: number | undefined
     level: PermissionLevel
   }
-  getProfile: {}
+  getProfile: {
+    id?: number
+  }
+  getUser: { id: number }
   updateOnboarding: Partial<Onboarding>
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
-  createReleasePipeline: {
-    projectId: number
-    name: string
-    status: PipelineStatus
-  }
+  createReleasePipeline: ReleasePipelineRequest
   getPipelineStages: PagedRequest<{
     projectId: number
     pipelineId: number
@@ -711,8 +715,16 @@ export type Req = {
     pipelineId: number
     stageId: number
   }
-  createPipelineStage: PipelineStageRequest
   deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
     projectId: number
     pipelineId: number
   }
