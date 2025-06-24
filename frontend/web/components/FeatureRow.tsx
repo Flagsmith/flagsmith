@@ -9,7 +9,6 @@ import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction from './FeatureAction'
-import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Tag from './tags/Tag'
 import Button from './base/forms/Button'
@@ -227,7 +226,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
     environmentId,
   ) as Environment | null
 
-  const isCompact = getViewMode() === 'compact'
   const showPlusIndicator =
     projectFlag?.is_num_identity_overrides_complete === false
 
@@ -246,7 +244,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
         onChange={onChange}
         style={style}
         className={className}
-        isCompact={isCompact}
         fadeEnabled={fadeEnabled}
         fadeValue={fadeValue}
         index={index}
@@ -257,9 +254,9 @@ const FeatureRow: FC<FeatureRowProps> = ({
   return (
     <Row
       className={classNames(
-        `list-item ${isReadOnly ? '' : 'clickable'} ${
-          isCompact ? 'py-0 list-item-xs fs-small' : 'py-1'
-        }`,
+        `list-item ${
+          isReadOnly ? '' : 'clickable'
+        } ${'py-0 list-item-xs fs-small'}`,
         className,
       )}
       key={id}
@@ -283,7 +280,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
                 <span>
                   {created_date ? (
                     <Tooltip place='right' title={name}>
-                      {isCompact && description ? `${description}` : ''}
+                      {description ? `${description}` : ''}
                     </Tooltip>
                   ) : (
                     name
@@ -350,8 +347,8 @@ const FeatureRow: FC<FeatureRowProps> = ({
                   <Tag className='chip--xs' tag={Constants.archivedTag} />
                 )}
               </TagValues>
-              {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
-              {isFeatureHealthEnabled && !!isCompact && (
+              <StaleFlagWarning projectFlag={projectFlag} />
+              {isFeatureHealthEnabled && (
                 <UnhealthyFlagWarning
                   featureUnhealthyEvents={featureUnhealthyEvents}
                   onClick={(e) => {
@@ -361,24 +358,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
                 />
               )}
             </Row>
-            {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
-            {isFeatureHealthEnabled && !isCompact && (
-              <UnhealthyFlagWarning
-                featureUnhealthyEvents={featureUnhealthyEvents}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  openFeatureHealthTab(id)
-                }}
-              />
-            )}
-            {description && !isCompact && (
-              <div
-                className='list-item-subtitle'
-                style={{ lineHeight: '20px', width: width[4] }}
-              >
-                {description}
-              </div>
-            )}
           </Flex>
         </Row>
       </Flex>
@@ -410,7 +389,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
 
       <div
         className='table-column'
-        style={{ width: isCompact ? width[2] : width[3] }}
+        style={{ width: width[2] }}
         onClick={(e) => {
           e.stopPropagation()
         }}
@@ -421,7 +400,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
           readOnly={isReadOnly}
           protectedTags={protectedTags}
           tags={projectFlag.tags}
-          isCompact={isCompact}
           hideAudit={
             AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit
           }

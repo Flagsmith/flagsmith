@@ -4,7 +4,6 @@ import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
 import { getTags } from 'common/services/useTag'
-import { getViewMode, setViewMode } from 'common/useViewMode'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import {
   FeatureState,
@@ -513,22 +512,6 @@ const UserPage: FC = () => {
                                       })
                                     }}
                                   />
-                                  <TableFilterOptions
-                                    title={'View'}
-                                    className={'me-4'}
-                                    value={getViewMode()}
-                                    onChange={setViewMode as any}
-                                    options={[
-                                      {
-                                        label: 'Default',
-                                        value: 'default',
-                                      },
-                                      {
-                                        label: 'Compact',
-                                        value: 'compact',
-                                      },
-                                    ]}
-                                  />
                                   <TableSortFilter
                                     value={filter.sort}
                                     isLoading={FeatureListStore.isLoading}
@@ -627,7 +610,6 @@ const UserPage: FC = () => {
                                     }
                                   }
 
-                                  const isCompact = getViewMode() === 'compact'
                                   if (name === preselect && actualFlags) {
                                     setPreselect(null)
                                     onClick()
@@ -644,7 +626,6 @@ const UserPage: FC = () => {
                                         },
                                         {
                                           'list-item-xs':
-                                            isCompact &&
                                             !flagEnabledDifferent &&
                                             !flagValueDifferent,
                                         },

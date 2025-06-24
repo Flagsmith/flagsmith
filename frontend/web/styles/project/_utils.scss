@@ -256,3 +256,24 @@
   }
   background-color: $bg-light200;
 }
+
+
+@each $breakpoint-name, $breakpoint-size in $grid-breakpoints {
+    $infix: if($breakpoint-name == xs, "", "-#{$breakpoint-name}");
+
+    @if $breakpoint-name == xs {
+        // w-x-auto
+        .w#{$infix}-auto {
+            width: auto !important;
+        }
+    }
+        // For all other breakpoints, wrap in the media-query mixin
+    @else {
+        @include media-breakpoint-up($breakpoint-name) {
+            // w-x-auto
+            .w#{$infix}-auto {
+                width: auto !important;
+            }
+        }
+    }
+}

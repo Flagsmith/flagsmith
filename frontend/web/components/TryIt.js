@@ -62,7 +62,7 @@ const TryIt = class extends Component {
   render() {
     return Utils.getFlagsmithHasFeature('try_it') ? (
       <div>
-        <Row space>
+        <Row space className='gap-2'>
           <Flex className='align-items-start'>
             <h5 className='mb-2'>Try it out</h5>
             <div className='fs-small lh-sm'>{this.props.title}</div>

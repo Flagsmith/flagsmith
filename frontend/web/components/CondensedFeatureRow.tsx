@@ -25,7 +25,6 @@ export interface CondensedFeatureRowProps {
   onChange: () => void
   style?: React.CSSProperties
   className?: string
-  isCompact?: boolean
   fadeEnabled?: boolean
   fadeValue?: boolean
   hasUnhealthyEvents?: boolean
@@ -41,7 +40,6 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
   fadeValue,
   hasUnhealthyEvents,
   index,
-  isCompact,
   onChange,
   permission,
   projectFlag,
@@ -66,7 +64,7 @@ const CondensedFeatureRow: React.FC<CondensedFeatureRowProps> = ({
           )
       }}
       style={{ ...style }}
-      className={classNames('flex-row', { 'fs-small': isCompact }, className)}
+      className={classNames('flex-row fs-small', className)}
     >
       <div
         className={`table-column ${fadeEnabled && 'faded'}`}
