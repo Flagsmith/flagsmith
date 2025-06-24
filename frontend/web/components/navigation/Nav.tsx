@@ -209,7 +209,7 @@ const Nav: FC<NavType> = ({
           <OverflowNav
             gap={3}
             key={activeProject ? 'project' : AccountStore.getOrganisation()?.id}
-            containerClassName='px-2 bg-faint'
+            containerClassName='px-2 pb-1 pb-mb-0 bg-faint'
             className='py-0 d-flex'
           >
             {activeProject ? (

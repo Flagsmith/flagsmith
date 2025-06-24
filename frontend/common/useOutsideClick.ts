@@ -9,7 +9,10 @@ const useOutsideClick = (
       if (!ref.current || ref.current.contains(event.target as Node)) {
         return
       }
-      handler(event)
+      setTimeout(() => {
+        //ensures that other handlers get hit first
+        handler(event)
+      }, 100)
     }
 
     document.addEventListener('mouseup', listener)
