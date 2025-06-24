@@ -543,6 +543,16 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return str
   },
 
+  getUtmsFromUrl(): UtmsType {
+    const params = Utils.fromParam() as Record<string, string>
+    return TRACKED_UTMS.reduce((utms, key) => {
+      if (params[key]) {
+        utms[key] = params[key]
+      }
+      return utms
+    }, {} as UtmsType)
+  },
+
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
@@ -592,16 +602,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  },
-
-  getUtmsFromUrl(): UtmsType {
-    const params = Utils.fromParam() as Record<string, string>
-    return TRACKED_UTMS.reduce((utms, key) => {
-      if (params[key]) {
-        utms[key] = params[key]
-      }
-      return utms
-    }, {} as UtmsType)
   },
 
   openChat() {

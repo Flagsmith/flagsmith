@@ -29,15 +29,7 @@ import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
-import { UtmsType } from 'common/types/utms'
-
-const TRACKED_UTMS = [
-  'utm_source',
-  'utm_medium',
-  'utm_campaign',
-  'utm_content',
-  'utm_term',
-]
+import { useUTMs } from 'common/useUTMs'
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -51,8 +43,7 @@ const HomePage: React.FC = () => {
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
-  const [utms, setUtms] = useState<UtmsType>({})
-
+  const utms = useUTMs()
   const { data: version, isLoading: versionLoading } = useGetBuildVersionQuery(
     {},
   )
@@ -65,13 +56,6 @@ const HomePage: React.FC = () => {
   // can handle always setting the marketing consent.
   useEffect(() => {
     API.setCookie('marketing_consent_given', 'true')
-  }, [])
-
-  useEffect(() => {
-    const utmsParams = Utils.getUtmsFromUrl(document.location.href)
-    if (Object.keys(utmsParams).length > 0) {
-      setUtms(utmsParams)
-    }
   }, [])
 
   const addAlbacross = () => {
