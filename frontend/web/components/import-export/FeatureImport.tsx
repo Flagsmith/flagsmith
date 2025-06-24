@@ -27,6 +27,7 @@ import TableSearchFilter from 'components/tables/TableSearchFilter'
 import Utils from 'common/utils/utils'
 import TableTagFilter from 'components/tables/TableTagFilter'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
+import { getViewMode, setViewMode } from 'common/useViewMode'
 import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import { useGetFeatureImportsQuery } from 'common/services/useFeatureImport'
 
@@ -379,6 +380,22 @@ const FeatureExport: FC<FeatureExportType> = ({ projectId }) => {
                           setTags(tags)
                         }
                       }}
+                    />
+                    <TableFilterOptions
+                      title={'View'}
+                      className={'me-4'}
+                      value={getViewMode()}
+                      onChange={setViewMode}
+                      options={[
+                        {
+                          label: 'Default',
+                          value: 'default',
+                        },
+                        {
+                          label: 'Compact',
+                          value: 'compact',
+                        },
+                      ]}
                     />
                     <TableSortFilter
                       isLoading={FeatureListStore.isLoading}

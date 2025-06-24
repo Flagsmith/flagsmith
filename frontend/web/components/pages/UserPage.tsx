@@ -4,6 +4,7 @@ import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
 import { getTags } from 'common/services/useTag'
+import { getViewMode, setViewMode } from 'common/useViewMode'
 import { removeUserOverride } from 'components/RemoveUserOverride'
 import {
   FeatureState,
@@ -511,6 +512,22 @@ const UserPage: FC = () => {
                                         group_owners,
                                       })
                                     }}
+                                  />
+                                  <TableFilterOptions
+                                    title={'View'}
+                                    className={'me-4'}
+                                    value={getViewMode()}
+                                    onChange={setViewMode as any}
+                                    options={[
+                                      {
+                                        label: 'Default',
+                                        value: 'default',
+                                      },
+                                      {
+                                        label: 'Compact',
+                                        value: 'compact',
+                                      },
+                                    ]}
                                   />
                                   <TableSortFilter
                                     value={filter.sort}

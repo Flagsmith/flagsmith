@@ -14,6 +14,8 @@ import { IonIcon } from '@ionic/react'
 import TableSortFilter from 'components/tables/TableSortFilter'
 import TableSearchFilter from 'components/tables/TableSearchFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
+import { getViewMode, setViewMode } from 'common/useViewMode'
+import TableFilterOptions from 'components/tables/TableFilterOptions'
 import Format from 'common/utils/format'
 import EnvironmentDocumentCodeHelp from 'components/EnvironmentDocumentCodeHelp'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
@@ -516,6 +518,22 @@ const FeaturesPage = class extends Component {
                                           this.filter,
                                         )
                                       }}
+                                    />
+                                    <TableFilterOptions
+                                      title={'View'}
+                                      className={'me-4'}
+                                      value={getViewMode()}
+                                      onChange={setViewMode}
+                                      options={[
+                                        {
+                                          label: 'Default',
+                                          value: 'default',
+                                        },
+                                        {
+                                          label: 'Compact',
+                                          value: 'compact',
+                                        },
+                                      ]}
                                     />
                                     <TableSortFilter
                                       isLoading={FeatureListStore.isLoading}

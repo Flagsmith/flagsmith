@@ -82,7 +82,10 @@ const InfoMessage: FC<InfoMessageType> = ({
             {!isCollapsed && (
               <>
                 {url && buttonText && (
-                  <Button className='w-100' onClick={handleOpenNewWindow}>
+                  <Button
+                    className='w-100 w-md-auto'
+                    onClick={handleOpenNewWindow}
+                  >
                     {buttonText}
                   </Button>
                 )}

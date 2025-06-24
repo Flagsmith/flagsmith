@@ -9,6 +9,7 @@ import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from './Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction from './FeatureAction'
+import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
 import Tag from './tags/Tag'
 import Button from './base/forms/Button'
@@ -226,6 +227,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
     environmentId,
   ) as Environment | null
 
+  const isCompact = getViewMode() === 'compact'
   const showPlusIndicator =
     projectFlag?.is_num_identity_overrides_complete === false
 
@@ -280,7 +282,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
                 <span>
                   {created_date ? (
                     <Tooltip place='right' title={name}>
-                      {description ? `${description}` : ''}
+                      {isCompact && description ? `${description}` : ''}
                     </Tooltip>
                   ) : (
                     name
@@ -358,6 +360,24 @@ const FeatureRow: FC<FeatureRowProps> = ({
                 />
               )}
             </Row>
+            {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
+            {isFeatureHealthEnabled && !isCompact && (
+              <UnhealthyFlagWarning
+                featureUnhealthyEvents={featureUnhealthyEvents}
+                onClick={(e) => {
+                  e?.stopPropagation()
+                  openFeatureHealthTab(id)
+                }}
+              />
+            )}
+            {description && !isCompact && (
+              <div
+                className='d-none d-md-block list-item-subtitle'
+                style={{ lineHeight: '20px', width: width[4] }}
+              >
+                {description}
+              </div>
+            )}
           </Flex>
         </Row>
       </Flex>
