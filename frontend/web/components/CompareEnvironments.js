@@ -300,7 +300,6 @@ class CompareEnvironments extends Component {
                   </Row>
                 )
               }
-              console.log(this.props.history)
               return (
                 <div>
                   {this.state.isLoading && (

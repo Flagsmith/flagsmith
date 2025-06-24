@@ -68,7 +68,6 @@ const Nav: FC<NavType> = ({
     level: 'project',
     permission: 'ADMIN',
   })
-  console.log(projectAdmin)
   const isCreateEnvironment = environmentId === 'create'
   const isCreateOrganisation = document.location.pathname === '/create'
   const storageHasParams = lastEnvironmentId || lastProjectId
