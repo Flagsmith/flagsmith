@@ -365,18 +365,20 @@ const Nav: FC<NavType> = ({
         {environmentId && !isCreateEnvironment ? (
           <div className='d-md-flex'>
             <div>
-              <div className='d-block d-md-none'>{header}</div>
               <HomeAside
                 history={history}
                 environmentId={environmentId}
                 projectId={projectId}
               />
             </div>
-            <div className='aside-container'>{children}</div>
+            <div className='aside-container'>
+              <div>{header}</div>
+              {children}
+            </div>
           </div>
         ) : (
           <div>
-            <div className='d-none d-md-block'>{header}</div>
+            <div>{header}</div>
             {children}
           </div>
         )}
