@@ -97,6 +97,7 @@ const CreateFlag = class extends Component {
       githubId: '',
       hasIntegrationWithGithub: false,
       hasMetadataRequired: false,
+      hasPublishedReleasePipelines: false,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -108,7 +109,6 @@ const CreateFlag = class extends Component {
         typeof feature_state_value === 'undefined'
           ? undefined
           : Utils.getTypedValue(feature_state_value),
-      hasPublishedReleasePipelines: false,
       isEdit: !!this.props.projectFlag,
       is_archived,
       is_server_key_only,
@@ -1096,7 +1096,8 @@ const CreateFlag = class extends Component {
                 )
               const { featureError, featureWarning } = this.parseError(error)
 
-              const isReleasePipelineEnabled = true //Utils.getFlagsmithHasFeature('release_pipelines')
+              const isReleasePipelineEnabled =
+                Utils.getFlagsmithHasFeature('release_pipelines')
 
               return (
                 <Permission
