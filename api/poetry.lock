@@ -4033,6 +4033,24 @@ pytest = ">=5.0"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
+name = "pytest-responses"
+version = "0.5.1"
+description = "py.test integration for responses"
+optional = false
+python-versions = "*"
+groups = ["dev"]
+files = [
+    {file = "pytest_responses-0.5.1-py2.py3-none-any.whl", hash = "sha256:4172e565b94ac1ea3b10aba6e40855ad60cd7f141476b2d8a47e4b5f250be734"},
+]
+
+[package.dependencies]
+pytest = ">=2.5"
+responses = "*"
+
+[package.extras]
+tests = ["flake8"]
+
+[[package]]
 name = "pytest-structlog"
 version = "1.1"
 description = "Structured logging assertions"
@@ -5106,14 +5124,14 @@ files = [
 
 [[package]]
 name = "urllib3"
-version = "2.3.0"
+version = "2.5.0"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 optional = false
 python-versions = ">=3.9"
 groups = ["main", "dev", "saml", "split-testing", "workflows"]
 files = [
-    {file = "urllib3-2.3.0-py3-none-any.whl", hash = "sha256:1cee9ad369867bfdbbb48b7dd50374c0967a0bb7710050facf0dd6911440e3df"},
-    {file = "urllib3-2.3.0.tar.gz", hash = "sha256:f8c5449b3cf0861679ce7e0503c7b44b5ec981bec0d1d3795a07f1ba96f0204d"},
+    {file = "urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"},
+    {file = "urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760"},
 ]
 
 [package.extras]
@@ -5351,4 +5369,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "7e3ddff579a22aee98b12f5d76b547fc9a070ae336c4e9010bcebe3ed7d4fd7a"
+content-hash = "f444be832e2a8c763f0b624e10847aa57536272d082988b3060f714e89f078fa"
