@@ -22,9 +22,6 @@ import {
   StageTrigger,
   PipelineStatus,
   StageActionType,
-  Onboarding,
-  User,
-  GettingStartedTask,
 } from './responses'
 
 export type PagedRequest<T> = T & {

@@ -1,7 +1,6 @@
+//todo: replace with NavSubLink when mobile nav PR is merged
 import React, { FC, ReactNode } from 'react'
-import Icon, { IconName } from './Icon'
 import { NavLink, NavLinkProps } from 'react-router-dom'
-import { Nav } from 'reactstrap'
 import classNames from 'classnames'
 
 type SidebarLinkType = Partial<NavLinkProps> & {

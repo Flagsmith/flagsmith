@@ -4,7 +4,6 @@ import {
   integrationCategories,
   IntegrationSummary,
 } from './pages/IntegrationsPage'
-import SidebarLink from './SidebarLink'
 import Input from './base/forms/Input'
 import Utils from 'common/utils/utils'
 import { sortBy } from 'lodash'
@@ -15,7 +14,7 @@ import ModalDefault from './modals/base/ModalDefault'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
-import InfoMessage from './InfoMessage'
+import SidebarLink from './SidebarLink'
 
 type IntegrationSelectType = {
   onComplete: () => void
