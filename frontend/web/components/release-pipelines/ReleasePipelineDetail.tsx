@@ -11,6 +11,7 @@ import StageInfo from './StageInfo'
 import { PipelineStage } from 'common/types/responses'
 import { Environment } from 'common/types/responses'
 import StageFeatureDetail from './StageFeatureDetail'
+import Tag from 'components/tags/Tag'
 
 const LaunchedCard = ({
   completedFeatures,
