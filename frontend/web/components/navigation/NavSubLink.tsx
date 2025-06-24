@@ -13,7 +13,7 @@ const NavSubLink: FC<NavSubLinkType> = ({ children, icon, ...rest }) => {
     <NavLink
       {...rest}
       activeClassName='active'
-      className={classNames(rest.className, 'pt-2 nav-sub-link')}
+      className={classNames(rest.className, 'py-md-2 py-1 px-1 nav-sub-link')}
     >
       <div className='d-flex gap-2 text-nowrap nav-sub-link-inner align-items-center'>
         {typeof icon === 'string' ? <IonIcon icon={icon} /> : icon}

@@ -182,7 +182,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                 <div className='border-md-right home-aside d-flex flex-column pe-0 me-0'>
                   <div className='flex-1 flex-column ms-0 me-2'>
                     <div className='mt-3'>
-                      <div className='mb-md-2 px-2 d-flex align-items-center'>
+                      <div className='mb-md-2 ps-2 ps-md-0 d-flex align-items-center'>
                         <div className='full-width'>
                           {!!environment && (
                             <EnvironmentSelect
