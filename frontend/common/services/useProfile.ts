@@ -8,8 +8,8 @@ export const profileService = service
     endpoints: (builder) => ({
       getProfile: builder.query<Res['profile'], Req['getProfile']>({
         providesTags: [{ id: 'LIST', type: 'Profile' }],
-        query: (query) => ({
-          url: `auth/users/${query.id ?? 'me'}/`,
+        query: () => ({
+          url: `auth/users/me/`,
         }),
       }),
       // END OF ENDPOINTS
