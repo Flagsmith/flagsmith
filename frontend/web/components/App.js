@@ -22,7 +22,7 @@ import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
-import Nav from './Nav'
+import Nav from './navigation/Nav'
 
 const App = class extends Component {
   static propTypes = {

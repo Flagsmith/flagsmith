@@ -1,6 +1,6 @@
 import React, { FC } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
-import Icon, { IconName } from './Icon'
+import Icon, { IconName } from 'components/Icon'
 
 type EnvironmentLinkType = NavLinkProps & {
   icon: IconName

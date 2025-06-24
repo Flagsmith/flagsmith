@@ -10,11 +10,13 @@ type EnvironmentNavType = {
   projectId: number
   environmentId: string
   className: string
+  mobile?: boolean
 }
 
 const EnvironmentNav: FC<EnvironmentNavType> = ({
   className,
   environmentId,
+  mobile,
   projectId,
 }) => {
   const { data: environments } = useGetEnvironmentsQuery(
@@ -41,7 +43,6 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
         'd-flex flex-column mx-0 py-1 py-md-0 gap-2',
         className,
       )}
-      z
     >
       <Permission
         level='environment'
@@ -56,7 +57,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
           ) : (
             <>
               <EnvironmentLink
-                id='features-link'
+                id={mobile ? undefined : 'features-link'}
                 icon='features'
                 to={`/project/${projectId}/environment/${environmentId}/features`}
               >
@@ -75,7 +76,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
                 </div>
               </EnvironmentLink>
               <EnvironmentLink
-                id='change-requests-link'
+                id={mobile ? undefined : 'change-requests-link'}
                 icon='request'
                 to={`/project/${projectId}/environment/${environmentId}/change-requests/`}
               >
@@ -89,7 +90,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
                 </div>
               </EnvironmentLink>
               <EnvironmentLink
-                id='users-link'
+                id={mobile ? 'users-link' : undefined}
                 exact
                 icon='people'
                 to={`/project/${projectId}/environment/${environmentId}/users`}
@@ -97,7 +98,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
                 Identities
               </EnvironmentLink>
               <EnvironmentLink
-                id='sdk-keys-link'
+                id={mobile ? undefined : 'sdk-keys-link'}
                 icon='code'
                 exact
                 to={`/project/${projectId}/environment/${environmentId}/sdk-keys`}
@@ -106,7 +107,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
               </EnvironmentLink>
               {Utils.getFlagsmithHasFeature('split_testing') && (
                 <EnvironmentLink
-                  id='split-tests-link'
+                  id={mobile ? undefined : 'split-tests-link'}
                   exact
                   icon='flask'
                   to={`/project/${projectId}/environment/${environmentId}/split-tests`}
@@ -117,7 +118,7 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
               {environmentAdmin && (
                 <EnvironmentLink
                   icon='setting'
-                  id='env-settings-link'
+                  id={mobile ? undefined : 'env-settings-link'}
                   className='aside__environment-list-item'
                   to={`/project/${projectId}/environment/${environmentId}/settings`}
                 >

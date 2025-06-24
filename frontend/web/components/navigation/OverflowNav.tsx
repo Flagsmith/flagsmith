@@ -6,10 +6,10 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import InlineModal from './InlineModal'
+import InlineModal from 'components/InlineModal'
 import { IonIcon } from '@ionic/react'
 import { ellipsisHorizontal } from 'ionicons/icons'
-import Button from './base/forms/Button'
+import Button from 'components/base/forms/Button'
 import classNames from 'classnames'
 import { useHistory } from 'react-router-dom'
 
@@ -19,12 +19,14 @@ type OverflowNavProps = {
   className?: string
   gap?: number
   icon?: string
+  force?: boolean
 }
 const buttonWidth = 34
 const OverflowNav: FC<OverflowNavProps> = ({
   children: _children,
   className = '',
   containerClassName,
+  force,
   gap = 2,
   icon = ellipsisHorizontal,
 }) => {
@@ -36,7 +38,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
   const itemsContainerRef = useRef<HTMLDivElement>(null)
 
   const [open, setOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(items.length)
+  const [visibleCount, setVisibleCount] = useState(force ? 0 : items.length)
   const [widths, setWidths] = useState<number[]>([])
   const history = useHistory()
 
@@ -48,11 +50,17 @@ const OverflowNav: FC<OverflowNavProps> = ({
   }, [history])
 
   useEffect(() => {
+    if (force) {
+      return
+    }
     setWidths([])
     setVisibleCount(items.length)
-  }, [_children])
+  }, [_children, force])
 
   useLayoutEffect(() => {
+    if (force) {
+      return
+    }
     const itemsCont = itemsContainerRef.current
     if (!itemsCont || widths.length > 0 || items.length === 0) {
       return
@@ -61,9 +69,12 @@ const OverflowNav: FC<OverflowNavProps> = ({
     const childEls = Array.from(itemsCont.children) as HTMLElement[]
     const newWidths = childEls.map((el) => el.offsetWidth)
     setWidths(newWidths)
-  }, [items.length, widths]) // It runs when items change and widths have been reset.
+  }, [items.length, force, widths]) // It runs when items change and widths have been reset.
 
   useLayoutEffect(() => {
+    if (force) {
+      return
+    }
     const calculate = () => {
       const outerCont = outerContainerRef.current
       if (!outerCont || widths.length === 0) {
@@ -105,12 +116,11 @@ const OverflowNav: FC<OverflowNavProps> = ({
       ro.observe(outerContainerRef.current)
     }
     return () => ro.disconnect()
-  }, [widths, gap, items.length]) // Re-calculate when widths or container size changes.
+  }, [widths, force, gap, items.length]) // Re-calculate when widths or container size changes.
 
   const visible = items.slice(0, visibleCount)
   const overflow = items.slice(visibleCount)
-
-  const isMeasuring = widths.length === 0 && items.length > 0
+  const isMeasuring = force ? false : widths.length === 0 && items.length > 0
 
   return (
     <div

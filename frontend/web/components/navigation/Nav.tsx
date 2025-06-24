@@ -1,11 +1,11 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react'
 import { Link, NavLink, useHistory, useLocation } from 'react-router-dom'
-import BreadcrumbSeparator from './BreadcrumbSeparator'
+import BreadcrumbSeparator from 'components/BreadcrumbSeparator'
 import classNames from 'classnames'
 import AccountStore from 'common/stores/account-store'
-import GithubStar from './GithubStar'
-import Icon from './Icon'
-import Headway from './Headway'
+import GithubStar from 'components/GithubStar'
+import Icon from 'components/Icon'
+import Headway from 'components/Headway'
 import NavSubLink from './NavSubLink'
 import {
   apps,
@@ -14,11 +14,11 @@ import {
   gitCompare,
   statsChart,
 } from 'ionicons/icons'
-import SegmentsIcon from './svg/SegmentsIcon'
+import SegmentsIcon from 'components/svg/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
-import AuditLogIcon from './svg/AuditLogIcon'
-import UsersIcon from './svg/UsersIcon'
-import HomeAside from './pages/HomeAside'
+import AuditLogIcon from 'components/svg/AuditLogIcon'
+import UsersIcon from 'components/svg/UsersIcon'
+import HomeAside from './EnvironmentAside'
 import Utils from 'common/utils/utils'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'

@@ -19,8 +19,8 @@ import { components } from 'react-select'
 import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Constants from 'common/constants'
-import EnvironmentNav from 'components/EnvironmentNav'
-import OverflowNav from 'components/OverflowNav'
+import EnvironmentNav from './EnvironmentNav'
+import OverflowNav from './OverflowNav'
 
 type HomeAsideType = {
   environmentId: string
@@ -100,7 +100,7 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
   )
 }
 
-const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
   const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
@@ -182,7 +182,7 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                 <div className='border-md-right home-aside d-flex flex-column pe-0 me-0'>
                   <div className='flex-1 flex-column ms-0 me-2'>
                     <div className='mt-3'>
-                      <div className='mb-md-2 d-flex align-items-center'>
+                      <div className='mb-md-2 px-2 d-flex align-items-center'>
                         <div className='full-width'>
                           {!!environment && (
                             <EnvironmentSelect
@@ -261,15 +261,17 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                         </div>
                         <OverflowNav
                           icon={menu}
+                          force
                           containerClassName='d-block d-md-none'
                         >
                           <EnvironmentNav
+                            mobile
                             environmentId={environmentId}
                             projectId={projectId}
                           />
                         </OverflowNav>
                       </div>
-                      <div className='d-none d-md-block'>
+                      <div id={'desktop-nav'} className='d-none d-md-block'>
                         <EnvironmentNav
                           environmentId={environmentId}
                           projectId={projectId}
@@ -293,4 +295,4 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
   )
 }
 
-export default withRouter(ConfigProvider(HomeAside))
+export default withRouter(ConfigProvider(EnvironmentAside))
