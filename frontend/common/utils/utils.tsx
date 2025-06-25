@@ -367,8 +367,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   },
 
   getPlanName: (plan: string) => {
-    return planNames.enterprise
-
     if (plan && plan.includes('free')) {
       return planNames.free
     }
@@ -436,6 +434,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'RBAC':
       case 'AUDIT':
       case 'FORCE_2FA':
+      case '4_EYES_PROJECT':
       case '4_EYES': {
         plan = 'scale-up'
         break

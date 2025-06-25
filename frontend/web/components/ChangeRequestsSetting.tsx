@@ -26,7 +26,7 @@ const ChangeRequestsSetting: FC<ChangeRequestsSettingType> = ({
   return (
     <FormGroup className='mt-4 col-md-8'>
       <Setting
-        feature={feature}
+        feature={'4_EYES'}
         checked={has4EyesPermission && Utils.changeRequestsEnabled(value)}
         onChange={(v) => onToggle(v ? 0 : null)}
       />
