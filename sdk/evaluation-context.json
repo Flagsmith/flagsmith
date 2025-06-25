@@ -5,6 +5,18 @@
                 "api_key": {
                     "title": "Api Key",
                     "type": "string"
+                },
+                "name": {
+                    "anyOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
+                    "title": "Name"
                 }
             },
             "required": [
