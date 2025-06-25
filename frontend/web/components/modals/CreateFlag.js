@@ -235,13 +235,17 @@ const CreateFlag = class extends Component {
   fetchReleasePipelines = () => {
     getReleasePipelines(getStore(), {
       projectId: this.props.projectId,
-    }).then((res) => {
-      const pipelines = res.data.results
-      const hasPublishedReleasePipelines =
-        pipelines?.some((pipeline) => pipeline?.published_by) ?? false
-
-      this.setState({ hasPublishedReleasePipelines })
     })
+      .then((res) => {
+        const pipelines = res.data.results
+        const hasPublishedReleasePipelines =
+          pipelines?.some((pipeline) => pipeline?.published_by) ?? false
+
+        this.setState({ hasPublishedReleasePipelines })
+      })
+      .catch(() => {
+        this.setState({ hasPublishedReleasePipelines: false })
+      })
   }
 
   userOverridesPage = (page, forceRefetch) => {

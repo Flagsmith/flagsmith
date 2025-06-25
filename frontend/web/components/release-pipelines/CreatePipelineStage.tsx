@@ -155,6 +155,9 @@ const CreatePipelineStage = ({
   }
 
   const setWaitForTrigger = (time: number, unit: TimeUnit) => {
+    setAmountOfTime(time)
+    setSelectedTimeUnit(unit)
+
     const duration = moment.duration(time, unit)
     const formatted = formatDurationToHHMMSS(duration)
 
@@ -168,9 +171,6 @@ const CreatePipelineStage = ({
     if (option.value === StageTriggerType.WAIT_FOR) {
       const time = 1
       const unit = 'days'
-
-      setAmountOfTime(time)
-      setSelectedTimeUnit(unit)
 
       setWaitForTrigger(time, unit)
 
