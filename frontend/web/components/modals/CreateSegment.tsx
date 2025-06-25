@@ -27,7 +27,6 @@ import {
   useUpdateSegmentMutation,
 } from 'common/services/useSegment'
 import Utils from 'common/utils/utils'
-
 import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
@@ -38,10 +37,6 @@ import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { cloneDeep } from 'lodash'
 import ProjectStore from 'common/stores/project-store'
-import AddMetadataToEntity, {
-  CustomMetadataField,
-} from 'components/metadata/AddMetadataToEntity'
-import classNames from 'classnames'
 import AddMetadataToEntity from 'components/metadata/AddMetadataToEntity'
 import { useGetSupportedContentTypeQuery } from 'common/services/useSupportedContentType'
 import { setInterceptClose } from './base/ModalDefault'
@@ -49,7 +44,6 @@ import SegmentRuleDivider from 'components/SegmentRuleDivider'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useCreateProjectChangeRequestMutation } from 'common/services/useProjectChangeRequest'
 import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
-import AppActions from 'common/dispatcher/app-actions'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
 

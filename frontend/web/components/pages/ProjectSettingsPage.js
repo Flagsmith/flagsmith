@@ -30,7 +30,6 @@ import WarningMessage from 'components/WarningMessage'
 import { withRouter } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import SettingTitle from 'components/SettingTitle'
-import ProjectProvider from 'common/providers/ProjectProvider'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
