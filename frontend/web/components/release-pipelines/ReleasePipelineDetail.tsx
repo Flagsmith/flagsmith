@@ -10,9 +10,16 @@ import StageCard from './StageCard'
 import StageInfo from './StageInfo'
 import { PipelineStage } from 'common/types/responses'
 import { Environment } from 'common/types/responses'
+import StageFeatureDetail from './StageFeatureDetail'
+import Tag from 'components/tags/Tag'
 
-const LaunchedCard = () => {
-  // TODO: Add the logic to get the features that completed this pipeline in the last 30 days
+const LaunchedCard = ({
+  completedFeatures,
+  projectId,
+}: {
+  completedFeatures: number[]
+  projectId: string
+}) => {
   return (
     <StageCard>
       <Row className=' gap-2 align-items-center mb-2'>
@@ -22,10 +29,7 @@ const LaunchedCard = () => {
       <p className='text-muted'>
         Features that completed this pipeline in the last 30 days
       </p>
-      <h6>Features (1)</h6>
-      <p className='text-muted'>
-        Finished 3h ago by <b>John Doe</b>
-      </p>
+      <StageFeatureDetail features={completedFeatures} projectId={projectId} />
     </StageCard>
   )
 }
@@ -92,7 +96,22 @@ function ReleasePipelineDetail() {
 
   return (
     <HeaderWrapper>
-      <PageTitle title={pipelineData?.name ?? ''} />
+      <PageTitle
+        title={
+          <div className='d-flex'>
+            {pipelineData?.name}
+            <div className='ml-3 mt-auto' style={{ marginBottom: '5px' }}>
+              <Tag
+                className='chip--xs'
+                tag={{
+                  color: pipelineData?.published_at ? '#6837FC' : '#9DA4AE',
+                  label: pipelineData?.published_at ? 'Published' : 'Draft',
+                }}
+              />
+            </div>
+          </div>
+        }
+      />
       {pipelineData?.stages?.length === 0 && (
         <Row>
           <span>This release pipeline has no stages.</span>
@@ -108,10 +127,15 @@ function ReleasePipelineDetail() {
                 environmentsData?.results,
                 stageData,
               )}
-              projectId={Number(projectId)}
+              projectId={projectId}
             />
           ))}
-          {!!pipelineData?.stages?.length && <LaunchedCard />}
+          {!!pipelineData?.stages?.length && (
+            <LaunchedCard
+              completedFeatures={pipelineData?.completed_features}
+              projectId={projectId}
+            />
+          )}
         </Row>
       </div>
     </HeaderWrapper>
