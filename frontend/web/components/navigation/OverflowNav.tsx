@@ -80,7 +80,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
         return
       }
 
-      const gapPx = gap * 4 // Assuming a spacer unit of 4px. Adjust if needed.
+      const gapPx = gap * 5 // Assuming a spacer unit of 4px. Adjust if needed.
 
       const sumWidths = (count: number) => {
         if (count === 0) return 0
