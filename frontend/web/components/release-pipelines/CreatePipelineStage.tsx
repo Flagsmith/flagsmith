@@ -124,7 +124,7 @@ const CreatePipelineStage = ({
         if (action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT) {
           return {
             ...action,
-            action_body: { enabled: true, segment_id: option?.value },
+            action_body: { ...action.action_body, segment_id: option?.value },
           }
         }
         return action
@@ -154,23 +154,10 @@ const CreatePipelineStage = ({
     handleOnChange('actions', [{ action_body, action_type }])
   }
 
-  useEffect(() => {
-    if (
-      selectedTrigger?.value === StageTriggerType.WAIT_FOR &&
-      amountOfTime >= 1 &&
-      !!selectedTimeUnit
-    ) {
-      const duration = moment.duration(amountOfTime, selectedTimeUnit)
-      const formatted = formatDurationToHHMMSS(duration)
-      handleOnChange('trigger', {
-        trigger_body: { wait_for: formatted },
-        trigger_type: selectedTrigger?.value,
-      } as StageTrigger)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTrigger, selectedTimeUnit, amountOfTime])
-
   const setWaitForTrigger = (time: number, unit: TimeUnit) => {
+    setAmountOfTime(time)
+    setSelectedTimeUnit(unit)
+
     const duration = moment.duration(time, unit)
     const formatted = formatDurationToHHMMSS(duration)
 
@@ -184,9 +171,6 @@ const CreatePipelineStage = ({
     if (option.value === StageTriggerType.WAIT_FOR) {
       const time = 1
       const unit = 'days'
-
-      setAmountOfTime(time)
-      setSelectedTimeUnit(unit)
 
       setWaitForTrigger(time, unit)
 
