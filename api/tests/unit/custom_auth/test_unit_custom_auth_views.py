@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 from django.urls import reverse
+from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -26,13 +27,39 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
     assert response_json["uuid"] == str(staff_user.uuid)
 
 
-def test_get_me_should_return_onboarding_object(db: None) -> None:
+@pytest.mark.parametrize(
+    "onboarding_data, expected_response",
+    [
+        (None, None),
+        (
+            {"tasks": [{"name": "task-1"}]},
+            {"tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}]},
+        ),
+        (
+            {"tools": {"completed": True, "integrations": ["integration-1"]}},
+            {
+                "tasks": [],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+        ),
+        (
+            {
+                "tasks": [{"name": "task-1"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+        ),
+    ],
+)
+@freeze_time("2025-01-01T12:00:00Z")
+def test_get_me_should_return_onboarding_object(
+    db: None, onboarding_data: dict[str, Any], expected_response: dict[str, Any]
+) -> None:
     # Given
-    onboarding = {
-        "tasks": [{"name": "task-1"}],
-        "tools": {"completed": True, "integrations": ["integration-1"]},
-    }
-    onboarding_serialized = json.dumps(onboarding)
+    onboarding_serialized = json.dumps(onboarding_data)
     new_user = FFAdminUser.objects.create(
         email="testuser@mail.com",
         onboarding_data=onboarding_serialized,
@@ -49,13 +76,7 @@ def test_get_me_should_return_onboarding_object(db: None) -> None:
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert response_json["onboarding"] is not None
-    assert response_json["onboarding"].get("tools", {}).get("completed") is True
-    assert response_json["onboarding"].get("tools", {}).get("integrations") == [
-        "integration-1"
-    ]
-    assert response_json["onboarding"].get("tasks") is not None
-    assert response_json["onboarding"].get("tasks", [])[0].get("name") == "task-1"
+    assert response_json["onboarding"] == expected_response
 
 
 @pytest.mark.parametrize(

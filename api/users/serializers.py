@@ -189,7 +189,7 @@ class PatchOnboardingSerializer(serializers.Serializer[None]):
 
 
 class OnboardingResponseTypeSerializer(serializers.Serializer[None]):
-    tasks = OnboardingTaskSerializer(many=True)
+    tasks = OnboardingTaskSerializer(many=True, required=False, default=list)
     tools = OnboardingToolsSerializer(required=False)
 
 
