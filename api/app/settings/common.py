@@ -10,23 +10,27 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
-import importlib.util
+import importlib
 import json
 import os
-import sys
 import warnings
-from datetime import datetime, timedelta
-from importlib import reload
+from datetime import datetime, time, timedelta
 
 import dj_database_url  # type: ignore[import-untyped]
+import django_stubs_ext
+import prometheus_client
 import pytz
 from corsheaders.defaults import default_headers  # type: ignore[import-untyped]
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
 from environs import Env
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from app.routers import ReplicaReadStrategy
+from app.utils import get_numbered_env_vars_with_prefix
+from environments.enums import EnvironmentDocumentCacheMode
+
+django_stubs_ext.monkeypatch()
 
 env = Env()
 
@@ -58,21 +62,18 @@ HOSTED_SEATS_LIMIT = env.int("HOSTED_SEATS_LIMIT", default=0)
 MAX_PROJECTS_IN_FREE_PLAN = 1
 
 
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
+ALLOWED_HOSTS: list[str] = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 USE_X_FORWARDED_HOST = env.bool("USE_X_FORWARDED_HOST", default=False)
 
 
-CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+CSRF_TRUSTED_ORIGINS: list[str] = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
 
 INTERNAL_IPS = ["127.0.0.1"]
-
-if sys.version[0] == "2":
-    reload(sys)
-    sys.setdefaultencoding("utf-8")  # type: ignore[attr-defined]
 
 # Application definition
 
 INSTALLED_APPS = [
+    "common.core",
     "core.custom_admin.apps.CustomAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -122,6 +123,8 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "metrics",
+    "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
     # health check plugins
@@ -176,8 +179,15 @@ if "DATABASE_URL" in os.environ:
         ),
     }
     REPLICA_DATABASE_URLS_DELIMITER = env("REPLICA_DATABASE_URLS_DELIMITER", ",")
-    REPLICA_DATABASE_URLS = env.list(
-        "REPLICA_DATABASE_URLS", default=[], delimiter=REPLICA_DATABASE_URLS_DELIMITER
+    REPLICA_DATABASE_URLS = (
+        env.list(
+            "REPLICA_DATABASE_URLS",
+            subcast=str,
+            default=[],
+            delimiter=REPLICA_DATABASE_URLS_DELIMITER,
+        )
+        if not os.getenv("REPLICA_DATABASE_URL_0")
+        else get_numbered_env_vars_with_prefix("REPLICA_DATABASE_URL_")
     )
     NUM_DB_REPLICAS = len(REPLICA_DATABASE_URLS)
 
@@ -186,10 +196,15 @@ if "DATABASE_URL" in os.environ:
     CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER = env(
         "CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER", ","
     )
-    CROSS_REGION_REPLICA_DATABASE_URLS = env.list(
-        "CROSS_REGION_REPLICA_DATABASE_URLS",
-        default=[],
-        delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+    CROSS_REGION_REPLICA_DATABASE_URLS = (
+        env.list(
+            "CROSS_REGION_REPLICA_DATABASE_URLS",
+            subcast=str,
+            default=[],
+            delimiter=CROSS_REGION_REPLICA_DATABASE_URLS_DELIMITER,
+        )
+        if not os.getenv("CROSS_REGION_REPLICA_DATABASE_URL_0")
+        else get_numbered_env_vars_with_prefix("CROSS_REGION_REPLICA_DATABASE_URL_")
     )
     NUM_CROSS_REGION_DB_REPLICAS = len(CROSS_REGION_REPLICA_DATABASE_URLS)
 
@@ -197,8 +212,8 @@ if "DATABASE_URL" in os.environ:
     # SEQUENTIAL only falls back once the first replica connection is faulty
     REPLICA_READ_STRATEGY = env.enum(
         "REPLICA_READ_STRATEGY",
-        type=ReplicaReadStrategy,
-        default=ReplicaReadStrategy.DISTRIBUTED.value,
+        enum=ReplicaReadStrategy,
+        default=ReplicaReadStrategy.DISTRIBUTED,
     )
 
     for i, db_url in enumerate(REPLICA_DATABASE_URLS, start=1):
@@ -242,10 +257,52 @@ elif "DJANGO_DB_NAME" in os.environ:
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 
+# Task processor database — OPTIONALLY SEPARATED
+TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
+TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default=None)
+TASK_PROCESSOR_DATABASE_PASSWORD = env(
+    "TASK_PROCESSOR_DATABASE_PASSWORD",
+    default=None,
+)
+TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default=None)
+TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default=None)
+TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default=None)
+
+if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no cover
+    if TASK_PROCESSOR_DATABASE_URL:
+        DATABASES["task_processor"] = dj_database_url.parse(
+            TASK_PROCESSOR_DATABASE_URL,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+        )
+    else:
+        DATABASES["task_processor"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": TASK_PROCESSOR_DATABASE_NAME,
+            "USER": TASK_PROCESSOR_DATABASE_USER,
+            "PASSWORD": TASK_PROCESSOR_DATABASE_PASSWORD,
+            "HOST": TASK_PROCESSOR_DATABASE_HOST,
+            "PORT": TASK_PROCESSOR_DATABASE_PORT,
+            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+        }
+    DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
+
+    # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
+    _task_processor_databases = ["default", "task_processor"]
+else:
+    _task_processor_databases = ["default"]
+
+# Ultimately, allow the user to decide which databases to consume tasks from
+TASK_PROCESSOR_DATABASES = env.list(
+    "TASK_PROCESSOR_DATABASES",
+    subcast=str,
+    default=_task_processor_databases,
+)
+
+
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
-DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", default=[])
+DEFAULT_THROTTLE_CLASSES = env.list("DEFAULT_THROTTLE_CLASSES", subcast=str, default=[])
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -271,6 +328,8 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.core.middleware.APIResponseVersionHeaderMiddleware",
+    "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -325,8 +384,14 @@ INFLUXDB_URL = env.str("INFLUXDB_URL", default="")
 INFLUXDB_ORG = env.str("INFLUXDB_ORG", default="")
 
 USE_POSTGRES_FOR_ANALYTICS = env.bool("USE_POSTGRES_FOR_ANALYTICS", default=False)
-USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=False)
-PG_API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
+USE_CACHE_FOR_USAGE_DATA = env.bool("USE_CACHE_FOR_USAGE_DATA", default=True)
+
+API_USAGE_CACHE_SECONDS = env.int("API_USAGE_CACHE_SECONDS", default=0)
+
+if not API_USAGE_CACHE_SECONDS:
+    # Fallback to the old variable name, which is deprecated
+    # and will be removed in the future.
+    API_USAGE_CACHE_SECONDS = env.int("PG_API_USAGE_CACHE_SECONDS", default=60)
 
 FEATURE_EVALUATION_CACHE_SECONDS = env.int(
     "FEATURE_EVALUATION_CACHE_SECONDS", default=60
@@ -335,15 +400,13 @@ FEATURE_EVALUATION_CACHE_SECONDS = env.int(
 ENABLE_API_USAGE_TRACKING = env.bool("ENABLE_API_USAGE_TRACKING", default=True)
 
 if ENABLE_API_USAGE_TRACKING:
-    # NOTE: Because we use Postgres for analytics data in staging and Influx for tracking SSE data,
-    # we need to support setting the influx configuration alongside using postgres for analytics.
-    if USE_POSTGRES_FOR_ANALYTICS:
-        MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
-    elif INFLUXDB_TOKEN:
-        MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
+    MIDDLEWARE.append("app_analytics.middleware.APIUsageMiddleware")
 
-
-ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
+ALLOWED_ADMIN_IP_ADDRESSES = env.list(
+    "ALLOWED_ADMIN_IP_ADDRESSES",
+    subcast=str,
+    default=list(),
+)
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
     warnings.warn(
         "Restricting access to the admin site for ip addresses %s"
@@ -535,7 +598,11 @@ SECURE_PROXY_SSL_HEADER_NAME = env.str(
 SECURE_PROXY_SSL_HEADER_VALUE = env.str("SECURE_PROXY_SSL_HEADER_VALUE", "https")
 SECURE_PROXY_SSL_HEADER = (SECURE_PROXY_SSL_HEADER_NAME, SECURE_PROXY_SSL_HEADER_VALUE)
 
-SECURE_REDIRECT_EXEMPT = env.list("DJANGO_SECURE_REDIRECT_EXEMPT", default=[])
+SECURE_REDIRECT_EXEMPT = env.list(
+    "DJANGO_SECURE_REDIRECT_EXEMPT",
+    subcast=str,
+    default=[],
+)
 SECURE_REFERRER_POLICY = env.str("DJANGO_SECURE_REFERRER_POLICY", default="same-origin")
 SECURE_CROSS_ORIGIN_OPENER_POLICY = env.str(
     "DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", default="same-origin"
@@ -549,6 +616,7 @@ CHARGEBEE_API_KEY = env("CHARGEBEE_API_KEY", default=None)
 CHARGEBEE_SITE = env("CHARGEBEE_SITE", default=None)
 
 # Logging configuration
+ACCESS_LOG_EXTRA_ITEMS = env.list("ACCESS_LOG_EXTRA_ITEMS", subcast=str, default=[])
 LOGGING_CONFIGURATION_FILE = env.str("LOGGING_CONFIGURATION_FILE", default=None)
 if LOGGING_CONFIGURATION_FILE:
     with open(LOGGING_CONFIGURATION_FILE, "r") as f:
@@ -682,15 +750,51 @@ ENVIRONMENT_SEGMENTS_CACHE_BACKEND = env(
     "django.core.cache.backends.locmem.LocMemCache",
 )
 
+CACHE_ENVIRONMENT_DOCUMENT_LOCATION = env(
+    "CACHE_ENVIRONMENT_DOCUMENT_LOCATION", default="environment-documents"
+)
+CACHE_ENVIRONMENT_DOCUMENT_BACKEND = env(
+    "CACHE_ENVIRONMENT_DOCUMENT_BACKEND", "django.core.cache.backends.db.DatabaseCache"
+)
+CACHE_ENVIRONMENT_DOCUMENT_MODE = env.enum(
+    "CACHE_ENVIRONMENT_DOCUMENT_MODE",
+    enum=EnvironmentDocumentCacheMode,
+    default=EnvironmentDocumentCacheMode.EXPIRING.value,
+)
 CACHE_ENVIRONMENT_DOCUMENT_SECONDS = env.int("CACHE_ENVIRONMENT_DOCUMENT_SECONDS", 0)
-ENVIRONMENT_DOCUMENT_CACHE_LOCATION = "environment-documents"
+CACHE_ENVIRONMENT_DOCUMENT_OPTIONS = env.json(
+    "CACHE_ENVIRONMENT_DOCUMENT_OPTIONS", default=None
+)
+
+if (
+    CACHE_ENVIRONMENT_DOCUMENT_MODE == EnvironmentDocumentCacheMode.PERSISTENT
+    and CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+):
+    warnings.warn(
+        "Ignoring CACHE_ENVIRONMENT_DOCUMENT_SECONDS variable "
+        'since CACHE_ENVIRONMENT_DOCUMENT_MODE == "PERSISTENT"'
+    )  # pragma: no cover
 
 USER_THROTTLE_CACHE_NAME = "user-throttle"
 USER_THROTTLE_CACHE_BACKEND = env.str(
     "USER_THROTTLE_CACHE_BACKEND", "django.core.cache.backends.locmem.LocMemCache"
 )
 USER_THROTTLE_CACHE_LOCATION = env.str("USER_THROTTLE_CACHE_LOCATION", "admin-throttle")
-USER_THROTTLE_CACHE_OPTIONS = env.dict("USER_THROTTLE_CACHE_OPTIONS", default={})
+USER_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+    "USER_THROTTLE_CACHE_OPTIONS", default={}
+)
+
+ONBOARDING_REQUEST_THROTTLE_CACHE_NAME = "onboarding-request-throttle"
+ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND",
+    "django.core.cache.backends.db.DatabaseCache",
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION = env.str(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION", "onboarding-request-throttle"
+)
+ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS: dict[str, str] = env.dict(
+    "ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS", default={}
+)
 
 # Using Redis for cache
 # To use Redis for caching, set the cache backend to `django_redis.cache.RedisCache`.
@@ -738,10 +842,16 @@ CACHES = {
         "LOCATION": CHARGEBEE_CACHE_LOCATION,
         "TIMEOUT": 12 * 60 * 60,  # 12 hours
     },
-    ENVIRONMENT_DOCUMENT_CACHE_LOCATION: {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": ENVIRONMENT_DOCUMENT_CACHE_LOCATION,
-        "timeout": CACHE_ENVIRONMENT_DOCUMENT_SECONDS,
+    CACHE_ENVIRONMENT_DOCUMENT_LOCATION: {
+        "BACKEND": CACHE_ENVIRONMENT_DOCUMENT_BACKEND,
+        "LOCATION": CACHE_ENVIRONMENT_DOCUMENT_LOCATION,
+        "TIMEOUT": (
+            None
+            if CACHE_ENVIRONMENT_DOCUMENT_MODE
+            == EnvironmentDocumentCacheMode.PERSISTENT
+            else CACHE_ENVIRONMENT_DOCUMENT_SECONDS
+        ),
+        "OPTIONS": CACHE_ENVIRONMENT_DOCUMENT_OPTIONS or {},
     },
     GET_FLAGS_ENDPOINT_CACHE_NAME: {
         "BACKEND": GET_FLAGS_ENDPOINT_CACHE_BACKEND,
@@ -760,6 +870,14 @@ CACHES = {
         "BACKEND": USER_THROTTLE_CACHE_BACKEND,
         "LOCATION": USER_THROTTLE_CACHE_LOCATION,
         "OPTIONS": USER_THROTTLE_CACHE_OPTIONS,
+    },
+    ONBOARDING_REQUEST_THROTTLE_CACHE_NAME: {
+        "BACKEND": ONBOARDING_REQUEST_THROTTLE_CACHE_BACKEND,
+        "LOCATION": ONBOARDING_REQUEST_THROTTLE_CACHE_LOCATION,
+        "OPTIONS": ONBOARDING_REQUEST_THROTTLE_CACHE_OPTIONS,
+        "TIMEOUT": None,
+        "MAX_ENTRIES": 10000,
+        "KEY_PREFIX": "onboarding-req",
     },
 }
 
@@ -925,7 +1043,7 @@ GITHUB_WEBHOOK_SECRET = env.str("GITHUB_WEBHOOK_SECRET", default="")
 # Additional functionality for using SAML in Flagsmith SaaS
 SAML_INSTALLED = importlib.util.find_spec("saml") is not None
 
-if SAML_INSTALLED:
+if SAML_INSTALLED:  # pragma: no cover
     SAML_REQUESTS_CACHE_LOCATION = "saml_requests_cache"
     CACHES[SAML_REQUESTS_CACHE_LOCATION] = {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
@@ -933,9 +1051,11 @@ if SAML_INSTALLED:
     }
     INSTALLED_APPS.append("saml")
     SAML_ACCEPTED_TIME_DIFF = env.int("SAML_ACCEPTED_TIME_DIFF", default=60)
-    DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"
+    DJOSER["SERIALIZERS"]["current_user"] = "saml.serializers.SamlCurrentUserSerializer"  # type: ignore[index]
     EXTRA_ALLOWED_CANONICALIZATIONS = env.list(
-        "EXTRA_ALLOWED_CANONICALIZATIONS", default=[]
+        "EXTRA_ALLOWED_CANONICALIZATIONS",
+        subcast=str,
+        default=[],
     )
 
 
@@ -997,11 +1117,11 @@ TASK_PROCESSOR_MODE = env.bool("RUN_BY_PROCESSOR", False)
 # or in a separate thread for self-hosted users
 TASK_RUN_METHOD = env.enum(
     "TASK_RUN_METHOD",
-    type=TaskRunMethod,
+    enum=TaskRunMethod,
     default=(
-        TaskRunMethod.TASK_PROCESSOR.value
+        TaskRunMethod.TASK_PROCESSOR
         if TASK_PROCESSOR_MODE
-        else TaskRunMethod.SEPARATE_THREAD.value
+        else TaskRunMethod.SEPARATE_THREAD
     ),
 )
 ENABLE_TASK_PROCESSOR_HEALTH_CHECK = env.bool(
@@ -1017,10 +1137,20 @@ TASK_DELETE_BATCH_SIZE = env.int("TASK_DELETE_BATCH_SIZE", default=2000)
 TASK_DELETE_INCLUDE_FAILED_TASKS = env.bool(
     "TASK_DELETE_INCLUDE_FAILED_TASKS", default=False
 )
-TASK_DELETE_RUN_TIME = env.time("TASK_DELETE_RUN_TIME", default="01:00")
-TASK_DELETE_RUN_EVERY = env.timedelta("TASK_DELETE_RUN_EVERY", default=86400)
+TASK_DELETE_RUN_TIME = env.time(
+    "TASK_DELETE_RUN_TIME",
+    default=time(hour=1),
+)
+TASK_DELETE_RUN_EVERY = env.timedelta(
+    "TASK_DELETE_RUN_EVERY",
+    default=timedelta(seconds=86400),
+)
 RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
     "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
+)
+TASK_BACKOFF_DEFAULT_DELAY_SECONDS = env.int(
+    "TASK_BACKOFF_DEFAULT_DELAY_SECONDS",
+    default=5,
 )
 
 # Webhook settings
@@ -1051,7 +1181,11 @@ CORS_ALLOW_CREDENTIALS = env.bool("CORS_ALLOW_CREDENTIALS", COOKIE_AUTH_ENABLED)
 FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS = env.list(
     "FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS", default=["sentry-trace"]
 )
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    subcast=str,
+    default=[],
+)
 CORS_ALLOW_HEADERS = [
     *default_headers,
     *FLAGSMITH_CORS_EXTRA_ALLOW_HEADERS,
@@ -1059,48 +1193,25 @@ CORS_ALLOW_HEADERS = [
     "X-E2E-Test-Auth-Token",
 ]
 
-# use a separate boolean setting so that we add it to the API containers in environments
-# where we're running the task processor, so we avoid creating unnecessary tasks
-ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
-PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
-PIPEDRIVE_BASE_API_URL = env.str(
-    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
-)
-PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
-    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
-)
-PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_VALUE", "App Sign-up"
-)
-PIPEDRIVE_IGNORE_DOMAINS = env.list("PIPEDRIVE_IGNORE_DOMAINS", [])
-PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
-PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
-    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
-)
-
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
-HUBSPOT_IGNORE_DOMAINS = env.list("HUBSPOT_IGNORE_DOMAINS", [])
-HUBSPOT_IGNORE_DOMAINS_REGEX = env("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
+HUBSPOT_IGNORE_DOMAINS = env.list(
+    "HUBSPOT_IGNORE_DOMAINS",
+    subcast=str,
+    default=[],
+)
+HUBSPOT_IGNORE_DOMAINS_REGEX = env.str("HUBSPOT_IGNORE_DOMAINS_REGEX", "")
 HUBSPOT_IGNORE_ORGANISATION_DOMAINS = env.list(
-    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS", []
+    "HUBSPOT_IGNORE_ORGANISATION_DOMAINS",
+    subcast=str,
+    default=[],
 )
 
 # Number of minutes to wait for a user that has signed up to
 # join or create an organisation before creating a lead in
 # hubspot without a Flagsmith organisation.
 CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES = 30
-
-# List of plan ids that support seat upgrades
-AUTO_SEAT_UPGRADE_PLANS = env.list("AUTO_SEAT_UPGRADE_PLANS", default=[])
-
 
 SKIP_MIGRATION_TESTS = env.bool("SKIP_MIGRATION_TESTS", False)
 
@@ -1217,7 +1328,12 @@ if LDAP_ENABLED:  # pragma: no cover
     )
 
     # List of LDAP group DN's that needs to be synced.
-    LDAP_SYNCED_GROUPS = env.list("LDAP_SYNCED_GROUPS", default=[], delimiter=":")
+    LDAP_SYNCED_GROUPS = env.list(
+        "LDAP_SYNCED_GROUPS",
+        subcast=str,
+        default=[],
+        delimiter=":",
+    )
 
     # DN of the LDAP group that is allowed to login
     # If None no group check will be performed.
@@ -1268,7 +1384,9 @@ EDGE_V2_MIGRATION_READ_CAPACITY_BUDGET = env.int(
 )
 
 ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST = env.list(
-    "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST", default=[]
+    "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST",
+    subcast=str,
+    default=[],
 )
 
 # Date on which versioning is released. This is used to give any scale up
@@ -1299,3 +1417,13 @@ LICENSING_INSTALLED = importlib.util.find_spec("licensing") is not None
 
 if LICENSING_INSTALLED:  # pragma: no cover
     INSTALLED_APPS.append("licensing")
+
+PROMETHEUS_ENABLED = env.bool("PROMETHEUS_ENABLED", False)
+PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
+    env.list(
+        "PROMETHEUS_HISTOGRAM_BUCKETS",
+        default=prometheus_client.Histogram.DEFAULT_BUCKETS,
+    )
+)
+
+DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)

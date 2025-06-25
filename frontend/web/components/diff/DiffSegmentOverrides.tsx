@@ -7,7 +7,7 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import Icon from 'components/Icon'
 import Tooltip from 'components/Tooltip'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import DiffVariations from './DiffVariations'
 
 type DiffSegmentOverride = {
@@ -88,6 +88,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
   environmentId,
   projectId,
 }) => {
+  const history = useHistory()
   const { created, deleted, modified, unChanged } = useMemo(() => {
     const created: TDiffSegmentOverride[] = []
     const deleted: TDiffSegmentOverride[] = []
@@ -124,7 +125,7 @@ const DiffSegmentOverrides: FC<DiffSegmentOverridesType> = ({
   )
 
   return diffs ? (
-    <Tabs className='mt-4' uncontrolled theme='pill'>
+    <Tabs className='mt-4' uncontrolled theme='pill' history={history}>
       {!!created.length && (
         <TabItem
           className='p-0'

@@ -170,7 +170,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
     case Actions.GET_CHANGE_REQUEST:
       controller.getChangeRequest(
         action.id,
-        action.projectId,
+        parseInt(action.projectId),
         action.environmentId,
       )
       break

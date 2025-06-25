@@ -1,6 +1,6 @@
 import typing
 
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from rest_framework.test import APIClient
 
 from environments.models import Environment

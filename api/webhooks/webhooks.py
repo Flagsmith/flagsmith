@@ -2,7 +2,8 @@ import enum
 import json
 import logging
 import typing
-from typing import Type, Union
+from datetime import datetime
+from typing import Any, Type, Union
 
 import backoff
 import requests
@@ -11,17 +12,18 @@ from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
 from django.template.loader import get_template
 from django.utils import timezone
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 
 from core.constants import FLAGSMITH_SIGNATURE_HEADER
 from core.signing import sign_payload
 from environments.models import Environment, Webhook
+from features.models import Feature
 from organisations.models import OrganisationWebhook
-from projects.models import Organisation  # type: ignore[attr-defined]
-from webhooks.sample_webhook_data import (
-    environment_webhook_data,
-    organisation_webhook_data,
+from projects.models import (  # type: ignore[attr-defined]
+    Organisation,
+    Project,
 )
+from users.models import FFAdminUser
 
 from .models import AbstractBaseWebhookModel
 from .serializers import WebhookSerializer
@@ -43,12 +45,6 @@ class WebhookEventType(enum.Enum):
 class WebhookType(enum.Enum):
     ORGANISATION = "ORGANISATION"
     ENVIRONMENT = "ENVIRONMENT"
-
-
-WEBHOOK_SAMPLE_DATA = {
-    WebhookType.ORGANISATION: organisation_webhook_data,
-    WebhookType.ENVIRONMENT: environment_webhook_data,
-}
 
 
 def get_webhook_model(
@@ -122,18 +118,6 @@ def call_organisation_webhooks(  # type: ignore[no-untyped-def]
 
 def call_integration_webhook(config: AbstractBaseWebhookModel, data: typing.Mapping):  # type: ignore[type-arg,no-untyped-def]  # noqa: E501
     return _call_webhook(config, data)
-
-
-def trigger_sample_webhook(
-    webhook: AbstractBaseWebhookModel, webhook_type: WebhookType
-) -> requests.models.Response:
-    data = WEBHOOK_SAMPLE_DATA.get(webhook_type)
-    serializer = WebhookSerializer(data=data)
-    serializer.is_valid(raise_exception=True)
-    """
-    :raises requests.exceptions.RequestException: If an error occurs while making the request to the webhook.
-    """
-    return _call_webhook(webhook, serializer.data)  # type: ignore[has-type]
 
 
 @backoff.on_exception(
@@ -300,3 +284,98 @@ def _get_failure_email_template_data(  # type: ignore[no-untyped-def]
         data["environment_name"] = webhook.environment.name  # type: ignore[union-attr]
 
     return data
+
+
+def send_test_request_to_webhook(
+    url: str, secret: str | None, webhook_type: WebhookType
+) -> requests.models.Response:
+    test_data = (
+        generate_environment_sample_webhook_data()
+        if webhook_type == WebhookType.ENVIRONMENT
+        else generate_organisation_sample_webhook_data()
+    )
+
+    json_data = json.dumps(
+        test_data,
+        sort_keys=True,
+        cls=DjangoJSONEncoder,
+    )
+    headers = {"content-type": "application/json"}
+    if secret:
+        signed_payload = sign_payload(json_data, secret)
+        headers.update({FLAGSMITH_SIGNATURE_HEADER: signed_payload})
+    res = requests.post(
+        url, data=json_data, headers=headers, timeout=10, allow_redirects=False
+    )
+    return res
+
+
+def generate_environment_sample_webhook_data() -> dict[str, Any]:
+    project = Project(id=1, name="Test Project", organisation_id=1)
+
+    environment = Environment(id=1, name="Development", project=project)
+
+    feature = Feature(
+        id=1,
+        name="test_feature",
+        project=project,
+        description="This is a description",
+        default_enabled=False,
+        type="CONFIG",
+        initial_value=None,
+        created_date=datetime.fromisoformat(
+            "2021-02-10T20:03:43.348556Z".replace("Z", "+00:00")
+        ),
+    )
+
+    data = {
+        "changed_by": "user@domain.com",
+        "timestamp": "2021-06-18T07:50:26.595298Z",
+        "new_state": Webhook.generate_webhook_feature_state_data(
+            feature=feature,
+            environment=environment,
+            enabled=True,
+            value="feature_state_value",
+            identity_id=1,
+            identity_identifier="test_identity",
+        ),
+        "previous_state": Webhook.generate_webhook_feature_state_data(
+            feature=feature,
+            environment=environment,
+            enabled=False,
+            value="old_feature_state_value",
+            identity_id=1,
+            identity_identifier="test_identity",
+        ),
+    }
+
+    return {"data": data, "event_type": WebhookEventType.FLAG_UPDATED.value}
+
+
+def generate_organisation_sample_webhook_data() -> dict[str, Any]:
+    project = Project(id=1, name="Test Project", organisation_id=1)
+
+    author = FFAdminUser(
+        id=1, email="user@domain.com", first_name="Jane", last_name="Doe"
+    )
+
+    data = {
+        "created_date": "2020-02-23T17:30:57.006318Z",
+        "log": "New Flag / Remote Config created: my_feature",
+        "author": {
+            "id": author.id,
+            "email": author.email,
+            "first_name": author.first_name,
+            "last_name": author.last_name,
+        },
+        "environment": None,
+        "project": {
+            "id": project.id,
+            "name": project.name,
+            "organisation": project.organisation_id,
+        },
+        "related_object_id": 1,
+        "related_object_type": "FEATURE",
+    }
+
+    return {"data": data, "event_type": WebhookEventType.AUDIT_LOG_CREATED.value}

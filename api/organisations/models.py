@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
 from django.core.cache import caches
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -17,11 +18,10 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 )
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
-from app.utils import is_enterprise, is_saas
 from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_lead,
+    track_hubspot_lead_v2,
     update_hubspot_active_subscription,
 )
 from organisations.chargebee import (  # type: ignore[attr-defined]
@@ -138,10 +138,7 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         self.save()
 
     def is_auto_seat_upgrade_available(self) -> bool:
-        return (
-            len(settings.AUTO_SEAT_UPGRADE_PLANS) > 0
-            and self.subscription.can_auto_upgrade_seats
-        )
+        return self.subscription.can_auto_upgrade_seats
 
     @hook(BEFORE_DELETE)
     def cancel_subscription(self):  # type: ignore[no-untyped-def]
@@ -212,7 +209,7 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     @hook(AFTER_CREATE)
     def register_hubspot_lead_tracking(self):  # type: ignore[no-untyped-def]
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_lead.delay(
+            track_hubspot_lead_v2.delay(
                 args=(
                     self.user.id,
                     self.organisation.id,
@@ -262,7 +259,17 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
 
     @property
     def can_auto_upgrade_seats(self) -> bool:
-        return self.plan in settings.AUTO_SEAT_UPGRADE_PLANS
+        return (
+            is_saas()
+            and self.subscription_plan_family == SubscriptionPlanFamily.SCALE_UP
+        )
+
+    @property
+    def has_active_billing_periods(self) -> bool:
+        return (
+            self.organisation.has_subscription_information_cache()
+            and self.organisation.subscription_information_cache.has_active_billing_periods()
+        )
 
     @property
     def is_free_plan(self) -> bool:
@@ -386,7 +393,8 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
         # Note that Free plans are caught in the parent method above.
         if self.organisation.has_subscription_information_cache():
             return self.organisation.subscription_information_cache.as_base_subscription_metadata(
-                seats=self.max_seats, api_calls=self.max_api_calls
+                seats=self.max_seats,
+                api_calls=self.max_api_calls,
             )
         return BaseSubscriptionMetadata(
             seats=self.max_seats, api_calls=self.max_api_calls
@@ -544,6 +552,30 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             "audit_log_visibility_days": self.audit_log_visibility_days,
             "feature_history_visibility_days": self.feature_history_visibility_days,
         }
+
+    def is_billing_terms_dates_set(self) -> bool:
+        return (
+            self.current_billing_term_starts_at is not None
+            and self.current_billing_term_ends_at is not None
+        )
+
+    def has_active_billing_periods(self) -> bool:
+        """
+        Returns True if current date is within the billing term.
+        If either start or end date is None, returns False.
+        """
+        if not self.is_billing_terms_dates_set():
+            return False
+
+        if TYPE_CHECKING:
+            assert self.current_billing_term_starts_at is not None
+            assert self.current_billing_term_ends_at is not None
+
+        starts_at = self.current_billing_term_starts_at
+        ends_at = self.current_billing_term_ends_at
+        now = timezone.now()
+
+        return starts_at <= now <= ends_at
 
 
 class OrganisationAPIUsageNotification(models.Model):

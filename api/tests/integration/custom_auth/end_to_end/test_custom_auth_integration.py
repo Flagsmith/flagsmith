@@ -3,6 +3,7 @@ import re
 from collections import ChainMap
 
 import pyotp
+import pytest
 from django.conf import settings
 from django.core import mail
 from django.urls import reverse
@@ -141,7 +142,7 @@ def test_can_register_with_invite_if_registration_disabled_without_invite(
 
 
 @override_settings(  # type: ignore[misc]
-    DJOSER=ChainMap(
+    DJOSER=ChainMap(  # type: ignore[misc]
         {"SEND_ACTIVATION_EMAIL": True, "SEND_CONFIRMATION_EMAIL": False},
         settings.DJOSER,
     )
@@ -489,7 +490,7 @@ def test_throttle_login_workflows(
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
-    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["login"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )
@@ -531,7 +532,7 @@ def test_throttle_signup(
 ) -> None:
     # verify that a throttle rate exists already then set it
     # to something easier to reliably test
-    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]
+    assert settings.REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"]["signup"]  # type: ignore[index]
     mocker.patch(
         "rest_framework.throttling.ScopedRateThrottle.get_rate", return_value="1/minute"
     )
@@ -617,3 +618,115 @@ def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-un
     assert response_json["sign_up_type"] == sign_up_type
 
     assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
+
+
+def test_can_create_superuser(
+    db: None, api_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("custom_auth.serializers.is_saas", return_value=False)
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "superuser": True,
+        "other_field": "meh",
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    user = FFAdminUser.objects.get(email=email)
+    assert user.superuser is True
+
+
+def test_cannot_create_superuser_on_saas_build(
+    db: None, api_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("custom_auth.serializers.is_saas", return_value=True)
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "superuser": True,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    user = FFAdminUser.objects.get(email=email)
+    assert user.superuser is False
+
+
+def test_cannot_create_superuser_if_any_user_exists(
+    admin_user: FFAdminUser, api_client: APIClient, mocker: MockerFixture
+) -> None:
+    # Given
+    mocker.patch("custom_auth.serializers.is_saas", return_value=False)
+
+    email = "test@example.com"
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": email,
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "superuser": True,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(url, data=register_data)
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["superuser"] == [
+        "A superuser can only be created through this  endpoint if no other users exist."
+    ]
+    assert FFAdminUser.objects.filter(email=email).exists() is False
+
+
+@pytest.mark.parametrize("marketing_consent_given", [None, True, False])
+def test_marketing_consent_given_defaults_to_true(
+    api_client: APIClient,
+    marketing_consent_given: bool | None,
+    db: None,
+) -> None:
+    # Given
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "email": "test@example.com",
+        "password": password,
+        "re_password": password,
+        "first_name": "user",
+        "last_name": "test",
+        "marketing_consent_given": marketing_consent_given,
+    }
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+
+    # When
+    response = api_client.post(
+        url, data=json.dumps(register_data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.json()["marketing_consent_given"] is True

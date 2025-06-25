@@ -103,14 +103,17 @@ export const getFeatureStateCrud = (
 }
 
 export const featureVersionService = service
-  .enhanceEndpoints({ addTagTypes: ['FeatureVersion'] })
+  .enhanceEndpoints({ addTagTypes: ['FeatureVersion', 'Environment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createAndSetFeatureVersion: builder.mutation<
         Res['featureVersion'],
         Req['createAndSetFeatureVersion']
       >({
-        invalidatesTags: [{ id: 'LIST', type: 'FeatureVersion' }],
+        invalidatesTags: [
+          { id: 'LIST', type: 'FeatureVersion' },
+          { id: 'METRICS', type: 'Environment' },
+        ],
         queryFn: async (query: Req['createAndSetFeatureVersion']) => {
           // todo: this will be removed when we combine saving value and segment overrides
           const mode = query.featureStates.find(

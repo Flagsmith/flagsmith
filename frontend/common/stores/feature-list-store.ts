@@ -8,6 +8,7 @@ import {
 import { updateSegmentPriorities } from 'common/services/useSegmentPriority'
 import {
   createProjectFlag,
+  projectFlagService,
   updateProjectFlag,
 } from 'common/services/useProjectFlag'
 import OrganisationStore from './organisation-store'
@@ -28,6 +29,7 @@ import { Req } from 'common/types/requests'
 import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
+import { projectService } from 'common/services/useProject'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -133,6 +135,10 @@ const controller = {
               environmentFeatures && _.keyBy(environmentFeatures, 'feature'),
           }
           store.model.lastSaved = new Date().valueOf()
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
+
           store.saved({ createdFlag: flag.name })
         }),
       )
@@ -165,6 +171,9 @@ const controller = {
           const index = _.findIndex(store.model.features, { id: flag.id })
           store.model.features[index] = controller.parseFlag(flag)
           store.model.lastSaved = new Date().valueOf()
+          getStore().dispatch(
+            projectFlagService.util.invalidateTags(['ProjectFlag']),
+          )
           store.changed()
         }
       })
@@ -234,7 +243,7 @@ const controller = {
         }
       })
   },
-  editFeatureState: (
+  editFeatureState: async (
     projectId,
     environmentId,
     flag,
@@ -248,6 +257,7 @@ const controller = {
     store.saving()
     API.trackEvent(Constants.events.EDIT_FEATURE)
     const env = ProjectStore.getEnvironment(environmentId)
+
     if (env.use_v2_feature_versioning) {
       controller.editVersionedFeatureState(
         projectId,
@@ -279,19 +289,13 @@ const controller = {
               feature_segment: {
                 segment: v.segment,
               },
-              feature_state_value: {
-                boolean_value:
-                  v.feature_segment_value.feature_state_value.boolean_value,
-                integer_value:
-                  v.feature_segment_value.feature_state_value.integer_value,
-                string_value:
-                  v.feature_segment_value.feature_state_value.string_value,
-                type: v.feature_segment_value.feature_state_value.type,
-              },
+              feature_state_value: Utils.valueToFeatureState(v.value),
+              multivariate_feature_state_values: v.multivariate_options,
             },
             { forceRefetch: true },
           ).then((segmentOverride) => {
             const newValue = {
+              created: !segmentOverrides[i].id,
               environment: segmentOverride.data.environment,
               feature: featureFlagId,
               feature_segment_value: {
@@ -381,9 +385,12 @@ const controller = {
           )
         }
 
+        const priorityChanged = segmentOverrides?.find(
+          (v) => v.originalPriority !== v.priority,
+        )
         const segmentOverridesRequest =
           mode === 'SEGMENT' && segmentOverrides
-            ? (segmentOverrides.length
+            ? (priorityChanged
                 ? updateSegmentPriorities(
                     getStore(),
                     segmentOverrides.map((override, index) => ({
@@ -395,29 +402,32 @@ const controller = {
               ).then(() =>
                 Promise.all(
                   segmentOverrides.map((override) =>
-                    data.put(
-                      `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
-                      {
-                        ...override.feature_segment_value,
-                        enabled: override.enabled,
-                        feature_state_value: Utils.valueToFeatureState(
-                          override.value,
-                        ),
-                        multivariate_feature_state_values:
-                          override.multivariate_options &&
-                          override.multivariate_options.map((o) => {
-                            if (o.multivariate_feature_option) return o
-                            return {
-                              multivariate_feature_option:
-                                environmentFlag
-                                  .multivariate_feature_state_values[
-                                  o.multivariate_feature_option_index
-                                ].multivariate_feature_option,
-                              percentage_allocation: o.percentage_allocation,
-                            }
-                          }),
-                      },
-                    ),
+                    !override.created
+                      ? data.put(
+                          `${Project.api}features/featurestates/${override.feature_segment_value.id}/`,
+                          {
+                            ...override.feature_segment_value,
+                            enabled: override.enabled,
+                            feature_state_value: Utils.valueToFeatureState(
+                              override.value,
+                            ),
+                            multivariate_feature_state_values:
+                              override.multivariate_options &&
+                              override.multivariate_options.map((o) => {
+                                if (o.multivariate_feature_option) return o
+                                return {
+                                  multivariate_feature_option:
+                                    environmentFlag
+                                      .multivariate_feature_state_values[
+                                      o.multivariate_feature_option_index
+                                    ].multivariate_feature_option,
+                                  percentage_allocation:
+                                    o.percentage_allocation,
+                                }
+                              }),
+                          },
+                        )
+                      : Promise.resolve(override),
                   ),
                 ),
               )
@@ -448,6 +458,9 @@ const controller = {
               store.model.lastSaved = new Date().valueOf()
             }
             onComplete && onComplete()
+            getStore().dispatch(
+              projectFlagService.util.invalidateTags(['ProjectFlag']),
+            )
             store.saved({})
           })
           .catch((e) => {
@@ -952,6 +965,9 @@ const controller = {
           (f) => f.id !== flag.id,
         )
         store.model.lastSaved = new Date().valueOf()
+        getStore().dispatch(
+          projectFlagService.util.invalidateTags(['ProjectFlag']),
+        )
         store.saved({})
         store.trigger('removed', flag)
       })
@@ -960,7 +976,7 @@ const controller = {
     (search, environmentId, projectId, filter, pageSize) => {
       store.search = encodeURIComponent(search || '')
       controller.getFeatures(
-        projectId,
+        parseInt(projectId),
         environmentId,
         true,
         0,
@@ -999,7 +1015,7 @@ const store = Object.assign({}, BaseStore, {
 
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
-
+  const projectId = parseInt(action.projectId)
   switch (action.actionType) {
     case Actions.SEARCH_FLAGS: {
       if (action.sort) {
@@ -1008,7 +1024,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.searchFeatures(
         action.search,
         action.environmentId,
-        action.projectId,
+        projectId,
         action.filter,
         action.pageSize,
       )
@@ -1020,7 +1036,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
         store.sort = action.sort
       }
       controller.getFeatures(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.force,
         action.page,
@@ -1030,7 +1046,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.REFRESH_FEATURES:
       if (
-        action.projectId === store.projectId &&
+        projectId === store.projectId &&
         action.environmentId === store.environmentId
       ) {
         controller.getFeatures(
@@ -1044,18 +1060,18 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.GET_FEATURE_USAGE:
       controller.getFeatureUsage(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.flag,
         action.period,
       )
       break
     case Actions.CREATE_FLAG:
-      controller.createFlag(action.projectId, action.environmentId, action.flag)
+      controller.createFlag(projectId, action.environmentId, action.flag)
       break
     case Actions.EDIT_ENVIRONMENT_FLAG:
       controller.editFeatureState(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.flag,
         action.projectFlag,
@@ -1067,7 +1083,7 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       break
     case Actions.EDIT_ENVIRONMENT_FLAG_CHANGE_REQUEST:
       controller.editFeatureStateChangeRequest(
-        action.projectId,
+        projectId,
         action.environmentId,
         action.flag,
         action.projectFlag,
@@ -1078,13 +1094,13 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       )
       break
     case Actions.EDIT_FEATURE:
-      controller.editFeature(action.projectId, action.flag, action.onComplete)
+      controller.editFeature(projectId, action.flag, action.onComplete)
       break
     case Actions.EDIT_FEATURE_MV:
-      controller.editFeatureMv(action.projectId, action.flag, action.onComplete)
+      controller.editFeatureMv(projectId, action.flag, action.onComplete)
       break
     case Actions.REMOVE_FLAG:
-      controller.removeFlag(action.projectId, action.flag)
+      controller.removeFlag(projectId, action.flag)
       break
     default:
   }

@@ -6,9 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": [
-                "serve"
-            ],
+            "command": ["serve"],
             "cpu": 0,
             "portMappings": [
                 {
@@ -17,6 +15,13 @@
                     "protocol": "tcp"
                 }
             ],
+            "healthCheck": {
+                "command": ["CMD-SHELL", "flagsmith healthcheck tcp"],
+                "interval": 10,
+                "timeout": 2,
+                "retries": 5,
+                "startPeriod": 5
+            },
             "essential": true,
             "environment": [
                 {
@@ -160,16 +165,16 @@
                     "value": "https://origin.realtime-staging.flagsmith.com"
                 },
                 {
-                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
+                    "name": "USE_POSTGRES_FOR_ANALYTICS",
+                    "value": "False"
+                },
+                {
+                    "name": "USE_CACHE_FOR_USAGE_DATA",
                     "value": "True"
                 },
                 {
-                    "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up,scale-up-v2,scale-up-annual-v2,scale-up-24-months-v2"
-                },
-                {
-                    "name": "USE_POSTGRES_FOR_ANALYTICS",
-                    "value": "False"
+                    "name": "API_USAGE_CACHE_SECONDS",
+                    "value": "300"
                 },
                 {
                     "name": "INFLUXDB_ORG",
@@ -202,6 +207,10 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "PROMETHEUS_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [
@@ -276,9 +285,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }

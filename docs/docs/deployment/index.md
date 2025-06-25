@@ -16,8 +16,6 @@ We have a number of example deployments across different providers and orchestra
 
 ## One Click Installers
 
-[![Deploy to Dome](https://trydome.io/button.svg)](https://app.trydome.io/signup?package=flagsmith)
-
 [![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/flagsmith/flagsmith/tree/main)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/flagsmith/flagsmith/tree/main)
@@ -72,7 +70,7 @@ We recommend running Flagsmith with [Docker](/deployment/hosting/docker). We hav
 The Flagsmith architecture is based around a REST API that is accessed by both SDK clients and the Flagsmith Dashboard
 Front End Web App.
 
-![Application Architecture](/img/self-hosted-architecture.svg)
+![Application Architecture](/img/architecture.svg)
 
 ## Dependencies
 

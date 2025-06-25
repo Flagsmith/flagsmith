@@ -1,6 +1,6 @@
 import { FC, ReactNode, useEffect, useState } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
-import { RouterChildContext } from 'react-router'
+import { RouterChildContext, useHistory } from 'react-router'
 import AccountStore from 'common/stores/account-store'
 import AppActions from 'common/dispatcher/app-actions'
 import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
@@ -43,6 +43,7 @@ const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
   const { environmentId, projectId } = match.params
   const [page, setPage] = useState(1)
   const [pageCommitted, setPageCommitted] = useState(1)
+  const history = useHistory()
   const organisationId = AccountStore.getOrganisation()?.id
   const environment = ProjectStore.getEnvironment(
     environmentId,
@@ -236,7 +237,7 @@ export const ChangeRequestsInner: FC<ChangeRequestsInnerType> = ({
           <div>
             {changeRequestsDisabled && <p>{ChangeRequestsDisabledMessage}</p>}
 
-            <Tabs urlParam={'tab'}>
+            <Tabs history={history} urlParam={'tab'}>
               <TabItem
                 tabLabelString='Open'
                 tabLabel={

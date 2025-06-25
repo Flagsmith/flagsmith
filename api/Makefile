@@ -7,12 +7,10 @@ COMPOSE_PROJECT_NAME ?= flagsmith
 
 DOTENV_OVERRIDE_FILE ?= .env
 
-POETRY_VERSION ?= 2.0.1
-
-GUNICORN_LOGGER_CLASS ?= util.logging.GunicornJsonCapableLogger
+POETRY_VERSION ?= 2.1.1
 
 SAML_REVISION ?= v1.6.4
-RBAC_REVISION ?= v0.11.2
+RBAC_REVISION ?= v0.11.6
 
 -include .env-local
 -include $(DOTENV_OVERRIDE_FILE)
@@ -97,11 +95,17 @@ django-collect-static:
 	poetry run python manage.py collectstatic --noinput
 
 .PHONY: serve
-serve:
-	poetry run gunicorn --bind 0.0.0.0:8000 \
-		--logger-class ${GUNICORN_LOGGER_CLASS} \
-		--reload \
-		app.wsgi
+serve: docker-up
+	poetry run flagsmith start --reload api
+
+.PHONY: run-task-processor
+run-task-processor: docker-up
+	poetry run flagsmith start --reload --bind 0.0.0.0:8001 task-processor
+
+.PHONY: serve-with-task-processor
+serve-with-task-processor: TASK_RUN_METHOD=TASK_PROCESSOR
+serve-with-task-processor:
+	make -j2 serve run-task-processor
 
 .PHONY: generate-ld-client-types
 generate-ld-client-types:
@@ -144,3 +148,7 @@ integrate-private-tests:
 
 	git clone https://github.com/flagsmith/flagsmith-task-processor --depth 1 --branch ${TASK_PROCESSOR_REVISION} && mv ./flagsmith-task-processor/tests tests/task_processor_tests
 	rm -rf ./flagsmith-saml ./flagsmith-rbac ./flagsmith-workflows ./flagsmith-auth-controller ./flagsmith-task-processor
+
+.PHONY: generate-docs
+generate-docs:
+	poetry run flagsmith docgen metrics > ../docs/docs/system-administration/metrics.md

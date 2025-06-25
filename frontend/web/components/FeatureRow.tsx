@@ -29,7 +29,7 @@ import API from 'project/api'
 import Switch from './Switch'
 import AccountStore from 'common/stores/account-store'
 import CondensedFeatureRow from './CondensedFeatureRow'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 
 interface FeatureRowProps {
@@ -50,10 +50,10 @@ interface FeatureRowProps {
   fadeValue?: boolean
   hideAudit?: boolean
   hideRemove?: boolean
-  history?: RouterChildContext['router']['history']
+  onCloseEditModal?: () => void
 }
 
-const width = [200, 70, 55, 70, 450]
+const width = [220, 70, 55, 70, 450]
 
 const FeatureRow: FC<FeatureRowProps> = ({
   className,
@@ -65,8 +65,8 @@ const FeatureRow: FC<FeatureRowProps> = ({
   fadeValue,
   hideAudit = false,
   hideRemove = false,
-  history,
   index,
+  onCloseEditModal,
   permission,
   projectFlag,
   projectId,
@@ -76,6 +76,8 @@ const FeatureRow: FC<FeatureRowProps> = ({
   toggleFlag,
 }) => {
   const protectedTags = useProtectedTags(projectFlag, projectId)
+
+  const history = useHistory()
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },
@@ -197,6 +199,10 @@ const FeatureRow: FC<FeatureRowProps> = ({
       />,
       'side-modal create-feature-modal',
       () => {
+        if (onCloseEditModal) {
+          return onCloseEditModal()
+        }
+
         history.replace({
           pathname: document.location.pathname,
           search: '',

@@ -52,6 +52,7 @@ import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
+import { withRouter } from 'react-router-dom'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -336,7 +337,7 @@ const CreateFlag = class extends Component {
             enabled: default_enabled,
             feature_state_value: hasMultivariate
               ? this.props.environmentFlag.feature_state_value
-              : initial_value,
+              : this.cleanInputValue(initial_value),
             multivariate_options: this.state.identityVariations,
           }),
           projectFlag,
@@ -352,7 +353,7 @@ const CreateFlag = class extends Component {
           {
             default_enabled,
             description,
-            initial_value,
+            initial_value: this.cleanInputValue(initial_value),
             is_archived,
             is_server_key_only,
             metadata:
@@ -439,6 +440,12 @@ const CreateFlag = class extends Component {
       featureError = ''
     }
     return { featureError, featureWarning }
+  }
+  cleanInputValue = (value) => {
+    if (value && typeof value === 'string') {
+      return value.trim()
+    }
+    return value
   }
   drawChart = (data) => {
     return data?.length ? (
@@ -804,7 +811,6 @@ const CreateFlag = class extends Component {
               editingChangeRequest={this.props.changeRequest}
               projectId={this.props.projectId}
               environmentId={this.props.environmentId}
-              history={this.props.history}
               changeRequests={changeRequests}
               scheduledChangeRequests={scheduledChangeRequests}
             />
@@ -1087,8 +1093,8 @@ const CreateFlag = class extends Component {
                             {isEdit && !identity ? (
                               <Tabs
                                 onChange={() => this.forceUpdate()}
-                                history={this.props.history}
                                 urlParam='tab'
+                                history={this.props.history}
                               >
                                 <TabItem
                                   data-test='value'
@@ -2141,10 +2147,6 @@ CreateFlag.propTypes = {}
 //This will remount the modal when a feature is created
 const FeatureProvider = (WrappedComponent) => {
   class HOC extends Component {
-    static contextTypes = {
-      router: propTypes.object.isRequired,
-    }
-
     constructor(props) {
       super(props)
       this.state = {
@@ -2244,4 +2246,6 @@ const FeatureProvider = (WrappedComponent) => {
   return HOC
 }
 
-export default FeatureProvider(ConfigProvider(withSegmentOverrides(CreateFlag)))
+const WrappedCreateFlag = ConfigProvider(withSegmentOverrides(CreateFlag))
+
+export default FeatureProvider(WrappedCreateFlag)

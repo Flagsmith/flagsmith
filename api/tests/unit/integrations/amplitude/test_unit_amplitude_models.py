@@ -19,7 +19,7 @@ def test_amplitude_configuration_save_writes_environment_to_dynamodb(  # type: i
     amplitude_config.save()
 
     # Then
-    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+    mock_environment_model_class.write_environment_documents.assert_called_once_with(
         environment_id=environment.id
     )
 
@@ -43,7 +43,7 @@ def test_amplitude_configuration_delete_writes_environment_to_dynamodb(  # type:
     amplitude_config.delete()
 
     # Then
-    mock_environment_model_class.write_environments_to_dynamodb.assert_called_once_with(
+    mock_environment_model_class.write_environment_documents.assert_called_once_with(
         environment_id=environment.id
     )
 
@@ -60,4 +60,4 @@ def test_amplitude_configuration_update_clears_environment_cache(environment, mo
     amplitude_config.save()
 
     # Then
-    mock_environment_cache.delete.assert_called_once_with(environment.api_key)
+    mock_environment_cache.delete_many.assert_called_once_with([environment.api_key])

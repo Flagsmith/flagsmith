@@ -1,12 +1,19 @@
+import json
 import logging
+import typing
 
 import pytest
 import responses
+from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
+from hubspot.crm.companies import (  # type: ignore[import-untyped]
+    SimplePublicObjectInputForCreate,
+)
 from pytest_mock import MockerFixture
 from rest_framework import status
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
 from integrations.lead_tracking.hubspot.constants import (
+    HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
     HUBSPOT_FORM_ID,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
@@ -25,12 +32,27 @@ def hubspot_client(mocker: MockerFixture) -> HubspotClient:
 
 
 @responses.activate
+@pytest.mark.parametrize(
+    "hubspot_cookie_body,expected_context",
+    [
+        (
+            "test_hubspot_cookie",
+            {
+                "hutk": "test_hubspot_cookie",
+                "pageUri": "www.flagsmith.com",
+                "pageName": "Homepage",
+            },
+        ),
+        (None, {}),
+    ],
+)
 def test_create_lead_form(
     staff_user: FFAdminUser,
     hubspot_client: HubspotClient,
+    hubspot_cookie_body: str | None,
+    expected_context: dict[str, str],
 ) -> None:
     # Given
-    hubspot_cookie = "test_hubspot_cookie"
     url = f"{HUBSPOT_ROOT_FORM_URL}/{HUBSPOT_PORTAL_ID}/{HUBSPOT_FORM_ID}"
     responses.add(
         method="POST",
@@ -40,10 +62,31 @@ def test_create_lead_form(
     )
 
     # When
-    response = hubspot_client.create_lead_form(staff_user, hubspot_cookie)
+    response = hubspot_client.create_lead_form(staff_user, hubspot_cookie_body)
 
     # Then
+    assert len(responses.calls) == 1
     assert response == {"inlineMessage": "Thanks for submitting the form."}
+    call: responses.Call = responses.calls[0]  # type: ignore[assignment]
+    request_body = json.loads(call.request.body)
+    assert response == {"inlineMessage": "Thanks for submitting the form."}
+
+    fields: list[dict[str, str]] = request_body["fields"]
+
+    assert {"objectTypeId": "0-1", "name": "email", "value": staff_user.email} in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "firstname",
+        "value": staff_user.first_name,
+    } in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "lastname",
+        "value": staff_user.last_name,
+    } in fields
+
+    context = request_body.get("context", {})
+    assert context == expected_context
 
 
 @responses.activate
@@ -145,3 +188,96 @@ def test_create_company_without_organisation_information(
         "domain": domain,
         "name": name,
     }
+
+
+def test_create_self_hosted_contact(hubspot_client: HubspotClient) -> None:
+    # Given
+    email = "user@flagsmith.com"
+    first_name = "test"
+    last_name = "user"
+    hubspot_company_id = "111"
+
+    properties = {
+        "email": email,
+        "firstname": first_name,
+        "lastname": last_name,
+        "api_lead_source": HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
+    }
+
+    # When
+    hubspot_client.create_self_hosted_contact(
+        email, first_name, last_name, hubspot_company_id
+    )
+
+    # Then
+    hubspot_client.client.crm.contacts.basic_api.create.assert_called_once_with(
+        simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
+            properties=properties,
+            associations=[
+                {
+                    "types": [
+                        {
+                            "associationCategory": "HUBSPOT_DEFINED",
+                            "associationTypeId": 1,
+                        }
+                    ],
+                    "to": {"id": hubspot_company_id},
+                }
+            ],
+        )
+    )
+
+
+def test_associate_contact_to_company_succeeds(hubspot_client: HubspotClient) -> None:
+    # Given
+    company_id = "456"
+    contact_id = "123"
+
+    # When
+    hubspot_client.associate_contact_to_company(
+        contact_id=contact_id, company_id=company_id
+    )
+
+    # Then
+    hubspot_client.client.crm.associations.v4.basic_api.create.assert_called_once_with(
+        object_type="contacts",
+        object_id=contact_id,
+        to_object_type="companies",
+        to_object_id=company_id,
+        association_spec=[
+            AssociationSpec(
+                association_category="HUBSPOT_DEFINED", association_type_id=1
+            )
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "kwargs, expected_properties",
+    [
+        ({"name": "Test Organisation"}, {"name": "Test Organisation"}),
+        (
+            {"name": "Test Organisation", "active_subscription": "scaleup"},
+            {"name": "Test Organisation", "active_subscription": "scaleup"},
+        ),
+        ({"active_subscription": "scaleup"}, {"active_subscription": "scaleup"}),
+        ({"name": None, "active_subscription": None}, {}),
+    ],
+)
+def test_update_company_calls_hubspot_api(
+    hubspot_client: HubspotClient,
+    kwargs: dict[str, typing.Any],
+    expected_properties: dict[str, typing.Any],
+) -> None:
+    # Given / When
+    mock_update_company = hubspot_client.client.crm.companies.basic_api.update
+
+    hubspot_client.update_company(hubspot_company_id="123", **kwargs)
+
+    # Then
+    mock_update_company.assert_called_once()
+    _, call_kwargs = mock_update_company.call_args
+    assert call_kwargs["company_id"] == "123"
+
+    simple_input = call_kwargs["simple_public_object_input"]
+    assert simple_input.properties == expected_properties

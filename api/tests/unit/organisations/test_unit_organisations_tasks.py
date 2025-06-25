@@ -330,14 +330,43 @@ def test_handle_api_usage_notification_for_organisation_when_cancellation_date_i
     logger.addHandler(inspecting_handler)
 
     # When
-    result = handle_api_usage_notification_for_organisation(organisation)  # type: ignore[func-returns-value]
+    handle_api_usage_notification_for_organisation(organisation)
 
     # Then
-    assert result is None
     assert OrganisationAPIUsageNotification.objects.count() == 0
 
     # Check to ensure that error messages haven't been set.
     assert inspecting_handler.messages == []  # type: ignore[attr-defined]
+
+
+def test_handle_api_usage_notification_for_organisation_when_billing_starts_at_is_more_than_12_months_ago(
+    organisation: Organisation,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    organisation.subscription.plan = SCALE_UP
+    organisation.subscription.subscription_id = "fancy_id"
+    organisation.subscription.save()
+
+    billing_term_starts_at = timezone.now() - relativedelta(days=367)
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        allowed_30d_api_calls=1_000_000,
+        current_billing_term_starts_at=billing_term_starts_at,
+    )
+
+    mock_api_usage = mocker.patch("organisations.task_helpers.get_current_api_usage")
+    mock_api_usage.return_value = 25
+
+    organisation.refresh_from_db()
+
+    # When
+    handle_api_usage_notification_for_organisation(organisation)
+
+    # Then
+    mock_api_usage.assert_called_once_with(
+        organisation.id, billing_term_starts_at + relativedelta(months=12)
+    )
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
@@ -840,10 +869,12 @@ def test_handle_api_usage_notifications_missing_info_cache(
     ]
 
 
+@pytest.mark.parametrize("plan", ("scale-up", "scale-up-v2", "scale-up-v3"))
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_charge_for_api_call_count_overages_scale_up(
     organisation: Organisation,
     mocker: MockerFixture,
+    plan: str,
 ) -> None:
     # Given
     now = timezone.now()
@@ -857,7 +888,7 @@ def test_charge_for_api_call_count_overages_scale_up(
         current_billing_term_ends_at=now + timedelta(minutes=30),
     )
     organisation.subscription.subscription_id = "fancy_sub_id23"
-    organisation.subscription.plan = "scale-up-v2"
+    organisation.subscription.plan = plan
     organisation.subscription.save()
 
     # In order to cover an edge case found in production use, we make the
@@ -1232,13 +1263,14 @@ def test_charge_for_api_call_count_overages_start_up(
 ) -> None:
     # Given
     now = timezone.now()
+    current_billing_term_starts_at = now - timedelta(days=30)
     OrganisationSubscriptionInformationCache.objects.create(
         organisation=organisation,
         allowed_seats=10,
         allowed_projects=3,
         allowed_30d_api_calls=100_000,
         chargebee_email="test@example.com",
-        current_billing_term_starts_at=now - timedelta(days=30),
+        current_billing_term_starts_at=current_billing_term_starts_at,
         current_billing_term_ends_at=now + timedelta(minutes=30),
     )
     organisation.subscription.subscription_id = "fancy_sub_id23"
@@ -1265,6 +1297,15 @@ def test_charge_for_api_call_count_overages_start_up(
     mock_api_usage.return_value = 202_005
     assert OrganisationAPIBilling.objects.count() == 0
 
+    # address a bug where we didn't filter for the current organisation
+    # when selecting related billing records
+    unrelated_organisation = Organisation.objects.create(name="Unrelated Organisation")
+    OrganisationAPIBilling.objects.create(
+        organisation=unrelated_organisation,
+        api_overage=123_000_000,
+        billed_at=current_billing_term_starts_at + timedelta(minutes=60),
+    )
+
     # When
     charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
 
@@ -1283,19 +1324,22 @@ def test_charge_for_api_call_count_overages_start_up(
         },
     )
 
-    assert OrganisationAPIBilling.objects.count() == 1
-    api_billing = OrganisationAPIBilling.objects.first()
-    assert api_billing.organisation == organisation  # type: ignore[union-attr]
-    assert api_billing.api_overage == 200_000  # type: ignore[union-attr]
-    assert api_billing.immediate_invoice is False  # type: ignore[union-attr]
-    assert api_billing.billed_at == now  # type: ignore[union-attr]
+    assert OrganisationAPIBilling.objects.count() == 2
+    api_billing = OrganisationAPIBilling.objects.filter(
+        organisation=organisation
+    ).first()
+    assert api_billing
+    assert api_billing.organisation == organisation
+    assert api_billing.api_overage == 200_000
+    assert api_billing.immediate_invoice is False
+    assert api_billing.billed_at == now
 
     # Now attempt to rebill the account should fail
     calls_mock = mocker.patch(
         "organisations.tasks.add_100k_api_calls_start_up",
     )
     charge_for_api_call_count_overages()  # type: ignore[no-untyped-call]
-    assert OrganisationAPIBilling.objects.count() == 1
+    assert OrganisationAPIBilling.objects.filter(organisation=organisation).count() == 1
     calls_mock.assert_not_called()
 
 
@@ -1350,8 +1394,10 @@ def test_charge_for_api_call_count_overages_non_standard(
     # Then
     mock_chargebee_update.assert_not_called()
     assert inspecting_handler.messages == [  # type: ignore[attr-defined]
-        f"Unable to bill for API overages for plan `{organisation.subscription.plan}` "
-        f"for organisation {organisation.id}"
+        "Unknown subscription plan when trying to bill for overages "
+        f"organisation.id={organisation.id} "
+        f"organisation.name='{organisation.name}' "
+        "organisation.subscription.plan='nonstandard-v2'"
     ]
 
     assert OrganisationAPIBilling.objects.count() == 0

@@ -1,10 +1,11 @@
 from datetime import date, datetime, timedelta
-from typing import List
+from typing import TYPE_CHECKING, List
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Sum
 from django.utils import timezone
+from rest_framework.exceptions import NotFound
 
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
 from app_analytics.influxdb_wrapper import (
@@ -36,35 +37,37 @@ def get_usage_data(
     period: PERIOD_TYPE | None = None,
 ) -> list[UsageData]:
     now = timezone.now()
-
     date_start = date_stop = None
+    sub_cache = getattr(organisation, "subscription_information_cache", None)
+
+    is_subscription_valid = (
+        sub_cache is not None and sub_cache.is_billing_terms_dates_set()
+    )
+
+    if period in (constants.CURRENT_BILLING_PERIOD, constants.PREVIOUS_BILLING_PERIOD):
+        if not is_subscription_valid:
+            raise NotFound("No billing periods found for this organisation.")
+
+    if TYPE_CHECKING:
+        assert sub_cache is not None
 
     match period:
         case constants.CURRENT_BILLING_PERIOD:
-            if not getattr(organisation, "subscription_information_cache", None):
-                starts_at = now - timedelta(days=30)
-            else:
-                sub_cache = organisation.subscription_information_cache
-                starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                    days=30
-                )
+            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                days=30
+            )
             month_delta = relativedelta(now, starts_at).months
             date_start = relativedelta(months=month_delta) + starts_at
             date_stop = now
 
         case constants.PREVIOUS_BILLING_PERIOD:
-            if not getattr(organisation, "subscription_information_cache", None):
-                starts_at = now - timedelta(days=30)
-            else:
-                sub_cache = organisation.subscription_information_cache
-                starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                    days=30
-                )
+            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
+                days=30
+            )
             month_delta = relativedelta(now, starts_at).months - 1
             month_delta += relativedelta(now, starts_at).years * 12
             date_start = relativedelta(months=month_delta) + starts_at
             date_stop = relativedelta(months=month_delta + 1) + starts_at
-
         case constants.NINETY_DAY_PERIOD:
             date_start = now - relativedelta(days=90)
             date_stop = now
@@ -75,7 +78,6 @@ def get_usage_data(
             "environment_id": environment_id,
             "project_id": project_id,
         }
-
         if date_start:
             assert date_stop
             kwargs["date_start"] = date_start  # type: ignore[assignment]
@@ -135,15 +137,16 @@ def get_usage_data_from_local_db(
         .annotate(count=Sum("total_count"))
     )
     data_by_day = {}
-    for row in qs:
+    for row in qs:  # TODO Write proper mappers for this?
         day = row["created_at__date"]
         if day not in data_by_day:
             data_by_day[day] = UsageData(day=day)
-        setattr(
-            data_by_day[day],
-            Resource.get_lowercased_name(row["resource"]),
-            row["count"],
-        )
+        if column_name := Resource(row["resource"]).column_name:
+            setattr(
+                data_by_day[day],
+                column_name,
+                row["count"],
+            )
 
     return data_by_day.values()  # type: ignore[return-value]
 

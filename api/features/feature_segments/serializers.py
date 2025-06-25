@@ -1,7 +1,9 @@
-from common.environments.permissions import (  # type: ignore[import-untyped]
+import typing
+
+from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
 )
-from common.features.serializers import (  # type: ignore[import-untyped]
+from common.features.serializers import (
     CreateSegmentOverrideFeatureSegmentSerializer,
 )
 from django.db import transaction
@@ -41,7 +43,7 @@ class FeatureSegmentCreateSerializer(serializers.ModelSerializer):  # type: igno
 
 
 class CustomCreateSegmentOverrideFeatureSegmentSerializer(
-    CreateSegmentOverrideFeatureSegmentSerializer  # type: ignore[misc]
+    CreateSegmentOverrideFeatureSegmentSerializer
 ):
     # Since the `priority` field on the FeatureSegment model is set to editable=False
     # (to adhere to the django-ordered-model functionality), we redefine the priority
@@ -49,7 +51,7 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
     priority = serializers.IntegerField(min_value=0, required=False)
 
     @transaction.atomic()
-    def save(self, **kwargs) -> FeatureSegment:  # type: ignore[no-untyped-def]
+    def save(self, **kwargs: typing.Any) -> FeatureSegment:
         """
         Note that this method is marked as atomic since a lot of additional validation is
         performed in the call to super. If that fails, we want to roll the changes made by
@@ -71,6 +73,7 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
                 priority=priority,
             )
             if self.instance is not None:
+                assert isinstance(self.instance, FeatureSegment)
                 collision_qs = collision_qs.exclude(id=self.instance.id)
             collision = collision_qs.first()
             if collision:
@@ -79,7 +82,7 @@ class CustomCreateSegmentOverrideFeatureSegmentSerializer(
                 # down. This ensures that the incoming priority space is 'free'.
                 collision.to(priority + 1)
 
-        return super().save(**kwargs)  # type: ignore[no-any-return]
+        return super().save(**kwargs)  # type: ignore[return-value]
 
 
 class FeatureSegmentQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]

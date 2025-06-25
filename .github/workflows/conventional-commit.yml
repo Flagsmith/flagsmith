@@ -2,12 +2,14 @@ name: Conventional Commit
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types:
+      - edited
+      - opened
 
 jobs:
   conventional-commit:
     name: Conventional Commit
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - name: Check PR Conventional Commit title
         uses: amannn/action-semantic-pull-request@v5

@@ -1,10 +1,11 @@
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import hubspot  # type: ignore[import-untyped]
 import requests
 from django.conf import settings
+from hubspot.crm.associations.v4 import AssociationSpec  # type: ignore[import-untyped]
 from hubspot.crm.companies import (  # type: ignore[import-untyped]
     PublicObjectSearchRequest,
     SimplePublicObjectInput,
@@ -15,11 +16,14 @@ from hubspot.crm.contacts import (  # type: ignore[import-untyped]
 )
 
 from integrations.lead_tracking.hubspot.constants import (
+    HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
     HUBSPOT_FORM_ID,
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
-from users.models import FFAdminUser
+
+if TYPE_CHECKING:
+    from users.models import FFAdminUser
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +33,7 @@ class HubspotClient:
         self.access_token = settings.HUBSPOT_ACCESS_TOKEN
         self.client = client or hubspot.Client.create(access_token=self.access_token)
 
-    def get_contact(self, user: FFAdminUser) -> None | dict[str, Any]:
+    def get_contact(self, user: "FFAdminUser") -> None | dict[str, Any]:
         public_object_id = BatchReadInputSimplePublicObjectId(
             id_property="email",
             inputs=[{"id": user.email}],
@@ -53,7 +57,7 @@ class HubspotClient:
         return results[0]  # type: ignore[no-any-return]
 
     def create_lead_form(
-        self, user: FFAdminUser, hubspot_cookie: str
+        self, user: "FFAdminUser", hubspot_cookie: str | None = None
     ) -> dict[str, Any]:
         logger.info(
             f"Creating Hubspot lead form for user {user.email} with hubspot cookie {hubspot_cookie}"
@@ -68,11 +72,13 @@ class HubspotClient:
             {"objectTypeId": "0-1", "name": "lastname", "value": user.last_name},
         ]
 
-        context = {
-            "hutk": hubspot_cookie,
-            "pageUri": "www.flagsmith.com",
-            "pageName": "Homepage",
-        }
+        context = {}
+        if hubspot_cookie:
+            context = {
+                "hutk": hubspot_cookie,
+                "pageUri": "www.flagsmith.com",
+                "pageName": "Homepage",
+            }
 
         legal = {
             "consent": {
@@ -102,32 +108,51 @@ class HubspotClient:
             )
         return response.json()  # type: ignore[no-any-return]
 
-    def create_contact(
-        self, user: FFAdminUser, hubspot_company_id: str
-    ) -> dict[str, Any]:
+    def associate_contact_to_company(self, contact_id: str, company_id: str) -> None:
+        association_spec = [
+            AssociationSpec(
+                association_category="HUBSPOT_DEFINED", association_type_id=1
+            )
+        ]
+
+        self.client.crm.associations.v4.basic_api.create(
+            object_type="contacts",
+            object_id=contact_id,
+            to_object_type="companies",
+            to_object_id=company_id,
+            association_spec=association_spec,
+        )
+
+    def create_self_hosted_contact(
+        self, email: str, first_name: str, last_name: str, hubspot_company_id: str
+    ) -> None:
         properties = {
-            "email": user.email,
-            "firstname": user.first_name,
-            "lastname": user.last_name,
-            "hs_marketable_status": user.marketing_consent_given,
+            "email": email,
+            "firstname": first_name,
+            "lastname": last_name,
+            "api_lead_source": HUBSPOT_API_LEAD_SOURCE_SELF_HOSTED,
         }
 
-        response = self.client.crm.contacts.basic_api.create(
-            simple_public_object_input_for_create=SimplePublicObjectInputForCreate(
+        create_params = {
+            "simple_public_object_input_for_create": SimplePublicObjectInputForCreate(
                 properties=properties,
-                associations=[
-                    {
-                        "types": [
-                            {
-                                "associationCategory": "HUBSPOT_DEFINED",
-                                "associationTypeId": 1,
-                            }
-                        ],
-                        "to": {"id": hubspot_company_id},
-                    }
-                ],
             )
-        )
+        }
+
+        if hubspot_company_id:
+            create_params["simple_public_object_input_for_create"].associations = [
+                {
+                    "types": [
+                        {
+                            "associationCategory": "HUBSPOT_DEFINED",
+                            "associationTypeId": 1,
+                        }
+                    ],
+                    "to": {"id": hubspot_company_id},
+                }
+            ]
+
+        response = self.client.crm.contacts.basic_api.create(**create_params)
         return response.to_dict()  # type: ignore[no-any-return]
 
     def get_company_by_domain(self, domain: str) -> dict[str, Any] | None:
@@ -185,11 +210,17 @@ class HubspotClient:
         return response.to_dict()  # type: ignore[no-any-return]
 
     def update_company(
-        self, active_subscription: str, hubspot_company_id: str
+        self,
+        hubspot_company_id: str,
+        name: str | None = None,
+        active_subscription: str | None = None,
     ) -> dict[str, Any]:
-        properties = {
-            "active_subscription": active_subscription,
-        }
+        properties = {}
+        if name is not None:
+            properties["name"] = name
+        if active_subscription is not None:
+            properties["active_subscription"] = active_subscription
+
         simple_public_object_input = SimplePublicObjectInput(properties=properties)
 
         response = self.client.crm.companies.basic_api.update(

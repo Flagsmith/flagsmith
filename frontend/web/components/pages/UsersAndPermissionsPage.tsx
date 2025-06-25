@@ -24,7 +24,7 @@ import CreateGroup from 'components/modals/CreateGroup'
 import UserGroupList from 'components/UserGroupList'
 import { useGetRolesQuery } from 'common/services/useRole'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router'
+import { RouterChildContext, useHistory } from 'react-router-dom'
 import map from 'lodash/map'
 import Input from 'components/base/forms/Input'
 import ErrorMessage from 'components/ErrorMessage'
@@ -39,6 +39,13 @@ import RolesTable from 'components/RolesTable'
 import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import {
+  useDeleteUserInviteMutation,
+  useGetUserInvitesQuery,
+  useResendUserInviteMutation,
+} from 'common/services/useInvites'
+import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -52,7 +59,6 @@ type UsersAndPermissionsInnerType = {
   error: any
   invalidateInviteLink: typeof AppActions.invalidateInviteLink
   inviteLinks: InviteLink[] | null
-  invites: Invite[] | null
   isLoading: boolean
   users: User[]
   subscriptionMeta: SubscriptionMeta | null
@@ -63,18 +69,29 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   error,
   invalidateInviteLink,
   inviteLinks,
-  invites,
   isLoading,
   organisation,
   router,
   subscriptionMeta,
   users,
 }) => {
+  const { data: userInvitesData } = useGetUserInvitesQuery({
+    organisationId: organisation.id,
+  })
+
+  const history = useHistory()
+
+  const [deleteUserInvite] = useDeleteUserInviteMutation()
+  const [resendUserInvite] = useResendUserInviteMutation()
+
+  const invites = userInvitesData?.results
   const paymentsEnabled = Utils.getFlagsmithHasFeature('payments_enabled')
   const verifySeatsLimit = Utils.getFlagsmithHasFeature(
     'verify_seats_limit_for_invite_links',
   )
-  const hasEmailProvider = Utils.hasEmailProvider()
+  const { data: version } = useGetBuildVersionQuery({})
+
+  const hasEmailProvider = version?.backend?.has_email_provider ?? false
   const manageUsersPermission = useHasPermission({
     id: AccountStore.getOrganisation()?.id,
     level: 'organisation',
@@ -145,6 +162,29 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       'p-0 side-modal',
     )
   }
+
+  const inspectPermissions = (user: User, organisationId: number) => {
+    openModal(
+      user.first_name || user.last_name
+        ? `${user.first_name} ${user.last_name}`
+        : `${user.email}`,
+      <div>
+        <Tabs uncontrolled hideNavOnSingleTab>
+          <TabItem tabLabel='Permissions'>
+            <div className='pt-4'>
+              <InspectPermissions
+                uncontrolled
+                user={user}
+                orgId={organisationId}
+              />
+            </div>
+          </TabItem>
+        </Tabs>
+      </div>,
+      'p-0 side-modal',
+    )
+  }
+
   const formatLastLoggedIn = (last_login: string | undefined) => {
     if (!last_login) return 'Never'
 
@@ -187,7 +227,15 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
         </div>
       ),
       destructive: true,
-      onYes: () => AppActions.deleteInvite(id),
+      onYes: () =>
+        deleteUserInvite({ inviteId: id, organisationId: organisation.id })
+          .then(() => {
+            toast('Invite deleted successfully')
+          })
+          .catch((error) => {
+            toast('Error deleting invite', 'error')
+            console.error(error)
+          }),
       title: 'Delete Invite',
       yesText: 'Confirm',
     })
@@ -195,6 +243,11 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const needsUpgradeForAdditionalSeats =
     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
     (!autoSeats && usedSeats)
+
+  const isInspectPermissionsEnabled = Utils.getFlagsmithHasFeature(
+    'inspect_permissions',
+  )
+
   return (
     <div className='app-container container'>
       <JSONReference
@@ -296,7 +349,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                         <a
                                           href='#'
                                           onClick={() => {
-                                            router.history.replace(
+                                            history.replace(
                                               Constants.getUpgradeUrl(),
                                             )
                                           }}
@@ -593,6 +646,13 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                     onEdit={onEditClick}
                                     canRemove={AccountStore.isAdmin()}
                                     canEdit={AccountStore.isAdmin()}
+                                    canInspectPermissions={
+                                      isInspectPermissionsEnabled &&
+                                      AccountStore.isAdmin()
+                                    }
+                                    onInspectPermissions={() => {
+                                      inspectPermissions(user, organisation.id)
+                                    }}
                                   />
                                 </div>
                               </Row>
@@ -679,7 +739,20 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                       id='resend-invite'
                                       type='button'
                                       onClick={() =>
-                                        AppActions.resendInvite(id)
+                                        resendUserInvite({
+                                          inviteId: id,
+                                          organisationId: organisation.id,
+                                        })
+                                          .then(() => {
+                                            toast('Invite resent successfully')
+                                          })
+                                          .catch((error) => {
+                                            toast(
+                                              'Error resent invite',
+                                              'error',
+                                            )
+                                            console.error(error)
+                                          })
                                       }
                                       theme='text'
                                       size='small'
@@ -789,7 +862,6 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
             error,
             invalidateInviteLink,
             inviteLinks,
-            invites,
             isLoading,
             subscriptionMeta,
             users,
@@ -808,7 +880,6 @@ const UsersAndPermissionsPage: FC<UsersAndPermissionsPageType> = ({
                 error={error}
                 invalidateInviteLink={invalidateInviteLink}
                 inviteLinks={inviteLinks}
-                invites={invites}
                 isLoading={isLoading}
                 users={users}
                 subscriptionMeta={subscriptionMeta}

@@ -56,6 +56,7 @@ urlpatterns = [
         feature_health_webhook,
         name="feature-health-webhook",
     ),
+    re_path(r"^onboarding/", include("onboarding.urls", namespace="onboarding")),
     # Client SDK urls
     re_path(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     re_path(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
@@ -79,6 +80,8 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
+    # Test webhook url
+    re_path(r"^webhooks/", include("webhooks.urls", namespace="webhooks")),
 ]
 
 if settings.SPLIT_TESTING_INSTALLED:

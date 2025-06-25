@@ -1,11 +1,16 @@
 from django.conf import settings
-from task_processor.decorators import (  # type: ignore[import-untyped]
+from task_processor.decorators import (
     register_task_handler,
 )
 
 
-@register_task_handler()  # type: ignore[misc]
-def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # type: ignore[assignment]
+@register_task_handler()
+def track_hubspot_lead_v2(user_id: int, organisation_id: int) -> None:
+    track_hubspot_lead(user_id, organisation_id)
+
+
+@register_task_handler()
+def track_hubspot_lead(user_id: int, organisation_id: int | None = None) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
     # Avoid circular imports.
@@ -15,7 +20,6 @@ def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # ty
     from .lead_tracker import HubspotLeadTracker
 
     user = FFAdminUser.objects.get(id=user_id)
-
     if not HubspotLeadTracker.should_track(user):
         return
 
@@ -30,7 +34,24 @@ def track_hubspot_lead(user_id: int, organisation_id: int = None) -> None:  # ty
     hubspot_lead_tracker.create_lead(**create_lead_kwargs)
 
 
-@register_task_handler()  # type: ignore[misc]
+@register_task_handler()
+def create_hubspot_contact_for_user(user_id: int) -> None:
+    assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
+
+    from users.models import FFAdminUser
+
+    from .lead_tracker import HubspotLeadTracker
+
+    user = FFAdminUser.objects.get(id=user_id)
+    if not HubspotLeadTracker.should_track(user):
+        return
+
+    hubspot_lead_tracker = HubspotLeadTracker()
+
+    hubspot_lead_tracker.create_user_hubspot_contact(user)
+
+
+@register_task_handler()
 def update_hubspot_active_subscription(subscription_id: int) -> None:
     assert settings.ENABLE_HUBSPOT_LEAD_TRACKING
 
@@ -43,22 +64,18 @@ def update_hubspot_active_subscription(subscription_id: int) -> None:
     hubspot_lead_tracker.update_company_active_subscription(subscription)
 
 
-@register_task_handler()  # type: ignore[misc]
-def track_hubspot_lead_without_organisation(user_id: int) -> None:
-    """
-    The Hubspot logic relies on users joining or creating an organisation
-    to be tracked. This should cover most use cases, but for users that
-    sign up but don't join or create an organisation we still want to be
-    able to track them.
-    """
+@register_task_handler()
+def create_self_hosted_onboarding_lead_task(
+    email: str, first_name: str, last_name: str, organisation_name: str
+) -> None:
+    # Avoid circular imports.
+    from integrations.lead_tracking.hubspot.services import (
+        create_self_hosted_onboarding_lead,
+    )
 
-    from users.models import FFAdminUser
-
-    user = FFAdminUser.objects.get(id=user_id)
-    if hasattr(user, "hubspot_lead"):
-        # Since this task is designed to be delayed, there's a chance
-        # that the user will have joined an organisation and thus been
-        # tracked in hubspot already. If so, do nothing.
-        return
-
-    track_hubspot_lead(user.id)
+    create_self_hosted_onboarding_lead(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        organisation_name=organisation_name,
+    )

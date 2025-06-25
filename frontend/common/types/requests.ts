@@ -20,6 +20,10 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  Onboarding,
+  StageTrigger,
+  PipelineStatus,
+  StageActionType,
 } from './responses'
 
 export type PagedRequest<T> = T & {
@@ -29,6 +33,11 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export enum PermissionRoleType {
+  GRANTED = 'GRANTED',
+  GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
+  NONE = 'NONE',
+}
 export const billingPeriods = [
   {
     label: 'Current billing period',
@@ -61,6 +70,40 @@ export type WithoutId<T> = Omit<
   | 'committed_at'
   | 'deleted_at'
 >
+export type LoginRequest = {
+  email: string
+  password: string
+}
+export type RegisterRequest = {
+  email: string
+  first_name: string
+  last_name: string
+  password: string
+  superuser?: boolean
+  organisation_name?: string
+  marketing_consent_given?: boolean
+}
+
+export interface StageActionRequest {
+  action_type: StageActionType
+  action_body: { enabled: boolean; segment_id?: number }
+}
+
+export type ReleasePipelineRequest = {
+  project: number
+  name: string
+  description?: string
+  stages: PipelineStageRequest[]
+}
+
+export type PipelineStageRequest = {
+  name: string
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageActionRequest[]
+}
+
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -76,6 +119,11 @@ export type Req = {
   createSegment: {
     projectId: number | string
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  cloneSegment: {
+    projectId: number | string
+    segmentId: number
+    name: string
   }
   getAuditLogs: PagedRequest<{
     search?: string
@@ -190,6 +238,7 @@ export type Req = {
     environmentId: string
     featureId: string
     enabled: boolean
+    multivariate_feature_state_values: MultivariateOption[] | null
     feature_segment: {
       segment: number
     }
@@ -200,6 +249,25 @@ export type Req = {
     organisation_id: number
     description: string | null
     name: string
+  }
+  getUserInvites: {
+    organisationId: number
+  }
+  createUserInvite: {
+    organisationId: number
+    invites: {
+      email: string
+      role: string
+      permission_groups: number[]
+    }[]
+  }
+  deleteUserInvite: {
+    organisationId: number
+    inviteId: number
+  }
+  resendUserInvite: {
+    organisationId: number
+    inviteId: number
   }
   getRole: { organisation_id: string; role_id: number }
   updateRole: {
@@ -634,5 +702,52 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
+  testWebhook: {
+    webhookUrl: string
+    secret?: string
+    scope: {
+      type: 'environment' | 'organisation'
+      id: string
+    }
+  }
+  register: {
+    first_name: string
+    last_name: string
+    email: string
+    password: string
+    contact_consent_given: boolean
+    organisation_name: string
+    superuser: boolean
+  }
+  getBuildVersion: {}
+  createOnboardingSupportOptIn: {}
+  getEnvironmentMetrics: { id: string }
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: string
+  }
+  getUserPermissions: {
+    id?: string
+    userId: number | undefined
+    level: PermissionLevel
+  }
+  getProfile: {}
+  updateOnboarding: Partial<Onboarding>
+  getReleasePipelines: PagedRequest<{ projectId: number }>
+  getReleasePipeline: { projectId: number; pipelineId: number }
+  createReleasePipeline: ReleasePipelineRequest
+  getPipelineStages: PagedRequest<{
+    projectId: number
+    pipelineId: number
+  }>
+  getPipelineStage: {
+    projectId: number
+    pipelineId: number
+    stageId: number
+  }
+  deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
   // END OF TYPES
 }

@@ -1,8 +1,22 @@
-
+.onboarding {
+  background-color: $bg-light200;
+  nav {
+    display: none;
+  }
+  .butter-bar {
+    display: none;
+  }
+}
 nav a {
   font-weight: 500;
   &.active {
     font-weight: bold;
+  }
+}
+.nav-sub-link-disabled {
+  cursor: not-allowed;
+  span {
+    opacity: 0.5;
   }
 }
 .nav-sub-link {
@@ -16,7 +30,7 @@ nav a {
       background-color: $primary-alfa-8;
     }
   }
-  &:hover{
+  &:hover {
     svg {
       path {
         fill: $link-hover-color;
@@ -36,19 +50,21 @@ nav a {
     font-size: $font-size-base;
   }
   &.active {
-    border-bottom:2px solid $primary;
+    border-bottom: 2px solid $primary;
   }
 }
 .breadcrumb-link {
   padding: 4px 8px 4px 8px;
   border-radius: $border-radius;
-  &:hover,&.hovered {
+  &:hover,
+  &.hovered {
     color: $body-color;
     background-color: $primary-alfa-8;
   }
 }
 .dark {
-  .breadcrumb-link:hover, .breadcrumb-link.hovered {
+  .breadcrumb-link:hover,
+  .breadcrumb-link.hovered {
     color: $body-color-dark;
   }
   .nav-sub-link {
@@ -64,57 +80,15 @@ nav a {
     }
   }
 }
-.dark-mode {
-  .rc-switch {
-    svg {
-      height: 16px;
-      margin-right: 0;
-      z-index: 1000;
-    }
-    width: $switch-dark-mode-width;
-    height: $switch-dark-mode-height;
-    border-radius: $border-radius;
-    background-color: $switch-dark-mode-bg;
-    &:after {
-      width: $switcher-dark-mode-width;
-      height: $switcher-dark-mode-width;
-      top: 4px;
-      left: 4px;
-      z-index: 100;
-      border-radius: $border-radius;
-      box-shadow: 0px 2px 2px 0px rgba(100, 116, 139, 0.12);
-    }
-    &:focus {
-      border: none;
-      box-shadow: none;
-    }
-    &:hover {
-      background-color: $switch-dark-mode-bg;
-    }
-    &-checked {
-      &:after {
-        left: 36px;
-        background-color: $switch-dark-mode-bg-dark;
-        box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.16);
-        &:hover {
-          background-color: $switcher-checked-dark-mode-bg;
-        }
-      }
-      &:hover {
-        background-color: $switcher-checked-dark-mode-bg;
-      }
-      background-color: $switcher-checked-dark-mode-bg;
-    }
-  }
-}
 .border-1 {
   border: 1px solid $hr-border-color;
 }
 .border-right {
-  border-right:  1px solid $hr-border-color;
+  border-right: 1px solid $hr-border-color;
 }
 .collapsible__content {
-  svg, ion-icon {
+  svg,
+  ion-icon {
     text-align: center;
     width: 16px;
     height: 16px;
@@ -144,11 +118,11 @@ nav a {
     background-color: $primary-alfa-8;
   }
 }
-  .collapsible.active {
-    .collapsible-title {
-      pointer-events: none;
-    }
+.collapsible.active {
+  .collapsible-title {
+    pointer-events: none;
   }
+}
 .collapsible__content a {
   padding-left: 12px;
   padding-right: 4px;

@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+import pytz
 import re2 as re  # type: ignore[import-untyped]
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
@@ -15,19 +16,21 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from django.template import loader
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
-from django.views.generic import ListView
-from django.views.generic.edit import FormView
+from django.views.generic import ListView, TemplateView
 
 from app_analytics.influxdb_wrapper import (
     get_event_list_for_organisation,
     get_events_for_organisation,
 )
+from core.helpers import get_current_site_url
 from environments.dynamodb.migrator import IdentityMigrator
 from environments.identities.models import Identity
+from environments.models import Environment
+from features.models import Feature
 from import_export.export import full_export
 from organisations.chargebee.tasks import update_chargebee_cache
 from organisations.models import (
@@ -39,10 +42,10 @@ from organisations.tasks import (
     update_organisation_subscription_information_cache,
     update_organisation_subscription_information_influx_cache,
 )
+from projects.models import Project
 from users.models import FFAdminUser
 
 from .forms import (
-    EmailUsageForm,
     EndTrialForm,
     MaxAPICallsForm,
     MaxSeatsForm,
@@ -67,7 +70,14 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
     template_name = "sales_dashboard/home.html"
 
     def get_queryset(self):  # type: ignore[no-untyped-def]
-        queryset = Organisation.objects.annotate(
+        if self.request.GET.get("include_deleted") == "on" or self.request.GET.get(
+            "search"
+        ):
+            queryset = Organisation.objects.all_with_deleted()
+        else:
+            queryset = Organisation.objects.all()
+
+        queryset = queryset.annotate(
             num_projects=Count("projects", distinct=True),
             num_users=Count("users", distinct=True),
             num_features=Count("projects__features", distinct=True),
@@ -105,6 +115,7 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
         data["filter_plan"] = self.request.GET.get("filter_plan")
         data["sort_field"] = self.request.GET.get("sort_field")
         data["sort_direction"] = self.request.GET.get("sort_direction")
+        data["include_deleted"] = self.request.GET.get("include_deleted", "off") == "on"
 
         # Use the most recent "influx_updated_at" in
         # OrganisationSubscriptionInformationCache object to determine
@@ -155,7 +166,8 @@ class OrganisationList(ListView):  # type: ignore[type-arg]
 @staff_member_required
 def organisation_info(request: HttpRequest, organisation_id: int) -> HttpResponse:
     organisation = get_object_or_404(
-        Organisation.objects.select_related("subscription"), pk=organisation_id
+        Organisation.objects.all_with_deleted().select_related("subscription"),
+        pk=organisation_id,
     )
     template = loader.get_template("sales_dashboard/organisation.html")
     subscription_metadata = organisation.subscription.get_subscription_metadata()
@@ -286,18 +298,21 @@ def migrate_identities_to_edge(request, project_id):  # type: ignore[no-untyped-
     name="get",
     decorator=staff_member_required(),
 )
-@method_decorator(
-    name="post",
-    decorator=staff_member_required(),
-)
-class EmailUsage(FormView):  # type: ignore[type-arg]
-    form_class = EmailUsageForm
-    template_name = "sales_dashboard/email-usage.html"
-    success_url = reverse_lazy("sales_dashboard:index")
+class UsageReport(TemplateView):  # pragma: no cover
+    template_name = "sales_dashboard/usage.html"
 
-    def form_valid(self, form):  # type: ignore[no-untyped-def]
-        form.save()
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):  # type: ignore[no-untyped-def]
+        context = super().get_context_data(**kwargs)
+        context["stats"] = {
+            "site_url": get_current_site_url(),
+            "total_organisations": Organisation.objects.all().count(),
+            "total_projects": Project.objects.all().count(),
+            "total_environments": Environment.objects.all().count(),
+            "total_features": Feature.objects.all().count(),
+            "total_seats": FFAdminUser.objects.all().count(),
+            "report_date": timezone.now().astimezone(pytz.UTC),
+        }
+        return context
 
 
 @staff_member_required()  # type: ignore[misc]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_PROJECT,
 )
@@ -11,7 +11,7 @@ from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import no_body, swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -23,6 +23,7 @@ from environments.serializers import EnvironmentSerializerLight
 from permissions.permissions_calculator import get_project_permission_data
 from permissions.serializers import (
     PermissionModelSerializer,
+    UserDetailedPermissionsSerializer,
     UserObjectPermissionsSerializer,
 )
 from projects.exceptions import (
@@ -48,6 +49,7 @@ from projects.serializers import (
     ProjectRetrieveSerializer,
     ProjectUpdateSerializer,
 )
+from users.models import FFAdminUser
 
 
 @method_decorator(
@@ -91,7 +93,6 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_queryset(self):  # type: ignore[no-untyped-def]
         if getattr(self, "swagger_fake_view", False):
             return Project.objects.none()
-
         queryset = self.request.user.get_permitted_projects(permission_key=VIEW_PROJECT)  # type: ignore[union-attr]
 
         organisation_id = self.request.query_params.get("organisation")
@@ -141,6 +142,34 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
             ).data
         )
 
+    @swagger_auto_schema(
+        responses={200: UserDetailedPermissionsSerializer},
+    )  # type: ignore[misc]
+    @action(
+        detail=True,
+        methods=["GET"],
+        url_path=r"user-detailed-permissions/(?P<user_id>\d+)",
+        url_name="user-detailed-permissions",
+    )
+    def detailed_permissions(self, request: Request, pk: str, user_id: str) -> Response:
+        project = self.get_object()
+        user = request.user
+        user_id_int = int(user_id)
+
+        if request.user.id != user_id_int:
+            if not request.user.is_project_admin(project):  # type: ignore[union-attr]
+                # Only project admin can get permissions of other users
+                raise PermissionDenied()
+
+            user = get_object_or_404(FFAdminUser, id=user_id_int)
+
+        permission_data = get_project_permission_data(project, user)  # type: ignore[arg-type]
+
+        serializer = UserDetailedPermissionsSerializer(
+            permission_data.to_detailed_permissions_data()
+        )
+        return Response(serializer.data)
+
     @swagger_auto_schema(responses={200: UserObjectPermissionsSerializer()})  # type: ignore[misc]
     @action(
         detail=True,
@@ -156,7 +185,9 @@ class ProjectViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
                     "detail": "This endpoint can only be used with a user and not Master API Key"
                 },
             )
-        permission_data = get_project_permission_data(pk, user_id=request.user.id)
+
+        project = self.get_object()
+        permission_data = get_project_permission_data(project, user=request.user)  # type: ignore[arg-type]
         serializer = UserObjectPermissionsSerializer(instance=permission_data)
         return Response(serializer.data)
 
@@ -236,8 +267,10 @@ class UserPermissionGroupProjectPermissionsViewSet(BaseProjectPermissionsViewSet
 @permission_classes([IsAuthenticated, IsProjectAdmin])
 def get_user_project_permissions(request, **kwargs):  # type: ignore[no-untyped-def]
     user_id = kwargs["user_pk"]
+    project = get_object_or_404(Project, pk=kwargs["project_pk"])
+    user = get_object_or_404(FFAdminUser, pk=user_id)
 
-    permission_data = get_project_permission_data(kwargs["project_pk"], user_id=user_id)
+    permission_data = get_project_permission_data(project, user=user)
     # TODO: expose `user` and `groups` attributes from user_permissions_data
     serializer = UserObjectPermissionsSerializer(instance=permission_data)
     return Response(serializer.data)

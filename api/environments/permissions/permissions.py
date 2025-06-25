@@ -1,9 +1,9 @@
 import typing
 
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import (  # type: ignore[import-untyped]
+from common.projects.permissions import (
     CREATE_ENVIRONMENT,
 )
 from django.db.models import Model, Q
@@ -53,7 +53,8 @@ class EnvironmentPermissions(IsAuthenticated):
             return request.user.has_environment_permission(VIEW_ENVIRONMENT, obj)
 
         return request.user.is_environment_admin(obj) or view.action in [
-            "user_permissions"
+            "user_permissions",
+            "detailed_permissions",
         ]
 
 

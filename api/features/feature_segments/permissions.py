@@ -1,6 +1,4 @@
-from contextlib import suppress
-
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_SEGMENT_OVERRIDES,
 )
 from rest_framework.permissions import IsAuthenticated
@@ -22,13 +20,20 @@ class FeatureSegmentPermissions(IsAuthenticated):
             return True
 
         if view.action == "create":
-            with suppress(Environment.DoesNotExist, ValueError):
-                environment = request.data.get("environment")
-                environment = Environment.objects.get(id=int(environment))
+            try:
+                # Validate here because this evaluates prior to the serializer layer
+                environment_pk = int(request.data.get("environment"))
+            except (TypeError, ValueError):
+                return False
 
-                return request.user.has_environment_permission(
-                    MANAGE_SEGMENT_OVERRIDES, environment
-                )
+            try:
+                environment = Environment.objects.get(pk=environment_pk)
+            except Environment.DoesNotExist:
+                return False
+
+            return request.user.has_environment_permission(
+                MANAGE_SEGMENT_OVERRIDES, environment
+            )
 
         return False
 

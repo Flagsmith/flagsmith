@@ -10,7 +10,7 @@ const getIdentityEndpoint = (environmentId: string, isEdge: boolean) => {
 }
 
 export const identityService = service
-  .enhanceEndpoints({ addTagTypes: ['Identity'] })
+  .enhanceEndpoints({ addTagTypes: ['Identity', 'Environment'] })
   .injectEndpoints({
     endpoints: (builder) => ({
       createIdentities: builder.mutation<
@@ -133,6 +133,7 @@ export const identityService = service
         invalidatesTags: (res) => [
           { id: 'LIST', type: 'Identity' },
           { id: res?.id, type: 'Identity' },
+          { id: 'METRICS', type: 'Environment' },
         ],
         query: (query: Req['updateIdentity']) => ({
           body: query.data,
@@ -141,7 +142,7 @@ export const identityService = service
             query.environmentId
           }/${Utils.getIdentitiesEndpoint()}/${
             query.data.identity_uuid || query.data.id
-          }`,
+          }/`,
         }),
       }),
       // END OF ENDPOINTS

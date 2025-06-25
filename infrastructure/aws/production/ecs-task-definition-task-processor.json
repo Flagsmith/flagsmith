@@ -6,15 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-task-processor",
-            "entryPoint": [
-                "python",
-                "manage.py",
-                "runprocessor",
-                "--sleepintervalms",
-                "1000",
-                "--numthreads",
-                "12"
-            ],
+            "command": ["run-task-processor"],
             "essential": true,
             "environment": [
                 {
@@ -28,6 +20,10 @@
                 {
                     "name": "AWS_DEFAULT_REGION",
                     "value": "eu-west-2"
+                },
+                {
+                    "name": "DJANGO_ALLOWED_HOSTS",
+                    "value": "*"
                 },
                 {
                     "name": "DJANGO_SETTINGS_MODULE",
@@ -114,26 +110,6 @@
                     "value": "https://origin.realtime.flagsmith.com"
                 },
                 {
-                    "name": "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY",
-                    "value": "ab20826fa9dce795b0f078fed778b8dbdf89fe01"
-                },
-                {
-                    "name": "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY",
-                    "value": "66f192b2d9660f1472d9a238133be6f78fb7cf93"
-                },
-                {
-                    "name": "PIPEDRIVE_BASE_API_URL",
-                    "value": "https://bullettrain2.pipedrive.com/api/v1"
-                },
-                {
-                    "name": "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY",
-                    "value": "f001193d9249bb49d631d7c2c516ab72f9ebd204"
-                },
-                {
-                    "name": "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID",
-                    "value": "d828a3a0-bf34-11ed-b08d-b12d3497f5c4"
-                },
-                {
                     "name": "TASK_DELETE_RUN_TIME",
                     "value": "07:00"
                 },
@@ -172,6 +148,14 @@
                 {
                     "name": "ORG_SUBSCRIPTION_CANCELLED_ALERT_RECIPIENT_LIST",
                     "value": "customersuccess@flagsmith.com"
+                },
+                {
+                    "name": "TASK_PROCESSOR_SLEEP_INTERVAL_MS",
+                    "value": "1000"
+                },
+                {
+                    "name": "TASK_PROCESSOR_NUM_THREADS",
+                    "value": "12"
                 }
             ],
             "secrets": [
@@ -224,10 +208,6 @@
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:SSE_AUTHENTICATION_TOKEN::"
                 },
                 {
-                    "name": "PIPEDRIVE_API_TOKEN",
-                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:PIPEDRIVE_API_TOKEN::"
-                },
-                {
                     "name": "HUBSPOT_ACCESS_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
                 },
@@ -250,9 +230,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }

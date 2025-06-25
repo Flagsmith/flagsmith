@@ -1,9 +1,11 @@
 import typing
+from typing import cast
 
-from common.metadata.serializers import (  # type: ignore[import-untyped]
+from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.db import models
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
@@ -75,7 +77,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[t
 
 
 class EnvironmentSerializerWithMetadata(
-    SerializerWithMetadata,  # type: ignore[misc]
+    SerializerWithMetadata,
     DeleteBeforeUpdateWritableNestedModelSerializer,
     EnvironmentSerializerLight,
 ):
@@ -84,15 +86,27 @@ class EnvironmentSerializerWithMetadata(
     class Meta(EnvironmentSerializerLight.Meta):
         fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
-    def get_project(self, validated_data: dict = None) -> Project:  # type: ignore[type-arg,assignment]
+    def get_project(
+        self,
+        validated_data: dict[str, typing.Any] | None = None,
+    ) -> Project:
         if self.instance:
             return self.instance.project  # type: ignore[no-any-return,union-attr]
-        elif "project" in validated_data:
+        elif validated_data and "project" in validated_data:
             return validated_data["project"]  # type: ignore[no-any-return]
 
         raise serializers.ValidationError(
             "Unable to retrieve project for metadata validation."
         )
+
+    def update(
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
+    ) -> Environment:
+        metadata_items = validated_data.pop("metadata", [])
+        environment = cast(Environment, super().update(instance, validated_data))
+        self.update_metadata(environment, metadata_items)
+        environment.refresh_from_db()
+        return environment
 
 
 class EnvironmentRetrieveSerializerWithMetadata(EnvironmentSerializerWithMetadata):

@@ -2,17 +2,18 @@ import typing
 from datetime import datetime
 
 import django.core.exceptions
-from common.features.multivariate.serializers import (  # type: ignore[import-untyped]
+from common.features.multivariate.serializers import (
     MultivariateFeatureStateValueSerializer,
 )
-from common.features.serializers import (  # type: ignore[import-untyped]
+from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
-from common.metadata.serializers import (  # type: ignore[import-untyped]
+from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
@@ -326,13 +327,16 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSerializer):  # type: ignore[misc]
+class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
     class Meta(CreateFeatureSerializer.Meta):
         fields = CreateFeatureSerializer.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
-    def get_project(self, validated_data: dict = None) -> Project:  # type: ignore[type-arg,assignment]
+    def get_project(
+        self,
+        validated_data: dict[str, typing.Any] | None = None,
+    ) -> Project:
         project = self.context.get("project")
         if project:
             return project  # type: ignore[no-any-return]
@@ -340,6 +344,15 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
             raise serializers.ValidationError(
                 "Unable to retrieve project for metadata validation."
             )
+
+    def update(
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
+    ) -> Feature:
+        metadata_items = validated_data.pop("metadata", [])
+        feature = typing.cast(Feature, super().update(instance, validated_data))
+        self.update_metadata(feature, metadata_items)
+        feature.refresh_from_db()
+        return feature
 
 
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
@@ -554,7 +567,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
             )
 
         mv_values = attrs.get("multivariate_feature_state_values", [])
-        if sum([v["percentage_allocation"] for v in mv_values]) > 100:
+        if sum([v.get("percentage_allocation", 0) for v in mv_values]) > 100:
             raise serializers.ValidationError(
                 "Multivariate percentage values exceed 100%."
             )
@@ -600,7 +613,7 @@ class GetUsageDataQuerySerializer(serializers.Serializer):  # type: ignore[type-
 
 
 class WritableNestedFeatureStateSerializer(FeatureStateSerializerBasic):
-    feature_state_value = FeatureStateValueSerializer(required=False)
+    feature_state_value = FeatureStateValueSerializer(required=False)  # type: ignore[assignment]
 
     class Meta(FeatureStateSerializerBasic.Meta):
         extra_kwargs = {"environment": {"required": True}}
@@ -623,7 +636,7 @@ class SDKFeatureStatesQuerySerializer(serializers.Serializer):  # type: ignore[t
 
 
 class CustomCreateSegmentOverrideFeatureStateSerializer(
-    CreateSegmentOverrideFeatureStateSerializer  # type: ignore[misc]
+    CreateSegmentOverrideFeatureStateSerializer
 ):
     validate_override_limit = True
 
@@ -632,7 +645,7 @@ class CustomCreateSegmentOverrideFeatureStateSerializer(
     )
 
     def _get_save_kwargs(self, field_name):  # type: ignore[no-untyped-def]
-        kwargs = super()._get_save_kwargs(field_name)
+        kwargs = super()._get_save_kwargs(field_name)  # type: ignore[no-untyped-call]
         if field_name == "feature_segment":
             kwargs["feature"] = self.context.get("feature")
             kwargs["environment"] = self.context.get("environment")
@@ -647,4 +660,4 @@ class CustomCreateSegmentOverrideFeatureStateSerializer(
             raise serializers.ValidationError(
                 {"environment": SEGMENT_OVERRIDE_LIMIT_EXCEEDED_MESSAGE}
             )
-        return super().create(validated_data)  # type: ignore[no-any-return]
+        return super().create(validated_data)  # type: ignore[no-any-return,no-untyped-call]

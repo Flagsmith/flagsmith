@@ -6,9 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": [
-                "serve"
-            ],
+            "command": ["serve"],
             "cpu": 0,
             "portMappings": [
                 {
@@ -160,6 +158,14 @@
                     "value": "300"
                 },
                 {
+                    "name": "USE_CACHE_FOR_USAGE_DATA",
+                    "value": "True"
+                },
+                {
+                    "name": "API_USAGE_CACHE_SECONDS",
+                    "value": "300"
+                },
+                {
                     "name": "EDGE_RELEASE_DATETIME",
                     "value": "2022-06-07T10:00:00Z"
                 },
@@ -174,18 +180,6 @@
                 {
                     "name": "SSE_SERVER_BASE_URL",
                     "value": "https://origin.realtime.flagsmith.com"
-                },
-                {
-                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
-                    "value": "True"
-                },
-                {
-                    "name": "AUTO_SEAT_UPGRADE_PLANS",
-                    "value": "scale-up-12-months-v2-gbp,scale-up-12-months-v2-eur,scale-up-12-months-v2,scale-up-quarterly-v2-semiannual,scale-up-quarterly-v2,scale-up-v2,scale-up-24-months-v2"
-                },
-                {
-                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
                 },
                 {
                     "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
@@ -256,6 +250,10 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
+                },
+                {
+                    "name": "HUBSPOT_ACCESS_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
                 }
             ],
             "logConfiguration": {
@@ -268,9 +266,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }

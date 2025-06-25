@@ -1,3 +1,6 @@
+from typing import Any
+
+from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     NestedCreateMixin,
     NestedUpdateMixin,
@@ -10,7 +13,9 @@ class NestedUpdateMixinDeleteBeforeUpdate(NestedUpdateMixin):
     ref: https://github.com/beda-software/drf-writable-nested/issues/158
     """
 
-    def update(self, instance, validated_data):  # type: ignore[no-untyped-def]
+    def update(
+        self, instance: models.Model, validated_data: dict[str, Any]
+    ) -> models.Model:
         relations, reverse_relations = self._extract_relations(validated_data)  # type: ignore[no-untyped-call]
 
         # Create or update direct relations (foreign key, one-to-one)

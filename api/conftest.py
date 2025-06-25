@@ -1,16 +1,18 @@
 import logging
 import os
+import site
 import typing
 from unittest.mock import MagicMock
 
 import boto3
 import pytest
-from common.environments.permissions import (  # type: ignore[import-untyped]
+from common.environments.permissions import (
     MANAGE_IDENTITIES,
+    MANAGE_SEGMENT_OVERRIDES,
     VIEW_ENVIRONMENT,
     VIEW_IDENTITIES,
 )
-from common.projects.permissions import VIEW_PROJECT  # type: ignore[import-untyped]
+from common.projects.permissions import VIEW_PROJECT
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
@@ -18,12 +20,14 @@ from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
+from pyfakefs.fake_filesystem import FakeFilesystem
+from pytest import FixtureRequest
 from pytest_django.fixtures import SettingsWrapper
 from pytest_django.plugin import blocking_manager_key
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from task_processor.task_run_method import TaskRunMethod  # type: ignore[import-untyped]
+from task_processor.task_run_method import TaskRunMethod
 from urllib3 import BaseHTTPResponse
 from urllib3.connectionpool import HTTPConnectionPool
 from xdist import get_xdist_worker_id  # type: ignore[import-untyped]
@@ -75,6 +79,7 @@ from projects.models import (
 )
 from projects.tags.models import Tag
 from segments.models import Condition, Segment, SegmentRule
+from segments.services import SegmentCloneService
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
@@ -130,6 +135,26 @@ def pytest_configure(config: pytest.Config) -> None:
                 interactive=False,
                 parallel=config.option.numprocesses,
             )
+
+
+@pytest.fixture
+def fs(fs: FakeFilesystem) -> FakeFilesystem:
+    """
+    Provide a fake filesystem for tests
+
+    NOTE: Sometimes pyfakefs patching goes wonky, causing the fake file system
+    to be cached across tests. This can lead tests failing to access real files
+    even if they do not use this fixture. Because we can't fix this issue now,
+    it's safer to allow site-packages [read-only] access from tests.
+    """
+    app_path = os.path.dirname(os.path.abspath(__file__))
+    site_packages = site.getsitepackages()  # Allow files within dependencies
+    paths_to_add = [app_path]
+    for site_package_path in site_packages:
+        if not site_package_path.startswith(app_path):
+            paths_to_add.append(site_package_path)
+    fs.add_real_paths(paths_to_add)
+    return fs
 
 
 @pytest.fixture(scope="session")
@@ -368,7 +393,7 @@ def segment(project: Project):  # type: ignore[no-untyped-def]
     _segment = Segment.objects.create(name="segment", project=project)
     # Deep clone the segment to ensure that any bugs around
     # versioning get bubbled up through the test suite.
-    _segment.deep_clone()
+    SegmentCloneService(_segment).deep_clone()
 
     return _segment
 
@@ -567,10 +592,13 @@ def feature_state(feature: Feature, environment: Environment) -> FeatureState:
 
 
 @pytest.fixture()
-def feature_state_with_value(environment: Environment) -> FeatureState:
+def feature_state_with_value(
+    environment: Environment, request: FixtureRequest
+) -> FeatureState:
+    initial_value = getattr(request, "param", "foo")
     feature = Feature.objects.create(
         name="feature_with_value",
-        initial_value="foo",
+        initial_value=initial_value,
         default_enabled=True,
         project=environment.project,
     )
@@ -771,6 +799,11 @@ def view_project_permission(db):  # type: ignore[no-untyped-def]
 @pytest.fixture()
 def create_project_permission(db):  # type: ignore[no-untyped-def]
     return PermissionModel.objects.get(key=CREATE_PROJECT)
+
+
+@pytest.fixture()
+def manage_segment_overrides_permission(db: None) -> PermissionModel:
+    return PermissionModel.objects.get(key=MANAGE_SEGMENT_OVERRIDES)
 
 
 @pytest.fixture()
