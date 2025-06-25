@@ -30,7 +30,6 @@ const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
     const latestChangeRequest = !editingChangeRequest?.id
       ? changes?.at(-1)?.id
       : editingChangeRequest?.id
-    console.log('history', history)
     closeModal()
     history.push(
       `/project/${projectId}/environment/${environmentId}/change-requests/${latestChangeRequest}`,
