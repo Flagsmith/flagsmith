@@ -18,6 +18,7 @@ NINETY_DAY_PERIOD: PeriodType
 TRACK_HEADERS: dict[str, Label] = {
     "Flagsmith-Application-Name": "client_application_name",
     "Flagsmith-Application-Version": "client_application_version",
+    "User-Agent": "user_agent",
 }
 LABELS: tuple[Label, ...] = get_args(Label)
 

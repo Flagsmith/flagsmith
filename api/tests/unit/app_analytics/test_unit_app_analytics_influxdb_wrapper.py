@@ -225,7 +225,7 @@ def test_get_multiple_event_list_for_organisation__calls_expected(
         f"{build_filter_string(expected_filters)} "
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         '"project_id", "environment", "environment_id", "host"]) '
-        '|> group(columns: ["client_application_name", "client_application_version"]) '
+        '|> group(columns: ["client_application_name", "client_application_version", "user_agent"]) '
         '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
     )
 
@@ -265,7 +265,7 @@ def test_get_multiple_event_list_for_organisation__labels_filter__calls_expected
         '|> filter(fn: (r) => r["client_application_name"] == "value") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         '"project_id", "environment", "environment_id", "host"]) '
-        '|> group(columns: ["client_application_name", "client_application_version"]) '
+        '|> group(columns: ["client_application_name", "client_application_version", "user_agent"]) '
         '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
     )
 
@@ -298,7 +298,7 @@ def test_get_multiple_event_list_for_feature__calls_expected(
         f'|> filter(fn: (r) => r["feature_id"] == "{feature_name}") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         '"project_id", "environment", "environment_id", "host"]) '
-        '|> group(columns: ["client_application_name", "client_application_version"]) '
+        '|> group(columns: ["client_application_name", "client_application_version", "user_agent"]) '
         '|> aggregateWindow(every: 24h, fn: sum, createEmpty: false, timeSrc: "_start") '
         '|> yield(name: "sum")'
     )
@@ -331,7 +331,7 @@ def test_get_multiple_event_list_for_feature__labels_filter__calls_expected(
         '|> filter(fn: (r) => r["client_application_name"] == "value") '
         '|> drop(columns: ["organisation", "organisation_id", "type", "project", '
         '"project_id", "environment", "environment_id", "host"]) '
-        '|> group(columns: ["client_application_name", "client_application_version"]) '
+        '|> group(columns: ["client_application_name", "client_application_version", "user_agent"]) '
         '|> aggregateWindow(every: 24h, fn: sum, createEmpty: false, timeSrc: "_start") '
         '|> yield(name: "sum")'
     )

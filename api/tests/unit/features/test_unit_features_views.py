@@ -902,6 +902,7 @@ def test_get_feature_evaluation_data(
             "labels": {
                 "client_application_name": "web",
                 "client_application_version": None,
+                "user_agent": None,
             },
         },
         {
@@ -953,6 +954,7 @@ def test_get_feature_evaluation_data__labels_filter__returns_expected(
             "labels": {
                 "client_application_name": "web",
                 "client_application_version": None,
+                "user_agent": None,
             },
         },
     ]

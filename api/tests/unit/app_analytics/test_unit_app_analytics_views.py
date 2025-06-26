@@ -157,6 +157,7 @@ def test_get_usage_data__current_billing_period(
             "labels": {
                 "client_application_name": "test-app",
                 "client_application_version": None,
+                "user_agent": None,
             },
         },
     ]
@@ -345,6 +346,7 @@ def test_get_usage_data__labels_filter__returns_expected(
             "labels": {
                 "client_application_name": "test-app",
                 "client_application_version": None,
+                "user_agent": None,
             },
         },
     ]
@@ -551,11 +553,13 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
             {
                 "Flagsmith-Application-Name": "web",
                 "Flagsmith-Application-Version": "1.0",
+                "User-Agent": "python-requests/2.31.0",
                 "Unrelated-Header": "value",
             },
             {
                 "client_application_name": "web",
                 "client_application_version": "1.0",
+                "user_agent": "python-requests/2.31.0",
             },
         ),
     ],
