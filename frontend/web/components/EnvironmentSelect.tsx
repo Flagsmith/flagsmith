@@ -53,6 +53,7 @@ const EnvironmentSelect: FC<EnvironmentSelectType> = ({
     <div>
       <Select
         {...rest}
+        className='react-select select-xsm'
         value={
           foundValue
             ? foundValue

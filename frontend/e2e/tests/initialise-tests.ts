@@ -20,7 +20,7 @@ export default async function () {
   await setText('[name="orgName"]', 'Flagsmith Ltd 0')
   await click('#create-org-btn')
   if(flagsmith.hasFeature("welcome_page")) {
-    await click(byId('create-project')) // Click create project from welcome page
+  await click(byId('create-project')) // Click create project from welcome page
   } else {
     await waitForElementVisible(byId('project-manage-widget'))
   }

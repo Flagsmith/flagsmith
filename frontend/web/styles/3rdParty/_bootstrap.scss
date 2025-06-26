@@ -14,6 +14,8 @@
 @import "~bootstrap/scss/utilities"; // Required
 
 // 4. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
+
+@import "../project/spacing-utils";
 @import "~bootstrap/scss/utilities/api";
 
 // 5. Include any optional Bootstrap CSS as needed

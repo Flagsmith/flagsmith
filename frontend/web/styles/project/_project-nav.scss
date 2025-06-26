@@ -20,7 +20,6 @@ nav a {
   }
 }
 .nav-sub-link {
-  padding-bottom: 10px;
   color: $body-color;
   &-inner {
     padding: 4px;
@@ -86,6 +85,11 @@ nav a {
 .border-right {
   border-right: 1px solid $hr-border-color;
 }
+@include media-breakpoint-up(md) {
+  .border-md-right {
+    border-right:  1px solid $hr-border-color;
+  }
+}
 .collapsible__content {
   svg,
   ion-icon {
@@ -100,13 +104,6 @@ nav a {
   }
   ion-icon {
     font-size: $font-size-base;
-  }
-}
-.aside-nav a:hover {
-  svg {
-    path {
-      fill: $primary;
-    }
   }
 }
 .collapsible-title {
@@ -144,17 +141,21 @@ nav a {
       opacity: 0.3;
     }
   }
-  .aside-nav a {
+}
+
+@include media-breakpoint-down(md) {
+  .nav-sub-link {
+    border-bottom: none !important;
     &.active {
-      background-color: $primary-alfa-16;
-    }
-  }
-  .aside-nav a:hover {
-    background-color: $primary-alfa-8;
-    svg {
+      color: $primary;
       path {
-        fill: $body-color-dark;
+        fill: $primary;
       }
     }
   }
+  .nav-modal {
+    left: -50px;
+    width: calc(100vw);
+  }
 }
+

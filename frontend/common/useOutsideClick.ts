@@ -9,15 +9,18 @@ const useOutsideClick = (
       if (!ref.current || ref.current.contains(event.target as Node)) {
         return
       }
-      handler(event)
+      setTimeout(() => {
+        //ensures that other handlers get hit first
+        handler(event)
+      }, 100)
     }
 
-    document.addEventListener('mousedown', listener)
-    document.addEventListener('touchstart', listener)
+    document.addEventListener('mouseup', listener)
+    document.addEventListener('touchend', listener)
 
     return () => {
-      document.removeEventListener('mousedown', listener)
-      document.removeEventListener('touchstart', listener)
+      document.removeEventListener('mouseup', listener)
+      document.removeEventListener('touchend', listener)
     }
   }, [ref, handler])
 }

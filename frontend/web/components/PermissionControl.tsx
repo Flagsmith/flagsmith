@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import Select, { components } from 'react-select'
+import { components } from 'react-select'
 import Switch from './Switch'
 import Tooltip from './Tooltip'
 import BooleanDotIndicator from './BooleanDotIndicator'
@@ -101,7 +101,7 @@ const PermissionControl: React.FC<PermissionControlProps> = ({
               )
             }
           }}
-          className='react-select select-sm'
+          className='react-select'
           disabled={disabled || isAdmin || isSaving}
           options={
             supportsTag
