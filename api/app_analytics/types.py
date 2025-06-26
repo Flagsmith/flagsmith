@@ -45,6 +45,7 @@ class AnnotatedAPIUsageKey(NamedTuple):
 Label = Literal[
     "client_application_name",
     "client_application_version",
+    "user_agent",
 ]
 
 Labels: TypeAlias = dict[Label, str]
