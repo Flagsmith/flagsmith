@@ -19,14 +19,19 @@ else:
 
 
 class LabelsQuerySerializerMixin(_SerializerType):
+    """
+    Expect label fields in the query string
+    and envelope them under a `labels_filter` key.
+
+    This is to simplify the query syntax for filtering by labels
+    while avoiding variable keyword arguments in the app_analytics
+    service interfaces.
+    """
+
     def get_fields(self) -> dict[str, serializers.Field[Any, Any, Any, Any]]:
         return {**super().get_fields(), **_get_label_fields()}
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        """
-        Yank label filters from the top level and place them under a
-        separate `labels_filter` key
-        """
         attrs = super().validate(attrs)
         if labels_filter := {
             label: attrs.pop(label)
