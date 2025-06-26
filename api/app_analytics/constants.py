@@ -14,7 +14,7 @@ NINETY_DAY_PERIOD: PeriodType
     NINETY_DAY_PERIOD,
 ) = get_args(PeriodType)
 
-# Optional headers sent from client SDK mapped to their respetive labels.
+# Optional headers sent from client SDK mapped to their respective labels.
 TRACK_HEADERS: dict[str, Label] = {
     "Flagsmith-Application-Name": "client_application_name",
     "Flagsmith-Application-Version": "client_application_version",
