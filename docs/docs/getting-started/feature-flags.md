@@ -4,7 +4,27 @@ sidebar_label: Feature Flags
 sidebar_position: 1
 ---
 
-Feature Flags are a development methodology that allow you to ship code and features before they are finished. This greatly benefits Continuous Integration and Continuous Deployment (CI/CD). The typical workflow for this is as follows.
+Feature Flags are a development methodology that allow you to ship code and features in your application before they are finished. A feature flag is a control point in your code that determines whether a particular feature or behavior is active. Flags can be simple on/off (boolean) switches, or multivariate, allowing you to select from multiple options or variants.
+
+### What do Feature Flags enable?
+
+- **Decouple deployment from release:** Ship code to production with features hidden behind flags, then enable them for users when ready.
+
+- **Staged rollouts:** Gradually enable features for a subset of users, reducing risk and allowing for real-world testing. [Learn more](/guides-and-examples/staged-feature-rollouts.md)
+
+- **A/B testing and experimentation:** Test multiple variants of a feature and measure impact. [Learn more](/advanced-use/ab-testing.md)
+
+- **Remote configuration:** Change app behavior or configuration in real time, without redeploying.
+
+### Advantages of using Feature Flags
+
+- **Safer releases:** Reduce the risk of deploying new features by controlling exposure.
+- **Faster iteration:** Test and iterate on features quickly, without waiting for deployment cycles.
+- **Targeted rollouts:** Enable features for specific users, groups, or environments.
+- **Easy rollback:** Instantly turn off features if bugs or issues are detected.
+- **Experimentation:** Run experiments and gather data to inform product decisions.
+
+### Workflow
 
 1. You are about to start work on a new feature. Lets imaging you are going to implement a sharing button with your application.
 
