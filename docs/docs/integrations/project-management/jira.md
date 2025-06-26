@@ -47,5 +47,5 @@ Flag states now show inside Jira:
 
 ## Additional Tips
 
-- You can associate multiple Flagsmith projects to a single Jira Project
+- You can associate multiple Flagsmith projects to a single Jira project
 - You can associate multiple flags to a single Jira ticket.
