@@ -22,7 +22,7 @@ View your Flagsmith flags inside Jira.
 3. When prompted, add the Flagsmith API key.
 4. If you are a member of more than one Organisation, select the Organisation you want to associate with the
    Integration. Otherwise you can skip this step.
-5. Go back to the Jira project, click `Project Settings > Connect Flagsmith project` and select the Flagsmith Project
+5. Go back to the Jira project, click `Project Settings > Connect Flagsmith project` and select the Flagsmith Projects
    you want to associate. Click Save.
 
 ## Adding a Flagsmith Flag to a Jira ticket
@@ -47,4 +47,5 @@ Flag states now show inside Jira:
 
 ## Additional Tips
 
+- You can associate multiple Flagsmith projects to a single Jira Project
 - You can associate multiple flags to a single Jira ticket.
