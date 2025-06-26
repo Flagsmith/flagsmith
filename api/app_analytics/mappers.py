@@ -28,6 +28,11 @@ _labels_type_adapter: TypeAdapter[Labels] = TypeAdapter(Labels)
 def map_annotated_api_usage_buckets_to_usage_data(
     api_usage_buckets: Iterable[AnnotatedAPIUsageBucket],
 ) -> list[UsageData]:
+    """
+    Aggregates API usage data buckets by date and labels.
+    Each resulting `UsageData` object contains the total count for each resource
+    for that date and labels combination.
+    """
     data_by_key: dict[AnnotatedAPIUsageKey, UsageData] = {}
     for row in api_usage_buckets:
         date = row["created_at__date"]
