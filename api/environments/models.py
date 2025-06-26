@@ -1,3 +1,4 @@
+import datetime
 import logging
 import typing
 import uuid
@@ -15,6 +16,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_CREATE,
     LifecycleModel,
     hook,
 )
@@ -49,6 +51,7 @@ from environments.metrics import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from integrations.flagsmith.client import get_client
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -194,6 +197,22 @@ class Environment(
             or settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
         ):
             environment_document_cache.delete(self.api_key)
+
+    @hook(BEFORE_CREATE)  # type: ignore[misc]
+    def enable_v2_versioning(self) -> None:
+        flagsmith_client = get_client("local", local_eval=True)
+        organisation = self.project.organisation
+        flag = flagsmith_client.get_identity_flags(
+            organisation.flagsmith_identifier,
+            traits={"organisation_id": organisation.id},
+        ).get_flag("enable_feature_versioning_for_new_projects")
+
+        if (
+            flag.enabled
+            and self.project.created_date.date()
+            >= datetime.date.fromisoformat(str(flag.value))
+        ):
+            self.use_v2_feature_versioning = True
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
