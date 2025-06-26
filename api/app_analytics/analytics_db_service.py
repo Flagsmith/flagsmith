@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from logging import getLogger
-from typing import TYPE_CHECKING, List
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -209,38 +209,33 @@ def _get_start_date_and_stop_date_for_subscribed_organisation(
     Populate start and stop date for the given period
     from the organisation's subscription information.
     """
-    if period in {constants.CURRENT_BILLING_PERIOD, constants.PREVIOUS_BILLING_PERIOD}:
-        if not (sub_cache and sub_cache.is_billing_terms_dates_set()):
-            raise NotFound("No billing periods found for this organisation.")
-
-    if TYPE_CHECKING:
-        assert sub_cache
-
     now = timezone.now()
 
     match period:
         case constants.CURRENT_BILLING_PERIOD:
-            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                days=30
-            )
+            if sub_cache and sub_cache.current_billing_term_starts_at:
+                starts_at = sub_cache.current_billing_term_starts_at
+            else:
+                raise NotFound("No billing periods found for this organisation.")
+
             month_delta = relativedelta(now, starts_at).months
             date_start = relativedelta(months=month_delta) + starts_at
-            date_stop = now
+            return date_start, now
 
         case constants.PREVIOUS_BILLING_PERIOD:
-            starts_at = sub_cache.current_billing_term_starts_at or now - timedelta(
-                days=30
-            )
+            if sub_cache and sub_cache.current_billing_term_starts_at:
+                starts_at = sub_cache.current_billing_term_starts_at
+            else:
+                raise NotFound("No billing periods found for this organisation.")
+
             month_delta = relativedelta(now, starts_at).months - 1
             month_delta += relativedelta(now, starts_at).years * 12
             date_start = relativedelta(months=month_delta) + starts_at
             date_stop = relativedelta(months=month_delta + 1) + starts_at
+            return date_start, date_stop
 
         case constants.NINETY_DAY_PERIOD:
             date_start = now - relativedelta(days=90)
-            date_stop = now
+            return date_start, now
 
-        case _:
-            return None, None
-
-    return date_start, date_stop
+    return None, None
