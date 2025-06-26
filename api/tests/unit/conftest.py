@@ -248,22 +248,12 @@ def set_flagsmith_client_flags(
 ) -> typing.Callable[[list[TestFlagData]], None]:
     class TestOfflineHandler(BaseOfflineHandler):
         def __init__(self) -> None:
+            _organisation_model = OrganisationModel(id=1, name="flagsmith-organisation")
+            _project_model = ProjectModel(
+                id=1, name="flagsmith-project", organisation=_organisation_model
+            )
             self.environment = EnvironmentModel(
-                id=1,
-                api_key="flagsmith-environment-key",
-                project=ProjectModel(
-                    id=1,
-                    name="flagsmith-project",
-                    organisation=OrganisationModel(
-                        id=1,
-                        name="flagsmith-organisation",
-                        feature_analytics=False,
-                        stop_serving_flags=False,
-                        persist_trait_data=False,
-                    ),
-                    hide_disabled_flags=False,
-                ),
-                feature_states=[],
+                id=1, api_key="test-key", project=_project_model
             )
 
         def set_flags(self, flags: list[TestFlagData]) -> None:
