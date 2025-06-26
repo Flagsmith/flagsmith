@@ -21,7 +21,14 @@ const controller = {
     store.model = flagsmith.getAllFlags()
   },
   onError() {
-    store.error = true
+    if (Project.isFlagsmithOnFlagsmith) {
+      store.model = {}
+      // TODO: Migrate to TS and use enum
+      store.error = 'fof_init_error'
+      store.loaded(true)
+      return
+    }
+    store.error = 'unknown'
     store.goneABitWest()
   },
 }
@@ -44,11 +51,11 @@ const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 flagsmith
   .init({
     AsyncStorage,
-    api: Project.flagsmithClientAPI,
+    api: '', //Project.flagsmithClientAPI,
     cacheFlags: true,
     enableAnalytics: Project.flagsmithAnalytics,
     enableDynatrace,
-    environmentID: Project.flagsmith,
+    environmentID: '',
     onChange: controller.loaded,
     realtime: Project.flagsmithRealtime,
   })

@@ -206,7 +206,8 @@ const Utils = Object.assign({}, require('./base/_utils'), {
    *  only add behaviour to Flagsmith-on-Flagsmith flags that have been explicitly created by customers.
    */
   flagsmithFeatureExists(flag: string) {
-    return Object.prototype.hasOwnProperty.call(flagsmith.getAllFlags(), flag)
+    const allFlags = flagsmith?.getAllFlags()
+    return allFlags && Object.prototype.hasOwnProperty.call(allFlags, flag)
   },
   getContentType(contentTypes: ContentType[], model: string, type: string) {
     return contentTypes.find((c: ContentType) => c[model] === type) || null

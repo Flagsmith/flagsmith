@@ -38,6 +38,7 @@ declare global {
     theme?: string,
     expiry?: number,
     action?: { buttonText: string; onClick: () => void },
+    position?: 'top' | 'bottom',
   ) => void
   const Flex: typeof Component
   const isMobile: boolean

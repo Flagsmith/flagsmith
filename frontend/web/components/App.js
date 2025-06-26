@@ -16,14 +16,17 @@ import { Provider } from 'react-redux'
 import { getStore } from 'common/store'
 import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import Button from './base/forms/Button'
 import Icon from './Icon'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
 import GithubStar from './GithubStar'
-import Tooltip from './Tooltip'
 import classNames from 'classnames'
 import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
+import {
+  getStartupErrorText,
+  isFlagsmithOnFlagsmithError,
+  isMaintenanceError,
+} from './base/errors/init.error'
 import NavSubLink from './navigation/NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
 import UsersIcon from './svg/UsersIcon'
@@ -304,9 +307,24 @@ const App = class extends Component {
     ) {
       return <Blocked />
     }
-    if (Project.maintenance || this.props.error || !window.projectOverrides) {
+    const maintenanceMode =
+      Utils.getFlagsmithHasFeature('maintenance_mode') || Project.maintenance
+    const isUnknownError =
+      this.props.error && !isFlagsmithOnFlagsmithError(this.props.error)
+    if (maintenanceMode || !window.projectOverrides || isUnknownError) {
       return <Maintenance />
     }
+
+    if (this.props.error && isFlagsmithOnFlagsmithError(this.props.error)) {
+      toast(
+        getStartupErrorText(this.props.error),
+        'danger',
+        2 * 60 * 1000,
+        undefined,
+        'top',
+      )
+    }
+
     const activeProject = OrganisationStore.getProject(projectId)
     const projectNotLoaded =
       !activeProject && document.location.href.includes('project/')
@@ -326,20 +344,20 @@ const App = class extends Component {
         </AccountProvider>
       )
     }
+
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
+
     if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
     const isOrganisationSelect = document.location.pathname === '/organisations'
     const integrations = Object.keys(Utils.getIntegrationData())
-    const environmentMetricsEnabled = Utils.getFlagsmithHasFeature(
-      'environment_metrics',
-    )
     const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
       'project_metrics_tooltip',
     )
+
     return (
       <Provider store={getStore()}>
         <AccountProvider
