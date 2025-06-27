@@ -59,7 +59,8 @@ flagsmith
     onChange: controller.loaded,
     realtime: Project.flagsmithRealtime,
   })
-  .catch(() => {
+  .catch((e) => {
+    console.error(e)
     controller.onError()
   })
 
