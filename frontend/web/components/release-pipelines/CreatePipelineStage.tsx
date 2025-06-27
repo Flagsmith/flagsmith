@@ -2,7 +2,6 @@ import { SyntheticEvent, useEffect, useMemo, useState } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { useGetSegmentsQuery } from 'common/services/useSegment'
 import {
   StageActionType,
   StageTrigger,
@@ -10,19 +9,63 @@ import {
 } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
-import {
-  FLAG_ACTION_OPTIONS,
-  TIME_UNIT_OPTIONS,
-  TRIGGER_OPTIONS,
-} from './constants'
+import { TIME_UNIT_OPTIONS, TimeUnit, TRIGGER_OPTIONS } from './constants'
 import { StageAction } from 'common/types/responses'
 import moment from 'moment'
 import Input from 'components/base/forms/Input'
 import { PipelineStageRequest } from 'common/types/requests'
+import PipelineStageActions from './PipelineStageActions'
 
 type DraftStageType = PipelineStageRequest
+type TimeUnitType = (typeof TimeUnit)[keyof typeof TimeUnit]
 
-type TimeUnit = 'days' | 'hours' | 'minutes'
+const getExistingWaitForTime = (
+  waitFor: string | undefined,
+): { amountOfTime: number; timeUnit: TimeUnitType } | undefined => {
+  if (!waitFor) {
+    return
+  }
+
+  const timeParts = waitFor.split(':')
+
+  if (timeParts.length != 3) return
+
+  const [hours, minutes, seconds] = timeParts
+
+  const amountOfMinutes = Number(minutes)
+  const amountOfHours = Number(hours)
+  const amountOfSeconds = Number(seconds)
+
+  if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+    return
+  }
+
+  // Days
+  if (
+    amountOfHours % 24 === 0 &&
+    amountOfMinutes === 0 &&
+    amountOfSeconds === 0
+  ) {
+    return {
+      amountOfTime: amountOfHours / 24,
+      timeUnit: TimeUnit.DAY,
+    }
+  }
+
+  // Hours
+  if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+    return {
+      amountOfTime: amountOfHours,
+      timeUnit: TimeUnit.HOUR,
+    }
+  }
+
+  // Minutes
+  return {
+    amountOfTime: amountOfMinutes,
+    timeUnit: TimeUnit.MINUTE,
+  }
+}
 
 const CreatePipelineStage = ({
   onChange,
@@ -33,54 +76,38 @@ const CreatePipelineStage = ({
 }: {
   stageData: DraftStageType
   onChange: (stageData: DraftStageType) => void
-  projectId: string
+  projectId: number
   showRemoveButton?: boolean
   onRemove?: () => void
 }) => {
+  const existingWaitForTime = getExistingWaitForTime(
+    stageData?.trigger?.trigger_body?.wait_for,
+  )
+
   const [searchInput, setSearchInput] = useState('')
-  const [amountOfTime, setAmountOfTime] = useState(1)
-  const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnit>('days')
-  const [selectedAction, setSelectedAction] = useState<{
-    label: string
-    value: string
-  }>({ label: 'Select an action', value: '' })
-  const [selectedSegment, setSelectedSegment] = useState<
-    | {
-        label: string
-        value: number | null
-      }
-    | undefined
-  >()
+
+  // These are not fetched directly from stageData because
+  // it gives more flexibility to the user to set 24h or 1 day
+  const [amountOfTime, setAmountOfTime] = useState(
+    existingWaitForTime?.amountOfTime || 1,
+  )
+  const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnitType>(
+    existingWaitForTime?.timeUnit || TimeUnit.DAY,
+  )
 
   const { data: environmentsData, isLoading: isEnvironmentsLoading } =
     useGetEnvironmentsQuery(
       {
-        projectId,
+        projectId: `${projectId}`,
       },
       { skip: !projectId },
     )
-
-  const { data: segments, isLoading: isSegmentsLoading } = useGetSegmentsQuery(
-    {
-      include_feature_specific: true,
-      page_size: 1000,
-      projectId,
-    },
-    { skip: !projectId },
-  )
 
   const selectedTrigger = useMemo(() => {
     return TRIGGER_OPTIONS.find(
       (trigger) => trigger.value === stageData.trigger.trigger_type,
     )
   }, [stageData.trigger.trigger_type])
-
-  const segmentOptions = useMemo(() => {
-    return segments?.results?.map((segment) => ({
-      label: segment.name,
-      value: segment.id,
-    }))
-  }, [segments])
 
   const environmentOptions = useMemo(() => {
     return environmentsData?.results?.map((environment) => ({
@@ -112,13 +139,10 @@ const CreatePipelineStage = ({
     if (environmentOptions?.length && stageData.environment === -1) {
       handleOnChange('environment', environmentOptions?.[0]?.value)
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [environmentOptions, stageData])
 
   const handleSegmentChange = (option: { value: number; label: string }) => {
-    setSelectedSegment(option)
-
     if (option?.value) {
       const actions = stageData.actions.map((action) => {
         if (action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT) {
@@ -135,9 +159,6 @@ const CreatePipelineStage = ({
   }
 
   const handleActionChange = (option: { value: string; label: string }) => {
-    setSelectedAction(option)
-    setSelectedSegment(undefined)
-
     if (option.value === '') {
       return handleOnChange('actions', [])
     }
@@ -154,7 +175,7 @@ const CreatePipelineStage = ({
     handleOnChange('actions', [{ action_body, action_type }])
   }
 
-  const setWaitForTrigger = (time: number, unit: TimeUnit) => {
+  const setWaitForTrigger = (time: number, unit: TimeUnitType) => {
     setAmountOfTime(time)
     setSelectedTimeUnit(unit)
 
@@ -170,10 +191,9 @@ const CreatePipelineStage = ({
   const handleTriggerChange = (option: { value: string; label: string }) => {
     if (option.value === StageTriggerType.WAIT_FOR) {
       const time = 1
-      const unit = 'days'
+      const unit = TimeUnit.DAY
 
       setWaitForTrigger(time, unit)
-
       return
     }
 
@@ -269,43 +289,12 @@ const CreatePipelineStage = ({
           </div>
         </FormGroup>
       )}
-      <Row>
-        <div className='flex-1 and-divider__line' />
-        <div className='mx-2'>Then</div>
-        <div className='flex-1 and-divider__line' />
-      </Row>
-      <FormGroup>
-        <InputGroup
-          title='Flag Action'
-          component={
-            <Select
-              menuPortalTarget={document.body}
-              maxMenuHeight={120}
-              value={selectedAction}
-              options={FLAG_ACTION_OPTIONS}
-              onChange={handleActionChange}
-            />
-          }
-        />
-      </FormGroup>
-      {selectedAction.value.includes('FOR_SEGMENT') && (
-        <FormGroup className='pl-4'>
-          <InputGroup
-            title='Segment'
-            component={
-              <Select
-                menuPortalTarget={document.body}
-                maxMenuHeight={120}
-                isDisabled={isSegmentsLoading}
-                isLoading={isSegmentsLoading}
-                value={Utils.toSelectedValue(selectedSegment, segmentOptions)}
-                options={segmentOptions}
-                onChange={handleSegmentChange}
-              />
-            }
-          />
-        </FormGroup>
-      )}
+      <PipelineStageActions
+        actions={stageData.actions}
+        projectId={projectId}
+        onActionChange={handleActionChange}
+        onSegmentChange={handleSegmentChange}
+      />
     </div>
   )
 }
