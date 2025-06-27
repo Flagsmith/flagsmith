@@ -52,7 +52,8 @@ import { getChangeRequests } from 'common/services/useChangeRequest'
 import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
-import { withRouter } from 'react-router-dom'
+import AddToReleasePipelineModal from 'components/release-pipelines/AddToReleasePipelineModal'
+import { getReleasePipelines } from 'common/services/useReleasePipelines'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -96,6 +97,7 @@ const CreateFlag = class extends Component {
       githubId: '',
       hasIntegrationWithGithub: false,
       hasMetadataRequired: false,
+      hasPublishedReleasePipelines: false,
       identityVariations:
         this.props.identityFlag &&
         this.props.identityFlag.multivariate_feature_state_values
@@ -212,6 +214,7 @@ const CreateFlag = class extends Component {
 
     this.fetchChangeRequests()
     this.fetchScheduledChangeRequests()
+    this.fetchReleasePipelines()
 
     getGithubIntegration(getStore(), {
       organisation_id: AccountStore.getOrganisation().id,
@@ -227,6 +230,22 @@ const CreateFlag = class extends Component {
     if (this.focusTimeout) {
       clearTimeout(this.focusTimeout)
     }
+  }
+
+  fetchReleasePipelines = () => {
+    getReleasePipelines(getStore(), {
+      projectId: this.props.projectId,
+    })
+      .then((res) => {
+        const pipelines = res.data.results
+        const hasPublishedReleasePipelines =
+          pipelines?.some((pipeline) => pipeline?.published_by) ?? false
+
+        this.setState({ hasPublishedReleasePipelines })
+      })
+      .catch(() => {
+        this.setState({ hasPublishedReleasePipelines: false })
+      })
   }
 
   userOverridesPage = (page, forceRefetch) => {
@@ -599,6 +618,16 @@ const CreateFlag = class extends Component {
     ).then((res) => {
       this.setState({ scheduledChangeRequests: res.data?.results })
     })
+  }
+
+  openReleasePipelineModal = () => {
+    openModal2(
+      `Add ${this.state.name} To Release Pipeline`,
+      <AddToReleasePipelineModal
+        projectId={this.props.projectId}
+        featureId={this.props.projectFlag.id}
+      />,
+    )
   }
 
   render() {
@@ -1071,6 +1100,9 @@ const CreateFlag = class extends Component {
                 )
               const { featureError, featureWarning } = this.parseError(error)
 
+              const isReleasePipelineEnabled =
+                Utils.getFlagsmithHasFeature('release_pipelines')
+
               return (
                 <Permission
                   level='project'
@@ -1163,28 +1195,49 @@ const CreateFlag = class extends Component {
                                         }
                                       </strong>
                                     </div>
-
-                                    <Permission
-                                      level='environment'
-                                      tags={projectFlag?.tags}
-                                      permission={Utils.getManageFeaturePermission(
-                                        is4Eyes,
-                                        identity,
-                                      )}
-                                      id={this.props.environmentId}
-                                    >
-                                      {({ permission: savePermission }) =>
-                                        Utils.renderWithPermission(
-                                          savePermission,
-                                          Constants.environmentPermissions(
-                                            Utils.getManageFeaturePermissionDescription(
-                                              is4Eyes,
-                                              identity,
+                                    <div className='text-right'>
+                                      <Permission
+                                        level='environment'
+                                        permission={'UPDATE_FEATURE_STATE'}
+                                        id={this.props.environmentId}
+                                      >
+                                        {({ permission: updateFeatureState }) =>
+                                          isReleasePipelineEnabled &&
+                                          updateFeatureState &&
+                                          this.state
+                                            .hasPublishedReleasePipelines && (
+                                            <Button
+                                              className='mr-2'
+                                              theme='secondary'
+                                              onClick={
+                                                this.openReleasePipelineModal
+                                              }
+                                            >
+                                              Add to Release Pipeline
+                                            </Button>
+                                          )
+                                        }
+                                      </Permission>
+                                      <Permission
+                                        level='environment'
+                                        tags={projectFlag?.tags}
+                                        permission={Utils.getManageFeaturePermission(
+                                          is4Eyes,
+                                          identity,
+                                        )}
+                                        id={this.props.environmentId}
+                                      >
+                                        {({ permission: savePermission }) =>
+                                          Utils.renderWithPermission(
+                                            savePermission,
+                                            Constants.environmentPermissions(
+                                              Utils.getManageFeaturePermissionDescription(
+                                                is4Eyes,
+                                                identity,
+                                              ),
                                             ),
-                                          ),
-                                          <div className='text-right'>
-                                            {!is4Eyes && (
-                                              <>
+                                            <>
+                                              {!is4Eyes && (
                                                 <Button
                                                   feature='SCHEDULE_FLAGS'
                                                   theme='secondary'
@@ -1210,56 +1263,56 @@ const CreateFlag = class extends Component {
                                                     ? 'Update Change Request'
                                                     : 'Schedule Update'}
                                                 </Button>
-                                              </>
-                                            )}
+                                              )}
 
-                                            {is4Eyes ? (
-                                              <Button
-                                                onClick={() =>
-                                                  saveFeatureValue()
-                                                }
-                                                type='button'
-                                                data-test='update-feature-btn'
-                                                id='update-feature-btn'
-                                                disabled={
-                                                  !savePermission ||
-                                                  isSaving ||
-                                                  !name ||
-                                                  invalid
-                                                }
-                                              >
-                                                {isSaving
-                                                  ? existingChangeRequest
-                                                    ? 'Updating Change Request'
-                                                    : 'Creating Change Request'
-                                                  : existingChangeRequest
-                                                  ? 'Update Change Request'
-                                                  : 'Create Change Request'}
-                                              </Button>
-                                            ) : (
-                                              <Button
-                                                onClick={() =>
-                                                  saveFeatureValue()
-                                                }
-                                                type='button'
-                                                data-test='update-feature-btn'
-                                                id='update-feature-btn'
-                                                disabled={
-                                                  isSaving ||
-                                                  !name ||
-                                                  invalid ||
-                                                  !savePermission
-                                                }
-                                              >
-                                                {isSaving
-                                                  ? 'Updating'
-                                                  : 'Update Feature Value'}
-                                              </Button>
-                                            )}
-                                          </div>,
-                                        )
-                                      }
-                                    </Permission>
+                                              {is4Eyes ? (
+                                                <Button
+                                                  onClick={() =>
+                                                    saveFeatureValue()
+                                                  }
+                                                  type='button'
+                                                  data-test='update-feature-btn'
+                                                  id='update-feature-btn'
+                                                  disabled={
+                                                    !savePermission ||
+                                                    isSaving ||
+                                                    !name ||
+                                                    invalid
+                                                  }
+                                                >
+                                                  {isSaving
+                                                    ? existingChangeRequest
+                                                      ? 'Updating Change Request'
+                                                      : 'Creating Change Request'
+                                                    : existingChangeRequest
+                                                    ? 'Update Change Request'
+                                                    : 'Create Change Request'}
+                                                </Button>
+                                              ) : (
+                                                <Button
+                                                  onClick={() =>
+                                                    saveFeatureValue()
+                                                  }
+                                                  type='button'
+                                                  data-test='update-feature-btn'
+                                                  id='update-feature-btn'
+                                                  disabled={
+                                                    isSaving ||
+                                                    !name ||
+                                                    invalid ||
+                                                    !savePermission
+                                                  }
+                                                >
+                                                  {isSaving
+                                                    ? 'Updating'
+                                                    : 'Update Feature Value'}
+                                                </Button>
+                                              )}
+                                            </>,
+                                          )
+                                        }
+                                      </Permission>
+                                    </div>
                                   </FormGroup>
                                 </TabItem>
                                 {!existingChangeRequest && (
@@ -1918,11 +1971,7 @@ const CreateFlag = class extends Component {
                                     data-test='feature_health'
                                     tabLabelString='Feature Health'
                                     tabLabel={
-                                      <Row
-                                        className={`inline-block justify-content-center ${
-                                          true ? 'pr-1' : ''
-                                        }`}
-                                      >
+                                      <Row className='inline-block justify-content-center pr-1'>
                                         Feature Health{' '}
                                         <IonIcon
                                           icon={warning}
