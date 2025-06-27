@@ -104,6 +104,52 @@ Segment rule properties:
   [`In`](?operators=in#operator-details) operator.
 - **Environment Name**: the name of your Flagsmith environment. Useful for restricting Segments to certain environments.
 
+Context values can be used to control your targeting more precisely:
+
+### Gradual rollout across tenants
+
+Suppose your application supports users who can belong to multiple organisations. Now imagine you want to roll out a new
+feature to 50% of your total user base — but instead of targeting users randomly, you'd like to gradually release the
+feature based on the organisations they belong to.
+
+Here's how you might define a segment to achieve this:
+
+| Rule Order | Property                  | Operator | Value |
+| ---------- | ------------------------- | -------- | ----- |
+| 1          | Identifier                | % Split  | 50    |
+| 2          | `organisation_name` Trait | % Split  | 20    |
+
+This setup instructs the evaluation engine to:
+
+1. Check whether the user falls within the first 50% of your overall user base.
+2. If they do, check whether the organisation they belong to is within 20% of all organisations.
+
+As you gradually increase the percentage in Rule 2, the number of users with access to the feature grows — but it will
+never exceed 50% of your total user base. If a user switches to an organisation that isn’t included in Rule 2, they’ll
+lose access to the feature.
+
+:::info Use transient traits for multi-tenancy
+
+To avoid persisting the `organisation_name` trait on the user identity, mark it as
+[transient](../advanced-use/transient-traits.md).
+
+:::
+
+### Restrict evaluation to select environments
+
+Segments and segment overrides are defined at the project level. This means they apply across all environments, so you
+may want to restrict your targeting to specific environments — for example, to avoid exposing features in production
+while still running complex evaluations in staging or development.
+
+Here’s how you could define such a segment:
+
+| Rule Order | Property         | Operator            | Value        |
+| ---------- | ---------------- | ------------------- | ------------ |
+| 1          | Environment Name | Does Not Match (!=) | `production` |
+| 2          | Identifier       | % Split             | 20           |
+
+This setup will enable the feature for 20% of users, but only in non-production environments.
+
 ## Trait data types
 
 Each individual trait value is always stored as one of the following data types:
@@ -207,8 +253,8 @@ You can use Percentage Split to drive [A/B tests](/advanced-use/ab-testing) and
 [staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
 
 Percentage Split deterministically assigns an Identity to a bucket based on a provided [context value](#context-values)
-or a trait. This means that Segment overrides that use Percentage Split will always result in the 
-same feature value for a given identity in the chosen context.
+or a trait. This means that Segment overrides that use Percentage Split will always result in the same feature value for
+a given identity in the chosen context.
 
 If you create a Segment with a single Percentage Split rule of 10% over identifier, Identities who are members of that  
 split will be guaranteed to also be in that split if it is changed to a value higher than 10%.
