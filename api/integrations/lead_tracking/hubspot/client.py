@@ -21,7 +21,6 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
-from users.models import HubspotTracker
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
