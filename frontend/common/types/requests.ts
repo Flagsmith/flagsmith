@@ -710,6 +710,7 @@ export type Req = {
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
   createReleasePipeline: ReleasePipelineRequest
+  updateReleasePipeline: UpdateReleasePipelineRequest
   getPipelineStages: PagedRequest<{
     projectId: number
     pipelineId: number
