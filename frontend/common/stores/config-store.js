@@ -21,7 +21,14 @@ const controller = {
     store.model = flagsmith.getAllFlags()
   },
   onError() {
-    store.error = true
+    if (Project.isFlagsmithOnFlagsmith) {
+      store.model = {}
+      // TODO: Migrate to TS and use enum
+      store.error = 'fof_init_error'
+      store.loaded(true)
+      return
+    }
+    store.error = 'unknown'
     store.goneABitWest()
   },
 }
@@ -52,7 +59,8 @@ flagsmith
     onChange: controller.loaded,
     realtime: Project.flagsmithRealtime,
   })
-  .catch(() => {
+  .catch((e) => {
+    console.error(e)
     controller.onError()
   })
 

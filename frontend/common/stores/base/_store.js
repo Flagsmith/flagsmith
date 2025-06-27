@@ -32,9 +32,9 @@ module.exports = Object.assign({}, EventEmitter.prototype, {
 
   isSaving: false,
 
-  loaded() {
+  loaded(persistError = false) {
     this.hasLoaded = true
-    this.error = null
+    this.error = persistError ? this.error : null
     this.isLoading = false
     this.trigger(DEFAULT_LOADED_EVENT)
     this.trigger(DEFAULT_CHANGE_EVENT)
