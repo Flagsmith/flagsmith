@@ -46,11 +46,17 @@ export type ChangeRequestSummary = {
   deleted_at: string | null
   live_from: string | null
 }
+
+export type SegmentProperty = {
+  label?: string
+  value: string
+}
+
 export type SegmentCondition = {
   delete?: boolean
   description?: string
   operator: string
-  property: string
+  property: SegmentProperty
   value: string | number | null
 }
 
