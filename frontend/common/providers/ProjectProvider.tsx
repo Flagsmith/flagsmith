@@ -23,7 +23,7 @@ export type ProjectProviderType = {
     isSaving: boolean
     project: Project | null
   }) => ReactNode
-  id?: string
+  id?: number
   onRemove?: () => void
   onRemoveEnvironment?: (environment: Environment) => void
   onSave?: (environment: Environment) => void

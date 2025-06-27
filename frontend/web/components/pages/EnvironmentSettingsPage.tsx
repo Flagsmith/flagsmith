@@ -66,6 +66,7 @@ const EnvironmentSettingsPage: React.FC = () => {
   const store = getStore()
   const history = useHistory()
   const match = useRouteMatch<{
+    projectId: string
     environmentId: string
   }>()
   const { projectId } = useRouteContext()
@@ -289,7 +290,7 @@ const EnvironmentSettingsPage: React.FC = () => {
       'New Webhook',
       <CreateWebhookModal
         environmentId={match.params.environmentId}
-        projectId={projectId?.toString() || ''}
+        projectId={projectId}
         save={(webhook: Webhook) =>
           createWebhook({
             ...webhook,
@@ -308,7 +309,7 @@ const EnvironmentSettingsPage: React.FC = () => {
         webhook={webhook}
         isEdit
         environmentId={match.params.environmentId}
-        projectId={projectId?.toString() || ''}
+        projectId={projectId}
         save={(webhook: Webhook) =>
           saveWebhook({ ...webhook, environmentId: match.params.environmentId })
         }
@@ -322,7 +323,7 @@ const EnvironmentSettingsPage: React.FC = () => {
       'Remove Webhook',
       <ConfirmRemoveWebhook
         environmentId={match.params.environmentId}
-        projectId={projectId?.toString() || ''}
+        projectId={projectId}
         url={webhook.url}
         cb={() =>
           deleteWebhook({
@@ -388,7 +389,7 @@ const EnvironmentSettingsPage: React.FC = () => {
     <div className='app-container container'>
       <ProjectProvider
         onRemoveEnvironment={onRemoveEnvironment}
-        id={projectId?.toString() || ''}
+        id={projectId}
         onRemove={onRemove}
         onSave={onSave}
       >
@@ -842,7 +843,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                     <FormGroup>
                       <EditPermissions
                         tabClassName='flat-panel'
-                        parentId={projectId?.toString() || ''}
+                        parentId={projectId}
                         parentLevel='project'
                         parentSettingsLink={`/project/${projectId}/settings`}
                         id={match.params.environmentId}
@@ -979,7 +980,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                           component={
                             <AddMetadataToEntity
                               organisationId={AccountStore.getOrganisation().id}
-                              projectId={projectId?.toString() || ''}
+                              projectId={projectId}
                               entityId={currentEnv?.api_key ?? ''}
                               envName={currentEnv?.name}
                               entityContentType={environmentContentType?.id}
