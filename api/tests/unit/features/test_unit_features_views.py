@@ -912,7 +912,7 @@ def test_get_feature_evaluation_data(
         },
     ]
     mocked_get_feature_evaluation_data.assert_called_with(
-        feature=feature, period=30, environment_id=environment.id
+        feature=feature, period_days=30, environment_id=environment.id
     )
 
 
@@ -960,7 +960,7 @@ def test_get_feature_evaluation_data__labels_filter__returns_expected(
     ]
     mocked_get_feature_evaluation_data.assert_called_with(
         feature=feature,
-        period=30,
+        period_days=30,
         environment_id=environment.id,
         labels_filter={"client_application_name": "web"},
     )

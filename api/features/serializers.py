@@ -609,7 +609,10 @@ class GetInfluxDataQuerySerializer(serializers.Serializer):  # type: ignore[type
 
 class GetUsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
     period = serializers.IntegerField(
-        required=False, default=30, help_text="number of days"
+        required=False,
+        default=30,
+        help_text="number of days",
+        source="period_days",
     )
     environment_id = serializers.IntegerField(required=True)
 
