@@ -1,5 +1,6 @@
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useRouteContext } from 'components/providers/RouteContext'
 import keyBy from 'lodash/keyBy'
 
 import { getStore } from 'common/store'
@@ -133,7 +134,7 @@ const UserPage: FC = () => {
   const environmentId = match?.params?.environmentId
   const id = match?.params?.id
   const identity = match?.params?.identity
-  const projectId = match?.params?.projectId
+  const { projectId } = useRouteContext()
 
   const [filter, setFilter] = useState(defaultState)
   const [actualFlags, setActualFlags] =

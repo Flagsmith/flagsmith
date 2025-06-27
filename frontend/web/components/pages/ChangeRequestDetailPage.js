@@ -25,9 +25,10 @@ import NewVersionWarning from 'components/NewVersionWarning'
 import WarningMessage from 'components/WarningMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { Component } from 'react'
+import { useRouteContext } from 'components/providers/RouteContext'
 
-const ChangeRequestsPage = class extends Component {
-  static displayName = 'ChangeRequestsPage'
+const ChangeRequestDetailPage = class extends Component {
+  static displayName = 'ChangeRequestDetailPage'
 
   getApprovals = (users, approvals) =>
     users?.filter((v) => approvals?.includes(v.id))
@@ -37,7 +38,8 @@ const ChangeRequestsPage = class extends Component {
 
   constructor(props) {
     super(props)
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+    this.projectId = props.routeContext.projectId
+    this.environmentId = props.routeContext.environmentId
     this.state = {
       showArchived: false,
       tags: [],
@@ -51,8 +53,8 @@ const ChangeRequestsPage = class extends Component {
     )
     AppActions.getChangeRequest(
       this.props.match.params.id,
-      projectIdFromUrl,
-      this.props.match.params.environmentId,
+      this.projectId,
+      this.environmentId,
     )
     AppActions.getOrganisation(AccountStore.getOrganisation().id)
     getMyGroups(getStore(), { orgId: AccountStore.getOrganisation().id }).then(
@@ -97,12 +99,11 @@ const ChangeRequestsPage = class extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     if (prevProps.match.params.id !== this.props.match.params.id) {
       AppActions.getChangeRequest(
         this.props.match.params.id,
-        projectIdFromUrl,
-        this.props.match.params.environmentId,
+        this.projectId,
+        this.environmentId,
       )
     }
   }
@@ -121,7 +122,7 @@ const ChangeRequestsPage = class extends Component {
       onYes: () => {
         AppActions.deleteChangeRequest(this.props.match.params.id, () => {
           this.props.history.replace(
-            `/project/${this.props.match.params.projectId}/environment/${this.props.match.params.environmentId}/change-requests`,
+            `/project/${this.projectId}/environment/${this.environmentId}/change-requests`,
           )
         })
       },
@@ -133,13 +134,12 @@ const ChangeRequestsPage = class extends Component {
   editChangeRequest = (projectFlag, environmentFlag) => {
     const id = this.props.match.params.id
     const changeRequest = ChangeRequestStore.model[id]
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     openModal(
       'Edit Change Request',
       <CreateFlagModal
         history={this.props.history}
-        environmentId={this.props.match.params.environmentId}
-        projectId={projectIdFromUrl}
+        environmentId={this.environmentId}
+        projectId={this.projectId}
         changeRequest={ChangeRequestStore.model[id]}
         projectFlag={projectFlag}
         multivariate_options={
@@ -227,11 +227,7 @@ const ChangeRequestsPage = class extends Component {
           this.props.match.params.id,
           'commit',
           () => {
-            AppActions.refreshFeatures(
-              Utils.getProjectIdFromUrl(this.props.match),
-              this.props.match.params.environmentId,
-              true,
-            )
+            AppActions.refreshFeatures(this.projectId, this.environmentId, true)
             this.refreshChangeRequests()
           },
         )
@@ -281,7 +277,7 @@ const ChangeRequestsPage = class extends Component {
         </div>
       )
     }
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+
     const orgUsers = OrganisationStore.model && OrganisationStore.model.users
     const orgGroups = this.state.groups || []
     const ownerUsers =
@@ -355,9 +351,9 @@ const ChangeRequestsPage = class extends Component {
                   items={[
                     {
                       title: isScheduled ? 'Scheduling' : 'Change requests',
-                      url: `/project/${
-                        this.props.match.params.projectId
-                      }/environment/${this.props.match.params.environmentId}/${
+                      url: `/project/${this.projectId}/environment/${
+                        this.environmentId
+                      }/${
                         isScheduled ? 'scheduled-changes' : 'change-requests'
                       }`,
                     },
@@ -523,10 +519,8 @@ const ChangeRequestsPage = class extends Component {
                         <a
                           target='_blank'
                           className='btn-link font-weight-medium'
-                          href={`/project/${
-                            this.props.match.params.projectId
-                          }/environment/${
-                            this.props.match.params.environmentId
+                          href={`/project/${this.projectId}/environment/${
+                            this.environmentId
                           }/features?feature=${projectFlag && projectFlag.id}`}
                           rel='noreferrer'
                         >
@@ -546,7 +540,7 @@ const ChangeRequestsPage = class extends Component {
                     isVersioned={isVersioned}
                     changeRequest={changeRequest}
                     feature={projectFlag.id}
-                    projectId={projectIdFromUrl}
+                    projectId={this.projectId}
                   />
                 </div>
                 <JSONReference
@@ -625,8 +619,13 @@ const ChangeRequestsPage = class extends Component {
   }
 }
 
-ChangeRequestsPage.propTypes = {}
+ChangeRequestDetailPage.propTypes = {}
+
+const ChangeRequestDetailPageWithContext = (props) => {
+  const context = useRouteContext()
+  return <ChangeRequestDetailPage {...props} routeContext={context} />
+}
 
 export default withRouter(
-  ConfigProvider(withSegmentOverrides(ChangeRequestsPage)),
+  ConfigProvider(withSegmentOverrides(ChangeRequestDetailPageWithContext)),
 )

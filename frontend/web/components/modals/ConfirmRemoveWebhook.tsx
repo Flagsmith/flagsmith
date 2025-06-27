@@ -10,7 +10,7 @@ import ModalHR from './ModalHR'
 type ConfirmRemoveWebhookType = {
   url: string
   cb: () => void
-  projectId: string
+  projectId: number
   environmentId: string
 }
 
