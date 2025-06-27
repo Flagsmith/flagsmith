@@ -66,6 +66,10 @@
     animation: toast-out 0.3s ease-out forwards;
   }
 
+  &.large {
+    width: 520px !important;
+  }
+
   @media screen and (min-width: 768px) {
     width: 320px;
   }

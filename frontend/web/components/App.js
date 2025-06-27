@@ -25,7 +25,6 @@ import { apps, gitBranch, gitCompare, statsChart } from 'ionicons/icons'
 import {
   getStartupErrorText,
   isFlagsmithOnFlagsmithError,
-  isMaintenanceError,
 } from './base/errors/init.error'
 import NavSubLink from './navigation/NavSubLink'
 import SettingsIcon from './svg/SettingsIcon'
@@ -320,8 +319,15 @@ const App = class extends Component {
         getStartupErrorText(this.props.error),
         'danger',
         2 * 60 * 1000,
-        undefined,
-        'top',
+        {
+          buttonText: 'See documentation',
+          onClick: () =>
+            window.open(
+              'https://docs.flagsmith.com/deployment/#running-flagsmith-on-flagsmith',
+              '_blank',
+            ),
+        },
+        { size: 'large' },
       )
     }
 
