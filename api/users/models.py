@@ -484,18 +484,26 @@ class HubspotTracker(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # @staticmethod
+    # def filter_utm_data(utms: dict[str, str]) -> dict[str, str]:
+    #     return {
+    #         key: value
+    #         for key in ALLOWED_UTM_KEYS
+    #         if (value := utms.get(key)) is not None
+    #     }
+
     @staticmethod
     def build_utm_data(utm_dict: dict[str, str] | None) -> dict[str, str]:
         if not utm_dict:
             return {}
         return {
-            key: utm_value
-            for key, utm_value in utm_dict.items()
-            if key in ALLOWED_UTM_KEYS and utm_value
+            key: value
+            for key in ALLOWED_UTM_KEYS
+            if (value := utm_dict.get(key)) is not None
         }
 
     @property
     def utm_data(self) -> dict[str, str]:
-        return {
-            key: getattr(self, key) for key in ALLOWED_UTM_KEYS if getattr(self, key)
-        }
+        return HubspotTracker.build_utm_data(
+            {key: getattr(self, key) for key in ALLOWED_UTM_KEYS}
+        )

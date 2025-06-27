@@ -66,7 +66,6 @@ def test_create_lead_form(
         "utm_campaign": "test_campaign",
         "utm_content": "test_content",
         "utm_term": "test_term",
-        "wrong_utm": "wrong_utm",
     }
     # When
     response = hubspot_client.create_lead_form(
@@ -116,11 +115,6 @@ def test_create_lead_form(
         "value": "test_content",
     } in fields
     assert {"objectTypeId": "0-1", "name": "utm_term", "value": "test_term"} in fields
-    assert {
-        "objectTypeId": "0-1",
-        "name": "wrong_utm",
-        "value": "wrong_utm",
-    } not in fields
 
     context = request_body.get("context", {})
     assert context == expected_context

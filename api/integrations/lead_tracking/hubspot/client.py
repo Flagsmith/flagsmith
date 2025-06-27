@@ -21,7 +21,7 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_PORTAL_ID,
     HUBSPOT_ROOT_FORM_URL,
 )
-from users.constants import ALLOWED_UTM_KEYS
+from users.models import HubspotTracker
 
 if TYPE_CHECKING:
     from users.models import FFAdminUser
@@ -63,6 +63,7 @@ class HubspotClient:
         hubspot_cookie: str | None = None,
         utm_data: dict[str, str] | None = None,
     ) -> dict[str, Any]:
+        utm_data = utm_data or {}
         logger.info(
             f"Creating Hubspot lead form for user {user.email} with hubspot cookie {hubspot_cookie}"
         )
@@ -76,12 +77,9 @@ class HubspotClient:
             {"objectTypeId": "0-1", "name": "lastname", "value": user.last_name},
         ]
 
-        if utm_data:
-            for key, utm_value in utm_data.items():
-                if key in ALLOWED_UTM_KEYS and utm_value:
-                    fields.append(
-                        {"objectTypeId": "0-1", "name": key, "value": utm_value}
-                    )
+        fields.extend(
+            {"objectTypeId": "0-1", "name": k, "value": v} for k, v in utm_data.items()
+        )
 
         context = {}
         if hubspot_cookie:

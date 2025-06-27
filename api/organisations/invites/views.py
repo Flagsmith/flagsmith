@@ -42,11 +42,12 @@ def join_organisation_from_email(request, hash):  # type: ignore[no-untyped-def]
     invite = get_object_or_404(Invite, hash=hash)
     try:
         request.user.join_organisation_from_invite_email(invite)
-        register_hubspot_tracker(request)
 
     except InvalidInviteError as e:
         error_data = {"detail": str(e)}
         return Response(data=error_data, status=status.HTTP_400_BAD_REQUEST)
+
+    register_hubspot_tracker(request)
 
     return Response(
         OrganisationSerializerFull(
