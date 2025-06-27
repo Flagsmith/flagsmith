@@ -13,16 +13,12 @@ import ProjectProvider, {
 } from 'common/providers/ProjectProvider'
 import AccountStore from 'common/stores/account-store'
 import Utils from 'common/utils/utils'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import API from 'project/api'
 import InputGroup from 'components/base/forms/InputGroup'
 import { Environment } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import { useRouteContext } from 'components/providers/RouteContext'
-interface RouteParams {
-  environmentId: string
-  projectId: string
-}
 
 const CreateEnvironmentPage: React.FC = () => {
   const [envContentType, setEnvContentType] = useState<Record<string, any>>({})
@@ -33,11 +29,10 @@ const CreateEnvironmentPage: React.FC = () => {
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const history = useHistory()
-  const match = useRouteMatch<RouteParams>()
   const { projectId } = useRouteContext()
   const onSave = (environment: Environment) => {
     history.push(
-      `/project/${match.params.projectId}/environment/${environment.api_key}/features`,
+      `/project/${projectId}/environment/${environment.api_key}/features`,
     )
   }
 

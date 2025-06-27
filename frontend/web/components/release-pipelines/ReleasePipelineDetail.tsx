@@ -10,6 +10,7 @@ import StageCard from './StageCard'
 import StageInfo from './StageInfo'
 import { PipelineStage } from 'common/types/responses'
 import { Environment } from 'common/types/responses'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const LaunchedCard = () => {
   // TODO: Add the logic to get the features that completed this pipeline in the last 30 days
@@ -31,8 +32,8 @@ const LaunchedCard = () => {
 }
 
 function ReleasePipelineDetail() {
-  const { id, projectId } = useParams<{ projectId: string; id: string }>()
-
+  const { id } = useParams<{ projectId: string; id: string }>()
+  const { projectId } = useRouteContext()
   const { data: pipelineData, isLoading: isLoadingPipeline } =
     useGetReleasePipelineQuery(
       {
