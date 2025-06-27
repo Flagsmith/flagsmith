@@ -136,14 +136,14 @@ def get_total_events_count(organisation) -> int:  # type: ignore[no-untyped-def]
 def get_feature_evaluation_data(
     feature: Feature,
     environment_id: int,
-    period: int = 30,
+    period_days: int = 30,
     labels_filter: Labels | None = None,
 ) -> List[FeatureEvaluationData]:
     if settings.USE_POSTGRES_FOR_ANALYTICS:
         return get_feature_evaluation_data_from_local_db(
             feature=feature,
             environment_id=environment_id,
-            period=period,
+            period_days=period_days,
             labels_filter=labels_filter,
         )
 
@@ -151,7 +151,7 @@ def get_feature_evaluation_data(
         return get_feature_evaluation_data_from_influxdb(
             feature_name=feature.name,
             environment_id=environment_id,
-            period=f"{period}d",
+            period_days=period_days,
             labels_filter=labels_filter,
         )
 
@@ -162,7 +162,7 @@ def get_feature_evaluation_data(
 def get_feature_evaluation_data_from_local_db(
     feature: Feature,
     environment_id: int,
-    period: int = 30,
+    period_days: int = 30,
     labels_filter: Labels | None = None,
 ) -> List[FeatureEvaluationData]:
     filter = Q(
@@ -170,7 +170,7 @@ def get_feature_evaluation_data_from_local_db(
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
         feature_name=feature.name,
         created_at__date__lte=timezone.now(),
-        created_at__date__gt=timezone.now() - timedelta(days=period),
+        created_at__date__gt=timezone.now() - timedelta(days=period_days),
     )
     if labels_filter:
         filter &= Q(labels__contains=labels_filter)
@@ -197,7 +197,12 @@ def _get_environment_ids_for_org(organisation: Organisation) -> list[int]:
     # references the environments and projects tables,
     # as they do not exist in the analytics database.
     return [
-        e.id for e in Environment.objects.filter(project__organisation=organisation)
+        *Environment.objects.filter(
+            project__organisation=organisation,
+        ).values_list(
+            "id",
+            flat=True,
+        )
     ]
 
 

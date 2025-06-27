@@ -346,12 +346,10 @@ def get_multiple_event_list_for_feature(
 def get_feature_evaluation_data(
     feature_name: str,
     environment_id: int,
-    period: str = "30d",
+    period_days: int = 30,
     labels_filter: Labels | None = None,
 ) -> list[FeatureEvaluationData]:
-    assert period.endswith("d")
-    days = int(period[:-1])
-    date_start = timezone.now() - timedelta(days=days)
+    date_start = timezone.now() - timedelta(days=period_days)
     return get_multiple_event_list_for_feature(
         feature_name=feature_name,
         environment_id=environment_id,

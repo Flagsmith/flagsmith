@@ -586,7 +586,7 @@ def test_get_feature_evaluation_data_calls_influx_method_if_postgres_not_configu
     mocked_get_feature_evaluation_data_from_influxdb.assert_called_once_with(
         feature_name=feature.name,
         environment_id=environment.id,
-        period="30d",
+        period_days=30,
         labels_filter=None,
     )
 
@@ -643,7 +643,7 @@ def test_get_feature_evaluation_data_calls_get_feature_evaluation_data_from_loca
     mocked_get_feature_evaluation_data_from_local_db.assert_called_once_with(
         feature=feature,
         environment_id=environment.id,
-        period=30,
+        period_days=30,
         labels_filter=None,
     )
 
