@@ -2,6 +2,7 @@ from typing import Callable
 
 from django.http import HttpRequest, HttpResponse
 
+from app_analytics.mappers import map_request_to_labels
 from app_analytics.services import track_usage_by_resource_host_and_environment
 
 from .track import (
@@ -36,6 +37,7 @@ class APIUsageMiddleware:
                 resource=get_resource_from_uri(request.path),
                 host=request.get_host(),
                 environment_key=environment_key,
+                labels=map_request_to_labels(request),
             )
 
         response = self.get_response(request)

@@ -1,16 +1,50 @@
-import typing
+from typing import TYPE_CHECKING, Any, get_args
 
 from django.conf import settings
 from rest_framework import serializers
 
+from app_analytics.constants import LABELS
 from app_analytics.tasks import (
     track_feature_evaluation_influxdb_v2,
     track_feature_evaluation_v2,
 )
+from app_analytics.types import Labels, PeriodType
 from environments.models import Environment
 from features.models import FeatureState
 
-from .types import PERIOD_TYPE
+if TYPE_CHECKING:
+    _SerializerType = serializers.Serializer[Any]
+else:
+    _SerializerType = object
+
+
+class LabelsQuerySerializerMixin(_SerializerType):
+    """
+    Expect label fields in the query string
+    and envelope them under a `labels_filter` key.
+
+    This is to simplify the query syntax for filtering by labels
+    while avoiding variable keyword arguments in the app_analytics
+    service interfaces.
+    """
+
+    def get_fields(self) -> dict[str, serializers.Field[Any, Any, Any, Any]]:
+        return {**super().get_fields(), **_get_label_fields()}
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        if labels_filter := {
+            label: attrs.pop(label)
+            for label in LABELS
+            if label in attrs and attrs[label] is not None
+        }:
+            attrs["labels_filter"] = labels_filter
+        return attrs
+
+
+class LabelsSerializer(serializers.Serializer[Labels]):
+    def get_fields(self) -> dict[str, serializers.Field[Any, Any, Any, Any]]:
+        return _get_label_fields()
 
 
 class UsageDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -19,13 +53,14 @@ class UsageDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
     traits = serializers.IntegerField()
     environment_document = serializers.IntegerField()
     day = serializers.CharField()
+    labels = LabelsSerializer(allow_null=True, required=False)
 
 
-class UsageDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+class UsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
     project_id = serializers.IntegerField(required=False)
     environment_id = serializers.IntegerField(required=False)
     period = serializers.ChoiceField(
-        choices=typing.get_args(PERIOD_TYPE),
+        choices=get_args(PeriodType),
         allow_null=True,
         default=None,
         required=False,
@@ -46,7 +81,7 @@ class SDKAnalyticsFlagsSerializerDetail(serializers.Serializer):  # type: ignore
 class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-arg]
     evaluations = SDKAnalyticsFlagsSerializerDetail(many=True)
 
-    def validate(self, attrs: dict[str, typing.Any]) -> dict[str, typing.Any]:
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         request = self.context["request"]
         environment_feature_names = set(
             FeatureState.objects.filter(
@@ -63,7 +98,7 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
             ]
         }
 
-    def save(self, **kwargs: typing.Any) -> None:
+    def save(self, **kwargs: Any) -> None:
         environment: Environment = kwargs["environment"]
 
         if settings.USE_POSTGRES_FOR_ANALYTICS:
@@ -80,3 +115,10 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
                     self.validated_data["evaluations"],
                 )
             )
+
+
+def _get_label_fields() -> dict[str, serializers.Field[Any, Any, Any, Any]]:
+    return {
+        str(label): serializers.CharField(allow_null=True, required=False)
+        for label in LABELS
+    }
