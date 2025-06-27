@@ -197,7 +197,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
         environmentFlag={environmentFlag}
         tab={tab}
         flagId={environmentFlag?.id}
-        releasePipelineId={releasePipelineId}
       />,
       'side-modal create-feature-modal',
       () => {
