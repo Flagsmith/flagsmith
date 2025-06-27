@@ -19,7 +19,7 @@ def register_hubspot_tracker(
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
     utm_data = HubspotTracker.build_utm_data(request.data)
     track_user = user if user else request.user
-    if not hubspot_cookie and not utm_data:
+    if not (hubspot_cookie or utm_data):
         logger.info(f"Request did not included Hubspot data for user {track_user.id}")
         return
 
