@@ -2,12 +2,13 @@ import React, { FC, useEffect, useState } from 'react' // we need this to make J
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Utils from 'common/utils/utils'
 import { Project } from 'common/types/responses'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import AuditLog from 'components/AuditLog'
 import ProjectProvider from 'common/providers/ProjectProvider'
 import PageTitle from 'components/PageTitle'
 import Tag from 'components/tags/Tag'
 import { featureDescriptions } from 'components/PlanBasedAccess'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 interface RouteParams {
   environmentId: string
@@ -16,8 +17,7 @@ interface RouteParams {
 
 const AuditLogPage: FC = () => {
   const history = useHistory()
-  const match = useRouteMatch<RouteParams>()
-  const projectId = match?.params?.projectId
+  const { projectId } = useRouteContext()
 
   const [environment, setEnvironment] = useState(Utils.fromParam().env)
   useEffect(() => {

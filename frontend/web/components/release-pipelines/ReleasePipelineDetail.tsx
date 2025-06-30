@@ -10,6 +10,7 @@ import StageCard from './StageCard'
 import StageInfo from './StageInfo'
 import { PipelineStage } from 'common/types/responses'
 import { Environment } from 'common/types/responses'
+import { useRouteContext } from 'components/providers/RouteContext'
 import StageFeatureDetail from './StageFeatureDetail'
 import Tag from 'components/tags/Tag'
 
@@ -35,8 +36,8 @@ const LaunchedCard = ({
 }
 
 function ReleasePipelineDetail() {
-  const { id, projectId } = useParams<{ projectId: string; id: string }>()
-
+  const { id } = useParams<{ projectId: string; id: string }>()
+  const { projectId } = useRouteContext()
   const { data: pipelineData, isLoading: isLoadingPipeline } =
     useGetReleasePipelineQuery(
       {
@@ -51,7 +52,7 @@ function ReleasePipelineDetail() {
   const { data: environmentsData, isLoading: isLoadingEnvironments } =
     useGetEnvironmentsQuery(
       {
-        projectId,
+        projectId: projectId?.toString() || '',
       },
       {
         skip: !projectId,
@@ -127,13 +128,13 @@ function ReleasePipelineDetail() {
                 environmentsData?.results,
                 stageData,
               )}
-              projectId={projectId}
+              projectId={projectId?.toString() || ''}
             />
           ))}
           {!!pipelineData?.stages?.length && (
             <LaunchedCard
               completedFeatures={pipelineData?.completed_features}
-              projectId={projectId}
+              projectId={projectId?.toString() || ''}
             />
           )}
         </Row>
