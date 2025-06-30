@@ -21,7 +21,10 @@ const controller = {
     store.model = flagsmith.getAllFlags()
   },
   onError(e) {
-    if (Project.isFlagsmithOnFlagsmith) {
+    if (
+      Project.isFlagsmithOnFlagsmith ||
+      (!Project.flagsmith && !Project.flagsmithClientAPI)
+    ) {
       store.model = {}
       // TODO: Migrate to TS and use enum
       store.error = {
