@@ -305,7 +305,7 @@ class ConditionManager(SoftDeleteExportableManager):
     def get_queryset(
         self,
     ) -> models.QuerySet["Condition"]:
-        # Effectively `Condition.Meta.ordering = ("-id",) if ... else ()`,
+        # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
         # but avoid the weirdness of a setting-dependant migration
         # and having to reload everything in tests
         qs: models.QuerySet["Condition"]
