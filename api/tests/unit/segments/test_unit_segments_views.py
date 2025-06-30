@@ -648,8 +648,11 @@ def test_update_segment_add_new_condition(
     admin_client_new: APIClient,
     segment: Segment,
     segment_rule: SegmentRule,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING = True
+
     url = reverse(
         "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
     )
@@ -705,11 +708,8 @@ def test_update_segment_add_new_condition(
     assert response.status_code == status.HTTP_200_OK
 
     assert nested_rule.conditions.count() == 2
-    assert (
-        nested_rule.conditions.order_by("-id").first().property
-        == new_condition_property
-    )
-    assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
+    assert nested_rule.conditions.last().property == new_condition_property
+    assert nested_rule.conditions.last().value == new_condition_value
 
 
 def test_update_mismatched_rule_and_segment(
