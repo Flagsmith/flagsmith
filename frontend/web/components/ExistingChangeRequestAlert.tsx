@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import InfoMessage from './InfoMessage'
-import { useHistory } from 'react-router-dom'
 import Button from './base/forms/Button'
 import { ChangeRequestSummary } from 'common/types/responses'
+import { RouterChildContext } from 'react-router-dom'
 
 type ExistingChangeRequestAlertType = {
   changeRequests: ChangeRequestSummary[]
@@ -11,6 +11,7 @@ type ExistingChangeRequestAlertType = {
   projectId: number | string
   environmentId: string
   className?: string
+  history: RouterChildContext['router']['history']
 }
 
 const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
@@ -18,11 +19,10 @@ const ExistingChangeRequestAlert: FC<ExistingChangeRequestAlertType> = ({
   className,
   editingChangeRequest,
   environmentId,
+  history,
   projectId,
   scheduledChangeRequests,
 }) => {
-  const history = useHistory()
-
   const handleNavigate = () => {
     const changes = scheduledChangeRequests?.length
       ? scheduledChangeRequests
