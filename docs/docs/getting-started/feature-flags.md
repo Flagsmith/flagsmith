@@ -4,7 +4,7 @@ sidebar_label: Feature Flags
 sidebar_position: 1
 ---
 
-Feature Flags are a development methodology that allow you to ship code and features in your application before they are finished. A feature flag is a control point in your code that determines whether a particular feature or behavior is active. Flags can be simple on/off (boolean) switches, or multivariate, allowing you to select from multiple options or variants.
+Feature Flags are a development methodology that allow you to ship code and features in your application before they are finished. A feature flag is a control point in your code that determines whether a particular feature or behaviour is active. Flags can be simple on/off (boolean) switches, or multivariate, allowing you to select from multiple options or variants.
 
 ### What do Feature Flags enable?
 
@@ -14,7 +14,7 @@ Feature Flags are a development methodology that allow you to ship code and feat
 
 - **A/B testing and experimentation:** Test multiple variants of a feature and measure impact. [Learn more](/advanced-use/ab-testing.md)
 
-- **Remote configuration:** Change app behavior or configuration in real time, without redeploying.
+- **Remote configuration:** Change app behaviour or configuration in real time, without redeploying.
 
 ### Advantages of using Feature Flags
 

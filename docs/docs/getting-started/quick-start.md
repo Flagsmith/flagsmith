@@ -17,7 +17,7 @@ By the end of this tutorial, you will be able to:
 - Create a Project and your first Flag in the Flagsmith dashboard.
 - Import the Flagsmith Javascript SDK into your web page.
 - Connect to the Flagsmith API and retrieve your flags.
-- Update your application's behavior based on a flag's value.
+- Update your application's behaviour based on a flag's value.
 
 ## Prerequisites
 
