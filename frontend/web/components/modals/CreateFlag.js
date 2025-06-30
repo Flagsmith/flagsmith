@@ -837,6 +837,7 @@ const CreateFlag = class extends Component {
           {!!isEdit && !identity && (
             <ExistingChangeRequestAlert
               className='mb-4'
+              history={this.props.history}
               editingChangeRequest={this.props.changeRequest}
               projectId={this.props.projectId}
               environmentId={this.props.environmentId}
