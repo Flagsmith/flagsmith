@@ -18,6 +18,7 @@ module.exports = Object.assign({}, EventEmitter.prototype, {
     // console.log('change', this.id)
     this.trigger(DEFAULT_CHANGE_EVENT)
   },
+  // Config store uses {type: FlagsmithStartupErrors, message: string}
   error: null,
   goneABitWest() {
     this.hasLoaded = true

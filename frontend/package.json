@@ -78,7 +78,7 @@
     "fbjs": "^3.0.4",
     "fetchify": "0.0.2",
     "file-loader": "6.2.0",
-    "flagsmith": "^9.0.0",
+    "flagsmith": "^9.2.2",
     "flux-react-dispatcher": "1.2.5",
     "free-email-domains": "^1.2.14",
     "fs-extra": "2.0.0",

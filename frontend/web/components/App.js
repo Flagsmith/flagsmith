@@ -306,6 +306,7 @@ const App = class extends Component {
     ) {
       return <Blocked />
     }
+    console.log(this.props.error)
     const maintenanceMode =
       Utils.getFlagsmithHasFeature('maintenance_mode') || Project.maintenance
     const isUnknownError =

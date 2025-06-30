@@ -20,15 +20,22 @@ const controller = {
     }
     store.model = flagsmith.getAllFlags()
   },
-  onError() {
+  onError(e) {
     if (Project.isFlagsmithOnFlagsmith) {
       store.model = {}
       // TODO: Migrate to TS and use enum
-      store.error = 'fof_init_error'
+      store.error = {
+        message: e?.message,
+        type: 'fof_init_error',
+      }
       store.loaded(true)
       return
     }
-    store.error = 'unknown'
+
+    store.error = {
+      message: e,
+      type: 'unknown',
+    }
     store.goneABitWest()
   },
 }
@@ -61,7 +68,7 @@ flagsmith
   })
   .catch((e) => {
     console.error(e)
-    controller.onError()
+    controller.onError(e)
   })
 
 controller.store = store
