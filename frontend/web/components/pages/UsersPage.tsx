@@ -20,6 +20,7 @@ import PageTitle from 'components/PageTitle'
 import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 interface RouteParams {
   environmentId: string
@@ -67,6 +68,7 @@ export const removeIdentity = (
 }
 
 const UsersPage: FC<{ props: any }> = (props) => {
+  const { projectId } = useRouteContext()
   const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
     number: number
@@ -243,7 +245,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
                   data-test={`user-item-${index}`}
                 >
                   <Link
-                    to={`/project/${props.match.params.projectId}/environment/${
+                    to={`/project/${projectId}/environment/${
                       props.match.params.environmentId
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'

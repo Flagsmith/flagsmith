@@ -14,6 +14,7 @@ import Format from 'common/utils/format'
 import { Environment } from 'common/types/responses'
 import { Link, useRouteMatch } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 interface RouteParams {
   environmentId: string
@@ -23,10 +24,11 @@ interface RouteParams {
 
 const AuditLogItemPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
+  const { projectId } = useRouteContext()
 
   const { data, error, isLoading } = useGetAuditLogItemQuery({
     id: match.params.id,
-    projectId: match.params.projectId,
+    projectId: projectId?.toString() || '',
   })
 
   const index = (ProjectStore.getEnvs() as Environment[] | null)?.findIndex(
@@ -42,7 +44,7 @@ const AuditLogItemPage: FC = () => {
         items={[
           {
             title: 'Audit Log',
-            url: `/project/${match.params.projectId}/audit-log`,
+            url: `/project/${projectId}/audit-log`,
           },
         ]}
         currentPage={match.params.id}

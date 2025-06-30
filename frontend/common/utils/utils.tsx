@@ -422,10 +422,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
-  getProjectIdFromUrl(match: any) {
-    const projectId = match?.params?.projectId
-    return projectId ? parseInt(projectId) : null
-  },
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {

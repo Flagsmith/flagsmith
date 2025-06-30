@@ -8,9 +8,10 @@ import Utils from 'common/utils/utils'
 import { StageActionType, StageTriggerType } from 'common/types/responses'
 import Icon from 'components/Icon'
 import { useCreateReleasePipelineMutation } from 'common/services/useReleasePipelines'
-import { useHistory, useParams } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import StageArrow from './StageArrow'
 import { ReleasePipelineRequest } from 'common/types/requests'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const blankStage: DraftStageType = {
   actions: [],
@@ -25,7 +26,7 @@ const blankStage: DraftStageType = {
 
 function CreateReleasePipeline() {
   const history = useHistory()
-  const { projectId } = useParams<{ projectId: string }>()
+  const { projectId } = useRouteContext()
 
   const [
     createReleasePipeline,

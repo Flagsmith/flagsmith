@@ -27,6 +27,7 @@ import Button from 'components/base/forms/Button'
 import { isEqual } from 'lodash'
 import EnvironmentMetricsList from 'components/metrics/EnvironmentMetricsList'
 import { withRouter } from 'react-router-dom'
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const FeaturesPage = class extends Component {
   static displayName = 'FeaturesPage'
@@ -73,9 +74,9 @@ const FeaturesPage = class extends Component {
       forceMetricsRefetch: false,
     }
     ES6Component(this)
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
+    this.projectId = this.props.routeContext.projectId
     AppActions.getFeatures(
-      projectIdFromUrl,
+      this.projectId,
       this.props.match.params.environmentId,
       true,
       this.state.search,
@@ -117,13 +118,12 @@ const FeaturesPage = class extends Component {
   }
 
   newFlag = () => {
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     openModal(
       'New Feature',
       <CreateFlagModal
         history={this.props.history}
         environmentId={this.props.match.params.environmentId}
-        projectId={projectIdFromUrl}
+        projectId={this.projectId}
       />,
       'side-modal create-feature-modal',
     )
@@ -174,7 +174,6 @@ const FeaturesPage = class extends Component {
 
   filter = (page) => {
     const currentParams = Utils.fromParam()
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     this.setState({ page }, () => {
       if (!currentParams.feature) {
         this.props.history.replace(
@@ -183,7 +182,7 @@ const FeaturesPage = class extends Component {
       }
       if (page) {
         AppActions.getFeatures(
-          projectIdFromUrl,
+          this.projectId,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -193,7 +192,7 @@ const FeaturesPage = class extends Component {
         )
       } else {
         AppActions.searchFeatures(
-          projectIdFromUrl,
+          this.projectId,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -205,12 +204,11 @@ const FeaturesPage = class extends Component {
   }
 
   createFeaturePermission(el) {
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     return (
       <Permission
         level='project'
         permission='CREATE_FEATURE'
-        id={projectIdFromUrl}
+        id={this.projectId}
       >
         {({ permission }) =>
           permission
@@ -234,7 +232,6 @@ const FeaturesPage = class extends Component {
 
     const environment = ProjectStore.getEnvironment(environmentId)
     const params = Utils.fromParam()
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
 
     const hasFilters = !isEqual(
       this.getFiltersFromParams({ ...params, page: '1' }),
@@ -245,7 +242,7 @@ const FeaturesPage = class extends Component {
       const newState = this.getFiltersFromParams({})
       this.setState(newState, () => {
         AppActions.getFeatures(
-          projectIdFromUrl,
+          projectId,
           this.props.match.params.environmentId,
           true,
           this.state.search,
@@ -629,7 +626,7 @@ const FeaturesPage = class extends Component {
                           />
                           <EnvironmentDocumentCodeHelp
                             title='3: Providing feature defaults and support offline'
-                            projectId={projectIdFromUrl}
+                            projectId={projectId}
                             environmentId={
                               this.props.match.params.environmentId
                             }
@@ -761,5 +758,9 @@ const FeaturesPage = class extends Component {
 }
 
 FeaturesPage.propTypes = {}
+const FeaturesPageWithContext = (props) => {
+  const context = useRouteContext()
+  return <FeaturesPage {...props} routeContext={context} />
+}
 
-export default withRouter(ConfigProvider(FeaturesPage))
+export default withRouter(ConfigProvider(FeaturesPageWithContext))

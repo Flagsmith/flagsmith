@@ -1,19 +1,17 @@
 import { FC, useEffect } from 'react'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import ConfigProvider from 'common/providers/ConfigProvider'
-
-interface RouteParams {
-  projectId: string
-}
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const ProjectRedirectPage: FC = () => {
   const history = useHistory()
-  const match = useRouteMatch<RouteParams>()
-  const projectId = match?.params?.projectId
+  const { projectId } = useRouteContext()
 
-  const { data, error } = useGetEnvironmentsQuery({ projectId })
+  const { data, error } = useGetEnvironmentsQuery({
+    projectId: projectId?.toString() || '',
+  })
   useEffect(() => {
     if (!data) {
       return

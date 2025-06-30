@@ -3,7 +3,7 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import { Props } from 'react-select/lib/Select'
 
 export type EnvironmentSelectType = Partial<Omit<Props, 'value'>> & {
-  projectId: string
+  projectId: number
   value?: string
   label?: string
   onChange: (value: string) => void
