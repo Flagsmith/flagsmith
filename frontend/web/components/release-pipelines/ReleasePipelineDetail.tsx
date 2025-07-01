@@ -19,7 +19,7 @@ const LaunchedCard = ({
   projectId,
 }: {
   completedFeatures: number[]
-  projectId: string
+  projectId: number
 }) => {
   return (
     <StageCard>
@@ -128,13 +128,13 @@ function ReleasePipelineDetail() {
                 environmentsData?.results,
                 stageData,
               )}
-              projectId={projectId?.toString() || ''}
+              projectId={Number(projectId)}
             />
           ))}
           {!!pipelineData?.stages?.length && (
             <LaunchedCard
               completedFeatures={pipelineData?.completed_features}
-              projectId={projectId?.toString() || ''}
+              projectId={Number(projectId)}
             />
           )}
         </Row>

@@ -68,25 +68,36 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({
         createPortal(
           <div ref={dropDownRef} className='feature-action__list'>
             {items.map((item, index) => (
-              <div
+              <Tooltip
                 key={index}
-                className={classNames('feature-action__item', {
-                  'feature-action__item_disabled': item.disabled,
-                })}
-                data-test={item.dataTest}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (!item.disabled) {
-                    item.onClick(e)
-                    setIsOpen(false)
-                  }
-                }}
+                title={
+                  <div
+                    className={classNames('feature-action__item', {
+                      'feature-action__item_disabled': item.disabled,
+                    })}
+                    data-test={item.dataTest}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (!item.disabled) {
+                        item.onClick(e)
+                        setIsOpen(false)
+                      }
+                    }}
+                  >
+                    {item.icon && (
+                      <Icon
+                        name={item.icon}
+                        width={iconWidth}
+                        fill={iconFill}
+                      />
+                    )}
+                    <span>{item.label}</span>
+                  </div>
+                }
+                place='right'
               >
-                {item.icon && (
-                  <Icon name={item.icon} width={iconWidth} fill={iconFill} />
-                )}
-                <span>{item.label}</span>
-              </div>
+                {item.tooltip ?? ''}
+              </Tooltip>
             ))}
           </div>,
           document.body,

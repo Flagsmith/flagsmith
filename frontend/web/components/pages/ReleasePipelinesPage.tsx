@@ -1,7 +1,7 @@
 import PageTitle from 'components/PageTitle'
 import { useGetReleasePipelinesQuery } from 'common/services/useReleasePipelines'
 import { Button } from 'components/base/forms/Button'
-import { useHistory, useRouteMatch } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ReleasePipelinesList from 'components/release-pipelines/ReleasePipelinesList'
 import { useState } from 'react'
