@@ -352,6 +352,7 @@ export const logout = async () => {
   await click('#account-settings-link')
   await click('#logout-link')
   await waitForElementVisible('#login-page')
+  await t.wait(500)
 }
 
 export const goToFeatureVersions = async (featureIndex: number) => {
