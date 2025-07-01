@@ -315,20 +315,20 @@ const App = class extends Component {
                       }
                     />
                     {user && (
-                      <OrganisationLimit
-                        id={AccountStore.getOrganisation()?.id}
-                        organisationPlan={
-                          AccountStore.getOrganisation()?.subscription.plan
-                        }
-                      />
-                    )}
-                    {user && (
-                      <div className='container announcement-container'>
-                        <div>
-                          <Announcement />
-                          <AnnouncementPerPage pathname={pathname} />
+                      <>
+                        <OrganisationLimit
+                          id={AccountStore.getOrganisation()?.id}
+                          organisationPlan={
+                            AccountStore.getOrganisation()?.subscription.plan
+                          }
+                        />
+                        <div className='container announcement-container'>
+                          <div>
+                            <Announcement />
+                            <AnnouncementPerPage pathname={pathname} />
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </>
                 }

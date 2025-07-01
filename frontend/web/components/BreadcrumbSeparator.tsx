@@ -279,10 +279,8 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
     level: 'organisation',
     permission: Utils.getCreateProjectPermission(hoveredOrganisation),
   })
-  const openRef = useRef(false)
   const toggle = () => {
-    setOpen(!openRef.current) // for some unknown reason !open doesn't work
-    openRef.current = !openRef.current
+    setOpen(!open) // for some unknown reason !open doesn't work
   }
 
   return (
