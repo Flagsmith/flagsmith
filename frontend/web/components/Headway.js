@@ -35,16 +35,13 @@ class _Headway extends React.Component {
       <Tooltip
         place='bottom'
         title={
-          <Row className={this.props.className}>
-            <Button
-              onClick={() => {
-                Headway.show()
-              }}
-              className='btn-with-icon'
-              size='small'
-            >
-              <Icon name='bell' width={20} fill='#9DA4AE' />
-            </Button>
+          <Row
+            onClick={() => {
+              Headway.show()
+            }}
+            className={this.props.className}
+          >
+            <Icon name='bell' width={20} fill='#9DA4AE' />
             <span id='headway'>
               <span />
             </span>

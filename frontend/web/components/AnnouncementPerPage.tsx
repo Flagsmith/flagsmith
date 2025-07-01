@@ -75,17 +75,19 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
   return (
     <>
       {showAnnouncementPerPage && announcementInPage && (
-        <InfoMessage
-          title={announcementPerPageValue?.title}
-          isClosable={announcementPerPageValue?.isClosable}
-          close={() => closeAnnouncement(announcementPerPageValue?.id)}
-          buttonText={announcementPerPageValue?.buttonText}
-          url={announcementPerPageValue?.url}
-        >
-          <div>
-            <div>{announcementPerPageValue?.description}</div>
-          </div>
-        </InfoMessage>
+        <div className='mt-4'>
+          <InfoMessage
+            title={announcementPerPageValue?.title}
+            isClosable={announcementPerPageValue?.isClosable}
+            close={() => closeAnnouncement(announcementPerPageValue?.id)}
+            buttonText={announcementPerPageValue?.buttonText}
+            url={announcementPerPageValue?.url}
+          >
+            <div>
+              <div>{announcementPerPageValue?.description}</div>
+            </div>
+          </InfoMessage>
+        </div>
       )}
     </>
   )
