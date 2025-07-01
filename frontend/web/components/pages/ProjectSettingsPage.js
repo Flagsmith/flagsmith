@@ -164,7 +164,6 @@ const ProjectSettingsPage = class extends Component {
     const changeRequestsFeature = Utils.getFlagsmithHasFeature(
       'segment_change_requests',
     )
-    const projectIdFromUrl = Utils.getProjectIdFromUrl(this.props.match)
     return (
       <div className='app-container container'>
         <ProjectProvider id={this.projectId} onSave={this.onSave}>
