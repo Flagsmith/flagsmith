@@ -1,17 +1,16 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react'
-import { Link, NavLink, useHistory, useLocation } from 'react-router-dom'
-import BreadcrumbSeparator from 'components/BreadcrumbSeparator'
-import classNames from 'classnames'
+import { NavLink, useHistory, useLocation } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
-import GithubStar from 'components/GithubStar'
-import Icon from 'components/Icon'
-import Headway from 'components/Headway'
 import HomeAside from './EnvironmentAside'
-import Utils from 'common/utils/utils'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
 import ProjectNav from './ProjectNav'
 import OrganisationNav from './OrganisationNav'
+import SelectOrgAndProject from './SelectOrgAndProject'
+import Utils from 'common/utils/utils'
+import GithubStar from 'components/GithubStar'
+import Icon from 'components/Icon'
+import Headway from 'components/Headway'
 
 type NavType = {
   environmentId: string | undefined
@@ -37,7 +36,7 @@ const Nav: FC<NavType> = ({
 
   useEffect(() => {
     const updateLastViewed = () => {
-      AsyncStorage.getItem('lastEnv').then((res) => {
+      AsyncStorage.getItem('lastEnv').then((res: string | null) => {
         if (res) {
           const lastEnv = JSON.parse(res)
           setLastEnvironmentId(lastEnv.environmentId)
@@ -52,8 +51,6 @@ const Nav: FC<NavType> = ({
 
   const isCreateEnvironment = environmentId === 'create'
   const isCreateOrganisation = document.location.pathname === '/create'
-  const storageHasParams = lastEnvironmentId || lastProjectId
-  const pageHasAside = environmentId || projectId || storageHasParams
   const isHomepage =
     pathname === '/' ||
     pathname === '/login' ||
@@ -75,64 +72,10 @@ const Nav: FC<NavType> = ({
               {!!AccountStore.getUser() && (
                 <React.Fragment>
                   <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
-                    <Row className='gap-2'>
-                      <Link data-test='home-link' to={'/organisations'}>
-                        <img
-                          style={{
-                            height: 24,
-                            width: 24,
-                          }}
-                          src='/static/images/nav-logo.png'
-                        />
-                      </Link>
-                      {!(isOrganisationSelect || isCreateOrganisation) && (
-                        <div className='d-flex gap-1 ml-1 align-items-center'>
-                          <div
-                            className={
-                              !!activeProject && !!projectId
-                                ? 'd-none d-md-block'
-                                : ''
-                            }
-                          >
-                            <BreadcrumbSeparator
-                              projectId={projectId}
-                              hideSlash={!activeProject}
-                              focus='organisation'
-                            >
-                              <NavLink
-                                id='organisation-link'
-                                data-test='organisation-link'
-                                activeClassName='active'
-                                className={classNames('breadcrumb-link', {
-                                  active: !projectId,
-                                })}
-                                to={Utils.getOrganisationHomePage()}
-                              >
-                                <div>
-                                  {AccountStore.getOrganisation()?.name}
-                                </div>
-                              </NavLink>
-                            </BreadcrumbSeparator>
-                          </div>
-                          {!!activeProject && !!projectId && (
-                            <BreadcrumbSeparator
-                              projectId={projectId}
-                              hideSlash
-                              focus='project'
-                            >
-                              <NavLink
-                                to={`/project/${activeProject.id}`}
-                                id='project-link'
-                                activeClassName='active'
-                                className={'breadcrumb-link active'}
-                              >
-                                <div>{activeProject.name}</div>
-                              </NavLink>
-                            </BreadcrumbSeparator>
-                          )}
-                        </div>
-                      )}
-                    </Row>
+                    <SelectOrgAndProject
+                      activeProject={activeProject}
+                      projectId={projectId}
+                    />
                     <Row className='align-items-center'>
                       <div className='me-3'>
                         <GithubStar />

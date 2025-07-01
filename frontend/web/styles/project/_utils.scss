@@ -256,3 +256,9 @@
   }
   background-color: $bg-light200;
 }
+
+@include media-breakpoint-up(md) {
+    .left-md-0 {
+        left:0;
+    }
+}

@@ -333,7 +333,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
         }}
         containerClassName={'p-0'}
         className={
-          'inline-modal nav-modal top-form-item mt-1 inline-modal--sm max-w-auto'
+          'inline-modal left-md-0 nav-modal top-form-item mt-1 inline-modal--sm max-w-auto'
         }
       >
         {!!open && (
