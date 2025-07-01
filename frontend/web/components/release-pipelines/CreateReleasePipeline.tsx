@@ -7,7 +7,11 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { StageActionType, StageTriggerType } from 'common/types/responses'
 import Icon from 'components/Icon'
-import { useCreateReleasePipelineMutation, useGetReleasePipelineQuery, useUpdateReleasePipelineMutation } from 'common/services/useReleasePipelines'
+import {
+  useCreateReleasePipelineMutation,
+  useGetReleasePipelineQuery,
+  useUpdateReleasePipelineMutation,
+} from 'common/services/useReleasePipelines'
 import { useHistory, useParams } from 'react-router-dom'
 import StageArrow from './StageArrow'
 import { ReleasePipelineRequest } from 'common/types/requests'
