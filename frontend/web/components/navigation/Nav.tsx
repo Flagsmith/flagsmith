@@ -88,19 +88,22 @@ const Nav: FC<NavType> = ({
         )}
         <hr className='my-0 py-0' />
         {environmentId && !isCreateEnvironment ? (
-          <div className='d-md-flex'>
-            <div>
-              <HomeAside
-                history={history}
-                environmentId={environmentId}
-                projectId={projectId}
-              />
+          <>
+            <div className='d-block d-md-none'>{header}</div>
+            <div className='d-md-flex'>
+              <div>
+                <HomeAside
+                  history={history}
+                  environmentId={environmentId}
+                  projectId={projectId}
+                />
+              </div>
+              <div className='aside-container'>
+                <div className='d-none d-md-block'>{header}</div>
+                {children}
+              </div>
             </div>
-            <div className='aside-container'>
-              <div>{header}</div>
-              {children}
-            </div>
-          </div>
+          </>
         ) : (
           <div>
             <div>{header}</div>
