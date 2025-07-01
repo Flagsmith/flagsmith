@@ -33,7 +33,7 @@ const OverflowNav: FC<OverflowNavProps> = ({
   const [open, setOpen] = useState(false)
   const history = useHistory()
   const { isMeasuring, visibleCount } = useVisibleCount({
-    extraWidth: buttonWidth + 10,
+    extraWidth: buttonWidth + 20,
     force,
     gap,
     itemCount: items.length,

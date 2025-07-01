@@ -542,64 +542,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-  hasEntityPermission(key: string, entityPermissions: UserPermissions) {
-    if (entityPermissions?.admin) return true
-    return !!entityPermissions?.permissions?.find(
-      (permission) => permission.permission_key === key,
-    )
-  },
-  //todo: Remove when migrating to RTK
-  isEnterpriseImage: () =>
-    selectBuildVersion(getStore().getState())?.backend.is_enterprise,
-  isMigrating() {
-    const model = ProjectStore.model as null | ProjectType
-    if (
-      model?.migration_status === 'MIGRATION_IN_PROGRESS' ||
-      model?.migration_status === 'MIGRATION_SCHEDULED'
-    ) {
-      return true
-    }
-    return false
-  },
-  isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
-  isValidNumber(value: any) {
-    return /^-?\d*\.?\d+$/.test(`${value}`)
-  },
-
-  isValidURL(value: any) {
-    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
-    return regex.test(value)
-  },
-  loadScriptPromise(url: string) {
-    return new Promise((resolve) => {
-      const cb = function () {
-        // @ts-ignore
-        this.removeEventListener('load', cb)
-        resolve(null)
-      }
-      const head = document.getElementsByTagName('head')[0]
-      const script = document.createElement('script')
-      script.type = 'text/javascript'
-      script.addEventListener('load', cb)
-      script.src = url
-      head.appendChild(script)
-    })
-  },
-  numberWithCommas(x: number) {
-    if (typeof x !== 'number') return ''
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-  },
-
-  openChat() {
-    if (typeof $crisp !== 'undefined') {
-      $crisp.push(['do', 'chat:open'])
-    }
-    Utils.setupCrisp()
-  },
-
-  removeElementFromArray(array: any[], index: number) {
-    return array.slice(0, index).concat(array.slice(index + 1))
-  },
   getExistingWaitForTime: (
     waitFor: string | undefined,
   ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
@@ -646,6 +588,65 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       amountOfTime: amountOfMinutes,
       timeUnit: TimeUnit.MINUTE,
     }
+  },
+  
+  hasEntityPermission(key: string, entityPermissions: UserPermissions) {
+    if (entityPermissions?.admin) return true
+    return !!entityPermissions?.permissions?.find(
+      (permission) => permission.permission_key === key,
+    )
+  },
+  //todo: Remove when migrating to RTK
+  isEnterpriseImage: () =>
+    selectBuildVersion(getStore().getState())?.backend.is_enterprise,
+  isMigrating() {
+    const model = ProjectStore.model as null | ProjectType
+    if (
+      model?.migration_status === 'MIGRATION_IN_PROGRESS' ||
+      model?.migration_status === 'MIGRATION_SCHEDULED'
+    ) {
+      return true
+    }
+    return false
+  },
+  isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
+
+  isValidNumber(value: any) {
+    return /^-?\d*\.?\d+$/.test(`${value}`)
+  },
+  isValidURL(value: any) {
+    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
+    return regex.test(value)
+  },
+  loadScriptPromise(url: string) {
+    return new Promise((resolve) => {
+      const cb = function () {
+        // @ts-ignore
+        this.removeEventListener('load', cb)
+        resolve(null)
+      }
+      const head = document.getElementsByTagName('head')[0]
+      const script = document.createElement('script')
+      script.type = 'text/javascript'
+      script.addEventListener('load', cb)
+      script.src = url
+      head.appendChild(script)
+    })
+  },
+
+  numberWithCommas(x: number) {
+    if (typeof x !== 'number') return ''
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  },
+
+  openChat() {
+    if (typeof $crisp !== 'undefined') {
+      $crisp.push(['do', 'chat:open'])
+    }
+    Utils.setupCrisp()
+  },
+  removeElementFromArray(array: any[], index: number) {
+    return array.slice(0, index).concat(array.slice(index + 1))
   },
   renderWithPermission(permission: boolean, name: string, el: ReactNode) {
     return permission ? (
