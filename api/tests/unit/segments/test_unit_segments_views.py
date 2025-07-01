@@ -651,7 +651,7 @@ def test_update_segment_add_new_condition(
     settings: SettingsWrapper,
 ) -> None:
     # Given
-    settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING = True
+    settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
 
     url = reverse(
         "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
