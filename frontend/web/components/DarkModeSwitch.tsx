@@ -1,22 +1,23 @@
 import React, { FC, useState } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import Setting from './Setting'
-import { getDarkMode, setDarkMode } from 'project/darkMode'
+import { getDarkMode, setDarkMode as persistDarkMode } from 'project/darkMode'
 
 type DarkModeSwitchType = {}
 
 const DarkModeSwitch: FC<DarkModeSwitchType> = ({}) => {
-  const [darkMode, _setDarkMode] = useState(getDarkMode())
+  const [darkModeLocal, setDarkModeLocal] = useState(getDarkMode())
 
   const toggleDarkMode = () => {
-    _setDarkMode(!getDarkMode())
-    setDarkMode(!getDarkMode())
+    const newDarkMode = !getDarkMode()
+    setDarkModeLocal(newDarkMode)
+    persistDarkMode(newDarkMode)
   }
   return (
     <Setting
       title='Dark Mode'
       description='Adjust the theme you see when using Flagsmith.'
-      checked={darkMode}
+      checked={darkModeLocal}
       onChange={toggleDarkMode}
     />
   )
