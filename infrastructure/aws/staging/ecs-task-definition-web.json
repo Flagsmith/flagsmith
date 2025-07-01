@@ -6,7 +6,9 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": ["serve"],
+            "command": [
+                "serve"
+            ],
             "cpu": 0,
             "portMappings": [
                 {
@@ -16,7 +18,10 @@
                 }
             ],
             "healthCheck": {
-                "command": ["CMD-SHELL", "flagsmith healthcheck tcp"],
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
@@ -211,6 +216,10 @@
                 {
                     "name": "PROMETHEUS_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "value": "True"
                 }
             ],
             "secrets": [
@@ -285,7 +294,9 @@
             }
         }
     ],
-    "requiresCompatibilities": ["FARGATE"],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
     "cpu": "1024",
     "memory": "2048"
 }
