@@ -4,7 +4,7 @@ import Permission from 'common/providers/Permission'
 import ChangeRequestStore from 'common/stores/change-requests-store'
 import classNames from 'classnames'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
-import EnvironmentLink from './EnvironmentLink'
+import EnvironmentLink from 'components/navigation/EnvironmentLink'
 
 type EnvironmentNavType = {
   projectId: number
@@ -13,7 +13,7 @@ type EnvironmentNavType = {
   mobile?: boolean
 }
 
-const EnvironmentNav: FC<EnvironmentNavType> = ({
+const EnvironmentNavbar: FC<EnvironmentNavType> = ({
   className,
   environmentId,
   mobile,
@@ -134,4 +134,4 @@ const EnvironmentNav: FC<EnvironmentNavType> = ({
   return inner
 }
 
-export default EnvironmentNav
+export default EnvironmentNavbar

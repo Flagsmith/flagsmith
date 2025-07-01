@@ -1,16 +1,12 @@
 import React, { FC, ReactNode, useEffect, useState } from 'react'
-import { NavLink, useHistory, useLocation } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 import AccountStore from 'common/stores/account-store'
 import HomeAside from './EnvironmentAside'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
-import ProjectNav from './ProjectNav'
-import OrganisationNav from './OrganisationNav'
-import SelectOrgAndProject from './SelectOrgAndProject'
-import Utils from 'common/utils/utils'
-import GithubStar from 'components/GithubStar'
-import Icon from 'components/Icon'
-import Headway from 'components/Headway'
+import ProjectNavbar from './navbars/ProjectNavbar'
+import OrganisationNavbar from './navbars/OrganisationNavbar'
+import TopNavbar from './navbars/TopNavbar'
 
 type NavType = {
   environmentId: string | undefined
@@ -70,56 +66,10 @@ const Nav: FC<NavType> = ({
           <div className='d-flex bg-faint pt-1 py-0'>
             <Flex className='flex-row px-2 '>
               {!!AccountStore.getUser() && (
-                <React.Fragment>
-                  <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
-                    <SelectOrgAndProject
-                      activeProject={activeProject}
-                      projectId={projectId}
-                    />
-                    <Row className='align-items-center'>
-                      <div className='me-3'>
-                        <GithubStar />
-                      </div>
-                      {Utils.getFlagsmithHasFeature('welcome_page') && (
-                        <NavLink
-                          activeClassName='active'
-                          to={'/getting-started'}
-                          className='d-flex gap-1 d-none d-md-flex text-end lh-1 align-items-center'
-                        >
-                          <span>
-                            <Icon name='rocket' width={20} fill='#9DA4AE' />
-                          </span>
-                          <span className='d-none d-md-block'>
-                            Getting Started
-                          </span>
-                        </NavLink>
-                      )}
-                      <a
-                        className='d-flex gap-1 ps-3 text-end lh-1 align-items-center'
-                        href={'https://docs.flagsmith.com'}
-                      >
-                        <span>
-                          <Icon name='file-text' width={20} fill='#9DA4AE' />
-                        </span>
-                        <span className='d-none d-md-block'>Docs</span>
-                      </a>
-                      <Headway className='cursor-pointer' />
-
-                      <NavLink
-                        className='d-flex ps-3 lh-1 align-items-center'
-                        id='account-settings-link'
-                        data-test='account-settings-link'
-                        activeClassName='active'
-                        to={'/account'}
-                      >
-                        <span className='mr-1'>
-                          <Icon name='person' width={20} fill='#9DA4AE' />
-                        </span>
-                        <span className='d-none d-md-block'>Account</span>
-                      </NavLink>
-                    </Row>
-                  </nav>
-                </React.Fragment>
+                <TopNavbar
+                  activeProject={activeProject}
+                  projectId={projectId}
+                />
               )}
             </Flex>
           </div>
@@ -127,12 +77,12 @@ const Nav: FC<NavType> = ({
         {showNav && (
           <>
             {activeProject ? (
-              <ProjectNav
+              <ProjectNavbar
                 projectId={projectId || lastProjectId}
                 environmentId={environmentId || lastEnvironmentId}
               />
             ) : (
-              <OrganisationNav />
+              <OrganisationNavbar />
             )}
           </>
         )}

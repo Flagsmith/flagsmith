@@ -1,16 +1,16 @@
 import React, { FC } from 'react'
-import NavSubLink from './NavSubLink'
+import NavSubLink from 'components/navigation/NavSubLink'
 import { apps, statsChart } from 'ionicons/icons'
 import Utils from 'common/utils/utils'
 import UsersIcon from 'components/svg/UsersIcon'
 import AccountStore from 'common/stores/account-store'
 import Project from 'common/project'
 import Icon from 'components/Icon'
-import OverflowNav from './OverflowNav'
+import OverflowNav from 'components/navigation/OverflowNav'
 
 type OrganisationNavType = {}
 
-const OrganisationNav: FC<OrganisationNavType> = ({}) => {
+const OrganisationNavbar: FC<OrganisationNavType> = ({}) => {
   return (
     <OverflowNav
       gap={3}
@@ -69,4 +69,4 @@ const OrganisationNav: FC<OrganisationNavType> = ({}) => {
   )
 }
 
-export default OrganisationNav
+export default OrganisationNavbar

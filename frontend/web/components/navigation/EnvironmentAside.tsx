@@ -19,7 +19,7 @@ import { components } from 'react-select'
 import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Constants from 'common/constants'
-import EnvironmentNav from './EnvironmentNav'
+import EnvironmentNavbar from './navbars/EnvironmentNavbar'
 import OverflowNav from './OverflowNav'
 
 type HomeAsideType = {
@@ -260,7 +260,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                           force
                           containerClassName='d-block d-md-none'
                         >
-                          <EnvironmentNav
+                          <EnvironmentNavbar
                             mobile
                             environmentId={environmentId}
                             projectId={projectId}
@@ -268,7 +268,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                         </OverflowNav>
                       </div>
                       <div id={'desktop-nav'} className='d-none d-md-block'>
-                        <EnvironmentNav
+                        <EnvironmentNavbar
                           environmentId={environmentId}
                           projectId={projectId}
                         />

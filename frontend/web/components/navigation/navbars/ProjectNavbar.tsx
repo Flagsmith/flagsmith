@@ -1,19 +1,19 @@
 import React, { FC } from 'react'
-import NavSubLink from './NavSubLink'
+import NavSubLink from 'components/navigation/NavSubLink'
 import { barChart, gitBranch, gitCompare } from 'ionicons/icons'
 import SegmentsIcon from 'components/svg/SegmentsIcon'
 import Permission, { useHasPermission } from 'common/providers/Permission'
 import AuditLogIcon from 'components/svg/AuditLogIcon'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
-import OverflowNav from './OverflowNav'
+import OverflowNav from 'components/navigation/OverflowNav'
 
 type ProjectNavType = {
   environmentId?: string
   projectId?: number
 }
 
-const ProjectNav: FC<ProjectNavType> = ({ environmentId, projectId }) => {
+const ProjectNavbar: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   const integrations = Object.keys(Utils.getIntegrationData())
   const { permission: projectAdmin } = useHasPermission({
     id: projectId,
@@ -112,4 +112,4 @@ const ProjectNav: FC<ProjectNavType> = ({ environmentId, projectId }) => {
   )
 }
 
-export default ProjectNav
+export default ProjectNavbar
