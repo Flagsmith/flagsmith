@@ -15,150 +15,10 @@ import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 import SidebarLink from './SidebarLink'
+import Constants from 'common/constants'
 
 type IntegrationSelectType = {
   onComplete: () => void
-}
-
-const integrationSummaries: IntegrationSummary[] = [
-  {
-    categories: ['Analytics'],
-    image: '/static/images/integrations/hubspot.svg',
-    title: 'HubSpot',
-  },
-  {
-    categories: ['Analytics'],
-    image: '/static/images/integrations/pendo.svg',
-    title: 'Pendo',
-  },
-  {
-    categories: ['Analytics'],
-    image: '/static/images/integrations/adobe-analytics.png',
-    title: 'Adobe Analytics',
-  },
-  {
-    categories: ['Analytics'],
-    image: '/static/images/integrations/google-analytics.svg',
-    title: 'Google Analytics',
-  },
-  {
-    categories: ['Authentication'],
-    image: '/static/images/integrations/okta.svg',
-    title: 'Okta',
-  },
-  {
-    categories: ['Developer tools'],
-    image: '/static/images/integrations/vs-code.svg',
-    title: 'VS Code',
-  },
-  {
-    categories: ['Infrastructure'],
-    image: '/static/images/integrations/terraform.svg',
-    title: 'Terraform',
-  },
-  {
-    categories: ['Infrastructure'],
-    image: '/static/images/integrations/vercel.svg',
-    title: 'Vercel',
-  },
-  {
-    categories: ['Messaging'],
-    image: '/static/images/integrations/microsoft-teams.svg',
-    title: 'Microsoft Teams',
-  },
-  {
-    categories: ['Developer tools'],
-    image: '/static/images/integrations/intellij.svg',
-    title: 'Intellij',
-  },
-  {
-    categories: ['Authentication'],
-    image: '/static/images/integrations/ldap.png',
-    title: 'LDAP',
-  },
-  {
-    categories: ['Authentication'],
-    image: '/static/images/integrations/saml.png',
-    title: 'SAML',
-  },
-  {
-    categories: ['CI/CD'],
-    image: '/static/images/integrations/bitbucket.svg',
-    title: 'Bitbucket',
-  },
-  {
-    categories: ['CI/CD'],
-    image: '/static/images/integrations/gitlab.svg',
-    title: 'GitLab',
-  },
-  {
-    categories: ['CI/CD'],
-    image: '/static/images/integrations/azure-devops.svg',
-    title: 'Azure DevOps',
-  },
-  {
-    categories: ['CI/CD'],
-    image: '/static/images/integrations/jenkins.svg',
-    title: 'Jenkins',
-  },
-  {
-    categories: ['Authentication'],
-    image: '/static/images/integrations/adfs.svg',
-    title: 'Microsoft Active Directory',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/appdynamics.svg',
-    title: 'AppDynamics',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/aws_cloudtrail.svg',
-    title: 'AWS CloudTrail',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/aws_cloudwatch.svg',
-    title: 'AWS CloudWatch',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/elastic.svg',
-    title: 'Elastic (ELK) Stack',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/opentelemetry.svg',
-    title: 'OpenTelemetry',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/prometheus.svg',
-    title: 'Prometheus',
-  },
-  {
-    categories: ['Monitoring'],
-    image: '/static/images/integrations/sumologic.svg',
-    title: 'SumoLogic',
-  },
-]
-const categoryDescriptions: Record<
-  (typeof integrationCategories)[number],
-  string
-> = {
-  'Analytics': 'Send data on what flags served to each identity.',
-  'Authentication':
-    'Use the Flagsmith Dashboard with your authentication provider.',
-  'CI/CD': 'View your Flagsmith Flags inside your Issues and Pull Request.',
-  'Developer tools': 'Interact with feature flags from your developer tools.',
-  'Infrastructure':
-    'Manage and evaluate your features within your infrastructure tooling.',
-  'Messaging':
-    'Send messages when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
-  'Monitoring':
-    'Send events when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
-  'Webhooks':
-    'Receive webhooks when your features change or when audit logs occur.',
 }
 
 const ALL_CATEGORY = 'All'
@@ -167,47 +27,54 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
   // Initialize search as an empty string
   const [search, setSearch] = useState<string>('')
   const integrationsData = Utils.getFlagsmithValue('integration_data')
-  const [category, setCategory] = useState<string>(ALL_CATEGORY)
+  const [selectedCategory, setSelectedCategory] = useState<
+    (typeof integrationCategories)[number]
+  >(ALL_CATEGORY as any)
 
   // Filter integrations by category and search term
   const allIntegrations = useMemo(() => {
     if (!integrationsData) {
-      return [] as typeof integrationSummaries
+      return [] as typeof Constants.integrationSummaries
     }
-    const parsed = Object.values(JSON.parse(integrationsData)).concat(
-      integrationSummaries,
+    const parsedCategories = Object.values(JSON.parse(integrationsData)).concat(
+      Constants.integrationSummaries,
     ) as IntegrationSummary[]
 
-    const filtered = parsed.filter((v) => {
+    const filtered = parsedCategories.filter((v) => {
       const matchesCategory =
-        category === ALL_CATEGORY || v.categories.includes(category as any)
+        selectedCategory === (ALL_CATEGORY as any) ||
+        v.categories.includes(selectedCategory as any)
       const matchesSearch =
         !search || v.title.toLowerCase().includes(search.toLowerCase())
 
       return matchesCategory && matchesSearch
     })
 
-    return sortBy(filtered, 'title') as typeof integrationSummaries
-  }, [integrationsData, category, search])
+    return sortBy(filtered, 'title') as typeof Constants.integrationSummaries
+  }, [integrationsData, selectedCategory, search])
 
-  const [selected, setSelected] = useState<string[]>([])
+  const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>([])
   const [showCustomTool, setShowCustomTool] = useState(false)
   const [customTool, setCustomTool] = useState('')
   const [updateTools, { isLoading }] = useUpdateOnboardingMutation({})
-  const skip = () =>
-    updateTools({
+  const skip = async () => {
+    await updateTools({
       tools: {
         completed: true,
         integrations: [],
       },
-    }).then(onComplete)
-  const submit = () =>
-    updateTools({
+    })
+    onComplete()
+  }
+  const submit = async () => {
+    await updateTools({
       tools: {
         completed: true,
-        integrations: selected,
+        integrations: selectedIntegrations,
       },
-    }).then(onComplete)
+    })
+    onComplete()
+  }
   return (
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>
@@ -223,8 +90,8 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               {[ALL_CATEGORY].concat(integrationCategories).map((v) => (
                 <SidebarLink
                   key={v}
-                  active={category === v}
-                  onClick={() => setCategory(v)}
+                  active={selectedCategory === v}
+                  onClick={() => setSelectedCategory(v as any)}
                 >
                   {v}
                 </SidebarLink>
@@ -232,10 +99,12 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             </div>
           </div>
           <div className='col-md-9 h-100'>
-            {!!categoryDescriptions[category] && (
+            {!!Constants.integrationCategoryDescriptions[selectedCategory] && (
               <div className='mx-4 mb-4'>
-                <span className='fw-semibold'>{category} integrations</span>:{' '}
-                {categoryDescriptions[category]}
+                <span className='fw-semibold'>
+                  {selectedCategory} integrations
+                </span>
+                : {Constants.integrationCategoryDescriptions[selectedCategory]}
               </div>
             )}
             <div className='col-md-6 mx-4 mb-2'>
@@ -251,11 +120,13 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               />
             </div>
             <div className='d-flex my-2 mx-4 flex-wrap gap-2'>
-              {selected.map((label) => (
+              {selectedIntegrations.map((label) => (
                 <div
                   key={label}
                   onClick={() =>
-                    setSelected(selected.filter((target) => target !== label))
+                    setSelectedIntegrations(
+                      selectedIntegrations.filter((target) => target !== label),
+                    )
                   }
                   className='chip--xs cursor-pointer chip'
                 >
@@ -272,20 +143,22 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             >
               <div className='row mx-0 row-cols-3 row-cols-md-4  row-cols-xl-6'>
                 {allIntegrations.map((v, i) => {
-                  const isSelected = selected.includes(v.title)
+                  const isSelected = selectedIntegrations.includes(v.title)
                   return (
                     <div
                       data-test={`integration-${i}`}
                       key={v.title}
                       onClick={() => {
                         if (isSelected) {
-                          setSelected(
-                            selected.filter(
+                          setSelectedIntegrations(
+                            selectedIntegrations.filter(
                               (selectedItem) => selectedItem !== v.title,
                             ),
                           )
                         } else {
-                          setSelected(selected.concat(v.title))
+                          setSelectedIntegrations(
+                            selectedIntegrations.concat(v.title),
+                          )
                         }
                       }}
                       className='col cursor-pointer px-2 py-2 text-center'
@@ -336,7 +209,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               <Button
                 data-test='submit-integrations'
                 onClick={submit}
-                disabled={!selected?.length || isLoading}
+                disabled={!selectedIntegrations?.length || isLoading}
                 style={{ width: 120 }}
                 theme='primary'
               >
@@ -369,7 +242,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             onClick={() => {
               setShowCustomTool(false)
               setCustomTool('')
-              setSelected(selected.concat([customTool]))
+              setSelectedIntegrations(selectedIntegrations.concat([customTool]))
             }}
           >
             Confirm
