@@ -27,6 +27,7 @@ import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
+import { TimeUnit } from 'components/release-pipelines/constants'
 
 const semver = require('semver')
 
@@ -541,6 +542,54 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+  
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {
     if (entityPermissions?.admin) return true
     return !!entityPermissions?.permissions?.find(
@@ -561,10 +610,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
-
   isValidURL(value: any) {
     const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
     return regex.test(value)
@@ -584,6 +633,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       head.appendChild(script)
     })
   },
+
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -595,7 +645,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     Utils.setupCrisp()
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -608,6 +657,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
@@ -671,11 +721,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
-
   tagDisabled: (tag: Tag | undefined) => {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
+
   toKebabCase: (string: string) =>
     string
       .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -705,7 +755,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return true
     }
   },
-
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
     if (rule.delete) {
@@ -762,6 +811,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         )
     }
   },
+
   valueToFeatureState(value: FlagsmithValue, trimSpaces = true) {
     const val = Utils.getTypedValue(value, undefined, trimSpaces)
 
@@ -790,7 +840,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: 'unicode',
     }
   },
-
   valueToTrait(value: FlagsmithValue) {
     const val = Utils.getTypedValue(value)
 
