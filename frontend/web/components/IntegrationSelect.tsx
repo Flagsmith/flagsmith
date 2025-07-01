@@ -218,7 +218,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
       </div>
       <div className='container-fluid'>
         <div className='row'>
-          <div className=' d-none col-md-4 d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
+          <div className=' d-none col-md-3 d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
             <div className='mx-md-3'>
               {[ALL_CATEGORY].concat(integrationCategories).map((v) => (
                 <SidebarLink
@@ -267,10 +267,10 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               ))}
             </div>
             <div
-              style={{ height: 'calc(100vh - 500px)', minHeight: 550 }}
+              style={{ height: 'calc(100vh - 400px)' }}
               className='overflow-scroll overflow-x-hidden d-flex flex-column m-0  pt-0 custom-scroll'
             >
-              <div className='row mx-0 row-cols-4  row-cols-xl-6'>
+              <div className='row mx-0 row-cols-3 row-cols-md-4  row-cols-xl-6'>
                 {allIntegrations.map((v, i) => {
                   const isSelected = selected.includes(v.title)
                   return (
@@ -349,7 +349,10 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
       <ModalDefault
         title={'Add your favourite tool'}
         isOpen={showCustomTool}
-        onDismiss={() => setShowCustomTool(false)}
+        onDismiss={() => {
+          setCustomTool('')
+          setShowCustomTool(false)
+        }}
         toggle={() => setShowCustomTool(!showCustomTool)}
       >
         <p>Let us know what tool you would love to use with feature flags</p>
@@ -365,6 +368,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
           <Button
             onClick={() => {
               setShowCustomTool(false)
+              setCustomTool('')
               setSelected(selected.concat([customTool]))
             }}
           >
