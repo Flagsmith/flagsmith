@@ -1,27 +1,19 @@
 import pytest
-from django.utils import timezone
-from environments.models import Environment
-from features.release_pipelines.core.models import (
-    PipelineStage,
-    PipelineStageAction,
-    PipelineStageTrigger,
-    ReleasePipeline,
-    StageActionType,
-    StageTriggerType,
-)
+
 from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
     RELEASE_PIPELINE_DELETED_MESSAGE,
     RELEASE_PIPELINE_PUBLISHED_MESSAGE,
 )
-
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
-from projects.models import Project
-from segments.models import Segment
-from users.models import FFAdminUser
-
+from environments.models import Environment
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
+from features.release_pipelines.core.models import (
+    PipelineStage,
+    ReleasePipeline,
+)
+from users.models import FFAdminUser
 
 
 def test_release_pipeline_publish_creates_audit_log(
