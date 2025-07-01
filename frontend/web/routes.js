@@ -21,7 +21,7 @@ import EnvironmentSettingsPage from './components/pages/EnvironmentSettingsPage'
 import InvitePage from './components/pages/InvitePage'
 import NotFoundPage from './components/pages/NotFoundPage'
 import ChangeRequestsPage from './components/pages/ChangeRequestsPage'
-import ChangeRequestPage from './components/pages/ChangeRequestPage'
+import ChangeRequestDetailPage from './components/pages/ChangeRequestDetailPage'
 import ScheduledChangesPage from './components/pages/ScheduledChangesPage'
 import AuditLogPage from './components/pages/AuditLogPage'
 import ComparePage from './components/pages/ComparePage'
@@ -148,12 +148,12 @@ export default (
       <ParameterizedRoute
         path={routes['change-request']}
         exact
-        component={ChangeRequestPage}
+        component={ChangeRequestDetailPage}
       />
       <ParameterizedRoute
         path={routes['scheduled-change']}
         exact
-        component={ChangeRequestPage}
+        component={ChangeRequestDetailPage}
       />
       <Route path={routes.widget} exact component={WidgetPage} />
       <Route path={routes.invite} exact component={InvitePage} />

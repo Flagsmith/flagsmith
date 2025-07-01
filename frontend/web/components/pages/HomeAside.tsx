@@ -161,7 +161,10 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
   return (
     <OrganisationProvider>
       {() => (
-        <ProjectProvider id={projectId} onSave={onProjectSave}>
+        <ProjectProvider
+          id={parseInt(projectId?.toString())}
+          onSave={onProjectSave}
+        >
           {({ project }) => {
             if (!project) return null
             const createEnvironmentButton = (

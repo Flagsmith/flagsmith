@@ -49,6 +49,7 @@ import {
 import Button from 'components/base/forms/Button'
 import Input from 'components/base/forms/Input'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
+import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
 import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 
@@ -69,7 +70,7 @@ const EnvironmentSettingsPage: React.FC = () => {
     projectId: string
     environmentId: string
   }>()
-  const projectIdFromUrl = Utils.getProjectIdFromUrl(match)
+  const { projectId } = useRouteContext()
   const [currentEnv, setCurrentEnv] = useState<Environment | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [environmentContentType, setEnvironmentContentType] =
@@ -162,8 +163,8 @@ const EnvironmentSettingsPage: React.FC = () => {
   }, [store, env])
 
   useEffect(() => {
-    AppActions.getProject(projectIdFromUrl)
-  }, [projectIdFromUrl])
+    AppActions.getProject(projectId)
+  }, [projectId])
 
   useEffect(() => {
     getEnvironment()
@@ -224,11 +225,10 @@ const EnvironmentSettingsPage: React.FC = () => {
     const envs = ProjectStore.getEnvs() as Environment[] | null
     if (envs && envs?.length > 0) {
       history.replace(
-        `/project/${match.params.projectId}/environment` +
-          `/${envs[0].api_key}/features`,
+        `/project/${projectId}/environment` + `/${envs[0].api_key}/features`,
       )
     } else {
-      history.replace(`/project/${match.params.projectId}/environment/create`)
+      history.replace(`/project/${projectId}/environment/create`)
     }
     toast(
       <div>
@@ -291,7 +291,7 @@ const EnvironmentSettingsPage: React.FC = () => {
       'New Webhook',
       <CreateWebhookModal
         environmentId={match.params.environmentId}
-        projectId={projectIdFromUrl}
+        projectId={projectId}
         save={(webhook: Webhook) =>
           createWebhook({
             ...webhook,
@@ -310,7 +310,7 @@ const EnvironmentSettingsPage: React.FC = () => {
         webhook={webhook}
         isEdit
         environmentId={match.params.environmentId}
-        projectId={projectIdFromUrl}
+        projectId={projectId}
         save={(webhook: Webhook) =>
           saveWebhook({ ...webhook, environmentId: match.params.environmentId })
         }
@@ -324,7 +324,7 @@ const EnvironmentSettingsPage: React.FC = () => {
       'Remove Webhook',
       <ConfirmRemoveWebhook
         environmentId={match.params.environmentId}
-        projectId={projectIdFromUrl}
+        projectId={projectId}
         url={webhook.url}
         cb={() =>
           deleteWebhook({
@@ -390,7 +390,7 @@ const EnvironmentSettingsPage: React.FC = () => {
     <div className='app-container container'>
       <ProjectProvider
         onRemoveEnvironment={onRemoveEnvironment}
-        id={projectIdFromUrl}
+        id={projectId}
         onRemove={onRemove}
         onSave={onSave}
       >
@@ -677,9 +677,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                             enabling this will prevent the API from returning
                             features that are disabled. You can also manage this
                             in{' '}
-                            <Link
-                              to={`/project/${match.params.projectId}/settings`}
-                            >
+                            <Link to={`/project/${projectId}/settings`}>
                               Project settings
                             </Link>
                             .
@@ -795,9 +793,9 @@ const EnvironmentSettingsPage: React.FC = () => {
                     <FormGroup>
                       <EditPermissions
                         tabClassName='flat-panel'
-                        parentId={projectIdFromUrl}
+                        parentId={projectId}
                         parentLevel='project'
-                        parentSettingsLink={`/project/${match.params.projectId}/settings`}
+                        parentSettingsLink={`/project/${projectId}/settings`}
                         id={match.params.environmentId}
                         envId={env?.id}
                         level='environment'
@@ -932,7 +930,7 @@ const EnvironmentSettingsPage: React.FC = () => {
                           component={
                             <AddMetadataToEntity
                               organisationId={AccountStore.getOrganisation().id}
-                              projectId={projectIdFromUrl}
+                              projectId={projectId}
                               entityId={currentEnv?.api_key ?? ''}
                               envName={currentEnv?.name}
                               entityContentType={environmentContentType?.id}

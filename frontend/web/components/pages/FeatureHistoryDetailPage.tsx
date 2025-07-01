@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import { useRouteMatch } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
@@ -17,7 +17,7 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import Breadcrumb from 'components/Breadcrumb'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-import { useHistory } from 'react-router-dom'
+import { useRouteContext } from 'components/providers/RouteContext'
 interface RouteParams {
   id: string
   environmentId: string
@@ -25,9 +25,9 @@ interface RouteParams {
 }
 
 const FeatureHistoryPage: FC = () => {
-  const [open, setOpen] = useState(false)
   const match = useRouteMatch<RouteParams>()
-  const history = useHistory()
+  const { projectId } = useRouteContext()
+
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
   ) as any
@@ -58,7 +58,7 @@ const FeatureHistoryPage: FC = () => {
   const user = users?.find((user) => data?.published_by === user.id)
   const live = versions?.results?.[0]
   const { data: feature } = useGetProjectFlagQuery(
-    { id: `${data?.feature}`, project: match.params.projectId },
+    { id: `${data?.feature}`, project: projectId?.toString() || '' },
     {
       skip: !data?.feature,
     },
@@ -69,11 +69,15 @@ const FeatureHistoryPage: FC = () => {
         items={[
           {
             title: 'Features',
-            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/features`,
+            url: `/project/${projectId?.toString() || ''}/environment/${
+              match.params.environmentId
+            }/features`,
           },
           {
             title: feature?.name,
-            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/features?feature=${featureId}&tab=history`,
+            url: `/project/${projectId?.toString() || ''}/environment/${
+              match.params.environmentId
+            }/features?feature=${featureId}&tab=history`,
           },
         ]}
         currentPage={'History'}
@@ -114,7 +118,7 @@ const FeatureHistoryPage: FC = () => {
                   <TabItem tabLabel='Compare to Previous'>
                     <div className='mt-4'>
                       <FeatureVersion
-                        projectId={`${match.params.projectId}`}
+                        projectId={`${projectId?.toString() || ''}`}
                         featureId={parseInt(featureId)}
                         environmentId={environmentId}
                         newUUID={data.uuid}
@@ -126,7 +130,7 @@ const FeatureHistoryPage: FC = () => {
                 <TabItem tabLabel='Compare to Live'>
                   <div className='mt-4'>
                     <FeatureVersion
-                      projectId={`${match.params.projectId}`}
+                      projectId={`${projectId?.toString() || ''}`}
                       featureId={parseInt(featureId)}
                       environmentId={environmentId}
                       newUUID={live!.uuid}

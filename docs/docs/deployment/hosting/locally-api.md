@@ -222,6 +222,7 @@ the below variables will be ignored.
   and hence should not be modified for already running instances of flagsmith. It should only be used for new
   installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
   platform if required in the future.
+- `SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED`: Forces segment rule condition ordering by primary key, ascending. Default is `False` (no guaranteed order). **Warning**: changing this setting might affect evaluation for existing segments.
 - `ENABLE_API_USAGE_TRACKING`: Enable tracking of all API requests in Postgres / Influx. Default is True. Setting to
   False will mean that the Usage tab in the Organisation Settings will not show any data. Useful when using Postgres for
   analytics in high traffic environments to limit the size of database.
@@ -451,7 +452,7 @@ increasing the performance of your task processor.
 
 
 | Environment Variable                  | Description                                                                                                                                                                                       | Example value                                          | Default                                       |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------|
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------- |
 | `CACHE_ENVIRONMENT_DOCUMENT_MODE`     | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                           | `EXPIRING`                                    |
 | `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                    | `60`                                                   | `0` ( = don't cache)                          |
 | `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                    | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |
