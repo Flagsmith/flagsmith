@@ -7,6 +7,7 @@ import { loadReoScript } from 'reodotdev'
 
 import freeEmailDomains from 'free-email-domains'
 import { groupBy } from 'lodash'
+
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -146,6 +147,19 @@ global.API = {
       }
     }
     API.flagsmithIdentify()
+  },
+  expireCookieAnywhere(name) {
+    const segments = window.location.pathname.split('/').filter(Boolean)
+    let pathAcc = ''
+
+    for (const seg of segments) {
+      pathAcc += `/${seg}`
+      document.cookie = `${name}=;path=${pathAcc};expires=${new Date(
+        0,
+      ).toUTCString()};`
+    }
+    // and at the root
+    document.cookie = `${name}=;path=/;expires=${new Date(0).toUTCString()};`
   },
   flagsmithIdentify() {
     const user = AccountStore.model
@@ -371,20 +385,8 @@ global.API = {
     try {
       if (!v) {
         if (E2E) {
-          // TestCafe’s proxy means we need to delete the cookie at all paths
-          const segments = window.location.pathname.split('/').filter(Boolean)
-          let pathAccumulator = ''
-
-          segments.forEach((seg) => {
-            pathAccumulator += `/${seg}`
-            document.cookie = `${key}=;path=${pathAccumulator};expires=${new Date(
-              0,
-            ).toUTCString()};`
-          })
-
-          document.cookie = `${key}=;path=/;expires=${new Date(
-            0,
-          ).toUTCString()};`
+          // We need to expire cookies everywhere since TestCafe uses a proxy
+          Utils.expireCookieAnywhere(key)
         } else {
           require('js-cookie').remove(key, {
             domain: Project.cookieDomain,
@@ -392,18 +394,17 @@ global.API = {
           })
           require('js-cookie').remove(key, { path: '/' })
         }
-        if (E2E) {
-          // Since E2E is not https, we can't set secure cookies
-          require('js-cookie').set(key, v, { expires: 30, path: '/' })
-        } else {
-          // We need samesite secure cookies to allow for IFrame embeds from 3rd parties
-          require('js-cookie').set(key, v, {
-            expires: 30,
-            path: '/',
-            sameSite: Project.cookieSameSite || 'none',
-            secure: Project.useSecureCookies,
-          })
-        }
+      } else if (E2E) {
+        // Since E2E is not https, we can't set secure cookies
+        require('js-cookie').set(key, v, { expires: 30, path: '/' })
+      } else {
+        // We need samesite secure cookies to allow for IFrame embeds from 3rd parties
+        require('js-cookie').set(key, v, {
+          expires: 30,
+          path: '/',
+          sameSite: Project.cookieSameSite || 'none',
+          secure: Project.useSecureCookies,
+        })
       }
     } catch (e) {}
   },
