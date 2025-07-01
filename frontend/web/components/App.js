@@ -34,6 +34,8 @@ import HomeAside from './pages/HomeAside'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
 import Announcement from './Announcement'
+import ProjectChangeRequestsLink from './ProjectChangeRequestsLink'
+import { plugin } from '@amplitude/plugin-session-replay-browser'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 
 const App = class extends Component {
@@ -552,6 +554,7 @@ const App = class extends Component {
                           >
                             Segments
                           </NavSubLink>
+                          <ProjectChangeRequestsLink projectId={projectId} />
                           <Permission
                             level='project'
                             permission='VIEW_AUDIT_LOG'

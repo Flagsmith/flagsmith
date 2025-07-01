@@ -1,6 +1,5 @@
-import React, { ComponentProps, FC, useEffect, useState } from 'react'
+import React, { ComponentProps, FC, useRef } from 'react'
 import ProjectStore from 'common/stores/project-store'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import Utils from 'common/utils/utils'
 import { Environment } from 'common/types/responses'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -26,9 +25,10 @@ import EnvironmentSelect from 'components/EnvironmentSelect'
 import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
+import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import Constants from 'common/constants'
-
+import moment from 'moment'
 type HomeAsideType = {
   environmentId: string
   projectId: string
@@ -108,27 +108,26 @@ const CustomSingleValue = ({ hasWarning, ...rest }: CustomSingleValueProps) => {
 }
 
 const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
+  const date = useRef(moment().toISOString())
+
   const history = useHistory()
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: projectId },
     { skip: !projectId },
   )
 
-  useEffect(() => {
-    if (environmentId) {
-      AppActions.getChangeRequests(environmentId, {})
-    }
-  }, [environmentId])
-  const [_, setChangeRequestsUpdated] = useState(Date.now())
+  const { data: scheduledData } = useGetChangeRequestsQuery({
+    committed: true,
+    environmentId,
+    live_from_after: date.current,
+    page_size: 1,
+  })
 
-  useEffect(() => {
-    const onChangeRequestsUpdated = () => setChangeRequestsUpdated(Date.now())
-    ChangeRequestStore.on('change', onChangeRequestsUpdated)
-    return () => {
-      ChangeRequestStore.off('change', onChangeRequestsUpdated)
-    }
-    //eslint-disable-next-line
-  }, [])
+  const { data: changeRequestsData } = useGetChangeRequestsQuery({
+    committed: false,
+    environmentId,
+    page_size: 1,
+  })
 
   const unhealthyEnvironments = healthEvents
     ?.filter((event) => event?.type === 'UNHEALTHY' && !!event?.environment)
@@ -148,15 +147,14 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
     environmentId === 'create'
       ? null
       : (ProjectStore.getEnvironment(environmentId) as any)
-  const changeRequest = Utils.changeRequestsEnabled(
-    environment?.minimum_change_request_approvals,
-  )
-    ? ChangeRequestStore.model[environmentId]
-    : null
-  const changeRequests = changeRequest?.count || 0
 
-  const scheduled =
-    (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
+  const changeRequests =
+    (Utils.changeRequestsEnabled(
+      environment?.minimum_change_request_approvals,
+    ) &&
+      changeRequestsData?.count) ||
+    0
+  const scheduled = scheduledData?.count || 0
   const onProjectSave = () => {
     AppActions.refreshOrganisation()
   }
@@ -168,6 +166,7 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
           onSave={onProjectSave}
         >
           {({ project }) => {
+            if (!project) return null
             const createEnvironmentButton = (
               <Permission
                 level='project'
