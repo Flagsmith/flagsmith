@@ -9,10 +9,12 @@ export const setDarkMode = (enabled: boolean) => {
     document.body.classList.add('dark')
     document.documentElement.setAttribute('data-bs-theme', 'dark')
   } else {
-    API.setCookie('dark_mode', null)
+    API.setCookie('dark_mode', 'false')
     document.body.classList.remove('dark')
     document.documentElement.removeAttribute('data-bs-theme')
   }
 }
 
-setDarkMode(getDarkMode())
+if (API.getCookie('dark_mode')) {
+  setDarkMode(getDarkMode())
+}
