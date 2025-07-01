@@ -35,7 +35,10 @@
 .modal-caption {
   color: $body-color;
 }
-
+.inline-modal-right {
+  left: auto;
+  right: 0;
+}
 $side-width: 750px;
 .dark {
   .inline-modal {
@@ -58,81 +61,89 @@ $side-width: 750px;
   }
 }
 
-.side-modal {
-  overflow-y: hidden !important;
-  opacity: 1 !important;
-  z-index: 10000000;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-
-  .modal-body {
-    padding: 0;
-    height: calc(100% - 60px);
-    overflow-y: auto;
-  }
-
-  .modal-dialog {
-    box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
-      rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
-    transition: transform 0.2s ease-out;
-    transform: translate(100%, 0%) !important;
-    position: absolute;
-    max-width: 1000px;
-    width: $side-width !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    margin: 0;
-    right: 0;
-    left: auto;
-  }
-
-  &.show {
-    .modal-dialog {
-      transform: translate(0%, 0%) !important;
-    }
-  }
-
-  &__footer {
-    position: fixed;
-    bottom: 0;
+@include media-breakpoint-up(md) {
+  .side-modal {
+    overflow-y: hidden !important;
+    opacity: 1 !important;
+    z-index: 10000000;
     left: 0;
     right: 0;
-    padding: 20px;
-    height: 130px;
-  }
+    top: 0;
+    bottom: 0;
 
-  .modal-content {
-    border-radius: 0;
-    width: 100%;
-    height: 100%;
-  }
-  &.create-feature-modal {
     .modal-body {
-      overflow-y: hidden;
+      padding: 0;
+      height: calc(100% - 60px);
+      overflow-y: auto;
     }
-    &.overflow-y-auto {
-      overflow-y: hidden;
-      .modal-body {
-        overflow-y: auto;
+
+    .modal-dialog {
+      box-shadow: rgba(75, 75, 75, 0.11) 0px 1px 6px 0px,
+      rgba(75, 75, 75, 0.11) 0px 1px 4px 0px;
+      transition: transform 0.2s ease-out;
+      transform: translate(100%, 0%) !important;
+      position: absolute;
+      max-width: 1000px;
+      width: $side-width !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      margin: 0;
+      right: 0;
+      left: auto;
+    }
+
+    &.show {
+      .modal-dialog {
+        transform: translate(0%, 0%) !important;
       }
     }
-    .tabs {
-      .tab-item {
-        padding-top: 24px;
-        padding-bottom: 24px;
-        overflow-y: auto;
-        height: calc(100vh - 110px);
-        &.p-0 {
-          height: auto;
+
+    &__footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px;
+      height: 130px;
+    }
+
+    .modal-content {
+      border-radius: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    &.create-feature-modal {
+      .modal-body {
+        overflow-y: hidden;
+      }
+
+      &.overflow-y-auto {
+        overflow-y: hidden;
+
+        .modal-body {
+          overflow-y: auto;
         }
       }
-    }
-    .create-feature-tab {
-      margin-top: 16px;
-      overflow-y: auto;
-      height: calc(100vh - 80px);
+
+      .tabs {
+        .tab-item {
+          padding-top: 24px;
+          padding-bottom: 24px;
+          overflow-y: auto;
+          height: calc(100vh - 110px);
+
+          &.p-0 {
+            height: auto;
+          }
+        }
+      }
+
+      .create-feature-tab {
+        margin-top: 16px;
+        overflow-y: auto;
+        height: calc(100vh - 80px);
+      }
     }
   }
 }
@@ -296,5 +307,15 @@ $side-width: 750px;
 
   .table-filter-item {
     border-color: $white-alpha-8;
+  }
+}
+
+@include media-breakpoint-down(md) {
+  .modal-dialog {
+    margin:0;
+    .modal-content {
+      border-radius:0;
+      height: 100vh;
+    }
   }
 }

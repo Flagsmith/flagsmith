@@ -203,13 +203,14 @@ $font-sm: 14px;
 $font-caption: 13px;
 $font-caption-sm: 12px;
 $font-caption-xs: 11px;
+$font-size-base: 14px;
 $font-sizes: (
+        regular: $font-size-base,
         small: $font-sm,
         caption: $font-caption,
         captionSmall: $font-caption-sm,
         captionXSmall: $font-caption-xs,
 );
-$font-size-base: 14px;
 $h1-font-size: 42px;
 $h1-line-height: 46px;
 $h2-font-size: 34px;
@@ -394,4 +395,21 @@ $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
 
 .bg-opacity-5 {
   --bs-bg-opacity: 0.5 !important;
+}
+
+// Adds .fill-primary etc to svgs
+@each $name, $color in $theme-colors {
+  .fill-#{$name} {
+    fill: #{$color} !important;
+    path, circle, rect {
+      fill: #{$color} !important;
+    }
+  }
+  .hover-fill-#{$name}:hover {
+    fill: #{$color} !important;
+    path, circle, rect {
+      fill: #{$color} !important;
+    }
+  }
+
 }

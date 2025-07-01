@@ -77,11 +77,15 @@ export interface StageActionRequest {
   action_body: { enabled: boolean; segment_id?: number }
 }
 
-export type ReleasePipelineRequest = {
+export interface ReleasePipelineRequest {
   project: number
   name: string
   description?: string
   stages: PipelineStageRequest[]
+}
+
+export interface UpdateReleasePipelineRequest extends ReleasePipelineRequest {
+  id: number
 }
 
 export type PipelineStageRequest = {
@@ -706,6 +710,7 @@ export type Req = {
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
   createReleasePipeline: ReleasePipelineRequest
+  updateReleasePipeline: UpdateReleasePipelineRequest
   getPipelineStages: PagedRequest<{
     projectId: number
     pipelineId: number
