@@ -93,7 +93,7 @@ const Nav: FC<NavType> = ({
         {!isHomepage && (!pageHasAside || !asideIsVisible) && (
           <div className='d-flex bg-faint pt-1 py-0'>
             <Flex className='flex-row px-2 '>
-              {AccountStore.getUser() ? (
+              {!!AccountStore.getUser() && (
                 <React.Fragment>
                   <nav className='mt-2 mb-1 space flex-row hidden-xs-down'>
                     <Row className='gap-2'>
@@ -198,8 +198,6 @@ const Nav: FC<NavType> = ({
                     </Row>
                   </nav>
                 </React.Fragment>
-              ) : (
-                <div />
               )}
             </Flex>
           </div>
