@@ -23,7 +23,7 @@ import Announcement from './Announcement'
 import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
-
+import 'project/darkMode'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -200,10 +200,6 @@ const App = class extends Component {
         })
       }
     }
-
-    if (Utils.getFlagsmithHasFeature('dark_mode')) {
-      document.body.classList.add('dark')
-    }
   }
 
   handleScroll = () => {
@@ -231,12 +227,6 @@ const App = class extends Component {
   }
 
   render() {
-    if (
-      Utils.getFlagsmithHasFeature('dark_mode') &&
-      !document.body.classList.contains('dark')
-    ) {
-      document.body.classList.add('dark')
-    }
     const { location } = this.props
     const pathname = location.pathname
 
