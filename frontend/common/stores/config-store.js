@@ -9,10 +9,6 @@ const controller = {
     store.loading()
   },
   loaded(oldFlags) {
-    // Occurs whenever flags are changed
-    if (flagsmith.hasFeature('dark_mode')) {
-      document.body.classList.add('dark')
-    }
     if (!oldFlags || !Object.keys(oldFlags).length) {
       store.loaded()
     } else {
