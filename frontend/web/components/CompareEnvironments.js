@@ -13,7 +13,6 @@ import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
 import { withRouter } from 'react-router-dom'
-import { getDarkMode } from 'project/darkMode'
 
 const featureNameWidth = 300
 
@@ -175,7 +174,9 @@ class CompareEnvironments extends Component {
               <Icon
                 name='arrow-right'
                 width={20}
-                fill={getDarkMode() ? '#fff' : '#1A2634'}
+                fill={
+                  Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
+                }
               />
             </div>
 

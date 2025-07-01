@@ -22,7 +22,6 @@ import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Tooltip from './Tooltip'
 import PageTitle from './PageTitle'
-import { getDarkMode } from 'project/darkMode'
 
 type CompareIdentitiesType = {
   projectId: string
@@ -207,7 +206,9 @@ const CompareIdentities: FC<CompareIdentitiesType> = ({
             <Icon
               name='arrow-right'
               width={20}
-              fill={getDarkMode() ? '#fff' : '#1A2634'}
+              fill={
+                Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
+              }
             />
           </div>
           <div style={{ width: selectWidth }}>

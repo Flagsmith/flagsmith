@@ -6,7 +6,6 @@ import ToggleChip from 'components/ToggleChip'
 import Utils from 'common/utils/utils'
 import TagContent from './TagContent'
 import Constants from 'common/constants'
-import { getDarkMode } from 'project/darkMode'
 
 type TagType = {
   className?: string
@@ -18,7 +17,7 @@ type TagType = {
 }
 
 export const getTagColor = (tag: Partial<TTag>, selected?: boolean) => {
-  if (getDarkMode() && tag.color === '#344562') {
+  if (Utils.getFlagsmithHasFeature('dark_mode') && tag.color === '#344562') {
     return '#9DA4AE'
   }
   if (tag.type === 'UNHEALTHY') {
