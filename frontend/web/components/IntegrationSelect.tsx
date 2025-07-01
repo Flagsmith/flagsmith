@@ -79,8 +79,9 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>
         <PageTitle title={'Use Feature Flags with your favourite tools'}>
-          To personalise your experience and help us assist you, select the
-          relevant tools you want to use feature flags with.
+          Select which tools you current use. This information will help us
+          surface the integrations we currently have and also prioritize
+          additional development work on integrations in our pipeline.
         </PageTitle>
       </div>
       <div className='container-fluid'>
