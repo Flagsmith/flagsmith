@@ -370,12 +370,28 @@ global.API = {
   setCookie(key, v) {
     try {
       if (!v) {
-        require('js-cookie').remove(key, {
-          domain: Project.cookieDomain,
-          path: '/',
-        })
-        require('js-cookie').remove(key, { path: '/' })
-      } else {
+        if (E2E) {
+          // TestCafe’s proxy means we need to delete the cookie at all paths
+          const segments = window.location.pathname.split('/').filter(Boolean)
+          let pathAccumulator = ''
+
+          segments.forEach((seg) => {
+            pathAccumulator += `/${seg}`
+            document.cookie = `${key}=;path=${pathAccumulator};expires=${new Date(
+              0,
+            ).toUTCString()};`
+          })
+
+          document.cookie = `${key}=;path=/;expires=${new Date(
+            0,
+          ).toUTCString()};`
+        } else {
+          require('js-cookie').remove(key, {
+            domain: Project.cookieDomain,
+            path: '/',
+          })
+          require('js-cookie').remove(key, { path: '/' })
+        }
         if (E2E) {
           // Since E2E is not https, we can't set secure cookies
           require('js-cookie').set(key, v, { expires: 30, path: '/' })
