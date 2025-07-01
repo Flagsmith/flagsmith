@@ -6,24 +6,12 @@ import AccountStore from 'common/stores/account-store'
 import GithubStar from 'components/GithubStar'
 import Icon from 'components/Icon'
 import Headway from 'components/Headway'
-import NavSubLink from './NavSubLink'
-import {
-  apps,
-  barChart,
-  gitBranch,
-  gitCompare,
-  statsChart,
-} from 'ionicons/icons'
-import SegmentsIcon from 'components/svg/SegmentsIcon'
-import Permission, { useHasPermission } from 'common/providers/Permission'
-import AuditLogIcon from 'components/svg/AuditLogIcon'
-import UsersIcon from 'components/svg/UsersIcon'
 import HomeAside from './EnvironmentAside'
 import Utils from 'common/utils/utils'
 import { Project as ProjectType } from 'common/types/responses'
 import { AsyncStorage } from 'polyfill-react-native'
-import Project from 'common/project'
-import OverflowNav from './OverflowNav'
+import ProjectNav from './ProjectNav'
+import OrganisationNav from './OrganisationNav'
 
 type NavType = {
   environmentId: string | undefined
@@ -43,11 +31,9 @@ const Nav: FC<NavType> = ({
   const [lastProjectId, setLastProjectId] = useState()
 
   const isOrganisationSelect = document.location.pathname === '/organisations'
-  const integrations = Object.keys(Utils.getIntegrationData())
   const history = useHistory()
   const location = useLocation()
   const pathname = location.pathname
-  const [asideIsVisible, setAsideIsVisible] = useState()
 
   useEffect(() => {
     const updateLastViewed = () => {
@@ -63,11 +49,7 @@ const Nav: FC<NavType> = ({
     updateLastViewed()
     return () => unlisten()
   }, [history])
-  const { permission: projectAdmin } = useHasPermission({
-    id: projectId,
-    level: 'project',
-    permission: 'ADMIN',
-  })
+
   const isCreateEnvironment = environmentId === 'create'
   const isCreateOrganisation = document.location.pathname === '/create'
   const storageHasParams = lastEnvironmentId || lastProjectId
@@ -84,13 +66,10 @@ const Nav: FC<NavType> = ({
     !isCreateOrganisation &&
     !!AccountStore.getOrganisation()?.id
 
-  const projectMetricsTooltipEnabled = Utils.getFlagsmithHasFeature(
-    'project_metrics_tooltip',
-  )
   return (
     <div className='fs-small'>
       <div>
-        {!isHomepage && (!pageHasAside || !asideIsVisible) && (
+        {!isHomepage && (
           <div className='d-flex bg-faint pt-1 py-0'>
             <Flex className='flex-row px-2 '>
               {!!AccountStore.getUser() && (
@@ -203,160 +182,16 @@ const Nav: FC<NavType> = ({
           </div>
         )}
         {showNav && (
-          <OverflowNav
-            gap={3}
-            key={activeProject ? 'project' : AccountStore.getOrganisation()?.id}
-            containerClassName='px-2 pb-1 pb-mb-0 bg-faint'
-            className='py-0 d-flex'
-          >
+          <>
             {activeProject ? (
-              <>
-                <NavSubLink
-                  icon={gitBranch}
-                  className={environmentId ? 'active' : ''}
-                  id={`features-link`}
-                  to={`/project/${projectId}/environment/${
-                    lastEnvironmentId || environmentId
-                  }/features`}
-                >
-                  Environments
-                </NavSubLink>
-                <NavSubLink
-                  icon={<SegmentsIcon />}
-                  id={`segments-link`}
-                  to={`/project/${projectId}/segments`}
-                >
-                  Segments
-                </NavSubLink>
-                <Permission
-                  level='project'
-                  permission='VIEW_AUDIT_LOG'
-                  id={projectId}
-                >
-                  {({ permission }) =>
-                    permission && (
-                      <NavSubLink
-                        icon={<AuditLogIcon />}
-                        id='audit-log-link'
-                        to={`/project/${projectId}/audit-log`}
-                        data-test='audit-log-link'
-                      >
-                        Audit Log
-                      </NavSubLink>
-                    )
-                  }
-                </Permission>
-                {!!integrations.length && (
-                  <NavSubLink
-                    icon={<Icon name='layers' />}
-                    id='integrations-link'
-                    to={`/project/${projectId}/integrations`}
-                  >
-                    Integrations
-                  </NavSubLink>
-                )}
-                {projectMetricsTooltipEnabled && (
-                  <NavSubLink
-                    icon={barChart}
-                    to={`/project/${projectId}/reporting`}
-                    id='reporting-link'
-                    disabled
-                    tooltip={
-                      Utils.getFlagsmithValue('project_metrics_tooltip') ||
-                      'Coming soon - fallback'
-                    }
-                  >
-                    Reporting
-                  </NavSubLink>
-                )}
-                <NavSubLink
-                  icon={gitCompare}
-                  id='compare-link'
-                  to={`/project/${projectId}/compare`}
-                >
-                  Compare
-                </NavSubLink>
-                {projectAdmin && (
-                  <>
-                    {Utils.getFlagsmithHasFeature('release_pipelines') && (
-                      <NavSubLink
-                        icon={<Icon name='flash' />}
-                        id='release-pipelines-link'
-                        to={`/project/${projectId}/release-pipelines`}
-                      >
-                        Release Pipelines
-                      </NavSubLink>
-                    )}
-                    <NavSubLink
-                      icon={<Icon name='setting' width={24} />}
-                      id='project-settings-link'
-                      to={`/project/${projectId}/settings`}
-                    >
-                      Project Settings
-                    </NavSubLink>
-                  </>
-                )}
-              </>
+              <ProjectNav
+                projectId={projectId || lastProjectId}
+                environmentId={environmentId || lastEnvironmentId}
+              />
             ) : (
-              <>
-                <NavSubLink
-                  icon={apps}
-                  id='projects-link'
-                  to={Utils.getOrganisationHomePage()}
-                >
-                  Projects
-                </NavSubLink>
-                <NavSubLink
-                  data-test='users-and-permissions'
-                  icon={<UsersIcon />}
-                  id='permissions-link'
-                  to={`/organisation/${
-                    AccountStore.getOrganisation().id
-                  }/permissions`}
-                >
-                  Users and Permissions
-                </NavSubLink>
-                {!Project.disableAnalytics && AccountStore.isAdmin() && (
-                  <NavSubLink
-                    icon={statsChart}
-                    id='permissions-link'
-                    to={`/organisation/${
-                      AccountStore.getOrganisation().id
-                    }/usage`}
-                  >
-                    Usage
-                  </NavSubLink>
-                )}
-                {AccountStore.isAdmin() && (
-                  <>
-                    {Utils.getFlagsmithHasFeature(
-                      'organisation_integrations',
-                    ) && (
-                      <NavSubLink
-                        icon={<Icon name='layers' />}
-                        id='integrations-link'
-                        to={`/organisation/${
-                          AccountStore.getOrganisation().id
-                        }/integrations`}
-                      >
-                        Organisation Integrations
-                      </NavSubLink>
-                    )}
-                    <NavSubLink
-                      icon={<Icon name='setting' width={24} />}
-                      id='org-settings-link'
-                      data-test='org-settings-link'
-                      to={`/organisation/${
-                        AccountStore.getOrganisation().id
-                      }/settings`}
-                    >
-                      Organisation Settings
-                    </NavSubLink>
-                  </>
-                )}
-              </>
+              <OrganisationNav />
             )}
-          </OverflowNav>
+          </>
         )}
         <hr className='my-0 py-0' />
         {environmentId && !isCreateEnvironment ? (
