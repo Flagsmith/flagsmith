@@ -149,7 +149,10 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
     <>
       <OrganisationProvider>
         {() => (
-          <ProjectProvider id={projectId} onSave={onProjectSave}>
+          <ProjectProvider
+            id={parseInt(projectId?.toString())}
+            onSave={onProjectSave}
+          >
             {({}) => {
               const createEnvironmentButton = (
                 <Permission
