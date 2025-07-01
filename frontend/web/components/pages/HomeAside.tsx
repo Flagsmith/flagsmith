@@ -27,7 +27,6 @@ import { components } from 'react-select'
 import SettingsIcon from 'components/svg/SettingsIcon'
 import BuildVersion from 'components/BuildVersion'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
-import Resources from 'components/Resources'
 import Constants from 'common/constants'
 
 type HomeAsideType = {
@@ -164,7 +163,10 @@ const HomeAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
   return (
     <OrganisationProvider>
       {() => (
-        <ProjectProvider id={projectId} onSave={onProjectSave}>
+        <ProjectProvider
+          id={parseInt(projectId?.toString())}
+          onSave={onProjectSave}
+        >
           {({ project }) => {
             const createEnvironmentButton = (
               <Permission

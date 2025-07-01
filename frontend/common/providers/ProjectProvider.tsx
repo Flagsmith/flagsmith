@@ -1,11 +1,11 @@
 import { FC, ReactNode, useEffect, useState } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
-import { Environment, Metadata, Project } from 'common/types/responses'
+import { Environment, Project } from 'common/types/responses'
 import ProjectStore from 'common/stores/project-store'
 export type CreateEnvType = (data: {
   name: string
-  projectId: string
+  projectId: number
   cloneId?: string
   description?: string
   cloneFeatureStatesAsync?: boolean
@@ -23,7 +23,7 @@ export type ProjectProviderType = {
     isSaving: boolean
     project: Project | null
   }) => ReactNode
-  id?: string
+  id?: number
   onRemove?: () => void
   onRemoveEnvironment?: (environment: Environment) => void
   onSave?: (environment: Environment) => void

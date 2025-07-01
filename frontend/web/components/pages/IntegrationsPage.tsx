@@ -4,15 +4,12 @@ import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import InfoMessage from 'components/InfoMessage'
-import { Link, useRouteMatch } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
-
-interface RouteParams {
-  projectId: string
-}
+import { useRouteContext } from 'components/providers/RouteContext'
 
 export const integrationCategories = [
   'Analytics',
@@ -36,18 +33,20 @@ export type IntegrationCategoryDescription = {
 }
 
 const IntegrationsPage: FC = () => {
-  const match = useRouteMatch<RouteParams>()
+  const { projectId } = useRouteContext()
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)
   }, [])
 
   const integrations = Object.keys(Utils.getIntegrationData())
   const { isLoading: permissionsLoading, permission } = useHasPermission({
-    id: match.params.projectId,
+    id: projectId,
     level: 'project',
     permission: 'ADMIN',
   })
-  const { data: project } = useGetProjectQuery({ id: match.params.projectId })
+  const { data: project } = useGetProjectQuery({
+    id: projectId?.toString() || '',
+  })
   return (
     <div className='app-container container'>
       <PageTitle title={'Integrations'}>
@@ -78,7 +77,7 @@ const IntegrationsPage: FC = () => {
               <div>
                 {project && (
                   <IntegrationList
-                    projectId={match.params.projectId}
+                    projectId={projectId?.toString() || ''}
                     integrations={integrations}
                   />
                 )}
