@@ -1,4 +1,5 @@
 import Project from 'common/project'
+import { setDarkMode } from 'project/darkMode'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -9,9 +10,9 @@ const controller = {
     store.loading()
   },
   loaded(oldFlags) {
-    // Occurs whenever flags are changed
-    if (flagsmith.hasFeature('dark_mode')) {
-      document.body.classList.add('dark')
+    //todo: Remove this after a few weeks have passed
+    if (API.getCookie('dark_mode') === undefined) {
+      setDarkMode(flagsmith.hasFeature('dark_mode'))
     }
     if (!oldFlags || !Object.keys(oldFlags).length) {
       store.loaded()

@@ -5,6 +5,7 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
 import ModalHR from './ModalHR'
+import { getDarkMode } from 'project/darkMode'
 
 type RuleInputValueProps = {
   'data-test'?: string
@@ -119,7 +120,7 @@ const RuleInputValue = (props: RuleInputValueProps) => {
   }
 
   const showIcon = hasWarning || isLongText
-  const isDarkMode = Utils.getFlagsmithHasFeature('dark_mode')
+  const isDarkMode = getDarkMode()
 
   return (
     <div className='relative'>
