@@ -370,15 +370,18 @@ global.API = {
   setCookie(key, v) {
     try {
       if (!v) {
-        require('js-cookie').remove(key, {
-          domain: Project.cookieDomain,
-          path: '/',
-        })
-        require('js-cookie').remove(key, { path: '/' })
+        if (E2E) {
+          localStorage.removeItem(key, v)
+        } else {
+          require('js-cookie').remove(key, {
+            domain: Project.cookieDomain,
+            path: '/',
+          })
+          require('js-cookie').remove(key, { path: '/' })
+        }
       } else {
         if (E2E) {
-          // Since E2E is not https, we can't set secure cookies
-          require('js-cookie').set(key, v, { expires: 30, path: '/' })
+          localStorage.setItem(key, v)
         } else {
           // We need samesite secure cookies to allow for IFrame embeds from 3rd parties
           require('js-cookie').set(key, v, {
