@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.186.0](https://github.com/Flagsmith/flagsmith/compare/v2.185.0...v2.186.0) (2025-07-02)
+
+
+### Features
+
+* **BE:** release pipeline v0.1.0 ([#5496](https://github.com/Flagsmith/flagsmith/issues/5496)) ([de7c278](https://github.com/Flagsmith/flagsmith/commit/de7c278dd405281efe1d7101e7a5130dd11fb59a))
+* Edit Release Pipeline Feature ([#5650](https://github.com/Flagsmith/flagsmith/issues/5650)) ([64f7f29](https://github.com/Flagsmith/flagsmith/commit/64f7f295638a0bd2cc8c961bec63c516befb4eff))
+* Make dark mode local ([#5680](https://github.com/Flagsmith/flagsmith/issues/5680)) ([54af554](https://github.com/Flagsmith/flagsmith/commit/54af5542a32a4fec5c9772a42b31f79ea34395b0))
+* mobile nav ([#5561](https://github.com/Flagsmith/flagsmith/issues/5561)) ([57fc7de](https://github.com/Flagsmith/flagsmith/commit/57fc7deb0d3fec90ef1768fb84e9b7c0269201f4))
+
+
+### Bug Fixes
+
+* Headway padding ([#5690](https://github.com/Flagsmith/flagsmith/issues/5690)) ([655bfee](https://github.com/Flagsmith/flagsmith/commit/655bfee3aff64a80ca2c38024668137ecb681a27))
+
 ## [2.185.0](https://github.com/Flagsmith/flagsmith/compare/v2.184.0...v2.185.0) (2025-07-01)
 
 
