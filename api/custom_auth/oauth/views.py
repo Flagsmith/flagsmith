@@ -1,21 +1,21 @@
 import logging
 
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 from api.serializers import ErrorSerializer
+from custom_auth.jwt_cookie.services import authorise_response
 from custom_auth.oauth.exceptions import GithubError, GoogleError
 from custom_auth.oauth.serializers import (
     GithubLoginSerializer,
     GoogleLoginSerializer,
 )
 from custom_auth.serializers import CustomTokenSerializer
-from custom_auth.jwt_cookie.services import authorise_response
-from django.conf import settings
-from rest_framework.status import HTTP_204_NO_CONTENT
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +39,7 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
         if settings.COOKIE_AUTH_ENABLED:
-            return authorise_response(
-                serializer.user, Response(status=HTTP_204_NO_CONTENT)
-            )
+            return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
         return Response(data=CustomTokenSerializer(instance=token).data)
     except GoogleError as e:
         logger.warning("%s: %s" % (GOOGLE_AUTH_ERROR_MESSAGE, str(e)))
@@ -66,9 +64,7 @@ def login_with_github(request):  # type: ignore[no-untyped-def]
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
         if settings.COOKIE_AUTH_ENABLED:
-            return authorise_response(
-                serializer.user, Response(status=HTTP_204_NO_CONTENT)
-            )
+            return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
         return Response(data=CustomTokenSerializer(instance=token).data)
     except GithubError as e:
         logger.warning("%s: %s" % (GITHUB_AUTH_ERROR_MESSAGE, str(e)))

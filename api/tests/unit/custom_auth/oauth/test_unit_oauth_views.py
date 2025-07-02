@@ -1,3 +1,4 @@
+from typing import Any
 from unittest import mock
 
 from django.db.models import Model
@@ -301,3 +302,73 @@ def test_user_with_duplicate_accounts_authenticates_as_the_correct_oauth_user(
 
     google_auth_key = auth_with_google_response.json().get("key")
     assert google_auth_key == google_user.auth_token.key
+
+
+@mock.patch("custom_auth.oauth.serializers.get_user_info")
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_login_with_google_jwt_cookie(
+    mock_get_user_info: mock.Mock,
+    db: None,
+    django_user_model: type[Any],
+    api_client: APIClient,
+) -> None:
+    # Given
+    email = "test@example.com"
+    google_user_id = "abc123"
+
+    django_user_model.objects.create(email=email)
+    mock_get_user_info.return_value = {
+        "email": email,
+        "first_name": "John",
+        "last_name": "Smith",
+        "google_user_id": google_user_id,
+    }
+
+    url = reverse("api-v1:custom_auth:oauth:google-oauth-login")
+
+    # When
+    response = api_client.post(url, data={"access_token": "some-token"})
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    assert not response.data
+
+
+@override_settings(COOKIE_AUTH_ENABLED=True)
+def test_login_with_github_jwt_cookie(
+    db: None,
+    django_user_model: type[Any],
+    api_client: APIClient,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    email = "test@example.com"
+    github_user_id = "abc123"
+
+    django_user_model.objects.create(email=email)
+
+    mock_github_user = mock.MagicMock()
+    mocker.patch(
+        "custom_auth.oauth.serializers.GithubUser", return_value=mock_github_user
+    )
+    mock_github_user.get_user_info.return_value = {
+        "email": email,
+        "first_name": "John",
+        "last_name": "Smith",
+        "github_user_id": github_user_id,
+    }
+
+    url = reverse("api-v1:custom_auth:oauth:github-oauth-login")
+
+    # When
+    response = api_client.post(url, data={"access_token": "some-token"})
+
+    # Then
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
+    assert jwt_access_cookie["httponly"]
+
+    assert not response.data
