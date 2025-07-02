@@ -48,6 +48,37 @@ def test_organisation_has_paid_subscription_true(db: None) -> None:
     assert organisation.has_paid_subscription()
 
 
+@pytest.mark.parametrize(
+    "plan_id, expected_has_enterprise",
+    (
+        ("free", False),
+        ("enterprise", True),
+        ("enterprise-semiannual", True),
+        ("scale-up", False),
+        ("scaleup", False),
+        ("scale-up-v2", False),
+        ("scale-up-v2-annual", False),
+        ("startup", False),
+        ("start-up", False),
+        ("start-up-v2", False),
+        ("start-up-v2-annual", False),
+    ),
+)
+def test_organisation_has_enterprise_subscription(
+    plan_id: str, expected_has_enterprise: bool, organisation: Organisation
+) -> None:
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=plan_id, subscription_id="subscription_id"
+    )
+
+    # # When
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.has_enterprise_subscription() is expected_has_enterprise
+
+
 def test_organisation_has_paid_subscription_missing_subscription_id(db: None) -> None:
     # Given
     organisation = Organisation.objects.create(name="Test org")
@@ -548,6 +579,35 @@ def test_subscription_plan_family(
     plan_id: str, expected_plan_family: SubscriptionPlanFamily
 ) -> None:
     assert Subscription(plan=plan_id).subscription_plan_family == expected_plan_family
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_is_enterprise",
+    (
+        ("free", False),
+        ("enterprise", True),
+        ("enterprise-semiannual", True),
+        ("scale-up", False),
+        ("scaleup", False),
+        ("scale-up-v2", False),
+        ("scale-up-v2-annual", False),
+        ("startup", False),
+        ("start-up", False),
+        ("start-up-v2", False),
+        ("start-up-v2-annual", False),
+    ),
+)
+def test_subscription_is_enterprise_property(
+    plan_id: str, expected_is_enterprise: bool, organisation: Organisation
+) -> None:
+    # Given
+    subscription = Subscription.objects.get(organisation=organisation)
+
+    subscription.plan = plan_id
+    subscription.save()
+
+    # Then
+    assert subscription.is_enterprise is expected_is_enterprise
 
 
 @pytest.mark.parametrize(
