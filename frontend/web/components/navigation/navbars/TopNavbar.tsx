@@ -45,7 +45,7 @@ const TopNavbar: FC<TopNavType> = ({ activeProject, projectId }) => {
             </span>
             <span className='d-none d-md-block'>Docs</span>
           </a>
-          <Headway className='cursor-pointer' />
+          <Headway className='cursor-pointer ps-3' />
 
           <NavLink
             className='d-flex ps-3 lh-1 align-items-center'
