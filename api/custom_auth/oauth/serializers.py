@@ -52,7 +52,6 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
             )
 
         user = self._get_user(user_info)
-        self.user = user
         user_logged_in.send(
             sender=UserModel, request=self.context.get("request"), user=user
         )
