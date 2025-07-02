@@ -511,7 +511,7 @@ const HomePage: React.FC = () => {
                                     marketing_consent_given:
                                       marketingConsentGiven,
                                     password,
-                                    ...utms,
+                                    ...(utms && { utm_data: utms }),
                                   },
                                   isInvite,
                                 )
