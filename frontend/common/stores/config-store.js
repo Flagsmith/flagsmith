@@ -1,5 +1,6 @@
 import Project from 'common/project'
 import { setDarkMode } from 'project/darkMode'
+import { storageGet } from 'common/safeLocalStorage'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -11,7 +12,7 @@ const controller = {
   },
   loaded(oldFlags) {
     //todo: Remove this after a few weeks have passed
-    if (API.getCookie('dark_mode') === undefined) {
+    if (storageGet('dark_mode') === null) {
       setDarkMode(flagsmith.hasFeature('dark_mode'))
     }
     if (!oldFlags || !Object.keys(oldFlags).length) {
