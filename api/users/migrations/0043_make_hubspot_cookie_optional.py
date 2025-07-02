@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("users", "0042_add_utm_fields_to_hubspottracker"),
+        ("users", "0042_add_utm_data_json_field"),
     ]
 
     operations = [

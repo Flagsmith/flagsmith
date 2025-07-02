@@ -41,8 +41,18 @@ from permissions.permission_service import (
 from projects.models import Project
 from users.abc import UserABC
 from users.auth_type import AuthType
-from users.constants import ALLOWED_UTM_KEYS, DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
+from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
+from pydantic import BaseModel, ValidationError
+
+
+class UTMDataModel(BaseModel):
+    utm_source: typing.Optional[str] = None
+    utm_medium: typing.Optional[str] = None
+    utm_campaign: typing.Optional[str] = None
+    utm_term: typing.Optional[str] = None
+    utm_content: typing.Optional[str] = None
+
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -475,35 +485,26 @@ class HubspotTracker(models.Model):
         null=True,
         blank=True,
     )
-    utm_source = models.CharField(max_length=256, null=True, blank=True)
-    utm_medium = models.CharField(max_length=256, null=True, blank=True)
-    utm_campaign = models.CharField(max_length=256, null=True, blank=True)
-    utm_term = models.CharField(max_length=256, null=True, blank=True)
-    utm_content = models.CharField(max_length=256, null=True, blank=True)
+    utm_data = models.JSONField(default=None, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # @staticmethod
-    # def filter_utm_data(utms: dict[str, str]) -> dict[str, str]:
-    #     return {
-    #         key: value
-    #         for key in ALLOWED_UTM_KEYS
-    #         if (value := utms.get(key)) is not None
-    #     }
+    def save(self, *args, **kwargs):
+        if self.utm_data:
+            try:
+                self.utm_data = UTMDataModel(**self.utm_data).model_dump(
+                    exclude_none=True
+                )
+            except ValidationError:
+                self.utm_data = None
+
+        super().save(*args, **kwargs)
 
     @staticmethod
-    def build_utm_data(utm_dict: dict[str, str] | None) -> dict[str, str]:
-        if not utm_dict:
+    def build_utm_data(data: dict[str, str]) -> dict[str, str]:
+        try:
+            return UTMDataModel(**data).model_dump(exclude_none=True)
+        except ValidationError as e:
+            logger.warning(f"Invalid UTM data: {e}")
             return {}
-        return {
-            key: value
-            for key in ALLOWED_UTM_KEYS
-            if (value := utm_dict.get(key)) is not None
-        }
-
-    @property
-    def utm_data(self) -> dict[str, str]:
-        return HubspotTracker.build_utm_data(
-            {key: getattr(self, key) for key in ALLOWED_UTM_KEYS}
-        )

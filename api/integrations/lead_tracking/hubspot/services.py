@@ -17,7 +17,7 @@ def register_hubspot_tracker(
     user: FFAdminUser | None = None,
 ) -> None:
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
-    utm_data = HubspotTracker.build_utm_data(request.data)
+    utm_data = request.data.get("utm_data")
     track_user = user if user else request.user
     if not (hubspot_cookie or utm_data):
         logger.info(f"Request did not included Hubspot data for user {track_user.id}")
@@ -38,7 +38,7 @@ def register_hubspot_tracker(
         user=track_user,
         defaults={
             "hubspot_cookie": hubspot_cookie,
-            **utm_data,
+            "utm_data": utm_data,
         },
     )
     logger.info(
