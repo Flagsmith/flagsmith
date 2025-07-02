@@ -505,6 +505,5 @@ class HubspotTracker(models.Model):
     def build_utm_data(data: dict[str, str]) -> dict[str, str]:
         try:
             return UTMDataModel(**data).model_dump(exclude_none=True)
-        except ValidationError as e:
-            logger.warning(f"Invalid UTM data: {e}")
+        except ValidationError:
             return {}
