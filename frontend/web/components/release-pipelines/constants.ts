@@ -24,10 +24,16 @@ const FLAG_ACTION_OPTIONS = [
   },
 ]
 
+enum TimeUnit {
+  DAY = 'days',
+  HOUR = 'hours',
+  MINUTE = 'minutes',
+}
+
 const TIME_UNIT_OPTIONS = [
-  { label: 'Day(s)', value: 'days' },
-  { label: 'Hour(s)', value: 'hour' },
-  { label: 'Minute(s)', value: 'minute' },
+  { label: 'Day(s)', value: TimeUnit.DAY },
+  { label: 'Hour(s)', value: TimeUnit.HOUR },
+  { label: 'Minute(s)', value: TimeUnit.MINUTE },
 ]
 
-export { TRIGGER_OPTIONS, FLAG_ACTION_OPTIONS, TIME_UNIT_OPTIONS }
+export { TRIGGER_OPTIONS, FLAG_ACTION_OPTIONS, TIME_UNIT_OPTIONS, TimeUnit }

@@ -1,28 +1,17 @@
-import { useGetProfileQuery } from 'common/services/useProfile'
 import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import { ProjectFlag } from 'common/types/responses'
 import { useCallback, useEffect, useState } from 'react'
 type StageFeatureDetailProps = {
   features: number[]
-  publishedBy?: number
-  projectId: string
+  projectId: number
 }
 
 const StageFeatureDetail = ({
   features,
   projectId,
-  publishedBy,
 }: StageFeatureDetailProps) => {
   const [projectFlags, setProjectFlags] = useState<ProjectFlag[]>([])
-
-  const { data: userData } = useGetProfileQuery(
-    { id: publishedBy },
-    {
-      skip: !publishedBy,
-    },
-  )
-
   const getProjectFlags = useCallback(async () => {
     if (!features.length) {
       return
@@ -58,20 +47,14 @@ const StageFeatureDetail = ({
     )
   }
 
+
   return (
     <>
       <h6>Features ({features.length})</h6>
       {projectFlags?.map((flag) => (
-        <>
-          <div key={flag.id} className='text-muted'>
-            <b>{flag.name}</b>
-          </div>
-          {userData?.first_name && (
-            <div className='text-muted text-small mt-1'>
-              Added by {userData?.first_name} {userData?.last_name}
-            </div>
-          )}
-        </>
+        <p key={flag.id} className='text-muted'>
+          <b>{flag.name}</b>
+        </p>
       ))}
     </>
   )

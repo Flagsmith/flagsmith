@@ -7,8 +7,12 @@ import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import { StageActionType, StageTriggerType } from 'common/types/responses'
 import Icon from 'components/Icon'
-import { useCreateReleasePipelineMutation } from 'common/services/useReleasePipelines'
-import { useHistory } from 'react-router-dom'
+import {
+  useCreateReleasePipelineMutation,
+  useGetReleasePipelineQuery,
+  useUpdateReleasePipelineMutation,
+} from 'common/services/useReleasePipelines'
+import { useHistory, useParams } from 'react-router-dom'
 import StageArrow from './StageArrow'
 import { ReleasePipelineRequest } from 'common/types/requests'
 import { useRouteContext } from 'components/providers/RouteContext'
@@ -24,9 +28,25 @@ const blankStage: DraftStageType = {
   },
 }
 
+type CreateReleasePipelineParams = {
+  id?: string
+}
+
 function CreateReleasePipeline() {
   const history = useHistory()
   const { projectId } = useRouteContext()
+
+  const { id: pipelineId } = useParams<CreateReleasePipelineParams>()
+  const { data: existingPipeline, isLoading: isLoadingExistingPipeline } =
+    useGetReleasePipelineQuery(
+      {
+        pipelineId: Number(pipelineId),
+        projectId: Number(projectId),
+      },
+      {
+        skip: !pipelineId,
+      },
+    )
 
   const [
     createReleasePipeline,
@@ -38,6 +58,16 @@ function CreateReleasePipeline() {
     },
   ] = useCreateReleasePipelineMutation()
 
+  const [
+    updateReleasePipeline,
+    {
+      error: updatePipelineError,
+      isError: isUpdatingPipelineError,
+      isLoading: isUpdatingPipeline,
+      isSuccess: isUpdatingPipelineSuccess,
+    },
+  ] = useUpdateReleasePipelineMutation()
+
   const [pipelineData, setPipelineData] = useState<ReleasePipelineRequest>({
     name: '',
     project: Number(projectId),
@@ -48,25 +78,48 @@ function CreateReleasePipeline() {
     !pipelineData?.name?.length,
   )
 
-  const handleSuccess = useCallback(() => {
-    history.push(`/project/${projectId}/release-pipelines`)
-    toast('Release pipeline created successfully')
-  }, [history, projectId])
+  const handleSuccess = useCallback(
+    (updated = false) => {
+      history.push(`/project/${projectId}/release-pipelines`)
+      toast(`Release pipeline ${updated ? 'updated' : 'created'} successfully`)
+    },
+    [history, projectId],
+  )
 
   useEffect(() => {
     if (isCreatingPipelineSuccess) {
       return handleSuccess()
     }
-  }, [isCreatingPipelineSuccess, handleSuccess])
+
+    if (isUpdatingPipelineSuccess) {
+      return handleSuccess(true)
+    }
+  }, [isCreatingPipelineSuccess, isUpdatingPipelineSuccess, handleSuccess])
 
   useEffect(() => {
     if (isCreatingPipelineError) {
+      toast('Error creating release pipeline', 'danger')
+    }
+
+    if (isUpdatingPipelineError) {
       toast(
-        createPipelineError?.data?.detail ?? 'Error creating release pipeline',
-        'error',
+        updatePipelineError?.data?.detail ?? 'Error updating release pipeline',
+        'danger',
       )
     }
-  }, [isCreatingPipelineError, createPipelineError])
+  }, [
+    isCreatingPipelineError,
+    createPipelineError,
+    isUpdatingPipelineError,
+    updatePipelineError,
+  ])
+
+  useEffect(() => {
+    console.log('existingPipeline', existingPipeline)
+    if (existingPipeline) {
+      setPipelineData(existingPipeline)
+    }
+  }, [existingPipeline])
 
   const handleOnChange = (newStageData: DraftStageType, index: number) => {
     const updatedStages = pipelineData.stages.map((stage, i) =>
@@ -110,9 +163,35 @@ function CreateReleasePipeline() {
     })
   }
 
+  const handleUpdate = (id: number) => {
+    updateReleasePipeline({
+      id,
+      name: pipelineData.name,
+      project: Number(projectId),
+      stages: pipelineData.stages.map((stage, index) => ({
+        ...stage,
+        order: index,
+      })),
+    })
+  }
+
   const handleRemoveStage = (index: number) => {
     const newStages = pipelineData.stages.filter((_, i) => i !== index)
     setPipelineData((prev) => ({ ...prev, stages: newStages }))
+  }
+
+  const isSaveDisabled =
+    !validatePipelineData() || isCreatingPipeline || isUpdatingPipeline
+  const saveButtonText = existingPipeline?.id ? 'Update' : 'Save'
+
+  if (isLoadingExistingPipeline) {
+    return (
+      <div className='app-container container'>
+        <div className='text-center'>
+          <Loader />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -161,10 +240,14 @@ function CreateReleasePipeline() {
         }
         cta={
           <Button
-            disabled={!validatePipelineData() || isCreatingPipeline}
-            onClick={() => handleSave()}
+            disabled={isSaveDisabled}
+            onClick={() =>
+              existingPipeline?.id
+                ? handleUpdate(existingPipeline.id)
+                : handleSave()
+            }
           >
-            Save Release Pipeline
+            {saveButtonText}
           </Button>
         }
       />
@@ -178,7 +261,7 @@ function CreateReleasePipeline() {
                   onChange={(stageData: DraftStageType) =>
                     handleOnChange(stageData, index)
                   }
-                  projectId={projectId}
+                  projectId={Number(projectId)}
                   showRemoveButton={index > 0}
                   onRemove={() => handleRemoveStage(index)}
                 />

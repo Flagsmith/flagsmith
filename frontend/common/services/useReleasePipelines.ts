@@ -74,6 +74,24 @@ export const releasePipelinesService = service
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/publish-pipeline/`,
         }),
       }),
+      updateReleasePipeline: builder.mutation<
+        Res['releasePipeline'],
+        Req['updateReleasePipeline']
+      >({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'ReleasePipelines' },
+          { id: res?.id, type: 'ReleasePipelines' },
+        ],
+        query: (query: Req['updateReleasePipeline']) => ({
+          body: {
+            description: query.description,
+            name: query.name,
+            stages: query.stages,
+          },
+          method: 'PUT',
+          url: `projects/${query.project}/release-pipelines/${query.id}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -117,6 +135,7 @@ export const {
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
   usePublishReleasePipelineMutation,
+  useUpdateReleasePipelineMutation,
   // END OF EXPORTS
 } = releasePipelinesService
 
