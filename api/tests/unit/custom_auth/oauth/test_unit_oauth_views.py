@@ -331,7 +331,9 @@ def test_login_with_google_jwt_cookie(
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert response.cookies.get["jwt"]["httponly"]
+    access_token = response.cookies.get("jwt")
+    assert access_token is not None
+    assert access_token.get("httponly")
 
     assert not response.data
 
@@ -367,6 +369,7 @@ def test_login_with_github_jwt_cookie(
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert response.cookies.get["jwt"]["httponly"]
-
+    access_token = response.cookies.get("jwt")
+    assert access_token is not None
+    assert access_token.get("httponly")
     assert not response.data
