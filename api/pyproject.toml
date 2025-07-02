@@ -202,6 +202,13 @@ optional = true
 [tool.poetry.group.split-testing.dependencies]
 flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-testing", tag = "v0.2.1" }
 
+[tool.poetry.group.release-pipelines]
+optional = true
+
+[tool.poetry.group.release-pipelines.dependencies]
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.1.0" }
+
+
 [tool.poetry.group.dev.dependencies]
 django-test-migrations = "~1.2.0"
 responses = "~0.22.0"
