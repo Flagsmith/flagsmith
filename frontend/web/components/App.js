@@ -380,6 +380,7 @@ const App = class extends Component {
                   billingStatus={
                     AccountStore.getOrganisation()?.subscription.billing_status
                   }
+                  fofError={this.props.error?.message}
                 />
                 {projectNotLoaded ? (
                   <div className='text-center'>
