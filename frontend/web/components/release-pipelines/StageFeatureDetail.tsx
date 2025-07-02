@@ -47,6 +47,7 @@ const StageFeatureDetail = ({
     )
   }
 
+
   return (
     <>
       <h6>Features ({features.length})</h6>

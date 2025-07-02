@@ -61,8 +61,12 @@ const CreatePipelineStage = ({
     )
   }, [stageData.trigger.trigger_type])
 
-  const environmentOptions = useMemo(() => {
-    return environmentsData?.results?.map((environment) => ({
+  const environmentWithFeatureVersioningOptions = useMemo(() => {
+    const environmentsWithV2FeatureVersioning =
+      environmentsData?.results?.filter(
+        (environment) => environment.use_v2_feature_versioning,
+      )
+    return environmentsWithV2FeatureVersioning?.map((environment) => ({
       label: environment.name,
       value: environment.id,
     }))
@@ -88,11 +92,17 @@ const CreatePipelineStage = ({
   }
 
   useEffect(() => {
-    if (environmentOptions?.length && stageData.environment === -1) {
-      handleOnChange('environment', environmentOptions?.[0]?.value)
+    if (
+      environmentWithFeatureVersioningOptions?.length &&
+      stageData.environment === -1
+    ) {
+      handleOnChange(
+        'environment',
+        environmentWithFeatureVersioningOptions?.[0]?.value,
+      )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [environmentOptions, stageData])
+  }, [environmentWithFeatureVersioningOptions, stageData])
 
   const handleSegmentChange = (option: { value: number; label: string }) => {
     if (option?.value) {
@@ -155,6 +165,10 @@ const CreatePipelineStage = ({
     } as StageTrigger)
   }
 
+  const hasNoFeatureVersioningEnvironments =
+    !!environmentsData?.results?.length &&
+    !environmentWithFeatureVersioningOptions?.length
+
   return (
     <div
       className='p-3 border-1 rounded position-relative'
@@ -181,17 +195,38 @@ const CreatePipelineStage = ({
       <FormGroup>
         <InputGroup
           title='Environment'
+          inputProps={{
+            error: hasNoFeatureVersioningEnvironments
+              ? 'No environments with feature versioning enabled'
+              : undefined,
+          }}
           component={
             <Select
+              styles={{
+                control: (base: any) => ({
+                  ...base,
+                  '&:hover': {
+                    borderColor: hasNoFeatureVersioningEnvironments
+                      ? '#ef4d56'
+                      : base.borderColor,
+                  },
+                  borderColor: hasNoFeatureVersioningEnvironments
+                    ? '#ef4d56'
+                    : base.borderColor,
+                  boxShadow: hasNoFeatureVersioningEnvironments
+                    ? '0 0 0 1px #ef4d56'
+                    : base.boxShadow,
+                }),
+              }}
               value={Utils.toSelectedValue(
                 stageData.environment,
-                environmentOptions,
+                environmentWithFeatureVersioningOptions,
               )}
               isDisabled={isEnvironmentsLoading}
               isLoading={isEnvironmentsLoading}
               inputValue={searchInput}
               onInputChange={setSearchInput}
-              options={environmentOptions}
+              options={environmentWithFeatureVersioningOptions}
               onChange={(option: { value: number; label: string }) =>
                 handleOnChange('environment', option.value)
               }

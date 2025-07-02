@@ -98,10 +98,7 @@ function CreateReleasePipeline() {
 
   useEffect(() => {
     if (isCreatingPipelineError) {
-      toast(
-        createPipelineError?.data?.detail ?? 'Error creating release pipeline',
-        'danger',
-      )
+      toast('Error creating release pipeline', 'danger')
     }
 
     if (isUpdatingPipelineError) {
