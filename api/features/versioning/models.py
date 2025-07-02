@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from django.conf import settings
 from django.db import models
-from django.db.models import Index
+from django.db.models import Index, Q
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     BEFORE_CREATE,
@@ -78,9 +78,15 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         null=True,
         blank=True,
     )
-
     change_request = models.ForeignKey(
         "workflows_core.ChangeRequest",
+        related_name="environment_feature_versions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    pipeline_stage = models.ForeignKey(
+        "release_pipelines_core.PipelineStage",
         related_name="environment_feature_versions",
         on_delete=models.CASCADE,
         null=True,
@@ -91,6 +97,14 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
 
     class Meta:
         indexes = [Index(fields=("environment", "feature"))]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["feature", "environment", "pipeline_stage"],
+                condition=Q(published_at__isnull=True),
+                name="unique_feature_environment_stage_unpublished",
+            )
+        ]
+
         ordering = ("-live_from",)
 
     def __gt__(self, other):  # type: ignore[no-untyped-def]
