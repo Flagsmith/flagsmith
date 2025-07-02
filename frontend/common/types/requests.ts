@@ -20,7 +20,6 @@ import {
   IdentityTrait,
   Onboarding,
   StageTrigger,
-  PipelineStatus,
   StageActionType,
 } from './responses'
 import { UtmsType } from './utms'
@@ -80,11 +79,15 @@ export interface StageActionRequest {
   action_body: { enabled: boolean; segment_id?: number }
 }
 
-export type ReleasePipelineRequest = {
+export interface ReleasePipelineRequest {
   project: number
   name: string
   description?: string
   stages: PipelineStageRequest[]
+}
+
+export interface UpdateReleasePipelineRequest extends ReleasePipelineRequest {
+  id: number
 }
 
 export type PipelineStageRequest = {
@@ -701,11 +704,15 @@ export type Req = {
     userId: number | undefined
     level: PermissionLevel
   }
-  getProfile: {}
+  getProfile: {
+    id?: number
+  }
+  getUser: { id: number }
   updateOnboarding: Partial<Onboarding>
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
   createReleasePipeline: ReleasePipelineRequest
+  updateReleasePipeline: UpdateReleasePipelineRequest
   getPipelineStages: PagedRequest<{
     projectId: number
     pipelineId: number
@@ -716,6 +723,15 @@ export type Req = {
     stageId: number
   }
   deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
     projectId: number
     pipelineId: number
   }

@@ -224,7 +224,6 @@ const SegmentsPage: FC = () => {
                   renderSearchWithNoResults
                   className='no-pad'
                   id='segment-list'
-                  title=' '
                   renderFooter={() => (
                     <JSONReference
                       className='mx-2 mt-4'

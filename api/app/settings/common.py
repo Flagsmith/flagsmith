@@ -113,6 +113,7 @@ INSTALLED_APPS = [
     "features.multivariate",
     "features.versioning",
     "features.workflows.core",
+    "features.release_pipelines.core",
     "segments",
     "app",
     "e2etests",
@@ -1067,6 +1068,14 @@ if WORKFLOWS_LOGIC_INSTALLED:
     if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
         INSTALLED_APPS.append("workflows_logic.stale_flags")
 
+RELEASE_PIPELINES_LOGIC_INSTALLED = (
+    importlib.util.find_spec("release_pipelines_logic") is not None
+)
+
+if RELEASE_PIPELINES_LOGIC_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("release_pipelines_logic")
+
+
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
 if AUTH_CONTROLLER_INSTALLED:
@@ -1356,6 +1365,10 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
     )
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
+
+SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
+)
 
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
