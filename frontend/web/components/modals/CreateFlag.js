@@ -58,6 +58,7 @@ import {
   removeFeatureFromReleasePipeline,
 } from 'common/services/useReleasePipelines'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
+import ButtonDropdown from 'components/base/forms/ButtonDropdown'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -1245,36 +1246,6 @@ const CreateFlag = class extends Component {
                                       <div className='text-right'>
                                         <Permission
                                           level='environment'
-                                          permission={'UPDATE_FEATURE_STATE'}
-                                          id={this.props.environmentId}
-                                        >
-                                          {({
-                                            permission: updateFeatureState,
-                                          }) =>
-                                            isReleasePipelineEnabled &&
-                                            updateFeatureState &&
-                                            this.state
-                                              .hasPublishedReleasePipelines && (
-                                              <Button
-                                                className='mr-2'
-                                                theme='secondary'
-                                                onClick={
-                                                  releasePipelineId
-                                                    ? this
-                                                        .removeFromReleasePipeline
-                                                    : this
-                                                        .openReleasePipelineModal
-                                                }
-                                              >
-                                                {releasePipelineId
-                                                  ? 'Remove from Release Pipeline'
-                                                  : 'Add to Release Pipeline'}
-                                              </Button>
-                                            )
-                                          }
-                                        </Permission>
-                                        <Permission
-                                          level='environment'
                                           tags={projectFlag?.tags}
                                           permission={Utils.getManageFeaturePermission(
                                             is4Eyes,
@@ -1321,7 +1292,7 @@ const CreateFlag = class extends Component {
                                                 )}
 
                                                 {is4Eyes ? (
-                                                  <Button
+                                                  <ButtonDropdown
                                                     onClick={() =>
                                                       saveFeatureValue()
                                                     }
@@ -1334,6 +1305,19 @@ const CreateFlag = class extends Component {
                                                       !name ||
                                                       invalid
                                                     }
+                                                    dropdownItems={[
+                                                      {
+                                                        label: releasePipelineId
+                                                          ? 'Remove from Release Pipeline'
+                                                          : 'Add to Release Pipeline',
+                                                        onClick:
+                                                          releasePipelineId
+                                                            ? this
+                                                                .removeFromReleasePipeline
+                                                            : this
+                                                                .openReleasePipelineModal,
+                                                      },
+                                                    ]}
                                                   >
                                                     {isSaving
                                                       ? existingChangeRequest
@@ -1342,9 +1326,9 @@ const CreateFlag = class extends Component {
                                                       : existingChangeRequest
                                                       ? 'Update Change Request'
                                                       : 'Create Change Request'}
-                                                  </Button>
+                                                  </ButtonDropdown>
                                                 ) : (
-                                                  <Button
+                                                  <ButtonDropdown
                                                     onClick={() =>
                                                       saveFeatureValue()
                                                     }
@@ -1357,11 +1341,24 @@ const CreateFlag = class extends Component {
                                                       invalid ||
                                                       !savePermission
                                                     }
+                                                    dropdownItems={[
+                                                      {
+                                                        label: releasePipelineId
+                                                          ? 'Remove from Release Pipeline'
+                                                          : 'Add to Release Pipeline',
+                                                        onClick:
+                                                          releasePipelineId
+                                                            ? this
+                                                                .removeFromReleasePipeline
+                                                            : this
+                                                                .openReleasePipelineModal,
+                                                      },
+                                                    ]}
                                                   >
                                                     {isSaving
                                                       ? 'Updating'
                                                       : 'Update Feature Value'}
-                                                  </Button>
+                                                  </ButtonDropdown>
                                                 )}
                                               </>,
                                             )
