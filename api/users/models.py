@@ -18,6 +18,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
+from pydantic import BaseModel, ValidationError
 
 from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
@@ -43,7 +44,6 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
-from pydantic import BaseModel, ValidationError
 
 
 class UTMDataModel(BaseModel):
@@ -490,7 +490,7 @@ class HubspotTracker(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         if self.utm_data:
             try:
                 self.utm_data = UTMDataModel(**self.utm_data).model_dump(
