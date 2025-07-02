@@ -78,6 +78,7 @@ console_output_style = 'count'
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
 strict = true
+show_absolute_path = true
 
 [[tool.mypy.overrides]]
 module = ["admin_sso.models"]
