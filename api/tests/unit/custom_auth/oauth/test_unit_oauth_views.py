@@ -367,7 +367,6 @@ def test_login_with_github_jwt_cookie(
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
-    assert (jwt_access_cookie := response.cookies.get("jwt")) is not None
-    assert jwt_access_cookie["httponly"]
+    assert response.cookies.get["jwt"]["httponly"]
 
     assert not response.data
