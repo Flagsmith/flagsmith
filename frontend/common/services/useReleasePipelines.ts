@@ -74,6 +74,22 @@ export const releasePipelinesService = service
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/publish-pipeline/`,
         }),
       }),
+      removeFeature: builder.mutation<
+        Res['releasePipeline'],
+        Req['removeFeatureFromReleasePipeline']
+      >({
+        invalidatesTags: (res, err, query) => [
+          { id: 'LIST', type: 'ReleasePipelines' },
+          { id: query.pipelineId, type: 'ReleasePipelines' },
+        ],
+        query: (query: Req['removeFeatureFromReleasePipeline']) => ({
+          body: {
+            feature_id: query.featureId,
+          },
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/remove-feature/`,
+        }),
+      }),
       updateReleasePipeline: builder.mutation<
         Res['releasePipeline'],
         Req['updateReleasePipeline']
@@ -126,6 +142,17 @@ export async function createReleasePipeline(
   )
 }
 
+export async function removeFeatureFromReleasePipeline(
+  store: any,
+  data: Req['removeFeatureFromReleasePipeline'],
+  options?: Parameters<
+    typeof releasePipelinesService.endpoints.removeFeature.initiate
+  >[1],
+) {
+  return store.dispatch(
+    releasePipelinesService.endpoints.removeFeature.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
@@ -135,6 +162,7 @@ export const {
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
   usePublishReleasePipelineMutation,
+  useRemoveFeatureMutation,
   useUpdateReleasePipelineMutation,
   // END OF EXPORTS
 } = releasePipelinesService

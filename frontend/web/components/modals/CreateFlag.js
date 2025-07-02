@@ -53,7 +53,10 @@ import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import AddToReleasePipelineModal from 'components/release-pipelines/AddToReleasePipelineModal'
-import { getReleasePipelines } from 'common/services/useReleasePipelines'
+import {
+  getReleasePipelines,
+  removeFeatureFromReleasePipeline,
+} from 'common/services/useReleasePipelines'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 
 const CreateFlag = class extends Component {
@@ -641,6 +644,20 @@ const CreateFlag = class extends Component {
         featureId={this.props.projectFlag.id}
       />,
     )
+  }
+
+  removeFromReleasePipeline = () => {
+    removeFeatureFromReleasePipeline(getStore(), {
+      featureId: this.props.projectFlag.id,
+      pipelineId: this.getReleasePipelineId(),
+      projectId: this.props.projectId,
+    })
+      .then(() => {
+        toast('Feature removed from release pipeline')
+      })
+      .catch(() => {
+        toast('Error removing feature from release pipeline', 'danger')
+      })
   }
 
   render() {
@@ -1236,17 +1253,22 @@ const CreateFlag = class extends Component {
                                           }) =>
                                             isReleasePipelineEnabled &&
                                             updateFeatureState &&
-                                            !releasePipelineId &&
                                             this.state
                                               .hasPublishedReleasePipelines && (
                                               <Button
                                                 className='mr-2'
                                                 theme='secondary'
                                                 onClick={
-                                                  this.openReleasePipelineModal
+                                                  releasePipelineId
+                                                    ? this
+                                                        .removeFromReleasePipeline
+                                                    : this
+                                                        .openReleasePipelineModal
                                                 }
                                               >
-                                                Add to Release Pipeline
+                                                {releasePipelineId
+                                                  ? 'Remove from Release Pipeline'
+                                                  : 'Add to Release Pipeline'}
                                               </Button>
                                             )
                                           }
