@@ -241,7 +241,7 @@ def test_get_usage_data__previous_billing_period(
 
 
 @pytest.mark.freeze_time("2024-04-30T09:09:47.325132+00:00")
-def test_get_usage_data__ninety_day_period(
+def test_get_usage_data__90_day_period(
     settings: SettingsWrapper,
     mocker: MockerFixture,
     admin_client_new: APIClient,
