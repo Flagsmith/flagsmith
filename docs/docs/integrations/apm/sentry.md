@@ -7,19 +7,14 @@ hide_title: true
 
 ![Sentry logo](/img/integrations/sentry/sentry-logo.svg)
 
-Integrate Flagsmith with Sentry to enable feature flag
-[Change Tracking](https://docs.sentry.io/product/issues/issue-details/feature-flags/#change-tracking).
+Integrate Flagsmith with Sentry to enable tracking suspect feature flag changes:
 
-:::tip
+- [Change Tracking](https://docs.sentry.io/product/issues/issue-details/feature-flags/#change-tracking) logs when
+  feature flags update in Flagsmith, helping correlate flag changes with new errors or regressions.
+- [Evaluation Tracking](https://docs.sentry.io/product/issues/issue-details/feature-flags/#evaluation-tracking) captures
+  feature flag evaluation in the code, adding their state to Issue details and allowing for flag-based Issue search.
 
-Along with _Change Tracking_, Sentry also offers
-[Evaluation Tracking](https://docs.sentry.io/product/issues/issue-details/feature-flags/#evaluation-tracking).
-Integrating with _Evaluation Tracking_ is currently only possible via our
-[OpenFeature provider](/clients/openfeature.md).
-
-:::
-
-## Change Tracking Setup
+## Change Tracking setup
 
 1. **In Sentry**
    1. Visit the
@@ -39,26 +34,26 @@ Integrating with _Evaluation Tracking_ is currently only possible via our
    1. Paste the secret copied above.
    1. Click "Add Provider". ✅
 
-Flag change events will now be sent to Sentry, and should be displayed in issue details. For more information, visit
-Sentry's [Issue Details page documentation](https://docs.sentry.io/product/issues/issue-details/#feature-flags).
+Flag change events should now be sent to Sentry, and displayed in Issue details. For more information, visit Sentry's
+[Issue Details page documentation](https://docs.sentry.io/product/issues/issue-details/#feature-flags).
 
-## Evaluation Tracking example
+## Evaluation Tracking setup
 
-In order to add **evaluated** feature flags to a Sentry issue when it occurs, events must be sent via Sentry SDK, i.e.
-the same SDK used to send application errors to Sentry.
-
-Flagsmith relies on the OpenFeature SDK and its integration with Sentry.
+Flagsmith relies on the OpenFeature SDK and its integration with Sentry in order to add **evaluated** feature flags to a
+Sentry issue when it occurs. Learn more by reading OpenFeature's
+[SDK docs](https://openfeature.dev/docs/reference/technologies/client/web/) and
+[provider docs](https://openfeature.dev/docs/reference/concepts/provider).
 
 ### Python
 
 Sentry offers [good documentation](https://docs.sentry.io/platforms/python/integrations/openfeature/) on how to
-integrate the Sentry SDK with the OpenFeature SDK. We'll extend it a bit adding an example of using it with Flagsmith.
+integrate the Sentry SDK with the OpenFeature SDK in Python. We'll extend it a bit adding an example of using it with
+Flagsmith.
 
 You'll need to install the following libraries:
 
 ```sh
-pip install "sentry-sdk[openfeature]"
-pip install openfeature-provider-flagsmith
+pip install "sentry-sdk[openfeature]" openfeature-provider-flagsmith
 ```
 
 The following snippet is a micro-application that reports feature flags to Sentry when an exception is raised.
@@ -100,10 +95,63 @@ def apply_discount(price):
     return price * discount  # TypeError
 ```
 
-You can learn more about feature flags and Sentry issues in their
-[Issue Details documentation](https://docs.sentry.io/product/issues/issue-details/#feature-flags).
-
 ## JavaScript
 
-You'll need to manually call `Sentry.FeatureFlagsIntegration.addFeatureFlag` when evaluating a feature flag. Learn more
-in the [Sentry documentation](https://docs.sentry.io/platforms/javascript/configuration/integrations/featureflags/).
+Sentry offers [good documentation](https://docs.sentry.io/platforms/javascript/configuration/integrations/featureflags/)
+on how to integrate the Sentry SDK with the OpenFeature SDK in JavaScript. We'll extend it a bit adding an example of
+using it with Flagsmith.
+
+You'll need to install the following libraries:
+
+```sh
+npm install @sentry/browser @openfeature/web-sdk @openfeature/flagsmith-client-provider
+```
+
+The following snippet extends
+[Sentry's example](https://docs.sentry.io/platforms/javascript/configuration/integrations/openfeature/) with the
+Flagsmith provider:
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import { FlagsmithClientProvider } from '@openfeature/flagsmith-client-provider';
+import { OpenFeature } from '@openfeature/web-sdk';
+
+Sentry.init({
+ dsn: '___PUBLIC_DSN___',
+ integrations: [Sentry.openFeatureIntegration()],
+});
+
+const flagsmithClientProvider = new FlagsmithClientProvider({
+ environmentID: '<FLAGSMITH_CLIENT_SIDE_ENVIRONMENT_KEY>',
+});
+OpenFeature.setProvider(flagsmithClientProvider);
+
+OpenFeature.addHooks(new Sentry.OpenFeatureIntegrationHook());
+
+const client = OpenFeature.getClient();
+const result = client.getBooleanValue('test-flag', false); // evaluate with a default value
+Sentry.captureException(new Error('Something went wrong!'));
+```
+
+Alternatively, the Flagsmith SDK can be initialized with Sentry **without** OpenFeature:
+
+```javascript
+import * as Sentry from '@sentry/browser';
+import flagsmith from 'flagsmith';
+
+Sentry.init({
+ dsn: '___PUBLIC_DSN___',
+ // ...
+});
+
+flagsmith.init({
+ environmentID: '<FLAGSMITH_CLIENT_SIDE_ENVIRONMENT_KEY>',
+ // ...
+ sentryClient: Sentry.getClient(),
+});
+```
+
+---
+
+You can learn more about feature flags and Sentry issues in their
+[Issue Details documentation](https://docs.sentry.io/product/issues/issue-details/#feature-flags).
