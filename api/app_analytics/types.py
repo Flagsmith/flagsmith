@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 PeriodType = Literal[
     "current_billing_period",
     "previous_billing_period",
-    "ninety_day_period",
+    "90_day_period",
 ]
 
 
