@@ -88,8 +88,6 @@ const HomePage: React.FC = () => {
       addAlbacross()
     }
 
-    document.body.classList.remove('dark')
-
     if (document.location.href.includes('oauth')) {
       const parts = document.location.href.split('oauth/')
       const oauthParams = parts[1]
