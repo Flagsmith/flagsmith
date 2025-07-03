@@ -47,6 +47,7 @@ export type PaidFeature =
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
+  | 'RELEASE_PIPELINES'
 
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
@@ -403,6 +404,53 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return true
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
     const plans = isOrgPermission
@@ -423,6 +471,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -436,6 +485,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
+      case 'RELEASE_PIPELINES':
       case 'SAML': {
         plan = 'enterprise'
         break
@@ -538,58 +588,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return str
   },
-
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
-    if (!waitFor) {
-      return
-    }
 
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
-  },
-  
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {
     if (entityPermissions?.admin) return true
     return !!entityPermissions?.permissions?.find(
