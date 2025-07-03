@@ -1,4 +1,3 @@
-import API from './api'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
 
 export const getDarkMode = () => {
@@ -14,8 +13,4 @@ export const setDarkMode = (enabled: boolean) => {
     document.body.classList.remove('dark')
     document.documentElement.removeAttribute('data-bs-theme')
   }
-}
-
-if (storageGet('dark_mode')) {
-  setDarkMode(getDarkMode())
 }

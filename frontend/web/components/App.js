@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -24,6 +24,8 @@ import { getBuildVersion } from 'common/services/useBuildVersion'
 import AccountProvider from 'common/providers/AccountProvider'
 import Nav from './navigation/Nav'
 import 'project/darkMode'
+import { storageGet } from 'common/safeLocalStorage'
+import { setDarkMode } from 'project/darkMode'
 const App = class extends Component {
   static propTypes = {
     children: propTypes.element.isRequired,
@@ -73,6 +75,13 @@ const App = class extends Component {
   }
 
   componentDidMount = () => {
+    //todo: Remove this after a few weeks have passed
+    const darkMode = storageGet('dark_mode')
+    if (darkMode === null) {
+      setDarkMode(flagsmith.hasFeature('dark_mode'))
+    } else {
+      setDarkMode(darkMode)
+    }
     if (Project.amplitude) {
       amplitude.init(Project.amplitude, {
         defaultTracking: true,
