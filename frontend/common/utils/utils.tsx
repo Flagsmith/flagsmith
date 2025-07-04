@@ -48,6 +48,7 @@ export type PaidFeature =
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
+  | 'RELEASE_PIPELINES'
 
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
@@ -310,6 +311,54 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -318,7 +367,53 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
+    if (!waitFor) {
+      return
+    }
 
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -334,6 +429,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'
   },
+
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
@@ -366,7 +462,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
-
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -421,53 +516,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     return !!found
   },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
-    if (!waitFor) {
-      return
-    }
-
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
-  },
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
@@ -485,6 +533,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
+      case 'RELEASE_PIPELINES':
       case 'SAML': {
         plan = 'enterprise'
         break
@@ -587,7 +636,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return str
   },
-
   getUtmsFromUrl(): UtmsType {
     const params = Utils.fromParam() as Record<string, string>
     return TRACKED_UTMS.reduce((utms, key) => {
