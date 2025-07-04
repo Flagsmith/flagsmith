@@ -11,12 +11,10 @@ import InputGroup from 'components/base/forms/InputGroup'
 type AddToReleasePipelineModalProps = {
   projectId: number
   featureId: number
-  onSuccess?: () => void
 }
 
 const AddToReleasePipelineModal = ({
   featureId,
-  onSuccess,
   projectId,
 }: AddToReleasePipelineModalProps) => {
   const [selectedReleasePipeline, setSelectedReleasePipeline] = useState<
@@ -61,7 +59,6 @@ const AddToReleasePipelineModal = ({
     if (isSuccess) {
       closeModal2()
       toast('Feature added to release pipeline')
-      onSuccess?.()
       return
     }
 
@@ -72,7 +69,7 @@ const AddToReleasePipelineModal = ({
       )
       return
     }
-  }, [isSuccess, isError, error, onSuccess])
+  }, [isSuccess, isError, error])
 
   return (
     <div className='p-4'>

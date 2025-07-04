@@ -6,12 +6,10 @@ type RemoveFromReleasePipelineModalProps = {
   projectId: number
   featureId: number
   pipelineId: number
-  onSuccess?: () => void
 }
 
 const RemoveFromReleasePipelineModal = ({
   featureId,
-  onSuccess,
   pipelineId,
   projectId,
 }: RemoveFromReleasePipelineModalProps) => {
@@ -24,7 +22,6 @@ const RemoveFromReleasePipelineModal = ({
     if (isSuccess) {
       closeModal2()
       toast('Feature removed from release pipeline')
-      onSuccess?.()
       return
     }
 
@@ -32,7 +29,7 @@ const RemoveFromReleasePipelineModal = ({
       toast('Error removing feature from release pipeline', 'danger')
       return
     }
-  }, [isSuccess, isError, error, onSuccess])
+  }, [isSuccess, isError, error])
 
   const handleRemoveFromReleasePipeline = () => {
     removeFeatureFromReleasePipeline({
