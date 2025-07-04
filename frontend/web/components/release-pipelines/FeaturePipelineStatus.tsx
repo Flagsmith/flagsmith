@@ -81,7 +81,7 @@ const FeaturePipelineStatus = ({
   if (!stages) return null
 
   return (
-    <AccordionCard title='Release Pipeline' defaultOpen>
+    <AccordionCard title='Release Pipeline'>
       <Row className='flex mt-4 align-items-start justify-content-between'>
         {stages?.map((stage) => (
           <StageStatus

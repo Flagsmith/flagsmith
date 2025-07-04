@@ -78,10 +78,7 @@ export const releasePipelinesService = service
         Res['releasePipeline'],
         Req['removeFeatureFromReleasePipeline']
       >({
-        invalidatesTags: (res, err, query) => [
-          { id: 'LIST', type: 'ReleasePipelines' },
-          { id: query.pipelineId, type: 'ReleasePipelines' },
-        ],
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
         query: (query: Req['removeFeatureFromReleasePipeline']) => ({
           body: {
             feature_id: query.featureId,

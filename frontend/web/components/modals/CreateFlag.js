@@ -53,12 +53,10 @@ import FeatureHealthTabContent from './FeatureHealthTabContent'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
 import AddToReleasePipelineModal from 'components/release-pipelines/AddToReleasePipelineModal'
-import {
-  getReleasePipelines,
-  removeFeatureFromReleasePipeline,
-} from 'common/services/useReleasePipelines'
+import { getReleasePipelines } from 'common/services/useReleasePipelines'
 import FeaturePipelineStatus from 'components/release-pipelines/FeaturePipelineStatus'
 import ButtonDropdown from 'components/base/forms/ButtonDropdown'
+import RemoveFromReleasePipelineModal from 'components/release-pipelines/RemoveFromReleasePipelineModal'
 
 const CreateFlag = class extends Component {
   static displayName = 'CreateFlag'
@@ -190,10 +188,10 @@ const CreateFlag = class extends Component {
     return Promise.resolve(true)
   }
 
-  getReleasePipelineId = () => {
+  getActiveReleasePipeline = () => {
     return this.state.releasePipelines?.find((pipeline) =>
       pipeline.features?.includes(this.props.projectFlag.id),
-    )?.id
+    )
   }
 
   componentDidMount = () => {
@@ -246,10 +244,13 @@ const CreateFlag = class extends Component {
 
   fetchReleasePipelines = () => {
     if (!this.props.projectId) return
-
-    getReleasePipelines(getStore(), {
-      projectId: this.props.projectId,
-    })
+    getReleasePipelines(
+      getStore(),
+      {
+        projectId: this.props.projectId,
+      },
+      { forceRefetch: true },
+    )
       .then((res) => {
         const pipelines = res.data.results
         const hasPublishedReleasePipelines =
@@ -643,22 +644,27 @@ const CreateFlag = class extends Component {
       <AddToReleasePipelineModal
         projectId={this.props.projectId}
         featureId={this.props.projectFlag.id}
+        onSuccess={() => {
+          this.fetchReleasePipelines()
+        }}
       />,
     )
   }
 
   removeFromReleasePipeline = () => {
-    removeFeatureFromReleasePipeline(getStore(), {
-      featureId: this.props.projectFlag.id,
-      pipelineId: this.getReleasePipelineId(),
-      projectId: this.props.projectId,
-    })
-      .then(() => {
-        toast('Feature removed from release pipeline')
-      })
-      .catch(() => {
-        toast('Error removing feature from release pipeline', 'danger')
-      })
+    openModal2(
+      `Remove ${this.state.name} From ${
+        this.getActiveReleasePipeline()?.name ?? ''
+      } Pipeline`,
+      <RemoveFromReleasePipelineModal
+        projectId={this.props.projectId}
+        featureId={this.props.projectFlag.id}
+        pipelineId={this.getActiveReleasePipeline()?.id}
+        onSuccess={() => {
+          this.fetchReleasePipelines()
+        }}
+      />,
+    )
   }
 
   render() {
@@ -1135,7 +1141,16 @@ const CreateFlag = class extends Component {
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
 
-              const releasePipelineId = this.getReleasePipelineId()
+              const releasePipeline = this.getActiveReleasePipeline()
+
+              const releasePipelineOption = {
+                label: releasePipeline?.id
+                  ? 'Remove from Release Pipeline'
+                  : 'Add to Release Pipeline',
+                onClick: releasePipeline?.id
+                  ? this.removeFromReleasePipeline
+                  : this.openReleasePipelineModal,
+              }
 
               return (
                 <Permission
@@ -1161,7 +1176,7 @@ const CreateFlag = class extends Component {
                                 {isReleasePipelineEnabled && (
                                   <div className='m-4'>
                                     <FeaturePipelineStatus
-                                      releasePipelineId={releasePipelineId}
+                                      releasePipelineId={releasePipeline?.id}
                                       projectId={this.props.projectId}
                                       featureId={projectFlag?.id}
                                     />
@@ -1290,76 +1305,41 @@ const CreateFlag = class extends Component {
                                                       : 'Schedule Update'}
                                                   </Button>
                                                 )}
-
-                                                {is4Eyes ? (
-                                                  <ButtonDropdown
-                                                    onClick={() =>
-                                                      saveFeatureValue()
-                                                    }
-                                                    type='button'
-                                                    data-test='update-feature-btn'
-                                                    id='update-feature-btn'
-                                                    disabled={
-                                                      !savePermission ||
-                                                      isSaving ||
-                                                      !name ||
-                                                      invalid
-                                                    }
-                                                    dropdownItems={[
-                                                      {
-                                                        label: releasePipelineId
-                                                          ? 'Remove from Release Pipeline'
-                                                          : 'Add to Release Pipeline',
-                                                        onClick:
-                                                          releasePipelineId
-                                                            ? this
-                                                                .removeFromReleasePipeline
-                                                            : this
-                                                                .openReleasePipelineModal,
-                                                      },
-                                                    ]}
-                                                  >
-                                                    {isSaving
+                                                <ButtonDropdown
+                                                  onClick={() =>
+                                                    saveFeatureValue()
+                                                  }
+                                                  type='button'
+                                                  data-test='update-feature-btn'
+                                                  id='update-feature-btn'
+                                                  toggleIcon='plus'
+                                                  disabled={
+                                                    !savePermission ||
+                                                    isSaving ||
+                                                    !name ||
+                                                    invalid
+                                                  }
+                                                  dropdownItems={[
+                                                    ...(isReleasePipelineEnabled &&
+                                                    this.state
+                                                      .hasPublishedReleasePipelines &&
+                                                    projectAdmin
+                                                      ? [releasePipelineOption]
+                                                      : []),
+                                                  ]}
+                                                >
+                                                  {isSaving
+                                                    ? is4Eyes
                                                       ? existingChangeRequest
                                                         ? 'Updating Change Request'
                                                         : 'Creating Change Request'
-                                                      : existingChangeRequest
+                                                      : 'Updating'
+                                                    : is4Eyes
+                                                    ? existingChangeRequest
                                                       ? 'Update Change Request'
-                                                      : 'Create Change Request'}
-                                                  </ButtonDropdown>
-                                                ) : (
-                                                  <ButtonDropdown
-                                                    onClick={() =>
-                                                      saveFeatureValue()
-                                                    }
-                                                    type='button'
-                                                    data-test='update-feature-btn'
-                                                    id='update-feature-btn'
-                                                    disabled={
-                                                      isSaving ||
-                                                      !name ||
-                                                      invalid ||
-                                                      !savePermission
-                                                    }
-                                                    dropdownItems={[
-                                                      {
-                                                        label: releasePipelineId
-                                                          ? 'Remove from Release Pipeline'
-                                                          : 'Add to Release Pipeline',
-                                                        onClick:
-                                                          releasePipelineId
-                                                            ? this
-                                                                .removeFromReleasePipeline
-                                                            : this
-                                                                .openReleasePipelineModal,
-                                                      },
-                                                    ]}
-                                                  >
-                                                    {isSaving
-                                                      ? 'Updating'
-                                                      : 'Update Feature Value'}
-                                                  </ButtonDropdown>
-                                                )}
+                                                      : 'Create Change Request'
+                                                    : 'Update Feature Value'}
+                                                </ButtonDropdown>
                                               </>,
                                             )
                                           }

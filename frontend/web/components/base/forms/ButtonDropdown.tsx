@@ -2,8 +2,10 @@ import { FC, useLayoutEffect, useRef, useState } from 'react'
 import Button, { ButtonType, sizeClassNames, themeClassNames } from './Button'
 import classNames from 'classnames'
 import useOutsideClick from 'common/useOutsideClick'
+import Icon, { IconName } from 'components/Icon'
 
 export interface ButtonDropdownType extends ButtonType {
+  toggleIcon?: IconName
   dropdownItems: {
     label: string
     onClick: () => void
@@ -17,6 +19,7 @@ export const ButtonDropdown: FC<ButtonDropdownType> = ({
   onClick,
   size = 'default',
   theme = 'primary',
+  toggleIcon = 'chevron-down',
   ...rest
 }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -45,7 +48,7 @@ export const ButtonDropdown: FC<ButtonDropdownType> = ({
   }, [isOpen])
 
   return (
-    <div ref={dropdownRef} className='btn-group position-relative'>
+    <div ref={dropdownRef} className='button-dropdown position-relative'>
       <Button
         theme={theme}
         size={size}
@@ -53,19 +56,29 @@ export const ButtonDropdown: FC<ButtonDropdownType> = ({
           onClick?.(e)
           setIsOpen(false)
         }}
+        className={classNames(
+          {
+            'button-dropdown-default': !!dropdownItems?.length,
+          },
+          rest.className,
+        )}
         {...rest}
       >
         {children}
       </Button>
-      <Button
-        className={classNames(
-          'dropdown-toggle dropdown-toggle-split',
-          themeClassNames[theme],
-          sizeClassNames[size],
-        )}
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={rest.disabled}
-      />
+      {!!dropdownItems?.length && (
+        <Button
+          className={classNames(
+            'button-dropdown-toggle',
+            themeClassNames[theme],
+            sizeClassNames[size],
+          )}
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={rest.disabled}
+        >
+          <Icon className='m-2' name={toggleIcon} fill='white' />
+        </Button>
+      )}
       {isOpen && (
         <div
           ref={menuRef}
