@@ -733,5 +733,10 @@ export type Req = {
     projectId: number
     pipelineId: number
   }
+  removeFeatureFromReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
   // END OF TYPES
 }

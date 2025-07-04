@@ -1,8 +1,12 @@
-import { useGetReleasePipelineQuery } from 'common/services/useReleasePipelines'
+import {
+  useGetReleasePipelineQuery,
+  useGetReleasePipelinesQuery,
+} from 'common/services/useReleasePipelines'
 import AccordionCard from 'components/base/accordion/AccordionCard'
 import ProjectStore from 'common/stores/project-store'
 import { Environment } from 'common/types/responses'
 import classNames from 'classnames'
+import { useMemo } from 'react'
 
 interface StageStatusProps {
   featureId: number
@@ -57,21 +61,35 @@ const StageStatus = ({
 interface FeaturePipelineStatusProps {
   featureId: number
   projectId: string
-  releasePipelineId: number
 }
 
 const FeaturePipelineStatus = ({
   featureId,
   projectId,
-  releasePipelineId,
 }: FeaturePipelineStatusProps) => {
-  const { data: releasePipeline } = useGetReleasePipelineQuery(
+  const { data: releasePipelines } = useGetReleasePipelinesQuery(
     {
-      pipelineId: releasePipelineId,
       projectId: Number(projectId),
     },
     {
-      skip: !releasePipelineId,
+      skip: !projectId,
+    },
+  )
+  const matchingReleasePipeline = useMemo(
+    () =>
+      releasePipelines?.results?.find((pipeline) =>
+        pipeline.features?.includes(featureId),
+      ),
+    [releasePipelines, featureId],
+  )
+
+  const { data: releasePipeline } = useGetReleasePipelineQuery(
+    {
+      pipelineId: matchingReleasePipeline?.id ?? NaN,
+      projectId: Number(projectId),
+    },
+    {
+      skip: !matchingReleasePipeline?.id,
     },
   )
 
@@ -81,7 +99,7 @@ const FeaturePipelineStatus = ({
   if (!stages) return null
 
   return (
-    <AccordionCard title='Release Pipeline' defaultOpen>
+    <AccordionCard title='Release Pipeline'>
       <Row className='flex mt-4 align-items-start justify-content-between'>
         {stages?.map((stage) => (
           <StageStatus
