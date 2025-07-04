@@ -8,7 +8,7 @@ Flagsmith uses a flexible data model to help you manage feature flags and remote
 
 Here's a high-level overview of the Flagsmith data model. Fear not - it's not as complex as it looks!
 
-![Flagsmith Data Model](/img/flagsmith-model.svg)
+![Image](/img/flagsmith-model.svg)
 
 OK let's break this down.
 
@@ -42,11 +42,3 @@ For more info see [Traits](/basic-features/managing-identities.md#identity-trait
 Segments define a group of users by traits such as login count, device, location or any number of custom defined traits. Similar to individual users, you can override environment defaults for features for a segment. For example, you might show certain features for a "power user" segment.
 
 For more info see [Segments](/basic-features/segments.md).
-
-## Relationships Summary
-
-- **Organizations** contain **Projects**
-- **Projects** contain **Environments** and **Features**
-- **Environments** have their own configuration for each **Feature**
-- **Identities** belong to an **Environment** and can be related to  **Traits**
-- **Segments** group **Identities** by rules on **Traits**
