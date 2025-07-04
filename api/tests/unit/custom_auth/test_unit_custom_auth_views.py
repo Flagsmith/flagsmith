@@ -1,13 +1,15 @@
 import json
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from django.urls import reverse
 from freezegun import freeze_time
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import FFAdminUser
+from users.models import FFAdminUser, HubspotTracker
 
 
 def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> None:
@@ -141,3 +143,50 @@ def test_patch_user_onboarding_returns_error_if_tasks_and_tools_are_missing(
     assert response.json() == {
         "non_field_errors": ["At least one of 'tasks' or 'tools' must be provided."]
     }
+
+
+@pytest.mark.parametrize(
+    "hubspot_cookie",
+    [
+        "1234567890",
+        None,
+    ],
+)
+def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
+    mocker: MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+    hubspot_cookie: str,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "sign_up_type": "NO_INVITE",
+        "hubspotutk": hubspot_cookie,
+    }
+
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "custom_auth.views.create_hubspot_contact_for_user"
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    # When
+    response = staff_client.post(url, data=data, format="json")
+
+    user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert user is not None
+    if hubspot_cookie:
+        assert hubspot_tracker is not None
+        assert hubspot_tracker.hubspot_cookie == hubspot_cookie
+    else:
+        assert hubspot_tracker is None
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
