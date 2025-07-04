@@ -645,7 +645,9 @@ const CreateFlag = class extends Component {
         projectId={this.props.projectId}
         featureId={this.props.projectFlag.id}
         onSuccess={() => {
-          this.fetchReleasePipelines()
+          setTimeout(() => {
+            this.fetchReleasePipelines()
+          }, 500) // workaround for waiting the cache to be invalidated, RTK does not seem to like class based components
         }}
       />,
     )
@@ -661,7 +663,9 @@ const CreateFlag = class extends Component {
         featureId={this.props.projectFlag.id}
         pipelineId={this.getActiveReleasePipeline()?.id}
         onSuccess={() => {
-          this.fetchReleasePipelines()
+          setTimeout(() => {
+            this.fetchReleasePipelines()
+          }, 500) // workaround for waiting the cache to be invalidated, RTK does not seem to like class based components
         }}
       />,
     )
