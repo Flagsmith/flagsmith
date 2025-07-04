@@ -22,12 +22,14 @@ export interface MessageProps {
   isRemoving?: boolean
   theme?: ThemeType
   children?: React.ReactNode
+  extraStyles?: { size?: 'large' | undefined }
 }
 
 const Message: FC<MessageProps> = ({
   action,
   children,
   expiry = 5000,
+  extraStyles,
   isRemoving = false,
   remove,
   theme = 'success',
@@ -40,6 +42,7 @@ const Message: FC<MessageProps> = ({
   const className = cn(
     {
       'alert': true,
+      'large': extraStyles?.size === 'large',
       'removing-out': isRemoving,
       'show': !isRemoving,
       'toast-message': true,
@@ -87,6 +90,7 @@ export interface Message {
   expiry?: number
   theme?: ThemeType
   isRemoving?: boolean
+  extraStyles?: { size?: 'large' | undefined }
 }
 
 const ToastMessages: FC<{}> = () => {
@@ -97,6 +101,7 @@ const ToastMessages: FC<{}> = () => {
     theme?: ThemeType,
     expiry?: number,
     action?: { buttonText: string; onClick: () => void },
+    extraStyles?: { size?: 'large' | undefined },
   ) => {
     setMessages((prevMessages) => {
       // Ignore duplicate messages
@@ -110,6 +115,7 @@ const ToastMessages: FC<{}> = () => {
           action,
           content,
           expiry: E2E ? 1000 : expiry,
+          extraStyles,
           id,
           theme,
         },
@@ -149,6 +155,7 @@ const ToastMessages: FC<{}> = () => {
           remove={() => remove(message.id)}
           expiry={message.expiry}
           theme={message.theme}
+          extraStyles={message.extraStyles}
         >
           {message.content}
         </Message>

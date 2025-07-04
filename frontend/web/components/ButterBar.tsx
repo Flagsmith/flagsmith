@@ -13,9 +13,14 @@ import Constants from 'common/constants'
 interface ButterBarProps {
   billingStatus?: string
   projectId: string
+  fofError?: string
 }
 
-const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
+const ButterBar: React.FC<ButterBarProps> = ({
+  billingStatus,
+  fofError,
+  projectId,
+}) => {
   const matches = document.location.href.match(/\/environment\/([^/]*)/)
   const environment = matches && matches[1]
   const timerRef = useRef<NodeJS.Timer>()
@@ -58,6 +63,35 @@ const ButterBar: React.FC<ButterBarProps> = ({ billingStatus, projectId }) => {
     checkProcessing(processing)
     return processing
   }, [checkProcessing, featureImports])
+
+  if (fofError) {
+    return (
+      <div
+        className='announcement-container font-weight-medium bg-danger'
+        style={{ padding: '10px' }}
+      >
+        <Row>
+          <h6>Could not initialise Flagsmith-on-Flagsmith</h6>
+        </Row>
+        <p className='mb-1'>The error was: "{fofError}"</p>
+        <p className='mb-1'>
+          Flag evaluation for is not affected, but some dashboard features might
+          be unavailable.
+        </p>
+        <p className='mb-1'>
+          Check with{' '}
+          <a
+            href='https://docs.flagsmith.com/deployment/#running-flagsmith-on-flagsmith'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            Flagsmith-on-Flagsmith documentation
+          </a>{' '}
+          for more info.
+        </p>
+      </div>
+    )
+  }
 
   if (processingImport) {
     return (

@@ -49,6 +49,7 @@ app.get('/config/project-overrides', (req, res) => {
     */
 
   const values = [
+    { name: 'isFlagsmithOnFlagsmith', value: !!process.env.FLAGSMITH_ON_FLAGSMITH_API_KEY && !!process.env.FLAGSMITH_ON_FLAGSMITH_API_URL },
     { name: 'preventSignup', value: envToBool('PREVENT_SIGNUP', false) },
     {
       name: 'preventEmailPassword',

@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import { matchPath, withRouter } from 'react-router-dom'
 import * as amplitude from '@amplitude/analytics-browser'
 import { plugin as engagementPlugin } from '@amplitude/engagement-browser'
@@ -16,6 +16,10 @@ import { resolveAuthFlow } from '@datadog/ui-extensions-sdk'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import AccountStore from 'common/stores/account-store'
 import OrganisationLimit from './OrganisationLimit'
+import {
+  getStartupErrorText,
+  isFlagsmithOnFlagsmithError,
+} from './base/errors/init.error'
 import OrganisationStore from 'common/stores/organisation-store'
 import ScrollToTop from './ScrollToTop'
 import AnnouncementPerPage from './AnnouncementPerPage'
@@ -240,9 +244,32 @@ const App = class extends Component {
     ) {
       return <Blocked />
     }
-    if (Project.maintenance || this.props.error || !window.projectOverrides) {
+
+    const maintenanceMode =
+      Utils.getFlagsmithHasFeature('maintenance_mode') || Project.maintenance
+    const isUnknownError =
+      this.props.error && !isFlagsmithOnFlagsmithError(this.props.error)
+    if (maintenanceMode || !window.projectOverrides || isUnknownError) {
       return <Maintenance />
     }
+
+    if (this.props.error && isFlagsmithOnFlagsmithError(this.props.error)) {
+      toast(
+        getStartupErrorText(this.props.error),
+        'danger',
+        2 * 60 * 1000,
+        {
+          buttonText: 'See documentation',
+          onClick: () =>
+            window.open(
+              'https://docs.flagsmith.com/deployment/#running-flagsmith-on-flagsmith',
+              '_blank',
+            ),
+        },
+        { size: 'large' },
+      )
+    }
+
     const activeProject = OrganisationStore.getProject(projectId)
     const projectNotLoaded =
       !activeProject && document.location.href.includes('project/')
@@ -262,12 +289,15 @@ const App = class extends Component {
         </AccountProvider>
       )
     }
+
     if (AccountStore.forced2Factor()) {
       return <AccountSettingsPage isLoginPage={true} />
     }
+
     if (document.location.pathname.includes('widget')) {
       return <div>{this.props.children}</div>
     }
+
     return (
       <Provider store={getStore()}>
         <AccountProvider
@@ -303,6 +333,7 @@ const App = class extends Component {
                         AccountStore.getOrganisation()?.subscription
                           .billing_status
                       }
+                      fofError={this.props.error?.message}
                     />
                     {user && (
                       <>
