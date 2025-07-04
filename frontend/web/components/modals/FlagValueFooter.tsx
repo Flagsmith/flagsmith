@@ -159,7 +159,6 @@ const FlagValueFooter = ({
                       type='button'
                       data-test='update-feature-btn'
                       id='update-feature-btn'
-                      toggleIcon='plus'
                       disabled={
                         !savePermission || isSaving || !featureName || isInvalid
                       }
