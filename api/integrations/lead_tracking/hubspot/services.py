@@ -8,6 +8,7 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_COOKIE_NAME,
 )
 from users.models import FFAdminUser, HubspotTracker
+from users.serializers import UTMDataSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +18,14 @@ def register_hubspot_tracker(
     user: FFAdminUser | None = None,
 ) -> None:
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
-    utm_data = request.data.get("utm_data")
+    raw_utm_data = request.data.get("utm_data")
     track_user = user if user else request.user
+
+    serializer = UTMDataSerializer(data=raw_utm_data)
+    utm_data = serializer.validated_data if serializer.is_valid() else None
+
     if not (hubspot_cookie or utm_data):
-        logger.info(f"Request did not included Hubspot data for user {track_user.id}")
+        logger.info(f"Request did not include Hubspot data for user {track_user.id}")
         return
 
     if (
@@ -34,6 +39,7 @@ def register_hubspot_tracker(
             f" due to cookie conflict with cookie {hubspot_cookie}"
         )
         return
+
     HubspotTracker.objects.update_or_create(
         user=track_user,
         defaults={

@@ -18,7 +18,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
@@ -473,6 +473,14 @@ class HubspotLead(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class HubspotTrackerUTMData(typing.TypedDict, total=False):
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+
+
 class HubspotTracker(models.Model):
     user = models.OneToOneField(
         FFAdminUser,
@@ -485,25 +493,9 @@ class HubspotTracker(models.Model):
         null=True,
         blank=True,
     )
-    utm_data = models.JSONField(default=None, blank=True, null=True)
+    utm_data: HubspotTrackerUTMData = models.JSONField(
+        default=None, blank=True, null=True
+    )  # type: ignore[assignment]
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args: typing.Any, **kwargs: typing.Any) -> None:
-        if self.utm_data:
-            try:
-                self.utm_data = UTMDataModel(**self.utm_data).model_dump(
-                    exclude_none=True
-                )
-            except ValidationError:
-                self.utm_data = None
-
-        super().save(*args, **kwargs)
-
-    @staticmethod
-    def build_utm_data(data: dict[str, str]) -> dict[str, str]:
-        try:
-            return UTMDataModel(**data).model_dump(exclude_none=True)
-        except ValidationError:
-            return {}

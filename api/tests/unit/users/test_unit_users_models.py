@@ -10,7 +10,7 @@ from organisations.permissions.models import UserOrganisationPermission
 from organisations.permissions.permissions import ORGANISATION_PERMISSIONS
 from projects.models import Project
 from tests.types import WithProjectPermissionsCallable
-from users.models import FFAdminUser, HubspotTracker
+from users.models import FFAdminUser
 
 
 def test_user_belongs_to_success(
@@ -257,78 +257,3 @@ def test_user_create_calls_hubspot_tracking(
 
     # Then
     create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
-
-
-def test_user_model_save_with_valid_utm_data(db: None, staff_user: FFAdminUser) -> None:
-    # Given
-    utm_data = {
-        "utm_source": "google",
-        "utm_medium": "cpc",
-        "utm_wrong_key": "wrong_value",
-    }
-
-    # When
-    HubspotTracker.objects.update_or_create(
-        user=staff_user,
-        defaults={
-            "hubspot_cookie": "123",
-            "utm_data": utm_data,
-        },
-    )
-
-    # Then
-    tracker = HubspotTracker.objects.filter(user=staff_user).first()
-    assert tracker is not None
-    assert tracker.utm_data is not None
-    assert "utm_source" in tracker.utm_data
-    assert "utm_medium" in tracker.utm_data
-    assert "utm_wrong_key" not in tracker.utm_data
-
-
-def test_user_model_save_with_invalid_utm_data(
-    db: None, staff_user: FFAdminUser
-) -> None:
-    # Given
-    utm_data = {"utm_source": {"value": "wrong_type"}}
-
-    # When
-    HubspotTracker.objects.update_or_create(
-        user=staff_user,
-        defaults={
-            "hubspot_cookie": "123",
-            "utm_data": utm_data,
-        },
-    )
-
-    # Then
-    tracker = HubspotTracker.objects.filter(user=staff_user).first()
-    assert tracker is not None
-    assert tracker.utm_data is None
-
-
-@pytest.mark.parametrize(
-    "utm_data, expected_utm_data",
-    [
-        (
-            {
-                "utm_source": "google",
-                "utm_medium": "cpc",
-                "utm_wrong_key": "wrong_value",
-            },
-            {"utm_source": "google", "utm_medium": "cpc"},
-        ),
-        (
-            {
-                "utm_source": {"value": "google"},
-            },
-            {},
-        ),
-    ],
-)
-def test_build_utm_data_valid(
-    utm_data: dict[str, str], expected_utm_data: dict[str, str]
-) -> None:
-    # When / Then
-    utms = HubspotTracker.build_utm_data(utm_data)
-    # Then
-    assert utms == expected_utm_data
