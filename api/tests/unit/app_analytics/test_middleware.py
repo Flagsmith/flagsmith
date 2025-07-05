@@ -44,9 +44,27 @@ def test_api_usage_middleware__calls_expected(
         resource=Resource.get_from_name(resource_name),
         host="testserver",
         environment_key=environment_key,
+        labels={},
     )
 
 
+@pytest.mark.parametrize(
+    "optional_headers,expected_labels",
+    [
+        ({}, {}),
+        (
+            {
+                "HTTP_Flagsmith-Application-Name": "web",
+                "HTTP_Flagsmith-Application-Version": "1.0",
+                "HTTP_Unrelated-Header": "value",
+            },
+            {
+                "client_application_name": "web",
+                "client_application_version": "1.0",
+            },
+        ),
+    ],
+)
 @pytest.mark.parametrize(
     "path, resource_name",
     [
@@ -62,10 +80,12 @@ def test_api_usage_middleware__no_cache__calls_expected(
     path: str,
     resource_name: str,
     settings: SettingsWrapper,
+    optional_headers: dict[str, str],
+    expected_labels: dict[str, str],
 ) -> None:
     # Given
     environment_key = "test"
-    headers = {"HTTP_X-Environment-Key": environment_key}
+    headers = {"HTTP_X-Environment-Key": environment_key, **optional_headers}
     request = rf.get(path, **headers)  # type: ignore[arg-type]
     settings.USE_CACHE_FOR_USAGE_DATA = False
 
@@ -83,6 +103,7 @@ def test_api_usage_middleware__no_cache__calls_expected(
             "resource": Resource.get_from_name(resource_name),
             "environment_key": environment_key,
             "host": "testserver",
+            "labels": expected_labels,
         }
     )
 
