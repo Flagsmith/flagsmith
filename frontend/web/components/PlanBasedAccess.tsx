@@ -74,7 +74,7 @@ export const featureDescriptions: Record<PaidFeature, any> = {
   'RELEASE_PIPELINES': {
     description:
       'Automate releases across multiple environments using customisable conditions',
-    docs: 'TBD', // TODO: Add docs
+    docs: 'https://docs.flagsmith.com/advanced-use/release-pipelines/',
     title: 'Release Pipelines',
   },
   'SAML': {
