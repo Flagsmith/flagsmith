@@ -3,6 +3,7 @@ import Project from '../common/project';
 import fetch from 'node-fetch';
 import flagsmith from 'flagsmith/isomorphic';
 import { IFlagsmith, FlagsmithValue } from 'flagsmith/types';
+import { delay } from 'lodash';
 
 export const LONG_TIMEOUT = 40000
 
@@ -352,6 +353,7 @@ export const logout = async () => {
   await click('#account-settings-link')
   await click('#logout-link')
   await waitForElementVisible('#login-page')
+  await t.wait(500)
 }
 
 export const goToFeatureVersions = async (featureIndex: number) => {

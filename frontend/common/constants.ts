@@ -3,6 +3,7 @@ import { SegmentCondition } from './types/responses'
 import Utils from './utils/utils'
 
 import Project from './project'
+import { integrationCategories } from 'components/pages/IntegrationsPage'
 const keywords = {
   FEATURE_FUNCTION: 'myCoolFeature',
   FEATURE_NAME: 'my_cool_feature',
@@ -483,6 +484,143 @@ const Constants = {
     githubIssue: 'GitHub Issue',
     githubPR: 'Github PR',
   },
+  integrationCategoryDescriptions: {
+    'Analytics': 'Send data on what flags served to each identity.',
+    'Authentication':
+      'Use the Flagsmith Dashboard with your authentication provider.',
+    'CI/CD': 'View your Flagsmith Flags inside your Issues and Pull Request.',
+    'Developer tools': 'Interact with feature flags from your developer tools.',
+    'Infrastructure':
+      'Manage and evaluate your features within your infrastructure tooling.',
+    'Messaging':
+      'Send messages when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Monitoring':
+      'Send events when features are created, updated and removed. Logs are tagged with the environment they came from e.g. production.',
+    'Webhooks':
+      'Receive webhooks when your features change or when audit logs occur.',
+  } as Record<(typeof integrationCategories)[number], string>,
+  integrationSummaries: [
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/hubspot.svg',
+      title: 'HubSpot',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/pendo.svg',
+      title: 'Pendo',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/adobe-analytics.png',
+      title: 'Adobe Analytics',
+    },
+    {
+      categories: ['Analytics'],
+      image: '/static/images/integrations/google-analytics.svg',
+      title: 'Google Analytics',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/okta.svg',
+      title: 'Okta',
+    },
+    {
+      categories: ['Developer tools'],
+      image: '/static/images/integrations/vs-code.svg',
+      title: 'VS Code',
+    },
+    {
+      categories: ['Infrastructure'],
+      image: '/static/images/integrations/terraform.svg',
+      title: 'Terraform',
+    },
+    {
+      categories: ['Infrastructure'],
+      image: '/static/images/integrations/vercel.svg',
+      title: 'Vercel',
+    },
+    {
+      categories: ['Messaging'],
+      image: '/static/images/integrations/microsoft-teams.svg',
+      title: 'Microsoft Teams',
+    },
+    {
+      categories: ['Developer tools'],
+      image: '/static/images/integrations/intellij.svg',
+      title: 'Intellij',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/ldap.png',
+      title: 'LDAP',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/saml.png',
+      title: 'SAML',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/bitbucket.svg',
+      title: 'Bitbucket',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/gitlab.svg',
+      title: 'GitLab',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/azure-devops.svg',
+      title: 'Azure DevOps',
+    },
+    {
+      categories: ['CI/CD'],
+      image: '/static/images/integrations/jenkins.svg',
+      title: 'Jenkins',
+    },
+    {
+      categories: ['Authentication'],
+      image: '/static/images/integrations/adfs.svg',
+      title: 'Microsoft Active Directory',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/appdynamics.svg',
+      title: 'AppDynamics',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/aws_cloudtrail.svg',
+      title: 'AWS CloudTrail',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/aws_cloudwatch.svg',
+      title: 'AWS CloudWatch',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/elastic.svg',
+      title: 'Elastic (ELK) Stack',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/opentelemetry.svg',
+      title: 'OpenTelemetry',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/prometheus.svg',
+      title: 'Prometheus',
+    },
+    {
+      categories: ['Monitoring'],
+      image: '/static/images/integrations/sumologic.svg',
+      title: 'SumoLogic',
+    },
+  ],
   isCustomFlagsmithUrl: () =>
     Constants.getFlagsmithSDKUrl() !== 'https://edge.api.flagsmith.com/api/v1/',
   modals: {

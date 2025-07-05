@@ -120,6 +120,7 @@ const Integration: FC<IntegrationProps> = (props) => {
     image,
     isExternalInstallation,
     perEnvironment,
+    title,
   } = props.integration
   const activeIntegrations = props.activeIntegrations
   const showAdd = !(
@@ -130,93 +131,98 @@ const Integration: FC<IntegrationProps> = (props) => {
 
   return (
     <div className='panel panel-integrations p-4 mb-3'>
-      <img className='mb-2' src={image} alt='Integration' />
-      <Row space style={{ flexWrap: 'noWrap' }}>
-        <div className='subtitle mt-2'>
-          {description}{' '}
-          {docs && (
-            <Button
-              theme='text'
-              href={docs}
-              target='_blank'
-              className='fw-normal'
-            >
-              View docs
-            </Button>
-          )}
-        </div>
-        <Row style={{ flexWrap: 'noWrap' }}>
-          {activeIntegrations &&
-            activeIntegrations.map((integration) => (
-              <Button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  remove(integration)
-                  return false
-                }}
-                className='ml-3'
-                theme='secondary'
-                type='submit'
-                size='xSmall'
-                key={integration.id}
-              >
-                Delete Integration
-              </Button>
-            ))}
-          {showAdd && (
-            <>
-              {external && !isExternalInstallation ? (
-                <a
+      <div className='d-flex align-items-center gap-4'>
+        <img src={image} alt='Integration' />
+        <div className='flex-1 flex-column'>
+          <h4 className='mb-0'>{title}</h4>
+          <Row space style={{ flexWrap: 'noWrap' }}>
+            <div className='subtitle'>
+              {description}{' '}
+              {docs && (
+                <Button
+                  theme='text'
                   href={docs}
-                  target={'_blank'}
-                  className='btn btn-primary btn-xsm ml-3'
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  rel='noreferrer'
+                  target='_blank'
+                  className='fw-normal'
                 >
-                  Add Integration
-                </a>
-              ) : external &&
-                isExternalInstallation &&
-                (windowInstallationId ||
-                  props.githubMeta.hasIntegrationWithGithub) ? (
-                <Button
-                  className='ml-3'
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  onClick={add}
-                  size='xSmall'
-                >
-                  Manage Integration
-                </Button>
-              ) : external &&
-                !props.githubMeta.hasIntegrationWithGithub &&
-                isExternalInstallation ? (
-                <Button
-                  className='ml-3'
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  onClick={openChildWin}
-                  size='xSmall'
-                >
-                  Add Integration
-                </Button>
-              ) : (
-                <Button
-                  className='ml-3'
-                  id='show-create-segment-btn'
-                  data-test='show-create-segment-btn'
-                  onClick={add}
-                  size='xSmall'
-                >
-                  Add Integration
+                  View docs
                 </Button>
               )}
-            </>
-          )}
-        </Row>
-      </Row>
+            </div>
+            <Row style={{ flexWrap: 'noWrap' }}>
+              {activeIntegrations &&
+                activeIntegrations.map((integration) => (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      remove(integration)
+                      return false
+                    }}
+                    className='ml-3'
+                    theme='secondary'
+                    type='submit'
+                    size='xSmall'
+                    key={integration.id}
+                  >
+                    Delete Integration
+                  </Button>
+                ))}
+              {showAdd && (
+                <>
+                  {external && !isExternalInstallation ? (
+                    <a
+                      href={docs}
+                      target={'_blank'}
+                      className='btn btn-primary btn-xsm ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      rel='noreferrer'
+                    >
+                      Add Integration
+                    </a>
+                  ) : external &&
+                    isExternalInstallation &&
+                    (windowInstallationId ||
+                      props.githubMeta.hasIntegrationWithGithub) ? (
+                    <Button
+                      className='ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      onClick={add}
+                      size='xSmall'
+                    >
+                      Manage Integration
+                    </Button>
+                  ) : external &&
+                    !props.githubMeta.hasIntegrationWithGithub &&
+                    isExternalInstallation ? (
+                    <Button
+                      className='ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      onClick={openChildWin}
+                      size='xSmall'
+                    >
+                      Add Integration
+                    </Button>
+                  ) : (
+                    <Button
+                      className='ml-3'
+                      id='show-create-segment-btn'
+                      data-test='show-create-segment-btn'
+                      onClick={add}
+                      size='xSmall'
+                    >
+                      Add Integration
+                    </Button>
+                  )}
+                </>
+              )}
+            </Row>
+          </Row>
+        </div>
+      </div>
 
       {activeIntegrations &&
         activeIntegrations.map((integration) => (

@@ -11,6 +11,27 @@ import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
 import { useRouteContext } from 'components/providers/RouteContext'
 
+export const integrationCategories = [
+  'Analytics',
+  'Authentication',
+  'CI/CD',
+  'Developer tools',
+  'Infrastructure',
+  'Messaging',
+  'Monitoring',
+  'Webhooks',
+] as const
+export type IntegrationSummary = {
+  categories: (typeof integrationCategories)[number][]
+  image: string
+  title: string
+}
+
+export type IntegrationCategoryDescription = {
+  category: (typeof integrationCategories)[number]
+  description: string
+}
+
 const IntegrationsPage: FC = () => {
   const { projectId } = useRouteContext()
   useEffect(() => {
