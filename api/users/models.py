@@ -18,6 +18,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
+from pydantic import BaseModel
 
 from integrations.lead_tracking.hubspot.tasks import (
     create_hubspot_contact_for_user,
@@ -43,6 +44,15 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
+
+
+class UTMDataModel(BaseModel):
+    utm_source: typing.Optional[str] = None
+    utm_medium: typing.Optional[str] = None
+    utm_campaign: typing.Optional[str] = None
+    utm_term: typing.Optional[str] = None
+    utm_content: typing.Optional[str] = None
+
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -463,12 +473,29 @@ class HubspotLead(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class HubspotTrackerUTMData(typing.TypedDict, total=False):
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+
+
 class HubspotTracker(models.Model):
     user = models.OneToOneField(
         FFAdminUser,
         related_name="hubspot_tracker",
         on_delete=models.CASCADE,
     )
-    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
+    hubspot_cookie = models.CharField(
+        unique=True,
+        max_length=100,
+        null=True,
+        blank=True,
+    )
+    utm_data: HubspotTrackerUTMData = models.JSONField(
+        default=None, blank=True, null=True
+    )  # type: ignore[assignment]
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

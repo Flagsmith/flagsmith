@@ -29,6 +29,7 @@ import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import { useUTMs } from 'common/useUTMs'
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -42,7 +43,7 @@ const HomePage: React.FC = () => {
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
-
+  const utms = useUTMs()
   const { data: version, isLoading: versionLoading } = useGetBuildVersionQuery(
     {},
   )
@@ -489,7 +490,7 @@ const HomePage: React.FC = () => {
                           )}
                         >
                           {!!oauths.length && (
-                            <div className='row'>{oauths}</div>
+                            <div className='row row-gap-2'>{oauths}</div>
                           )}
                           {!preventEmailPassword && (
                             <form
@@ -508,6 +509,7 @@ const HomePage: React.FC = () => {
                                     marketing_consent_given:
                                       marketingConsentGiven,
                                     password,
+                                    ...(utms && { utm_data: utms }),
                                   },
                                   isInvite,
                                 )

@@ -27,6 +27,7 @@ import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
+import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
 
 const semver = require('semver')
@@ -310,6 +311,54 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -317,92 +366,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
     return false
-  },
-
-  getManageFeaturePermission(isChangeRequest: boolean) {
-    if (isChangeRequest) {
-      return 'CREATE_CHANGE_REQUEST'
-    }
-    return 'UPDATE_FEATURE_STATE'
-  },
-  getManageFeaturePermissionDescription(isChangeRequest: boolean) {
-    if (isChangeRequest) {
-      return 'Create Change Request'
-    }
-    return 'Update Feature State'
-  },
-  getManageUserPermission() {
-    return 'MANAGE_IDENTITIES'
-  },
-  getManageUserPermissionDescription() {
-    return 'Manage Identities'
-  },
-  getNextPlan: (skipFree?: boolean) => {
-    const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
-    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
-      return planNames.enterprise
-    }
-    switch (currentPlan) {
-      case planNames.free: {
-        return skipFree ? planNames.startup : planNames.scaleUp
-      }
-      case planNames.startup: {
-        return planNames.startup
-      }
-      default: {
-        return planNames.enterprise
-      }
-    }
-  },
-
-  getOrganisationHomePage(id?: string) {
-    const orgId = id || AccountStore.getOrganisation()?.id
-    if (!orgId) {
-      return `/organisations`
-    }
-    return `/organisation/${orgId}/projects`
-  },
-  getOrganisationIdFromUrl(match: any) {
-    const organisationId = match?.params?.organisationId
-    return organisationId ? parseInt(organisationId) : null
-  },
-
-  getPlanName: (plan: string) => {
-    if (plan && plan.includes('free')) {
-      return planNames.free
-    }
-    if (plan && plan.includes('scale-up')) {
-      return planNames.scaleUp
-    }
-    if (plan && plan.includes('startup')) {
-      return planNames.startup
-    }
-    if (plan && plan.includes('start-up')) {
-      return planNames.startup
-    }
-    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
-      return planNames.enterprise
-    }
-    return planNames.free
-  },
-  getPlanPermission: (plan: string, feature: PaidFeature) => {
-    const planName = Utils.getPlanName(plan)
-    if (!plan || planName === planNames.free) {
-      return false
-    }
-    const isScaleupOrGreater = planName !== planNames.startup
-    const isEnterprise = planName === planNames.enterprise
-    if (feature === 'AUTO_SEATS') {
-      return isScaleupOrGreater && !isEnterprise
-    }
-
-    const requiredPlan = Utils.getRequiredPlan(feature)
-    if (requiredPlan === 'enterprise') {
-      return isEnterprise
-    } else if (requiredPlan === 'scale-up') {
-      return isScaleupOrGreater
-    }
-    return true
   },
   getExistingWaitForTime: (
     waitFor: string | undefined,
@@ -450,6 +413,91 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       amountOfTime: amountOfMinutes,
       timeUnit: TimeUnit.MINUTE,
     }
+  },
+  getManageFeaturePermission(isChangeRequest: boolean) {
+    if (isChangeRequest) {
+      return 'CREATE_CHANGE_REQUEST'
+    }
+    return 'UPDATE_FEATURE_STATE'
+  },
+  getManageFeaturePermissionDescription(isChangeRequest: boolean) {
+    if (isChangeRequest) {
+      return 'Create Change Request'
+    }
+    return 'Update Feature State'
+  },
+  getManageUserPermission() {
+    return 'MANAGE_IDENTITIES'
+  },
+
+  getManageUserPermissionDescription() {
+    return 'Manage Identities'
+  },
+  getNextPlan: (skipFree?: boolean) => {
+    const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
+    if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
+      return planNames.enterprise
+    }
+    switch (currentPlan) {
+      case planNames.free: {
+        return skipFree ? planNames.startup : planNames.scaleUp
+      }
+      case planNames.startup: {
+        return planNames.startup
+      }
+      default: {
+        return planNames.enterprise
+      }
+    }
+  },
+
+  getOrganisationHomePage(id?: string) {
+    const orgId = id || AccountStore.getOrganisation()?.id
+    if (!orgId) {
+      return `/organisations`
+    }
+    return `/organisation/${orgId}/projects`
+  },
+  getOrganisationIdFromUrl(match: any) {
+    const organisationId = match?.params?.organisationId
+    return organisationId ? parseInt(organisationId) : null
+  },
+  getPlanName: (plan: string) => {
+    if (plan && plan.includes('free')) {
+      return planNames.free
+    }
+    if (plan && plan.includes('scale-up')) {
+      return planNames.scaleUp
+    }
+    if (plan && plan.includes('startup')) {
+      return planNames.startup
+    }
+    if (plan && plan.includes('start-up')) {
+      return planNames.startup
+    }
+    if (Utils.isEnterpriseImage() || (plan && plan.includes('enterprise'))) {
+      return planNames.enterprise
+    }
+    return planNames.free
+  },
+  getPlanPermission: (plan: string, feature: PaidFeature) => {
+    const planName = Utils.getPlanName(plan)
+    if (!plan || planName === planNames.free) {
+      return false
+    }
+    const isScaleupOrGreater = planName !== planNames.startup
+    const isEnterprise = planName === planNames.enterprise
+    if (feature === 'AUTO_SEATS') {
+      return isScaleupOrGreater && !isEnterprise
+    }
+
+    const requiredPlan = Utils.getRequiredPlan(feature)
+    if (requiredPlan === 'enterprise') {
+      return isEnterprise
+    } else if (requiredPlan === 'scale-up') {
+      return isScaleupOrGreater
+    }
+    return true
   },
   getPlansPermission: (feature: PaidFeature) => {
     const isOrgPermission = feature !== '2FA'
@@ -587,6 +635,15 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
 
     return str
+  },
+  getUtmsFromUrl(): UtmsType {
+    const params = Utils.fromParam() as Record<string, string>
+    return TRACKED_UTMS.reduce((utms, key) => {
+      if (params[key]) {
+        utms[key] = params[key]
+      }
+      return utms
+    }, {} as UtmsType)
   },
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
