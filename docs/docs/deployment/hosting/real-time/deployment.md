@@ -18,21 +18,24 @@ Clustering Redis is recommended for high availability, but not required. All
 
 ### Authentication
 
-Redis must not require a password for the default user. Options for authentication will be added in the future.
+By default, the SSE service will try to connect to Redis without a username or password. If needed, these can be set
+with the `REDIS_USERNAME` and `REDIS_PASSWORD` environment variables.
 
 ## SSE service
 
 Run the `flagsmith/sse` image, setting these environment variables:
 
 | Variable name                   | Description                                                                                                                     | Default      |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------|
 | `SSE_AUTHENTICATION_TOKEN`      | Shared secret for authentication on the `/queue-change` endpoint                                                                | **Required** |
 | `REDIS_HOST`                    | Hostname of the Redis load balancer                                                                                             | `localhost`  |
 | `REDIS_PORT`                    | Port number to use when connecting to Redis                                                                                     | 6379         |
+| `REDIS_USERNAME`                | Username to use when connecting to Redis                                                                                        | None         |
+| `REDIS_PASSWORD`                | Password to use when connecting to Redis                                                                                        | None         |
 | `REDIS_SCAN_COUNT`              | Number of Redis keys to [`SCAN`](https://redis.io/docs/latest/commands/scan/) at once when updating the in-memory cache         | 500          |
 | `CACHE_UPDATE_INTERVAL_SECONDS` | How long (in seconds) to wait between each `SCAN` to update the in-memory cache                                                 | 1            |
 | `USE_CLUSTER_MODE`              | Whether to connect to Redis with [Cluster Mode](https://redis.io/docs/latest/operate/oss_and_stack/management/scaling/) enabled | `False`      |
-| `REDIS_USE_SSL`                 | Whether to connect to Redis with SSL                                                                                            | `False`      |
+| `REDIS_USE_SSL`                 | Whether to connect to Redis using TLS                                                                                           | `False`      |
 | `MAX_STREAM_AGE`                | How long (in seconds) to keep SSE connections alive for. If negative, connections are kept open indefinitely                    | 30           |
 | `STREAM_DELAY`                  | How long (in seconds) to wait before checking the internal cache for updates                                                    | 1            |
 
@@ -54,6 +57,30 @@ its environments are updated.
 
 Lastly, client applications should set their Flagsmith SDK's realtime endpoint URL to the load balancer for the SSE
 service.
+
+## Example: Helm chart
+
+The [Flagsmith Helm chart](https://github.com/Flagsmith/flagsmith-charts) can be used to deploy the SSE service when
+`sse.enabled`is `true`. A minimal example is shown below.
+
+```yaml title="values.yaml"
+sse:
+  enabled: true
+  image:
+    repository: flagsmith/sse
+    tag: 4.0.0
+    imagePullPolicy: ""
+    imagePullSecrets: []
+    extraEnv:
+      REDIS_HOST: your_redis.example.com
+      REDIS_PORT: 6379
+      REDIS_USE_SSL: false # set to true if connecting to Redis over TLS
+      USE_CLUSTER_MODE: false # set to true if connecting to a Redis cluster, not a single node
+    extraEnvFromSecret:
+      REDIS_PASSWORD: # Optional, if your Redis requires authentication
+        secretName: my_redis_secret
+        secretKey: my_redis_password
+```
 
 ## Example: Docker Compose
 

@@ -67,7 +67,10 @@ depend on:
 
 ## Storage
 
-Redis stores a timestamp of when each environment was last updated. Each key is named `sse:ENVIRONMENT_ID`.
+Redis stores a timestamp of when each environment was last updated, in a single key.
+This key is named `sse:updated_at_json`.
+
+Each timestamp is stored for up to 5 minutes.
 
 ## Security
 
@@ -92,14 +95,16 @@ responds with 200 if the SSE service can accept incoming connections and is conn
 
 ## Metrics
 
-TODO: The following is not yet implemented!
+The SSE service does not expose any metrics.
 
+<!--
 The SSE service exposes the following Prometheus metrics at the `/metrics` endpoint:
 
 - `flagsmith_sse_subscribers_active`: number of active subscribers
 - `flagsmith_sse_subscribers_total`: total number of subscribers
 - `flagsmith_sse_redis_commands_total`, with labels `command=SCAN|PING|SET`
 - `flagsmith_sse_redis_errors_total`, with labels `command=SCAN|PING|SET`
+-->
 
 ## Benchmarking
 

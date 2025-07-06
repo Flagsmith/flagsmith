@@ -20,8 +20,7 @@ Real-time flag updates require an Enterprise subscription.
 We assume you already have the [Flagsmith API](/deployment/hosting/locally-api.md) running on your infrastructure.
 
 Real-time flag updates are only delivered for Flagsmith projects that have the "Real-time Updates"
-(`enable_realtime_updates`) setting enabled. This option can be found in **Project Settings** > **SDK Settings**
-only if the `realtime_setting` [Flagsmith-on-Flagsmith](/deployment#running-flagsmith-on-flagsmith) flag is enabled.
+(`enable_realtime_updates`) setting enabled. This option can be found in **Project Settings** > **SDK Settings**.
 
 ## Infrastructure
 
@@ -41,12 +40,12 @@ This diagram shows how all the components initiate connections to each other:
 graph LR
     api[Task processor]
     sse[SSE service]
-    nats[Redis]
+    redis[Redis]
     client1[Client]
     client2[Client]
 
     api -->|Publish| sse
-    sse -->|Fetch| nats
+    sse -->|Fetch| redis
     client1 -->|Connect| sse
     client2 -->|Connect| sse
 ```
