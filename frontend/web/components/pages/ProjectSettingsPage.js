@@ -532,18 +532,16 @@ const ProjectSettingsPage = class extends Component {
                       data-test='js-sdk-settings'
                       tabLabel='SDK Settings'
                     >
-                      {Utils.isSaas() && (
-                        <FormGroup className='mt-4 col-md-8'>
-                          <Setting
-                            feature='REALTIME'
-                            disabled={isSaving}
-                            onChange={() =>
-                              this.toggleRealtimeUpdates(project, editProject)
-                            }
-                            checked={project.enable_realtime_updates}
-                          />
-                        </FormGroup>
-                      )}
+                      <FormGroup className='mt-4 col-md-8'>
+                        <Setting
+                          feature='REALTIME'
+                          disabled={isSaving}
+                          onChange={() =>
+                            this.toggleRealtimeUpdates(project, editProject)
+                          }
+                          checked={project.enable_realtime_updates}
+                        />
+                      </FormGroup>
                       <div className='mt-4'>
                         <form onSubmit={saveProject}>
                           <FormGroup className='mt-4 col-md-8'>
