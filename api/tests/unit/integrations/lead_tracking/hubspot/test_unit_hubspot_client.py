@@ -60,9 +60,17 @@ def test_create_lead_form(
         status=status.HTTP_200_OK,
         json={"inlineMessage": "Thanks for submitting the form."},
     )
-
+    utms_data = {
+        "utm_source": "test_source",
+        "utm_medium": "test_medium",
+        "utm_campaign": "test_campaign",
+        "utm_content": "test_content",
+        "utm_term": "test_term",
+    }
     # When
-    response = hubspot_client.create_lead_form(staff_user, hubspot_cookie_body)
+    response = hubspot_client.create_lead_form(
+        staff_user, hubspot_cookie_body, utms_data
+    )
 
     # Then
     assert len(responses.calls) == 1
@@ -84,6 +92,29 @@ def test_create_lead_form(
         "name": "lastname",
         "value": staff_user.last_name,
     } in fields
+
+    # Test UTMs
+    assert {
+        "objectTypeId": "0-1",
+        "name": "utm_source",
+        "value": "test_source",
+    } in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "utm_medium",
+        "value": "test_medium",
+    } in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "utm_campaign",
+        "value": "test_campaign",
+    } in fields
+    assert {
+        "objectTypeId": "0-1",
+        "name": "utm_content",
+        "value": "test_content",
+    } in fields
+    assert {"objectTypeId": "0-1", "name": "utm_term", "value": "test_term"} in fields
 
     context = request_body.get("context", {})
     assert context == expected_context
