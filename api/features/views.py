@@ -113,7 +113,6 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         return {
             "list": ListFeatureSerializer,
-            "retrieve": ListFeatureSerializer,
             "create": ListFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
