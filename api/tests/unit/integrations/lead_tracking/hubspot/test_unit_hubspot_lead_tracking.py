@@ -120,7 +120,6 @@ def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_association
 ) -> None:
     # Given
     domain = "example.com"
-    mocker.patch("users.models.create_hubspot_contact_for_user")
 
     user = FFAdminUser.objects.create(
         email=f"new.user@{domain}",
