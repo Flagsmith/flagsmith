@@ -658,7 +658,7 @@ def test_user_organisation_create_calls_hubspot_lead_tracking(
     # Given
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
     track_hubspot_lead = mocker.patch("organisations.models.track_hubspot_lead_v2")
-    mocker.patch("users.models.create_hubspot_contact_for_user")
+
     user = FFAdminUser.objects.create(
         email="test@example.com", first_name="John", last_name="Doe"
     )
