@@ -27,12 +27,10 @@ Release Pipelines are available on [Enterprise plans](/version-comparison.md#ent
 
 **Pipeline Information:**
 - **Name**: Give your pipeline a descriptive name (e.g., "Web App Release Pipeline")
-- **Description**: Optional description to explain the pipeline's purpose
 
 **Pipeline Configuration:**
 - Add multiple stages to represent your release process
 - Each stage can represent an environment or phase in your release process
-- Stages are executed in order from first to last
 
 ## Pipeline Stages
 
@@ -62,10 +60,6 @@ Each stage in your pipeline consists of:
 - **Disable flag for everyone**: Disables the feature flag for all users in the environment
 - **Enable flag for segment**: Enables the feature flag for a specific user segment
 - **Disable flag for segment**: Disables the feature flag for a specific user segment
-
-**Feature Value Actions:**
-- **Update feature value**: Changes the remote config value for all users
-- **Update feature value for segment**: Changes the remote config value for a specific segment
 
 ## Publishing a Release Pipeline
 
@@ -113,7 +107,6 @@ Once a flag is added to a pipeline:
 
 - **Active Pipelines**: View all published pipelines and their current status
 - **Flag Progress**: Track which flags are currently in each stage
-- **Execution History**: Review past pipeline executions and their outcomes
 
 ### Removing Flags from Pipelines
 
@@ -122,86 +115,3 @@ If you need to remove a flag from a pipeline:
 2. Select **Remove from Release Pipeline**
 3. Confirm the action
 
-:::info
-
-Removing a flag from a pipeline stops its automated progression but doesn't affect the flag's current state in your environments.
-
-:::
-
-## Best Practices
-
-### Pipeline Design
-
-- **Keep It Simple**: Start with a basic pipeline and add complexity as needed
-- **Environment Alignment**: Align pipeline stages with your actual environments
-- **Consistent Naming**: Use clear, consistent naming conventions for stages
-
-### Timing Considerations
-
-- **Allow Testing Time**: Build in sufficient wait times for testing between stages
-- **Consider Time Zones**: Account for team availability when setting trigger times
-- **Monitor Progress**: Regularly review pipeline execution to ensure it meets your needs
-
-### Risk Management
-
-- **Test Thoroughly**: Ensure your pipeline configuration is tested before publishing
-- **Segment First**: Consider using segments before enabling for all users
-- **Have Rollback Plans**: Maintain the ability to manually override pipeline actions if needed
-
-## Common Use Cases
-
-### Progressive Rollout
-
-Create a pipeline that gradually enables features:
-1. **Development**: Enable for internal testing
-2. **Staging**: Enable for QA team (wait 24 hours)
-3. **Production Beta**: Enable for beta user segment (wait 48 hours)  
-4. **Production**: Enable for all users
-
-### Scheduled Releases
-
-Automate feature releases at specific times:
-1. **Preparation**: Stage the feature (ready state)
-2. **Launch**: Wait until launch time, then enable for all users
-3. **Post-Launch**: Monitor and adjust based on feedback
-
-### A/B Testing Pipeline
-
-Manage A/B test progression:
-1. **Test Setup**: Configure test parameters
-2. **Limited Test**: Enable for small user segment
-3. **Expanded Test**: Wait for statistical significance, then expand
-4. **Winner Selection**: Automatically implement winning variant
-
-## Troubleshooting
-
-### Common Issues
-
-**Pipeline Not Executing**
-- Verify the pipeline is published
-- Check that flags are properly added to the pipeline
-- Review trigger configurations
-
-**Unexpected Behavior**
-- Ensure segment configurations are correct
-- Verify environment permissions
-- Check for conflicting manual flag changes
-
-**Timing Issues**
-- Review wait time configurations
-- Consider timezone differences
-- Check for system delays or outages
-
-### Getting Help
-
-If you encounter issues with release pipelines:
-- Review the audit logs for pipeline execution details
-- Check the pipeline status dashboard
-- Contact support with specific pipeline and flag information
-
-## Limitations
-
-- Maximum of 30 stages per pipeline
-- Once published, pipelines cannot be modified
-- Pipeline execution requires appropriate environment permissions
-- Some actions may have slight delays due to system processing 
