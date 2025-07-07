@@ -102,6 +102,10 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     name="list",
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
 )
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(responses={200: ProjectFeatureSerializer()}),
+)
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
     pagination_class = CustomPagination
