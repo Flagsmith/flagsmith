@@ -67,8 +67,15 @@ class HubspotLeadTracker(LeadTracker):
 
     def create_user_hubspot_contact(self, user: FFAdminUser) -> str | None:
         tracker = HubspotTracker.objects.filter(user=user).first()
-        tracker_cookie = tracker.hubspot_cookie if tracker else None
-        self.client.create_lead_form(user=user, hubspot_cookie=tracker_cookie)
+        create_lead_form_kwargs: dict[str, Any] = {"user": user}
+        if tracker:
+            create_lead_form_kwargs.update(
+                {
+                    "hubspot_cookie": tracker.hubspot_cookie,
+                    "utm_data": tracker.utm_data,
+                }
+            )
+        self.client.create_lead_form(**create_lead_form_kwargs)
 
         # Create lead form creates a contact asynchronously in hubspot but does not return the contact id
         # We need to get the contact id separately and retry 3 times
