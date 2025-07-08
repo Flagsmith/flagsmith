@@ -199,11 +199,19 @@ class Environment(
 
     @hook(BEFORE_CREATE)  # type: ignore[misc]
     def enable_v2_versioning(self) -> None:
+        if self.enable_v2_versioning:
+            # if the environment has already been created with versioning enabled,
+            # we don't want to disable it based on the flag state.
+            return
+
         flagsmith_client = get_client("local", local_eval=True)
         organisation = self.project.organisation
         enable_v2_versioning = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={"organisation_id": organisation.id},
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
         ).is_feature_enabled("enable_feature_versioning_for_new_environments")
         self.use_v2_feature_versioning = enable_v2_versioning
 

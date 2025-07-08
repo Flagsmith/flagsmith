@@ -1,25 +1,16 @@
-import typing
 from unittest.mock import MagicMock
 
 import pytest
 from django.core.cache import BaseCache
-from flag_engine.environments.models import EnvironmentModel
-from flag_engine.features.models import FeatureModel, FeatureStateModel
-from flag_engine.organisations.models import OrganisationModel
-from flag_engine.projects.models import ProjectModel
-from flagsmith import Flagsmith
-from flagsmith.offline_handlers import BaseOfflineHandler
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
 from environments.enums import EnvironmentDocumentCacheMode
 from environments.models import Environment
-from features.feature_types import STANDARD
 from features.models import Feature
 from organisations.models import Organisation, OrganisationRole
 from projects.models import Project
 from projects.tags.models import Tag
-from tests.types import TestFlagData
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -241,52 +232,3 @@ def populate_environment_document_cache(
     persistent_environment_document_cache.get.return_value = (
         map_environment_to_environment_document(environment)
     )
-
-
-@pytest.fixture(autouse=True)
-def set_flagsmith_client_flags(
-    mocker: MockerFixture,
-) -> typing.Callable[[list[TestFlagData]], None]:
-    # TODO:
-    #  - Investigate flagsmith client to remove more unnecessary data (id, name?)
-    #  - When using offline mode, remove requirement on environment key
-
-    class TestOfflineHandler(BaseOfflineHandler):
-        def __init__(self) -> None:
-            _organisation_model = OrganisationModel(id=1, name="flagsmith-organisation")
-            _project_model = ProjectModel(
-                id=1, name="flagsmith-project", organisation=_organisation_model
-            )
-            self.environment = EnvironmentModel(
-                id=1, api_key="test-key", project=_project_model
-            )
-
-        def set_flags(self, flags: list[TestFlagData]) -> None:
-            # TODO: this should do an upsert
-            self.environment.feature_states = [
-                FeatureStateModel(
-                    feature=FeatureModel(
-                        id=i, name=flag_data.feature_name, type=STANDARD
-                    ),
-                    enabled=flag_data.enabled,
-                    feature_state_value=flag_data.value,
-                )
-                for i, flag_data in enumerate(flags)
-            ]
-
-        def get_environment(self) -> EnvironmentModel:
-            return self.environment
-
-    offline_handler = TestOfflineHandler()
-    client = Flagsmith(
-        environment_key="test-key",
-        offline_handler=offline_handler,
-    )
-
-    # TODO: how can we make this mocker.patch more generic?
-    mocker.patch("environments.models.get_client", return_value=client)
-
-    def _setter(flags: list[TestFlagData]) -> None:
-        offline_handler.set_flags(flags)
-
-    return _setter

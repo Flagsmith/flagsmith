@@ -35,11 +35,9 @@ from features.versioning.tasks import enable_v2_versioning
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
-from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
-from tests.types import TestFlagData
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -55,14 +53,14 @@ def test_on_environment_create_makes_feature_states(
     project: Project,
 ) -> None:
     # Given
-    assert feature.feature_states.count() == 1
+    assert feature.feature_states.count() == 0
 
     # When
     Environment.objects.create(name="New Environment", project=project)
 
     # Then
     # A new environment comes with a new feature state.
-    feature.feature_states.count() == 2
+    assert feature.feature_states.count() == 1
 
 
 def test_on_environment_update_feature_states(
@@ -1214,12 +1212,10 @@ def test_environment_metric_query_helpers_match_expected_counts(
 def test_environment_create_with_use_v2_feature_versioning_true(
     project: Project,
     feature: Feature,
-    set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
+    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
 ) -> None:
     # Given
-    set_flagsmith_client_flags(
-        [TestFlagData("enable_feature_versioning_for_new_environments", True)]
-    )
+    enable_v2_versioning_for_new_environments()
 
     # When
     new_environment = Environment.objects.create(
@@ -1237,12 +1233,10 @@ def test_environment_clone_from_versioned_environment_with_use_v2_feature_versio
     project: Project,
     environment_v2_versioning: Environment,
     feature: Feature,
-    set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
+    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
 ) -> None:
     # Given
-    set_flagsmith_client_flags(
-        [TestFlagData("enable_feature_versioning_for_new_projects", True, "2025-02-17")]
-    )
+    enable_v2_versioning_for_new_environments()
 
     # When
     new_environment = environment_v2_versioning.clone(name="new-environment")
@@ -1257,12 +1251,10 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     project: Project,
     environment: Environment,
     feature: Feature,
-    set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
+    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
 ) -> None:
     # Given
-    set_flagsmith_client_flags(
-        [TestFlagData("enable_feature_versioning_for_new_projects", True, "2025-02-17")]
-    )
+    enable_v2_versioning_for_new_environments()
 
     # When
     new_environment = environment.clone(name="new-environment")
