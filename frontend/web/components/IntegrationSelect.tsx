@@ -100,15 +100,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             </div>
           </div>
           <div className='col-md-9 h-100'>
-            {!!Constants.integrationCategoryDescriptions[selectedCategory] && (
-              <div className='mx-4 mb-4'>
-                <span className='fw-semibold'>
-                  {selectedCategory} integrations
-                </span>
-                : {Constants.integrationCategoryDescriptions[selectedCategory]}
-              </div>
-            )}
-            <div className='col-md-6 mx-4 mb-2'>
+            <div className='col-md-6 mx-2 mb-2'>
               <Input
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   setSearch(Utils.safeParseEventValue(e))
@@ -120,7 +112,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
                 search
               />
             </div>
-            <div className='d-flex my-2 mx-4 flex-wrap gap-2'>
+            <div className='d-flex my-2 mx-2 flex-wrap gap-2'>
               {selectedIntegrations.map((label) => (
                 <div
                   key={label}
@@ -139,9 +131,20 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               ))}
             </div>
             <div
-              style={{ height: 'calc(100vh - 400px)' }}
+              style={{ height: 'calc(100vh - 450px)' }}
               className='overflow-scroll overflow-x-hidden d-flex flex-column m-0  pt-0 custom-scroll'
             >
+              {!!Constants.integrationCategoryDescriptions[
+                selectedCategory
+              ] && (
+                <div className='mx-2 mb-2'>
+                  <span className='fw-semibold'>
+                    {selectedCategory} integrations
+                  </span>
+                  :{' '}
+                  {Constants.integrationCategoryDescriptions[selectedCategory]}
+                </div>
+              )}
               <div className='row mx-0 row-cols-3 row-cols-md-4  row-cols-xl-6'>
                 {allIntegrations.map((v, i) => {
                   const isSelected = selectedIntegrations.includes(v.title)

@@ -485,6 +485,7 @@ const Constants = {
     githubPR: 'Github PR',
   },
   integrationCategoryDescriptions: {
+    'All': 'Send data on what flags served to each identity.',
     'Analytics': 'Send data on what flags served to each identity.',
     'Authentication':
       'Use the Flagsmith Dashboard with your authentication provider.',

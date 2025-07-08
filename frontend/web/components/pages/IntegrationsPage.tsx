@@ -27,11 +27,6 @@ export type IntegrationSummary = {
   title: string
 }
 
-export type IntegrationCategoryDescription = {
-  category: (typeof integrationCategories)[number]
-  description: string
-}
-
 const IntegrationsPage: FC = () => {
   const { projectId } = useRouteContext()
   useEffect(() => {
