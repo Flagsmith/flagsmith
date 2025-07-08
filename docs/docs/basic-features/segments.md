@@ -109,24 +109,15 @@ Context values can be used to control your targeting more precisely:
 ### Gradual rollout across tenants
 
 Suppose your application supports users who can belong to multiple organisations. Now imagine you want to roll out a new
-feature to 50% of your total user base — but instead of targeting users randomly, you'd like to gradually release the
-feature based on the organisations they belong to.
+feature to 20% of your organisations, ensuring that users only have access to the feature when they are part of an organisation included in that 20%. If they switch to an organisation outside this group, they will no longer have access to the feature.
 
 Here's how you might define a segment to achieve this:
 
 | Rule Order | Property                  | Operator | Value |
 | ---------- | ------------------------- | -------- | ----- |
-| 1          | Identifier                | % Split  | 50    |
-| 2          | `organisation_name` Trait | % Split  | 20    |
+| 1          | `organisation_name` Trait | % Split  | 20    |
 
-This setup instructs the evaluation engine to:
-
-1. Check whether the user falls within the first 50% of your overall user base.
-2. If they do, check whether the organisation they belong to is within 20% of all organisations.
-
-As you gradually increase the percentage in Rule 2, the number of users with access to the feature grows — but it will
-never exceed 50% of your total user base. If a user switches to an organisation that isn’t included in Rule 2, they’ll
-lose access to the feature.
+This setup, along with a segment override, instructs the evaluation engine to enable the feature if the user's current organisation belongs to consistent 20% of all organisations.
 
 :::info Use transient traits for multi-tenancy
 
