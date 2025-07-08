@@ -652,12 +652,13 @@ def test_organisation_has_billing_periods(
     assert result == expected_result
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
 def test_user_organisation_create_calls_hubspot_lead_tracking(
     mocker: MagicMock, db: None, settings: SettingsWrapper, organisation: Organisation
 ) -> None:
     # Given
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
-    track_hubspot_lead = mocker.patch("organisations.models.track_hubspot_lead_v2")
+    track_hubspot_lead_v2 = mocker.patch("organisations.models.track_hubspot_lead_v2")
 
     user = FFAdminUser.objects.create(
         email="test@example.com", first_name="John", last_name="Doe"
@@ -667,4 +668,7 @@ def test_user_organisation_create_calls_hubspot_lead_tracking(
     user.add_organisation(organisation)
 
     # Then
-    track_hubspot_lead.delay.assert_called_once_with(args=(user.id, organisation.id))
+    track_hubspot_lead_v2.delay.assert_called_once_with(
+        args=(user.id, organisation.id),
+        delay_until=timezone.now() + timedelta(minutes=3),
+    )

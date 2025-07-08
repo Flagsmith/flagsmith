@@ -1,5 +1,6 @@
 from typing import Type
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from django.test import RequestFactory
@@ -7,6 +8,9 @@ from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 from rest_framework.authtoken.models import Token
+from rest_framework.parsers import JSONParser
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory
 
 from custom_auth.oauth.serializers import (
     GithubLoginSerializer,
@@ -14,19 +18,29 @@ from custom_auth.oauth.serializers import (
     OAuthLoginSerializer,
 )
 from organisations.invites.models import InviteLink
-from users.models import FFAdminUser, SignUpType
+from users.models import FFAdminUser, HubspotTracker, SignUpType
 
 
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 def test_create_oauth_login_serializer(
-    mock_get_user_info: mock.MagicMock, db: None
+    mock_get_user_info: mock.MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    mocker: MagicMock,
 ) -> None:
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
     # Given
     access_token = "access-token"
     sign_up_type = "NO_INVITE"
-    data = {"access_token": access_token, "sign_up_type": sign_up_type}
-    rf = RequestFactory()
-    request = rf.post("/api/v1/auth/oauth/google/")
+    data = {
+        "access_token": access_token,
+        "sign_up_type": sign_up_type,
+        "hubspotutk": "test-hubspot-utk",
+        "utm_data": {"utm_source": "test-utm-data"},
+    }
+    rf = APIRequestFactory()
+    django_request = rf.post("/api/v1/auth/oauth/google/", data=data, format="json")
+    request = Request(django_request, parsers=[JSONParser()])
     email = "testytester@example.com"
     first_name = "testy"
     last_name = "tester"
@@ -39,7 +53,9 @@ def test_create_oauth_login_serializer(
         "google_user_id": google_user_id,
     }
     serializer = OAuthLoginSerializer(data=data, context={"request": request})  # type: ignore[abstract]
-
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
     # monkey patch the get_user_info method to return the mock user data
     serializer.get_user_info = lambda: mock_user_data  # type: ignore[method-assign]
 
@@ -48,7 +64,15 @@ def test_create_oauth_login_serializer(
     response = serializer.save()
 
     # Then
-    assert FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).exists()
+    user = FFAdminUser.objects.filter(email=email, sign_up_type=sign_up_type).first()
+    assert user is not None
+    hubspot_tracker = HubspotTracker.objects.filter(
+        user=user,
+    ).first()
+    assert hubspot_tracker is not None
+    assert hubspot_tracker.utm_data == {"utm_source": "test-utm-data"}
+    assert hubspot_tracker.hubspot_cookie == "test-hubspot-utk"
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
     assert isinstance(response, Token)
     assert (timezone.now() - response.user.last_login).seconds < 5
     assert response.user.email == email
@@ -103,8 +127,10 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
 ):
     # Given
     settings.AUTH_CONTROLLER_INSTALLED = True
-
-    request = rf.post("/some-login/url")
+    data = {"access_token": "some_token"}
+    rf = APIRequestFactory()
+    django_request = rf.post("/some-login/url", data=data, format="json")
+    request = Request(django_request, parsers=[JSONParser()])
     user_email = "test_user@test.com"
     mocked_auth_controller = mocker.MagicMock()
     mocker.patch.dict(
@@ -112,7 +138,7 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
     )
 
     serializer = OAuthLoginSerializer(  # type: ignore[abstract]
-        data={"access_token": "some_token"}, context={"request": request}
+        data=data, context={"request": request}
     )
     # monkey patch the get_user_info method to return the mock user data
     serializer.get_user_info = lambda: {"email": user_email}  # type: ignore[method-assign]
@@ -139,16 +165,18 @@ def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link
 ):
     # Given
     settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
-
-    request = rf.post("/api/v1/auth/users/")
+    rf = APIRequestFactory()
+    data = {
+        "access_token": "some_token",
+        "sign_up_type": SignUpType.INVITE_LINK.value,
+        "invite_hash": invite_link.hash,
+    }
+    django_request = rf.post("/api/v1/auth/oauth/google/", data=data, format="json")
+    request = Request(django_request, parsers=[JSONParser()])
     user_email = "test_user@test.com"
 
     serializer = OAuthLoginSerializer(  # type: ignore[abstract]
-        data={
-            "access_token": "some_token",
-            "sign_up_type": SignUpType.INVITE_LINK.value,
-            "invite_hash": invite_link.hash,
-        },
+        data=data,
         context={"request": request},
     )
     # monkey patch the get_user_info method to return the mock user data

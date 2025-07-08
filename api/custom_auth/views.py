@@ -30,10 +30,7 @@ from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
 from integrations.lead_tracking.hubspot.services import (
-    register_hubspot_tracker,
-)
-from integrations.lead_tracking.hubspot.tasks import (
-    create_hubspot_contact_for_user,
+    register_hubspot_tracker_and_track_user,
 )
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser
@@ -131,10 +128,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
-        register_hubspot_tracker(request, user=self.user)
-
-        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            create_hubspot_contact_for_user.delay(args=(self.user.id,))
+        register_hubspot_tracker_and_track_user(request, user=self.user)
 
         if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)

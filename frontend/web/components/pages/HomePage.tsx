@@ -88,8 +88,8 @@ const HomePage: React.FC = () => {
     if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
       addAlbacross()
     }
-
     if (document.location.href.includes('oauth')) {
+      const oAuthUtms = Utils.getUtmsFromUrl(document.location.href)
       const parts = document.location.href.split('oauth/')
       const oauthParams = parts[1]
       if (oauthParams && oauthParams.includes('google')) {
@@ -97,12 +97,14 @@ const HomePage: React.FC = () => {
         AppActions.oauthLogin('google', {
           access_token,
           marketing_consent_given: marketingConsentGiven,
+          ...(oAuthUtms && { utm_data: oAuthUtms }),
         })
       } else if (oauthParams && oauthParams.includes('github')) {
         const access_token = params.code
         AppActions.oauthLogin('github', {
           access_token,
           marketing_consent_given: marketingConsentGiven,
+          ...(oAuthUtms && { utm_data: oAuthUtms }),
         })
       }
     }
@@ -220,7 +222,26 @@ const HomePage: React.FC = () => {
             <GoogleButton
               className='w-100'
               onSuccess={(e) => {
-                document.location.href = `${document.location.origin}/oauth/google?code=${e.access_token}`
+                console.log(
+                  `${document.location.origin}/oauth/google?code=${
+                    e.access_token
+                  }&${
+                    utms
+                      ? `${Object.keys(utms)
+                          .map((key) => `${key}=${utms[key]}`)
+                          .join('&')}`
+                      : ''
+                  }`,
+                )
+                document.location.href = `${
+                  document.location.origin
+                }/oauth/google?code=${e.access_token}&${
+                  utms
+                    ? `${Object.keys(utms)
+                        .map((key) => `${key}=${utms[key]}`)
+                        .join('&')}`
+                    : ''
+                }`
               }}
             />
           </GoogleOAuthProvider>

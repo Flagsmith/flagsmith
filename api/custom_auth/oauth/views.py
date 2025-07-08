@@ -16,6 +16,9 @@ from custom_auth.oauth.serializers import (
     GoogleLoginSerializer,
 )
 from custom_auth.serializers import CustomTokenSerializer
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker_and_track_user,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +30,7 @@ GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 @swagger_auto_schema(
     method="post",
     request_body=GoogleLoginSerializer,
-    responses={200: CustomTokenSerializer(), 502: ErrorSerializer()},
+    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -52,7 +55,7 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
 @swagger_auto_schema(
     method="post",
     request_body=GithubLoginSerializer,
-    responses={200: CustomTokenSerializer(), 502: ErrorSerializer()},
+    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -63,6 +66,7 @@ def login_with_github(request):  # type: ignore[no-untyped-def]
         )
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
+        register_hubspot_tracker_and_track_user(request, token.user)
         if settings.COOKIE_AUTH_ENABLED:
             return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
         return Response(data=CustomTokenSerializer(instance=token).data)

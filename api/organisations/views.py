@@ -22,9 +22,6 @@ from app_analytics.influxdb_wrapper import (
     get_multiple_event_list_for_organisation,
 )
 from core.helpers import get_current_site_url
-from integrations.lead_tracking.hubspot.services import (
-    register_hubspot_tracker,
-)
 from organisations.chargebee import webhook_event_types, webhook_handlers
 from organisations.exceptions import OrganisationHasNoPaidSubscription
 from organisations.models import (
@@ -114,8 +111,8 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         Override create method to add new organisation to authenticated user
         """
 
-        register_hubspot_tracker(request)
         user = request.user
+        # register_hubspot_tracker_and_track_user(request, user)
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
             org = serializer.save()

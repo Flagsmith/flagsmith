@@ -171,7 +171,7 @@ def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
     }
 
     mock_create_hubspot_contact_for_user = mocker.patch(
-        "custom_auth.views.create_hubspot_contact_for_user"
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
     )
 
     url = reverse("api-v1:custom_auth:ffadminuser-list")
