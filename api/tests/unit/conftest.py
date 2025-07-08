@@ -283,6 +283,7 @@ def set_flagsmith_client_flags(
         offline_handler=offline_handler,
     )
 
+    # TODO: how can we make this mocker.patch more generic?
     mocker.patch("environments.models.get_client", return_value=client)
 
     def _setter(flags: list[TestFlagData]) -> None:
