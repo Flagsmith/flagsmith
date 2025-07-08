@@ -1,12 +1,13 @@
 # Release Pipelines
 
-Release Pipelines allow you to define a series of stages that your feature flags progress through automatically, from development to production. Each stage can have specific triggers and actions that control when and how flags are released.
+:::warning
 
-:::info
-
-Release Pipelines are available on [Enterprise plans](/version-comparison.md#enterprise-benefits).
+Release Pipelines is currenlty in alpha phase and is not available to the public.
 
 :::
+
+
+Release Pipelines allow you to define a series of stages that your feature flags progress through automatically, from development to production. Each stage can have specific triggers and actions that control when and how flags are released.
 
 ## Key Benefits
 
