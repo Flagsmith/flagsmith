@@ -243,14 +243,8 @@ def populate_environment_document_cache(
     )
 
 
-@pytest.fixture()
-def reset_global_flagsmith_clients(mocker: MockerFixture) -> None:
-    mocker.patch("integrations.flagsmith.client._flagsmith_clients", dict())
-
-
 @pytest.fixture(autouse=True)
 def set_flagsmith_client_flags(
-    reset_global_flagsmith_clients: None,
     mocker: MockerFixture,
 ) -> typing.Callable[[list[TestFlagData]], None]:
     # TODO:
