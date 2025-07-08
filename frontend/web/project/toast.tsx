@@ -64,8 +64,9 @@ const Message: FC<MessageProps> = ({
   expiry = 5000,
   isRemoving = false,
   remove,
-  theme = 'success',
+  theme: _theme,
 }) => {
+  const theme = _theme || 'success'
   useEffect(() => {
     const timeout = setTimeout(remove, expiry)
     return () => clearTimeout(timeout)
