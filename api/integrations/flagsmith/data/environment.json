@@ -54,16 +54,16 @@
       "multivariate_feature_state_values": []
     },
     {
-      "django_id": 691557,
+      "django_id": 905678,
       "enabled": false,
       "feature": {
-        "id": 125135,
-        "name": "enable_feature_versioning_for_new_projects",
+        "id": 148935,
+        "name": "enable_feature_versioning_for_new_environments",
         "type": "STANDARD"
       },
       "feature_segment": null,
       "feature_state_value": null,
-      "featurestate_uuid": "616f859f-1901-4099-b082-ffe5364798a2",
+      "featurestate_uuid": "f632c3f8-6f49-45c5-9977-762d9880e7f7",
       "multivariate_feature_state_values": []
     }
   ],
