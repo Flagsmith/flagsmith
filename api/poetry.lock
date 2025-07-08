@@ -1890,18 +1890,18 @@ typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 
 [[package]]
 name = "flagsmith"
-version = "3.9.1"
+version = "3.9.2"
 description = "Flagsmith Python SDK"
 optional = false
 python-versions = "<4,>=3.8.1"
 groups = ["main"]
 files = [
-    {file = "flagsmith-3.9.1-py3-none-any.whl", hash = "sha256:e452150933686d2b7ae5757cf7a3c93c6321c06c0d074449e42b3c69fb38d091"},
-    {file = "flagsmith-3.9.1.tar.gz", hash = "sha256:6e7b0137a0fc6c01be3eeb4d8817b7a8042bb0300b9687fb740e234860b59fb5"},
+    {file = "flagsmith-3.9.2-py3-none-any.whl", hash = "sha256:391b26f0f3f633b3c6f977ce79c575636afae75f0d006b4f72da9ca33d83c751"},
+    {file = "flagsmith-3.9.2.tar.gz", hash = "sha256:b4705a75edfd41569af7af2867f3a8fc43851bf52a1870443b87d439cf6b9e72"},
 ]
 
 [package.dependencies]
-flagsmith-flag-engine = ">=5.1.0,<6.0.0"
+flagsmith-flag-engine = ">=5.3.1,<6.0.0"
 pydantic = ">=2,<3"
 requests = ">=2.32.3,<3.0.0"
 requests-futures = ">=1.0.1,<2.0.0"
@@ -1961,13 +1961,13 @@ test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "5.3.0"
+version = "5.3.1"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 groups = ["main", "dev", "split-testing", "workflows"]
 files = [
-    {file = "flagsmith-flag-engine-5.3.0.tar.gz", hash = "sha256:87007f6a312cf11b2c201acd54b30f17de8aa039c3c56af431f1ed3c743fa84c"},
+    {file = "flagsmith-flag-engine-5.3.1.tar.gz", hash = "sha256:6f04cd3f8dc8ffed0454d43dc980ac521d52637e8f107eed3dadcfb5a6ee233f"},
 ]
 
 [package.dependencies]
