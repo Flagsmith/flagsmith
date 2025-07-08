@@ -341,7 +341,7 @@ const HomePage: React.FC = () => {
                     {!isSignup ? (
                       <>
                         <Card
-                          className='mb-3'
+                          className='mb-3 bg-white p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
@@ -483,7 +483,7 @@ const HomePage: React.FC = () => {
                     ) : (
                       <>
                         <Card
-                          className='mb-3'
+                          className='mb-3 bg-white p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
