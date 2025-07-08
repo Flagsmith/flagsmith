@@ -34,7 +34,7 @@ const TableOwnerFilter: FC<TableFilterType> = ({
         <Row>
           Users{' '}
           {!!value?.length && (
-            <span className='mx-1 unread d-inline'>{value.length}</span>
+            <span className='mx-1 unread d-inline-block'>{value.length}</span>
           )}
         </Row>
       }

@@ -71,7 +71,9 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 <div>
                   Scheduling
                   {scheduled ? (
-                    <span className='ml-1 unread d-inline'>{scheduled}</span>
+                    <span className='ml-1 unread d-inline-block'>
+                      {scheduled}
+                    </span>
                   ) : null}
                 </div>
               </EnvironmentLink>
@@ -83,7 +85,7 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
                 <div>
                   Change Requests{' '}
                   {changeRequests ? (
-                    <span className='ms-1 unread d-inline'>
+                    <span className='ms-1 unread d-inline-block'>
                       {changeRequests}
                     </span>
                   ) : null}

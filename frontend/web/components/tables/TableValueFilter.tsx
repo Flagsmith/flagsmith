@@ -53,7 +53,7 @@ const TableTagFilter: FC<TableFilterType> = ({
           <Row>
             Value{' '}
             {(value.enabled !== null || !!value.valueSearch) && (
-              <span className='mx-1 unread d-inline'>{1}</span>
+              <span className='mx-1 unread d-inline-block'>{1}</span>
             )}
           </Row>
         }
