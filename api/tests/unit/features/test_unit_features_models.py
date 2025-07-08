@@ -417,7 +417,8 @@ def test_feature_state_gt_operator_throws_value_error_if_different_environments(
 
 
 def test_feature_state_gt_operator_throws_value_error_if_different_features(
-    project: Project, feature: Feature, environment: Environment
+    project: Project,
+    feature: Feature,
 ) -> None:
     # Given
     another_feature = Feature.objects.create(name="Another feature", project=project)
