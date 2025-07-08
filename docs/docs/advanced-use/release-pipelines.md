@@ -64,19 +64,14 @@ Each stage in your pipeline consists of:
 
 ## Publishing a Release Pipeline
 
-### Before Publishing
-
-Before a release pipeline can be used, it must be published. Once published:
-- The pipeline becomes active and can process feature flags
-- The pipeline configuration becomes immutable
-- You cannot modify stages, triggers, or actions
+### Draft Status
+Before it is published, a release pipeline is in draft mode. In this state:
+The pipeline is inactive and does not process feature flags
+- The configuration remains editable
+- You can modify stages, triggers, and actions freely
+- Once published, the pipeline becomes immutable and operational.
 
 ### Publishing Process
-
-1. Complete your pipeline configuration
-2. Review all stages, triggers, and actions
-3. Click **Publish Pipeline**
-4. Confirm the action when prompted
 
 :::warning
 
@@ -84,15 +79,25 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 
 :::
 
+1. Complete your pipeline configuration
+2. Review all stages, triggers, and actions
+3. Click **Publish Pipeline**
+4. Confirm the action when prompted
+
+![Publish Release Pipeline](/img/publish-release-pipeline.png)
+
+
 ## Adding Flags to Release Pipelines
 
-### From Feature Management
+### From the Dashboard
 
 1. Navigate to your feature flags
 2. Select the flag you want to add to a pipeline
 3. Click the **Add to Release Pipeline** option
-4. Select the pipeline and starting stage
+4. Select the pipeline
 5. Confirm the selection
+
+![Add To Release Pipeline](/img/add-to-release-pipeline.png)
 
 ### Pipeline Execution
 
@@ -115,4 +120,36 @@ If you need to remove a flag from a pipeline:
 1. Navigate to the flag or pipeline view
 2. Select **Remove from Release Pipeline**
 3. Confirm the action
+
+## Audit Log Events
+
+Release Pipelines generate audit log events to track pipeline-related activities.
+
+### Events
+
+**Pipeline Creation**
+- Event: `RELEASE_PIPELINE_CREATED_MESSAGE`
+- Triggered when a new release pipeline is created
+
+**Pipeline Publication**
+- Event: `RELEASE_PIPELINE_PUBLISHED_MESSAGE`
+- Triggered when a pipeline is published and becomes active
+
+**Pipeline Deletion**
+- Event: `RELEASE_PIPELINE_DELETED_MESSAGE`
+- Triggered when a pipeline is permanently deleted
+
+**Feature Addition to Pipeline**
+- Event: `RELEASE_PIPELINE_FEATURE_ADDED_MESSAGE`
+- Triggered when a feature flag is added to a release pipeline
+
+**Feature State Updates**
+- Event: `FEATURE_STATE_UPDATED_BY_RELEASE_PIPELINE_MESSAGE`
+- Triggered when a pipeline automatically updates a feature flag's state during stage execution
+
+### Viewing Audit Logs
+
+You can view these audit events in your project's audit log:
+1. Navigate to your project
+2. Go to the **Audit Log** tab
 
