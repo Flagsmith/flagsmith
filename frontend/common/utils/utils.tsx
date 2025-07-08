@@ -28,6 +28,7 @@ import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TimeUnit } from 'components/release-pipelines/constants'
+import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
 
@@ -309,6 +310,54 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -317,7 +366,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -336,6 +384,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+
   getNextPlan: (skipFree?: boolean) => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -353,7 +402,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
-
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -361,11 +409,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
-
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -423,6 +471,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -538,58 +587,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return str
   },
-
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
-    if (!waitFor) {
-      return
-    }
 
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
-  },
-  
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {
     if (entityPermissions?.admin) return true
     return !!entityPermissions?.permissions?.find(
@@ -685,11 +686,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     if (window.$crisp) {
       $crisp.push(['set', 'user:email', user.email])
-      $crisp.push([
-        'set',
-        'user:nickname',
-        `${user.first_name} ${user.last_name}`,
-      ])
+      $crisp.push(['set', 'user:nickname', `${getUserDisplayName(user)}`])
       if (otherOrgs.length) {
         $crisp.push([
           'set',
