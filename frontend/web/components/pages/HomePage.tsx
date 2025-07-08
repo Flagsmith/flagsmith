@@ -222,17 +222,6 @@ const HomePage: React.FC = () => {
             <GoogleButton
               className='w-100'
               onSuccess={(e) => {
-                console.log(
-                  `${document.location.origin}/oauth/google?code=${
-                    e.access_token
-                  }&${
-                    utms
-                      ? `${Object.keys(utms)
-                          .map((key) => `${key}=${utms[key]}`)
-                          .join('&')}`
-                      : ''
-                  }`,
-                )
                 document.location.href = `${
                   document.location.origin
                 }/oauth/google?code=${e.access_token}&${
