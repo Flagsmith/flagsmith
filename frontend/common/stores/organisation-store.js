@@ -3,7 +3,6 @@ import { projectService } from 'common/services/useProject'
 import { getStore } from 'common/store'
 import sortBy from 'lodash/sortBy'
 import { getSubscriptionMetadata } from 'common/services/useSubscriptionMetadata'
-import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -166,7 +165,9 @@ const controller = {
               if (isYou) {
                 return ``
               }
-              return `${getUserDisplayName(user)}`.toLowerCase()
+              return `${user.first_name || ''} ${
+                user.last_name || ''
+              }`.toLowerCase()
             }),
           }
 
