@@ -2,9 +2,10 @@
 import React, { FC, ReactNode } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import classNames from 'classnames'
+import Icon, { IconName } from 'components/Icon'
 
 type SidebarLinkType = Partial<NavLinkProps> & {
-  icon?: ReactNode
+  icon?: IconName
   children?: ReactNode
   to?: string
   active?: boolean
@@ -19,29 +20,24 @@ const SidebarLink: FC<SidebarLinkType> = ({
   ...rest
 }) => {
   const Tag = (to ? NavLink : 'div') as any
-  const activeClassName =
-    'fw-semibold text-primary bg-primary-opacity-5 fill-primary'
+  const activeClassName = 'text-primary bg-primary-opacity-5 fill-primary'
   const inactiveClassName = 'text-body fill-body'
   return (
     <Tag
+      {...rest}
       to={to}
       activeClassName={activeClassName}
       inactiveClassName={activeClassName}
       className={classNames(
         rest.className,
-        'd-flex cursor-pointer align-items-center p-2 rounded',
+        'd-flex hover-fill-primary hover-bg-primary gap-2 cursor-pointer align-items-center p-2 rounded',
         {
           [activeClassName]: active,
           [inactiveClassName]: !to && !active,
         },
       )}
-      {...rest}
     >
-      {!!icon && (
-        <span className='mr-2 d-flex h-100 justify-content-center align-items-center'>
-          {icon}
-        </span>
-      )}
+      {!!icon && <Icon width={18} name={icon} fill={'#767D85'} />}
       {children}
     </Tag>
   )

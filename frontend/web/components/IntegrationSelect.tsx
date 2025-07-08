@@ -14,7 +14,7 @@ import ModalDefault from './modals/base/ModalDefault'
 import { IonIcon } from '@ionic/react'
 import { close } from 'ionicons/icons'
 import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
-import SidebarLink from './SidebarLink'
+import SidebarLink from './navigation/SidebarLink'
 import Constants from 'common/constants'
 
 type IntegrationSelectType = {
