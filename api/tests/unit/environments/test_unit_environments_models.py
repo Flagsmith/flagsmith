@@ -52,7 +52,7 @@ def test_on_environment_create_makes_feature_states(
     project: Project,
 ) -> None:
     # Given
-    assert feature.feature_states.count() == 0
+    assert not feature.feature_states.exists()
 
     # When
     Environment.objects.create(name="New Environment", project=project)
