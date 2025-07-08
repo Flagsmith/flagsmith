@@ -205,7 +205,7 @@ class Environment(
             organisation.flagsmith_identifier,
             traits={"organisation_id": organisation.id},
         ).is_feature_enabled("enable_feature_versioning_for_new_environments")
-        self.enable_v2_versioning = enable_v2_versioning
+        self.use_v2_feature_versioning = enable_v2_versioning
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)

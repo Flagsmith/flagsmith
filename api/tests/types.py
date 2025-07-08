@@ -22,5 +22,5 @@ AdminClientAuthType = Literal["user", "master_api_key"]
 
 class TestFlagData(typing.NamedTuple):
     feature_name: str
-    enabled: bool
-    value: typing.Any
+    enabled: bool = False
+    value: typing.Any = None

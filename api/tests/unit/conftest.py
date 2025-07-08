@@ -7,6 +7,7 @@ from flag_engine.environments.models import EnvironmentModel
 from flag_engine.features.models import FeatureModel, FeatureStateModel
 from flag_engine.organisations.models import OrganisationModel
 from flag_engine.projects.models import ProjectModel
+from flagsmith import Flagsmith
 from flagsmith.offline_handlers import BaseOfflineHandler
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
@@ -243,9 +244,19 @@ def populate_environment_document_cache(
 
 
 @pytest.fixture()
+def reset_global_flagsmith_clients(mocker: MockerFixture) -> None:
+    mocker.patch("integrations.flagsmith.client._flagsmith_clients", dict())
+
+
+@pytest.fixture(autouse=True)
 def set_flagsmith_client_flags(
+    reset_global_flagsmith_clients: None,
     mocker: MockerFixture,
 ) -> typing.Callable[[list[TestFlagData]], None]:
+    # TODO:
+    #  - Investigate flagsmith client to remove more unnecessary data (id, name?)
+    #  - When using offline mode, remove requirement on environment key
+
     class TestOfflineHandler(BaseOfflineHandler):
         def __init__(self) -> None:
             _organisation_model = OrganisationModel(id=1, name="flagsmith-organisation")
@@ -257,6 +268,7 @@ def set_flagsmith_client_flags(
             )
 
         def set_flags(self, flags: list[TestFlagData]) -> None:
+            # TODO: this should do an upsert
             self.environment.feature_states = [
                 FeatureStateModel(
                     feature=FeatureModel(
@@ -272,9 +284,12 @@ def set_flagsmith_client_flags(
             return self.environment
 
     offline_handler = TestOfflineHandler()
-    mocker.patch(
-        "integrations.flagsmith.client.LocalFileHandler", return_value=offline_handler
+    client = Flagsmith(
+        environment_key="test-key",
+        offline_handler=offline_handler,
     )
+
+    mocker.patch("environments.models.get_client", return_value=client)
 
     def _setter(flags: list[TestFlagData]) -> None:
         offline_handler.set_flags(flags)

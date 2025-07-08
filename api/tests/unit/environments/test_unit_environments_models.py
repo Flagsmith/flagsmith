@@ -1213,13 +1213,12 @@ def test_environment_metric_query_helpers_match_expected_counts(
 
 def test_environment_create_with_use_v2_feature_versioning_true(
     project: Project,
-    environment_v2_versioning: Environment,
     feature: Feature,
     set_flagsmith_client_flags: typing.Callable[[list[TestFlagData]], None],
 ) -> None:
     # Given
     set_flagsmith_client_flags(
-        [TestFlagData("enable_feature_versioning_for_new_projects", True, "2025-02-17")]
+        [TestFlagData("enable_feature_versioning_for_new_environments", True)]
     )
 
     # When
