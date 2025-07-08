@@ -9,7 +9,7 @@ class GithubData:
     feature_id: int
     feature_name: str
     type: str
-    feature_states: list[dict[str, Any]] | None = None
+    feature_states: list[dict[str, Any]] = field(default_factory=list)
     url: str | None = None
     project_id: int | None = None
     segment_name: str | None = None

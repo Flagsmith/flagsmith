@@ -568,7 +568,7 @@ def api_client() -> APIClient:
 
 
 @pytest.fixture()
-def feature(project: Project, environment: Environment) -> Feature:
+def feature(project: Project) -> Feature:
     return Feature.objects.create(name="Test Feature1", project=project)  # type: ignore[no-any-return]
 
 
