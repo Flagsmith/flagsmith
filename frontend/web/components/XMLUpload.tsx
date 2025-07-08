@@ -14,7 +14,7 @@ const XMLUpload: FC<DropAreaType> = ({ onChange, value }) => {
         try {
           onChange(acceptedFiles[0], reader.result as string)
         } catch (e) {
-          toast('File is not valid XML')
+          toast('File is not valid XML', 'danger')
         }
       },
       false,
