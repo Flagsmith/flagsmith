@@ -35,6 +35,7 @@ from features.versioning.tasks import enable_v2_versioning
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
@@ -43,8 +44,6 @@ from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
     from django.db.models import Model
-
-    from features.workflows.core.models import ChangeRequest
 
 
 def test_on_environment_create_makes_feature_states(

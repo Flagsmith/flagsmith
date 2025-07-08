@@ -125,7 +125,7 @@ def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> Non
 def generate_body_comment(
     name: str,
     event_type: str,
-    project_id: int,
+    project_id: int | None,
     feature_id: int,
     feature_states: list[dict[str, typing.Any]],
     segment_name: str | None = None,
