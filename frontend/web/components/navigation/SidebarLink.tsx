@@ -1,4 +1,3 @@
-//todo: replace with NavSubLink when mobile nav PR is merged
 import React, { FC, ReactNode } from 'react'
 import { NavLink, NavLinkProps } from 'react-router-dom'
 import classNames from 'classnames'
