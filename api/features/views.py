@@ -102,10 +102,6 @@ def get_feature_by_uuid(request, uuid):  # type: ignore[no-untyped-def]
     name="list",
     decorator=swagger_auto_schema(query_serializer=FeatureQuerySerializer()),
 )
-@method_decorator(
-    name="retrieve",
-    decorator=swagger_auto_schema(responses={200: ProjectFeatureSerializer()}),
-)
 class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     permission_classes = [FeaturePermissions]
     pagination_class = CustomPagination
@@ -113,6 +109,7 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_serializer_class(self):  # type: ignore[no-untyped-def]
         return {
             "list": ListFeatureSerializer,
+            "retrieve": ListFeatureSerializer,
             "create": ListFeatureSerializer,
             "update": UpdateFeatureSerializer,
             "partial_update": UpdateFeatureSerializer,
@@ -208,6 +205,8 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         instance.delete()
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
+        if getattr(self, "swagger_fake_view", False):
+            return None
         context = super().get_serializer_context()
         feature_states = getattr(self, "_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
@@ -507,8 +506,6 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
         Override queryset to filter based on provided URL parameters.
         """
-        if getattr(self, "swagger_fake_view", False):
-            return FeatureState.objects.none()
 
         environment_api_key = self.kwargs["environment_api_key"]
 
