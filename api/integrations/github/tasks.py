@@ -21,18 +21,16 @@ def send_post_request(data: CallGithubData) -> None:
     feature_id = data.github_data.feature_id
     project_id = data.github_data.project_id
     event_type = data.event_type
-    feature_states = (
-        data.github_data.feature_states if data.github_data.feature_states else None
-    )
+    feature_states = data.github_data.feature_states or []
     installation_id = data.github_data.installation_id
-    segment_name: str | None = data.github_data.segment_name
+    segment_name = data.github_data.segment_name
     body = generate_body_comment(
-        feature_name,
-        event_type,
-        project_id,  # type: ignore[arg-type]
-        feature_id,
-        feature_states,  # type: ignore[arg-type]
-        segment_name,
+        name=feature_name,
+        event_type=event_type,
+        project_id=project_id,
+        feature_id=feature_id,
+        feature_states=feature_states,
+        segment_name=segment_name,
     )
 
     if (

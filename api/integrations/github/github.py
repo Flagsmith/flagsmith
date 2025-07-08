@@ -125,9 +125,9 @@ def handle_github_webhook_event(event_type: str, payload: dict[str, Any]) -> Non
 def generate_body_comment(
     name: str,
     event_type: str,
-    project_id: int,
     feature_id: int,
     feature_states: list[dict[str, typing.Any]],
+    project_id: int | None = None,
     segment_name: str | None = None,
 ) -> str:
     is_removed = event_type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
@@ -197,8 +197,9 @@ def generate_data(
     url: str | None = None,
     segment_name: str | None = None,
 ) -> GithubData:
+    feature_states_list = []
+
     if feature_states:
-        feature_states_list = []
         for feature_state in feature_states:
             feature_state_value = feature_state.get_feature_state_value()
             feature_env_data = {}
@@ -234,7 +235,7 @@ def generate_data(
             if type == GitHubEventType.FEATURE_EXTERNAL_RESOURCE_REMOVED.value
             else None
         ),
-        feature_states=feature_states_list if feature_states else None,
+        feature_states=feature_states_list,
         project_id=feature.project_id,
         segment_name=segment_name,
     )
