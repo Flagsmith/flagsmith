@@ -1,4 +1,4 @@
-from typing import Any, Callable, Literal, NamedTuple, Protocol
+from typing import Callable, Literal, Protocol
 
 from environments.permissions.models import UserEnvironmentPermission
 from organisations.permissions.models import UserOrganisationPermission
@@ -30,9 +30,3 @@ class GetIdentityFlagsResponseJSONCallable(Protocol):
         identity_identifier: str = "test-identity",
         **traits,
     ) -> dict: ...  # type: ignore[type-arg]
-
-
-class TestFlagData(NamedTuple):
-    feature_name: str
-    enabled: bool = False
-    value: Any = None
