@@ -8,7 +8,7 @@ slug: /clients/ios
 import CodeBlock from '@theme/CodeBlock';
 import { CocoapodsVersion, SwiftPMVersion } from '@site/src/components/SdkVersions.js';
 
-This library can be used with iOS and Mac applications. The source code for the client is available on
+This library can be used with iOS and macOS applications. The source code for the client is available on
 [GitHub](https://github.com/flagsmith/flagsmith-ios-client).
 
 ## Installation
@@ -54,7 +54,7 @@ The SDK is initialised against a single environment within a project on [https:/
 for example the Development or Production environment. You can find your Client-side Environment Key in the Environment
 settings page.
 
-### Initialization
+### Initialisation
 
 Within your application delegate (usually _AppDelegate.swift_) add:
 
@@ -304,16 +304,15 @@ If more customisation is required, you can override the cache implemention with 
 Flagsmith.shared.cacheConfig.cache = <CUSTOM_CACHE_IMPLEMENTATION>
 ```
 
-### Real Time Updates
+### Real-time updates
 
-By default real-time updates are disabled. When enabled the SDK will listen for changes to flags and update the cache as
-needed. If you want to enable real-time updates you can do so by setting the following flag:
+[Real-time flag updates](/advanced-use/real-time-flags) are disabled by default. To enable them, set the following flag:
 
 ```swift
-Flagsmith.shared.enableRealTimeUpdates = false
+Flagsmith.shared.enableRealtimeUpdates = true
 ```
 
-It's possible to listen to updates in real time from the SDK using the `flagStream` property.
+Then, the `flagStream` property will emit new flags as updates are received:
 
 ```swift
 func subscribeToFlagUpdates() {
@@ -332,16 +331,14 @@ you replace your Environment Key in the `AppDelegate.swift` file.
 
 ## Override default configuration
 
-By default, the client uses a default configuration. You can override the configuration as follows:
-
-Override just the default API URI with your own:
+By default, the client connects to the public Flagsmith SaaS. You can override the configuration as follows:
 
 ```swift
 func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
     Flagsmith.shared.apiKey = "<YOUR_API_KEY>"
-    Flagsmith.shared.baseURL = "https://flagsmith.example.com/api/v1/"
-    Flagsmith.eventSourceBaseURL = "https://realtime.flagsmith.example.com/"
+    Flagsmith.shared.baseURL = URL(string: "https://flagsmith.example.com/api/v1/")!
+    Flagsmith.shared.eventSourceBaseURL = URL(string: "https://realtime.flagsmith.example.com/")!
     // The rest of your launch method code
 }
 ```
