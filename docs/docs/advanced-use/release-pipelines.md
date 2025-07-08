@@ -39,7 +39,7 @@ Release Pipelines allow you to define a series of stages that your feature flags
 
 Each stage in your pipeline consists of:
 
-1. **Stage Name**: A descriptive name for the stage (e.g., "Development", "Staging", "Production")
+1. **Stage Name**: A descriptive name for the stage (e.g., "Development", "Staging", "Production", "Turn on beta users")
 2. **Trigger**: When the stage should be activated
 3. **Actions**: What should happen when the stage is triggered
 
