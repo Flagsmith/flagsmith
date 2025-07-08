@@ -45,8 +45,6 @@ from util.mappers import map_environment_to_environment_document
 if typing.TYPE_CHECKING:
     from django.db.models import Model
 
-    from features.workflows.core.models import ChangeRequest
-
 
 def test_on_environment_create_makes_feature_states(
     organisation: Organisation,
@@ -54,14 +52,14 @@ def test_on_environment_create_makes_feature_states(
     project: Project,
 ) -> None:
     # Given
-    assert feature.feature_states.count() == 1
+    assert feature.feature_states.count() == 0
 
     # When
     Environment.objects.create(name="New Environment", project=project)
 
     # Then
     # A new environment comes with a new feature state.
-    feature.feature_states.count() == 2
+    assert feature.feature_states.count() == 1
 
 
 def test_on_environment_update_feature_states(
