@@ -226,6 +226,110 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'Create Project'
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ):
+    | {
+        amountOfTime: number
+        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
+      }
+    | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ):
+    | {
+        amountOfTime: number
+        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
+      }
+    | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -288,6 +392,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: projectFlag.type,
     }
   },
+
   getFlagsmithHasFeature(key: string) {
     return flagsmith.hasFeature(key)
   },
@@ -311,54 +416,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
-    if (!waitFor) {
-      return
-    }
-
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
-  },
-
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -366,53 +423,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       return true
     }
     return false
-  },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
-    if (!waitFor) {
-      return
-    }
-
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
   },
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
@@ -426,13 +436,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'Update Feature State'
   },
+
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'
   },
-
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+
   getNextPlan: (skipFree?: boolean) => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -450,7 +461,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
-
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
