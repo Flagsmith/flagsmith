@@ -205,9 +205,10 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         instance.delete()
 
     def get_serializer_context(self):  # type: ignore[no-untyped-def]
-        if getattr(self, "swagger_fake_view", False):
-            return None
         context = super().get_serializer_context()
+        if getattr(self, "swagger_fake_view", False):
+            return context
+
         feature_states = getattr(self, "_feature_states", {})
         project = get_object_or_404(Project.objects.all(), pk=self.kwargs["project_pk"])
         context.update(
@@ -506,6 +507,8 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
         Override queryset to filter based on provided URL parameters.
         """
+        if getattr(self, "swagger_fake_view", False):
+            return FeatureState.objects.none()
 
         environment_api_key = self.kwargs["environment_api_key"]
 
