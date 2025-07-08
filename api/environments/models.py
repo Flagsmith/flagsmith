@@ -199,7 +199,7 @@ class Environment(
 
     @hook(BEFORE_CREATE)  # type: ignore[misc]
     def enable_v2_versioning(self) -> None:
-        if self.enable_v2_versioning:
+        if self.use_v2_feature_versioning:
             # if the environment has already been created with versioning enabled,
             # we don't want to disable it based on the flag state.
             return
