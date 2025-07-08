@@ -24,10 +24,7 @@ def enable_v2_versioning_for_new_environments(
     are created with feature versioning v2 enabled. It returns a callable to ensure that we can
     control when the flag is enabled in the test code, to ensure that other fixtures are unaffected.
 
-    TODO: How can we make this more generic so that we don't need to mock individual calling
-     locations and instead we can have a fixture that somehow mocks a given flag or set of flags.
-     This should probably be a part of the flagsmith-python-client repository itself.
-     See: https://github.com/Flagsmith/flagsmith-python-client/issues/135
+    Relevant issue for improving this: https://github.com/Flagsmith/flagsmith-python-client/issues/135
     """
 
     def _enable_v2_versioning_for_new_environments() -> None:
