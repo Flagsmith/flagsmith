@@ -1,5 +1,44 @@
 # Changelog
 
+## [2.186.0](https://github.com/Flagsmith/flagsmith/compare/v2.185.0...v2.186.0) (2025-07-02)
+
+
+### Features
+
+* **BE:** release pipeline v0.1.0 ([#5496](https://github.com/Flagsmith/flagsmith/issues/5496)) ([de7c278](https://github.com/Flagsmith/flagsmith/commit/de7c278dd405281efe1d7101e7a5130dd11fb59a))
+* Edit Release Pipeline Feature ([#5650](https://github.com/Flagsmith/flagsmith/issues/5650)) ([64f7f29](https://github.com/Flagsmith/flagsmith/commit/64f7f295638a0bd2cc8c961bec63c516befb4eff))
+* Make dark mode local ([#5680](https://github.com/Flagsmith/flagsmith/issues/5680)) ([54af554](https://github.com/Flagsmith/flagsmith/commit/54af5542a32a4fec5c9772a42b31f79ea34395b0))
+* mobile nav ([#5561](https://github.com/Flagsmith/flagsmith/issues/5561)) ([57fc7de](https://github.com/Flagsmith/flagsmith/commit/57fc7deb0d3fec90ef1768fb84e9b7c0269201f4))
+
+
+### Bug Fixes
+
+* Headway padding ([#5690](https://github.com/Flagsmith/flagsmith/issues/5690)) ([655bfee](https://github.com/Flagsmith/flagsmith/commit/655bfee3aff64a80ca2c38024668137ecb681a27))
+
+## [2.185.0](https://github.com/Flagsmith/flagsmith/compare/v2.184.0...v2.185.0) (2025-07-01)
+
+
+### Features
+
+* Add explicit ordering for segment rule conditions ([#5671](https://github.com/Flagsmith/flagsmith/issues/5671)) ([f124c76](https://github.com/Flagsmith/flagsmith/commit/f124c76b967f67792143dbf629dedd7bdf0c5c63))
+* Release Pipeline Publish and Add Flag ([#5542](https://github.com/Flagsmith/flagsmith/issues/5542)) ([5b89995](https://github.com/Flagsmith/flagsmith/commit/5b899950c734983d106a5806991e91ddb1c3acae))
+* use-project-id-from-context ([#5547](https://github.com/Flagsmith/flagsmith/issues/5547)) ([71a0863](https://github.com/Flagsmith/flagsmith/commit/71a0863f35beab9290775892ba87b7938b6616bd))
+
+
+### Bug Fixes
+
+* fix cookie validation in authentication  ([#5621](https://github.com/Flagsmith/flagsmith/issues/5621)) ([30a7c8c](https://github.com/Flagsmith/flagsmith/commit/30a7c8c64bfeedd1b8f2d066f2742eb0dcf0b9ec))
+* hubspot attribution issues ([#5560](https://github.com/Flagsmith/flagsmith/issues/5560)) ([251508a](https://github.com/Flagsmith/flagsmith/commit/251508a71d5a052c216138d21bf1b00c72efd929))
+* Navigate to change request after creation ([#5655](https://github.com/Flagsmith/flagsmith/issues/5655)) ([4b54c64](https://github.com/Flagsmith/flagsmith/commit/4b54c64e8942006b55d732b73906fde1b822ab32))
+* optional-and-default-values-for-tasks-in-me-endpoint ([#5646](https://github.com/Flagsmith/flagsmith/issues/5646)) ([0235f18](https://github.com/Flagsmith/flagsmith/commit/0235f186510032e37a40dd64eb4dca39fce685b0))
+* Panel styles ([#5649](https://github.com/Flagsmith/flagsmith/issues/5649)) ([6a2ba6d](https://github.com/Flagsmith/flagsmith/commit/6a2ba6dab3e56f8bc423d869377f5f0aa4d9dd4d))
+
+
+### Dependency Updates
+
+* bump pbkdf2 from 3.1.2 to 3.1.3 in /docs ([#5644](https://github.com/Flagsmith/flagsmith/issues/5644)) ([dbfbf21](https://github.com/Flagsmith/flagsmith/commit/dbfbf21eec1fd325bcb612fb825a9e517f118de6))
+* bump urllib3 from 2.3.0 to 2.5.0 in /api ([#5622](https://github.com/Flagsmith/flagsmith/issues/5622)) ([23aa20f](https://github.com/Flagsmith/flagsmith/commit/23aa20f89c62c2f9d9161b4771f7342e7e08814e))
+
 ## [2.184.0](https://github.com/Flagsmith/flagsmith/compare/v2.183.0...v2.184.0) (2025-06-18)
 
 

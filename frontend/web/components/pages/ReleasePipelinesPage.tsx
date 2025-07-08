@@ -1,10 +1,11 @@
 import PageTitle from 'components/PageTitle'
 import { useGetReleasePipelinesQuery } from 'common/services/useReleasePipelines'
 import { Button } from 'components/base/forms/Button'
-import { useHistory, useRouteMatch } from 'react-router'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ReleasePipelinesList from 'components/release-pipelines/ReleasePipelinesList'
 import { useState } from 'react'
+import PlanBasedAccess from 'components/PlanBasedAccess'
 
 interface RouteParams {
   projectId: string
@@ -26,31 +27,33 @@ const ReleasePipelinesPage = () => {
 
   return (
     <div className='app-container container'>
-      <PageTitle
-        title={'Release Pipelines'}
-        cta={
-          hasReleasePipelines && (
-            <Button
-              onClick={() =>
-                history.push(`/project/${projectId}/release-pipelines/create`)
-              }
-            >
-              Create Release Pipeline
-            </Button>
-          )
-        }
-      >
-        {hasReleasePipelines &&
-          'Define the stages your flags should go from development to launched. Learn more.'}
-      </PageTitle>
-      <ReleasePipelinesList
-        data={data}
-        isLoading={isLoading}
-        projectId={projectId}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-      />
+      <PlanBasedAccess feature={'RELEASE_PIPELINES'} theme={'page'}>
+        <PageTitle
+          title={'Release Pipelines'}
+          cta={
+            hasReleasePipelines && (
+              <Button
+                onClick={() =>
+                  history.push(`/project/${projectId}/release-pipelines/create`)
+                }
+              >
+                Create Release Pipeline
+              </Button>
+            )
+          }
+        >
+          {hasReleasePipelines &&
+            'Define the stages your flags should go from development to launched. Learn more.'}
+        </PageTitle>
+        <ReleasePipelinesList
+          data={data}
+          isLoading={isLoading}
+          projectId={projectId}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
+      </PlanBasedAccess>
     </div>
   )
 }
