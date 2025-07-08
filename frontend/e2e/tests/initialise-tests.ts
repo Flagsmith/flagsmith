@@ -19,6 +19,13 @@ export default async function () {
   await click(byId('signup-btn'))
   await setText('[name="orgName"]', 'Flagsmith Ltd 0')
   await click('#create-org-btn')
+
+  if(flagsmith.hasFeature("integration_onboarding")) {
+    await click(byId("integration-0"))
+    await click(byId("integration-1"))
+    await click(byId("integration-2"))
+    await click(byId("submit-integrations"))
+  }
   if(flagsmith.hasFeature("welcome_page")) {
   await click(byId('create-project')) // Click create project from welcome page
   } else {

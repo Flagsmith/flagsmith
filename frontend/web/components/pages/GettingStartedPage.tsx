@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import PageTitle from 'components/PageTitle'
 import Button from 'components/base/forms/Button'
 import loadCrisp from 'common/loadCrisp'
@@ -15,6 +15,8 @@ import GettingStartedItem, {
 } from 'components/onboarding/GettingStartedItem'
 import GettingStartedResource from 'components/onboarding/GettingStartedResource'
 import { links, resources } from 'components/onboarding/data/onboarding.data'
+import { useGetProfileQuery } from 'common/services/useProfile'
+import IntegrationSelect from 'components/IntegrationSelect'
 
 const GettingStartedPage: FC = () => {
   useEffect(() => {
@@ -124,6 +126,27 @@ const GettingStartedPage: FC = () => {
     },
   ]
 
+  const { data, isLoading } = useGetProfileQuery({})
+  const [completedIntegrations, setCompletedIntegrations] = useState(false)
+
+  const hasSubmittedIntegrations =
+    completedIntegrations || data?.onboarding?.tools?.completed
+  if (isLoading && !hasSubmittedIntegrations) {
+    return (
+      <div className='text-center'>
+        <Loader />
+      </div>
+    )
+  }
+
+  if (
+    !hasSubmittedIntegrations &&
+    Utils.getFlagsmithHasFeature('integration_onboarding')
+  ) {
+    return (
+      <IntegrationSelect onComplete={() => setCompletedIntegrations(true)} />
+    )
+  }
   return (
     <div className='bg-light100 pb-5'>
       <div className='container-fluid mt-4 px-3'>
