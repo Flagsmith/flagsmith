@@ -8,19 +8,29 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_COOKIE_NAME,
 )
 from users.models import FFAdminUser, HubspotTracker
+from users.serializers import UTMDataSerializer
 
 logger = logging.getLogger(__name__)
 
 
-def register_hubspot_tracker(request: Request, user: FFAdminUser | None = None) -> None:
+def register_hubspot_tracker(
+    request: Request,
+    user: FFAdminUser | None = None,
+) -> None:
     hubspot_cookie = request.data.get(HUBSPOT_COOKIE_NAME)
+    raw_utm_data = request.data.get("utm_data")
     track_user = user if user else request.user
-    if not hubspot_cookie:
-        logger.info(f"Request did not included Hubspot data for user {track_user.id}")
+
+    serializer = UTMDataSerializer(data=raw_utm_data)
+    utm_data = serializer.validated_data if serializer.is_valid() else None
+
+    if not (hubspot_cookie or utm_data):
+        logger.info(f"Request did not include Hubspot data for user {track_user.id}")
         return
 
     if (
-        HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)  # type: ignore[misc]
+        hubspot_cookie
+        and HubspotTracker.objects.filter(hubspot_cookie=hubspot_cookie)  # type: ignore[misc]
         .exclude(user=track_user)
         .exists()
     ):
@@ -34,6 +44,7 @@ def register_hubspot_tracker(request: Request, user: FFAdminUser | None = None) 
         user=track_user,
         defaults={
             "hubspot_cookie": hubspot_cookie,
+            "utm_data": utm_data,
         },
     )
     logger.info(

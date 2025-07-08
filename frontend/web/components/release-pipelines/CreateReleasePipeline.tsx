@@ -16,6 +16,7 @@ import { useHistory, useParams } from 'react-router-dom'
 import StageArrow from './StageArrow'
 import { ReleasePipelineRequest } from 'common/types/requests'
 import { useRouteContext } from 'components/providers/RouteContext'
+import PlanBasedAccess from 'components/PlanBasedAccess'
 
 const blankStage: DraftStageType = {
   actions: [],
@@ -98,10 +99,7 @@ function CreateReleasePipeline() {
 
   useEffect(() => {
     if (isCreatingPipelineError) {
-      toast(
-        createPipelineError?.data?.detail ?? 'Error creating release pipeline',
-        'danger',
-      )
+      toast('Error creating release pipeline', 'danger')
     }
 
     if (isUpdatingPipelineError) {
@@ -199,99 +197,105 @@ function CreateReleasePipeline() {
 
   return (
     <div className='app-container container'>
-      <Breadcrumb
-        items={[
-          {
-            title: 'Release Pipelines',
-            url: `/project/${projectId}/release-pipelines`,
-          },
-        ]}
-        currentPage='New Release Pipeline'
-      />
+      <PlanBasedAccess feature={'RELEASE_PIPELINES'} theme={'page'}>
+        <Breadcrumb
+          items={[
+            {
+              title: 'Release Pipelines',
+              url: `/project/${projectId}/release-pipelines`,
+            },
+          ]}
+          currentPage='New Release Pipeline'
+        />
 
-      <PageTitle
-        title={
-          <Row>
-            {!isEditingName && !!pipelineData?.name?.length ? (
-              <div>{pipelineData?.name}</div>
-            ) : (
-              <InputGroup
-                className='mb-0'
-                value={pipelineData?.name}
-                placeholder='Release Pipeline Name'
-                onChange={(event: InputEvent) => {
-                  setPipelineData({
-                    ...pipelineData,
-                    name: Utils.safeParseEventValue(event),
-                  })
-                }}
-              />
-            )}
-            <Button
-              theme='text'
-              className='ml-2 clickable'
-              onClick={() => setIsEditingName(!isEditingName)}
-              disabled={!pipelineData?.name?.length}
-            >
-              {isEditingName ? (
-                <Icon width={20} fill='#6837FC' name='close-circle' />
+        <PageTitle
+          title={
+            <Row>
+              {!isEditingName && !!pipelineData?.name?.length ? (
+                <div>{pipelineData?.name}</div>
               ) : (
-                <Icon width={20} fill='#6837FC' name='edit' />
-              )}
-            </Button>
-          </Row>
-        }
-        cta={
-          <Button
-            disabled={isSaveDisabled}
-            onClick={() =>
-              existingPipeline?.id
-                ? handleUpdate(existingPipeline.id)
-                : handleSave()
-            }
-          >
-            {saveButtonText}
-          </Button>
-        }
-      />
-      <div className='px-2 pb-4 overflow-auto'>
-        <Row className='no-wrap'>
-          {pipelineData.stages.map((stageData, index) => (
-            <Row key={index}>
-              <Row className='align-items-start no-wrap'>
-                <CreatePipelineStage
-                  stageData={stageData}
-                  onChange={(stageData: DraftStageType) =>
-                    handleOnChange(stageData, index)
-                  }
-                  projectId={Number(projectId)}
-                  showRemoveButton={index > 0}
-                  onRemove={() => handleRemoveStage(index)}
+                <InputGroup
+                  className='mb-0'
+                  value={pipelineData?.name}
+                  placeholder='Release Pipeline Name'
+                  onChange={(event: InputEvent) => {
+                    setPipelineData({
+                      ...pipelineData,
+                      name: Utils.safeParseEventValue(event),
+                    })
+                  }}
                 />
-                <div className='flex-1'>
-                  <StageArrow
-                    showAddStageButton={
-                      index === pipelineData.stages.length - 1
-                    }
-                    onAddStage={() =>
-                      setPipelineData((prev) => ({
-                        ...prev,
-                        stages: prev.stages.concat([blankStage]),
-                      }))
-                    }
-                  />
-                  {index === pipelineData.stages.length - 1 && (
-                    <div className='m-auto p-2 border-1 rounded border-primary '>
-                      <Icon width={30} name='checkmark-circle' fill='#27AB95' />
-                      Launched
-                    </div>
-                  )}
-                </div>
-              </Row>
+              )}
+              <Button
+                theme='text'
+                className='ml-2 clickable'
+                onClick={() => setIsEditingName(!isEditingName)}
+                disabled={!pipelineData?.name?.length}
+              >
+                {isEditingName ? (
+                  <Icon width={20} fill='#6837FC' name='close-circle' />
+                ) : (
+                  <Icon width={20} fill='#6837FC' name='edit' />
+                )}
+              </Button>
             </Row>
-          ))}
-        </Row>
-      </div>
+          }
+          cta={
+            <Button
+              disabled={isSaveDisabled}
+              onClick={() =>
+                existingPipeline?.id
+                  ? handleUpdate(existingPipeline.id)
+                  : handleSave()
+              }
+            >
+              {saveButtonText}
+            </Button>
+          }
+        />
+        <div className='px-2 pb-4 overflow-auto'>
+          <Row className='no-wrap'>
+            {pipelineData.stages.map((stageData, index) => (
+              <Row key={index}>
+                <Row className='align-items-start no-wrap'>
+                  <CreatePipelineStage
+                    stageData={stageData}
+                    onChange={(stageData: DraftStageType) =>
+                      handleOnChange(stageData, index)
+                    }
+                    projectId={Number(projectId)}
+                    showRemoveButton={index > 0}
+                    onRemove={() => handleRemoveStage(index)}
+                  />
+                  <div className='flex-1'>
+                    <StageArrow
+                      showAddStageButton={
+                        index === pipelineData.stages.length - 1
+                      }
+                      onAddStage={() =>
+                        setPipelineData((prev) => ({
+                          ...prev,
+                          stages: prev.stages.concat([blankStage]),
+                        }))
+                      }
+                    />
+                    {index === pipelineData.stages.length - 1 && (
+                      <div className='m-auto p-2 border-1 rounded border-primary '>
+                        <Icon
+                          width={30}
+                          name='checkmark-circle'
+                          fill='#27AB95'
+                        />
+                        Launched
+                      </div>
+                    )}
+                  </div>
+                </Row>
+              </Row>
+            ))}
+          </Row>
+        </div>
+      </PlanBasedAccess>
     </div>
   )
 }

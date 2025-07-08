@@ -1,0 +1,32 @@
+  .circle-container {
+      background-color: white;
+      border: 4px solid;
+      border-color: #AAA;
+      border-radius: 50%;
+      height: 24px;
+      width: 24px;
+      z-index: 10;
+
+      &.in-stage {
+        border-color: #6837fc;
+      }
+  }
+
+  .line-left {
+    background-color: #AAA;
+    border: unset;
+    height: 3px;
+    left: 0%;
+    top: 11px;
+    width: 50%;
+    z-index: 1;
+  }
+  .line-right {
+    background-color: #AAA;
+    border: unset;
+    height: 3px;
+    left: 50%;
+    top: 11px;
+    width: calc(50% + 24px);
+    z-index: 1;
+  }

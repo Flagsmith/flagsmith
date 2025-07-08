@@ -23,6 +23,7 @@ import {
   FeatureListProviderData,
   FeatureState,
   ProjectFlag,
+  ReleasePipeline,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import API from 'project/api'
@@ -50,6 +51,7 @@ interface FeatureRowProps {
   fadeValue?: boolean
   hideAudit?: boolean
   hideRemove?: boolean
+  releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
 }
 
@@ -76,7 +78,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
   toggleFlag,
 }) => {
   const protectedTags = useProtectedTags(projectFlag, projectId)
-
   const history = useHistory()
 
   const { data: healthEvents } = useGetHealthEventsQuery(
