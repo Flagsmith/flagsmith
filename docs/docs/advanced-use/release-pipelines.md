@@ -65,7 +65,7 @@ Each stage in your pipeline consists of:
 ## Publishing a Release Pipeline
 
 ### Draft Status
-Before it is published, a release pipeline is in draft mode. In this state:
+After a pipeline is created and before it is published, a release pipeline is in draft mode. In this state:
 The pipeline is inactive and does not process feature flags
 - The configuration remains editable
 - You can modify stages, triggers, and actions freely
