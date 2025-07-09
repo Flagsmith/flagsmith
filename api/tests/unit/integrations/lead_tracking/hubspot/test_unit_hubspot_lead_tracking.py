@@ -190,16 +190,8 @@ def test_create_organisation_lead_creates_contact_when_not_found(
 
     assert mock_client.get_contact.call_count == 2
     mock_client.create_lead_form.assert_called_once_with(user=user)
-    mock_client.create_company.assert_called_once_with(
-        name=organisation.name,
-        active_subscription="free",
-        organisation_id=organisation.id,
-        domain="example.com",
-    )
-    mock_client.associate_contact_to_company.assert_called_once_with(
-        contact_id=HUBSPOT_USER_ID,
-        company_id=HUBSPOT_COMPANY_ID,
-    )
+    mock_client.create_company.assert_not_called()
+    mock_client.associate_contact_to_company.assert_not_called()
 
 
 def test_create_organisation_lead_creates_contact_for_existing_org(
@@ -394,7 +386,7 @@ def test_create_leads_skips_association_on_missing_ids(
         tracker, "_get_or_create_user_hubspot_id", return_value=hubspot_contact_id
     )
     mocker.patch.object(
-        tracker, "_get_or_create_organisation_hubspot_id", return_value=hubspot_org_id
+        tracker, "_get_organisation_hubspot_id", return_value=hubspot_org_id
     )
 
     # When
