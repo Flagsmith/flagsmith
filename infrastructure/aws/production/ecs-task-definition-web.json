@@ -188,6 +188,10 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
                 }
             ],
             "secrets": [
