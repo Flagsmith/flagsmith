@@ -18,6 +18,8 @@ from django.core.cache import caches
 from django.db.backends.base.creation import TEST_DATABASE_PREFIX
 from django.test.utils import setup_databases
 from flag_engine.segments.constants import EQUAL
+from flagsmith import Flagsmith
+from flagsmith.models import Flags
 from moto import mock_dynamodb  # type: ignore[import-untyped]
 from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource, Table
 from pyfakefs.fake_filesystem import FakeFilesystem
@@ -83,6 +85,7 @@ from segments.services import SegmentCloneService
 from tests.test_helpers import fix_issue_3869
 from tests.types import (
     AdminClientAuthType,
+    EnableFeaturesFixture,
     WithEnvironmentPermissionsCallable,
     WithOrganisationPermissionsCallable,
     WithProjectPermissionsCallable,
@@ -1265,3 +1268,33 @@ def set_github_webhook_secret() -> None:
     from django.conf import settings
 
     settings.GITHUB_WEBHOOK_SECRET = "secret-key"
+
+
+@pytest.fixture()
+def enable_features(
+    mocker: MockerFixture,
+) -> EnableFeaturesFixture:
+    """
+    This fixture returns a callable that allows us to enable any Flagsmith feature flag(s) in tests.
+
+    Relevant issue for improving this: https://github.com/Flagsmith/flagsmith-python-client/issues/135
+    """
+
+    def _enable_features(*expected_feature_names: str) -> None:
+        def _is_feature_enabled(feature_name: str) -> bool:
+            return feature_name in expected_feature_names
+
+        mock_flags = mocker.MagicMock(spec=Flags)
+        mock_flags.is_feature_enabled.side_effect = _is_feature_enabled
+        mock_flagsmith = mocker.MagicMock(spec=Flagsmith)
+        mock_flagsmith.get_identity_flags.return_value = mock_flags
+        mock_flagsmith.get_environment_flags.return_value = mock_flags
+        mock_clients = mocker.MagicMock(spec=dict)
+        mock_clients.__getitem__.return_value = mock_flagsmith
+
+        mocker.patch(
+            "integrations.flagsmith.client._flagsmith_clients",
+            new=mock_clients,
+        )
+
+    return _enable_features

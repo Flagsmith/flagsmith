@@ -5,6 +5,7 @@ from pytest_mock import MockerFixture
 
 from app_analytics.middleware import APIUsageMiddleware
 from app_analytics.models import Resource
+from tests.types import EnableFeaturesFixture
 
 
 @pytest.mark.parametrize(
@@ -77,6 +78,7 @@ def test_api_usage_middleware__calls_expected(
 def test_api_usage_middleware__no_cache__calls_expected(
     rf: RequestFactory,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
     path: str,
     resource_name: str,
     settings: SettingsWrapper,
@@ -84,6 +86,7 @@ def test_api_usage_middleware__no_cache__calls_expected(
     expected_labels: dict[str, str],
 ) -> None:
     # Given
+    enable_features("sdk_metrics_labels")
     environment_key = "test"
     headers = {"HTTP_X-Environment-Key": environment_key, **optional_headers}
     request = rf.get(path, **headers)  # type: ignore[arg-type]

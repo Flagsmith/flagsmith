@@ -23,6 +23,7 @@ from organisations.models import (
     Organisation,
     OrganisationSubscriptionInformationCache,
 )
+from tests.types import EnableFeaturesFixture
 
 
 def test_sdk_analytics_ignores_bad_data(
@@ -501,8 +502,10 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
     identity: Identity,
     settings: SettingsWrapper,
     mocker: MockerFixture,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
+    enable_features("sdk_metrics_labels")
     settings.INFLUXDB_TOKEN = "test-token"
     influx_db_wrapper_mock = mocker.patch(
         "app_analytics.track.InfluxDBWrapper",
@@ -571,8 +574,10 @@ def test_sdk_analytics_flags_v1(
     mocker: MockerFixture,
     optional_headers: dict[str, str],
     expected_labels: dict[str, str],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
+    enable_features("sdk_metrics_labels")
     url = reverse("api-v1:analytics-flags")
     api_client.credentials(HTTP_X_ENVIRONMENT_KEY=environment.api_key)
     feature_request_count = 2

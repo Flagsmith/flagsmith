@@ -17,6 +17,7 @@ from app_analytics.types import (
     TrackFeatureEvaluationsByEnvironmentData,
     TrackFeatureEvaluationsByEnvironmentKwargs,
 )
+from integrations.flagsmith.client import get_client
 
 _request_header_labels_model_fields: dict[str, Any] = {
     str(label): (str | None, Field(default=None, alias=header))
@@ -88,6 +89,12 @@ def map_flux_tables_to_feature_evaluation_data(
 
 
 def map_request_to_labels(request: HttpRequest) -> Labels:
+    if not (
+        get_client("local", local_eval=True)
+        .get_environment_flags()
+        .is_feature_enabled("sdk_metrics_labels")
+    ):
+        return {}
     result: Labels = _RequestHeaderLabelsModel.model_validate(
         request.headers,
     ).model_dump(

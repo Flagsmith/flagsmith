@@ -39,6 +39,7 @@ from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
+from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -1211,10 +1212,10 @@ def test_environment_metric_query_helpers_match_expected_counts(
 def test_environment_create_with_use_v2_feature_versioning_true(
     project: Project,
     feature: Feature,
-    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_v2_versioning_for_new_environments()
+    enable_features("enable_feature_versioning_for_new_environments")
 
     # When
     new_environment = Environment.objects.create(
@@ -1232,10 +1233,10 @@ def test_environment_clone_from_versioned_environment_with_use_v2_feature_versio
     project: Project,
     environment_v2_versioning: Environment,
     feature: Feature,
-    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_v2_versioning_for_new_environments()
+    enable_features("enable_feature_versioning_for_new_environments")
 
     # When
     new_environment = environment_v2_versioning.clone(name="new-environment")
@@ -1250,10 +1251,10 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     project: Project,
     environment: Environment,
     feature: Feature,
-    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_v2_versioning_for_new_environments()
+    enable_features("enable_feature_versioning_for_new_environments")
 
     # When
     new_environment = environment.clone(name="new-environment")
