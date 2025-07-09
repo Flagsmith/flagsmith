@@ -1259,6 +1259,6 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     new_environment = environment.clone(name="new-environment")
 
     # Then
-    assert not EnvironmentFeatureVersion.objects.filter(
+    assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
