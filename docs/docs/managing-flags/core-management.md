@@ -24,7 +24,9 @@ To create a new feature flag:
 5. Click **Create Feature**.
 
 :::tip
+
 By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, check the [A/B Testing guide](../advanced-use/ab-testing).
+
 :::
 
 ---
@@ -37,11 +39,13 @@ You create feature flags once per project, but you edit them within each environ
 2. Locate the feature flag you want to edit and click on it. You can use the search bar to find the flag by its name.
 
 :::tip
+
 If you just want to toggle the feature flag *on* or *off*, use the switch under the **View** column in the list view.
+
 :::
 
 3. On the **Value** tab, you can set the flag to be on/off, as well as editing a value for it. Click the **Update Feature Value** to save your changes.
-4. Optionally create segment-specific features and define **Segment Overrides**. Check the documentation to learn more about [Segment Overrides](../segments/segment-overrides.md). Save any changes by clicking the **Update Segment Overrides** button.
+4. Optionally create segment-specific features and define **Segment Overrides**. Check the documentation to learn more about [Segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
 5. On the **Settings** tab, you can:
     - Add tags to your feature flag.
     - Assign it to specific *users* and *groups*.
@@ -51,7 +55,9 @@ If you just want to toggle the feature flag *on* or *off*, use the switch under 
   Click **Update Settings** to save your changes.
 
 :::tip
+
 Changes made in the **Settings** tab affect all environments. Changes made in other tabs while editing a feature flag are valid only for the selected environment.
+
 :::
 
 ---
@@ -65,7 +71,9 @@ To delete a feature flag:
 3. Type in the name of the feature to confirm the deletion.
 
 :::caution
+
 Deleting a flag is permanent and cannot be undone. Make sure your applications do not contain any reference to this feature before confirming deleting it.
+
 :::
 
 ---
