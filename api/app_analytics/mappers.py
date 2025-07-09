@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Iterable
 
 from django.http import HttpRequest
@@ -7,11 +8,14 @@ from pydantic.type_adapter import TypeAdapter
 
 from app_analytics.constants import TRACK_HEADERS
 from app_analytics.dataclasses import FeatureEvaluationData, UsageData
-from app_analytics.models import Resource
+from app_analytics.models import FeatureEvaluationRaw, Resource
 from app_analytics.types import (
     AnnotatedAPIUsageBucket,
     AnnotatedAPIUsageKey,
+    FeatureEvaluationCacheKey,
     Labels,
+    TrackFeatureEvaluationsByEnvironmentData,
+    TrackFeatureEvaluationsByEnvironmentKwargs,
 )
 
 _request_header_labels_model_fields: dict[str, Any] = {
@@ -90,3 +94,44 @@ def map_request_to_labels(request: HttpRequest) -> Labels:
         exclude_unset=True,
     )
     return result
+
+
+def map_feature_evaluation_cache_to_track_feature_evaluations_by_environment_kwargs(
+    cache: dict[FeatureEvaluationCacheKey, int],
+) -> list[TrackFeatureEvaluationsByEnvironmentKwargs]:
+    feature_evaluations_by_environment: dict[
+        int, list[TrackFeatureEvaluationsByEnvironmentData]
+    ] = defaultdict(list)
+
+    for cache_key, evaluation_count in cache.items():
+        environment_id = cache_key.environment_id
+        feature_evaluations_by_environment[environment_id].append(
+            {
+                "feature_name": cache_key.feature_name,
+                "labels": dict(cache_key.labels),
+                "evaluation_count": evaluation_count,
+            }
+        )
+
+    return [
+        {
+            "environment_id": environment_id,
+            "feature_evaluations": feature_evaluations,
+        }
+        for environment_id, feature_evaluations in feature_evaluations_by_environment.items()
+    ]
+
+
+def map_feature_evaluation_data_to_feature_evaluation_raw(
+    environment_id: int,
+    feature_evaluations: list[TrackFeatureEvaluationsByEnvironmentData],
+) -> list[FeatureEvaluationRaw]:
+    return [
+        FeatureEvaluationRaw(
+            environment_id=environment_id,
+            feature_name=feature_evaluation["feature_name"],
+            evaluation_count=feature_evaluation["evaluation_count"],
+            labels=feature_evaluation["labels"],
+        )
+        for feature_evaluation in feature_evaluations
+    ]

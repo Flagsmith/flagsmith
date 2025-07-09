@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Unpack
 
 from django.conf import settings
 from django.db.models import Q, Sum
@@ -11,6 +11,7 @@ from task_processor.decorators import (
 )
 
 from app_analytics.constants import ANALYTICS_READ_BUCKET_SIZE
+from app_analytics.mappers import map_feature_evaluation_data_to_feature_evaluation_raw
 from app_analytics.models import (
     APIUsageBucket,
     APIUsageRaw,
@@ -26,8 +27,8 @@ from app_analytics.track import (
     track_feature_evaluation_influxdb_v2 as track_feature_evaluation_influxdb_v2_service,
 )
 from app_analytics.types import (
-    FeatureEvaluationKey,
     Labels,
+    TrackFeatureEvaluationsByEnvironmentKwargs,
 )
 from environments.models import Environment
 
@@ -95,21 +96,17 @@ def track_feature_evaluation_v2(
 
 @register_task_handler()
 def track_feature_evaluations_by_environment(
-    environment_id: int,
-    feature_evaluations: list[tuple[FeatureEvaluationKey, int]],
+    **kwargs: Unpack[TrackFeatureEvaluationsByEnvironmentKwargs],
 ) -> None:
+    environment_id = kwargs["environment_id"]
+    feature_evaluations = kwargs["feature_evaluations"]
     if settings.USE_POSTGRES_FOR_ANALYTICS:
-        feature_evaluation_objects = []
-        for (feature_name, labels), evaluation_count in feature_evaluations:
-            feature_evaluation_objects.append(
-                FeatureEvaluationRaw(
-                    feature_name=feature_name,
-                    environment_id=environment_id,
-                    evaluation_count=evaluation_count,
-                    labels=dict(labels),
-                )
+        FeatureEvaluationRaw.objects.bulk_create(
+            map_feature_evaluation_data_to_feature_evaluation_raw(
+                environment_id=environment_id,
+                feature_evaluations=feature_evaluations,
             )
-        FeatureEvaluationRaw.objects.bulk_create(feature_evaluation_objects)
+        )
     elif settings.INFLUXDB_TOKEN:
         track_feature_evaluation_influxdb(
             environment_id=environment_id,

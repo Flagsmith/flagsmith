@@ -8,7 +8,7 @@ from django.core.cache import caches
 
 from app_analytics.influxdb_wrapper import InfluxDBWrapper
 from app_analytics.models import Resource
-from app_analytics.types import FeatureEvaluationKey, Labels
+from app_analytics.types import Label, Labels, TrackFeatureEvaluationsByEnvironmentData
 from environments.models import Environment
 from util.util import postpone
 
@@ -116,7 +116,7 @@ def track_request_influxdb(
 
 def track_feature_evaluation_influxdb(
     environment_id: int,
-    feature_evaluations: list[tuple[FeatureEvaluationKey, int]],
+    feature_evaluations: list[TrackFeatureEvaluationsByEnvironmentData],
 ) -> None:
     """
     Sends Feature analytics event data to InfluxDB
@@ -126,13 +126,20 @@ def track_feature_evaluation_influxdb(
     """
     influxdb = InfluxDBWrapper("feature_evaluation")  # type: ignore[no-untyped-call]
 
-    for (feature_name, labels), evaluation_count in feature_evaluations:
-        tags: dict[str, str | int] = {
-            "feature_id": feature_name,
+    for feature_evaluation in feature_evaluations:
+        tags: dict[str | Label, str | int] = {
+            "feature_id": feature_evaluation["feature_name"],
             "environment_id": environment_id,
-            **dict(labels),
+            **{
+                str(label): value
+                for label, value in feature_evaluation["labels"].items()
+            },
         }
-        influxdb.add_data_point("request_count", evaluation_count, tags=tags)
+        influxdb.add_data_point(
+            "request_count",
+            feature_evaluation["evaluation_count"],
+            tags=tags,
+        )
 
     influxdb.write()
 

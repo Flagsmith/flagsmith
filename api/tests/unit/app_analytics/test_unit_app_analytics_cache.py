@@ -5,7 +5,7 @@ from pytest_mock import MockerFixture
 
 from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
 from app_analytics.models import Resource
-from app_analytics.types import FeatureEvaluationKey
+from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 
 
 def test_api_usage_cache(
@@ -170,19 +170,15 @@ def test_feature_evaluation_cache(
                 kwargs={
                     "environment_id": 1,
                     "feature_evaluations": [
-                        (
-                            FeatureEvaluationKey(
-                                feature_name="feature_1_name",
-                                labels=(),
-                            ),
-                            11,
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1_name",
+                            labels={},
+                            evaluation_count=11,
                         ),
-                        (
-                            FeatureEvaluationKey(
-                                feature_name="feature_2_name",
-                                labels=(),
-                            ),
-                            10,
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_2_name",
+                            labels={},
+                            evaluation_count=10,
                         ),
                     ],
                 }
@@ -191,12 +187,10 @@ def test_feature_evaluation_cache(
                 kwargs={
                     "environment_id": 2,
                     "feature_evaluations": [
-                        (
-                            FeatureEvaluationKey(
-                                feature_name="feature_2_name",
-                                labels=(),
-                            ),
-                            10,
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_2_name",
+                            labels={},
+                            evaluation_count=10,
                         )
                     ],
                 }
@@ -205,19 +199,15 @@ def test_feature_evaluation_cache(
                 kwargs={
                     "environment_id": 1,
                     "feature_evaluations": [
-                        (
-                            FeatureEvaluationKey(
-                                feature_name="feature_1_name",
-                                labels=(("client_application_name", "test-app"),),
-                            ),
-                            1,
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1_name",
+                            labels={"client_application_name": "test-app"},
+                            evaluation_count=1,
                         ),
-                        (
-                            FeatureEvaluationKey(
-                                feature_name="feature_1_name",
-                                labels=(),
-                            ),
-                            1,
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1_name",
+                            labels={},
+                            evaluation_count=1,
                         ),
                     ],
                 }

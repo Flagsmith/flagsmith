@@ -20,7 +20,7 @@ from app_analytics.tasks import (
     track_feature_evaluations_by_environment,
     track_request,
 )
-from app_analytics.types import FeatureEvaluationKey
+from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 from environments.models import Environment
 
 pytestmark = pytest.mark.skip_if_no_analytics_db
@@ -177,6 +177,7 @@ def test_track_request__postgres__inserts_expected(
 
 
 def test_track_request__influx__calls_expected(
+    db: None,
     settings: SettingsWrapper,
     mocker: MockerFixture,
     environment: Environment,
@@ -210,12 +211,23 @@ def test_track_feature_evaluation(settings: SettingsWrapper) -> None:
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = 1
     feature_evaluations = [
-        (FeatureEvaluationKey("feature1", ()), 10),
-        (FeatureEvaluationKey("feature2", ()), 20),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="feature1",
+            labels={},
+            evaluation_count=10,
+        ),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="feature2",
+            labels={},
+            evaluation_count=20,
+        ),
     ]
 
     # When
-    track_feature_evaluations_by_environment(environment_id, feature_evaluations)
+    track_feature_evaluations_by_environment(
+        environment_id=environment_id,
+        feature_evaluations=feature_evaluations,
+    )
 
     # Then
     assert (
@@ -245,12 +257,27 @@ def test_track_feature_evaluation__influx__calls_expected(
     )
     environment_id = 1
     feature_evaluations = [
-        (FeatureEvaluationKey("feature1", ()), 10),
-        (FeatureEvaluationKey("feature2", ()), 20),
+        (
+            TrackFeatureEvaluationsByEnvironmentData(
+                feature_name="feature1",
+                labels={},
+                evaluation_count=10,
+            )
+        ),
+        (
+            TrackFeatureEvaluationsByEnvironmentData(
+                feature_name="feature2",
+                labels={},
+                evaluation_count=20,
+            )
+        ),
     ]
 
     # When
-    track_feature_evaluations_by_environment(environment_id, feature_evaluations)
+    track_feature_evaluations_by_environment(
+        environment_id=environment_id,
+        feature_evaluations=feature_evaluations,
+    )
 
     # Then
     track_feature_evaluation_influxdb_mock.assert_called_once_with(

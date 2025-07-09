@@ -24,9 +24,15 @@ class FeatureEvaluationCacheKey(NamedTuple):
     labels: tuple[tuple["Label", str], ...]
 
 
-class FeatureEvaluationKey(NamedTuple):
+class TrackFeatureEvaluationsByEnvironmentData(TypedDict):
     feature_name: str
-    labels: tuple[tuple["Label", str], ...]
+    labels: "Labels"
+    evaluation_count: int
+
+
+class TrackFeatureEvaluationsByEnvironmentKwargs(TypedDict):
+    environment_id: int
+    feature_evaluations: list[TrackFeatureEvaluationsByEnvironmentData]
 
 
 class AnnotatedAPIUsageBucket(TypedDict):

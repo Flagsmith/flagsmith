@@ -9,7 +9,7 @@ from app_analytics.track import (
     track_request_googleanalytics,
     track_request_influxdb,
 )
-from app_analytics.types import FeatureEvaluationKey
+from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 
 
 @pytest.mark.parametrize(
@@ -119,9 +119,21 @@ def test_track_feature_evaluation_influxdb(mocker: MockerFixture) -> None:
     influx_db_wrapper_mock = influx_db_wrapper_class_mock.return_value
 
     data = [
-        (FeatureEvaluationKey("foo", ()), 12),
-        (FeatureEvaluationKey("bar", ()), 19),
-        (FeatureEvaluationKey("baz", (("client_application_name", "test-app"),)), 44),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="foo",
+            labels={},
+            evaluation_count=12,
+        ),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="bar",
+            labels={},
+            evaluation_count=19,
+        ),
+        TrackFeatureEvaluationsByEnvironmentData(
+            feature_name="baz",
+            labels={"client_application_name": "test-app"},
+            evaluation_count=44,
+        ),
     ]
     environment_id = 1
 

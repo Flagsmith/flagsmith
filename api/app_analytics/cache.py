@@ -1,9 +1,11 @@
-from collections import defaultdict
 from threading import Lock
 
 from django.conf import settings
 from django.utils import timezone
 
+from app_analytics.mappers import (
+    map_feature_evaluation_cache_to_track_feature_evaluations_by_environment_kwargs,
+)
 from app_analytics.models import Resource
 from app_analytics.tasks import (
     track_feature_evaluations_by_environment,
@@ -12,7 +14,6 @@ from app_analytics.tasks import (
 from app_analytics.types import (
     APIUsageCacheKey,
     FeatureEvaluationCacheKey,
-    FeatureEvaluationKey,
     Labels,
 )
 
@@ -69,25 +70,10 @@ class FeatureEvaluationCache:
         self._lock = Lock()
 
     def _flush(self) -> None:
-        evaluation_data: dict[int, dict[FeatureEvaluationKey, int]] = defaultdict(dict)
-        for (
-            cache_key,
-            eval_count,
-        ) in self._cache.items():
-            key = FeatureEvaluationKey(
-                feature_name=cache_key.feature_name,
-                labels=cache_key.labels,
-            )
-            evaluation_data[cache_key.environment_id][key] = eval_count
-
-        # Schedule evaluation tracking by environment
-        for environment_id, feature_evaluations in evaluation_data.items():
-            track_feature_evaluations_by_environment.delay(
-                kwargs={
-                    "environment_id": environment_id,
-                    "feature_evaluations": list(feature_evaluations.items()),
-                }
-            )
+        for kwargs in map_feature_evaluation_cache_to_track_feature_evaluations_by_environment_kwargs(
+            self._cache
+        ):
+            track_feature_evaluations_by_environment.delay(kwargs=dict(kwargs))
 
         self._cache = {}
         self._last_flushed_at = timezone.now()
