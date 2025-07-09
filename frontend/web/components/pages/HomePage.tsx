@@ -29,6 +29,7 @@ import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import { useUTMs } from 'common/useUTMs'
 
 const HomePage: React.FC = () => {
   const history = useHistory()
@@ -42,7 +43,7 @@ const HomePage: React.FC = () => {
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
-
+  const utms = useUTMs()
   const { data: version, isLoading: versionLoading } = useGetBuildVersionQuery(
     {},
   )
@@ -87,8 +88,6 @@ const HomePage: React.FC = () => {
     if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
       addAlbacross()
     }
-
-    document.body.classList.remove('dark')
 
     if (document.location.href.includes('oauth')) {
       const parts = document.location.href.split('oauth/')
@@ -342,7 +341,7 @@ const HomePage: React.FC = () => {
                     {!isSignup ? (
                       <>
                         <Card
-                          className='mb-3'
+                          className='mb-3 bg-white p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
@@ -484,14 +483,14 @@ const HomePage: React.FC = () => {
                     ) : (
                       <>
                         <Card
-                          className='mb-3'
+                          className='mb-3 bg-white p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
                           )}
                         >
                           {!!oauths.length && (
-                            <div className='row'>{oauths}</div>
+                            <div className='row row-gap-2'>{oauths}</div>
                           )}
                           {!preventEmailPassword && (
                             <form
@@ -510,6 +509,7 @@ const HomePage: React.FC = () => {
                                     marketing_consent_given:
                                       marketingConsentGiven,
                                     password,
+                                    ...(utms && { utm_data: utms }),
                                   },
                                   isInvite,
                                 )

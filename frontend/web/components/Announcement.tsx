@@ -37,17 +37,19 @@ const Announcement: FC<AnnouncementType> = () => {
   return (
     <>
       {showBanner && (
-        <InfoMessage
-          title={title}
-          isClosable={isClosable}
-          close={() => closeAnnouncement(id)}
-          buttonText={buttonText}
-          url={url}
-        >
-          <div>
-            <div>{description}</div>
-          </div>
-        </InfoMessage>
+        <div className='mt-4'>
+          <InfoMessage
+            title={title}
+            isClosable={isClosable}
+            close={() => closeAnnouncement(id)}
+            buttonText={buttonText}
+            url={url}
+          >
+            <div>
+              <div>{description}</div>
+            </div>
+          </InfoMessage>
+        </div>
       )}
     </>
   )

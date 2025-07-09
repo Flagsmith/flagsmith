@@ -94,6 +94,8 @@ export const routes = {
     '/project/:projectId/environment/:environmentId/project-settings',
   'release-pipelines': '/project/:projectId/release-pipelines',
   'release-pipelines-detail': '/project/:projectId/release-pipelines/:id',
+  'release-pipelines-detail-edit':
+    '/project/:projectId/release-pipelines/:id/edit',
   'root': '/',
   'saml': '/saml',
   'scheduled-change':
@@ -278,6 +280,11 @@ export default (
         path={routes['release-pipelines-detail']}
         exact
         component={ReleasePipelineDetailPage}
+      />
+      <ParameterizedRoute
+        path={routes['release-pipelines-detail-edit']}
+        exact
+        component={CreateReleasePipelinePage}
       />
       <ParameterizedRoute
         path={routes['audit-log-item']}

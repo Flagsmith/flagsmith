@@ -74,6 +74,37 @@ export const releasePipelinesService = service
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/publish-pipeline/`,
         }),
       }),
+      removeFeature: builder.mutation<
+        Res['releasePipeline'],
+        Req['removeFeatureFromReleasePipeline']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+        query: (query: Req['removeFeatureFromReleasePipeline']) => ({
+          body: {
+            feature_id: query.featureId,
+          },
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/remove-feature/`,
+        }),
+      }),
+      updateReleasePipeline: builder.mutation<
+        Res['releasePipeline'],
+        Req['updateReleasePipeline']
+      >({
+        invalidatesTags: (res) => [
+          { id: 'LIST', type: 'ReleasePipelines' },
+          { id: res?.id, type: 'ReleasePipelines' },
+        ],
+        query: (query: Req['updateReleasePipeline']) => ({
+          body: {
+            description: query.description,
+            name: query.name,
+            stages: query.stages,
+          },
+          method: 'PUT',
+          url: `projects/${query.project}/release-pipelines/${query.id}/`,
+        }),
+      }),
       // END OF ENDPOINTS
     }),
   })
@@ -108,6 +139,17 @@ export async function createReleasePipeline(
   )
 }
 
+export async function removeFeatureFromReleasePipeline(
+  store: any,
+  data: Req['removeFeatureFromReleasePipeline'],
+  options?: Parameters<
+    typeof releasePipelinesService.endpoints.removeFeature.initiate
+  >[1],
+) {
+  return store.dispatch(
+    releasePipelinesService.endpoints.removeFeature.initiate(data, options),
+  )
+}
 // END OF FUNCTION_EXPORTS
 
 export const {
@@ -117,6 +159,8 @@ export const {
   useGetReleasePipelineQuery,
   useGetReleasePipelinesQuery,
   usePublishReleasePipelineMutation,
+  useRemoveFeatureMutation,
+  useUpdateReleasePipelineMutation,
   // END OF EXPORTS
 } = releasePipelinesService
 

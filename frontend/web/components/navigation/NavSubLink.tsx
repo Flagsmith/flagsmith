@@ -6,41 +6,18 @@ import classNames from 'classnames'
 type NavSubLinkType = LinkProps & {
   icon: string | ReactNode
   children: ReactNode
-  disabled?: boolean
-  tooltip?: string
-  to?: string
 }
 
-const NavSubLink: FC<NavSubLinkType> = ({
-  children,
-  disabled,
-  icon,
-  to,
-  tooltip,
-  ...rest
-}) => {
+const NavSubLink: FC<NavSubLinkType> = ({ children, icon, ...rest }) => {
   return (
     <NavLink
-      to={to}
-      onClick={disabled ? (e) => e.preventDefault() : undefined}
       {...rest}
-      activeClassName={!disabled ? 'active' : ''}
-      className={classNames(rest.className, 'pt-2 nav-sub-link')}
+      activeClassName='active'
+      className={classNames(rest.className, 'py-md-2 py-1 px-1 nav-sub-link')}
     >
-      <div
-        className={classNames(
-          'd-flex gap-2 nav-sub-link-inner align-items-center',
-          disabled && 'nav-sub-link-disabled',
-        )}
-      >
+      <div className='d-flex gap-2 text-nowrap nav-sub-link-inner align-items-center'>
         {typeof icon === 'string' ? <IonIcon icon={icon} /> : icon}
-        {tooltip ? (
-          <Tooltip place='top' title={children}>
-            {tooltip}
-          </Tooltip>
-        ) : (
-          children
-        )}
+        {children}
       </div>
     </NavLink>
   )

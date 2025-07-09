@@ -548,8 +548,8 @@ def multivariate_options(
 
 
 @pytest.fixture()
-def identity_matching_segment(project, trait):  # type: ignore[no-untyped-def]
-    segment = Segment.objects.create(name="Matching segment", project=project)
+def identity_matching_segment(project: Project, trait: Trait) -> Segment:
+    segment: Segment = Segment.objects.create(name="Matching segment", project=project)
     matching_rule = SegmentRule.objects.create(
         segment=segment, type=SegmentRule.ALL_RULE
     )
@@ -563,12 +563,12 @@ def identity_matching_segment(project, trait):  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def api_client():  # type: ignore[no-untyped-def]
+def api_client() -> APIClient:
     return APIClient()
 
 
 @pytest.fixture()
-def feature(project: Project, environment: Environment) -> Feature:
+def feature(project: Project) -> Feature:
     return Feature.objects.create(name="Test Feature1", project=project)  # type: ignore[no-any-return]
 
 

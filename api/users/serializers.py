@@ -224,3 +224,11 @@ class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
 
 class ListUsersQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
     exclude_current = serializers.BooleanField(default=False)
+
+
+class UTMDataSerializer(serializers.Serializer[None]):
+    utm_source = serializers.CharField(required=False)
+    utm_medium = serializers.CharField(required=False)
+    utm_campaign = serializers.CharField(required=False)
+    utm_term = serializers.CharField(required=False)
+    utm_content = serializers.CharField(required=False)

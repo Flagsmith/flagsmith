@@ -31,6 +31,8 @@ import { withRouter } from 'react-router-dom'
 import Utils from 'common/utils/utils'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
+import ProjectProvider from 'common/providers/ProjectProvider'
+import BetaFlag from 'components/BetaFlag'
 
 const ProjectSettingsPage = class extends Component {
   static displayName = 'ProjectSettingsPage'
@@ -588,7 +590,12 @@ const ProjectSettingsPage = class extends Component {
                     {Utils.getFlagsmithHasFeature('feature_health') && (
                       <TabItem
                         data-test='feature-health-settings'
-                        tabLabel='Feature Health'
+                        tabLabel={
+                          <BetaFlag flagName={'feature_health'}>
+                            Feature Health
+                          </BetaFlag>
+                        }
+                        tabLabelString='Feature Health'
                       >
                         <EditHealthProvider
                           projectId={this.projectId}

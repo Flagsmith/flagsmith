@@ -6,7 +6,9 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": ["serve"],
+            "command": [
+                "serve"
+            ],
             "cpu": 0,
             "portMappings": [
                 {
@@ -16,7 +18,10 @@
                 }
             ],
             "healthCheck": {
-                "command": ["CMD-SHELL", "flagsmith healthcheck tcp"],
+                "command": [
+                    "CMD-SHELL",
+                    "flagsmith healthcheck tcp"
+                ],
                 "interval": 10,
                 "timeout": 2,
                 "retries": 5,
@@ -211,6 +216,18 @@
                 {
                     "name": "PROMETHEUS_ENABLED",
                     "value": "True"
+                },
+                {
+                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
+                    "value": "True"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
@@ -273,6 +290,10 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {
@@ -285,7 +306,9 @@
             }
         }
     ],
-    "requiresCompatibilities": ["FARGATE"],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
     "cpu": "1024",
     "memory": "2048"
 }

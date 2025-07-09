@@ -57,8 +57,12 @@ class HubspotClient:
         return results[0]  # type: ignore[no-any-return]
 
     def create_lead_form(
-        self, user: "FFAdminUser", hubspot_cookie: str | None = None
+        self,
+        user: "FFAdminUser",
+        hubspot_cookie: str | None = None,
+        utm_data: dict[str, str] | None = None,
     ) -> dict[str, Any]:
+        utm_data = utm_data or {}
         logger.info(
             f"Creating Hubspot lead form for user {user.email} with hubspot cookie {hubspot_cookie}"
         )
@@ -71,6 +75,10 @@ class HubspotClient:
             {"objectTypeId": "0-1", "name": "firstname", "value": user.first_name},
             {"objectTypeId": "0-1", "name": "lastname", "value": user.last_name},
         ]
+
+        fields.extend(
+            {"objectTypeId": "0-1", "name": k, "value": v} for k, v in utm_data.items()
+        )
 
         context = {}
         if hubspot_cookie:

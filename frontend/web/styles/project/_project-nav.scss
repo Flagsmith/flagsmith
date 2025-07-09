@@ -20,7 +20,6 @@ nav a {
   }
 }
 .nav-sub-link {
-  padding-bottom: 10px;
   color: $body-color;
   &-inner {
     padding: 4px;
@@ -86,6 +85,11 @@ nav a {
 .border-right {
   border-right: 1px solid $hr-border-color;
 }
+@include media-breakpoint-up(md) {
+  .border-md-right {
+    border-right:  1px solid $hr-border-color;
+  }
+}
 .collapsible__content {
   svg,
   ion-icon {
@@ -102,13 +106,6 @@ nav a {
     font-size: $font-size-base;
   }
 }
-.aside-nav a:hover {
-  svg {
-    path {
-      fill: $primary;
-    }
-  }
-}
 .collapsible-title {
   line-height: 32px;
   cursor: pointer;
@@ -123,34 +120,39 @@ nav a {
     pointer-events: none;
   }
 }
-.collapsible__content a {
-  padding-left: 12px;
-  padding-right: 4px;
-  margin-right: 10px;
-  line-height: 32px;
-  display: flex;
-  align-items: center;
-  border-radius: $border-radius;
-  &.active {
-    background-color: $primary-alfa-8;
+.fill-body {
+  svg {
+    path {
+      fill: $body-color;
+    }
   }
 }
-.dark {
-  .collapsible__content {
-    svg {
-      path {
-        fill: $body-color-dark;
-      }
-      opacity: 0.3;
+.fill-primary {
+  svg {
+    path {
+      fill: $primary;
     }
   }
-  .aside-nav a {
+}
+
+@include media-breakpoint-down(md) {
+  .nav-sub-link {
+    border-bottom: none !important;
     &.active {
-      background-color: $primary-alfa-16;
+      color: $primary;
+      path {
+        fill: $primary;
+      }
     }
   }
-  .aside-nav a:hover {
-    background-color: $primary-alfa-8;
+  .nav-modal {
+    left: -50px;
+    width: calc(100vw);
+  }
+}
+
+.dark {
+  .fill-body {
     svg {
       path {
         fill: $body-color-dark;

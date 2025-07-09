@@ -133,7 +133,7 @@ const ReleasePipelinesList = ({
       prevPage={() => onPageChange(page - 1)}
       goToPage={(page: number) => onPageChange(page)}
       renderRow={({
-        features_count,
+        features,
         id,
         name,
         published_at,
@@ -166,21 +166,23 @@ const ReleasePipelinesList = ({
                 <div>Stages</div>
               </div>
               <div className='text-center'>
-                <div className='fw-bold'>{features_count ?? 0}</div>
+                <div className='fw-bold'>{features?.length ?? 0}</div>
                 <div>Features</div>
               </div>
               <DropdownMenu
                 items={[
                   {
-                    disabled: isDeleting,
-                    icon: 'trash-2',
-                    label: 'Remove Release Pipeline',
+                    disabled: isPublishing || !!published_at,
+                    icon: 'edit' as IconName,
+                    label: 'Edit Release Pipeline',
                     onClick: () => {
-                      deleteReleasePipeline({
-                        pipelineId: id,
-                        projectId: Number(projectId),
-                      })
+                      history.push(
+                        `/project/${projectId}/release-pipelines/${id}/edit`,
+                      )
                     },
+                    tooltip: published_at
+                      ? 'Cannot edit a published release pipeline'
+                      : undefined,
                   },
                   ...(!isPublished
                     ? [
@@ -197,6 +199,17 @@ const ReleasePipelinesList = ({
                         },
                       ]
                     : []),
+                  {
+                    disabled: isDeleting,
+                    icon: 'trash-2',
+                    label: 'Remove Release Pipeline',
+                    onClick: () => {
+                      deleteReleasePipeline({
+                        pipelineId: id,
+                        projectId: Number(projectId),
+                      })
+                    },
+                  },
                 ]}
               />
             </Row>

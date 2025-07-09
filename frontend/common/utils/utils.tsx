@@ -27,6 +27,8 @@ import { defaultFlags } from 'common/stores/default-flags'
 import Color from 'color'
 import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
+import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
+import { TimeUnit } from 'components/release-pipelines/constants'
 
 const semver = require('semver')
 
@@ -47,6 +49,7 @@ export type PaidFeature =
   | 'SCHEDULE_FLAGS'
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
+  | 'RELEASE_PIPELINES'
 
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
@@ -224,6 +227,162 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'Create Project'
   },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ):
+    | {
+        amountOfTime: number
+        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
+      }
+    | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ):
+    | {
+        amountOfTime: number
+        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
+      }
+    | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
+  getExistingWaitForTime: (
+    waitFor: string | undefined,
+  ):
+    | {
+        amountOfTime: number
+        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
+      }
+    | undefined => {
+    if (!waitFor) {
+      return
+    }
+
+    const timeParts = waitFor.split(':')
+
+    if (timeParts.length != 3) return
+
+    const [hours, minutes, seconds] = timeParts
+
+    const amountOfMinutes = Number(minutes)
+    const amountOfHours = Number(hours)
+    const amountOfSeconds = Number(seconds)
+
+    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
+      return
+    }
+
+    // Days
+    if (
+      amountOfHours % 24 === 0 &&
+      amountOfMinutes === 0 &&
+      amountOfSeconds === 0
+    ) {
+      return {
+        amountOfTime: amountOfHours / 24,
+        timeUnit: TimeUnit.DAY,
+      }
+    }
+
+    // Hours
+    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
+      return {
+        amountOfTime: amountOfHours,
+        timeUnit: TimeUnit.HOUR,
+      }
+    }
+
+    // Minutes
+    return {
+      amountOfTime: amountOfMinutes,
+      timeUnit: TimeUnit.MINUTE,
+    }
+  },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -286,6 +445,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: projectFlag.type,
     }
   },
+
   getFlagsmithHasFeature(key: string) {
     return flagsmith.hasFeature(key)
   },
@@ -317,7 +477,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return false
   },
-
   getManageFeaturePermission(isChangeRequest: boolean) {
     if (isChangeRequest) {
       return 'CREATE_CHANGE_REQUEST'
@@ -330,12 +489,14 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'Update Feature State'
   },
+
   getManageUserPermission() {
     return 'MANAGE_IDENTITIES'
   },
   getManageUserPermissionDescription() {
     return 'Manage Identities'
   },
+
   getNextPlan: (skipFree?: boolean) => {
     const currentPlan = Utils.getPlanName(AccountStore.getActiveOrgPlan())
     if (currentPlan !== planNames.enterprise && !Utils.isSaas()) {
@@ -353,7 +514,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
-
   getOrganisationHomePage(id?: string) {
     const orgId = id || AccountStore.getOrganisation()?.id
     if (!orgId) {
@@ -365,7 +525,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
   },
-
   getPlanName: (plan: string) => {
     if (plan && plan.includes('free')) {
       return planNames.free
@@ -423,6 +582,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
   getProjectColour(index: number) {
     return Constants.projectColors[index % (Constants.projectColors.length - 1)]
   },
+
   getRequiredPlan: (feature: PaidFeature) => {
     let plan
     switch (feature) {
@@ -438,6 +598,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       case 'STALE_FLAGS':
       case 'REALTIME':
       case 'METADATA':
+      case 'RELEASE_PIPELINES':
       case 'SAML': {
         plan = 'enterprise'
         break
@@ -540,10 +701,19 @@ const Utils = Object.assign({}, require('./base/_utils'), {
 
     return str
   },
-
+  getUtmsFromUrl(): UtmsType {
+    const params = Utils.fromParam() as Record<string, string>
+    return TRACKED_UTMS.reduce((utms, key) => {
+      if (params[key]) {
+        utms[key] = params[key]
+      }
+      return utms
+    }, {} as UtmsType)
+  },
   getViewIdentitiesPermission() {
     return 'VIEW_IDENTITIES'
   },
+
   hasEntityPermission(key: string, entityPermissions: UserPermissions) {
     if (entityPermissions?.admin) return true
     return !!entityPermissions?.permissions?.find(
@@ -564,10 +734,10 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     return false
   },
   isSaas: () => selectBuildVersion(getStore().getState())?.backend?.is_saas,
+
   isValidNumber(value: any) {
     return /^-?\d*\.?\d+$/.test(`${value}`)
   },
-
   isValidURL(value: any) {
     const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i
     return regex.test(value)
@@ -587,6 +757,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       head.appendChild(script)
     })
   },
+
   numberWithCommas(x: number) {
     if (typeof x !== 'number') return ''
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -598,7 +769,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     Utils.setupCrisp()
   },
-
   removeElementFromArray(array: any[], index: number) {
     return array.slice(0, index).concat(array.slice(index + 1))
   },
@@ -611,6 +781,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       </Tooltip>
     )
   },
+
   sanitiseDiffString: (value: FlagsmithValue) => {
     if (value === undefined || value == null) {
       return ''
@@ -674,11 +845,11 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       }
     }
   },
-
   tagDisabled: (tag: Tag | undefined) => {
     const hasStaleFlagsPermission = Utils.getPlansPermission('STALE_FLAGS')
     return tag?.type === 'STALE' && !hasStaleFlagsPermission
   },
+
   toKebabCase: (string: string) =>
     string
       .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -708,7 +879,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         return true
     }
   },
-
   validateRule(rule: SegmentCondition) {
     if (!rule) return false
     if (rule.delete) {
@@ -765,6 +935,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
         )
     }
   },
+
   valueToFeatureState(value: FlagsmithValue, trimSpaces = true) {
     const val = Utils.getTypedValue(value, undefined, trimSpaces)
 
@@ -793,7 +964,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: 'unicode',
     }
   },
-
   valueToTrait(value: FlagsmithValue) {
     const val = Utils.getTypedValue(value)
 

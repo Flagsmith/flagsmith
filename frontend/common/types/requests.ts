@@ -24,6 +24,7 @@ import {
   StageTrigger,
   StageActionType,
 } from './responses'
+import { UtmsType } from './utms'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -81,6 +82,7 @@ export type RegisterRequest = {
   superuser?: boolean
   organisation_name?: string
   marketing_consent_given?: boolean
+  utm_data?: UtmsType
 }
 
 export interface StageActionRequest {
@@ -88,11 +90,15 @@ export interface StageActionRequest {
   action_body: { enabled: boolean; segment_id?: number }
 }
 
-export type ReleasePipelineRequest = {
+export interface ReleasePipelineRequest {
   project: number
   name: string
   description?: string
   stages: PipelineStageRequest[]
+}
+
+export interface UpdateReleasePipelineRequest extends ReleasePipelineRequest {
+  id: number
 }
 
 export type PipelineStageRequest = {
@@ -738,6 +744,7 @@ export type Req = {
   getReleasePipelines: PagedRequest<{ projectId: number }>
   getReleasePipeline: { projectId: number; pipelineId: number }
   createReleasePipeline: ReleasePipelineRequest
+  updateReleasePipeline: UpdateReleasePipelineRequest
   getPipelineStages: PagedRequest<{
     projectId: number
     pipelineId: number
@@ -759,6 +766,11 @@ export type Req = {
   publishReleasePipeline: {
     projectId: number
     pipelineId: number
+  }
+  removeFeatureFromReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
   }
   // END OF TYPES
 }

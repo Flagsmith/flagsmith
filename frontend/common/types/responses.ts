@@ -266,7 +266,7 @@ export type GettingStartedTask = {
 export type Onboarding = {
   tools: {
     completed: boolean
-    selection: string[]
+    integrations: string[]
   }
   tasks: GettingStartedTask[]
 }
@@ -844,7 +844,7 @@ export interface ReleasePipeline {
   stages_count: number
   published_at: string
   published_by: number
-  features_count: number
+  features: number[]
 }
 
 export interface SingleReleasePipeline extends ReleasePipeline {

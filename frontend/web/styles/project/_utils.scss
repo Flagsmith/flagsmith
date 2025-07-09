@@ -211,6 +211,7 @@
 
 .overflow-ellipsis {
     width: 100%;
+    text-overflow: ellipsis;
     >* {
         white-space: nowrap;
         overflow: hidden;
@@ -254,4 +255,14 @@
     display: none;
   }
   background-color: $bg-light200;
+}
+
+@include media-breakpoint-up(md) {
+    .left-md-0 {
+        left:0;
+    }
+}
+
+.overflow-x-hidden{
+  overflow-x: hidden !important;
 }

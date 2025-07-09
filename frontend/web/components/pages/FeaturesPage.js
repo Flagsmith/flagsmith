@@ -50,6 +50,7 @@ const FeaturesPage = class extends Component {
           ? params.owners.split(',').map((v) => parseInt(v))
           : [],
       page: params.page ? parseInt(params.page) - 1 : 1,
+      releasePipelines: [],
       search: params.search || null,
       showArchived: params.is_archived === 'true',
       sort: {
@@ -596,7 +597,6 @@ const FeaturesPage = class extends Component {
                                 {({ permission }) => (
                                   <FeatureRow
                                     environmentFlags={environmentFlags}
-                                    projectFlags={projectFlags}
                                     permission={permission}
                                     history={this.props.history}
                                     environmentId={environmentId}
