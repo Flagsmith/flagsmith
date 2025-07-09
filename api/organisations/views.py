@@ -112,7 +112,6 @@ class OrganisationViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
         """
 
         user = request.user
-        # register_hubspot_tracker_and_track_user(request, user)
         serializer = OrganisationSerializerFull(data=request.data)
         if serializer.is_valid():
             org = serializer.save()

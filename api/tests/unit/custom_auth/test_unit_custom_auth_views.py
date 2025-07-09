@@ -184,7 +184,7 @@ def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert user is not None
-    assert not hubspot_cookie or (
-        hubspot_tracker is not None and hubspot_tracker.hubspot_cookie == hubspot_cookie
-    )
+    assert hubspot_tracker is not None
+    assert not hubspot_cookie or hubspot_tracker.hubspot_cookie == hubspot_cookie
+
     mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
