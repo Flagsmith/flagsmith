@@ -1,10 +1,6 @@
 import { FC } from 'react'
 import OrganisationStore from 'common/stores/organisation-store'
-import ChangeRequestStore from 'common/stores/change-requests-store'
-import { Environment } from 'common/types/responses'
 import { RouterChildContext } from 'react-router'
-import Utils from 'common/utils/utils'
-import ProjectStore from 'common/stores/project-store'
 import { useHasPermission } from 'common/providers/Permission'
 import Constants from 'common/constants'
 import WarningMessage from 'components/WarningMessage'
@@ -20,7 +16,7 @@ import { ChangeRequestPageInner } from './ChangeRequestPage'
 import { useGetSegmentQuery } from 'common/services/useSegment'
 import { useGetProjectQuery } from 'common/services/useProject'
 import DiffSegment from 'components/diff/DiffSegment'
-import ConfigProvider from "common/providers/ConfigProvider";
+import ConfigProvider from 'common/providers/ConfigProvider'
 
 type ProjectChangeRequestPageType = {
   router: RouterChildContext['router']
@@ -37,7 +33,6 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
   router,
 }) => {
   const { id, projectId } = match.params
-  const error = ChangeRequestStore.error
   const approvePermission = useHasPermission({
     id: projectId,
     level: 'project',
@@ -91,7 +86,7 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
   }
 
   const removeOwner = (id: number, isUser = true) => {
-    if (ChangeRequestStore.isLoading || !changeRequest) return
+    if (!changeRequest) return
     updateChangeRequest({
       data: {
         ...changeRequest,

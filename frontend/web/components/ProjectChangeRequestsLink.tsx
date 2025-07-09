@@ -1,9 +1,9 @@
 import React, { FC } from 'react'
 import Icon from './Icon'
-import NavSubLink from './NavSubLink'
 import { useGetProjectChangeRequestsQuery } from 'common/services/useProjectChangeRequest'
 import Utils from 'common/utils/utils'
 import { useGetProjectQuery } from 'common/services/useProject'
+import NavSubLink from './navigation/NavSubLink'
 
 type ProjectChangeRequestsLinkType = {
   projectId: string

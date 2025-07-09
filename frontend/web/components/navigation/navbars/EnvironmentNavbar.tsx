@@ -1,10 +1,10 @@
-import React, { FC } from 'react'
+import React, { FC, useRef } from 'react'
 import Utils from 'common/utils/utils'
 import Permission from 'common/providers/Permission'
-import ChangeRequestStore from 'common/stores/change-requests-store'
 import classNames from 'classnames'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import SidebarLink from 'components/navigation/SidebarLink'
+import { useGetChangeRequestsQuery } from 'common/services/useChangeRequest'
 
 type EnvironmentNavType = {
   projectId: number
@@ -19,24 +19,39 @@ const EnvironmentNavbar: FC<EnvironmentNavType> = ({
   mobile,
   projectId,
 }) => {
+  const date = useRef(moment().toISOString())
+
   const { data: environments } = useGetEnvironmentsQuery(
     {
       projectId: `${projectId}`,
     },
     { skip: !projectId },
   )
+
+  const { data: scheduledData } = useGetChangeRequestsQuery({
+    committed: true,
+    environmentId,
+    live_from_after: date.current,
+    page_size: 1,
+  })
+
+  const { data: changeRequestsData } = useGetChangeRequestsQuery({
+    committed: false,
+    environmentId,
+    page_size: 1,
+  })
+
   const environment = environments?.results?.find(
     (v) => v.api_key === environmentId,
   )
-  const changeRequestsEnabled = Utils.changeRequestsEnabled(
-    environment?.minimum_change_request_approvals,
-  )
-  const changeRequest = changeRequestsEnabled
-    ? ChangeRequestStore.model[environmentId]
-    : null
-  const changeRequests = changeRequest?.count || 0
-  const scheduled =
-    (environment && ChangeRequestStore.scheduled[environmentId]?.count) || 0
+
+  const changeRequests =
+    (Utils.changeRequestsEnabled(
+      environment?.minimum_change_request_approvals,
+    ) &&
+      changeRequestsData?.count) ||
+    0
+  const scheduled = scheduledData?.count || 0
   const inner = (
     <div
       className={classNames(

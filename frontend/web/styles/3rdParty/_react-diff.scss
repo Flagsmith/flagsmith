@@ -17,13 +17,9 @@
 }
 .react-diff-same {
   font-size: 13px;
+  background-color: rgba(0, 0, 0, 0.08);
   .react-diff-marker {
-    background-color: rgba(0, 0, 0, 0.16);
-    width: 27px;
-    height: 28px;
-    justify-content: center;
-    display: flex;
-    align-items: center;
+    opacity: 0;
   }
   pre {
     padding-left: 2px;

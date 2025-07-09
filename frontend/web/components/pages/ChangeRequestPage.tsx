@@ -71,7 +71,7 @@ const ChangeRequestPage: FC<ChangeRequestPageType> = ({ match, router }) => {
   const approvePermission = useHasPermission({
     id: environmentId,
     level: 'environment',
-    permission: Utils.getApproveChangeRequestPermission(true),
+    permission: 'APPROVE_CHANGE_REQUEST',
   })
   const publishPermission = useHasPermission({
     id: environmentId,

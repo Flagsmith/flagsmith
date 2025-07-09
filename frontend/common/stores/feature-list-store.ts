@@ -30,6 +30,7 @@ import { getVersionFeatureState } from 'common/services/useVersionFeatureState'
 import { getFeatureStates } from 'common/services/useFeatureState'
 import { getSegments } from 'common/services/useSegment'
 import { projectService } from 'common/services/useProject'
+import { changeRequestService } from 'common/services/useChangeRequest'
 
 const Dispatcher = require('common/dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -661,6 +662,9 @@ const controller = {
                     },
                   )
                 } else {
+                  getStore().dispatch(
+                    changeRequestService.util.invalidateTags(['ChangeRequest']),
+                  )
                   AppActions.getChangeRequest(
                     updatedChangeRequest.id,
                     projectId,

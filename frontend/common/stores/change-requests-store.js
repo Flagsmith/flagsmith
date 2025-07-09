@@ -5,6 +5,9 @@ const { flatten } = require('lodash')
 const {
   addFeatureSegmentsToFeatureStates,
 } = require('../services/useFeatureState')
+const { getStore } = require('common/store')
+const { segmentService } = require('common/services/useSegment')
+const { changeRequestService } = require('common/services/useChangeRequest')
 
 const PAGE_SIZE = 20
 const transformChangeRequest = async (changeRequest) => {
@@ -29,6 +32,9 @@ const controller = {
             store.model[id] = await transformChangeRequest(res)
             cb && cb()
             store.loaded()
+            getStore().dispatch(
+              changeRequestService.util.invalidateTags(['ChangeRequest']),
+            )
           })
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -39,6 +45,9 @@ const controller = {
       .delete(`${Project.api}features/workflows/change-requests/${id}/`)
       .then(() => {
         store.loaded()
+        getStore().dispatch(
+          changeRequestService.util.invalidateTags(['ChangeRequest']),
+        )
         cb()
       })
       .catch((e) => API.ajaxHandler(store, e))
@@ -70,50 +79,6 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  getChangeRequests: (envId, { committed, live_from_after }, page) => {
-    const has4EyesPermission =
-      Utils.getPlansPermission('4_EYES') ||
-      Utils.getPlansPermission('SCHEDULE_FLAGS')
-    if (!has4EyesPermission) {
-      return
-    }
-
-    if (!envId) {
-      return
-    }
-    store.loading()
-    store.envId = envId
-    const committedParams = `${
-      committed || live_from_after ? 'committed=1' : 'committed=0'
-    }` // request only committed for closed and scheduled
-    const liveFromParams = live_from_after
-      ? `&live_from_after=${live_from_after}`
-      : '' // request live from after for scheduled
-    const liveFromBeforeParams = committed
-      ? `&live_from_before=${new Date().toISOString()}`
-      : '' // request live from before for closed
-    let endpoint =
-      page ||
-      `${Project.api}environments/${envId}/list-change-requests/?${committedParams}${liveFromParams}${liveFromBeforeParams}`
-    if (!endpoint.includes('page_size')) {
-      endpoint += `&page_size=${PAGE_SIZE}`
-    }
-    data
-      .get(endpoint)
-      .then((res) => {
-        res.currentPage = page ? parseInt(page.split('page=')[1]) : 1
-        res.pageSize = PAGE_SIZE
-        if (live_from_after) {
-          store.scheduled[envId] = res
-        } else if (committed) {
-          store.committed[envId] = res
-        } else {
-          store.model[envId] = res
-        }
-        store.loaded()
-      })
-      .catch((e) => API.ajaxHandler(store, e))
-  },
   updateChangeRequest: (changeRequest) => {
     store.loading()
     data
@@ -139,6 +104,9 @@ const controller = {
               `${Project.api}features/workflows/change-requests/${changeRequest.id}/`,
             )
             store.model[changeRequest.id] = await transformChangeRequest(res)
+            getStore().dispatch(
+              changeRequestService.util.invalidateTags(['ChangeRequest']),
+            )
             store.loaded()
           })
           .catch((e) => API.ajaxHandler(store, e))
@@ -157,16 +125,6 @@ const store = Object.assign({}, BaseStore, {
 store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   const action = payload.action // this is our action from handleViewAction
   switch (action.actionType) {
-    case Actions.GET_CHANGE_REQUESTS:
-      controller.getChangeRequests(
-        action.environment,
-        {
-          committed: action.committed,
-          live_from_after: action.live_from_after,
-        },
-        action.page,
-      )
-      break
     case Actions.GET_CHANGE_REQUEST:
       controller.getChangeRequest(
         action.id,
