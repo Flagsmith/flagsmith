@@ -1,6 +1,5 @@
 from datetime import date, datetime, timedelta
 from logging import getLogger
-from typing import List
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -79,7 +78,7 @@ def get_usage_data_from_local_db(
     date_start: datetime | None = None,
     date_stop: datetime | None = None,
     labels_filter: Labels | None = None,
-) -> List[UsageData]:
+) -> list[UsageData]:
     if date_start is None:
         date_start = timezone.now() - timedelta(days=30)
     if date_stop is None:
@@ -138,7 +137,7 @@ def get_feature_evaluation_data(
     environment_id: int,
     period_days: int = 30,
     labels_filter: Labels | None = None,
-) -> List[FeatureEvaluationData]:
+) -> list[FeatureEvaluationData]:
     if settings.USE_POSTGRES_FOR_ANALYTICS:
         return get_feature_evaluation_data_from_local_db(
             feature=feature,
@@ -164,7 +163,7 @@ def get_feature_evaluation_data_from_local_db(
     environment_id: int,
     period_days: int = 30,
     labels_filter: Labels | None = None,
-) -> List[FeatureEvaluationData]:
+) -> list[FeatureEvaluationData]:
     filter = Q(
         environment_id=environment_id,
         bucket_size=constants.ANALYTICS_READ_BUCKET_SIZE,
