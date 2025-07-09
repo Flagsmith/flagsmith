@@ -1226,6 +1226,7 @@ def test_environment_create_with_use_v2_feature_versioning_true(
     assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
 
 
 def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(
@@ -1244,6 +1245,7 @@ def test_environment_clone_from_versioned_environment_with_use_v2_feature_versio
     assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
 
 
 def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(
@@ -1259,6 +1261,7 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     new_environment = environment.clone(name="new-environment")
 
     # Then
-    assert not EnvironmentFeatureVersion.objects.filter(
+    assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
