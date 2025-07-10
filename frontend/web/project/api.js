@@ -328,7 +328,7 @@ global.API = {
             'tasks',
             (user.onboarding?.tasks || [])?.map((v) => v.name),
           )
-          .set('integrations', user.onboarding?.tools?.selection || [])
+          .set('integrations', user.onboarding?.tools?.integrations || [])
 
         amplitude.identify(identify)
       }

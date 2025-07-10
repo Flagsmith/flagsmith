@@ -15,6 +15,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_SAVE,
     LifecycleModel,
     hook,
 )
@@ -49,6 +50,7 @@ from environments.metrics import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from integrations.flagsmith.client import get_client
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -194,6 +196,26 @@ class Environment(
             or settings.CACHE_ENVIRONMENT_DOCUMENT_SECONDS > 0
         ):
             environment_document_cache.delete(self.api_key)
+
+    # Use the BEFORE_SAVE hook instead of BEFORE_CREATE to account for the logic in the
+    # Environment.clone() method
+    @hook(BEFORE_SAVE, when="pk", is_now=None)  # type: ignore[misc]
+    def enable_v2_versioning(self) -> None:
+        if self.use_v2_feature_versioning:
+            # if the environment has already been created with versioning enabled,
+            # we don't want to disable it based on the flag state.
+            return
+
+        flagsmith_client = get_client("local", local_eval=True)
+        organisation = self.project.organisation
+        enable_v2_versioning = flagsmith_client.get_identity_flags(
+            organisation.flagsmith_identifier,
+            traits={
+                "organisation_id": organisation.id,
+                "subscription.plan": organisation.subscription.plan,
+            },
+        ).is_feature_enabled("enable_feature_versioning_for_new_environments")
+        self.use_v2_feature_versioning = enable_v2_versioning
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)

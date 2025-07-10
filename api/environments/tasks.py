@@ -11,6 +11,7 @@ from environments.models import (
     environment_wrapper,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.tasks import enable_v2_versioning
 from sse import (  # type: ignore[attr-defined]
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
@@ -91,6 +92,11 @@ def clone_environment_feature_states(
     else:
         for feature_state in queryset:
             feature_state.clone(clone, live_from=feature_state.live_from)
+
+        if clone.use_v2_feature_versioning:
+            # This logic exists to handle the rollout of v2 versioning, allowing us
+            # to create new versioned environments from non-versioned environments.
+            enable_v2_versioning(environment_id=clone.id)
 
     clone.is_creating = False
     clone.save()
