@@ -51,6 +51,7 @@ import Input from 'components/base/forms/Input'
 import { useGetEnvironmentQuery } from 'common/services/useEnvironment'
 import { useRouteContext } from 'components/providers/RouteContext'
 import SettingTitle from 'components/SettingTitle'
+import ChangeRequestsSetting from 'components/ChangeRequestsSetting'
 
 const showDisabledFlagOptions: { label: string; value: boolean | null }[] = [
   { label: 'Inherit from Project', value: null },
@@ -589,75 +590,24 @@ const EnvironmentSettingsPage: React.FC = () => {
                         </div>
                       )}
                       <FormGroup className='mt-4'>
-                        <Setting
+                        <ChangeRequestsSetting
                           feature='4_EYES'
-                          checked={
-                            has4EyesPermission &&
-                            Utils.changeRequestsEnabled(
-                              currentEnv?.minimum_change_request_approvals,
-                            )
+                          isLoading={saveDisabled}
+                          value={currentEnv?.minimum_change_request_approvals}
+                          onSave={saveEnv}
+                          onToggle={(v) =>
+                            updateCurrentEnv({
+                              minimum_change_request_approvals: v,
+                            })
                           }
-                          onChange={(value) =>
-                            updateCurrentEnv(
-                              {
-                                minimum_change_request_approvals: value
-                                  ? 0
-                                  : null,
-                              },
-                              true,
-                              true,
-                            )
-                          }
+                          onChange={(value) => {
+                            updateCurrentEnv({
+                              minimum_change_request_approvals: value
+                                ? parseInt(value)
+                                : undefined,
+                            })
+                          }}
                         />
-                        {Utils.changeRequestsEnabled(
-                          currentEnv?.minimum_change_request_approvals,
-                        ) &&
-                          has4EyesPermission && (
-                            <div className='mt-4'>
-                              <div className='mb-2'>
-                                <strong>Minimum number of approvals</strong>
-                              </div>
-                              <Row>
-                                <Flex>
-                                  <Input
-                                    value={`${currentEnv?.minimum_change_request_approvals}`}
-                                    inputClassName='input input--wide'
-                                    name='env-name'
-                                    min={0}
-                                    style={{ minWidth: 50 }}
-                                    onChange={(
-                                      e: React.ChangeEvent<HTMLInputElement>,
-                                    ) => {
-                                      const value = Utils.safeParseEventValue(e)
-                                      updateCurrentEnv(
-                                        {
-                                          minimum_change_request_approvals:
-                                            value ? parseInt(value) : undefined,
-                                        },
-                                        false,
-                                      )
-                                    }}
-                                    isValid={
-                                      !!currentEnv?.minimum_change_request_approvals
-                                    }
-                                    type='number'
-                                    placeholder='Minimum number of approvals'
-                                  />
-                                </Flex>
-                                <Button
-                                  type='button'
-                                  onClick={() => saveEnv()}
-                                  id='save-env-btn'
-                                  className='ml-3'
-                                  disabled={
-                                    saveDisabled || isSaving || isLoading
-                                  }
-                                >
-                                  {isSaving || isLoading ? 'Saving' : 'Save'}
-                                </Button>
-                              </Row>
-                            </div>
-                          )}
                       </FormGroup>
                       <SettingTitle danger>Delete Environment</SettingTitle>
                       <FormGroup className='mt-4'>
