@@ -65,6 +65,19 @@
       "feature_state_value": null,
       "featurestate_uuid": "f632c3f8-6f49-45c5-9977-762d9880e7f7",
       "multivariate_feature_state_values": []
+    },
+    {
+      "django_id": 907926,
+      "enabled": false,
+      "feature": {
+        "id": 149200,
+        "name": "sdk_metrics_labels",
+        "type": "STANDARD"
+      },
+      "feature_segment": null,
+      "feature_state_value": "",
+      "featurestate_uuid": "b6aacfaf-5b02-4b58-9156-f018ffa85c2d",
+      "multivariate_feature_state_values": []
     }
   ],
   "id": 0,
