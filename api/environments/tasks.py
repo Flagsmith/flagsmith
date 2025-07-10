@@ -1,4 +1,6 @@
-from django.db.models import Prefetch
+from datetime import timedelta
+
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 from task_processor.decorators import (
     register_task_handler,
@@ -14,7 +16,9 @@ from environments.models import (
 )
 from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
-from features.versioning.versioning_service import get_environment_flags_queryset
+from features.versioning.versioning_service import (
+    get_environment_flags_list,
+)
 from sse import (  # type: ignore[attr-defined]
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
@@ -60,7 +64,7 @@ def delete_environment(environment_id: int) -> None:
     Environment.objects.get(id=environment_id).delete()
 
 
-@register_task_handler()
+@register_task_handler(timeout=timedelta(hours=1))
 def clone_environment_feature_states(
     source_environment_id: int, clone_environment_id: int
 ) -> None:
@@ -69,42 +73,33 @@ def clone_environment_feature_states(
 
     now = timezone.now()
 
-    for feature_state in (
-        get_environment_flags_queryset(
-            environment=source,
-        )
-        .select_related(
-            "environment_feature_version",
-            "feature",
-            "feature_segment",
-            "environment",
-            "feature_state_value",
-        )
-        .prefetch_related(
+    source_feature_states = get_environment_flags_list(
+        environment=source,
+        additional_prefetch_related_args=[
             Prefetch(
                 "multivariate_feature_state_values",
                 queryset=MultivariateFeatureStateValue.objects.select_related(
                     "multivariate_feature_option"
                 ),
             )
-        )
-        .filter(identity__isnull=True)
-    ):
-        fs_clone_kwargs = {"env": clone, "live_from": feature_state.live_from}
+        ],
+        additional_filters=Q(identity__isnull=True),
+    )
 
-        if efv := feature_state.environment_feature_version:
-            efv_clone = efv.clone_to_environment(environment=clone)
-            fs_clone_kwargs.update(environment_feature_version=efv_clone)
-        elif clone.use_v2_feature_versioning:
-            efv = EnvironmentFeatureVersion.objects.create(
+    for feature_state in source_feature_states:
+        kwargs = {"env": clone}
+
+        if clone.use_v2_feature_versioning:
+            efv, _ = EnvironmentFeatureVersion.objects.get_or_create(
                 environment=clone,
                 feature=feature_state.feature,
-                live_from=feature_state.live_from,
                 published_at=now,
             )
-            fs_clone_kwargs.update(environment_feature_version=efv)
+            kwargs.update(environment_feature_version=efv)
+        else:
+            kwargs.update(live_from=now)
 
-        feature_state.clone(**fs_clone_kwargs)
+        feature_state.clone(**kwargs)
 
     clone.is_creating = False
     clone.save()

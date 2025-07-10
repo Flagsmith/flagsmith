@@ -1252,6 +1252,7 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     project: Project,
     environment: Environment,
     feature: Feature,
+    segment_featurestate: FeatureState,
     enable_v2_versioning_for_new_environments: typing.Callable[[], None],
 ) -> None:
     # Given
@@ -1264,8 +1265,13 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     # Then
     assert new_environment.use_v2_feature_versioning
 
-    latest_feature_states = get_environment_flags_queryset(new_environment)
-    assert latest_feature_states.count() == 1
+    # we only expect a single environment feature version as we are essentially
+    # taking a snapshot and creating a new environment.
+    efv = EnvironmentFeatureVersion.objects.filter(
+        environment=new_environment, feature=feature
+    ).get()
 
-    latest_feature_state = latest_feature_states.get()
-    assert latest_feature_state.environment_feature_version is not None
+    # But we expect 2 feature states, each with the same version
+    latest_feature_states = get_environment_flags_queryset(new_environment)
+    assert latest_feature_states.count() == 2
+    assert {fs.environment_feature_version for fs in latest_feature_states} == {efv}
