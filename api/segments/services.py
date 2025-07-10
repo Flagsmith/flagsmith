@@ -69,6 +69,7 @@ class SegmentCloneService:
             change_request=change_request,
             project=self.segment.project,
             feature=self.segment.feature,
+            version=None,  # TODO: Why not keep track of version?
         )
 
         # Keep track of the original segment
