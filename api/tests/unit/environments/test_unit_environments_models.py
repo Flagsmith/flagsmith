@@ -1255,13 +1255,17 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     enable_v2_versioning_for_new_environments: typing.Callable[[], None],
 ) -> None:
     # Given
+    assert not environment.use_v2_feature_versioning
     enable_v2_versioning_for_new_environments()
 
     # When
     new_environment = environment.clone(name="new-environment")
 
     # Then
-    assert EnvironmentFeatureVersion.objects.filter(
-        environment=new_environment, feature=feature
-    ).exists()
     assert new_environment.use_v2_feature_versioning
+
+    latest_feature_states = get_environment_flags_queryset(new_environment)
+    assert latest_feature_states.count() == 1
+
+    latest_feature_state = latest_feature_states.get()
+    assert latest_feature_state.environment_feature_version is not None
