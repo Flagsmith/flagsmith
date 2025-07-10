@@ -84,10 +84,10 @@ def clone_environment_feature_states(
         additional_filters=Q(identity__isnull=True),
     )
 
-    # Since we only want to create a single version for each environment / feature
-    # combination in the new environment to create a 'snapshot' of the source
-    # environment, we keep a local cache of environment feature version objects
-    # to avoid having to use get_or_create and hit the db unnecessarily.
+    # Since, in versioned environments, we only want to create a single version for
+    # each feature to create a 'snapshot' of the source environment, we keep a local
+    # cache of EnvironmentFeatureVersion objects to avoid having to use get_or_create
+    # and hit the db unnecessarily.
     version_map: dict[int, EnvironmentFeatureVersion] = {}
 
     for feature_state in source_feature_states:
