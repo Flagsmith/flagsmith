@@ -46,6 +46,7 @@ import {
   useResendUserInviteMutation,
 } from 'common/services/useInvites'
 import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
+import LastLogin from 'components/users-permissions/OrganisationUsersList/LastLogin'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -183,24 +184,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
       </div>,
       'p-0 side-modal',
     )
-  }
-
-  const formatLastLoggedIn = (last_login: string | undefined) => {
-    if (!last_login) return 'Never'
-
-    const diff = moment().diff(moment(last_login), 'days')
-    if (diff >= 30) {
-      return (
-        <div className='mb-1'>
-          {`${diff} days ago`}
-          <br />
-          <div className='list-item-subtitle'>
-            {moment(last_login).format('Do MMM YYYY')}
-          </div>
-        </div>
-      )
-    }
-    return 'Within 30 days'
   }
 
   const deleteUser = (id: number, userDisplayName: string) => {
@@ -631,9 +614,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   }}
                                   className='table-column'
                                 >
-                                  <div className='fs-small lh-sm'>
-                                    {formatLastLoggedIn(last_login)}
-                                  </div>
+                                  <LastLogin lastLogin={last_login} />
                                 </div>
                                 <div
                                   style={{
