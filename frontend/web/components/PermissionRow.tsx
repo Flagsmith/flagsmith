@@ -8,7 +8,7 @@ import {
   RolePermission,
   UserPermissions,
 } from 'common/types/responses'
-import DerivedPermissionsList from './derived-permissions/DerivedPermissionsList'
+import DerivedPermissionsList from './users-permissions/derived-permissions/DerivedPermissionsList'
 import PermissionControl from './PermissionControl'
 import { PermissionRoleType } from 'common/types/requests'
 
