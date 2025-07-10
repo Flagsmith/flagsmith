@@ -1267,9 +1267,9 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
 
     # we only expect a single environment feature version as we are essentially
     # taking a snapshot and creating a new environment.
-    efv = EnvironmentFeatureVersion.objects.filter(
+    efv = EnvironmentFeatureVersion.objects.get(
         environment=new_environment, feature=feature
-    ).get()
+    )
 
     # But we expect 2 feature states, each with the same version
     latest_feature_states = get_environment_flags_queryset(new_environment)
