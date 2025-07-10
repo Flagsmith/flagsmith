@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
-from logging import getLogger
 
+import structlog
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db.models import Q, Sum
@@ -28,7 +28,7 @@ from environments.models import Environment
 from features.models import Feature
 from organisations.models import Organisation, OrganisationSubscriptionInformationCache
 
-logger = getLogger(__name__)
+logger = structlog.get_logger("app_analytics")
 
 
 def get_usage_data(
@@ -67,7 +67,10 @@ def get_usage_data(
             labels_filter=labels_filter,
         )
 
-    logger.warning(constants.NO_ANALYTICS_DATABASE_CONFIGURED_WARNING)
+    logger.warning(
+        "no-analytics-database-configured",
+        details=constants.NO_ANALYTICS_DATABASE_CONFIGURED_WARNING,
+    )
     return []
 
 
@@ -154,7 +157,10 @@ def get_feature_evaluation_data(
             labels_filter=labels_filter,
         )
 
-    logger.warning(constants.NO_ANALYTICS_DATABASE_CONFIGURED_WARNING)
+    logger.warning(
+        "no-analytics-database-configured",
+        details=constants.NO_ANALYTICS_DATABASE_CONFIGURED_WARNING,
+    )
     return []
 
 
