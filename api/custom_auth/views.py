@@ -151,8 +151,8 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         ):
             user.last_login = timezone.now()
             user.save(update_fields=["last_login"])
-
-        return super().retrieve(request, *args, **kwargs)
+        resp: Response = super().retrieve(request, *args, **kwargs)
+        return resp
 
     @action(
         detail=False,

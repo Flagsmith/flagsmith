@@ -1,6 +1,6 @@
 import json
 import typing
-
+from datetime import timedelta
 import pytest
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -15,7 +15,7 @@ from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
 from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
 from rest_framework.test import APIClient
-
+from freezegun import freeze_time
 from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
@@ -930,3 +930,25 @@ def test_list_user_groups(
         (user1.pk, False),
         (user2.pk, True),
     }
+
+
+@pytest.mark.django_db
+@freeze_time("2024-01-01T10:00:00Z")
+def test_get_me_view_updates_last_login(api_client, test_user: FFAdminUser) -> None:
+    # Given
+    test_user.last_login = timezone.now() - timedelta(days=5)
+    test_user.save(update_fields=["last_login"])
+    test_user.refresh_from_db()
+
+    api_client.force_authenticate(test_user)
+    assert test_user.last_login < timezone.now()
+
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    test_user.refresh_from_db()
+    assert test_user.last_login == timezone.now()
