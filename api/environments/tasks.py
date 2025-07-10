@@ -86,15 +86,17 @@ def clone_environment_feature_states(
         additional_filters=Q(identity__isnull=True),
     )
 
+    version_map: dict[int, EnvironmentFeatureVersion] = {}
     for feature_state in source_feature_states:
         kwargs = {"env": clone}
 
         if clone.use_v2_feature_versioning:
-            efv, _ = EnvironmentFeatureVersion.objects.get_or_create(
-                environment=clone,
-                feature=feature_state.feature,
-                published_at=now,
-            )
+            if not (efv := version_map.get(feature_state.feature_id)):
+                efv = EnvironmentFeatureVersion.create_initial_version(
+                    environment=clone, feature=feature_state.feature
+                )
+                version_map[feature_state.feature_id] = efv
+
             kwargs.update(environment_feature_version=efv)
         else:
             kwargs.update(live_from=now)
