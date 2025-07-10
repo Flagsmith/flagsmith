@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 from task_processor.decorators import (
@@ -64,7 +62,7 @@ def delete_environment(environment_id: int) -> None:
     Environment.objects.get(id=environment_id).delete()
 
 
-@register_task_handler(timeout=timedelta(hours=1))
+@register_task_handler()
 def clone_environment_feature_states(
     source_environment_id: int, clone_environment_id: int
 ) -> None:
