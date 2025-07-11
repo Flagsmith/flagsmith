@@ -18,6 +18,7 @@ import TabItem from 'components/base/forms/TabItem'
 import Breadcrumb from 'components/Breadcrumb'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
 import { useRouteContext } from 'components/providers/RouteContext'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 interface RouteParams {
   id: string
   environmentId: string
@@ -108,9 +109,7 @@ const FeatureHistoryPage: FC = () => {
                 </strong>{' '}
                 by{' '}
                 <strong>
-                  {user
-                    ? `${user.first_name || ''} ${user.last_name || ''} `
-                    : 'System '}
+                  {user ? `${getUserDisplayName(user)} ` : 'System '}
                 </strong>
               </div>
               <Tabs urlParam='compare' theme='pill' uncontrolled>

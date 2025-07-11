@@ -26,6 +26,7 @@ import WarningMessage from 'components/WarningMessage'
 import ErrorMessage from 'components/ErrorMessage'
 import { Component } from 'react'
 import { useRouteContext } from 'components/providers/RouteContext'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const ChangeRequestDetailPage = class extends Component {
   static displayName = 'ChangeRequestDetailPage'
@@ -316,7 +317,7 @@ const ChangeRequestDetailPage = class extends Component {
       .filter((v) => !!v.approved_at)
       .map((v) => {
         const matchingUser = orgUsers.find((u) => u.id === v.user) || {}
-        return `${matchingUser.first_name} ${matchingUser.last_name}`
+        return `${getUserDisplayName(matchingUser)}`
       })
     const approved = !!approval && !!approval.approved_at
     const environment = ProjectStore.getEnvironment(
@@ -392,10 +393,7 @@ const ChangeRequestDetailPage = class extends Component {
                   {moment(changeRequest.created_at).format(
                     'Do MMM YYYY HH:mma',
                   )}{' '}
-                  by{' '}
-                  {user
-                    ? `${user.first_name} ${user.last_name}`
-                    : 'Unknown user'}
+                  by {getUserDisplayName(user)}
                 </PageTitle>
                 <p className='mt-2'>{changeRequest.description}</p>
                 {isScheduled && (
@@ -440,7 +438,7 @@ const ChangeRequestDetailPage = class extends Component {
                                   }}
                                 >
                                   <span className='font-weight-bold'>
-                                    {u.first_name} {u.last_name}
+                                    {getUserDisplayName(u)}
                                   </span>
                                   <span className='chip-icon ion'>
                                     <IonIcon icon={close} />
@@ -570,7 +568,7 @@ const ChangeRequestDetailPage = class extends Component {
                         {moment(changeRequest.committed_at).format(
                           'Do MMM YYYY HH:mma',
                         )}{' '}
-                        by {committedBy.first_name} {committedBy.last_name}
+                        by {getUserDisplayName(committedBy)}
                       </div>
                     ) : (
                       <Row className='text-right mt-2'>

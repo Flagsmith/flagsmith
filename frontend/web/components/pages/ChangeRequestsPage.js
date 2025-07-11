@@ -16,6 +16,7 @@ import Utils from 'common/utils/utils'
 import PlanBasedAccess, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -184,8 +185,7 @@ const ChangeRequestsPage = class extends Component {
                             <div className='list-item-subtitle mt-1'>
                               Created{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
-                              by {(user && user.first_name) || 'Unknown'}{' '}
-                              {(user && user.last_name) || 'user'}
+                              by {getUserDisplayName(user)}
                               {description ? ` - ${description}` : ''}
                             </div>
                           </Flex>
@@ -265,8 +265,7 @@ const ChangeRequestsPage = class extends Component {
                             <div className='list-item-subtitle mt-1'>
                               Live from{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
-                              by {(user && user.first_name) || 'Unknown'}{' '}
-                              {(user && user.last_name) || 'user'}
+                              by {getUserDisplayName(user)}
                             </div>
                           </Flex>
                           <div className='table-column'>

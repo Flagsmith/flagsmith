@@ -29,6 +29,7 @@ import { selectBuildVersion } from 'common/services/useBuildVersion'
 import { getStore } from 'common/store'
 import { TRACKED_UTMS, UtmsType } from 'common/types/utms'
 import { TimeUnit } from 'components/release-pipelines/constants'
+import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
 
@@ -278,58 +279,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       timeUnit: TimeUnit.MINUTE,
     }
   },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ):
-    | {
-        amountOfTime: number
-        timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit]
-      }
-    | undefined => {
-    if (!waitFor) {
-      return
-    }
-
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
-  },
   getFeatureStatesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -416,53 +365,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       defaultFlags.integration_data,
     )
   },
-  getExistingWaitForTime: (
-    waitFor: string | undefined,
-  ): { amountOfTime: number; timeUnit: (typeof TimeUnit)[keyof typeof TimeUnit] } | undefined => {
-    if (!waitFor) {
-      return
-    }
-
-    const timeParts = waitFor.split(':')
-
-    if (timeParts.length != 3) return
-
-    const [hours, minutes, seconds] = timeParts
-
-    const amountOfMinutes = Number(minutes)
-    const amountOfHours = Number(hours)
-    const amountOfSeconds = Number(seconds)
-
-    if (amountOfHours + amountOfMinutes + amountOfSeconds === 0) {
-      return
-    }
-
-    // Days
-    if (
-      amountOfHours % 24 === 0 &&
-      amountOfMinutes === 0 &&
-      amountOfSeconds === 0
-    ) {
-      return {
-        amountOfTime: amountOfHours / 24,
-        timeUnit: TimeUnit.DAY,
-      }
-    }
-
-    // Hours
-    if (amountOfHours > 0 && amountOfMinutes === 0 && amountOfSeconds === 0) {
-      return {
-        amountOfTime: amountOfHours,
-        timeUnit: TimeUnit.HOUR,
-      }
-    }
-
-    // Minutes
-    return {
-      amountOfTime: amountOfMinutes,
-      timeUnit: TimeUnit.MINUTE,
-    }
-  },
   getIsEdge() {
     const model = ProjectStore.model as null | ProjectType
 
@@ -515,6 +417,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return `/organisation/${orgId}/projects`
   },
+
   getOrganisationIdFromUrl(match: any) {
     const organisationId = match?.params?.organisationId
     return organisationId ? parseInt(organisationId) : null
@@ -801,11 +704,7 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     )
     if (window.$crisp) {
       $crisp.push(['set', 'user:email', user.email])
-      $crisp.push([
-        'set',
-        'user:nickname',
-        `${user.first_name} ${user.last_name}`,
-      ])
+      $crisp.push(['set', 'user:nickname', `${getUserDisplayName(user)}`])
       if (otherOrgs.length) {
         $crisp.push([
           'set',

@@ -7,6 +7,7 @@ import { loadReoScript } from 'reodotdev'
 
 import freeEmailDomains from 'free-email-domains'
 import { groupBy } from 'lodash'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -178,7 +179,7 @@ global.API = {
           delighted.survey({
             createdAt: user.date_joined || new Date().toISOString(),
             email: user.email,
-            name: `${user.first_name || ''} ${user.last_name || ''}`, // time subscribed (optional)
+            name: `${getUserDisplayName(user)}`, // time subscribed (optional)
             properties: {
               company: organisation?.name,
             },
