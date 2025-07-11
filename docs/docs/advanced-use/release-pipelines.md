@@ -113,9 +113,10 @@ In alpha phase there are no automatic rollbacks, you'd need to revert changes ma
 
 1. Navigate to your feature flags.
 2. Select the flag you want to add to a pipeline.
-3. Click the **Add to Release Pipeline** option.
-4. Select the pipeline.
-5. Confirm the selection.
+3. Click the arrow on the "Update Feature Value" button to expand options.
+4. Click the **Add to Release Pipeline** option.
+5. Select the pipeline.
+6. Confirm the selection.
 
 ![Add To Release Pipeline](/img/release-pipelines/add-to-release-pipeline.png)
 
