@@ -176,7 +176,7 @@ const FeatureList = class extends Component<FeatureListType> {
   })
 
   onSave = () => {
-    toast('Saved')
+    toast('Your feature has been updated')
   }
 
   filter = () => {

@@ -42,6 +42,19 @@ button.btn {
     }
   }
 
+  &-success {
+    color: white;
+    &:hover,
+    &:focus {
+      color: white;
+      background-color: $btn-success-hover;
+    }
+    &.btn:active {
+      color: white;
+      background-color: $btn-success-active;
+    }
+  }
+
   &--outline {
     background: white;
     border: 1px solid $primary !important;

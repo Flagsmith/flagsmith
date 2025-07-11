@@ -31,23 +31,6 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000000000;
-
-  a,
-  button {
-    box-shadow: none;
-  }
-
-  a {
-    color: $text-icon-grey;
-  }
-
-  button {
-    box-shadow: none;
-    line-height: 16px;
-    color: $primary800;
-    height: 'auto';
-    margin-right: 0.2rem;
-  }
 }
 
 .toast-message {

@@ -748,7 +748,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           })
                                           .catch((error) => {
                                             toast(
-                                              'Error resent invite',
+                                              'Error resending invite',
                                               'error',
                                             )
                                             console.error(error)
