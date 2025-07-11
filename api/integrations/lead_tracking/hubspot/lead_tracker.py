@@ -92,7 +92,6 @@ class HubspotLeadTracker(LeadTracker):
         return hubspot_contact_id
 
     def create_lead(self, user: FFAdminUser, organisation: Organisation) -> None:
-        print("hello")
         hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
         if not hubspot_contact_id:
             return
