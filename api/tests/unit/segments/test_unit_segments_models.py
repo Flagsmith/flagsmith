@@ -354,3 +354,110 @@ def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_onc
 
     # Then
     assert task.delay.call_count == 1
+
+
+def test_Segment_clone__empty_segment__returns_new_segment(
+    segment: Segment,
+) -> None:
+    # Given
+    original_version = segment.version
+    assert original_version
+
+    # When
+    cloned_segment = segment.clone()
+
+    # Then
+    assert cloned_segment != segment
+    assert cloned_segment.version_of == segment
+    assert cloned_segment.version == original_version
+    assert segment.version == original_version + 1
+
+
+def test_Segment_clone__segment_with_rules__returns_new_segment_with_referenced_rules_and_conditions(
+    segment: Segment,
+) -> None:
+    # Given
+    original_version = segment.version
+    assert original_version
+    rule1 = SegmentRule.objects.create(
+        segment=segment,
+        type=SegmentRule.ALL_RULE,
+    )
+    condition1a = Condition.objects.create(
+        rule=rule1,
+        property="property1a",
+        operator=EQUAL,
+        value="value1a",
+    )
+    condition1b = Condition.objects.create(
+        rule=rule1,
+        property="property1b",
+        operator=EQUAL,
+        value="value1b",
+    )
+    rule2 = SegmentRule.objects.create(
+        segment=segment,
+        type=SegmentRule.ANY_RULE,
+    )
+    condition2a = Condition.objects.create(
+        rule=rule2,
+        property="property2a",
+        operator=EQUAL,
+        value="value2a",
+    )
+    rule3 = SegmentRule.objects.create(
+        rule=rule2,
+        type=SegmentRule.ALL_RULE,
+    )
+    condition3a = Condition.objects.create(
+        rule=rule3,
+        property="property3a",
+        operator=EQUAL,
+        value="value3a",
+    )
+
+    # When
+    cloned_segment = segment.clone()
+
+    # Then
+    assert cloned_segment != segment
+    assert cloned_segment.version_of == segment
+    assert cloned_segment.version == original_version
+    assert segment.version == original_version + 1
+    assert list(
+        SegmentRule.objects.filter(segment=cloned_segment)
+        .values("segment", "rule", "version_of")
+        .order_by("type")
+    ) == [
+        {"segment": cloned_segment.pk, "rule": None, "version_of": rule1.pk},
+        {"segment": cloned_segment.pk, "rule": None, "version_of": rule2.pk},
+    ]
+    cloned_rules = {
+        cloned_rule.version_of: cloned_rule
+        for cloned_rule in SegmentRule.objects.filter(
+            version_of__in={rule1, rule2, rule3}
+        )
+    }
+    assert list(
+        SegmentRule.objects.filter(rule__segment=cloned_segment)
+        .values("segment", "rule", "version_of")
+        .order_by("pk")
+    ) == [
+        {"segment": None, "rule": cloned_rules[rule2].pk, "version_of": rule3.pk},
+    ]
+    assert list(
+        Condition.objects.filter(rule__segment=cloned_segment)
+        .values("rule", "version_of")
+        .order_by("property")
+    ) == [
+        {"rule": cloned_rules[rule1].pk, "version_of": condition1a.pk},
+        {"rule": cloned_rules[rule1].pk, "version_of": condition1b.pk},
+        {"rule": cloned_rules[rule2].pk, "version_of": condition2a.pk},
+    ]
+    assert list(
+        Condition.objects.filter(rule__rule__segment=cloned_segment)
+        .values("rule", "version_of")
+        .order_by("property")
+    ) == [
+        {"rule": cloned_rules[rule3].pk, "version_of": condition3a.pk},
+    ]

@@ -71,7 +71,7 @@ class Segment(
     version_of = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
-        related_name="versioned_segments",
+        related_name="revisions",
         null=True,
         blank=True,
     )
@@ -171,6 +171,49 @@ class Segment(
 
         return cloned_segment
 
+    def clone(self) -> "Segment":
+        """
+        Clones a segment for versioning purposes
+        """
+        cloned_segment = deepcopy(self)
+        cloned_segment.pk = None
+        cloned_segment.uuid = uuid.uuid4()
+        cloned_segment.version_of = self.version_of or self
+        cloned_segment.save()
+
+        segment_rules = SegmentRule.objects.filter(
+            models.Q(segment=self) | models.Q(rule__segment=self)
+        )
+
+        # Ensure top-level rules are cloned first
+        segment_rules = segment_rules.order_by(models.F("rule").asc(nulls_first=True))
+
+        rule_to_cloned_rule_map: dict[SegmentRule, SegmentRule] = {}
+        for rule in segment_rules:
+            cloned_rule = deepcopy(rule)
+            cloned_rule.pk = None
+            cloned_rule.uuid = uuid.uuid4()
+            cloned_rule.segment = cloned_segment if rule.segment else None
+            cloned_rule.rule = rule_to_cloned_rule_map.get(rule.rule)
+            cloned_rule.version_of = rule.version_of or rule
+            cloned_rule.save()
+
+            rule_to_cloned_rule_map[rule] = cloned_rule
+
+        conditions = Condition.objects.filter(rule__in=rule_to_cloned_rule_map.keys())
+        for condition in conditions:
+            cloned_condition = deepcopy(condition)
+            cloned_condition.pk = None
+            cloned_condition.uuid = uuid.uuid4()
+            cloned_condition.rule = rule_to_cloned_rule_map[condition.rule]
+            cloned_condition.version_of = condition.version_of or condition
+            cloned_condition.save()
+
+        self.version = (self.version or 1) + 1
+        Segment.objects.filter(pk=self.pk).update(version=self.version)  # Skip .save
+
+        return cloned_segment
+
     def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return SEGMENT_CREATED_MESSAGE % self.name
 
@@ -202,6 +245,14 @@ class SegmentRule(
     )
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
+
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        related_name="revisions",
+        null=True,
+        blank=True,
+    )
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
@@ -353,6 +404,14 @@ class Condition(
 
     rule = models.ForeignKey(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
+    )
+
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        related_name="revisions",
+        null=True,
+        blank=True,
     )
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
