@@ -75,7 +75,6 @@ class SegmentCloneService:
         # Keep track of the original segment
         cloned.version_of = self.segment
 
-        cloned.history.update()
         cloned.save()
         return cloned
 
