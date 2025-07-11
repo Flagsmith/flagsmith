@@ -1256,7 +1256,9 @@ def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_ve
     enable_v2_versioning_for_new_environments: typing.Callable[[], None],
 ) -> None:
     # Given
-    assert not environment.use_v2_feature_versioning
+    environment.use_v2_feature_versioning = False
+    environment.save()
+
     enable_v2_versioning_for_new_environments()
 
     # When
