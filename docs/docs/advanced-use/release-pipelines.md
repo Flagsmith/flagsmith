@@ -79,7 +79,8 @@ Each stage in your pipeline consists of:
 
 ### Draft Status
 After a release pipeline is created and before it is published, it remains in draft mode. In this state:
-A release pipeline is inactive and does not process feature flags
+
+- The release pipeline is inactive and does not process feature flags.
 - The configuration remains editable.
 - You can modify stages, triggers, and actions freely.
 - Once published, the pipeline becomes immutable and operational.
