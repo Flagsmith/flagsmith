@@ -29,9 +29,20 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
-from .managers import LiveSegmentManager, SegmentManager
-
 logger = logging.getLogger(__name__)
+
+
+class SegmentManager(SoftDeleteExportableManager):
+    pass
+
+
+class LiveSegmentManager(SoftDeleteExportableManager):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Returns only the canonical segments, which will always be
+        the highest version.
+        """
+        return super().get_queryset().filter(id=models.F("version_of"))
 
 
 class Segment(
@@ -360,6 +371,7 @@ class Condition(
     def get_skip_create_audit_log(self) -> bool:
         try:
             segment = self.rule.get_segment()
+            self.rule.refresh_from_db()
             segment.refresh_from_db()
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
@@ -376,9 +388,15 @@ class Condition(
         if not self.created_with_segment:
             return f"Condition added to segment '{self._get_segment().name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
-        if not self._get_segment().deleted_at:
-            return f"Condition removed from segment '{self._get_segment().name}'."
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        try:
+            segment = self._get_segment()
+            segment.refresh_from_db()
+        except Segment.DoesNotExist:
+            return None
+        if segment.deleted_at:
+            return None
+        return f"Condition removed from segment '{self._get_segment().name}'."
 
     def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
         return self._get_segment().pk

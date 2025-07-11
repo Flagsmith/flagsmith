@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 import pytest
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
@@ -8,7 +8,36 @@ from segments.models import Condition, Segment, SegmentRule
 from segments.services import SegmentCloneService
 
 
-def test_get_segment_returns_parent_segment_for_nested_rule(
+def test_SegmentManager__returns_any_segment(
+    segment: Segment,
+) -> None:
+    # When
+    cloned_segment = SegmentCloneService(segment).deep_clone()
+
+    # Then
+    assert Segment.objects.get(id=cloned_segment.pk) == cloned_segment
+    assert Segment.objects.get(id=segment.pk) == segment
+
+
+def test_LiveSegmentManager__returns_only_highest_version_of_segments(
+    segment: Segment,
+) -> None:
+    # Given
+    # The built-in segment fixture is pre-versioned already.
+    assert segment.version == 2
+    assert segment.version_of == segment
+
+    # When
+    cloned_segment = SegmentCloneService(segment).deep_clone()
+
+    # Then
+    assert segment.version == 3
+    assert cloned_segment.version == 2
+    assert not Segment.live_objects.filter(id=cloned_segment.pk).exists()
+    assert Segment.live_objects.get(id=segment.pk) == segment
+
+
+def test_SegmentRule_get_segment__nested_rule__returns_parent_segment(
     segment: Segment,
 ) -> None:
     # Given
@@ -26,9 +55,11 @@ def test_get_segment_returns_parent_segment_for_nested_rule(
     assert new_segment == segment
 
 
-def test_condition_get_create_log_message_for_condition_created_with_segment(  # type: ignore[no-untyped-def]
-    segment, segment_rule, mocker
-):
+def test_Condition_get_create_log_message__created_with_segment__returns_none(
+    mocker: MockerFixture,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
     # Given
     condition = Condition.objects.create(
         rule=segment_rule,
@@ -38,58 +69,17 @@ def test_condition_get_create_log_message_for_condition_created_with_segment(  #
         created_with_segment=True,
     )
 
-    mock_history_instance = mocker.MagicMock()
-
     # When
+    mock_history_instance = mocker.MagicMock()
     msg = condition.get_create_log_message(mock_history_instance)
 
     # Then
     assert msg is None
 
 
-def test_condition_get_create_log_message_for_condition_not_created_with_segment(  # type: ignore[no-untyped-def]
-    segment, segment_rule, mocker
-):
-    # Given
-    condition = Condition.objects.create(
-        rule=segment_rule,
-        property="foo",
-        operator=EQUAL,
-        value="bar",
-        created_with_segment=False,
-    )
-
-    mock_history_instance = mocker.MagicMock()
-
-    # When
-    msg = condition.get_create_log_message(mock_history_instance)
-
-    # Then
-    assert msg == f"Condition added to segment '{segment.name}'."
-
-
-def test_condition_get_delete_log_message_for_valid_segment(  # type: ignore[no-untyped-def]
-    segment, segment_rule, mocker
-):
-    # Given
-    condition = Condition.objects.create(
-        rule=segment_rule,
-        property="foo",
-        operator=EQUAL,
-        value="bar",
-        created_with_segment=False,
-    )
-
-    mock_history_instance = mocker.MagicMock()
-
-    # When
-    msg = condition.get_delete_log_message(mock_history_instance)
-
-    # Then
-    assert msg == f"Condition removed from segment '{segment.name}'."
-
-
-def test__condition_get_skip_create_audit_log_on_rule_delete(
+def test_Condition_get_create_log_message__created_after_segment__returns_message(
+    mocker: MockerFixture,
+    segment: Segment,
     segment_rule: SegmentRule,
 ) -> None:
     # Given
@@ -100,72 +90,128 @@ def test__condition_get_skip_create_audit_log_on_rule_delete(
         value="bar",
         created_with_segment=False,
     )
+
     # When
-    segment_rule.delete()
-
-    # Then
-    assert condition.get_skip_create_audit_log() is True
-
-
-def test__condition_get_skip_create_audit_log_on_segment_delete(
-    segment_rule: SegmentRule, segment: Segment
-) -> None:
-    # Given
-    condition = Condition.objects.create(
-        rule=segment_rule,
-        property="foo",
-        operator=EQUAL,
-        value="bar",
-        created_with_segment=False,
-    )
-    # When
-    segment.delete()
-
-    # Then
-    assert condition.get_skip_create_audit_log() is True
-
-
-def test__condition_get_skip_create_audit_log_on_segment_hard_delete(
-    segment_rule: SegmentRule, segment: Segment
-) -> None:
-    # Given
-    condition = Condition.objects.create(
-        rule=segment_rule,
-        property="foo",
-        operator=EQUAL,
-        value="bar",
-        created_with_segment=False,
-    )
-    # When
-    segment.delete()
-
-    # Then
-    assert condition.get_skip_create_audit_log() is True
-
-
-def test_condition_get_delete_log_message_for_deleted_segment(  # type: ignore[no-untyped-def]
-    segment, segment_rule, mocker
-):
-    # Given
-    condition = Condition.objects.create(
-        rule=segment_rule,
-        property="foo",
-        operator=EQUAL,
-        value="bar",
-        created_with_segment=False,
-    )
-    segment.delete()
-
     mock_history_instance = mocker.MagicMock()
+    msg = condition.get_create_log_message(mock_history_instance)
+
+    # Then
+    assert msg == f"Condition added to segment '{segment.name}'."
+
+
+def test_Condition_get_delete_log_message__returns_message(
+    mocker: MockerFixture,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
 
     # When
+    mock_history_instance = mocker.MagicMock()
+    msg = condition.get_delete_log_message(mock_history_instance)
+
+    # Then
+    assert msg == f"Condition removed from segment '{segment.name}'."
+
+
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda rule: rule.delete(),
+        lambda rule: rule.hard_delete(),
+    ],
+)
+def test_Condition_get_skip_create_audit_log__rule_deleted__returns_true(
+    delete: Callable[[SegmentRule], None],
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    # When
+    delete(segment_rule)
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda segment: segment.delete(),
+        lambda segment: segment.hard_delete(),
+    ],
+)
+def test_Condition_get_skip_create_audit_log__segment_deleted__returns_true(
+    delete: Callable[[Segment], None],
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    # When
+    delete(segment)
+
+    # Then
+    assert condition.get_skip_create_audit_log() is True
+
+
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda segment: segment.delete(),
+        lambda segment: segment.hard_delete(),
+    ],
+)
+def test_Condition_get_delete_log_message__segment_deleted__returns_none(
+    delete: Callable[[Segment], None],
+    mocker: MockerFixture,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+        created_with_segment=False,
+    )
+
+    # When
+    delete(segment)
+    mock_history_instance = mocker.MagicMock()
     msg = condition.get_delete_log_message(mock_history_instance)
 
     # Then
     assert msg is None
 
 
-def test_condition_get_update_log_message(segment, segment_rule, mocker):  # type: ignore[no-untyped-def]
+def test_Condition_get_update_log_message__returns_message(
+    mocker: MockerFixture,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
     # Given
     condition = Condition.objects.create(
         rule=segment_rule,
@@ -175,9 +221,8 @@ def test_condition_get_update_log_message(segment, segment_rule, mocker):  # typ
         created_with_segment=False,
     )
 
-    mock_history_instance = mocker.MagicMock()
-
     # When
+    mock_history_instance = mocker.MagicMock()
     msg = condition.get_update_log_message(mock_history_instance)
 
     # Then
@@ -223,33 +268,11 @@ def test_condition_get_update_log_message(segment, segment_rule, mocker):  # typ
         ),
     ),
 )
-def test_segment_id_exists_in_rules_data(rules_data, expected_result):  # type: ignore[no-untyped-def]
-    assert Segment.id_exists_in_rules_data(rules_data) == expected_result
-
-
-def test_manager_returns_only_highest_version_of_segments(
-    segment: Segment,
+def test_Segment_id_exists_in_rules_data__checks_for_any_id(
+    rules_data: list[dict[str, Any]],
+    expected_result: bool,
 ) -> None:
-    # Given
-    # The built-in segment fixture is pre-versioned already.
-    assert segment.version == 2
-    assert segment.version_of == segment
-
-    cloned_segment = SegmentCloneService(segment).deep_clone()
-    assert cloned_segment.version == 2
-    assert segment.version == 3
-
-    # When
-    queryset1 = Segment.live_objects.filter(id=cloned_segment.id)
-    queryset2 = Segment.objects.filter(id=cloned_segment.id)
-    queryset3 = Segment.live_objects.filter(id=segment.id)
-    queryset4 = Segment.objects.filter(id=segment.id)
-
-    # Then
-    assert not queryset1.exists()
-    assert queryset2.first() == cloned_segment
-    assert queryset3.first() == segment
-    assert queryset4.first() == segment
+    assert Segment.id_exists_in_rules_data(rules_data) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -259,7 +282,7 @@ def test_manager_returns_only_highest_version_of_segments(
         lambda segment: segment.hard_delete(),
     ],
 )
-def test_segment_rule_get_skip_create_audit_log__skips_when_segment_deleted(
+def test_SegmentRule_get_skip_create_audit_log__segment_deleted__returns_true(
     segment: Segment,
     delete: Callable[[Segment], None],
 ) -> None:
@@ -275,7 +298,7 @@ def test_segment_rule_get_skip_create_audit_log__skips_when_segment_deleted(
     assert segment_rule.get_skip_create_audit_log() is True
 
 
-def test_segment_rule_get_skip_create_audit_log__doesnt_skip_new_segment(
+def test_SegmentRule_get_skip_create_audit_log__new_segment__returns_false(
     segment: Segment,
 ) -> None:
     # Given
@@ -291,7 +314,7 @@ def test_segment_rule_get_skip_create_audit_log__doesnt_skip_new_segment(
     assert result is False
 
 
-def test_segment_rule_get_skip_create_audit_log__skips_segment_revisions(
+def test_SegmentRule_get_skip_create_audit_log__segment_revision__returns_true(
     segment: Segment,
 ) -> None:
     # Given
@@ -308,7 +331,7 @@ def test_segment_rule_get_skip_create_audit_log__skips_segment_revisions(
     assert result is True
 
 
-def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
+def test_Segment_delete__multiple_rules_conditions__schedules_audit_log_task_once(
     mocker: MockerFixture, segment: Segment
 ) -> None:
     # Given
@@ -326,8 +349,8 @@ def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
             )
 
     # When
-    mocked_tasks = mocker.patch("core.signals.tasks")
+    task = mocker.patch("core.signals.tasks.create_audit_log_from_historical_record")
     segment.delete()
 
     # Then
-    assert len(mocked_tasks.mock_calls) == 1
+    assert task.delay.call_count == 1
