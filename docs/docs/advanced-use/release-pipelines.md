@@ -7,7 +7,7 @@ Release Pipelines is currenlty in alpha phase and is not available to the public
 :::
 
 
-Release Pipelines allow you to define a series of stages that your feature flags progress through automatically. Each stage can have specific triggers and actions that control when and how flags are released.
+Release Pipelines act as your intelligent release assistant, automating your entire feature flag deployment process. Define stages that your flags progress through automatically, with triggers and actions that control rollouts to selected environments and audiences. Release Pipelines can automatically generate change requests when promoting flags to production, eliminating manual effort and streamlining your deployment workflow.
 
 ## Key Benefits
 
@@ -100,6 +100,12 @@ Once published, a release pipeline cannot be modified. Ensure your configuration
 
 
 ## Adding Flags to Release Pipelines
+
+:::warning
+
+In alpha phase there are no automatic rollbacks, you'd need to revert changes manually.
+
+:::
 
 ### From the Dashboard
 
