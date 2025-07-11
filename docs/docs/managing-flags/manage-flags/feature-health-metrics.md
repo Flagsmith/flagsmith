@@ -1,6 +1,6 @@
 ---
-title: Feature Health
-sidebar_label: Feature Health
+title: Feature Health Metrics
+sidebar_label: Feature Health Metrics
 sidebar_position: 4
 ---
 

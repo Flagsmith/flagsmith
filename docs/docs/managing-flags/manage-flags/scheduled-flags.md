@@ -52,5 +52,4 @@ Once the scheduled date and time have passed and the flag change has been applie
 ## What's next?
 
 - To learn more about managing and approving changes to your flags, see the [Change Requests](../../advanced-use/change-requests.md) page.
-- To understand how environments work and how to configure them, visit the [Flag Environments](../environments.md) documentation.
-- To see how to view the history of changes to your flags, check out the [Flag History](../flag-history.md) section.
+- To learn how to monitor the performance and health of your feature flags, see the [Feature Health Metrics](../feature-health-metrics.md) page.
