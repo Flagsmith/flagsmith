@@ -123,6 +123,8 @@ Once a flag is added to a pipeline:
 
 ### Viewing Pipeline Status
 
+![View Pipeline](/img/release-pipelines/view-pipeline.png)
+
 - **Active Pipelines**: View all published pipelines and their current status.
 - **Flag Progress**: Track which flags are currently in each stage.
 
