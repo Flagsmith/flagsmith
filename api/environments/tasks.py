@@ -88,17 +88,17 @@ def clone_environment_feature_states(
     # each feature to create a 'snapshot' of the source environment, we keep a local
     # cache of EnvironmentFeatureVersion objects to avoid having to use get_or_create
     # and hit the db unnecessarily.
-    version_map: dict[int, EnvironmentFeatureVersion] = {}
+    efv_by_feature_id: dict[int, EnvironmentFeatureVersion] = {}
 
     for feature_state in source_feature_states:
         kwargs = {"env": clone}
 
         if clone.use_v2_feature_versioning:
-            if not (efv := version_map.get(feature_state.feature_id)):
+            if not (efv := efv_by_feature_id.get(feature_state.feature_id)):
                 efv = EnvironmentFeatureVersion.create_initial_version(
                     environment=clone, feature=feature_state.feature
                 )
-                version_map[feature_state.feature_id] = efv
+                efv_by_feature_id[feature_state.feature_id] = efv
 
             kwargs.update(environment_feature_version=efv)
         else:
