@@ -15,6 +15,7 @@ import { Environment } from 'common/types/responses'
 import { Link, useRouteMatch } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
 import { useRouteContext } from 'components/providers/RouteContext'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 interface RouteParams {
   environmentId: string
@@ -69,11 +70,7 @@ const AuditLogItemPage: FC = () => {
       >
         {!!data &&
           `Created ${moment(data.created_date).format('Do MMM YYYY HH:mma')}${
-            data.author
-              ? ` by ${data.author.first_name || ''} ${
-                  data.author.last_name || ''
-                }`
-              : ''
+            data.author ? ` by ${getUserDisplayName(data.author)}` : ''
           }`}
       </PageTitle>
       {isLoading ? (
