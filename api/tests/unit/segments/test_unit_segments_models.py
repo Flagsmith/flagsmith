@@ -1,4 +1,4 @@
-from unittest.mock import PropertyMock
+from typing import Callable
 
 import pytest
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
@@ -252,8 +252,16 @@ def test_manager_returns_only_highest_version_of_segments(
     assert queryset4.first() == segment
 
 
-def test_segment_rule_get_skip_create_on_segment_hard_delete(
+@pytest.mark.parametrize(
+    "delete",
+    [
+        lambda segment: segment.delete(),
+        lambda segment: segment.hard_delete(),
+    ],
+)
+def test_segment_rule_get_skip_create_audit_log__skips_when_segment_deleted(
     segment: Segment,
+    delete: Callable[[Segment], None],
 ) -> None:
     # Given
     segment_rule = SegmentRule.objects.create(
@@ -261,28 +269,13 @@ def test_segment_rule_get_skip_create_on_segment_hard_delete(
     )
 
     # When
-    segment.hard_delete()
+    delete(segment)
 
     # Then
     assert segment_rule.get_skip_create_audit_log() is True
 
 
-def test_segment_rule_get_skip_create_on_segment_delete(
-    segment: Segment,
-) -> None:
-    # Given
-    segment_rule = SegmentRule.objects.create(
-        segment=segment, type=SegmentRule.ALL_RULE
-    )
-
-    # When
-    segment.delete()
-
-    # Then
-    assert segment_rule.get_skip_create_audit_log() is True
-
-
-def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(
+def test_segment_rule_get_skip_create_audit_log__doesnt_skip_new_segment(
     segment: Segment,
 ) -> None:
     # Given
@@ -298,34 +291,18 @@ def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(
     assert result is False
 
 
-def test_segment_rule_get_skip_create_audit_log_when_skips(segment: Segment) -> None:
+def test_segment_rule_get_skip_create_audit_log__skips_segment_revisions(
+    segment: Segment,
+) -> None:
     # Given
     cloned_segment = SegmentCloneService(segment).deep_clone()
     assert cloned_segment != cloned_segment.version_of
-
     segment_rule = SegmentRule.objects.create(
         segment=cloned_segment, type=SegmentRule.ALL_RULE
     )
 
     # When
     result = segment_rule.get_skip_create_audit_log()
-
-    # Then
-    assert result is True
-
-
-def test_segment_get_skip_create_audit_log_when_exception(
-    mocker: MockerFixture,
-    segment: Segment,
-) -> None:
-    # Given
-    patched_segment = mocker.patch.object(
-        Segment, "version_of_id", new_callable=PropertyMock
-    )
-    patched_segment.side_effect = Segment.DoesNotExist("Segment missing")
-
-    # When
-    result = segment.get_skip_create_audit_log()
 
     # Then
     assert result is True

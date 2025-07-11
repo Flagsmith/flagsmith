@@ -3,6 +3,7 @@ from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID
 
+from django.db.models import F
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -30,6 +31,7 @@ from flag_engine.segments.models import (
 
 from environments.constants import IDENTITY_INTEGRATIONS_RELATION_NAMES
 from features.versioning.models import EnvironmentFeatureVersion
+from segments.models import Segment
 
 if TYPE_CHECKING:  # pragma: no cover
     from environments.identities.models import (  # type: ignore[attr-defined]
@@ -46,7 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from integrations.webhook.models import WebhookConfiguration
     from organisations.models import Organisation
     from projects.models import Project
-    from segments.models import Segment, SegmentRule
+    from segments.models import SegmentRule
 
 
 __all__ = (
@@ -201,9 +203,10 @@ def map_environment_to_engine(
 
     # Read relationships - grab all the data needed from the ORM here.
 
-    project_segments = [
-        ps for ps in project.segments.all() if ps.id == ps.version_of_id
-    ]
+    project_segments = Segment.objects.filter(
+        project=project,
+        pk=F("version_of"),
+    )
 
     project_segment_rules_by_segment_id: Dict[
         int,
