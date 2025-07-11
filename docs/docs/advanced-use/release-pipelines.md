@@ -6,6 +6,7 @@ Release Pipelines is currenlty in alpha phase and is not available to the public
 
 :::
 
+![Use Case](/img/release-pipelines/use-case-pipeline.png)
 
 Release Pipelines act as your intelligent release assistant, automating your entire feature flag deployment process. Define stages that your flags progress through automatically, with triggers and actions that control rollouts to selected environments and audiences. Release Pipelines can automatically generate change requests when promoting flags to production, eliminating manual effort and streamlining your deployment workflow.
 
