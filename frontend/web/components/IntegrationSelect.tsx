@@ -99,7 +99,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               ))}
             </div>
           </div>
-          <div className='col-md-9 h-100'>
+          <div className='col-md-9 col-xxl-7 h-100'>
             <div className='col-md-6 mx-2 mb-2'>
               <Input
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
