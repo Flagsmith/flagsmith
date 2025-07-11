@@ -9,7 +9,6 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
-    BEFORE_CREATE,
     LifecycleModelMixin,
     hook,
 )
@@ -30,9 +29,20 @@ from features.models import Feature
 from metadata.models import Metadata
 from projects.models import Project
 
-from .managers import LiveSegmentManager, SegmentManager
-
 logger = logging.getLogger(__name__)
+
+
+class SegmentManager(SoftDeleteExportableManager):
+    pass
+
+
+class LiveSegmentManager(SoftDeleteExportableManager):
+    def get_queryset(self):  # type: ignore[no-untyped-def]
+        """
+        Returns only the canonical segments, which will always be
+        the highest version.
+        """
+        return super().get_queryset().filter(id=models.F("version_of"))
 
 
 class Segment(
@@ -56,13 +66,12 @@ class Segment(
         Feature, on_delete=models.CASCADE, related_name="segments", null=True
     )
 
-    # This defaults to 1 for newly created segments.
-    version = models.IntegerField(null=True)
+    version = models.IntegerField(default=1, null=True)
 
     version_of = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
-        related_name="versioned_segments",
+        related_name="revisions",
         null=True,
         blank=True,
     )
@@ -92,13 +101,8 @@ class Segment(
         return "Segment - %s" % self.name
 
     def get_skip_create_audit_log(self) -> bool:
-        try:
-            if self.version_of_id and self.version_of_id != self.id:
-                return True
-        except Segment.DoesNotExist:
-            return True
-
-        return False
+        is_revision = bool(self.version_of_id and self.version_of_id != self.pk)
+        return is_revision
 
     @staticmethod
     def id_exists_in_rules_data(rules_data: typing.List[dict]) -> bool:  # type: ignore[type-arg]
@@ -131,19 +135,12 @@ class Segment(
 
         return False
 
-    @hook(BEFORE_CREATE, when="version_of", is_now=None)
-    def set_default_version_to_one_if_new_segment(self):  # type: ignore[no-untyped-def]
-        if self.version is None:
-            self.version = 1
-
+    # TODO: Consider using version_of=None to designate first/live segments
     @hook(AFTER_CREATE, when="version_of", is_now=None)
-    def set_version_of_to_self_if_none(self):  # type: ignore[no-untyped-def]
-        """
-        This allows the segment model to reference all versions of
-        itself including itself.
-        """
-        self.version_of = self
-        self.save_without_historical_record()
+    def set_version_of_to_itself_if_first_version(self):  # type: ignore[no-untyped-def]
+        # Revisions will already have `version_of` set
+        self.version_of = self  # Update the in-memory object
+        Segment.objects.filter(pk=self.pk).update(version_of=self)  # Skip .save hooks
 
     def _clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
         cloned_rules = []
@@ -171,6 +168,49 @@ class Segment(
         self.save_without_historical_record()
 
         self._clone_segment_rules(cloned_segment)
+
+        return cloned_segment
+
+    def clone(self) -> "Segment":
+        """
+        Clones a segment for versioning purposes
+        """
+        cloned_segment = deepcopy(self)
+        cloned_segment.pk = None
+        cloned_segment.uuid = uuid.uuid4()
+        cloned_segment.version_of = self.version_of or self
+        cloned_segment.save()
+
+        segment_rules = SegmentRule.objects.filter(
+            models.Q(segment=self) | models.Q(rule__segment=self)
+        )
+
+        # Ensure top-level rules are cloned first
+        segment_rules = segment_rules.order_by(models.F("rule").asc(nulls_first=True))
+
+        rule_to_cloned_rule_map: dict[SegmentRule, SegmentRule] = {}
+        for rule in segment_rules:
+            cloned_rule = deepcopy(rule)
+            cloned_rule.pk = None
+            cloned_rule.uuid = uuid.uuid4()
+            cloned_rule.segment = cloned_segment if rule.segment else None
+            cloned_rule.rule = rule_to_cloned_rule_map.get(rule.rule)
+            cloned_rule.version_of = rule.version_of or rule
+            cloned_rule.save()
+
+            rule_to_cloned_rule_map[rule] = cloned_rule
+
+        conditions = Condition.objects.filter(rule__in=rule_to_cloned_rule_map.keys())
+        for condition in conditions:
+            cloned_condition = deepcopy(condition)
+            cloned_condition.pk = None
+            cloned_condition.uuid = uuid.uuid4()
+            cloned_condition.rule = rule_to_cloned_rule_map[condition.rule]
+            cloned_condition.version_of = condition.version_of or condition
+            cloned_condition.save()
+
+        self.version = (self.version or 1) + 1
+        Segment.objects.filter(pk=self.pk).update(version=self.version)  # Skip .save
 
         return cloned_segment
 
@@ -206,6 +246,14 @@ class SegmentRule(
 
     type = models.CharField(max_length=50, choices=RULE_TYPES)
 
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        related_name="revisions",
+        null=True,
+        blank=True,
+    )
+
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
@@ -229,18 +277,20 @@ class SegmentRule(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
-            segment = self.get_segment()  # type: ignore[no-untyped-call]
-            if segment.deleted_at:
-                return True
-            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
+            segment = self.get_segment()
+            segment.refresh_from_db()
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
             return True
+        if segment.deleted_at:
+            return True
+        is_revision = segment.version_of != segment
+        return is_revision
 
     def _get_project(self) -> typing.Optional[Project]:
-        return self.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
+        return self.get_segment().project
 
-    def get_segment(self):  # type: ignore[no-untyped-def]
+    def get_segment(self) -> Segment:
         """
         rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
         segment
@@ -248,8 +298,8 @@ class SegmentRule(
         TODO: denormalise the segment information so that we don't have to make multiple queries here in complex cases
         """
         rule = self
-        while not rule.segment_id:
-            rule = rule.rule  # type: ignore[assignment]
+        while not rule.segment:
+            rule: SegmentRule = rule.rule  # type: ignore[no-redef]
         return rule.segment
 
     def deep_clone(self, cloned_segment: Segment) -> "SegmentRule":
@@ -356,6 +406,14 @@ class Condition(
         SegmentRule, on_delete=models.CASCADE, related_name="conditions"
     )
 
+    version_of = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        related_name="revisions",
+        null=True,
+        blank=True,
+    )
+
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
@@ -371,17 +429,16 @@ class Condition(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
-            if self.rule.deleted_at:
-                return True
-
-            segment = self.rule.get_segment()  # type: ignore[no-untyped-call]
-            if segment.deleted_at:
-                return True
-
-            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
+            segment = self.rule.get_segment()
+            self.rule.refresh_from_db()
+            segment.refresh_from_db()
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
             return True
+        if self.rule.deleted_at or segment.deleted_at:
+            return True
+        is_revision = segment.version_of != segment
+        return is_revision
 
     def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
         return f"Condition updated on segment '{self._get_segment().name}'."
@@ -390,23 +447,29 @@ class Condition(
         if not self.created_with_segment:
             return f"Condition added to segment '{self._get_segment().name}'."
 
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
-        if not self._get_segment().deleted_at:
-            return f"Condition removed from segment '{self._get_segment().name}'."
+    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
+        try:
+            segment = self._get_segment()
+            segment.refresh_from_db()
+        except Segment.DoesNotExist:
+            return None
+        if segment.deleted_at:
+            return None
+        return f"Condition removed from segment '{self._get_segment().name}'."
 
     def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
-        return self._get_segment().id
+        return self._get_segment().pk
 
     def _get_segment(self) -> Segment:
         """
         Temporarily cache the segment on the condition object to reduce number of queries.
         """
         if not hasattr(self, "segment"):
-            setattr(self, "segment", self.rule.get_segment())  # type: ignore[no-untyped-call]
+            setattr(self, "segment", self.rule.get_segment())
         return self.segment  # type: ignore[no-any-return]
 
     def _get_project(self) -> typing.Optional[Project]:
-        return self.rule.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
+        return self.rule.get_segment().project
 
 
 class WhitelistedSegment(models.Model):
