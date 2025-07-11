@@ -181,7 +181,7 @@ class HubspotLeadTracker(LeadTracker):
 
         return org_hubspot_id
 
-    def _get_company_from_hubspot_by_domain(
+    def _get_hubspot_company_by_domain(
         self,
         domain: str,
     ) -> dict[str, Any]:
