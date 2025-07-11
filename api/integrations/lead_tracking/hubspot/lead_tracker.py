@@ -159,7 +159,7 @@ class HubspotLeadTracker(LeadTracker):
         # As Hubspot creates/associates companies automatically based on contact domain
         # we need to get the hubspot id when this user creates the company for the first time
         # and update the company name
-        company = self._get_company_from_hubspot_by_domain(domain)
+        company = self._get_hubspot_company_by_domain(domain)
         if not company:
             return None
         org_hubspot_id: str = company["id"]
