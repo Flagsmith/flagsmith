@@ -190,7 +190,7 @@ def test_create_organisation_lead_creates_contact_when_not_found(
 
     assert mock_client.get_contact.call_count == 2
     mock_client.create_lead_form.assert_called_once_with(user=user)
-    mock_client.create_company.assert_not_called()
+    mock_client.create_company.assert_not_called()  # We rely on Hubspot creating contacts
     mock_client.associate_contact_to_company.assert_not_called()
 
 
