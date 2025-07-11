@@ -147,7 +147,7 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
         user = request.user
         assert isinstance(user, FFAdminUser)
         if not user.last_login or timezone.now() - user.last_login > timedelta(
-            minutes=10
+            minutes=settings.LAST_LOGIN_UPDATE_THRESHOLD_MINUTES
         ):
             user.last_login = timezone.now()
             user.save(update_fields=["last_login"])
