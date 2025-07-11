@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.187.0](https://github.com/Flagsmith/flagsmith/compare/v2.186.0...v2.187.0) (2025-07-11)
+
+
+### Features
+
+* add release pipeline paywall ([#5696](https://github.com/Flagsmith/flagsmith/issues/5696)) ([d2ec6ce](https://github.com/Flagsmith/flagsmith/commit/d2ec6ced8c6cb4881f688d412f95a07a48f46fa3))
+* Adds release pipeline status to feature modal ([#5575](https://github.com/Flagsmith/flagsmith/issues/5575)) ([1ed4a89](https://github.com/Flagsmith/flagsmith/commit/1ed4a89cbb95ea2cf4f0fd2b1a40abaf1098f1c1))
+* Beta feature flags ([#5722](https://github.com/Flagsmith/flagsmith/issues/5722)) ([ad9729b](https://github.com/Flagsmith/flagsmith/commit/ad9729b7bfa638455ff9377bfd070f3b90f7ae5e))
+* collect and track utms at signup ([#5630](https://github.com/Flagsmith/flagsmith/issues/5630)) ([e433c2f](https://github.com/Flagsmith/flagsmith/commit/e433c2f76cfe9c04fed58a415120bda2c4015e2f))
+* enable feature versioning for new environments ([#5108](https://github.com/Flagsmith/flagsmith/issues/5108)) ([e9c16e1](https://github.com/Flagsmith/flagsmith/commit/e9c16e194a682b8897a4b95cbd344eb331b62935))
+* generate-a-auth-cookie-on-oauth-succesful-logins ([#5670](https://github.com/Flagsmith/flagsmith/issues/5670)) ([4528877](https://github.com/Flagsmith/flagsmith/commit/4528877e77d74f8b5027a66000a027ca9d4cf0c6))
+* integrations onboarding ([#5497](https://github.com/Flagsmith/flagsmith/issues/5497)) ([fc216c8](https://github.com/Flagsmith/flagsmith/commit/fc216c84d23d3e671bbb6d8cb33134c7c6586845))
+* removes feature from release pipeline ([#5688](https://github.com/Flagsmith/flagsmith/issues/5688)) ([4981172](https://github.com/Flagsmith/flagsmith/commit/49811729b54fb087faf3c42d1118c8e47965b6a6))
+
+
+### Bug Fixes
+
+* Add missing Swagger schema for GET feature by ID ([#5713](https://github.com/Flagsmith/flagsmith/issues/5713)) ([d688c09](https://github.com/Flagsmith/flagsmith/commit/d688c097d8ab97890f326a73da58078a0d5c109f))
+* Environments don't preserve feature versioning when cloned ([#5740](https://github.com/Flagsmith/flagsmith/issues/5740)) ([bca7ed1](https://github.com/Flagsmith/flagsmith/commit/bca7ed145b4d0daa05581919d95cdd89068aab0f))
+* Improve Sentry documentation ([#5695](https://github.com/Flagsmith/flagsmith/issues/5695)) ([9f24435](https://github.com/Flagsmith/flagsmith/commit/9f2443525f3dc1be0747643292df51aecfe0c278))
+* Refactor toasts ([#5720](https://github.com/Flagsmith/flagsmith/issues/5720)) ([7747fa7](https://github.com/Flagsmith/flagsmith/commit/7747fa71da2e15e03d5736510de610de412cacd8))
+* removed-homepage-resetting-dark-mode ([#5700](https://github.com/Flagsmith/flagsmith/issues/5700)) ([4985794](https://github.com/Flagsmith/flagsmith/commit/49857942798efb4271789690894ba23e037ccbbc))
+* User display name ([#5719](https://github.com/Flagsmith/flagsmith/issues/5719)) ([d8bcfc7](https://github.com/Flagsmith/flagsmith/commit/d8bcfc79a43d72a2f24222340fe22b0a23741302))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* configure FoF keys and URL in ECS API instances ([#5738](https://github.com/Flagsmith/flagsmith/issues/5738)) ([a18a1e1](https://github.com/Flagsmith/flagsmith/commit/a18a1e193f73d7e8a76011ce6cd498fdf7dd2d01))
+* disable offline-mode in Flagsmith for API ECS instances ([#5737](https://github.com/Flagsmith/flagsmith/issues/5737)) ([86e82d8](https://github.com/Flagsmith/flagsmith/commit/86e82d867ea005686d3e47c1af474b303ff67cd1))
+
 ## [2.186.0](https://github.com/Flagsmith/flagsmith/compare/v2.185.0...v2.186.0) (2025-07-02)
 
 
