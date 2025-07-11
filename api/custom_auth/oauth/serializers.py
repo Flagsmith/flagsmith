@@ -7,8 +7,12 @@ from django.db.models import F
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker_and_track_user,
+)
 from users.auth_type import AuthType
 from users.models import SignUpType
+from users.serializers import UTMDataSerializer
 
 from ..serializers import InviteLinkValidationMixin
 from .github import GithubUser
@@ -31,7 +35,11 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
         help_text="Provide information about how the user signed up (i.e. via invite or not)",
         write_only=True,
     )
-
+    hubspot_cookie = serializers.CharField(
+        required=False, allow_null=True, allow_blank=True
+    )
+    marketing_consent_given = serializers.BooleanField(required=False, allow_null=True)
+    utm_data = UTMDataSerializer(required=False, allow_null=True)
     auth_type: AuthType | None = None
     user_model_id_attribute: str = "id"
 
@@ -87,9 +95,15 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
                 email=email, sign_up_type=self.validated_data.get("sign_up_type")
             )
 
-            return UserModel.objects.create(
+            user = UserModel.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type
             )
+
+            # On first OAuth signup, we register the hubspot cookies and utms before creating the hubspot contact
+            register_hubspot_tracker_and_track_user(self.context.get("request"), user)  # type: ignore[arg-type]
+
+            return user
+
         elif existing_user.auth_type != self.get_auth_type().value:
             # In this scenario, we're seeing a user that had previously
             # authenticated with another authentication method and is now

@@ -70,10 +70,8 @@ class HubspotLeadTracker(LeadTracker):
         create_lead_form_kwargs: dict[str, Any] = {"user": user}
         if tracker:
             create_lead_form_kwargs.update(
-                {
-                    "hubspot_cookie": tracker.hubspot_cookie,
-                    "utm_data": tracker.utm_data,
-                }
+                hubspot_cookie=tracker.hubspot_cookie,
+                utm_data=tracker.utm_data,
             )
         self.client.create_lead_form(**create_lead_form_kwargs)
 

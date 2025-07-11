@@ -13,7 +13,7 @@ from rest_framework.test import APIClient
 
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole, Subscription
-from users.models import FFAdminUser, HubspotTracker, UserPermissionGroup
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_create_invite_link(
@@ -173,8 +173,6 @@ def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-de
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    hubspot_tracker = HubspotTracker.objects.first()
-    assert hubspot_tracker.user == test_user  # type: ignore[union-attr]
 
     assert organisation in test_user.organisations.all()
     assert user_permission_group in test_user.permission_groups.all()
