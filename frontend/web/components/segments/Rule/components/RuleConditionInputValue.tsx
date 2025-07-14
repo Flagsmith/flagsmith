@@ -4,10 +4,11 @@ import Icon from 'components/Icon'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
 import Utils from 'common/utils/utils'
-import ModalHR from './ModalHR'
-import { getDarkMode } from 'project/darkMode'
 
-type RuleInputValueProps = {
+import { getDarkMode } from 'project/darkMode'
+import ModalHR from 'components/modals/ModalHR'
+
+type RuleConditionInputValueProps = {
   'data-test'?: string
   value: string | number
   style?: React.CSSProperties
@@ -26,7 +27,7 @@ const TextAreaModal = ({
   readOnly,
   style,
   value,
-}: RuleInputValueProps) => {
+}: RuleConditionInputValueProps) => {
   const [textAreaValue, setTextAreaValue] = React.useState(value)
 
   return (
@@ -84,7 +85,7 @@ const TextAreaModal = ({
   )
 }
 
-const RuleInputValue = (props: RuleInputValueProps) => {
+const RuleConditionInputValue = (props: RuleConditionInputValueProps) => {
   const value = props.value
   const hasLeadingWhitespace = typeof value === 'string' && /^\s/.test(value)
   const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
@@ -176,4 +177,4 @@ const RuleInputValue = (props: RuleInputValueProps) => {
   )
 }
 
-export default RuleInputValue
+export default RuleConditionInputValue

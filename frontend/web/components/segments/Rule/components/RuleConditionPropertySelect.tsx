@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import { RuleContextLabels, RuleContextValues } from 'common/types/rules.types'
 
-interface RuleTraitSelectProps {
+interface RulePropertySelectProps {
   ruleIndex: number
   propertyValue: string
   dataTest: string
@@ -14,13 +14,13 @@ interface RuleTraitSelectProps {
   isTraitDisabled?: boolean
 }
 
-const RuleTraitSelect = ({
+const RulePropertySelect = ({
   dataTest,
-  isTraitDisabled = true,
+  isTraitDisabled = false,
   propertyValue,
   ruleIndex,
   setRuleProperty,
-}: RuleTraitSelectProps) => {
+}: RulePropertySelectProps) => {
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
 
   useEffect(() => {
@@ -131,4 +131,4 @@ const RuleTraitSelect = ({
   )
 }
 
-export default RuleTraitSelect
+export default RulePropertySelect
