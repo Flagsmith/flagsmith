@@ -66,7 +66,6 @@ def login_with_github(request):  # type: ignore[no-untyped-def]
         )
         serializer.is_valid(raise_exception=True)
         token = serializer.save()
-        register_hubspot_tracker_and_track_user(request, token.user)
         if settings.COOKIE_AUTH_ENABLED:
             return authorise_response(token.user, Response(status=HTTP_204_NO_CONTENT))
         return Response(data=CustomTokenSerializer(instance=token).data)

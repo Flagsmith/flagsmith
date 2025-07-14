@@ -11,7 +11,7 @@ from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
 )
 from users.auth_type import AuthType
-from users.models import SignUpType
+from users.models import SignUpType, FFAdminUser
 from users.serializers import UTMDataSerializer
 
 from ..serializers import InviteLinkValidationMixin
@@ -95,12 +95,13 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
                 email=email, sign_up_type=self.validated_data.get("sign_up_type")
             )
 
-            user = UserModel.objects.create(
+            user = FFAdminUser.objects.create(
                 **user_data, email=email.lower(), sign_up_type=sign_up_type
             )
 
             # On first OAuth signup, we register the hubspot cookies and utms before creating the hubspot contact
-            register_hubspot_tracker_and_track_user(self.context.get("request"), user)  # type: ignore[arg-type]
+            if request := self.context["request"]:
+                register_hubspot_tracker_and_track_user(request, user)
 
             return user
 
