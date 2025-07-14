@@ -267,6 +267,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged, isEdit])
+
   useEffect(() => {
     setInterceptClose(onClosing)
     return () => setInterceptClose(null)
@@ -366,6 +367,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
+                  index={i}
                   operators={operators!}
                   onChange={(v: SegmentRule) => {
                     setValueChanged(true)

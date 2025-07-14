@@ -15,10 +15,13 @@ import Button from 'components/base/forms/Button'
 import RuleInputValue from './RuleInputValue'
 import ErrorMessage from 'components/ErrorMessage'
 import classNames from 'classnames'
+import RuleTraitSelect from 'components/segments/RuleTraitSelect/RuleTraitSelect'
+import { RuleContextValues } from 'common/types/rules.types'
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
 export default class Rule extends PureComponent<{
+  index: number
   operators: Operator[]
   rule: SegmentRule
   onChange: (newValue: SegmentRule) => void
@@ -30,6 +33,105 @@ export default class Rule extends PureComponent<{
   static displayName = 'Rule'
 
   static propTypes = {}
+  removeRule = (i: number) => {
+    this.setRuleProperty(i, 'delete', { value: true })
+  }
+
+  setRuleProperty = (
+    i: number,
+    prop: string,
+    { value }: { value: string | boolean },
+  ) => {
+    const rule = cloneDeep(this.props.rule)
+
+    const { conditions: rules } = rule
+    const prevOperator = Utils.findOperator(
+      rules[i]?.operator,
+      rules[i]?.value,
+      this.props.operators,
+    )
+    const newOperator =
+      prop !== 'operator'
+        ? prevOperator
+        : this.props.operators.find((v) => v.value === value)
+    if (newOperator && newOperator.hideValue) {
+      rules[i].value = null
+    }
+    if (
+      (prevOperator && prevOperator.append) !==
+      (newOperator && newOperator.append)
+    ) {
+      rules[i].value =
+        splitIfValue(rules[i].value, prevOperator && prevOperator.append)[0] +
+        (newOperator.append || '')
+    }
+
+    // remove append if one was added
+
+    if (prop == 'property') {
+      rules[i].property = value
+    } else {
+      const formattedValue =
+        prop === 'value' && value !== null ? `${value}` : value
+
+      rules[i][prop] =
+        prop === 'operator' ? formattedValue?.split(':')[0] : formattedValue
+    }
+
+    if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
+      console.log(rules[i].property)
+      const isPropertyContext = [
+        RuleContextValues.IDENTIFIER,
+        RuleContextValues.ENVIRONMENT_NAME,
+      ].includes(rules[i].property)
+      rules[i].property = isPropertyContext ? rules[i].property : ''
+      rules[i].value = isPropertyContext ? rules[i].value : ''
+    }
+
+    if (prop === 'delete') {
+      rules[i].property = { value: 'deleted' }
+      rules[i].value = 'deleted'
+    }
+
+    if (!rule.conditions.filter((condition) => !condition.delete).length) {
+      rule.delete = true
+    }
+
+    if (!rule.conditions.filter((condition) => !condition.delete).length) {
+      rule.delete = true
+    }
+
+    this.props.onChange(rule)
+  }
+
+  addRule = () => {
+    const {
+      props: {
+        rule: { conditions: rules },
+      },
+    } = this
+    this.props.onChange({
+      ...this.props.rule,
+      conditions: rules.concat([{ ...Constants.defaultRule }]),
+    })
+  }
+
+  render() {
+    const {
+      props: {
+        rule: { conditions: rules },
+      },
+    } = this
+    return (
+      <div>
+        <div className='panel-rule-wrapper overflow-visible'>
+          <div className='panel-rule p-2'>
+            {rules.map((rule, i) => this.renderRule(rule, i))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   renderRule = (rule: SegmentCondition, i: number) => {
     const {
@@ -61,6 +163,7 @@ export default class Rule extends PureComponent<{
     const valuePlaceholder = operatorObj?.hideValue
       ? 'Value (N/A)'
       : operatorObj?.valuePlaceholder || 'Value'
+
     return (
       <div className='rule__row reveal' key={i}>
         {hasOr && (
@@ -76,27 +179,11 @@ export default class Rule extends PureComponent<{
         <Row noWrap className='rule align-items-center justify-content-between'>
           <Tooltip
             title={
-              <Input
-                readOnly={this.props.readOnly}
-                data-test={`${this.props['data-test']}-property-${i}`}
-                value={`${rule.property}`}
-                inputClassName={classNames({
-                  'border-danger': ruleErrors?.property,
-                })}
-                style={{
-                  width: '135px',
-                }}
-                placeholder={
-                  operator && operator === 'PERCENTAGE_SPLIT'
-                    ? 'Trait (N/A)'
-                    : 'Trait *'
-                }
-                onChange={(e: InputEvent) =>
-                  this.setRuleProperty(i, 'property', {
-                    value: Utils.safeParseEventValue(e),
-                  })
-                }
-                disabled={operator && operator === 'PERCENTAGE_SPLIT'}
+              <RuleTraitSelect
+                dataTest={`${this.props['data-test']}-property-${i}`}
+                ruleIndex={i}
+                setRuleProperty={this.setRuleProperty}
+                propertyValue={rule.property}
               />
             }
             place='top'
@@ -166,7 +253,7 @@ export default class Rule extends PureComponent<{
               placeholder='Condition description (Optional)'
               onChange={(e) => {
                 const value = Utils.safeParseEventValue(e)
-                this.setRuleProperty(i, 'description', { value })
+                this.setRuleProperty(i, 'description', value)
               }}
             />
           </Row>
@@ -176,103 +263,6 @@ export default class Rule extends PureComponent<{
             <ErrorMessage error={ruleErrors} />
           </Row>
         )}
-      </div>
-    )
-  }
-  removeRule = (i: number) => {
-    this.setRuleProperty(i, 'delete', { value: true })
-  }
-
-  setRuleProperty = (
-    i: number,
-    prop: string,
-    { value }: { value: string | boolean },
-  ) => {
-    const rule = cloneDeep(this.props.rule)
-
-    const { conditions: rules } = rule
-
-    const prevOperator = Utils.findOperator(
-      rules[i].operator,
-      rules[i].value,
-      this.props.operators,
-    )
-    const newOperator =
-      prop !== 'operator'
-        ? prevOperator
-        : this.props.operators.find((v) => v.value === value)
-
-    if (newOperator && newOperator.hideValue) {
-      rules[i].value = null
-    }
-    if (
-      (prevOperator && prevOperator.append) !==
-      (newOperator && newOperator.append)
-    ) {
-      rules[i].value =
-        splitIfValue(rules[i].value, prevOperator && prevOperator.append)[0] +
-        (newOperator.append || '')
-    }
-
-    // remove append if one was added
-
-    const formattedValue =
-      prop === 'value' && value !== null ? `${value}` : value
-    const invalidPercentageSplit =
-      prop === 'value' &&
-      rules[i].operator === 'PERCENTAGE_SPLIT' &&
-      (`${value}`?.match(/\D/) || (value as any) > 100)
-    if (!invalidPercentageSplit) {
-      // split operator by append
-      // @ts-ignore
-      rules[i][prop] =
-        prop === 'operator' ? formattedValue?.split(':')[0] : formattedValue
-    }
-
-    if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
-      rules[i].property = ''
-      rules[i].value = ''
-    }
-
-    if (prop === 'delete') {
-      rules[i].property = 'deleted'
-      rules[i].value = 'deleted'
-    }
-
-    if (!rule.conditions.filter((condition) => !condition.delete).length) {
-      rule.delete = true
-    }
-
-    if (!rule.conditions.filter((condition) => !condition.delete).length) {
-      rule.delete = true
-    }
-
-    this.props.onChange(rule)
-  }
-
-  addRule = () => {
-    const {
-      props: {
-        rule: { conditions: rules },
-      },
-    } = this
-    this.props.onChange({
-      ...this.props.rule,
-      conditions: rules.concat([{ ...Constants.defaultRule }]),
-    })
-  }
-
-  render() {
-    const {
-      props: {
-        rule: { conditions: rules },
-      },
-    } = this
-    return (
-      <div>
-        <div className='panel-rule-wrapper overflow-visible'>
-          <div className='panel-rule p-2'>{rules.map(this.renderRule)}</div>
-        </div>
       </div>
     )
   }
