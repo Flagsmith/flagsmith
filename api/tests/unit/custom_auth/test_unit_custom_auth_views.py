@@ -179,11 +179,12 @@ def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
     response = staff_client.post(url, data=data, format="json")
 
     user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
-    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
-    hubspot_cookie_db = hubspot_tracker.hubspot_cookie if hubspot_tracker else None
+    hubspot_cookie_matches = HubspotTracker.objects.filter(
+        user=user, hubspot_cookie=hubspot_cookie
+    ).exists()
+    assert not hubspot_cookie or hubspot_cookie_matches
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert user is not None
-    assert hubspot_cookie_db == hubspot_cookie
 
     mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))

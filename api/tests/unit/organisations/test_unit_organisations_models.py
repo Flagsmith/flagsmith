@@ -652,7 +652,7 @@ def test_organisation_has_billing_periods(
     assert result == expected_result
 
 
-@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@pytest.mark.freeze_time("2023-01-19T09:09:47+00:00")
 def test_user_organisation_create_calls_hubspot_lead_tracking(
     mocker: MagicMock, db: None, settings: SettingsWrapper, organisation: Organisation
 ) -> None:

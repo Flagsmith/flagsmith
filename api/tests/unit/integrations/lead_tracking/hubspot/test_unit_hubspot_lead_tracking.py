@@ -115,7 +115,7 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
     mock_client_existing_contact.create_company.assert_not_called()
 
 
-@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+@pytest.mark.freeze_time("2023-01-19T09:09:47+00:00")
 def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_associations(
     organisation: Organisation,
     enable_hubspot: None,
