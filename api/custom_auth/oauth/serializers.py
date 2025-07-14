@@ -11,7 +11,7 @@ from integrations.lead_tracking.hubspot.services import (
     register_hubspot_tracker_and_track_user,
 )
 from users.auth_type import AuthType
-from users.models import SignUpType, FFAdminUser
+from users.models import FFAdminUser, SignUpType
 from users.serializers import UTMDataSerializer
 
 from ..serializers import InviteLinkValidationMixin

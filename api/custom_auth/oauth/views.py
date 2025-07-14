@@ -16,9 +16,6 @@ from custom_auth.oauth.serializers import (
     GoogleLoginSerializer,
 )
 from custom_auth.serializers import CustomTokenSerializer
-from integrations.lead_tracking.hubspot.services import (
-    register_hubspot_tracker_and_track_user,
-)
 
 logger = logging.getLogger(__name__)
 
