@@ -6,7 +6,7 @@
 version: '3'
 services:
   db:
-    image: ghcr.io/cloudnative-pg/postgresql:15
+    image: docker.io/library/postgres:15-alpine
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: flagsmith
