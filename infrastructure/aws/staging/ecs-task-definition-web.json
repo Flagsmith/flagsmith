@@ -218,8 +218,12 @@
                     "value": "True"
                 },
                 {
-                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
-                    "value": "True"
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
@@ -282,6 +286,10 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:GITHUB_PEM-Bfoaql"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:302456015006:secret:ECS-API-heAdoB:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {

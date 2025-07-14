@@ -188,6 +188,14 @@
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
@@ -254,6 +262,10 @@
                 {
                     "name": "HUBSPOT_ACCESS_TOKEN",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {

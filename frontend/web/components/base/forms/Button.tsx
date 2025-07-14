@@ -12,6 +12,7 @@ export const themeClassNames = {
   primary: 'btn-primary',
   project: 'btn-project',
   secondary: 'btn btn-secondary',
+  success: 'btn btn-success',
   tertiary: 'btn-tertiary',
   text: 'btn-link',
 }

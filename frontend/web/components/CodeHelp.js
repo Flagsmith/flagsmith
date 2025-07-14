@@ -96,7 +96,7 @@ const CodeHelp = class extends Component {
     const res = Clipboard.setString(s)
     toast(
       res ? 'Clipboard set' : 'Could not set clipboard :(',
-      res ? '' : 'danger',
+      res ? 'success' : 'danger',
     )
   }
 
