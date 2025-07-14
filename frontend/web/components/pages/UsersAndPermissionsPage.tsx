@@ -40,6 +40,7 @@ import {
   useResendUserInviteMutation,
 } from 'common/services/useInvites'
 import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type UsersAndPermissionsPageType = {
   router: RouterChildContext['router']
@@ -454,9 +455,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                   {invited_by ? (
                                     <div className='list-item-subtitle'>
                                       Invited by{' '}
-                                      {invited_by.first_name
-                                        ? `${invited_by.first_name} ${invited_by.last_name}`
-                                        : invited_by.email}
+                                      {getUserDisplayName(invited_by)}
                                     </div>
                                   ) : null}
                                 </div>
@@ -482,7 +481,7 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                                           })
                                           .catch((error) => {
                                             toast(
-                                              'Error resent invite',
+                                              'Error resending invite',
                                               'error',
                                             )
                                             console.error(error)

@@ -9,6 +9,7 @@ import { getProjectFlag } from 'common/services/useProjectFlag'
 import { getStore } from 'common/store'
 import SettingsButton from './SettingsButton'
 import OrganisationProvider from 'common/providers/OrganisationProvider'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 class TheComponent extends Component {
   state = {}
@@ -66,7 +67,7 @@ class TheComponent extends Component {
                         className='chip mr-2'
                       >
                         <span className='font-weight-bold'>
-                          {u.first_name} {u.last_name}
+                          {getUserDisplayName(u)}
                         </span>
                         <span className='chip-icon ion'>
                           <IonIcon icon={close} />

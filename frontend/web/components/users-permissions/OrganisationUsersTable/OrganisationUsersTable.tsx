@@ -10,7 +10,7 @@ import InspectPermissions from 'components/inspect-permissions/InspectPermission
 import Format from 'common/utils/format'
 import OrganisationUsersTableHeader from './components/OrganisationUsersTableHeader'
 import OrganisationUsersTableRow from './components/OrganisationUsersTableRow'
-
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 interface OrganisationUsersTableProps {
   users: User[]
   organisation: Organisation
@@ -53,9 +53,7 @@ const OrganisationUsersTable: React.FC<OrganisationUsersTableProps> = ({
 
   const inspectPermissions = (user: User, organisationId: number) => {
     openModal(
-      user.first_name || user.last_name
-        ? `${user.first_name} ${user.last_name}`
-        : `${user.email}`,
+      getUserDisplayName(user),
       <div>
         <Tabs uncontrolled hideNavOnSingleTab>
           <TabItem tabLabel='Permissions'>
