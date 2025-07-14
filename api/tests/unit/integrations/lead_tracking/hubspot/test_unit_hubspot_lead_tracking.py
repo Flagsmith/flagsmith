@@ -157,7 +157,7 @@ def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_association
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
 
 
-def test_create_organisation_lead_creates_contact_when_not_found(
+def test_create_organisation_lead_creates_contact_when_not_found_but_not_company(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
