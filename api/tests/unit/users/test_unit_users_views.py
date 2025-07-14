@@ -1,7 +1,7 @@
 import json
 import typing
 from datetime import datetime, timedelta
-from typing import Callable
+
 import pytest
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
@@ -17,7 +17,7 @@ from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.conf import settings
+
 from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
