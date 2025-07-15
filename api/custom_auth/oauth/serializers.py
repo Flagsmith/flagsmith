@@ -100,7 +100,7 @@ class OAuthLoginSerializer(InviteLinkValidationMixin, serializers.Serializer):  
             )
 
             # On first OAuth signup, we register the hubspot cookies and utms before creating the hubspot contact
-            if request := self.context["request"]:
+            if request := self.context.get("request"):
                 register_hubspot_tracker_and_track_user(request, user)
 
             return user
