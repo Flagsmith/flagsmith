@@ -48,15 +48,18 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
     useActionProjectChangeRequestMutation({})
   const [deleteProjectChangeRequest, { isLoading: isDeleting }] =
     useDeleteProjectChangeRequestMutation({})
-  const { data: changeRequest, isLoading: changeRequestLoading } =
-    useGetProjectChangeRequestQuery(
-      {
-        id,
-        project_id: projectId,
-      },
-      { skip: !projectId || !id },
-    )
-  const [updateChangeRequest, { isLoading: isUpdating }] =
+  const {
+    data: changeRequest,
+    error: loadError,
+    isLoading: changeRequestLoading,
+  } = useGetProjectChangeRequestQuery(
+    {
+      id,
+      project_id: projectId,
+    },
+    { skip: !projectId || !id },
+  )
+  const [updateChangeRequest, { error: saveError, isLoading: isUpdating }] =
     useUpdateProjectChangeRequestMutation({})
   const segmentId = changeRequest?.segments?.[0]?.version_of
   const { data: segment } = useGetSegmentQuery(
@@ -68,6 +71,8 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
       skip: !segmentId,
     },
   )
+
+  const error = loadError || saveError
 
   const addOwner = (id: number, isUser = true) => {
     if (isUpdating || !changeRequest) return
