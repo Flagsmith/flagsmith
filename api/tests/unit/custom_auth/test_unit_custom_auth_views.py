@@ -145,21 +145,14 @@ def test_patch_user_onboarding_returns_error_if_tasks_and_tools_are_missing(
     }
 
 
-@pytest.mark.parametrize(
-    "hubspot_cookie",
-    [
-        "1234567890",
-        None,
-    ],
-)
 def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
     mocker: MagicMock,
     db: None,
     settings: SettingsWrapper,
     staff_client: APIClient,
-    hubspot_cookie: str,
 ) -> None:
     # Given
+    hubspot_cookie = "1234567890"
     settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
     data = {
         "first_name": "new",
@@ -179,10 +172,43 @@ def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
     response = staff_client.post(url, data=data, format="json")
 
     user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
-    hubspot_cookie_matches = HubspotTracker.objects.filter(
-        user=user, hubspot_cookie=hubspot_cookie
-    ).exists()
-    assert not hubspot_cookie or hubspot_cookie_matches
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+    assert hubspot_tracker is not None
+    assert hubspot_tracker.hubspot_cookie == hubspot_cookie
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert user is not None
+
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+
+
+def test_create_user_does_not_create_hubspot_tracking_if_no_cookie_is_provided(
+    mocker: MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "sign_up_type": "NO_INVITE",
+    }
+
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    # When
+    response = staff_client.post(url, data=data, format="json")
+
+    user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+    assert hubspot_tracker is None
     # Then
     assert response.status_code == status.HTTP_201_CREATED
     assert user is not None

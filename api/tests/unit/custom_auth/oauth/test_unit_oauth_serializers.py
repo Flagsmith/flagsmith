@@ -138,9 +138,8 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
     # Given
     settings.AUTH_CONTROLLER_INSTALLED = True
     rf = APIRequestFactory()
-    django_request = rf.post(
-        "/some-login/url", data={"access_token": "some_token"}, format="json"
-    )
+    data = {"access_token": "some_token"}
+    django_request = rf.post("/some-login/url", data=data, format="json")
     request = Request(django_request, parsers=[JSONParser()])
     user_email = "test_user@test.com"
     mocked_auth_controller = mocker.MagicMock()
@@ -149,7 +148,7 @@ def test_OAuthLoginSerializer_calls_is_authentication_method_valid_correctly_if_
     )
 
     serializer = OAuthLoginSerializer(  # type: ignore[abstract]
-        data={"access_token": "some_token"}, context={"request": request}
+        data=data, context={"request": request}
     )
     # monkey patch the get_user_info method to return the mock user data
     serializer.get_user_info = lambda: {"email": user_email}  # type: ignore[method-assign]
@@ -176,25 +175,22 @@ def test_OAuthLoginSerializer_allows_registration_if_sign_up_type_is_invite_link
 ):
     # Given
     settings.ALLOW_REGISTRATION_WITHOUT_INVITE = False
+    data = {
+        "access_token": "some_token",
+        "sign_up_type": SignUpType.INVITE_LINK.value,
+        "invite_hash": invite_link.hash,
+    }
     rf = APIRequestFactory()
     django_request = rf.post(
         "/api/v1/auth/oauth/google/",
-        data={
-            "access_token": "some_token",
-            "sign_up_type": SignUpType.INVITE_LINK.value,
-            "invite_hash": invite_link.hash,
-        },
+        data=data,
         format="json",
     )
     request = Request(django_request, parsers=[JSONParser()])
     user_email = "test_user@test.com"
 
     serializer = OAuthLoginSerializer(  # type: ignore[abstract]
-        data={
-            "access_token": "some_token",
-            "sign_up_type": SignUpType.INVITE_LINK.value,
-            "invite_hash": invite_link.hash,
-        },
+        data=data,
         context={"request": request},
     )
     # monkey patch the get_user_info method to return the mock user data
