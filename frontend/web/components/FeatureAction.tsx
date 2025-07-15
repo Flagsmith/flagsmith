@@ -44,7 +44,8 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   tags,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
-
+  const [top, setTop] = useState<number>(0)
+  const [left, setLeft] = useState<number>(0)
   const btnRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -76,14 +77,20 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
   useLayoutEffect(() => {
     if (!isOpen || !listRef.current || !btnRef.current) return
-    const { left, top } = calculateListPosition(btnRef.current, listRef.current)
+    const { left, top } = calculateListPosition(
+      btnRef.current,
+      listRef.current,
+      true,
+    )
     listRef.current.style.top = `${top}px`
     listRef.current.style.left = `${left}px`
+    setTop(top)
+    setLeft(left)
   }, [isOpen])
 
   const isProtected = !!protectedTags?.length
   return (
-    <div className='feature-action'>
+    <div className='feature-action position-relative'>
       <div ref={btnRef}>
         <ActionButton
           onClick={() => setIsOpen(true)}
@@ -92,7 +99,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
       </div>
 
       {isOpen && (
-        <div ref={listRef} className='feature-action__list'>
+        <div ref={listRef} className='feature-action__list position-relative'>
           <ActionItem
             icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
             label='Copy Feature Name'
