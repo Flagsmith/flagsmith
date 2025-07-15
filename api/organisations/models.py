@@ -127,6 +127,14 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
         return f"org.{self.id}"
 
+    @property
+    def flagsmith_on_flagsmith_api_traits(self) -> dict[str, Any]:  # TODO: typed dict
+        return {
+            "organisation.id": self.id,
+            "organisation.name": self.name,
+            "subscription.plan": self.subscription.plan,
+        }
+
     def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
