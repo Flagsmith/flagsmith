@@ -403,7 +403,8 @@ def test_handle_api_usage_notifications_when_feature_flag_is_off(
     client_mock.get_identity_flags.assert_called_once_with(
         organisation.flagsmith_identifier,
         traits={
-            "organisation_id": organisation.id,
+            "organisation.id": organisation.id,
+            "organisation.name": organisation.name,
             "subscription.plan": organisation.subscription.plan,
         },
     )
@@ -1040,7 +1041,8 @@ def test_charge_for_api_call_count_overages_scale_up_when_flagsmith_client_sets_
     client_mock.get_identity_flags.assert_called_once_with(
         organisation.flagsmith_identifier,
         traits={
-            "organisation_id": organisation.id,
+            "organisation.id": organisation.id,
+            "organisation.name": organisation.name,
             "subscription.plan": organisation.subscription.plan,
         },
     )
@@ -1773,21 +1775,24 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         call(
             f"org.{organisation.id}",
             traits={
-                "organisation_id": organisation.id,
+                "organisation.id": organisation.id,
+                "organisation.name": organisation.name,
                 "subscription.plan": organisation.subscription.plan,
             },
         ),
         call(
             f"org.{organisation2.id}",
             traits={
-                "organisation_id": organisation2.id,
+                "organisation.id": organisation2.id,
+                "organisation.name": organisation2.name,
                 "subscription.plan": organisation2.subscription.plan,
             },
         ),
         call(
             f"org.{organisation6.id}",
             traits={
-                "organisation_id": organisation6.id,
+                "organisation.id": organisation6.id,
+                "organisation.name": organisation6.name,
                 "subscription.plan": organisation6.subscription.plan,
             },
         ),
