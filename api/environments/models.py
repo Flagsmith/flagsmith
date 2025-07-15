@@ -210,10 +210,7 @@ class Environment(
         organisation = self.project.organisation
         enable_v2_versioning = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={
-                "organisation_id": organisation.id,
-                "subscription.plan": organisation.subscription.plan,
-            },
+            traits=organisation.flagsmith_on_flagsmith_api_traits,
         ).is_feature_enabled("enable_feature_versioning_for_new_environments")
         self.use_v2_feature_versioning = enable_v2_versioning
 
