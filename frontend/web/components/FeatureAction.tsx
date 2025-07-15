@@ -99,7 +99,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
       </div>
 
       {isOpen && (
-        <div ref={listRef} className='feature-action__list position-relative'>
+        <div ref={listRef} className='feature-action__list'>
           <ActionItem
             icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
             label='Copy Feature Name'
