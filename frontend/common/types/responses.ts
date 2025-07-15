@@ -57,7 +57,7 @@ export type SegmentCondition = {
   operator: string
   property: string
   value: string | number | null
-  version_of?: SegmentCondition
+  version_of: number | undefined
 }
 
 export type SegmentConditionsError = {
@@ -71,7 +71,7 @@ export type SegmentRule = {
   rules: SegmentRule[]
   delete?: boolean
   conditions: SegmentCondition[]
-  version_of: SegmentRule | undefined
+  version_of: number | undefined
 }
 export type Segment = {
   id: number
