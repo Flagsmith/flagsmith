@@ -2,7 +2,6 @@ import datetime
 import json
 import typing
 import uuid
-from copy import deepcopy
 
 from django.conf import settings
 from django.db import models
@@ -174,17 +173,6 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         if persist:
             self.save()
             environment_feature_version_published.send(self.__class__, instance=self)
-
-    def clone_to_environment(
-        self, environment: "Environment"
-    ) -> "EnvironmentFeatureVersion":
-        _clone = deepcopy(self)
-
-        _clone.uuid = None  # type: ignore[assignment]
-        _clone.environment = environment
-
-        _clone.save()
-        return _clone
 
 
 class VersionChangeSet(LifecycleModelMixin, SoftDeleteObject):  # type: ignore[misc]
