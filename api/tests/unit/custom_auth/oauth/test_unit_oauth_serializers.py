@@ -21,15 +21,23 @@ from organisations.invites.models import InviteLink
 from users.models import FFAdminUser, HubspotTracker, SignUpType
 
 
+@pytest.mark.parametrize(
+    "enable_hubspot_lead_tracking",
+    (
+        True,
+        False,
+    ),
+)
 @mock.patch("custom_auth.oauth.serializers.get_user_info")
 def test_create_oauth_login_serializer(
     mock_get_user_info: mock.MagicMock,
     db: None,
     settings: SettingsWrapper,
     mocker: MagicMock,
+    enable_hubspot_lead_tracking: bool,
 ) -> None:
     # Given
-    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = enable_hubspot_lead_tracking
     access_token = "access-token"
     sign_up_type = "NO_INVITE"
     data = {
@@ -69,7 +77,12 @@ def test_create_oauth_login_serializer(
     hubspot_tracker = HubspotTracker.objects.get(user=user)
     assert hubspot_tracker.utm_data == {"utm_source": "test-utm-data"}
     assert hubspot_tracker.hubspot_cookie == "test-hubspot-utk"
-    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+    if enable_hubspot_lead_tracking:
+        mock_create_hubspot_contact_for_user.delay.assert_called_once_with(
+            args=(user.id,)
+        )
+    else:
+        mock_create_hubspot_contact_for_user.delay.assert_not_called()
     assert isinstance(response, Token)
     assert (timezone.now() - response.user.last_login).seconds < 5
     assert response.user.email == email

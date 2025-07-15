@@ -1,7 +1,7 @@
 import typing
 from datetime import timedelta
 from unittest.mock import MagicMock
-
+from rest_framework.test import APIRequestFactory
 import pytest
 import responses
 from django.utils import timezone
@@ -22,6 +22,9 @@ from organisations.models import (
     OrganisationRole,
 )
 from users.models import FFAdminUser, HubspotLead, HubspotTracker
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker_and_track_user,
+)
 
 HUBSPOT_USER_ID = "1000551"
 HUBSPOT_COMPANY_ID = "10280696017"
@@ -417,3 +420,30 @@ def test_create_leads_skips_association_on_missing_ids(
 
     # Then
     mock_client.associate_contact_to_company.assert_not_called()
+
+
+def test_register_hubspot_tracker_and_track_user_fallback_to_request_user(
+    mocker: MockerFixture, staff_user: FFAdminUser, settings: SettingsWrapper
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+
+    mock_register_hubspot_tracker = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.register_hubspot_tracker"
+    )
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    factory = APIRequestFactory()
+    request = factory.get("/")
+    request.user = staff_user
+
+    # When
+    register_hubspot_tracker_and_track_user(request)
+
+    # Then
+    mock_register_hubspot_tracker.assert_called_once_with(request, None)
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(
+        args=(staff_user.id,)
+    )
