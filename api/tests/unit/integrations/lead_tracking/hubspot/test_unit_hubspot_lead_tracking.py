@@ -1,12 +1,13 @@
 import typing
 from datetime import timedelta
 from unittest.mock import MagicMock
-from rest_framework.test import APIRequestFactory
+
 import pytest
 import responses
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from rest_framework.test import APIRequestFactory
 from task_processor.task_run_method import TaskRunMethod
 
 from integrations.lead_tracking.hubspot.constants import (
@@ -15,6 +16,9 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ROOT_FORM_URL,
 )
 from integrations.lead_tracking.hubspot.lead_tracker import HubspotLeadTracker
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker_and_track_user,
+)
 from integrations.lead_tracking.hubspot.tasks import track_hubspot_lead_v2
 from organisations.models import (
     HubspotOrganisation,
@@ -22,9 +26,6 @@ from organisations.models import (
     OrganisationRole,
 )
 from users.models import FFAdminUser, HubspotLead, HubspotTracker
-from integrations.lead_tracking.hubspot.services import (
-    register_hubspot_tracker_and_track_user,
-)
 
 HUBSPOT_USER_ID = "1000551"
 HUBSPOT_COMPANY_ID = "10280696017"
