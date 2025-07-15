@@ -12,8 +12,8 @@ You can achieve this by subscribing to real-time flag updates.
 
 Real-time flag updates require an Enterprise subscription.
 
-Real-time flag updates are only available on the public SaaS Flagsmith instance. Self-hosted and private cloud Flagsmith
-installations do not support real-time flag updates.
+If you are self-hosting Flagsmith, real-time flag updates require
+[additional infrastructure](/deployment/hosting/real-time).
 
 ## Setup
 
