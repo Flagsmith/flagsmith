@@ -90,7 +90,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
 
   const isProtected = !!protectedTags?.length
   return (
-    <div className='feature-action position-relative'>
+    <div className='feature-action'>
       <div ref={btnRef}>
         <ActionButton
           onClick={() => setIsOpen(true)}
