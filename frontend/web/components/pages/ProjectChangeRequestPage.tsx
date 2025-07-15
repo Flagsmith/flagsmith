@@ -243,7 +243,9 @@ const ProjectChangeRequestPage: FC<ProjectChangeRequestPageType> = ({
                   <a
                     target='_blank'
                     className='btn-link font-weight-medium'
-                    href={`/project/4236/segments?featureSpecific=${!segment.feature}&id=${
+                    href={`/project/${
+                      segment.project
+                    }/segments?featureSpecific=${!segment.feature}&id=${
                       segment.id
                     }`}
                     rel='noreferrer'
