@@ -22,7 +22,7 @@
             "type": "object"
         },
         "IdentityContext": {
-            "description": "Represents an identity context for feature flag evaluation.",
+            "description": "Represents an identity context for feature flag evaluation.\n    ",
             "properties": {
                 "identifier": {
                     "description": "The unique identifier for the identity, used for segment and multivariate feature flag targeting.",
@@ -43,120 +43,9 @@
             ],
             "title": "IdentityContext",
             "type": "object"
-        },
-        "SegmentCondition": {
-            "description": "Represents a condition for segment evaluation.",
-            "properties": {
-                "property": {
-                    "title": "Property",
-                    "type": "string"
-                },
-                "operator": {
-                    "$ref": "#/$defs/SegmentConditionOperator"
-                },
-                "value": {
-                    "title": "Value",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "property",
-                "operator",
-                "value"
-            ],
-            "title": "SegmentCondition",
-            "type": "object"
-        },
-        "SegmentConditionOperator": {
-            "description": "Represents the operators used in segment conditions. Operators are used to compare segment properties against context values, like `$.identity.traits.user_role` or `$.environment.key`.",
-            "enum": [
-                "EQUAL",
-                "GREATER_THAN",
-                "LESS_THAN",
-                "LESS_THAN_INCLUSIVE",
-                "CONTAINS",
-                "GREATER_THAN_INCLUSIVE",
-                "NOT_CONTAINS",
-                "NOT_EQUAL",
-                "REGEX",
-                "PERCENTAGE_SPLIT",
-                "MODULO",
-                "IS_SET",
-                "IS_NOT_SET",
-                "IN"
-            ],
-            "title": "SegmentConditionOperator",
-            "type": "string"
-        },
-        "SegmentContext": {
-            "description": "Represents a segment context for feature flag evaluation.",
-            "properties": {
-                "key": {
-                    "description": "The unique identifier for the segment, used for percentage-based targeting.",
-                    "title": "Key",
-                    "type": "string"
-                },
-                "name": {
-                    "title": "Name",
-                    "type": "string"
-                },
-                "rules": {
-                    "items": {
-                        "$ref": "#/$defs/SegmentRule"
-                    },
-                    "title": "Rules",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "key",
-                "name",
-                "rules"
-            ],
-            "title": "SegmentContext",
-            "type": "object"
-        },
-        "SegmentRule": {
-            "description": "Represents a rule for segment evaluation. Rules can be nested. ",
-            "properties": {
-                "type": {
-                    "$ref": "#/$defs/SegmentRuleType"
-                },
-                "rules": {
-                    "items": {
-                        "$ref": "#/$defs/SegmentRule"
-                    },
-                    "title": "Rules",
-                    "type": "array"
-                },
-                "conditions": {
-                    "items": {
-                        "$ref": "#/$defs/SegmentCondition"
-                    },
-                    "title": "Conditions",
-                    "type": "array"
-                }
-            },
-            "required": [
-                "type",
-                "rules",
-                "conditions"
-            ],
-            "title": "SegmentRule",
-            "type": "object"
-        },
-        "SegmentRuleType": {
-            "description": "Enum representing the types of segment rules.",
-            "enum": [
-                "ANY",
-                "ALL",
-                "NONE"
-            ],
-            "title": "SegmentRuleType",
-            "type": "string"
         }
     },
-    "description": "Represents a context object containing the necessary information to evaluate Flagsmith feature flags for a given environment, (optionally) identity, feature, and segments.",
+    "description": "Represents a context object containing the necessary information\nto evaluate Flagsmith feature flags for a given environment,\n(optionally) identity, feature, and segments.",
     "properties": {
         "environment": {
             "$ref": "#/$defs/EnvironmentContext"
@@ -171,14 +60,6 @@
                 }
             ],
             "default": null
-        },
-        "segments": {
-            "description": "A list of segments to evaluate against the identity and environment context.",
-            "items": {
-                "$ref": "#/$defs/SegmentContext"
-            },
-            "title": "Segments",
-            "type": "array"
         }
     },
     "required": [
