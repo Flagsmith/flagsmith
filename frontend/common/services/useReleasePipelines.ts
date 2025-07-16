@@ -48,7 +48,9 @@ export const releasePipelinesService = service
         Res['releasePipeline'],
         Req['getReleasePipeline']
       >({
-        providesTags: [{ type: 'ReleasePipelines' }],
+        providesTags: (result, error, { pipelineId }) => [
+          { id: pipelineId, type: 'ReleasePipelines' },
+        ],
         query: (query: Req['getReleasePipeline']) => ({
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/`,
         }),
@@ -91,10 +93,12 @@ export const releasePipelinesService = service
         Res['releasePipeline'],
         Req['updateReleasePipeline']
       >({
-        invalidatesTags: (res) => [
-          { id: 'LIST', type: 'ReleasePipelines' },
-          { id: res?.id, type: 'ReleasePipelines' },
-        ],
+        invalidatesTags: (res) => {
+          return [
+            { id: res?.id, type: 'ReleasePipelines' },
+            { id: 'LIST', type: 'ReleasePipelines' },
+          ]
+        },
         query: (query: Req['updateReleasePipeline']) => ({
           body: {
             description: query.description,

@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import CreatePipelineStage, { DraftStageType } from './CreatePipelineStage'
+import CreatePipelineStage from './CreatePipelineStage'
 import Breadcrumb from 'components/Breadcrumb'
 import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { StageActionType, StageTriggerType } from 'common/types/responses'
+import { StageActionType } from 'common/types/responses'
 import Icon from 'components/Icon'
 import {
   useCreateReleasePipelineMutation,
@@ -14,20 +14,13 @@ import {
 } from 'common/services/useReleasePipelines'
 import { useHistory, useParams } from 'react-router-dom'
 import StageArrow from './StageArrow'
-import { ReleasePipelineRequest } from 'common/types/requests'
+import {
+  PipelineStageRequest,
+  ReleasePipelineRequest,
+} from 'common/types/requests'
 import { useRouteContext } from 'components/providers/RouteContext'
 import PlanBasedAccess from 'components/PlanBasedAccess'
-
-const blankStage: DraftStageType = {
-  actions: [],
-  environment: -1,
-  name: '',
-  order: 0,
-  trigger: {
-    trigger_body: null,
-    trigger_type: StageTriggerType.ON_ENTER,
-  },
-}
+import { NEW_PIPELINE_STAGE } from './constants'
 
 type CreateReleasePipelineParams = {
   id?: string
@@ -72,7 +65,7 @@ function CreateReleasePipeline() {
   const [pipelineData, setPipelineData] = useState<ReleasePipelineRequest>({
     name: '',
     project: Number(projectId),
-    stages: [blankStage],
+    stages: [NEW_PIPELINE_STAGE],
   })
 
   const [isEditingName, setIsEditingName] = useState(
@@ -116,21 +109,33 @@ function CreateReleasePipeline() {
   ])
 
   useEffect(() => {
-    console.log('existingPipeline', existingPipeline)
     if (existingPipeline) {
       setPipelineData(existingPipeline)
     }
   }, [existingPipeline])
 
-  const handleOnChange = (newStageData: DraftStageType, index: number) => {
+  const handleOnChange = (
+    newStageData: PipelineStageRequest,
+    index: number,
+  ) => {
     const updatedStages = pipelineData.stages.map((stage, i) =>
       i === index ? newStageData : stage,
     )
     setPipelineData((prev) => ({ ...prev, stages: updatedStages }))
   }
 
-  const validateStage = (stage: DraftStageType) => {
+  const validateStage = (stage: PipelineStageRequest) => {
     if (!stage.actions.length) {
+      return false
+    }
+
+    // action in creation state
+    if (
+      stage.actions.some(
+        (action) =>
+          action.action_type === NEW_PIPELINE_STAGE.actions[0].action_type,
+      )
+    ) {
       return false
     }
 
@@ -260,7 +265,7 @@ function CreateReleasePipeline() {
                 <Row className='align-items-start no-wrap'>
                   <CreatePipelineStage
                     stageData={stageData}
-                    onChange={(stageData: DraftStageType) =>
+                    onChange={(stageData: PipelineStageRequest) =>
                       handleOnChange(stageData, index)
                     }
                     projectId={Number(projectId)}
@@ -275,7 +280,7 @@ function CreateReleasePipeline() {
                       onAddStage={() =>
                         setPipelineData((prev) => ({
                           ...prev,
-                          stages: prev.stages.concat([blankStage]),
+                          stages: prev.stages.concat([NEW_PIPELINE_STAGE]),
                         }))
                       }
                     />
