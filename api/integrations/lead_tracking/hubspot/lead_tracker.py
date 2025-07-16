@@ -70,10 +70,8 @@ class HubspotLeadTracker(LeadTracker):
         create_lead_form_kwargs: dict[str, Any] = {"user": user}
         if tracker:
             create_lead_form_kwargs.update(
-                {
-                    "hubspot_cookie": tracker.hubspot_cookie,
-                    "utm_data": tracker.utm_data,
-                }
+                hubspot_cookie=tracker.hubspot_cookie,
+                utm_data=tracker.utm_data,
             )
         self.client.create_lead_form(**create_lead_form_kwargs)
 
@@ -97,7 +95,7 @@ class HubspotLeadTracker(LeadTracker):
         hubspot_contact_id = self._get_or_create_user_hubspot_id(user)
         if not hubspot_contact_id:
             return
-        hubspot_org_id = self._get_or_create_organisation_hubspot_id(user, organisation)
+        hubspot_org_id = self._get_organisation_hubspot_id(user, organisation)
         if not hubspot_org_id:
             return
 
@@ -136,7 +134,7 @@ class HubspotLeadTracker(LeadTracker):
 
         return hubspot_contact_id
 
-    def _get_or_create_organisation_hubspot_id(
+    def _get_organisation_hubspot_id(
         self,
         user: FFAdminUser,
         organisation: Organisation,
@@ -156,10 +154,12 @@ class HubspotLeadTracker(LeadTracker):
         company_kwargs["organisation_id"] = organisation.id
         company_kwargs["active_subscription"] = organisation.subscription.plan
 
-        # As Hubspot creates/associates companies based on contact domain
+        # As Hubspot creates/associates companies automatically based on contact domain
         # we need to get the hubspot id when this user creates the company for the first time
         # and update the company name
-        company = self._get_or_create_hubspot_company(**company_kwargs)
+        company = self._get_hubspot_company_by_domain(domain)
+        if not company:
+            return None
         org_hubspot_id: str = company["id"]
 
         properties = company.get("properties", {})
@@ -179,21 +179,11 @@ class HubspotLeadTracker(LeadTracker):
 
         return org_hubspot_id
 
-    def _get_or_create_hubspot_company(
+    def _get_hubspot_company_by_domain(
         self,
         domain: str,
-        organisation_id: int,
-        name: str,
-        active_subscription: str | None = None,
     ) -> dict[str, Any]:
         company = self.client.get_company_by_domain(domain)
-        if not company:
-            company = self.client.create_company(
-                name=name,
-                domain=domain,
-                organisation_id=organisation_id,
-                active_subscription=active_subscription,
-            )
 
         return company  # type: ignore[no-any-return]
 

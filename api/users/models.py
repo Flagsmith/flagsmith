@@ -10,7 +10,6 @@ from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
     AFTER_SAVE,
     LifecycleModel,
     hook,
@@ -20,9 +19,6 @@ from django_lifecycle.conditions import (  # type: ignore[import-untyped]
 )
 from pydantic import BaseModel
 
-from integrations.lead_tracking.hubspot.tasks import (
-    create_hubspot_contact_for_user,
-)
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -151,11 +147,6 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     def superuser(self, value: bool) -> None:
         self.is_staff = value
         self.is_superuser = value
-
-    @hook(AFTER_CREATE)  # type: ignore[misc]
-    def create_hubspot_contact(self) -> None:
-        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            create_hubspot_contact_for_user.delay(args=(self.id,))
 
     @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]
     def send_warning_email(self) -> None:

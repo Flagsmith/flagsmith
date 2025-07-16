@@ -16,12 +16,10 @@ from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from integrations.lead_tracking.hubspot.constants import HUBSPOT_COOKIE_NAME
 from organisations.invites.models import Invite, InviteLink
 from organisations.models import Organisation, OrganisationRole
 from users.models import (
     FFAdminUser,
-    HubspotTracker,
     UserPermissionGroup,
     UserPermissionGroupMembership,
 )
@@ -35,17 +33,13 @@ def test_join_organisation(
     organisation = Organisation.objects.create(name="test org")
     invite = Invite.objects.create(email=staff_user.email, organisation=organisation)
     url = reverse("api-v1:users:user-join-organisation", args=[invite.hash])
-    data = {HUBSPOT_COOKIE_NAME: "test_cookie_tracker"}
-    assert not HubspotTracker.objects.filter(user=staff_user).exists()
-
     # When
-    response = staff_client.post(url, data)
+    response = staff_client.post(url)
     staff_user.refresh_from_db()
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert organisation in staff_user.organisations.all()
-    assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
 def test_join_organisation_via_link(
@@ -56,17 +50,14 @@ def test_join_organisation_via_link(
     organisation = Organisation.objects.create(name="test org")
     invite = InviteLink.objects.create(organisation=organisation)
     url = reverse("api-v1:users:user-join-organisation-link", args=[invite.hash])
-    data = {HUBSPOT_COOKIE_NAME: "test_cookie_tracker"}
-    assert not HubspotTracker.objects.filter(user=staff_user).exists()
 
     # When
-    response = staff_client.post(url, data)
+    response = staff_client.post(url)
     staff_user.refresh_from_db()
 
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert organisation in staff_user.organisations.all()
-    assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
 def test_cannot_join_organisation_via_expired_link(
