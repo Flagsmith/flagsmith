@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from rest_framework.request import Request
 
 from integrations.lead_tracking.hubspot.client import HubspotClient
@@ -7,10 +8,23 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ACTIVE_SUBSCRIPTION_SELF_HOSTED,
     HUBSPOT_COOKIE_NAME,
 )
+from integrations.lead_tracking.hubspot.tasks import (
+    create_hubspot_contact_for_user,
+)
 from users.models import FFAdminUser, HubspotTracker
 from users.serializers import UTMDataSerializer
 
 logger = logging.getLogger(__name__)
+
+
+def register_hubspot_tracker_and_track_user(
+    request: Request,
+    user: FFAdminUser | None = None,
+) -> None:
+    user_id = user.id if user else request.user.id
+    register_hubspot_tracker(request, user)
+    if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
+        create_hubspot_contact_for_user.delay(args=(user_id,))
 
 
 def register_hubspot_tracker(

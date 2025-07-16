@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from common.core.utils import is_enterprise, is_saas
@@ -224,7 +225,8 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
                 args=(
                     self.user.id,
                     self.organisation.id,
-                )
+                ),
+                delay_until=timezone.now() + timedelta(minutes=3),
             )
 
 
