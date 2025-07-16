@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from 'react'
-import { RouterChildContext } from 'react-router'
-import { Link } from 'react-router-dom'
+import { Link, useRouteMatch, withRouter } from 'react-router-dom'
 import { useHasPermission } from 'common/providers/Permission'
 import ConfigProvider from 'common/providers/ConfigProvider'
 
@@ -21,16 +20,13 @@ import PageTitle from 'components/PageTitle'
 import IdentifierString from 'components/IdentifierString'
 import CodeHelp from 'components/CodeHelp'
 import { getStore } from 'common/store'
+import { useRouteContext } from 'components/providers/RouteContext'
 
-type UsersPageType = {
-  router: RouterChildContext['router']
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
+interface RouteParams {
+  environmentId: string
+  projectId: string
 }
+
 const searchTypes = [
   { label: 'ID', value: 'id' },
   { label: 'Alias', value: 'alias' },
@@ -62,7 +58,7 @@ export const removeIdentity = (
         if (res.error) {
           toast('Identity could not be removed', 'danger')
         } else {
-          toast('Identity removed')
+          toast('Identity successfully removed')
         }
       })
     },
@@ -71,7 +67,9 @@ export const removeIdentity = (
   })
 }
 
-const UsersPage: FC<UsersPageType> = (props) => {
+const UsersPage: FC<{ props: any }> = (props) => {
+  const { projectId } = useRouteContext()
+  const match = useRouteMatch<RouteParams>()
   const [page, setPage] = useState<{
     number: number
     pageType: Req['getIdentities']['pageType']
@@ -94,7 +92,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
   }, [searchType])
   const { data: identities, isLoading } = useGetIdentitiesQuery({
     dashboard_alias: searchType === 'alias' ? search?.toLowerCase() : undefined,
-    environmentId: props.match.params.environmentId,
+    environmentId: match?.params?.environmentId,
     isEdge,
     page: page.number,
     pageType: page.pageType,
@@ -103,7 +101,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
     q: searchType === 'alias' ? undefined : search,
   })
 
-  const { environmentId } = props.match.params
+  const environmentId = match?.params?.environmentId
 
   const { permission } = useHasPermission({
     id: environmentId,
@@ -238,7 +236,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                   data-test={`user-item-${index}`}
                 >
                   <Link
-                    to={`/project/${props.match.params.projectId}/environment/${
+                    to={`/project/${projectId}/environment/${
                       props.match.params.environmentId
                     }/users/${encodeURIComponent(identifier)}/${id}`}
                     className='flex-row flex flex-1 table-column'
@@ -336,7 +334,7 @@ const UsersPage: FC<UsersPageType> = (props) => {
                 showInitially
                 title='Creating identities and getting their feature settings'
                 snippets={Constants.codeHelp.CREATE_USER(
-                  props.match.params.environmentId,
+                  match.params.environmentId,
                   identities?.results?.[0]?.identifier,
                 )}
               />
@@ -348,4 +346,4 @@ const UsersPage: FC<UsersPageType> = (props) => {
   )
 }
 
-export default ConfigProvider(UsersPage)
+export default withRouter(ConfigProvider(UsersPage))

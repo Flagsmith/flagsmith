@@ -1,3 +1,4 @@
+import random
 import typing
 from copy import copy
 from datetime import timedelta
@@ -6,6 +7,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 from common.test_tools import AssertMetricFixture
+from django.db.models import Count, Q
 from django.test import override_settings
 from django.utils import timezone
 from mypy_boto3_dynamodb.service_resource import Table
@@ -26,22 +28,22 @@ from environments.models import (
     environment_cache,
 )
 from features.feature_types import MULTIVARIATE
-from features.models import Feature, FeatureState
+from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.models import EnvironmentFeatureVersion
 from features.versioning.tasks import enable_v2_versioning
 from features.versioning.versioning_service import (
     get_environment_flags_queryset,
 )
+from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
+from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
 if typing.TYPE_CHECKING:
     from django.db.models import Model
-
-    from features.workflows.core.models import ChangeRequest
 
 
 def test_on_environment_create_makes_feature_states(
@@ -50,14 +52,14 @@ def test_on_environment_create_makes_feature_states(
     project: Project,
 ) -> None:
     # Given
-    assert feature.feature_states.count() == 1
+    assert not feature.feature_states.exists()
 
     # When
     Environment.objects.create(name="New Environment", project=project)
 
     # Then
     # A new environment comes with a new feature state.
-    feature.feature_states.count() == 2
+    assert feature.feature_states.count() == 1
 
 
 def test_on_environment_update_feature_states(
@@ -408,9 +410,9 @@ def test_save_environment_clears_environment_cache(mocker, project):  # type: ig
     environment.save()
 
     # Then
-    mock_calls = mock_environment_cache.delete.mock_calls
+    mock_calls = mock_environment_cache.delete_many.mock_calls
     assert len(mock_calls) == 2
-    assert mock_calls[0][1][0] == mock_calls[1][1][0] == old_key
+    assert mock_calls[0][1][0] == mock_calls[1][1][0] == [old_key]
 
 
 @pytest.mark.parametrize(
@@ -1092,3 +1094,188 @@ def test_get_environment_document_from_cache_triggers_correct_metrics__cache_mis
         },
         value=1.0,
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "total_features, feature_enabled_count, segment_overrides_count, change_request_count, scheduled_change_count",
+    [
+        (0, 0, 0, 0, 0),
+        (10, 4, 9, 4, 3),
+        (10, 10, 10, 10, 10),
+        (5, 10, 6, 3, 2),
+        (21, 14, 8, 13, 2),
+    ],
+)
+def test_environment_metric_query_helpers_match_expected_counts(
+    project: Project,
+    admin_user: FFAdminUser,
+    total_features: int,
+    feature_enabled_count: int,
+    segment_overrides_count: int,
+    change_request_count: int,
+    scheduled_change_count: int,
+) -> None:
+    # Given
+    env = Environment.objects.create(name="env", project=project)
+    env.minimum_change_request_approvals = 1
+    env.save()
+
+    features = []
+    version = 0
+    for i in range(total_features):
+        f = Feature.objects.create(project=project, name=f"f-{i}")
+        FeatureState.objects.update_or_create(
+            feature=f, environment=env, identity=None, enabled=False, version=version
+        )
+        features.append(f)
+        version += 1
+
+    for i in range(min(feature_enabled_count, total_features)):
+        # Create old feature_state versions that should not be counted
+        FeatureState.objects.create(
+            feature=features[i],
+            environment=env,
+            identity=None,
+            enabled=True,
+            version=version,
+        )
+        version += 1
+
+        FeatureState.objects.update_or_create(
+            feature=features[i],
+            environment=env,
+            identity=None,
+            enabled=True,
+            version=version,
+        )
+        version += 1
+
+    for i in range(segment_overrides_count):
+        segment = Segment.objects.create(project=project, name=f"s-{i}")
+        f = random.choice(features)
+        fs = FeatureSegment.objects.create(feature=f, segment=segment, environment=env)
+        FeatureState.objects.update_or_create(
+            feature=f,
+            environment=env,
+            feature_segment=fs,
+            identity=None,
+            enabled=False,
+            version=version,
+        )
+        version += 1
+
+    for i in range(change_request_count):
+        ChangeRequest.objects.create(
+            environment=env, title=f"CR-{i}", user_id=admin_user.id
+        )
+        version += 1
+
+    for i in range(scheduled_change_count):
+        cr = ChangeRequest.objects.create(
+            environment=env,
+            title=f"Scheduled-CR-{i}",
+            user_id=admin_user.id,
+            committed_at=timezone.now(),
+        )
+        FeatureState.objects.update_or_create(
+            feature=random.choice(features),
+            environment=env,
+            change_request=cr,
+            identity=None,
+            enabled=True,
+            live_from=timezone.now() + timedelta(days=5),
+            version=version,
+        )
+        version += 1
+
+    # When
+    features_agg = env.get_features_metrics_queryset().aggregate(
+        total=Count("id"),
+        enabled=Count("id", filter=Q(enabled=True)),
+    )
+    segment_count = env.get_segment_metrics_queryset().count()
+    identity_override_count = env.get_identity_overrides_queryset().count()
+    change_request_count_result = env.get_change_requests_metrics_queryset().count()
+    scheduled_count_result = env.get_scheduled_metrics_queryset().count()
+
+    # Then
+    assert features_agg["total"] == total_features
+    assert features_agg["enabled"] == min(feature_enabled_count, total_features)
+    assert segment_count == segment_overrides_count
+    assert change_request_count_result == change_request_count
+    assert scheduled_count_result == scheduled_change_count
+    assert identity_override_count == 0
+
+
+def test_environment_create_with_use_v2_feature_versioning_true(
+    project: Project,
+    feature: Feature,
+    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+) -> None:
+    # Given
+    enable_v2_versioning_for_new_environments()
+
+    # When
+    new_environment = Environment.objects.create(
+        name="new-environment",
+        project=project,
+    )
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(
+        environment=new_environment, feature=feature
+    ).exists()
+    assert new_environment.use_v2_feature_versioning
+
+
+def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(
+    project: Project,
+    environment_v2_versioning: Environment,
+    feature: Feature,
+    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+) -> None:
+    # Given
+    enable_v2_versioning_for_new_environments()
+
+    # When
+    new_environment = environment_v2_versioning.clone(name="new-environment")
+
+    # Then
+    assert EnvironmentFeatureVersion.objects.filter(
+        environment=new_environment, feature=feature
+    ).exists()
+    assert new_environment.use_v2_feature_versioning
+
+
+def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    segment_featurestate: FeatureState,
+    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+) -> None:
+    # Given
+    # Ensure that v2 versioning is not enabled for this test as we explicitly
+    # want to test that we can clone from v1 -> v2 successsfully.
+    environment.use_v2_feature_versioning = False
+    environment.save()
+
+    enable_v2_versioning_for_new_environments()
+
+    # When
+    new_environment = environment.clone(name="new-environment")
+
+    # Then
+    assert new_environment.use_v2_feature_versioning
+
+    # we only expect a single environment feature version as we are essentially
+    # taking a snapshot and creating a new environment.
+    efv = EnvironmentFeatureVersion.objects.get(
+        environment=new_environment, feature=feature
+    )
+
+    # But we expect 2 feature states, each with the same version
+    latest_feature_states = get_environment_flags_queryset(new_environment)
+    assert latest_feature_states.count() == 2
+    assert {fs.environment_feature_version for fs in latest_feature_states} == {efv}

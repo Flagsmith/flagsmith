@@ -1,5 +1,5 @@
 import React, { ChangeEvent, MouseEvent, useEffect, useState } from 'react'
-import { RouteComponentProps, withRouter } from 'react-router'
+import { useHistory, useLocation, withRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import ForgotPasswordModal from 'components/modals/ForgotPasswordModal'
 import Card from 'components/Card'
@@ -29,8 +29,11 @@ import AccountProvider from 'common/providers/AccountProvider'
 import AccountStore from 'common/stores/account-store'
 import { LoginRequest, RegisterRequest } from 'common/types/requests'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
+import { useUTMs } from 'common/useUTMs'
 
-const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
+const HomePage: React.FC = () => {
+  const history = useHistory()
+  const location = useLocation()
   const [allRequirementsMet, setAllRequirementsMet] = useState(false)
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -40,7 +43,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
 
   const [samlError, setLocalError] = useState(false)
   const [samlLoading, setSamlLoading] = useState(false)
-
+  const utms = useUTMs()
   const { data: version, isLoading: versionLoading } = useGetBuildVersionQuery(
     {},
   )
@@ -85,10 +88,8 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
     if (Project.albacross && location.pathname.indexOf('signup') !== -1) {
       addAlbacross()
     }
-
-    document.body.classList.remove('dark')
-
     if (document.location.href.includes('oauth')) {
+      const oAuthUtms = Utils.getUtmsFromUrl(document.location.href)
       const parts = document.location.href.split('oauth/')
       const oauthParams = parts[1]
       if (oauthParams && oauthParams.includes('google')) {
@@ -96,12 +97,14 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
         AppActions.oauthLogin('google', {
           access_token,
           marketing_consent_given: marketingConsentGiven,
+          ...(oAuthUtms && { utm_data: oAuthUtms }),
         })
       } else if (oauthParams && oauthParams.includes('github')) {
         const access_token = params.code
         AppActions.oauthLogin('github', {
           access_token,
           marketing_consent_given: marketingConsentGiven,
+          ...(oAuthUtms && { utm_data: oAuthUtms }),
         })
       }
     }
@@ -219,7 +222,15 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
             <GoogleButton
               className='w-100'
               onSuccess={(e) => {
-                document.location.href = `${document.location.origin}/oauth/google?code=${e.access_token}`
+                document.location.href = `${
+                  document.location.origin
+                }/oauth/google?code=${e.access_token}&${
+                  utms
+                    ? `${Object.keys(utms)
+                        .map((key) => `${key}=${utms[key]}`)
+                        .join('&')}`
+                    : ''
+                }`
               }}
             />
           </GoogleOAuthProvider>
@@ -267,7 +278,6 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
       )
     }
   }
-
   return (
     <AccountProvider>
       {(
@@ -341,7 +351,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                     {!isSignup ? (
                       <>
                         <Card
-                          className='mb-3'
+                          className='mb-3 bg-white p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
@@ -483,14 +493,14 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                     ) : (
                       <>
                         <Card
-                          className='mb-3'
+                          className='mb-3 bg-white p-3'
                           contentClassName={classNames(
                             'd-flex flex-column gap-3',
                             { 'bg-light200': preventEmailPassword },
                           )}
                         >
                           {!!oauths.length && (
-                            <div className='row'>{oauths}</div>
+                            <div className='row row-gap-2'>{oauths}</div>
                           )}
                           {!preventEmailPassword && (
                             <form
@@ -509,6 +519,7 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                                     marketing_consent_given:
                                       marketingConsentGiven,
                                     password,
+                                    ...(utms && { utm_data: utms }),
                                   },
                                   isInvite,
                                 )
@@ -522,8 +533,9 @@ const HomePage: React.FC<RouteComponentProps> = ({ history, location }) => {
                                   >
                                     <ErrorMessage
                                       error={
-                                        typeof AccountStore.error === 'string'
-                                          ? AccountStore.error
+                                        typeof AccountStore.error?.detail ===
+                                        'string'
+                                          ? AccountStore.error.detail
                                           : 'Please check your details and try again'
                                       }
                                     />

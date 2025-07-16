@@ -50,6 +50,9 @@ from organisations.subscriptions.constants import (
 )
 from projects.models import Project, UserProjectPermission
 from segments.models import Segment
+from tests.types import (
+    WithOrganisationPermissionsCallable,
+)
 from users.models import (
     FFAdminUser,
     HubspotTracker,
@@ -135,7 +138,6 @@ def test_non_superuser_can_create_new_organisation_by_default(
         Organisation.objects.get(name=org_name).webhook_notification_email
         == webhook_notification_email
     )
-    assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
 def test_colliding_hubspot_cookies_are_ignored(
@@ -214,6 +216,39 @@ def test_should_update_organisation_data(
     assert response.status_code == status.HTTP_200_OK
     assert organisation.name == new_organisation_name
     assert organisation.restrict_project_create_to_admin is True
+
+
+@pytest.mark.parametrize(
+    "current_billing_term_starts_at, current_billing_term_ends_at, has_billing_periods",
+    [
+        (None, None, False),
+        (timezone.now() - timedelta(days=5), timezone.now() + timedelta(days=5), True),
+        (timezone.now() - timedelta(days=5), timezone.now() - timedelta(days=1), False),
+    ],
+)
+def test_get_subscription_metadata_returns_expected_result(
+    organisation: Organisation,
+    admin_client: APIClient,
+    current_billing_term_starts_at: datetime,
+    current_billing_term_ends_at: datetime,
+    has_billing_periods: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=current_billing_term_starts_at,
+        current_billing_term_ends_at=current_billing_term_ends_at,
+    )
+
+    # When
+    response = admin_client.get("/api/v1/organisations/")
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert (
+        response.data["results"][0]["subscription"]["has_active_billing_periods"]
+        == has_billing_periods
+    )
 
 
 def test_should_invite_users_to_organisation(
@@ -968,33 +1003,6 @@ def test_can_update_secret_for_webhook(
     # and
     webhook.refresh_from_db()
     assert webhook.secret == data["secret"]
-
-
-@mock.patch("webhooks.mixins.trigger_sample_webhook")
-def test_trigger_sample_webhook_calls_trigger_sample_webhook_method_with_correct_arguments(
-    trigger_sample_webhook: MagicMock,
-    organisation: Organisation,
-    admin_client: APIClient,
-) -> None:
-    # Given
-    mocked_response = mock.MagicMock(status_code=200)
-    trigger_sample_webhook.return_value = mocked_response
-
-    url = reverse(
-        "api-v1:organisations:organisation-webhooks-trigger-sample-webhook",
-        args=[organisation.id],
-    )
-    valid_webhook_url = "http://my.webhook.com/webhooks"
-    data = {"url": valid_webhook_url}
-
-    # When
-    response = admin_client.post(url, data)
-
-    # Then
-    assert response.json()["message"] == "Request returned 200"
-    assert response.status_code == status.HTTP_200_OK
-    args, _ = trigger_sample_webhook.call_args
-    assert args[0].url == valid_webhook_url
 
 
 def test_get_subscription_metadata_when_subscription_information_cache_exist(
@@ -2059,3 +2067,84 @@ def test_validation_error_if_non_numeric_organisation_id(
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_organisation_user_can_get_their_detailed_permissions(
+    staff_client: APIClient,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+    organisation: Organisation,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:organisations:organisation-user-detailed-permissions",
+        args=[organisation.id, staff_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "CREATE_PROJECT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]
+
+
+def test_organisation_user_can_not_get_detailed_permissions_of_other_user(
+    staff_client: APIClient,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:organisations:organisation-user-detailed-permissions",
+        args=[organisation.id, admin_user.id],
+    )
+
+    # When
+    response = staff_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_organisation_admin_can_get_detailed_permissions_of_other_user(
+    admin_client: APIClient,
+    with_organisation_permissions: WithOrganisationPermissionsCallable,
+    organisation: Organisation,
+    admin_user: FFAdminUser,
+    staff_user: FFAdminUser,
+) -> None:
+    # Given
+    with_organisation_permissions([CREATE_PROJECT])  # type: ignore[call-arg]
+    url = reverse(
+        "api-v1:organisations:organisation-user-detailed-permissions",
+        args=[organisation.id, staff_user.id],
+    )
+
+    # When
+    response = admin_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["admin"] is False
+    assert response.json()["is_directly_granted"] is False
+    assert response.json()["derived_from"] == {"groups": [], "roles": []}
+    assert response.json()["permissions"] == [
+        {
+            "permission_key": "CREATE_PROJECT",
+            "is_directly_granted": True,
+            "derived_from": {"groups": [], "roles": []},
+        }
+    ]

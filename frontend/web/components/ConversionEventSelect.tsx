@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react'
+import React, { FC, useState } from 'react'
 import { useGetConversionEventsQuery } from 'common/services/useConversionEvent'
 import useDebouncedSearch from 'common/useDebouncedSearch'
 import { ConversionEvent } from 'common/types/responses'

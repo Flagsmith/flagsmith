@@ -2,18 +2,20 @@ import logging
 import typing
 import uuid
 from copy import deepcopy
+from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.cache import caches
 from django.db import models
-from django.db.models import Prefetch, Q
+from django.db.models import Max, Prefetch, Q, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_CREATE,
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
+    BEFORE_SAVE,
     LifecycleModel,
     hook,
 )
@@ -48,6 +50,7 @@ from environments.metrics import (
 )
 from features.models import Feature, FeatureSegment, FeatureState
 from features.multivariate.models import MultivariateFeatureStateValue
+from integrations.flagsmith.client import get_client
 from metadata.models import Metadata
 from projects.models import Project
 from segments.models import Segment
@@ -56,6 +59,10 @@ from util.mappers import (
     map_environment_to_sdk_document,
 )
 from webhooks.models import AbstractBaseExportableWebhookModel
+
+if TYPE_CHECKING:
+    from features.workflows.core.models import ChangeRequest
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +172,9 @@ class Environment(
     @hook(AFTER_UPDATE)  # type: ignore[misc]
     def clear_environment_cache(self) -> None:
         # TODO: this could rebuild the cache itself (using an async task)
-        environment_cache.delete(self.initial_value("api_key"))
+        environment_cache.delete_many(
+            [self.initial_value("api_key"), *[eak.key for eak in self.api_keys.all()]]
+        )
 
     @hook(AFTER_UPDATE, when="api_key", has_changed=True)  # type: ignore[misc]
     def update_environment_document_cache(self) -> None:
@@ -188,11 +197,32 @@ class Environment(
         ):
             environment_document_cache.delete(self.api_key)
 
+    # Use the BEFORE_SAVE hook instead of BEFORE_CREATE to account for the logic in the
+    # Environment.clone() method
+    @hook(BEFORE_SAVE, when="pk", is_now=None)  # type: ignore[misc]
+    def enable_v2_versioning(self) -> None:
+        if self.use_v2_feature_versioning:
+            # if the environment has already been created with versioning enabled,
+            # we don't want to disable it based on the flag state.
+            return
+
+        flagsmith_client = get_client("local", local_eval=True)
+        organisation = self.project.organisation
+        enable_v2_versioning = flagsmith_client.get_identity_flags(
+            organisation.flagsmith_identifier,
+            traits=organisation.flagsmith_on_flagsmith_api_traits,
+        ).is_feature_enabled("enable_feature_versioning_for_new_environments")
+        self.use_v2_feature_versioning = enable_v2_versioning
+
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Project %s - Environment %s" % (self.project.name, self.name)
 
     def natural_key(self):  # type: ignore[no-untyped-def]
         return (self.api_key,)
+
+    @property
+    def is_workflow_enabled(self) -> bool:
+        return self.minimum_change_request_approvals is not None
 
     def clone(
         self,
@@ -355,6 +385,104 @@ class Environment(
                 self.feature_states.filter(**filter_kwargs),
             )
         )
+
+    def get_identity_overrides_queryset(self) -> QuerySet[FeatureState]:
+        ids = self._get_active_feature_states_ids(
+            "identity_id",
+            {"identity__isnull": False, "feature_segment__isnull": True},
+        )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
+    def _get_active_feature_states_ids(
+        self,
+        extra_group_by_fields: Literal["identity_id"] | None = None,
+        filter_kwargs: dict[str, typing.Any] | None = None,
+    ) -> list[int]:
+        base_qs = FeatureState.objects.get_live_feature_states(
+            environment=self,
+            **(filter_kwargs or {}),
+        ).filter(
+            feature__is_archived=False,
+        )
+
+        group_fields = ["feature_id", "environment_id"]
+        if extra_group_by_fields is not None:
+            group_fields.append(extra_group_by_fields)
+
+        return list(
+            base_qs.values(*group_fields)
+            .annotate(id=Max("id"))
+            .values_list("id", flat=True)
+        )
+
+    def get_features_metrics_queryset(self) -> QuerySet[FeatureState]:
+        ids = self._get_active_feature_states_ids(
+            None,
+            {"identity__isnull": True, "feature_segment__isnull": True},
+        )
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
+    def _get_latest_segment_state_ids_subquery(self) -> list[int]:
+        feature_states_qs = FeatureState.objects.get_live_feature_states(
+            environment=self,
+            additional_filters=Q(
+                identity_id__isnull=True,
+                feature_segment_id__isnull=False,
+            ),
+        ).filter(feature__is_archived=False)
+
+        return list(
+            feature_states_qs.values(
+                "feature_id", "feature_segment_id", "environment_id"
+            )
+            .annotate(id=Max("id"))
+            .values_list("id", flat=True)
+        )
+
+    def get_segment_metrics_queryset(self) -> QuerySet[FeatureState]:
+        ids = self._get_latest_segment_state_ids_subquery()
+        result: QuerySet[FeatureState] = FeatureState.objects.filter(id__in=ids)
+        return result
+
+    def get_change_requests_metrics_queryset(self) -> QuerySet["ChangeRequest"]:
+        from features.workflows.core.models import ChangeRequest
+
+        result: QuerySet["ChangeRequest"] = ChangeRequest.objects.filter(
+            environment=self,
+            committed_at__isnull=True,
+            deleted_at__isnull=True,
+        )
+        return result
+
+    def get_scheduled_metrics_queryset(self) -> QuerySet[FeatureState]:
+        from features.workflows.core.models import ChangeRequest
+
+        qs = ChangeRequest.objects.filter(
+            environment=self,
+            committed_at__isnull=False,
+            deleted_at__isnull=True,
+        )
+        scheduled_q = (
+            Q(
+                Q(feature_states__deleted_at__isnull=True)
+                & Q(feature_states__live_from__gt=timezone.now())
+            )
+            | Q(
+                Q(environment_feature_versions__deleted_at__isnull=True)
+                & Q(environment_feature_versions__live_from__gt=timezone.now())
+            )
+            | Q(
+                Q(change_sets__deleted_at__isnull=True)
+                & Q(change_sets__live_from__gt=timezone.now())
+            )
+        )
+
+        change_requests: QuerySet["ChangeRequest"] = qs.filter(
+            id__in=qs.filter(scheduled_q).values_list("id", flat=True)
+        )
+        return change_requests
 
     @staticmethod
     def is_bad_key(environment_key: str) -> bool:

@@ -1,4 +1,4 @@
-import { matchPath } from 'react-router'
+import { matchPath } from 'react-router-dom'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -18,9 +18,7 @@ const controller = {
     API.setInvite('')
     API.setInviteType('')
     return data
-      .post(`${Project.api}users/join/link/${id}/`, {
-        hubspotutk: API.getCookie('hubspotutk'),
-      })
+      .post(`${Project.api}users/join/link/${id}/`)
       .catch((error) => {
         if (
           Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
@@ -29,9 +27,7 @@ const controller = {
           API.ajaxHandler(store, error)
           return
         }
-        return data.post(`${Project.api}users/join/${id}/`, {
-          hubspotutk: API.getCookie('hubspotutk'),
-        })
+        return data.post(`${Project.api}users/join/${id}/`)
       })
       .then((res) => {
         store.savedId = res.id
@@ -95,7 +91,6 @@ const controller = {
 
     return data
       .post(`${Project.api}organisations/`, {
-        hubspotutk: API.getCookie('hubspotutk'),
         name,
       })
       .then(async (res) => {
@@ -172,7 +167,7 @@ const controller = {
       store.saved()
     })
   },
-  getOrganisations: () =>
+  getOrganisations: (isGettingStarted) =>
     Promise.all([
       data.get(`${Project.api}organisations/`),
       data.get(`${Project.api}auth/users/me/`),
@@ -181,6 +176,7 @@ const controller = {
       .then(([res, userRes, methods]) => {
         controller.setUser({
           ...userRes,
+          isGettingStarted,
           organisations: res.results,
           twoFactorConfirmed: !!methods.length,
           twoFactorEnabled: !!methods.length,
@@ -224,6 +220,7 @@ const controller = {
           : `${Project.api}auth/oauth/${type}/`,
         {
           ...(_data || {}),
+          hubspotutk: API.getCookie('hubspotutk'),
           invite_hash: API.getInvite() || undefined,
           sign_up_type: API.getInviteType(),
         },
@@ -245,17 +242,17 @@ const controller = {
       })
       .catch((e) => API.ajaxHandler(store, e))
   },
-  onLogin: (skipCaching) => {
-    if (!skipCaching) {
-      API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
-    }
-    return controller.getOrganisations()
+  onLogin: (isGettingStarted) => {
+    API.setCookie('t', Project.cookieAuthEnabled ? 'true' : data.token)
+    return controller.getOrganisations(isGettingStarted)
   },
   register: ({ contact_consent_given, organisation_name, ...user }) => {
     store.saving()
+
     return data
       .post(`${Project.api}auth/users/`, {
         ...user,
+        hubspotutk: API.getCookie('hubspotutk'),
         invite_hash: API.getInvite() || undefined,
         referrer: API.getReferrer() || '',
         sign_up_type: API.getInviteType(),
@@ -276,7 +273,7 @@ const controller = {
         if (contact_consent_given) {
           await createOnboardingSupportOptIn(getStore(), {})
         }
-        await controller.onLogin()
+        await controller.onLogin(!API.getInvite())
 
         if (user.superuser) {
           // Creating a superuser will update the version endpoint

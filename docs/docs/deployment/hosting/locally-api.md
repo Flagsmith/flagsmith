@@ -13,7 +13,7 @@ found in the following section entitled 'Databases'.
 cd api
 make install
 make django-migrate
-make serve
+make serve-with-task-processor  # Or `make serve` for API + synchronous tasks (limited functionality)
 ```
 
 You can now visit `http://<your-server-domain:8000>/api/v1/users/config/init/` to create an initial Superuser and
@@ -175,6 +175,7 @@ the below variables will be ignored.
   `'djoser.permissions.CurrentUserOrAdmin'` Defaults to `'rest_framework.permissions.AllowAny'`.
 - `ALLOW_REGISTRATION_WITHOUT_INVITE`: Determines whether users can register without an invite. Defaults to True. Set to
   False or 0 to disable. Note that if disabled, new users must be invited via email.
+- `PREVENT_SIGNUP`: Determines whether to prevent new signups.
 - `ENABLE_EMAIL_ACTIVATION`: new user registration will go via email activation flow, default False
 - `SENTRY_SDK_DSN`: If using Sentry, set the project DSN here.
 - `SENTRY_TRACE_SAMPLE_RATE`: Float. If using Sentry, sets the trace sample rate. Defaults to 1.0.
@@ -221,6 +222,7 @@ the below variables will be ignored.
   and hence should not be modified for already running instances of flagsmith. It should only be used for new
   installations, and should not be modified. WARNING: setting this to a higher limit may prevent imports to our SaaS
   platform if required in the future.
+- `SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED`: Forces segment rule condition ordering by primary key, ascending. Default is `False` (no guaranteed order). **Warning**: changing this setting might affect evaluation for existing segments.
 - `ENABLE_API_USAGE_TRACKING`: Enable tracking of all API requests in Postgres / Influx. Default is True. Setting to
   False will mean that the Usage tab in the Organisation Settings will not show any data. Useful when using Postgres for
   analytics in high traffic environments to limit the size of database.
@@ -450,7 +452,7 @@ increasing the performance of your task processor.
 
 
 | Environment Variable                  | Description                                                                                                                                                                                       | Example value                                          | Default                                       |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|-----------------------------------------------|
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------- |
 | `CACHE_ENVIRONMENT_DOCUMENT_MODE`     | The caching mode. One of `PERSISTENT` or `EXPIRING`. Note that although the default is `EXPIRING` there is no caching by default due to the default value of `CACHE_ENVIRONMENT_DOCUMENT_SECONDS` | `PERSISTENT`                                           | `EXPIRING`                                    |
 | `CACHE_ENVIRONMENT_DOCUMENT_SECONDS`  | Number of seconds to cache the environment for (only relevant when `CACHE_ENVIRONMENT_DOCUMENT_MODE=EXPIRING`)                                                                                    | `60`                                                   | `0` ( = don't cache)                          |
 | `CACHE_ENVIRONMENT_DOCUMENT_BACKEND`  | Python path to the django cache backend chosen. See documentation [here](https://docs.djangoproject.com/en/4.2/topics/cache/).                                                                    | `django.core.cache.backends.memcached.PyMemcacheCache` | `django.core.cache.backends.db.DatabaseCache` |

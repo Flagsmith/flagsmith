@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-
 export type EdgePagedResponse<T> = PagedResponse<T> & {
   last_evaluated_key?: string
   pages?: (string | undefined)[]
@@ -239,6 +237,17 @@ export type githubIntegration = {
   organisation: string
 }
 
+export type GettingStartedTask = {
+  name: string
+  completed_at?: string
+}
+export type Onboarding = {
+  tools: {
+    completed: boolean
+    integrations: string[]
+  }
+  tasks: GettingStartedTask[]
+}
 export type User = {
   id: number
   email: string
@@ -246,6 +255,7 @@ export type User = {
   last_name: string
   last_login: string
   uuid: string
+  onboarding: Onboarding
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean
@@ -270,6 +280,30 @@ export type UserPermission = {
   admin: boolean
   id: number
   role?: number
+}
+
+export type DerivedPermission = {
+  groups: {
+    name: string
+    id: number
+  }[]
+  roles: {
+    name: string
+    id: number
+  }[]
+}
+
+export type Permission = {
+  is_directly_granted: boolean
+  permission_key: string
+  tags: number[]
+  derived_from: DerivedPermission
+}
+export type UserPermissions = {
+  admin: boolean
+  is_directly_granted: boolean
+  derived_from: DerivedPermission
+  permissions: Permission[]
 }
 
 export type RolePermission = Omit<UserPermission, 'permissions'> & {
@@ -415,25 +449,26 @@ export type IdentityFeatureState = {
 }
 
 export type FeatureState = {
-  id: number
-  feature_state_value: FlagsmithValue
-  multivariate_feature_state_values: MultivariateFeatureStateValue[]
-  uuid: string
-  enabled: boolean
+  change_request?: number
   created_at: string
-  updated_at: string
-  environment_feature_version: string
-  version?: number
-  live_from?: string
-  feature: number
+  enabled: boolean
   environment: number
+  environment_feature_version: string
+  feature: number
   feature_segment?: {
     id: number
     priority: number
     segment: number
     uuid: string
   }
-  change_request?: number
+  feature_state_value: FlagsmithValue
+  id: number
+  identity?: number
+  live_from?: string
+  multivariate_feature_state_values: MultivariateFeatureStateValue[]
+  updated_at: string
+  uuid: string
+  version?: number
   //Added by FE
   toRemove?: boolean
 }
@@ -623,7 +658,6 @@ export type ContentType = {
 
 export type isRequiredFor = {
   content_type: number
-  object_id: number
 }
 
 export type MetadataModelField = {
@@ -774,6 +808,62 @@ export type IdentityTrait = {
   trait_value: FlagsmithValue
 }
 
+export enum PipelineStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+}
+
+export interface ReleasePipeline {
+  id: number
+  name: string
+  project: number
+  description: string
+  stages_count: number
+  published_at: string
+  published_by: number
+  features: number[]
+}
+
+export interface SingleReleasePipeline extends ReleasePipeline {
+  stages: PipelineStage[]
+  completed_features: number[]
+}
+
+export enum StageTriggerType {
+  ON_ENTER = 'ON_ENTER',
+  WAIT_FOR = 'WAIT_FOR',
+}
+
+export type StageTriggerBody = { wait_for?: string } | null
+
+export type StageTrigger = {
+  trigger_type: StageTriggerType
+  trigger_body: StageTriggerBody
+}
+
+export enum StageActionType {
+  TOGGLE_FEATURE = 'TOGGLE_FEATURE',
+  TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+}
+
+export type StageActionBody = { enabled: boolean; segment_id?: number }
+export interface StageAction {
+  id: number
+  action_type: StageActionType
+  action_body: StageActionBody
+}
+
+export type PipelineStage = {
+  id: number
+  name: string
+  pipeline: number
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageAction[]
+  features: number[]
+}
+
 export type Res = {
   segments: PagedResponse<Segment>
   segment: Segment
@@ -911,5 +1001,21 @@ export type Res = {
   conversionEvents: PagedResponse<ConversionEvent>
   splitTest: PagedResponse<SplitTestResult>
   onboardingSupportOptIn: { id: string }
+  environmentMetrics: {
+    metrics: {
+      value: number
+      description: string
+      name: string
+      entity: 'features' | 'identities' | 'segments' | 'workflows'
+      rank: number
+    }[]
+  }
+  profile: User
+  onboarding: {}
+  userPermissions: UserPermissions
+  releasePipelines: PagedResponse<ReleasePipeline>
+  releasePipeline: SingleReleasePipeline
+  pipelineStages: PagedResponse<PipelineStage>
+  pipelineStage: PipelineStage
   // END OF TYPES
 }

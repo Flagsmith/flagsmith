@@ -1,7 +1,6 @@
 import logging
 import typing
 import uuid
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
@@ -11,7 +10,6 @@ from django.db import models
 from django.db.models import Count, QuerySet
 from django.utils import timezone
 from django_lifecycle import (  # type: ignore[import-untyped]
-    AFTER_CREATE,
     AFTER_SAVE,
     LifecycleModel,
     hook,
@@ -19,10 +17,8 @@ from django_lifecycle import (  # type: ignore[import-untyped]
 from django_lifecycle.conditions import (  # type: ignore[import-untyped]
     WhenFieldHasChanged,
 )
+from pydantic import BaseModel
 
-from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_lead_without_organisation,
-)
 from organisations.models import (
     Organisation,
     OrganisationRole,
@@ -44,6 +40,15 @@ from users.abc import UserABC
 from users.auth_type import AuthType
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.exceptions import InvalidInviteError
+
+
+class UTMDataModel(BaseModel):
+    utm_source: typing.Optional[str] = None
+    utm_medium: typing.Optional[str] = None
+    utm_campaign: typing.Optional[str] = None
+    utm_term: typing.Optional[str] = None
+    utm_content: typing.Optional[str] = None
+
 
 if typing.TYPE_CHECKING:
     from environments.models import Environment
@@ -111,10 +116,13 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
     last_name = models.CharField("last name", max_length=150)
     google_user_id = models.CharField(max_length=50, null=True, blank=True)
     github_user_id = models.CharField(max_length=50, null=True, blank=True)
+    onboarding_data = models.TextField(blank=True, null=True)
+    # Default to True, since it is covered in our Terms of Service.
     marketing_consent_given = models.BooleanField(
-        default=False,
+        default=True,
         help_text="Determines whether the user has agreed to receive marketing mails",
     )
+
     sign_up_type = models.CharField(
         choices=SignUpType.choices, max_length=100, blank=True, null=True
     )
@@ -140,19 +148,8 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         self.is_staff = value
         self.is_superuser = value
 
-    @hook(AFTER_CREATE)  # type: ignore[misc]
-    def schedule_hubspot_tracking(self) -> None:
-        if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_lead_without_organisation.delay(
-                kwargs={"user_id": self.id},
-                delay_until=timezone.now()
-                + timedelta(
-                    minutes=settings.CREATE_HUBSPOT_LEAD_WITHOUT_ORGANISATION_DELAY_MINUTES
-                ),
-            )
-
-    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))
-    def send_warning_email(self):  # type: ignore[no-untyped-def]
+    @hook(AFTER_SAVE, condition=(WhenFieldHasChanged("email", has_changed=True)))  # type: ignore[misc]
+    def send_warning_email(self) -> None:
         from users.tasks import send_email_changed_notification_email
 
         send_email_changed_notification_email.delay(
@@ -163,7 +160,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
             )
         )
 
-    def delete_orphan_organisations(self):  # type: ignore[no-untyped-def]
+    def delete_orphan_organisations(self) -> None:
         Organisation.objects.filter(
             id__in=self.organisations.values_list("id", flat=True)
         ).annotate(users_count=Count("users")).filter(users_count=1).delete()
@@ -173,7 +170,7 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
         delete_orphan_organisations: bool = DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
     ):
         if delete_orphan_organisations:
-            self.delete_orphan_organisations()  # type: ignore[no-untyped-call]
+            self.delete_orphan_organisations()
         super().delete()
 
     def set_password(self, raw_password):  # type: ignore[no-untyped-def]
@@ -467,12 +464,29 @@ class HubspotLead(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
+class HubspotTrackerUTMData(typing.TypedDict, total=False):
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+
+
 class HubspotTracker(models.Model):
     user = models.OneToOneField(
         FFAdminUser,
         related_name="hubspot_tracker",
         on_delete=models.CASCADE,
     )
-    hubspot_cookie = models.CharField(unique=True, max_length=100, null=False)
+    hubspot_cookie = models.CharField(
+        unique=True,
+        max_length=100,
+        null=True,
+        blank=True,
+    )
+    utm_data: HubspotTrackerUTMData = models.JSONField(
+        default=None, blank=True, null=True
+    )  # type: ignore[assignment]
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

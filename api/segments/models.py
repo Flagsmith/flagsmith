@@ -22,6 +22,7 @@ from audit.constants import (
 )
 from audit.related_object_type import RelatedObjectType
 from core.models import (
+    SoftDeleteExportableManager,
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory,
 )
@@ -30,9 +31,6 @@ from metadata.models import Metadata
 from projects.models import Project
 
 from .managers import LiveSegmentManager, SegmentManager
-
-if typing.TYPE_CHECKING:
-    from features.workflows.core.models import ChangeRequest
 
 logger = logging.getLogger(__name__)
 
@@ -147,26 +145,21 @@ class Segment(
         self.version_of = self
         self.save_without_historical_record()
 
-    def shallow_clone(
-        self,
-        name: str,
-        description: str,
-        change_request: typing.Optional["ChangeRequest"],
-    ) -> "Segment":
-        cloned_segment = Segment(
-            version_of=self,
-            uuid=uuid.uuid4(),
-            name=name,
-            description=description,
-            change_request=change_request,
-            project=self.project,
-            feature=self.feature,
-            version=None,
-        )
-        cloned_segment.history.update()
-        cloned_segment.save()
-        return cloned_segment
+    def _clone_segment_rules(self, cloned_segment: "Segment") -> list["SegmentRule"]:
+        cloned_rules = []
+        for rule in self.rules.all():
+            cloned_rule = rule.deep_clone(cloned_segment)
+            cloned_rules.append(cloned_rule)
+        cloned_segment.refresh_from_db()
+        assert (
+            len(self.rules.all())
+            == len(cloned_rules)
+            == len(cloned_segment.rules.all())
+        ), "Mismatch during rules creation"
 
+        return cloned_rules
+
+    # TODO: To be depreacted in flagsmith-common and flagsmith-workflows
     def deep_clone(self) -> "Segment":
         cloned_segment = deepcopy(self)
         cloned_segment.id = None
@@ -177,18 +170,7 @@ class Segment(
         self.version += 1  # type: ignore[operator]
         self.save_without_historical_record()
 
-        cloned_rules = []
-        for rule in self.rules.all():
-            cloned_rule = rule.deep_clone(cloned_segment)
-            cloned_rules.append(cloned_rule)
-
-        cloned_segment.refresh_from_db()
-
-        assert (
-            len(self.rules.all())
-            == len(cloned_rules)
-            == len(cloned_segment.rules.all())
-        ), "Mismatch during rules creation"
+        self._clone_segment_rules(cloned_segment)
 
         return cloned_segment
 
@@ -319,6 +301,21 @@ class SegmentRule(
         return cloned_rule
 
 
+class ConditionManager(SoftDeleteExportableManager):
+    def get_queryset(
+        self,
+    ) -> models.QuerySet["Condition"]:
+        # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
+        # but avoid the weirdness of a setting-dependant migration
+        # and having to reload everything in tests
+        qs: models.QuerySet["Condition"]
+        if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
+            qs = super().get_queryset().order_by("id")
+        else:
+            qs = super().get_queryset()
+        return qs
+
+
 class Condition(
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
@@ -361,6 +358,8 @@ class Condition(
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
+
+    objects: typing.ClassVar[ConditionManager] = ConditionManager()
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Condition for %s: %s %s %s" % (

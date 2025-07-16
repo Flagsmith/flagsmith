@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react'
 import IntegrationList from 'components/IntegrationList'
-import Permission from 'common/providers/Permission'
 import Constants from 'common/constants'
 import PageTitle from 'components/PageTitle'
 import Utils from 'common/utils/utils'
-import { IntegrationData } from 'common/types/responses'
 import InfoMessage from 'components/InfoMessage'
 import AccountStore from 'common/stores/account-store'
 
@@ -39,7 +37,7 @@ const OrganisationIntegrationsPage = ({ match }) => {
         level.
       </InfoMessage>
       <IntegrationList
-        organisationId={match.params.organisationId}
+        organisationId={Utils.getOrganisationIdFromUrl(match)}
         integrations={integrations}
       />
     </div>

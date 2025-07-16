@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import InfoMessage from './InfoMessage'
-import { RouterChildContext } from 'react-router-dom'
 import Button from './base/forms/Button'
 import { ChangeRequestSummary } from 'common/types/responses'
+import { RouterChildContext } from 'react-router-dom'
 
 type ExistingChangeRequestAlertType = {
   changeRequests: ChangeRequestSummary[]

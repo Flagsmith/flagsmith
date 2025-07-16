@@ -11,3 +11,4 @@ class RelatedObjectType(enum.Enum):
     IMPORT_REQUEST = "Import request"
     EF_VERSION = "Environment feature version"
     FEATURE_HEALTH = "Feature health status"
+    RELEASE_PIPELINE = "Release pipeline"

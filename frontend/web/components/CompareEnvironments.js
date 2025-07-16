@@ -12,6 +12,8 @@ import Icon from './Icon'
 import Constants from 'common/constants'
 import Button from './base/forms/Button'
 import Tooltip from './Tooltip'
+import { withRouter } from 'react-router-dom'
+import { getDarkMode } from 'project/darkMode'
 
 const featureNameWidth = 300
 
@@ -19,10 +21,6 @@ class CompareEnvironments extends Component {
   static displayName = 'CompareEnvironments'
 
   static propTypes = {}
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props) {
     super(props)
@@ -177,9 +175,7 @@ class CompareEnvironments extends Component {
               <Icon
                 name='arrow-right'
                 width={20}
-                fill={
-                  Utils.getFlagsmithHasFeature('dark_mode') ? '#fff' : '#1A2634'
-                }
+                fill={getDarkMode() ? '#fff' : '#1A2634'}
               />
             </div>
 
@@ -255,7 +251,7 @@ class CompareEnvironments extends Component {
                           condensed
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
-                          history={this.context.router.history}
+                          history={this.props.history}
                           fadeValue={fadeValue}
                           environmentFlags={this.state.environmentLeftFlags}
                           projectFlags={this.state.projectFlagsLeft}
@@ -286,7 +282,7 @@ class CompareEnvironments extends Component {
                           isCompareEnv
                           fadeEnabled={fadeEnabled}
                           fadeValue={fadeValue}
-                          history={this.context.router.history}
+                          history={this.props.history}
                           environmentFlags={this.state.environmentRightFlags}
                           projectFlags={this.state.projectFlagsRight}
                           permission={permission}
@@ -303,6 +299,7 @@ class CompareEnvironments extends Component {
                   </Row>
                 )
               }
+
               return (
                 <div>
                   {this.state.isLoading && (
@@ -450,4 +447,4 @@ class CompareEnvironments extends Component {
   }
 }
 
-module.exports = ConfigProvider(CompareEnvironments)
+module.exports = withRouter(ConfigProvider(CompareEnvironments))

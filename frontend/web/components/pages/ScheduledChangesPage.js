@@ -5,17 +5,14 @@ import ConfigProvider from 'common/providers/ConfigProvider'
 import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import PlanBasedBanner, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props, context) {
     super(props, context)
@@ -125,7 +122,7 @@ const ChangeRequestsPage = class extends Component {
                           <div className='list-item-subtitle mt-1'>
                             Created{' '}
                             {moment(created_at).format('Do MMM YYYY HH:mma')} by{' '}
-                            {user && user.first_name} {user && user.last_name}
+                            {getUserDisplayName(user)}
                           </div>
                         </Flex>
                         <div className='table-column'>
@@ -150,4 +147,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(ChangeRequestsPage)
+module.exports = withRouter(ConfigProvider(ChangeRequestsPage))

@@ -6,9 +6,7 @@
     "containerDefinitions": [
         {
             "name": "flagsmith-api",
-            "command": [
-                "serve"
-            ],
+            "command": ["serve"],
             "cpu": 0,
             "portMappings": [
                 {
@@ -184,20 +182,20 @@
                     "value": "https://origin.realtime.flagsmith.com"
                 },
                 {
-                    "name": "ENABLE_PIPEDRIVE_LEAD_TRACKING",
-                    "value": "True"
-                },
-                {
-                    "name": "PIPEDRIVE_IGNORE_DOMAINS",
-                    "value": "flagsmith.com,solidstategroup.com,restmail.net,bullettrain.io,flagsmithe2etestdomain.io"
-                },
-                {
                     "name": "ENABLE_HUBSPOT_LEAD_TRACKING",
                     "value": "True"
                 },
                 {
                     "name": "GITHUB_APP_ID",
                     "value": "811209"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
+                    "value": "False"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_API_URL",
+                    "value": "https://edge.api.flagsmith.com/api/v1/"
                 }
             ],
             "secrets": [
@@ -260,6 +258,14 @@
                 {
                     "name": "GITHUB_PEM",
                     "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:GITHUB_PEM-E1Ot8p"
+                },
+                {
+                    "name": "HUBSPOT_ACCESS_TOKEN",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:HUBSPOT_ACCESS_TOKEN::"
+                },
+                {
+                    "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:eu-west-2:084060095745:secret:ECS-API-LxUiIQ:FLAGSMITH_ON_FLAGSMITH_SERVER_KEY::"
                 }
             ],
             "logConfiguration": {
@@ -272,9 +278,7 @@
             }
         }
     ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
+    "requiresCompatibilities": ["FARGATE"],
     "cpu": "1024",
     "memory": "2048"
 }

@@ -27,6 +27,7 @@ from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule, WhitelistedSegment
+from segments.services import SegmentCloneService
 from tests.types import WithProjectPermissionsCallable
 from util.mappers import map_identity_to_identity_document
 
@@ -173,7 +174,7 @@ def test_segments_limit_ignores_old_segment_versions(
     project.save()
 
     # and create some older versions for the segment fixture
-    segment.deep_clone()
+    SegmentCloneService(segment).deep_clone()
     assert Segment.objects.filter(version_of_id=segment.id).count() == 3
     assert Segment.live_objects.count() == 1
 
@@ -647,8 +648,11 @@ def test_update_segment_add_new_condition(
     admin_client_new: APIClient,
     segment: Segment,
     segment_rule: SegmentRule,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
+    settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = True
+
     url = reverse(
         "api-v1:projects:project-segments-detail", args=[project.id, segment.id]
     )
@@ -704,11 +708,8 @@ def test_update_segment_add_new_condition(
     assert response.status_code == status.HTTP_200_OK
 
     assert nested_rule.conditions.count() == 2
-    assert (
-        nested_rule.conditions.order_by("-id").first().property
-        == new_condition_property
-    )
-    assert nested_rule.conditions.order_by("-id").first().value == new_condition_value
+    assert nested_rule.conditions.last().property == new_condition_property
+    assert nested_rule.conditions.last().value == new_condition_value
 
 
 def test_update_mismatched_rule_and_segment(
@@ -1110,6 +1111,69 @@ def test_update_segment_delete_existing_rule(project, client, segment, segment_r
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
 )
+def test_update_segment_metadata_create_correct_number_of_metadata(
+    project: Project,
+    client: APIClient,
+    required_a_segment_metadata_field: MetadataModelField,
+) -> None:
+    # Given
+    url = reverse("api-v1:projects:project-segments-list", args=[project.id])
+    description = "This is the description"
+    field_value = 10
+    first_segment_data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+    second_segment_data = {
+        "name": "Test Segment",
+        "description": description,
+        "project": project.id,
+        "rules": [{"type": "ALL", "rules": [], "conditions": []}],
+        "metadata": [
+            {
+                "model_field": required_a_segment_metadata_field.id,
+                "field_value": field_value,
+            },
+        ],
+    }
+
+    # When
+    response_first = client.post(
+        url, data=json.dumps(first_segment_data), content_type="application/json"
+    )
+    response_second = client.post(
+        url, data=json.dumps(second_segment_data), content_type="application/json"
+    )
+    # Then
+    assert response_first.status_code == status.HTTP_201_CREATED
+    assert response_second.status_code == status.HTTP_201_CREATED
+    assert (
+        response_first.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+    assert (
+        response_second.json()["metadata"][0]["model_field"]
+        == required_a_segment_metadata_field.id
+    )
+
+    metadata = Metadata.objects.filter(
+        model_field=required_a_segment_metadata_field.id
+    ).all()
+    assert metadata.count() == 2
+
+
+@pytest.mark.parametrize(
+    "client",
+    [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],
+)
 def test_create_segment_with_required_metadata_returns_201(
     project: Project,
     client: APIClient,
@@ -1493,3 +1557,59 @@ def test_include_feature_specific_query_filter__false(
     # Then
     assert response.json()["count"] == 1
     assert [res["id"] for res in response.json()["results"]] == [segment.id]
+
+
+def test_clone_endpoint_uses_segment_clone_service(
+    project: Project,
+    admin_client: APIClient,
+    segment: Segment,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
+    )
+    new_segment_name = "cloned_segment"
+    service_mock = mocker.patch("segments.services.SegmentCloneService")
+    service_mock.return_value.clone.return_value = Segment(
+        id=1,
+        name="new_segment_name",
+        project=project,
+        version=1,
+    )
+    data = {
+        "name": new_segment_name,
+    }
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+
+    response_data = response.json()
+    assert response_data["name"] == new_segment_name
+    assert response_data["project"] == project.id
+    assert response_data["id"] != segment.id
+
+
+def test_clone_segment_without_name_should_fail(
+    project: Project,
+    admin_client: APIClient,
+    segment: Segment,
+) -> None:
+    # Given
+    url = reverse(
+        "api-v1:projects:project-segments-clone", args=[project.id, segment.id]
+    )
+    data = {
+        "no-name": "",
+    }
+    # When
+    response = admin_client.post(
+        url, data=json.dumps(data), content_type="application/json"
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST

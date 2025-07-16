@@ -144,6 +144,9 @@ $btn-outline-focus-bg-dark: $primary-alfa-8;
 $btn-outline-active-bg: $primary-alfa-16;
 $btn-danger-hover: #cd384d;
 $btn-danger-active: #ac2646;
+$btn-success: $success400;
+$btn-success-hover: $success;
+$btn-success-active: $success600;
 $btn-border-width: 0;
 
 $link-hover-color: $primary;
@@ -203,13 +206,14 @@ $font-sm: 14px;
 $font-caption: 13px;
 $font-caption-sm: 12px;
 $font-caption-xs: 11px;
+$font-size-base: 14px;
 $font-sizes: (
+        regular: $font-size-base,
         small: $font-sm,
         caption: $font-caption,
         captionSmall: $font-caption-sm,
         captionXSmall: $font-caption-xs,
 );
-$font-size-base: 14px;
 $h1-font-size: 42px;
 $h1-line-height: 46px;
 $h2-font-size: 34px;
@@ -218,8 +222,8 @@ $h3-font-size: 30px;
 $h3-line-height: 40px;
 $h4-font-size: 24px;
 $h4-line-height: 32px;
-$h5-font-size: 20px;
-$h5-line-height: 30px;
+$h5-font-size: 18px;
+$h5-line-height: 28px;
 $h6-font-size: 16px;
 $h6-line-height: 24px;
 
@@ -266,12 +270,8 @@ $switch-disabled-bg-dark: $white-alpha-48;
 $switch-disabled-opacity-dark: 0.48;
 $switch-checked-hover-bg: $primary600;
 $switcher-width: 18px;
-$switch-dark-mode-height: 40px;
-$switch-dark-mode-width: 72px;
-$switch-dark-mode-bg: $bg-light300;
-$switch-dark-mode-bg-dark: $bg-dark300;
 $switcher-checked-dark-mode-bg: $bg-dark200;
-$switcher-dark-mode-width: 32px;
+$switcher-dark-mode-width: 22px;
 
 //Checkbox
 $checkbox-width: 20px;
@@ -370,6 +370,9 @@ $theme-colors: (
   .bg-primary800 {
     background-color: $body-bg-dark !important;
   }
+  .bg-body {
+    background-color: $body-bg-dark !important;
+  }
 }
 .bg-faint {
   background-color: #fafafa;
@@ -395,4 +398,21 @@ $button-transition: background-color 400ms cubic-bezier(0.23, 1, 0.32, 1);
 
 .bg-opacity-5 {
   --bs-bg-opacity: 0.5 !important;
+}
+
+// Adds .fill-primary etc to svgs
+@each $name, $color in $theme-colors {
+  .fill-#{$name} {
+    fill: #{$color} !important;
+    path, circle, rect {
+      fill: #{$color} !important;
+    }
+  }
+  .hover-fill-#{$name}:hover {
+    fill: #{$color} !important;
+    path, circle, rect {
+      fill: #{$color} !important;
+    }
+  }
+
 }

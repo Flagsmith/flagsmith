@@ -13,6 +13,7 @@ from common.metadata.serializers import (
     MetadataSerializer,
     SerializerWithMetadata,
 )
+from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
@@ -344,6 +345,15 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
                 "Unable to retrieve project for metadata validation."
             )
 
+    def update(
+        self, instance: models.Model, validated_data: dict[str, typing.Any]
+    ) -> Feature:
+        metadata_items = validated_data.pop("metadata", [])
+        feature = typing.cast(Feature, super().update(instance, validated_data))
+        self.update_metadata(feature, metadata_items)
+        feature.refresh_from_db()
+        return feature
+
 
 class UpdateFeatureSerializerWithMetadata(FeatureSerializerWithMetadata):
     """prevent users from changing certain values after creation"""
@@ -557,7 +567,7 @@ class FeatureStateSerializerBasic(WritableNestedModelSerializer):
             )
 
         mv_values = attrs.get("multivariate_feature_state_values", [])
-        if sum([v["percentage_allocation"] for v in mv_values]) > 100:
+        if sum([v.get("percentage_allocation", 0) for v in mv_values]) > 100:
             raise serializers.ValidationError(
                 "Multivariate percentage values exceed 100%."
             )

@@ -66,7 +66,9 @@ class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager)
 
 
 class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):  # type: ignore[misc]
-    objects = SoftDeleteExportableManager()  # type: ignore[misc]
+    objects: typing.ClassVar[SoftDeleteExportableManager] = (
+        SoftDeleteExportableManager()
+    )
 
     class Meta:
         abstract = True
@@ -83,8 +85,11 @@ class _BaseHistoricalModel(models.Model):
     class Meta:
         abstract = True
 
-    def get_change_details(self) -> typing.Optional[typing.List[ModelChange]]:  # type: ignore[return]
-        if self.history_type == "~":  # type: ignore[attr-defined]
+    def get_change_details(self) -> typing.List[ModelChange]:
+        # Note that self.prev_record should never be None when self.history_type == "~" but we have
+        # seen rare cases in Sentry which cause an unhandled exception, so we instead handle the case
+        # and fall back to just return an empty list.
+        if self.history_type == "~" and self.prev_record is not None:  # type: ignore[attr-defined]
             return [
                 change
                 for change in self.diff_against(self.prev_record).changes  # type: ignore[attr-defined]
@@ -96,11 +101,10 @@ class _BaseHistoricalModel(models.Model):
                 for key, value in self.instance.to_dict().items()  # type: ignore[attr-defined]
                 if key not in self._change_details_excluded_fields  # type: ignore[attr-defined]
             ]
-        elif self.history_type == "-":  # type: ignore[attr-defined]
-            # Ignore deletes because they get painful due to cascade deletes
-            # Maybe we can resolve this in the future but for now it's not
-            # critical.
-            return []
+
+        # Note that we ignore deletes because they get painful due to cascade deletes. Maybe we can
+        # resolve this in the future but for now it's not critical.
+        return []
 
 
 def base_historical_model_factory(

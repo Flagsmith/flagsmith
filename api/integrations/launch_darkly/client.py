@@ -1,15 +1,88 @@
-from typing import Any, Iterator, Optional, TypeVar
+from datetime import timedelta
+from typing import Any, Callable, Generator, Iterator, Optional, TypeVar
 
-from requests import Session
+import backoff
+from backoff.types import Details
+from django.utils.timezone import now as timezone_now
+from requests import RequestException, Session
+from rest_framework.status import HTTP_429_TOO_MANY_REQUESTS
 
 from integrations.launch_darkly import types as ld_types
 from integrations.launch_darkly.constants import (
+    BACKOFF_DEFAULT_RETRY_AFTER_SECONDS,
+    BACKOFF_MAX_RETRIES,
     LAUNCH_DARKLY_API_BASE_URL,
     LAUNCH_DARKLY_API_ITEM_COUNT_LIMIT_PER_PAGE,
     LAUNCH_DARKLY_API_VERSION,
 )
+from integrations.launch_darkly.exceptions import LaunchDarklyRateLimitError
 
 T = TypeVar("T")
+
+
+def launch_darkly_backoff(
+    _get_json_response: Callable[..., T],
+) -> Callable[..., T]:
+    # Handle LaunchDarkly rate limiting according to their API documentation:
+    # https://launchdarkly.com/docs/api
+    #
+    # 1. If a request returns a 429 Too Many Requests status code, the client should back off.
+    # 2. When backing off, the client retries the request after the time specified in the `Retry-After` header
+    #   or the `X-Ratelimit-Reset` header, if present, or a default of `BACKOFF_DEFAULT_RETRY_SECONDS`.
+    # 3. After `BACKOFF_MAX_RETRIES` retries, we give up.
+    #   If the last error was a 429 and contained retry information,
+    #   signal for the import request to be retried later by raising a `LaunchDarklyRateLimitError`.
+
+    def _get_retry_after(exc: RequestException) -> float | None:
+        if (
+            (response := exc.response) is not None
+        ) and response.status_code == HTTP_429_TOO_MANY_REQUESTS:
+            headers = response.headers
+            # Clients must wait at least `Retry-After` seconds
+            # before making additional calls to the API
+            if retry_after := headers.get("Retry-After"):
+                return float(retry_after)
+            # The time at which the current rate limit window resets in epoch milliseconds
+            if ratelimit_reset := headers.get("X-Ratelimit-Reset"):
+                timestamp = int(ratelimit_reset) / 1000
+                # Use default backoff time if the timestamp is in the past.
+                return (
+                    max(timestamp - timezone_now().timestamp(), 0)
+                    or BACKOFF_DEFAULT_RETRY_AFTER_SECONDS
+                )
+            # If no retry information retrieved, use a default backoff time
+            # of 10 seconds as per LD documentation.
+            return BACKOFF_DEFAULT_RETRY_AFTER_SECONDS
+        return None
+
+    def _wait_gen() -> Generator[float, None, None]:
+        exc: RequestException = yield  # type: ignore[misc,assignment]
+
+        while True:
+            if retry_after := _get_retry_after(exc):
+                yield retry_after
+            else:
+                return
+
+    def _handle_giveup(
+        details: Details,
+    ) -> None:
+        exc: RequestException = details["exception"]  # type: ignore[typeddict-item]
+
+        if retry_after := _get_retry_after(exc):
+            raise LaunchDarklyRateLimitError(
+                retry_at=timezone_now() + timedelta(seconds=retry_after)
+            )
+
+        raise exc
+
+    return backoff.on_exception(
+        wait_gen=_wait_gen,
+        exception=RequestException,
+        jitter=backoff.random_jitter,
+        on_giveup=_handle_giveup,
+        max_tries=BACKOFF_MAX_RETRIES,
+    )(_get_json_response)
 
 
 class LaunchDarklyClient:
@@ -23,6 +96,7 @@ class LaunchDarklyClient:
         )
         self.client_session = client_session
 
+    @launch_darkly_backoff
     def _get_json_response(
         self,
         endpoint: str,
@@ -53,7 +127,7 @@ class LaunchDarklyClient:
         if additional_params:
             params.update(additional_params)
 
-        response_json = self._get_json_response(  # type: ignore[var-annotated]
+        response_json: dict[str, Any] = self._get_json_response(
             endpoint=collection_endpoint,
             params=params,
         )

@@ -16,8 +16,6 @@ We have a number of example deployments across different providers and orchestra
 
 ## One Click Installers
 
-[![Deploy to Dome](https://trydome.io/button.svg)](https://app.trydome.io/signup?package=flagsmith)
-
 [![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/flagsmith/flagsmith/tree/main)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/flagsmith/flagsmith/tree/main)
@@ -72,7 +70,7 @@ We recommend running Flagsmith with [Docker](/deployment/hosting/docker). We hav
 The Flagsmith architecture is based around a REST API that is accessed by both SDK clients and the Flagsmith Dashboard
 Front End Web App.
 
-![Application Architecture](/img/self-hosted-architecture.svg)
+![Application Architecture](/img/architecture.svg)
 
 ## Dependencies
 
@@ -185,7 +183,6 @@ The list of the flags and remote config we're currently using in production is b
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
 | `announcement`                              | Shows an announcement at the top of the app                                                                                                    | None                                              |
 | `butter_bar`                                | Show html in a butter bar for certain users                                                                                                    | None                                              |
-| `dark_mode`                                 | Enables Dark Mode in UI See Below                                                                                                              | None                                              |
 | `default_environment_names_for_new_project` | Names of default environments to create when creating a new project (e.g. `["Development", "Production"]`)                                     | None                                              |
 | `disable_create_org`                        | Turning this on will prevent users from creating any additional organisations                                                                  | None                                              |
 | `disable_users_as_reviewers`                | If enabled, this flag will hide the Assigned users section in the Change Requests and in the Create Change Request modal in the Features page. | None                                              |
@@ -576,14 +573,6 @@ DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY=same-origin-allow-popups
 
 For those hosting the frontend independently, make sure you set the `Cross-Origin-Opener-Policy` to
 `same-origin-allow-popups` for Google OAuth flow to work.
-
-### Dark Mode
-
-We also have a Segment that manages the ui Dark Mode:
-
-Segment Name: `dark_mode` Segment Rules: Trait `dark_mode` EXACTLY MATCHES `True`
-
-Then use this rule to override the `dark_mode` Feature Flag.
 
 ## Integrations
 

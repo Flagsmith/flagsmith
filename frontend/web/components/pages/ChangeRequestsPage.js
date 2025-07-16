@@ -8,7 +8,7 @@ import TabItem from 'components/base/forms/TabItem'
 import JSONReference from 'components/JSONReference'
 import InfoMessage from 'components/InfoMessage'
 import Icon from 'components/Icon'
-import { Link } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 import PageTitle from 'components/PageTitle'
 import { timeOutline } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
@@ -16,13 +16,10 @@ import Utils from 'common/utils/utils'
 import PlanBasedAccess, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
-
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
 
   constructor(props, context) {
     super(props, context)
@@ -100,7 +97,7 @@ const ChangeRequestsPage = class extends Component {
                   </InfoMessage>
                 ) : null}
               </p>
-              <Tabs urlParam={'tab'}>
+              <Tabs urlParam={'tab'} history={this.props.history}>
                 <TabItem
                   tabLabelString='Open'
                   tabLabel={
@@ -188,8 +185,7 @@ const ChangeRequestsPage = class extends Component {
                             <div className='list-item-subtitle mt-1'>
                               Created{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
-                              by {(user && user.first_name) || 'Unknown'}{' '}
-                              {(user && user.last_name) || 'user'}
+                              by {getUserDisplayName(user)}
                               {description ? ` - ${description}` : ''}
                             </div>
                           </Flex>
@@ -269,8 +265,7 @@ const ChangeRequestsPage = class extends Component {
                             <div className='list-item-subtitle mt-1'>
                               Live from{' '}
                               {moment(created_at).format('Do MMM YYYY HH:mma')}{' '}
-                              by {(user && user.first_name) || 'Unknown'}{' '}
-                              {(user && user.last_name) || 'user'}
+                              by {getUserDisplayName(user)}
                             </div>
                           </Flex>
                           <div className='table-column'>
@@ -296,4 +291,4 @@ const ChangeRequestsPage = class extends Component {
 
 ChangeRequestsPage.propTypes = {}
 
-module.exports = ConfigProvider(ChangeRequestsPage)
+export default withRouter(ConfigProvider(ChangeRequestsPage))

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from unittest import mock
+from unittest.mock import MagicMock
 
 import pytest
 from django.conf import settings
@@ -30,6 +31,7 @@ from organisations.subscriptions.exceptions import (
 )
 from organisations.subscriptions.metadata import BaseSubscriptionMetadata
 from organisations.subscriptions.xero.metadata import XeroSubscriptionMetadata
+from users.models import FFAdminUser
 
 
 def test_organisation_has_paid_subscription_true(db: None) -> None:
@@ -44,6 +46,37 @@ def test_organisation_has_paid_subscription_true(db: None) -> None:
 
     # Then
     assert organisation.has_paid_subscription()
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_has_enterprise",
+    (
+        ("free", False),
+        ("enterprise", True),
+        ("enterprise-semiannual", True),
+        ("scale-up", False),
+        ("scaleup", False),
+        ("scale-up-v2", False),
+        ("scale-up-v2-annual", False),
+        ("startup", False),
+        ("start-up", False),
+        ("start-up-v2", False),
+        ("start-up-v2-annual", False),
+    ),
+)
+def test_organisation_has_enterprise_subscription(
+    plan_id: str, expected_has_enterprise: bool, organisation: Organisation
+) -> None:
+    # Given
+    Subscription.objects.filter(organisation=organisation).update(
+        plan=plan_id, subscription_id="subscription_id"
+    )
+
+    # # When
+    organisation.refresh_from_db()
+
+    # Then
+    assert organisation.has_enterprise_subscription() is expected_has_enterprise
 
 
 def test_organisation_has_paid_subscription_missing_subscription_id(db: None) -> None:
@@ -546,3 +579,96 @@ def test_subscription_plan_family(
     plan_id: str, expected_plan_family: SubscriptionPlanFamily
 ) -> None:
     assert Subscription(plan=plan_id).subscription_plan_family == expected_plan_family
+
+
+@pytest.mark.parametrize(
+    "plan_id, expected_is_enterprise",
+    (
+        ("free", False),
+        ("enterprise", True),
+        ("enterprise-semiannual", True),
+        ("scale-up", False),
+        ("scaleup", False),
+        ("scale-up-v2", False),
+        ("scale-up-v2-annual", False),
+        ("startup", False),
+        ("start-up", False),
+        ("start-up-v2", False),
+        ("start-up-v2-annual", False),
+    ),
+)
+def test_subscription_is_enterprise_property(
+    plan_id: str, expected_is_enterprise: bool, organisation: Organisation
+) -> None:
+    # Given
+    subscription = Subscription.objects.get(organisation=organisation)
+
+    subscription.plan = plan_id
+    subscription.save()
+
+    # Then
+    assert subscription.is_enterprise is expected_is_enterprise
+
+
+@pytest.mark.parametrize(
+    "billing_term_starts_at, billing_term_ends_at, expected_result",
+    [
+        (None, None, False),
+        (
+            timezone.now() - timedelta(hours=1),
+            timezone.now() + timedelta(days=30),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() + timedelta(hours=1),
+            True,
+        ),
+        (
+            timezone.now() - timedelta(days=30),
+            timezone.now() - timedelta(days=5),
+            False,
+        ),
+    ],
+)
+def test_organisation_has_billing_periods(
+    organisation: Organisation,
+    billing_term_starts_at: datetime,
+    billing_term_ends_at: datetime,
+    expected_result: bool,
+) -> None:
+    # Given
+    OrganisationSubscriptionInformationCache.objects.create(
+        organisation=organisation,
+        current_billing_term_starts_at=billing_term_starts_at,
+        current_billing_term_ends_at=billing_term_ends_at,
+    )
+
+    organisation.refresh_from_db()
+    # When
+    result = organisation.subscription.has_active_billing_periods
+
+    # Then
+    assert result == expected_result
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47+00:00")
+def test_user_organisation_create_calls_hubspot_lead_tracking(
+    mocker: MagicMock, db: None, settings: SettingsWrapper, organisation: Organisation
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    track_hubspot_lead_v2 = mocker.patch("organisations.models.track_hubspot_lead_v2")
+
+    user = FFAdminUser.objects.create(
+        email="test@example.com", first_name="John", last_name="Doe"
+    )
+
+    # When
+    user.add_organisation(organisation)
+
+    # Then
+    track_hubspot_lead_v2.delay.assert_called_once_with(
+        args=(user.id, organisation.id),
+        delay_until=timezone.now() + timedelta(minutes=3),
+    )

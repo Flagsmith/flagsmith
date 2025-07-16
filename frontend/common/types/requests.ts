@@ -18,7 +18,11 @@ import {
   RolePermission,
   Webhook,
   IdentityTrait,
+  Onboarding,
+  StageTrigger,
+  StageActionType,
 } from './responses'
+import { UtmsType } from './utms'
 
 export type PagedRequest<T> = T & {
   page?: number
@@ -27,6 +31,11 @@ export type PagedRequest<T> = T & {
 }
 export type OAuthType = 'github' | 'saml' | 'google'
 export type PermissionLevel = 'organisation' | 'project' | 'environment'
+export enum PermissionRoleType {
+  GRANTED = 'GRANTED',
+  GRANTED_FOR_TAGS = 'GRANTED_FOR_TAGS',
+  NONE = 'NONE',
+}
 export const billingPeriods = [
   {
     label: 'Current billing period',
@@ -62,7 +71,33 @@ export type RegisterRequest = {
   superuser?: boolean
   organisation_name?: string
   marketing_consent_given?: boolean
+  utm_data?: UtmsType
 }
+
+export interface StageActionRequest {
+  action_type: StageActionType
+  action_body: { enabled: boolean; segment_id?: number }
+}
+
+export interface ReleasePipelineRequest {
+  project: number
+  name: string
+  description?: string
+  stages: PipelineStageRequest[]
+}
+
+export interface UpdateReleasePipelineRequest extends ReleasePipelineRequest {
+  id: number
+}
+
+export type PipelineStageRequest = {
+  name: string
+  environment: number
+  order: number
+  trigger: StageTrigger
+  actions: StageActionRequest[]
+}
+
 export type Req = {
   getSegments: PagedRequest<{
     q?: string
@@ -78,6 +113,11 @@ export type Req = {
   createSegment: {
     projectId: number | string
     segment: Omit<Segment, 'id' | 'uuid' | 'project'>
+  }
+  cloneSegment: {
+    projectId: number | string
+    segmentId: number
+    name: string
   }
   getAuditLogs: PagedRequest<{
     search?: string
@@ -635,7 +675,15 @@ export type Req = {
   getSplitTest: PagedRequest<{
     conversion_event_type_id: string
   }>
-  createOnboarding: {
+  testWebhook: {
+    webhookUrl: string
+    secret?: string
+    scope: {
+      type: 'environment' | 'organisation'
+      id: string
+    }
+  }
+  register: {
     first_name: string
     last_name: string
     email: string
@@ -646,5 +694,51 @@ export type Req = {
   }
   getBuildVersion: {}
   createOnboardingSupportOptIn: {}
+  getEnvironmentMetrics: { id: string }
+  getUserEnvironmentPermissions: {
+    environmentId: string
+    userId: string
+  }
+  getUserPermissions: {
+    id?: string
+    userId: number | undefined
+    level: PermissionLevel
+  }
+  getProfile: {
+    id?: number
+  }
+  getUser: { id: number }
+  updateOnboarding: Partial<Onboarding>
+  getReleasePipelines: PagedRequest<{ projectId: number }>
+  getReleasePipeline: { projectId: number; pipelineId: number }
+  createReleasePipeline: ReleasePipelineRequest
+  updateReleasePipeline: UpdateReleasePipelineRequest
+  getPipelineStages: PagedRequest<{
+    projectId: number
+    pipelineId: number
+  }>
+  getPipelineStage: {
+    projectId: number
+    pipelineId: number
+    stageId: number
+  }
+  deleteReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  addFeatureToReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
+  publishReleasePipeline: {
+    projectId: number
+    pipelineId: number
+  }
+  removeFeatureFromReleasePipeline: {
+    projectId: number
+    pipelineId: number
+    featureId: number
+  }
   // END OF TYPES
 }

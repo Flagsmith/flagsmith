@@ -73,6 +73,10 @@ bold, strong {
 .cursor-default {
   cursor: default;
 }
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
 
 .maintenance {
   background: $bg-dark400;
@@ -226,4 +230,10 @@ input:disabled {
 
 .react-select__menu {
   z-index: 3 !important;
+}
+
+
+html,body {
+  max-width: 100vw;
+  overflow-x: hidden;
 }

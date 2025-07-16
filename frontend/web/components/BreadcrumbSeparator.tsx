@@ -1,4 +1,11 @@
-import React, { FC, ReactNode, useEffect, useRef, useState } from 'react'
+import React, {
+  FC,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { IonIcon } from '@ionic/react'
 import {
   checkmarkCircle,
@@ -18,7 +25,7 @@ import {
 import AccountStore from 'common/stores/account-store'
 import { useGetProjectsQuery } from 'common/services/useProject'
 import AccountProvider from 'common/providers/AccountProvider'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import OrganisationStore from 'common/stores/organisation-store'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
@@ -35,8 +42,7 @@ type BreadcrumbSeparatorType = {
   hideSlash?: boolean
   children: ReactNode
   focus?: 'organisation' | 'project'
-  projectId: string | undefined
-  router: RouterChildContext['router']
+  projectId: number | undefined
 }
 
 type ItemListType = {
@@ -125,7 +131,11 @@ const ItemList: FC<ItemListType> = ({
               { hovered: isHovered },
             )}
           >
-            {v.name}
+            <div className='flex-1 overflow-hidden'>
+              <span className='w-100 text-nowrap overflow-ellipsis overflow-hidden'>
+                {v.name}
+              </span>
+            </div>
             {isActive && (
               <IonIcon className='text-primary' icon={checkmarkCircle} />
             )}
@@ -146,7 +156,6 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   hideDropdown,
   hideSlash,
   projectId,
-  router,
 }) => {
   const [open, setOpen] = useState(false)
   const [organisationSearch, setOrganisationSearch] = useState('')
@@ -158,9 +167,11 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const [hoveredOrganisation, setHoveredOrganisation] = useState<Organisation>(
     AccountStore.getOrganisation(),
   )
-  const [hoveredProject, setHoveredProject] = useState<string | undefined>(
+  const [hoveredProject, setHoveredProject] = useState<number | undefined>(
     focus === 'organisation' ? undefined : projectId,
   )
+
+  const history = useHistory()
 
   useEffect(() => {
     const onChangeAccountStore = () => {
@@ -251,14 +262,14 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
   const goOrganisation = (organisation: Organisation) => {
     AppActions.selectOrganisation(organisation.id)
     AppActions.getOrganisation(organisation.id)
-    router.history.push(Utils.getOrganisationHomePage())
+    history.push(Utils.getOrganisationHomePage())
     setOpen(false)
   }
   const goProject = (project: Project) => {
     getEnvironments(getStore(), {
       projectId: `${project.id}`,
     }).then((res: { data: PagedResponse<Environment> }) => {
-      router.history.push(`/project/${project.id}`)
+      history.push(`/project/${project.id}`)
       setOpen(false)
     })
   }
@@ -268,12 +279,16 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
     level: 'organisation',
     permission: Utils.getCreateProjectPermission(hoveredOrganisation),
   })
+  const toggle = () => {
+    setOpen(!open) // for some unknown reason !open doesn't work
+  }
+
   return (
     <div className='d-flex align-items-center position-relative gap-1'>
       {children}
       {!hideDropdown && (
         <span
-          onClick={() => setOpen(true)}
+          onClick={toggle}
           className='breadcrumb-link user-select-none cursor-pointer d-flex flex-column mx-0 fs-captionSmall'
         >
           <IonIcon
@@ -318,20 +333,20 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
         }}
         containerClassName={'p-0'}
         className={
-          'inline-modal left-0 top-form-item inline-modal--sm max-w-auto'
+          'inline-modal left-md-0 nav-modal top-form-item mt-1 inline-modal--sm max-w-auto'
         }
       >
         {!!open && (
           <AccountProvider>
             {({ user }: { user: User }) => {
               return (
-                <div className='d-flex'>
+                <div className='d-flex px-2'>
                   <div
                     className={classNames({
-                      'bg-faint rounded': hoveredSection === 'project',
+                      'bg-faint h-100 rounded': hoveredSection === 'project',
                     })}
                     onMouseEnter={() => setHoveredSection('organisation')}
-                    style={{ width: 260 }}
+                    style={{ maxWidth: 'calc(50vw - 10px)', width: 260 }}
                   >
                     <Input
                       autoFocus={focus === 'organisation'}
@@ -374,10 +389,6 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                               )
                             }}
                           >
-                            <IonIcon
-                              className='fs-small'
-                              icon={createOutline}
-                            />
                             Create Organisation
                           </Button>
                         )
@@ -386,7 +397,7 @@ const BreadcrumbSeparator: FC<BreadcrumbSeparatorType> = ({
                   </div>
                   <div
                     onMouseEnter={() => setHoveredSection('project')}
-                    style={{ width: 260 }}
+                    style={{ maxWidth: 'calc(50vw)', width: 260 }}
                     className={classNames(
                       {
                         'bg-faint rounded': hoveredSection === 'organisation',

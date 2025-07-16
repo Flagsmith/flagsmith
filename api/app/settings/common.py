@@ -113,6 +113,7 @@ INSTALLED_APPS = [
     "features.multivariate",
     "features.versioning",
     "features.workflows.core",
+    "features.release_pipelines.core",
     "segments",
     "app",
     "e2etests",
@@ -123,6 +124,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "metrics",
     "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
@@ -256,6 +258,48 @@ elif "DJANGO_DB_NAME" in os.environ:
 
         DATABASE_ROUTERS.insert(0, "app.routers.AnalyticsRouter")
 
+# Task processor database — OPTIONALLY SEPARATED
+TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
+TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default=None)
+TASK_PROCESSOR_DATABASE_PASSWORD = env(
+    "TASK_PROCESSOR_DATABASE_PASSWORD",
+    default=None,
+)
+TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default=None)
+TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default=None)
+TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default=None)
+
+if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no cover
+    if TASK_PROCESSOR_DATABASE_URL:
+        DATABASES["task_processor"] = dj_database_url.parse(
+            TASK_PROCESSOR_DATABASE_URL,
+            conn_max_age=DJANGO_DB_CONN_MAX_AGE,
+        )
+    else:
+        DATABASES["task_processor"] = {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": TASK_PROCESSOR_DATABASE_NAME,
+            "USER": TASK_PROCESSOR_DATABASE_USER,
+            "PASSWORD": TASK_PROCESSOR_DATABASE_PASSWORD,
+            "HOST": TASK_PROCESSOR_DATABASE_HOST,
+            "PORT": TASK_PROCESSOR_DATABASE_PORT,
+            "CONN_MAX_AGE": DJANGO_DB_CONN_MAX_AGE,
+        }
+    DATABASE_ROUTERS.insert(0, "task_processor.routers.TaskProcessorRouter")
+
+    # Consume any remaining tasks from 'default' when opting in to 'task_processor' database
+    _task_processor_databases = ["default", "task_processor"]
+else:
+    _task_processor_databases = ["default"]
+
+# Ultimately, allow the user to decide which databases to consume tasks from
+TASK_PROCESSOR_DATABASES = env.list(
+    "TASK_PROCESSOR_DATABASES",
+    subcast=str,
+    default=_task_processor_databases,
+)
+
+
 LOGIN_THROTTLE_RATE = env("LOGIN_THROTTLE_RATE", "20/min")
 SIGNUP_THROTTLE_RATE = env("SIGNUP_THROTTLE_RATE", "10000/min")
 USER_THROTTLE_RATE = env("USER_THROTTLE_RATE", "500/min")
@@ -285,6 +329,7 @@ REST_FRAMEWORK = {
     ],
 }
 MIDDLEWARE = [
+    "common.core.middleware.APIResponseVersionHeaderMiddleware",
     "common.gunicorn.middleware.RouteLoggerMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -1023,6 +1068,14 @@ if WORKFLOWS_LOGIC_INSTALLED:
     if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
         INSTALLED_APPS.append("workflows_logic.stale_flags")
 
+RELEASE_PIPELINES_LOGIC_INSTALLED = (
+    importlib.util.find_spec("release_pipelines_logic") is not None
+)
+
+if RELEASE_PIPELINES_LOGIC_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("release_pipelines_logic")
+
+
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
 if AUTH_CONTROLLER_INSTALLED:
@@ -1104,6 +1157,10 @@ TASK_DELETE_RUN_EVERY = env.timedelta(
 RECURRING_TASK_RUN_RETENTION_DAYS = env.int(
     "RECURRING_TASK_RUN_RETENTION_DAYS", default=30
 )
+TASK_BACKOFF_DEFAULT_DELAY_SECONDS = env.int(
+    "TASK_BACKOFF_DEFAULT_DELAY_SECONDS",
+    default=5,
+)
 
 # Webhook settings
 DISABLE_WEBHOOKS = env.bool("DISABLE_WEBHOOKS", False)
@@ -1144,35 +1201,6 @@ CORS_ALLOW_HEADERS = [
     "X-Environment-Key",
     "X-E2E-Test-Auth-Token",
 ]
-
-# use a separate boolean setting so that we add it to the API containers in environments
-# where we're running the task processor, so we avoid creating unnecessary tasks
-ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
-PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
-PIPEDRIVE_BASE_API_URL = env.str(
-    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
-)
-PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
-    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
-)
-PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_VALUE", "App Sign-up"
-)
-PIPEDRIVE_IGNORE_DOMAINS = env.list(
-    "PIPEDRIVE_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
-PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
-    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
-)
 
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
@@ -1338,6 +1366,10 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
 
+SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
+)
+
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)
 
@@ -1406,3 +1438,5 @@ PROMETHEUS_HISTOGRAM_BUCKETS = tuple(
         default=prometheus_client.Histogram.DEFAULT_BUCKETS,
     )
 )
+
+DOCGEN_MODE = env.bool("DOCGEN_MODE", default=False)

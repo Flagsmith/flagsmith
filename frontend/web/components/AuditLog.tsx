@@ -3,7 +3,7 @@ import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
 import useDebouncedSearch from 'common/useDebouncedSearch'
-import { Link, withRouter } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import Button from './base/forms/Button'
 import Tag from './tags/Tag'
@@ -24,12 +24,6 @@ type AuditLogType = {
   onPageChange?: (page: number) => void
   searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
 }
 
 const widths = [210, 310, 150]
@@ -289,4 +283,4 @@ const AuditLogWrapper: FC<AuditLogWrapperType> = (props) => {
   )
 }
 
-export default withRouter(AuditLogWrapper as any)
+export default AuditLogWrapper

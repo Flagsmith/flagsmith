@@ -14,6 +14,21 @@
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0px 10px 12px 0px rgba(100, 116, 139, 0.15);
+
+    &.border {
+      border-bottom: 0.5px solid;
+    }
+
+    &.placed-top {
+      margin-top: 0px;
+      margin-bottom: 6px;
+      bottom: 100%;
+    }
+
+    &.placed-bottom {
+      top: 100%;
+    }
+
   }
 
   &__item {
@@ -35,6 +50,7 @@
     &_disabled {
       opacity: 0.4;
       pointer-events: none;
+      cursor: not-allowed;
     }
 
     &:hover {

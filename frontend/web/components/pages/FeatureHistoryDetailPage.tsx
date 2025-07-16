@@ -1,6 +1,6 @@
-import React, { FC, useState } from 'react'
+import React, { FC } from 'react'
 import ConfigProvider from 'common/providers/ConfigProvider'
-import { RouterChildContext } from 'react-router'
+import { useRouteMatch } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import {
   useGetFeatureVersionQuery,
@@ -17,21 +17,17 @@ import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
 import Breadcrumb from 'components/Breadcrumb'
 import { useGetProjectFlagQuery } from 'common/services/useProjectFlag'
-
-type FeatureHistoryPageType = {
-  router: RouterChildContext['router']
-
-  match: {
-    params: {
-      id: string
-      environmentId: string
-      projectId: string
-    }
-  }
+import { useRouteContext } from 'components/providers/RouteContext'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
+interface RouteParams {
+  id: string
+  environmentId: string
+  projectId: string
 }
 
-const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
-  const [open, setOpen] = useState(false)
+const FeatureHistoryPage: FC = () => {
+  const match = useRouteMatch<RouteParams>()
+  const { projectId } = useRouteContext()
 
   const env: Environment | undefined = ProjectStore.getEnvironment(
     match.params.environmentId,
@@ -63,7 +59,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
   const user = users?.find((user) => data?.published_by === user.id)
   const live = versions?.results?.[0]
   const { data: feature } = useGetProjectFlagQuery(
-    { id: `${data?.feature}`, project: match.params.projectId },
+    { id: `${data?.feature}`, project: projectId?.toString() || '' },
     {
       skip: !data?.feature,
     },
@@ -74,11 +70,15 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
         items={[
           {
             title: 'Features',
-            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/features`,
+            url: `/project/${projectId?.toString() || ''}/environment/${
+              match.params.environmentId
+            }/features`,
           },
           {
             title: feature?.name,
-            url: `/project/${match.params.projectId}/environment/${match.params.environmentId}/features?feature=${featureId}&tab=history`,
+            url: `/project/${projectId?.toString() || ''}/environment/${
+              match.params.environmentId
+            }/features?feature=${featureId}&tab=history`,
           },
         ]}
         currentPage={'History'}
@@ -109,9 +109,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                 </strong>{' '}
                 by{' '}
                 <strong>
-                  {user
-                    ? `${user.first_name || ''} ${user.last_name || ''} `
-                    : 'System '}
+                  {user ? `${getUserDisplayName(user)} ` : 'System '}
                 </strong>
               </div>
               <Tabs urlParam='compare' theme='pill' uncontrolled>
@@ -119,7 +117,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                   <TabItem tabLabel='Compare to Previous'>
                     <div className='mt-4'>
                       <FeatureVersion
-                        projectId={`${match.params.projectId}`}
+                        projectId={`${projectId?.toString() || ''}`}
                         featureId={parseInt(featureId)}
                         environmentId={environmentId}
                         newUUID={data.uuid}
@@ -131,7 +129,7 @@ const FeatureHistoryPage: FC<FeatureHistoryPageType> = ({ match, router }) => {
                 <TabItem tabLabel='Compare to Live'>
                   <div className='mt-4'>
                     <FeatureVersion
-                      projectId={`${match.params.projectId}`}
+                      projectId={`${projectId?.toString() || ''}`}
                       featureId={parseInt(featureId)}
                       environmentId={environmentId}
                       newUUID={live!.uuid}

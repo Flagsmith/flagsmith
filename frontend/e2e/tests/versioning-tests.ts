@@ -6,18 +6,15 @@ import {
     createFeature,
     createOrganisationAndProject,
     createRemoteConfig,
-    editRemoteConfig,
+    editRemoteConfig, getFlagsmith,
     log,
     login, refreshUntilElementVisible,
-    waitForElementVisible
-} from "../helpers.cafe";
+    waitForElementVisible,
+} from '../helpers.cafe';
 import { E2E_USER, PASSWORD } from '../config';
-import fetch from 'node-fetch';
-import flagsmith from 'flagsmith/isomorphic';
-import Project from '../../common/project';
 
 export default async () => {
-    await flagsmith.init({fetch,environmentID:Project.flagsmith,api:Project.flagsmithClientAPI})
+    const flagsmith = await getFlagsmith()
     const hasFeature = flagsmith.hasFeature("feature_versioning")
     log('Login')
     await login(E2E_USER, PASSWORD)

@@ -36,6 +36,7 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
     feature_state_id: int, msg_template: str
 ):
     from features.models import FeatureState
+    from features.signals import feature_state_change_went_live
 
     feature_state = FeatureState.objects.filter(id=feature_state_id).first()
 
@@ -48,19 +49,38 @@ def _create_feature_state_audit_log_for_change_request(  # type: ignore[no-untyp
     if not feature_state.change_request:
         raise RuntimeError("Feature state must have a change request")
 
-    log = msg_template % (
+    if feature_state.is_scheduled:
+        logger.info(
+            "FeatureState is not due to go live. "
+            "Likely the change request was rescheduled to a later date."
+        )
+        create_feature_state_went_live_audit_log.delay(
+            delay_until=feature_state.live_from,
+            args=(feature_state.id,),
+        )
+        return
+
+    log_message = msg_template % (
         feature_state.feature.name,
         feature_state.change_request.title,
     )
-    AuditLog.objects.create(
+    # NOTE: This NEEDS to leverage btree indexes on AuditLog
+    audit_log, log_created = AuditLog.objects.get_or_create(
+        created_date=feature_state.live_from,
+        environment=feature_state.environment,
+        is_system_event=True,
+        log=log_message,
+        project=feature_state.environment.project,
         related_object_id=feature_state.id,
         related_object_type=RelatedObjectType.FEATURE_STATE.name,
-        environment=feature_state.environment,
-        project=feature_state.environment.project,
-        log=log,
-        is_system_event=True,
-        created_date=feature_state.live_from,
     )
+    if log_created:
+        feature_state_change_went_live.send(audit_log)
+    else:
+        logger.info(
+            "FeatureState update audit log already exists. "
+            "Likely the change request was rescheduled to an earlier date.",
+        )
 
 
 @register_task_handler(priority=TaskPriority.HIGHEST)
@@ -79,16 +99,17 @@ def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
     ):
         return
 
-    user_model = get_user_model()
-
     instance = history_instance.instance
     if instance.get_skip_create_audit_log():
         return
 
-    history_user = user_model.objects.filter(id=history_user_id).first()
+    if history_user_id is not None:
+        user_model = get_user_model()
+        history_user = user_model.objects.filter(id=history_user_id).first()
+    else:
+        history_user = instance.get_audit_log_author(history_instance)
 
-    override_author = instance.get_audit_log_author(history_instance)
-    if not (history_user or override_author or history_instance.master_api_key):
+    if not (history_user or history_instance.master_api_key):
         return
 
     environment, project = instance.get_environment_and_project()
@@ -113,7 +134,7 @@ def create_audit_log_from_historical_record(  # type: ignore[no-untyped-def]
         history_record_class_path=history_record_class_path,
         environment=environment,
         project=project,
-        author=override_author or history_user,
+        author=history_user,
         related_object_id=related_object_id,
         related_object_type=related_object_type.name,
         log=log_message,
