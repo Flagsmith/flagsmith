@@ -38,4 +38,4 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Staged Rollout**](/guides-and-examples/staged-feature-rollouts.md): Gradually enabling a feature for increasing percentages of users to reduce risk.
 
-- [**Trait**](/basic-features/managing-identities.md#identity-traits): A key-value pair associated with an identity, that can store any type of data.
+- [**Trait**](/basic-features/managing-identities.md#identity-traits): A key-value pair associated with an identity that can store any type of data.

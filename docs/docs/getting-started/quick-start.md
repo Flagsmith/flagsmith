@@ -29,7 +29,7 @@ If you're using the SaaS platform, log in at [Flagsmith.com](https://flagsmith.c
 
 ## 1. Create a Project and Flag in the Dashboard
 
-We're going to create an Organisation (if you haven't already), a Project, and your first Flag.
+We are going to create an Organisation (if you have not already), a Project, and your first Flag.
 
 ![Create Organisation](/img/quickstart/demo_create_1.png)
 
@@ -37,7 +37,7 @@ Flagsmith manages Flags with Projects, so let's create one now:
 
 ![Create Project](/img/quickstart/demo_create_2.png)
 
-Flagsmith organises Projects into separate Environments. When you create a Project, Flagsmith automatically creates `Development` and `Production` Environments. We will come to these Environments later. Let's go ahead and create our first Flag. This flag will control whether a button shows on our web page.
+Flagsmith organises Projects into separate Environments. When you create a Project, Flagsmith automatically creates `Development` and `Production` Environments. We will come to these Environments later. Let us go ahead and create our first Flag. This flag will control whether a button shows on our web page.
 
 ![Flagsmith Overview](/img/quickstart/demo_create_3.png)
 
@@ -47,7 +47,7 @@ Flags within Flagsmith are a combination of both: A Boolean value - the `Flag St
 
 ## 2. Import the Javascript SDK
 
-OK so we've set up our flag; now let's bring it into our application. We have a (pretty small!) web page:
+Ok, so we have set up our flag; now let us bring it into our application. We have a (quite small!) web page:
 
 ```html
 <!doctype html>
@@ -75,7 +75,7 @@ For the purposes of this quickstart tutorial, we will import the SDK inline into
 
 ## 3. Connect to the Flagsmith API
 
-We can now connect to the Flagsmith API and get our Flags. When you initialise the Flagsmith SDK, you have to provide an Environment ID. This way, the SDK knows which Project and Environment to grab flags for. Head to the Environment Settings page within Flagsmith, and copy the API key:
+We can now connect to the Flagsmith API and get our Flags. When you initialise the Flagsmith SDK, you have to provide an Environment ID. This way, the SDK knows which Project and Environment to retrieve flags for. Head to the Environment Settings page within Flagsmith, and copy the API key:
 
 ![SDK Keys](/img/quickstart/demo_create_6.png)
 
@@ -118,7 +118,7 @@ Let's hook this value up to our button, so that the value of the flag controls w
 This code sets up a callback, which is triggered when we get a response back from the Flagsmith API. We will check for
 the state of the flag and set the display visibility based on the result.
 
-Our entire webpage now reads like this:
+Our entire web page now reads like this:
 
 <CodeBlock>{ `<!doctype html>
 
@@ -157,7 +157,7 @@ dashboard and enable the flag:
 
 ![Flag View](/img/quickstart/demo_create_10.png)
 
-Return to your browser, refresh the page, and the button will re-appear.
+Return to your browser, refresh the page, and the button will reappear.
 
 ## Finishing Up
 
