@@ -8,6 +8,7 @@ from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
     RELEASE_PIPELINE_DELETED_MESSAGE,
     RELEASE_PIPELINE_PUBLISHED_MESSAGE,
+    RELEASE_PIPELINE_UNPUBLISHED_MESSAGE,
 )
 from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
@@ -17,6 +18,7 @@ from core.models import (
 )
 from features.release_pipelines.core.constants import MAX_PIPELINE_STAGES
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -74,6 +76,14 @@ class ReleasePipeline(
         self.save()
         self._create_pipeline_published_audit_log()
 
+    def unpublish(self, unpublished_by: FFAdminUser) -> None:
+        if self.published_at is None:
+            raise InvalidPipelineStateError("Pipeline is not published.")
+        self.published_at = None
+        self.published_by = None
+        self.save()
+        self._create_pipeline_unpublished_audit_log(unpublished_by)
+
     def get_first_stage(self) -> "PipelineStage | None":
         return self.stages.order_by("order").first()
 
@@ -90,6 +100,11 @@ class ReleasePipeline(
     ) -> typing.Optional[str]:
         return RELEASE_PIPELINE_DELETED_MESSAGE % self.name
 
+    def has_feature_in_flight(self) -> bool:
+        return EnvironmentFeatureVersion.objects.filter(
+            published_at__isnull=True, pipeline_stage__in=self.stages.all()
+        ).exists()
+
     def _get_project(self) -> Project:
         return self.project
 
@@ -102,8 +117,17 @@ class ReleasePipeline(
             author=self.published_by,
         )
 
+    def _create_pipeline_unpublished_audit_log(self, unpublished_by) -> None:
+        AuditLog.objects.create(
+            related_object_id=self.id,
+            related_object_type=RelatedObjectType.RELEASE_PIPELINE.name,
+            project=self._get_project(),
+            log=RELEASE_PIPELINE_UNPUBLISHED_MESSAGE % self.name,
+            author=unpublished_by,
+        )
 
-class PipelineStage(models.Model):
+
+class PipelineStage(SoftDeleteExportableModel):
     name = models.CharField(max_length=255)
     pipeline = models.ForeignKey(
         "ReleasePipeline", related_name="stages", on_delete=models.CASCADE
@@ -133,7 +157,7 @@ class PipelineStage(models.Model):
         )
 
 
-class PipelineStageTrigger(models.Model):
+class PipelineStageTrigger(SoftDeleteExportableModel):
     trigger_type = models.CharField(
         max_length=50,
         choices=StageTriggerType.choices,
@@ -148,7 +172,7 @@ class PipelineStageTrigger(models.Model):
     )
 
 
-class PipelineStageAction(models.Model):
+class PipelineStageAction(SoftDeleteExportableModel):
     action_type = models.CharField(
         max_length=50,
         choices=StageActionType.choices,
