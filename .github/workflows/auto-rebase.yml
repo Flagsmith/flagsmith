@@ -1,0 +1,39 @@
+name: Auto Rebase Feature Branch
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  push:
+    branches:
+      - docs/writechoice-dev-docs
+
+jobs:
+  rebase-feature:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'Flagsmith'
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0  # Required for rebase
+
+      - name: Set up Git
+        run: |
+          git config user.name "flagsmithdev"
+          git config user.email "engineering@flagsmith.com"
+
+      - name: Fetch feature branch
+        run: |
+          git fetch origin docs/writechoice-dev-docs
+
+      - name: Rebase feature on main
+        run: |
+          git checkout docs/writechoice-dev-docs
+          git rebase main
+
+      - name: Push rebased feature
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin docs/writechoice-dev-docs --force-with-lease
