@@ -8,7 +8,7 @@ import Utils from 'common/utils/utils'
 import { getDarkMode } from 'project/darkMode'
 import ModalHR from 'components/modals/ModalHR'
 
-type RuleConditionInputValueProps = {
+type RuleConditionValueInputProps = {
   'data-test'?: string
   value: string | number | boolean
   style?: React.CSSProperties
@@ -27,7 +27,7 @@ const TextAreaModal = ({
   readOnly,
   style,
   value,
-}: RuleConditionInputValueProps) => {
+}: RuleConditionValueInputProps) => {
   const [textAreaValue, setTextAreaValue] = React.useState(value)
 
   return (
@@ -85,7 +85,7 @@ const TextAreaModal = ({
   )
 }
 
-const RuleConditionInputValue = (props: RuleConditionInputValueProps) => {
+const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
   const value = props.value
   const hasLeadingWhitespace = typeof value === 'string' && /^\s/.test(value)
   const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
@@ -177,4 +177,4 @@ const RuleConditionInputValue = (props: RuleConditionInputValueProps) => {
   )
 }
 
-export default RuleConditionInputValue
+export default RuleConditionValueInput

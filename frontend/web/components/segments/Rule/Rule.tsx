@@ -158,7 +158,7 @@ const Rule: React.FC<RuleProps> = ({
             removeRule={removeRule}
             addRule={addRule}
             rules={rules}
-            data-test={`${dataTest}-rule-${i}`}
+            data-test={`${dataTest}`}
           />
         ))}
       </div>

@@ -101,11 +101,12 @@ const RuleConditionPropertySelect = ({
       options: contextOptions,
     },
   ]
-
+  console.log('dataTest', dataTest)
   return (
     <>
       <Select
-        data-test={`${dataTest}-property-${ruleIndex}`}
+        inputId={`${dataTest}`}
+        data-test={dataTest}
         placeholder={'Trait / Context value'}
         value={{ label: label, value: propertyValue }}
         onBlur={() => {

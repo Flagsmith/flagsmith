@@ -11,7 +11,7 @@ import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import RuleConditionPropertySelect from './RuleConditionPropertySelect'
-import RuleConditionInputValue from './RuleConditionInputValue'
+import RuleConditionValueInput from './RuleConditionValueInput'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -100,7 +100,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
             style={{ width: '190px' }}
           />
         )}
-        <RuleConditionInputValue
+        <RuleConditionValueInput
           readOnly={readOnly}
           data-test={`${dataTest}-value-${ruleIndex}`}
           value={value || ''}
