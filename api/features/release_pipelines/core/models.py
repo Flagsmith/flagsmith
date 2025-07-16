@@ -1,4 +1,6 @@
 import typing
+import uuid
+from copy import deepcopy
 
 from django.core.validators import MaxValueValidator
 from django.db import models
@@ -7,9 +9,7 @@ from django.utils import timezone
 from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
     RELEASE_PIPELINE_DELETED_MESSAGE,
-    RELEASE_PIPELINE_PUBLISHED_MESSAGE,
 )
-from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.models import (
     SoftDeleteExportableModel,
@@ -17,6 +17,7 @@ from core.models import (
 )
 from features.release_pipelines.core.constants import MAX_PIPELINE_STAGES
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -72,7 +73,24 @@ class ReleasePipeline(
         self.published_at = timezone.now()
         self.published_by = published_by
         self.save()
-        self._create_pipeline_published_audit_log()
+
+    def unpublish(self, unpublished_by: FFAdminUser) -> None:
+        if self.published_at is None:
+            raise InvalidPipelineStateError("Pipeline is not published.")
+        self.published_at = None
+        self.published_by = None
+        self.save()
+
+    def clone(self) -> "ReleasePipeline":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.uuid = uuid.uuid4()
+        clone.published_at = None
+        clone.published_by = None
+        clone.save()
+        for stage in self.stages.all():
+            stage.clone(target_pipeline=clone)
+        return clone
 
     def get_first_stage(self) -> "PipelineStage | None":
         return self.stages.order_by("order").first()
@@ -90,17 +108,13 @@ class ReleasePipeline(
     ) -> typing.Optional[str]:
         return RELEASE_PIPELINE_DELETED_MESSAGE % self.name
 
+    def has_feature_in_flight(self) -> bool:
+        return EnvironmentFeatureVersion.objects.filter(  # type: ignore[no-any-return]
+            published_at__isnull=True, pipeline_stage__in=self.stages.all()
+        ).exists()
+
     def _get_project(self) -> Project:
         return self.project
-
-    def _create_pipeline_published_audit_log(self) -> None:
-        AuditLog.objects.create(
-            related_object_id=self.id,
-            related_object_type=RelatedObjectType.RELEASE_PIPELINE.name,
-            project=self._get_project(),
-            log=RELEASE_PIPELINE_PUBLISHED_MESSAGE % self.name,
-            author=self.published_by,
-        )
 
 
 class PipelineStage(models.Model):
@@ -132,6 +146,16 @@ class PipelineStage(models.Model):
             .first()
         )
 
+    def clone(self, target_pipeline: ReleasePipeline) -> "PipelineStage":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.pipeline = target_pipeline
+        clone.save()
+        self.trigger.clone(target_stage=clone)
+        for action in self.actions.all():
+            action.clone(target_stage=clone)
+        return clone
+
 
 class PipelineStageTrigger(models.Model):
     trigger_type = models.CharField(
@@ -147,6 +171,13 @@ class PipelineStageTrigger(models.Model):
         on_delete=models.CASCADE,
     )
 
+    def clone(self, target_stage: PipelineStage) -> "PipelineStageTrigger":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.stage = target_stage
+        clone.save()
+        return clone
+
 
 class PipelineStageAction(models.Model):
     action_type = models.CharField(
@@ -160,3 +191,10 @@ class PipelineStageAction(models.Model):
         related_name="actions",
         on_delete=models.CASCADE,
     )
+
+    def clone(self, target_stage: PipelineStage) -> "PipelineStageAction":
+        clone = deepcopy(self)
+        clone.id = None
+        clone.stage = target_stage
+        clone.save()
+        return clone
