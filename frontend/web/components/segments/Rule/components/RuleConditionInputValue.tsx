@@ -10,7 +10,7 @@ import ModalHR from 'components/modals/ModalHR'
 
 type RuleConditionInputValueProps = {
   'data-test'?: string
-  value: string | number
+  value: string | number | boolean
   style?: React.CSSProperties
   placeholder?: string
   onChange?: (e: InputEvent) => void

@@ -10,7 +10,7 @@ import {
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
-import RulePropertySelect from './RuleConditionPropertySelect'
+import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionInputValue from './RuleConditionInputValue'
 
 interface RuleConditionRowProps {
@@ -80,20 +80,13 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
         </Row>
       )}
       <Row noWrap className='rule align-items-center justify-content-between'>
-        <Tooltip
-          title={
-            <RulePropertySelect
-              dataTest={`${dataTest}-property-${ruleIndex}`}
-              ruleIndex={ruleIndex}
-              setRuleProperty={setRuleProperty}
-              propertyValue={rule.property}
-              isTraitDisabled={operatorObj?.value === 'PERCENTAGE_SPLIT'}
-            />
-          }
-          place='top'
-        >
-          {Constants.strings.USER_PROPERTY_DESCRIPTION}
-        </Tooltip>
+        <RuleConditionPropertySelect
+          dataTest={`${dataTest}-property-${ruleIndex}`}
+          ruleIndex={ruleIndex}
+          setRuleProperty={setRuleProperty}
+          propertyValue={rule.property}
+          isTraitDisabled={operatorObj?.value === 'PERCENTAGE_SPLIT'}
+        />
         {readOnly ? (
           !!find(operators, { value: operator })?.label
         ) : (
