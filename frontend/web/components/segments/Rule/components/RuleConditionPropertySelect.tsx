@@ -101,11 +101,10 @@ const RuleConditionPropertySelect = ({
       options: contextOptions,
     },
   ]
-  console.log('dataTest', dataTest)
+
   return (
     <>
       <Select
-        inputId={`${dataTest}`}
         data-test={dataTest}
         placeholder={'Trait / Context value'}
         value={{ label: label, value: propertyValue }}
@@ -127,20 +126,6 @@ const RuleConditionPropertySelect = ({
         options={[...optionsWithTrait]}
         style={{ width: '200px' }}
         noOptionsMessage={() => ''}
-        components={{
-          Option: ({ children, data, innerProps, innerRef }: any) => (
-            <div
-              ref={innerRef}
-              {...innerProps}
-              className='react-select__option'
-            >
-              {!!data.feature && (
-                <div className='unread ml-2 px-2'>Feature-Specific</div>
-              )}
-              {children}
-            </div>
-          ),
-        }}
       />
     </>
   )
