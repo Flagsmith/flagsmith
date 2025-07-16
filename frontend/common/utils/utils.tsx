@@ -341,16 +341,17 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       type: projectFlag.type,
     }
   },
+
   getFlagsmithHasFeature(key: string) {
     return flagsmith.hasFeature(key)
   },
-
   getFlagsmithJSONValue(key: string, defaultValue: any) {
     return flagsmith.getValue(key, { fallback: defaultValue, json: true })
   },
   getFlagsmithValue(key: string) {
     return flagsmith.getValue(key)
   },
+
   getIdentitiesEndpoint(_project: ProjectType) {
     const project = _project || ProjectStore.model
     if (project && project.use_edge_identities) {
@@ -358,7 +359,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
     }
     return 'identities'
   },
-
   getIntegrationData() {
     return Utils.getFlagsmithJSONValue(
       'integration_data',

@@ -27,7 +27,7 @@ GOOGLE_AUTH_ERROR_MESSAGE = AUTH_ERROR_MESSAGE.format("GOOGLE")
 @swagger_auto_schema(
     method="post",
     request_body=GoogleLoginSerializer,
-    responses={200: CustomTokenSerializer(), 502: ErrorSerializer()},
+    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -52,7 +52,7 @@ def login_with_google(request):  # type: ignore[no-untyped-def]
 @swagger_auto_schema(
     method="post",
     request_body=GithubLoginSerializer,
-    responses={200: CustomTokenSerializer(), 502: ErrorSerializer()},
+    responses={200: CustomTokenSerializer, 502: ErrorSerializer},
 )
 @api_view(["POST"])
 @permission_classes([AllowAny])

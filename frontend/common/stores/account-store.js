@@ -18,9 +18,7 @@ const controller = {
     API.setInvite('')
     API.setInviteType('')
     return data
-      .post(`${Project.api}users/join/link/${id}/`, {
-        hubspotutk: API.getCookie('hubspotutk'),
-      })
+      .post(`${Project.api}users/join/link/${id}/`)
       .catch((error) => {
         if (
           Utils.getFlagsmithHasFeature('verify_seats_limit_for_invite_links') &&
@@ -29,9 +27,7 @@ const controller = {
           API.ajaxHandler(store, error)
           return
         }
-        return data.post(`${Project.api}users/join/${id}/`, {
-          hubspotutk: API.getCookie('hubspotutk'),
-        })
+        return data.post(`${Project.api}users/join/${id}/`)
       })
       .then((res) => {
         store.savedId = res.id
@@ -95,7 +91,6 @@ const controller = {
 
     return data
       .post(`${Project.api}organisations/`, {
-        hubspotutk: API.getCookie('hubspotutk'),
         name,
       })
       .then(async (res) => {
@@ -225,6 +220,7 @@ const controller = {
           : `${Project.api}auth/oauth/${type}/`,
         {
           ...(_data || {}),
+          hubspotutk: API.getCookie('hubspotutk'),
           invite_hash: API.getInvite() || undefined,
           sign_up_type: API.getInviteType(),
         },
