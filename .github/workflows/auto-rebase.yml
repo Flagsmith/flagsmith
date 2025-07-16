@@ -3,9 +3,6 @@ name: Auto Rebase Feature Branch
 on:
   schedule:
     - cron: '0 * * * *'  # Every hour
-  push:
-    branches:
-      - docs/writechoice-dev-docs
 
 jobs:
   rebase-feature:
@@ -30,10 +27,21 @@ jobs:
       - name: Rebase feature on main
         run: |
           git checkout docs/writechoice-dev-docs
-          git rebase main
+          git rebase main || echo "REBASE_FAILED=true" >> $GITHUB_ENV
 
       - name: Push rebased feature
+        if: env.REBASE_FAILED != 'true'
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git push origin docs/writechoice-dev-docs --force-with-lease
+
+      - name: Comment on PR if rebase failed
+        if: env.REBASE_FAILED == 'true'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.number }}
+          body: |
+            🚨 The automatic rebase of `devops-infra/action-rebase` onto `main` failed due to conflicts.
+            Please rebase manually or resolve the conflict.
