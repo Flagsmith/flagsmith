@@ -4,6 +4,11 @@ import { RuleContextLabels, RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
 
+interface OptionType {
+  label: string
+  value: string
+}
+
 interface RuleConditionPropertySelectProps {
   ruleIndex: number
   propertyValue: string
@@ -51,20 +56,35 @@ const RuleConditionPropertySelect = ({
 }: RuleConditionPropertySelectProps) => {
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
 
+  const isContextPropertyEnabled =
+    Utils.getFlagsmithHasFeature('context_values')
+  const contextValues: OptionType[] = JSON.parse(
+    Utils.getFlagsmithValue('context_values') || '{}',
+  )
+
+  const formattedContextValues = contextValues.map(
+    (contextValue: { label: string; value: string }) => ({
+      label: contextValue?.label,
+      value: contextValue?.value,
+    }),
+  )
   useEffect(() => {
     setLocalCurrentValue(propertyValue)
   }, [propertyValue])
 
-  const contextOptions = [
-    {
-      label: `${RuleContextLabels.IDENTIFIER}`,
-      value: RuleContextValues.IDENTIFIER,
-    },
-    {
-      label: `${RuleContextLabels.ENVIRONMENT_NAME}`,
-      value: RuleContextValues.ENVIRONMENT_NAME,
-    },
-  ]
+  const contextOptions =
+    formattedContextValues?.length > 0
+      ? contextValues
+      : [
+          {
+            label: `${RuleContextLabels.IDENTIFIER}`,
+            value: RuleContextValues.IDENTIFIER,
+          },
+          {
+            label: `${RuleContextLabels.ENVIRONMENT_NAME}`,
+            value: RuleContextValues.ENVIRONMENT_NAME,
+          },
+        ]
 
   const isValueFromContext = !!contextOptions.find(
     (option) => option.value === localCurrentValue,
@@ -87,19 +107,23 @@ const RuleConditionPropertySelect = ({
             options: [{ label: localCurrentValue, value: localCurrentValue }],
           },
         ]),
-    {
-      label: (
-        <GroupLabel
-          groupName='Context'
-          tooltipText={
-            isTraitDisabled
-              ? Constants.strings.TRAITS_DISABLED_FOR_OPERATOR
-              : undefined
-          }
-        />
-      ),
-      options: contextOptions,
-    },
+    ...(isContextPropertyEnabled
+      ? [
+          {
+            label: (
+              <GroupLabel
+                groupName='Context'
+                tooltipText={
+                  isTraitDisabled
+                    ? Constants.strings.TRAITS_DISABLED_FOR_OPERATOR
+                    : undefined
+                }
+              />
+            ),
+            options: contextOptions,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -125,7 +149,6 @@ const RuleConditionPropertySelect = ({
         }}
         options={[...optionsWithTrait]}
         style={{ width: '200px' }}
-        noOptionsMessage={() => ''}
       />
     </>
   )
