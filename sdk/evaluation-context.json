@@ -29,6 +29,11 @@
                     "title": "Identifier",
                     "type": "string"
                 },
+                "key": {
+                    "description": "Key used when selecting multivariate feature, or % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depends on Flagsmith implementation.",
+                    "title": "Key",
+                    "type": "string"
+                },
                 "traits": {
                     "additionalProperties": {
                         "type": "string"
@@ -39,7 +44,8 @@
                 }
             },
             "required": [
-                "identifier"
+                "identifier",
+                "key"
             ],
             "title": "IdentityContext",
             "type": "object"
