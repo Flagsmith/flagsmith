@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.187.1](https://github.com/Flagsmith/flagsmith/compare/v2.187.0...v2.187.1) (2025-07-17)
+
+
+### Dependency Updates
+
+* bump on-headers and compression in /docs ([#5785](https://github.com/Flagsmith/flagsmith/issues/5785)) ([b566ff6](https://github.com/Flagsmith/flagsmith/commit/b566ff66fe52f97a1e63ad07b2a819bfd0f8e9ea))
+
 ## [2.187.0](https://github.com/Flagsmith/flagsmith/compare/v2.186.0...v2.187.0) (2025-07-16)
 
 
