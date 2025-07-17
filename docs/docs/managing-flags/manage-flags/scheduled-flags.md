@@ -25,7 +25,7 @@ There are two methods for creating a Scheduled Flag change:
 3. Fill in the following details:
    - The title of the Change Request
    - (Optional) A description of the reason for the Change Request
-   - The date and time you want the flag change to take effect
+   - The date and time at which you want the flag change to take effect
 4. Submit the Change Request. The scheduled change will appear in the Change Request area as 'Pending'.
 
 ---

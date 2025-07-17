@@ -4,7 +4,7 @@ sidebar_label: Feature Health Metrics
 sidebar_position: 4
 ---
 
-Feature Health enables you to monitor observability metrics within Flagsmith, specifically in relation to your Features and Environments. When your observability provider sends alert notifications, Flagsmith can mark Features (and optionally Environments) as **Unhealthy**, providing details about the alerts. This helps your team respond quickly and make informed decisions.
+Feature Health enables you to monitor observability metrics within Flagsmith, specifically in relation to your Features and Environments. When your observability provider sends alert notifications, Flagsmith can mark Features (and optionally Environments) as **Unhealthy**, providing details about the alerts. This assists your team in responding quickly and making informed decisions.
 
 :::info
 

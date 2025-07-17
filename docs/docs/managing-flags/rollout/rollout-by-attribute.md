@@ -4,7 +4,7 @@ sidebar_label: Rollout by Attribute
 sidebar_position: 1
 ---
 
-This guide explains how to enable a feature for specific users based on their attributes (traits) in Flagsmith using Segments and Segment Overrides. Attributes can include user role, subscription plan, app version, or device type.
+This guide explains how to enable a feature for specific users based on their attributes (traits) in Flagsmith using Segments and Segment Overrides. Attributes can include user role, subscription plan, application version, or device type.
 
 ## Prerequisites
 
@@ -47,7 +47,7 @@ Done! Now you can test with users who match (and don’t match) the segment to e
 ## Advanced Use Cases
 
 - You can combine attribute rules with a **% Split** rule for staged rollouts (e.g., only 10% of "pro" users).
-- You can use operators like `In`, `SemVer`, `Modulo`, etc., for more complex targeting.
+- You can use operators such as `In`, `SemVer`, `Modulo`, etc., for more complex targeting.
 
 ---
 

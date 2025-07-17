@@ -65,7 +65,7 @@ For a single Identity, the following steps are performed:
 2. Hash that string
 3. Generate a float value between 0 and 1 based on that hash
 
-For every Segment/Identity combination, a value of between 0 and 1 is generated. Due to the hashing algorithm used, there is a consistent spread of values from 0 to 1.
+For every Segment/Identity combination, a value between 0 and 1 is generated. Due to the hashing algorithm used, there is a consistent spread of values from 0 to 1.
 
 - If the number comes out at `0.351` for a particular Identity, and you create a Segment % split to be 30%, that Identity will **not** be included in that Segment because `0.351` is greater than `0.3` (30%).
 - If you then modify the Segment to be a 40% split, the Identity **will** be in that Segment because `0.4 > 0.351`. That way you get a consistent experience as an end-user. This works because the ID of a Segment doesn't change after it has been created.

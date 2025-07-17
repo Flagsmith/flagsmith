@@ -4,7 +4,7 @@ sidebar_label: Core Management
 sidebar_position: 1
 ---
 
-Flags in Flagsmith are used to categorize and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
+Flags in Flagsmith are used to categorise and monitor user actions or events, such as detecting spam or abuse. This guide covers how to create, edit, clone, and delete flags in your project.
 
 ---
 
@@ -18,14 +18,14 @@ To create a new feature flag:
 4. Fill in the available fields according to the specifications of your feature. Note that these values are applied to all your [environments]. You can edit each environment individually later.
     - **Enabled by default**: determines the initial state of the flag for all environments. This can be edited for each environment later.
     - **Value** (optional): additionally to their boolean value, you can choose a format and a value for your flag.
-    - **Tags** (optional): organise your flags by tags or add `protected`to prevent them from accidentally being deleted.
+    - **Tags** (optional): organise your flags by tags or add `protected` to prevent them from accidentally being deleted.
     - **Description** (optional): add a feature flag description.
     - **Server-side only**: enabling this prevents your flag from being accessed by client-side SDKs.
 5. Click **Create Feature**.
 
 :::tip
 
-By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, check the [A/B Testing guide](../advanced-use/ab-testing).
+By clicking the **Create A/B/n Test** button, you can define values for A/B testing. To learn more about this operation, refer to the [A/B Testing guide](../advanced-use/ab-testing).
 
 :::
 
@@ -44,13 +44,13 @@ If you just want to toggle the feature flag *on* or *off*, use the switch under 
 
 :::
 
-3. On the **Value** tab, you can set the flag to be on/off, as well as editing a value for it. Click the **Update Feature Value** to save your changes.
-4. Optionally create segment-specific features and define **Segment Overrides**. Check the documentation to learn more about [Segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
+3. On the **Value** tab, you can set the flag to be on or off, as well as edit a value for it. Click **Update Feature Value** to save your changes.
+4. Optionally, create segment-specific features and define **Segment Overrides**. Refer to the documentation to learn more about [Segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
 5. On the **Settings** tab, you can:
     - Add tags to your feature flag.
     - Assign it to specific *users* and *groups*.
     - Update the flag's description.
-    - Mark the flag as **Server-side only** to prevent it being accessed by client-side SDKs.
+    - Mark the flag as **Server-side only** to prevent it from being accessed by client-side SDKs.
     - Set the **Archived** status to filter the flag as no longer relevant. Note that the flag will still be returned by the endpoint as before.
   Click **Update Settings** to save your changes.
 

@@ -18,7 +18,7 @@ You can add tags to feature flags during creation or when editing an existing fl
 
 1. Go to the **Features** section in your dashboard.
 2. Click **Create Feature**.
-3. Fill in the flag details. In the **Tags** field (optional), enter one or more tags to organise your flag. You can also add special tags like `protected` to prevent accidental deletion.
+3. Fill in the flag details. In the **Tags** field (optional), enter one or more tags to organise your flag. You can also add special tags such as `protected` to prevent accidental deletion.
 4. Click **Create Feature** to save your changes.
 
 ### When Editing a Flag
@@ -55,7 +55,7 @@ Tags with the following names will prevent users from being able to delete tagge
 ## Best Practices for Tag Management
 - Use tags to group related flags (e.g., by feature, team, or release).
 - Apply protected tags (`protected`, `donotdelete`, `permanent`) to critical or long-lived flags to prevent accidental deletion.
-- Regularly review and update tags to keep your flag management organized.
+- Regularly review and update tags to keep your flag management organised.
 
 ---
 
