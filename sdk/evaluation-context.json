@@ -1,118 +1,65 @@
 {
     "$defs": {
-        "EnvironmentEvaluationContext": {
+        "EnvironmentContext": {
+            "description": "Represents an environment context for feature flag evaluation.",
             "properties": {
-                "api_key": {
-                    "title": "Api Key",
+                "key": {
+                    "description": "An environment's unique identifier.",
+                    "title": "Key",
                     "type": "string"
-                }
-            },
-            "required": [
-                "api_key"
-            ],
-            "title": "EnvironmentEvaluationContext",
-            "type": "object"
-        },
-        "FeatureEvaluationContext": {
-            "properties": {
+                },
                 "name": {
+                    "description": "An environment's human-readable name.",
                     "title": "Name",
                     "type": "string"
                 }
             },
             "required": [
+                "key",
                 "name"
             ],
-            "title": "FeatureEvaluationContext",
+            "title": "EnvironmentContext",
             "type": "object"
         },
-        "IdentityEvaluationContext": {
+        "IdentityContext": {
+            "description": "Represents an identity context for feature flag evaluation.\n    ",
             "properties": {
                 "identifier": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "title": "Identifier"
+                    "description": "The unique identifier for the identity, used for segment and multivariate feature flag targeting.",
+                    "title": "Identifier",
+                    "type": "string"
+                },
+                "key": {
+                    "description": "Key used when selecting multivariate feature, or % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depends on Flagsmith implementation.",
+                    "title": "Key",
+                    "type": "string"
                 },
                 "traits": {
                     "additionalProperties": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/$defs/TraitEvaluationContext"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
+                        "type": "string"
                     },
+                    "description": "A map of traits associated with the identity, where the key is the trait name and the value is the trait value.",
                     "title": "Traits",
                     "type": "object"
-                },
-                "transient": {
-                    "anyOf": [
-                        {
-                            "type": "boolean"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "title": "Transient"
-                }
-            },
-            "required": [],
-            "title": "IdentityEvaluationContext",
-            "type": "object"
-        },
-        "TraitEvaluationContext": {
-            "properties": {
-                "value": {},
-                "transient": {
-                    "type": "boolean",
-                    "default": false,
-                    "title": "Transient"
                 }
             },
             "required": [
-                "value"
+                "identifier",
+                "key"
             ],
-            "title": "TraitEvaluationContext",
+            "title": "IdentityContext",
             "type": "object"
         }
     },
+    "description": "Represents a context object containing the necessary information\nto evaluate Flagsmith feature flags for a given environment,\n(optionally) identity, feature, and segments.",
     "properties": {
         "environment": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/EnvironmentEvaluationContext"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null
+            "$ref": "#/$defs/EnvironmentContext"
         },
         "identity": {
             "anyOf": [
                 {
-                    "$ref": "#/$defs/IdentityEvaluationContext"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null
-        },
-        "feature": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/FeatureEvaluationContext"
+                    "$ref": "#/$defs/IdentityContext"
                 },
                 {
                     "type": "null"
@@ -121,6 +68,9 @@
             "default": null
         }
     },
-    "title": "FlagsmithEvaluationContext",
+    "required": [
+        "environment"
+    ],
+    "title": "EvaluationContext",
     "type": "object"
 }
