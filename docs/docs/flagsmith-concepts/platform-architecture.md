@@ -15,11 +15,11 @@ The most important components in Flagsmith's architecture are:
 - **Frontend Dashboard**: A web interface for managing projects, environments, feature flags, and user permissions. This is where most configuration and management tasks are performed.
 - **Core API**: RESTful API that powers the dashboard and SDKs. These endpoints are used for automation, integrations, and direct management of Flagsmith resources.
 - **Edge API**: A globally distributed API for low-latency flag evaluation, especially useful for applications with users around the world.
-- **SDKs**: Client libraries (available for many languages and platforms) that connect your applications and services to Flagsmith, enabling real-time feature flag evaluation and remote config.
+- **SDKs**: Client libraries (available for many languages and platforms) that connect your applications and services to Flagsmith, enabling real-time feature flag evaluation and remote configuration.
 - **Integrations**: Optional connectors to third-party tools and services (e.g., analytics, notifications, monitoring). These can be configured via the dashboard or API.
 - **Database**: Stores all persistent data, such as organisations, projects, features, and audit logs. Managed by Flagsmith in SaaS, but by your team in self-hosted/on-prem deployments.
 
-The architecture is REST-based, with both SDK clients and the dashboard interacting with the Core API. The platform is designed to be cloud-native, supporting containerization and orchestration for scalability and reliability.
+The architecture is REST-based, with both SDK clients and the dashboard interacting with the Core API. The platform is designed to be cloud-native, supporting containerisation and orchestration for scalability and reliability.
 
 ## Deployment Models
 
@@ -30,7 +30,7 @@ Flagsmith can be deployed in three main ways, each with conceptual differences i
 - **Managed by Flagsmith**: No infrastructure to manage; get started instantly.
 - **Automatic scaling, security, and updates**: All handled by the Flagsmith team.
 - **Global Edge API**: Provides low-latency flag delivery worldwide.
-- **Best for**: Teams who want to focus on product development and avoid infrastructure overhead.
+- **Best for**: Teams who wish to focus on product development and avoid infrastructure overhead.
 
 ![SaaS Architecture](/img/saas-architecture.svg)
 
@@ -45,7 +45,7 @@ Flagsmith can be deployed in three main ways, each with conceptual differences i
 
 ### 3. On-Premises (Enterprise Edition)
 
-- **Deployed in your private data center or isolated cloud**: For maximum control and data sovereignty.
+- **Deployed in your private data centre or isolated cloud**: For maximum control and data sovereignty.
 - **Enterprise features**: Advanced authentication (Okta, LDAP, SAML, ADFS), custom fields, support for additional databases (Oracle, MySQL), and more.
 - **Orchestration support**: Kubernetes, OpenShift, AWS ECS, GCP AppEngine, Azure Container Instances, and more.
 - **Best for**: Organisations with strict regulatory, security, or data sovereignty requirements.
