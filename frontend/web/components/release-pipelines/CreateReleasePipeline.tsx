@@ -5,7 +5,6 @@ import { Button } from 'components/base/forms/Button'
 import PageTitle from 'components/PageTitle'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
-import { StageActionType } from 'common/types/responses'
 import Icon from 'components/Icon'
 import {
   useCreateReleasePipelineMutation,
@@ -21,6 +20,7 @@ import {
 import { useRouteContext } from 'components/providers/RouteContext'
 import PlanBasedAccess from 'components/PlanBasedAccess'
 import { NEW_PIPELINE_STAGE } from './constants'
+import { StageActionType } from 'common/types/responses'
 
 type CreateReleasePipelineParams = {
   id?: string
@@ -139,14 +139,14 @@ function CreateReleasePipeline() {
       return false
     }
 
-    // const segments = stage.actions.filter(
-    //   (action) =>
-    //     action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
-    // )
+    const segments = stage.actions.filter(
+      (action) =>
+        action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
+    )
 
-    // if (segments.length) {
-    //   return segments.every(segment => !!segment.action_body.segment_id)
-    // }
+    if (segments.length) {
+      return segments.every((segment) => !!segment.action_body.segment_id)
+    }
 
     return !!stage.name.length
   }
