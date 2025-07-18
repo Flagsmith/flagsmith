@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
-import { RuleContextLabels, RuleContextValues } from 'common/types/rules.types'
+import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
 
@@ -52,42 +52,38 @@ const RuleConditionPropertySelect = ({
   ruleIndex,
   setRuleProperty,
 }: RuleConditionPropertySelectProps) => {
+  const ALLOWED_CONTEXT_VALUES = [
+    RuleContextValues.IDENTIFIER,
+    RuleContextValues.ENVIRONMENT_NAME,
+  ]
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
 
   const isContextPropertyEnabled =
     Utils.getFlagsmithHasFeature('context_values')
+
   const contextValues: OptionType[] = JSON.parse(
     Utils.getFlagsmithValue('context_values') || '{}',
   )
 
-  const formattedContextValues = contextValues.map(
-    (contextValue: { label: string; value: string }) => ({
-      label: contextValue?.label,
-      value: contextValue?.value,
-    }),
-  )
   useEffect(() => {
     setLocalCurrentValue(propertyValue)
   }, [propertyValue])
 
-  const contextOptions =
-    formattedContextValues?.length > 0
-      ? contextValues
-      : [
-          {
-            label: `${RuleContextLabels.IDENTIFIER}`,
-            value: RuleContextValues.IDENTIFIER,
-          },
-          {
-            label: `${RuleContextLabels.ENVIRONMENT_NAME}`,
-            value: RuleContextValues.ENVIRONMENT_NAME,
-          },
-        ]
+  // Filter invalid context values from flagsmith and format them as options
+  const contextOptions = contextValues
+    ?.filter((contextValue: OptionType) =>
+      ALLOWED_CONTEXT_VALUES.includes(contextValue.value as RuleContextValues),
+    )
+    ?.map((contextValue: OptionType) => ({
+      label: contextValue?.label,
+      value: contextValue?.value,
+    }))
 
   const isValueFromContext = !!contextOptions.find(
     (option) => option.value === localCurrentValue,
   )?.value
-  const label =
+
+  const displayedLabel =
     contextOptions.find((option) => option.value === propertyValue)?.label ||
     propertyValue
 
@@ -105,11 +101,11 @@ const RuleConditionPropertySelect = ({
             options: [{ label: localCurrentValue, value: localCurrentValue }],
           },
         ]),
-    ...(isContextPropertyEnabled
+    ...(isContextPropertyEnabled && contextOptions?.length > 0
       ? [
           {
             label: <GroupLabel groupName='Context' />,
-            options: contextOptions,
+            options: contextValues,
           },
         ]
       : []),
@@ -120,7 +116,7 @@ const RuleConditionPropertySelect = ({
       <Select
         data-test={dataTest}
         placeholder={'Trait / Context value'}
-        value={{ label: label, value: propertyValue }}
+        value={{ label: displayedLabel, value: propertyValue }}
         onBlur={() => {
           setRuleProperty(ruleIndex, 'property', { value: localCurrentValue })
         }}
