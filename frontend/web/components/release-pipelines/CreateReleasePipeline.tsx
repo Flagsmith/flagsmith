@@ -139,13 +139,14 @@ function CreateReleasePipeline() {
       return false
     }
 
-    const segment = stage.actions.find(
-      (action) =>
-        action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
-    )
-    if (segment) {
-      return !!segment.action_body.segment_id
-    }
+    // const segments = stage.actions.filter(
+    //   (action) =>
+    //     action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT,
+    // )
+
+    // if (segments.length) {
+    //   return segments.every(segment => !!segment.action_body.segment_id)
+    // }
 
     return !!stage.name.length
   }

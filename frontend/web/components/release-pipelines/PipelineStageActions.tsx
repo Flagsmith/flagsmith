@@ -49,9 +49,8 @@ const PipelineStageActions = ({
       {actions?.map((action, index) => (
         <SinglePipelineStageAction
           key={index}
-          indexPos={index}
+          actionIndex={index}
           action={action}
-          headerText={index === 0 ? 'Then' : 'And'}
           onActionChange={onActionChange}
           onSegmentChange={onSegmentChange}
           isSegmentsLoading={isSegmentsLoading}

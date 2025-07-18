@@ -25,9 +25,8 @@ const getSegment = (action: StageActionRequest | undefined) => {
 }
 
 interface SinglePipelineStageActionProps {
-  indexPos?: number
+  actionIndex?: number
   action?: StageActionRequest
-  headerText?: string
   onRemoveAction?: (id: number) => void
   onActionChange: (option: { value: string; label: string }, id: number) => void
   onSegmentChange: (
@@ -40,8 +39,7 @@ interface SinglePipelineStageActionProps {
 
 const SinglePipelineStageAction = ({
   action,
-  headerText = 'Then',
-  indexPos = 0,
+  actionIndex = 0,
   isSegmentsLoading,
   onActionChange,
   onRemoveAction,
@@ -52,7 +50,7 @@ const SinglePipelineStageAction = ({
     <>
       <Row>
         <div className='flex-1 and-divider__line' />
-        <div className='mx-2'>{headerText}</div>
+        <div className='mx-2'>{actionIndex === 0 ? 'Then' : 'And'}</div>
         <div className='flex-1 and-divider__line' />
       </Row>
       <FormGroup className='mt-2'>
@@ -71,14 +69,14 @@ const SinglePipelineStageAction = ({
                   )}
                   options={FLAG_ACTION_OPTIONS}
                   onChange={(option: { value: string; label: string }) =>
-                    onActionChange(option, indexPos)
+                    onActionChange(option, actionIndex)
                   }
                 />
               </div>
               {onRemoveAction && (
                 <div
                   className='ml-2 clickable'
-                  onClick={() => onRemoveAction(indexPos)}
+                  onClick={() => onRemoveAction(actionIndex)}
                 >
                   <Icon name='trash-2' width={20} fill='#8F98A3' />
                 </div>
@@ -104,7 +102,7 @@ const SinglePipelineStageAction = ({
                 )}
                 options={segmentOptions}
                 onChange={(option: { value: number; label: string }) =>
-                  onSegmentChange(option, indexPos)
+                  onSegmentChange(option, actionIndex)
                 }
               />
             }
