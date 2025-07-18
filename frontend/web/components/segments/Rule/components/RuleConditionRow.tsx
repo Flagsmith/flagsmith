@@ -1,5 +1,4 @@
 import React from 'react'
-import Constants from 'common/constants'
 import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import {
@@ -85,7 +84,6 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           ruleIndex={ruleIndex}
           setRuleProperty={setRuleProperty}
           propertyValue={rule.property}
-          isTraitDisabled={operatorObj?.value === 'PERCENTAGE_SPLIT'}
         />
         {readOnly ? (
           !!find(operators, { value: operator })?.label

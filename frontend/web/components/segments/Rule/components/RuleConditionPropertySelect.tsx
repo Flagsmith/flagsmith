@@ -18,7 +18,6 @@ interface RuleConditionPropertySelectProps {
     property: string,
     value: { value: string | boolean },
   ) => void
-  isTraitDisabled?: boolean
 }
 
 const GroupLabel = ({
@@ -49,7 +48,6 @@ const GroupLabel = ({
 
 const RuleConditionPropertySelect = ({
   dataTest,
-  isTraitDisabled = false,
   propertyValue,
   ruleIndex,
   setRuleProperty,
@@ -94,7 +92,7 @@ const RuleConditionPropertySelect = ({
     propertyValue
 
   const optionsWithTrait = [
-    ...(isValueFromContext || !localCurrentValue || isTraitDisabled
+    ...(isValueFromContext || !localCurrentValue
       ? []
       : [
           {
@@ -110,16 +108,7 @@ const RuleConditionPropertySelect = ({
     ...(isContextPropertyEnabled
       ? [
           {
-            label: (
-              <GroupLabel
-                groupName='Context'
-                tooltipText={
-                  isTraitDisabled
-                    ? Constants.strings.TRAITS_DISABLED_FOR_OPERATOR
-                    : undefined
-                }
-              />
-            ),
+            label: <GroupLabel groupName='Context' />,
             options: contextOptions,
           },
         ]
@@ -135,7 +124,7 @@ const RuleConditionPropertySelect = ({
         onBlur={() => {
           setRuleProperty(ruleIndex, 'property', { value: localCurrentValue })
         }}
-        isSearchable={!isTraitDisabled}
+        isSearchable={true}
         onInputChange={(e: string, metadata: any) => {
           if (metadata.action !== 'input-change') {
             return
