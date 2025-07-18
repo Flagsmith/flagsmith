@@ -99,7 +99,7 @@ API usage as:
 ## What happens if I exceed my API call limit?
 
 If you exceed your API call limit, your account may be blocked or charged for overages depending on your pricing plan.
-For more details, see [Traffic Limits](/system-administration/system-limits#traffic-limits).
+For more details, see [Traffic Limits](/administration-and-security/governance-and-compliance/system-limits#traffic-limits).
 
 Accounts on paid plans are never blocked automatically.
 

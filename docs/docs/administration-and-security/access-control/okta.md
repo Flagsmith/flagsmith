@@ -9,7 +9,7 @@ simplify the setup.
 
 ## Setup
 
-1. Create a [Flagsmith SAML configuration](/system-administration/authentication/SAML/#setup). You can leave the
+1. Create a [Flagsmith SAML configuration](/administration-and-security/access-control/saml#setup). You can leave the
    identity provider metadata blank for now.
 2. Add the [Flagsmith Okta integration](https://www.okta.com/integrations/flagsmith/) to your Okta account, and open 
    it in the Okta dashboard.
@@ -27,5 +27,5 @@ clicking "Single Sign-On" at the login page, and typing the name of the SAML con
 
 By default, the Flagsmith Okta integration will map your users' Okta email address, given name and surname so that they
 are visible within Flagsmith. If you need to map different attributes, you can
-[customise the attribute mappings](/system-administration/authentication/SAML/#attribute-mapping) on your SAML
+[customise the attribute mappings](/administration-and-security/access-control/saml#attribute-mapping) on your SAML
 configuration.

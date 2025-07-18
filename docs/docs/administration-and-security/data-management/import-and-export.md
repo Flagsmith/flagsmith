@@ -13,12 +13,12 @@ exporting any data.
 
 There are several ways of importing or exporting Flagsmith data:
 
-* [Feature import/export](/system-administration/importing-and-exporting/features). Copy all or a subset of features 
+* [Bulk feature import/export](bulk-import-and-export). Copy all or a subset of features 
   between Flagsmith projects.
-* [Organisation import/export](/system-administration/importing-and-exporting/organisations). Export an entire 
+* [Organisation import/export](organisations-import-export). Export an entire 
   Flagsmith organisation and copy it to a different Flagsmith instance.
 * Use the [Admin API](/clients/rest#private-admin-api-endpoints) to manually manage your Flagsmith data.
 
 ## Import from third-party services
 
-You can [import LaunchDarkly flags and segments](launchdarkly) into Flagsmith.
+You can [import LaunchDarkly flags and segments](import-from-launchdarkly) into Flagsmith.

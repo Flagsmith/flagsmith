@@ -19,7 +19,7 @@ For example, RBAC allows you to achieve the following scenarios:
 - Grant a default set of permissions to all users that join your Flagsmith organisation.
 - Lock down an [Admin API](/clients/rest/#private-admin-api-endpoints) key to a specific set of permissions.
 - Provide Flagsmith permissions based on your enterprise identity provider's groups when using
-  [SAML single sign-on](/system-administration/authentication/SAML/).
+  [SAML single sign-on](/administration-and-security/access-control/saml).
 
 To add users to your Flagsmith organisation or to manage user permissions, click on your organisation name in the top
 left and open the **Users and Permissions** tab.
@@ -75,7 +75,7 @@ link directly with them. Both options require organisation administrator permiss
 Permissions > Members**.
 
 Users can also join your organisation directly by logging in to Flagsmith using
-[single sign-on](/system-administration/authentication/SAML/).
+[single sign-on](/administration-and-security/access-control/saml).
 
 ### Email invites
 
@@ -117,7 +117,7 @@ options:
 - Add users by default to a group. When creating or editing a group, select the **Add new users by default** option.
   When a user logs in for the first time to your organisation, they will automatically be added to all groups that have
   this option enabled.
-- [Use existing groups from your enterprise identity provider](/system-administration/authentication/SAML/#using-groups-from-your-saml-idp).
+- [Use existing groups from your enterprise identity provider](/administration-and-security/access-control/saml#using-groups-from-your-saml-idp).
   Any time a user logs in using single sign-on, they will be made a member of any groups with matching external IDs.
 
 ## Deprecated features

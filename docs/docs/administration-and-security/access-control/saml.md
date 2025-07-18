@@ -38,7 +38,7 @@ If you are self-hosting Flagsmith, TLS is required. Encrypted SAML assertions ar
 
 :::tip
 
-If your identity provider is Okta, use the [Flagsmith Okta application](/system-administration/authentication/Okta)
+If your identity provider is Okta, use the [Flagsmith Okta application](/administration-and-security/access-control/index)
 instead of following these steps.
 
 :::
@@ -119,7 +119,7 @@ this mapping tells Flagsmith to look for user groups in a claim other than the d
 ## Permissions for SAML users
 
 By default, users logging in via SAML will have no permissions to view or modify anything in the Flagsmith dashboard.
-You can customise this by creating a [group](/system-administration/rbac) with the "Add new users by default" option
+You can customise this by creating a [group](/administration-and-security/access-control/rbac) with the "Add new users by default" option
 enabled, and assigning your desired default permissions to that group.
 
 ### Using groups from your identity provider
@@ -155,9 +155,9 @@ attribute mapping](#attribute-mapping).
 Once you have confirmed your SAML configuration is working, you can prevent users logging in using other authentication
 methods with any of these options:
 
-* [Restrict authentication methods per email domain](/system-administration/authentication#domain-auth).
+* [Restrict authentication methods per email domain](/administration-and-security/access-control/#domain-auth).
 * If you have a private Flagsmith instance,
-[disable password authentication](/system-administration/authentication#disable-password).
+[disable password authentication](/administration-and-security/access-control/#disable-password).
 
 ## Always use a specific SAML configuration
 

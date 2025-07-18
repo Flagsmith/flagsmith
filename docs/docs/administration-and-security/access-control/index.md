@@ -21,9 +21,9 @@ Two-factor authentication requires a [Start-Up or Enterprise subscription](https
 
 Using the following authentication methods requires an [Enterprise subscription](https://flagsmith.com/pricing):
 
-- [SAML](/system-administration/authentication/SAML)
-- Active Directory (LDAP)
-- Microsoft ADFS
+- [SAML](/administration-and-security/access-control/saml)
+- [Active Directory (LDAP)](/administration-and-security/access-control/ldap)
+- [Microsoft ADFS](/administration-and-security/access-control/adfs)
 
 Please get in touch in order to integrate with LDAP or ADFS.
 
