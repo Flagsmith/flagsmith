@@ -37,8 +37,19 @@ const TIME_UNIT_OPTIONS = [
   { label: 'Minute(s)', value: TimeUnit.MINUTE },
 ]
 
+const NEW_PIPELINE_STAGE_ACTION_TYPE = ''
+const NEW_PIPELINE_STAGE_ACTION = {
+  action_body: { enabled: false },
+  action_type: NEW_PIPELINE_STAGE_ACTION_TYPE,
+}
+
 const NEW_PIPELINE_STAGE: PipelineStageRequest = {
-  actions: [{ action_body: { enabled: false }, action_type: '' }],
+  actions: [
+    {
+      action_body: { enabled: false },
+      action_type: NEW_PIPELINE_STAGE_ACTION_TYPE,
+    },
+  ],
   environment: -1,
   name: '',
   order: 0,
@@ -54,4 +65,6 @@ export {
   TIME_UNIT_OPTIONS,
   TimeUnit,
   NEW_PIPELINE_STAGE,
+  NEW_PIPELINE_STAGE_ACTION,
+  NEW_PIPELINE_STAGE_ACTION_TYPE,
 }

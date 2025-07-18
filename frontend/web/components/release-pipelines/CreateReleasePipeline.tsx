@@ -19,7 +19,7 @@ import {
 } from 'common/types/requests'
 import { useRouteContext } from 'components/providers/RouteContext'
 import PlanBasedAccess from 'components/PlanBasedAccess'
-import { NEW_PIPELINE_STAGE } from './constants'
+import { NEW_PIPELINE_STAGE, NEW_PIPELINE_STAGE_ACTION_TYPE } from './constants'
 import { StageActionType } from 'common/types/responses'
 
 type CreateReleasePipelineParams = {
@@ -132,8 +132,7 @@ function CreateReleasePipeline() {
     // action in creation state
     if (
       stage.actions.some(
-        (action) =>
-          action.action_type === NEW_PIPELINE_STAGE.actions[0].action_type,
+        (action) => action.action_type === NEW_PIPELINE_STAGE_ACTION_TYPE,
       )
     ) {
       return false

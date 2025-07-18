@@ -11,6 +11,7 @@ import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
 import {
   NEW_PIPELINE_STAGE,
+  NEW_PIPELINE_STAGE_ACTION,
   TIME_UNIT_OPTIONS,
   TimeUnit,
   TRIGGER_OPTIONS,
@@ -158,7 +159,7 @@ const CreatePipelineStage = ({
   }
 
   const handleAddAction = () => {
-    const defaultDraftAction = NEW_PIPELINE_STAGE.actions[0]
+    const defaultDraftAction = NEW_PIPELINE_STAGE_ACTION
     handleOnChange('actions', [...stageData.actions, defaultDraftAction])
   }
 
