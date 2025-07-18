@@ -12,37 +12,37 @@ LDAP authentication requires a self-hosted [Enterprise subscription](https://fla
 
 :::
 
-Flagsmith can be configured to use LDAP for authentication with [environment variables](#backend-environment-variables).
-When enabled, it works by authenticating the user with username and password using the ldap server, fetching the user
-details from the LDAP server (if the authentication was successful) and creating the user in the Django database.
+Flagsmith can be configured to use LDAP for authentication with [environment variables](#backend-environment-variables). 
+
+When LDAP is enabled, it works by authenticating the user with username and password using the ldap server, fetching the user details from the LDAP server (if the authentication was successful) and creating the user in the Django database.
 
 ## Using Microsoft Active Directory
 
-By default, Flagsmith supports logging in via OpenLDAP. To connect to a Microsoft Active Directory, you need to modify
-the following environment variables.
+By default, Flagsmith supports logging in via OpenLDAP. To connect to a Microsoft Active Directory, you need to modify the following environment variables.
 
-For simple usernames (e.g. "username"):
+Flagsmith provides different `LDAP_AUTH_FORMAT_USERNAME` settings to accommodate various Active Directory username formats:
+
+- **Simple usernames** (e.g. "username"):
 
 ```txt
 LDAP_AUTH_FORMAT_USERNAME="django_python3_ldap.utils.format_username_active_directory"
 ```
 
-For down-level login name formats (e.g. "DOMAIN\username"):
+- **Down-level login name formats** (e.g. "DOMAIN\username"):
 
 ```txt
 LDAP_AUTH_FORMAT_USERNAME="django_python3_ldap.utils.format_username_active_directory"
 LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN="DOMAIN"
 ```
 
-For user-principal-name formats (e.g. "user@domain.com"):
+- **User-principal-name formats** (e.g. "user@domain.com"):
 
 ```txt
 LDAP_AUTH_FORMAT_USERNAME="django_python3_ldap.utils.format_username_active_directory_principal"
 LDAP_AUTH_ACTIVE_DIRECTORY_DOMAIN="domain.com"
 ```
 
-Depending on how your Active Directory server is configured, the following additional settings may match your server
-better than the defaults used by django-python3-ldap:
+Depending on how your Active Directory server is configured, the following additional settings may match your server better than the defaults used by django-python3-ldap:
 
 ```txt
 LDAP_AUTH_USER_FIELDS=username=sAMAccountName,email=mail,first_name=givenName,last_name=sn
@@ -51,8 +51,7 @@ LDAP_AUTH_OBJECT_CLASS="user"
 
 ## Sync LDAP groups
 
-You can synchronise Flagsmith users and groups with your LDAP (Directory) users and groups by running the following
-command:
+You can synchronise Flagsmith users and groups with your LDAP (Directory) users and groups by running the following command:
 
 ```bash
 python manage.py sync_ldap_users_and_groups
@@ -65,7 +64,7 @@ Running this command will:
 - Remove users from group if they no longer belong to that group in Directory
 - Add users to group if they belong to a new group in Directory
 
-:::note Before running this command, please make sure to set the following environment variables:
+:::note Before running the synchronisation command, please make sure to set the following environment variables:
 
 - LDAP_SYNC_USER_USERNAME
 - LDAP_SYNC_USER_PASSWORD
@@ -77,9 +76,7 @@ Running this command will:
 
 ## Backend environment variables
 
-Note that some environment variables may be different depending on the image that you are using
-(`flagsmith/flagsmith-api-ee` or `flagsmith/flagsmith-private-cloud`). Please select the correct tab below to ensure you
-are using the correct environment variables.
+Note that some environment variables may be different depending on the image that you are using (`flagsmith/flagsmith-api-ee` or `flagsmith/flagsmith-private-cloud`). Please select the correct tab below to ensure you are using the correct environment variables.
 
 <Tabs groupId="ImageType">
 <TabItem value="ee" label="flagsmith-api-ee">

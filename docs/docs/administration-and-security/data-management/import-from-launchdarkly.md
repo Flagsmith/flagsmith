@@ -7,7 +7,7 @@ sidebar_position: 20
 
 # LaunchDarkly Migrator - Migrate from LaunchDarkly
 
-You can import your Flags and Segments from LaunchDarkly into Flagsmith.
+This guide explains how to migrate your flags and segments from LaunchDarkly into Flagsmith.
 
 :::caution
 
@@ -17,17 +17,28 @@ import has finished.
 
 :::
 
+## Prerequisites
+
+- **LaunchDarkly Access Token**: You will need an Access Token from your LaunchDarkly account. To generate the token:
+    1. Log in to your LaunchDarkly account.
+    2. Navigate to **Account settings** > **Authorization** > **Access tokens**.
+    3. Create a new Access Token.
+
+## Integration Setup
+
 :::caution
 
 Import operations will overwrite existing environments and flags in your project.
 
 :::
 
-## Integration Setup
+Follow these steps to set up the integration and initiate the import:
 
-1. Create a LaunchDarkly Access Token. In LaunchDarkly: Account settings > Authorization > Access tokens.
-2. Create a new Project within Flagsmith, then go to Project Settings > Import. Add your Token generated in step 1.
-3. The import will begin immediately.
+1.  Import into Flagsmith:
+    - Create a new project within Flagsmith, or select an existing one.
+    - Go to **Project Settings** > **Import**.
+    - Paste the Access Token previously generated into the provided field.
+2.  Start the import: The import process will begin immediately upon adding the token.
 
 ## What we will import
 
@@ -39,12 +50,11 @@ All of the LaunchDarkly `Environments` within the Project will be copied into Fl
 
 ### Flags
 
-LaunchDarkly `Flags` will be copied into Flagsmith.
+LaunchDarkly `Flags` will be copied into Flagsmith as follows:
 
 #### Boolean Flags
 
-Boolean LaunchDarkly flags are imported into Flagsmith with the appropriate boolean state, with no flag value set on the
-Flagsmith side.
+Boolean LaunchDarkly flags are imported into Flagsmith with the appropriate boolean state, with no flag value set on the Flagsmith side.
 
 Boolean values will be taken from the `_summary -> on` field of within LaunchDarkly.
 
