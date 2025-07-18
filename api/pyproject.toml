@@ -112,7 +112,7 @@ pyparsing = "~2.4.7"
 requests = "~2.32.4"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
-dj-database-url = "~0.5.0"
+dj-database-url = "~3.0.1"
 drf-nested-routers = "~0.92.1"
 shortuuid = "~1.0.1"
 sendgrid-django = "~4.2.0"
@@ -166,6 +166,7 @@ tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
+django_cockroachdb = "~4.2"
 
 [tool.poetry.group.auth-controller]
 optional = true
