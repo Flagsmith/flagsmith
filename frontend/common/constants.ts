@@ -705,6 +705,8 @@ const Constants = {
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
     TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
       `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
+    TRAITS_DISABLED_FOR_OPERATOR:
+      'Traits are not supported for the selected operator',
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:
