@@ -1,5 +1,6 @@
 import json
 import typing
+from datetime import datetime, timedelta
 
 import pytest
 from dateutil.relativedelta import relativedelta
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from djoser import utils  # type: ignore[import-untyped]
 from djoser.email import PasswordResetEmail  # type: ignore[import-untyped]
+from freezegun import freeze_time
 from pytest_django import DjangoAssertNumQueries
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -921,3 +923,45 @@ def test_list_user_groups(
         (user1.pk, False),
         (user2.pk, True),
     }
+
+
+@pytest.mark.django_db
+@freeze_time("2024-01-01T10:00:00Z")
+@pytest.mark.parametrize(
+    "last_login",
+    [
+        None,
+        "2023-01-01T10:00:00Z",
+        "2024-01-01T09:59:00Z",
+    ],
+)
+def test_get_me_view_updates_last_login(
+    api_client: APIClient,
+    test_user: FFAdminUser,
+    last_login: datetime | None,
+) -> None:
+    # Given
+    test_user.last_login = last_login
+    test_user.save(update_fields=["last_login"])
+    test_user.refresh_from_db()
+
+    api_client.force_authenticate(test_user)
+    assert test_user.last_login is None or test_user.last_login < timezone.now()
+
+    should_update_last_login = test_user.last_login is None or (
+        timezone.now() - test_user.last_login
+        > timedelta(minutes=settings.LAST_LOGIN_UPDATE_THRESHOLD_MINUTES)
+    )
+    url = reverse("api-v1:custom_auth:ffadminuser-me")
+
+    # When
+    response = api_client.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    test_user.refresh_from_db()
+
+    expected_last_login = (
+        timezone.now() if should_update_last_login else test_user.last_login
+    )
+    assert test_user.last_login == expected_last_login
