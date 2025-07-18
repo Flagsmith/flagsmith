@@ -6,10 +6,11 @@ from common.metadata.serializers import (
     SerializerWithMetadata,
 )
 from django.conf import settings
+from django.db.models.functions import Coalesce
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.serializers import ListSerializer
 from rest_framework_recursive.fields import (  # type: ignore[import-untyped]
     RecursiveField,
 )
@@ -19,8 +20,14 @@ from segments.models import Condition, Segment, SegmentRule
 
 logger = logging.getLogger(__name__)
 
+DictList = list[dict[str, Any]]
+
 
 class ConditionSerializer(serializers.ModelSerializer[Condition]):
+    id = serializers.IntegerField(
+        read_only=False,
+        required=False,
+    )
     delete = serializers.BooleanField(
         write_only=True,
         required=False,
@@ -54,8 +61,11 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
         return super().to_internal_value(data)
 
 
-# TODO: Rename to SegmentRuleSerializer
-class RuleSerializer(serializers.ModelSerializer[SegmentRule]):
+class _BaseSegmentRuleSerializer(WritableNestedModelSerializer):
+    id = serializers.IntegerField(
+        read_only=False,
+        required=False,
+    )
     delete = serializers.BooleanField(
         write_only=True,
         required=False,
@@ -64,13 +74,28 @@ class RuleSerializer(serializers.ModelSerializer[SegmentRule]):
         many=True,
         required=False,
     )
-    rules: ListSerializer[SegmentRule] = ListSerializer(
-        child=RecursiveField(),
-        required=False,
-    )
     version_of = RecursiveField(
         required=False,
         allow_null=True,
+    )
+
+
+class _NestedSegmentRuleSerializer(_BaseSegmentRuleSerializer):
+    class Meta:
+        model = SegmentRule
+        fields = [
+            "id",
+            "type",
+            "conditions",
+            "delete",
+            "version_of",
+        ]
+
+
+class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
+    rules = _NestedSegmentRuleSerializer(
+        many=True,
+        required=False,
     )
 
     class Meta:
@@ -85,8 +110,8 @@ class RuleSerializer(serializers.ModelSerializer[SegmentRule]):
         ]
 
 
-class SegmentSerializer(serializers.ModelSerializer[Segment], SerializerWithMetadata):
-    rules = RuleSerializer(
+class SegmentSerializer(WritableNestedModelSerializer, SerializerWithMetadata):
+    rules = SegmentRuleSerializer(
         many=True,
     )
     metadata = MetadataSerializer(
@@ -98,15 +123,24 @@ class SegmentSerializer(serializers.ModelSerializer[Segment], SerializerWithMeta
         model = Segment
         fields = "__all__"
 
+    def get_initial(self) -> dict[str, Any]:
+        initial_data: dict[str, Any] = super().get_initial()
+        if rules_data := initial_data.get("rules"):
+            self._remove_segment_rules_conditions_marked_for_deletion(rules_data)
+        return initial_data
+
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
-        self.validate_required_metadata(attrs)
         if not attrs.get("rules"):
             raise ValidationError(
                 {"rules": "Segment cannot be created without any rules."}
             )
+        self.validate_required_metadata(attrs)
+        self._validate_segment_rules_conditions_limit(attrs["rules"])
+        self._validate_relations_of_nested_rules_and_conditions(attrs["rules"])
         return attrs
 
+    # Needed by SerializerWithMetadata.get_organisation
     def get_project(
         self,
         validated_data: dict[str, Any] | None = None,
@@ -120,16 +154,12 @@ class SegmentSerializer(serializers.ModelSerializer[Segment], SerializerWithMeta
 
     def create(self, validated_data: dict[str, Any]) -> Segment:
         project = validated_data["project"]
-        self.validate_project_segment_limit(project)
+        self._validate_project_segment_limit(project)
 
-        rules_data = validated_data.pop("rules", [])
         metadata_data = validated_data.pop("metadata", [])
-        self.validate_segment_rules_conditions_limit(rules_data)
 
-        # create segment with nested rules and conditions
-        segment: Segment = Segment.objects.create(**validated_data)
+        segment: Segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self.update_metadata(segment, metadata_data)
-        segment.refresh_from_db()
         return segment
 
     def update(
@@ -137,10 +167,7 @@ class SegmentSerializer(serializers.ModelSerializer[Segment], SerializerWithMeta
         instance: Segment,
         validated_data: dict[str, Any],
     ) -> Segment:
-        # use the initial data since we need the ids included to determine which to update & which to create
-        rules_data = self.initial_data.pop("rules", [])
         metadata_data = validated_data.pop("metadata", [])
-        self.validate_segment_rules_conditions_limit(rules_data)
 
         # Create a version of the segment now that we're updating.
         cloned_segment = instance.deep_clone()
@@ -150,10 +177,7 @@ class SegmentSerializer(serializers.ModelSerializer[Segment], SerializerWithMeta
 
         try:
             self.update_metadata(instance, metadata_data)
-
-            # remove rules from validated data to prevent error trying to create segment with nested rules
-            del validated_data["rules"]
-            instance = super().update(instance, validated_data)
+            instance = super().update(instance, validated_data)  # type: ignore[no-untyped-call]
         except Exception:
             # Roll back ¯\_(ツ)_/¯
             instance.refresh_from_db()
@@ -164,47 +188,121 @@ class SegmentSerializer(serializers.ModelSerializer[Segment], SerializerWithMeta
 
         return instance
 
-    def validate_project_segment_limit(self, project: Project) -> None:
-        if (
-            Segment.live_objects.filter(project=project).count()
-            >= project.max_segments_allowed
-        ):
-            raise ValidationError(
-                {
-                    "project": "The project has reached the maximum allowed segments limit.",
-                }
-            )
+    def _validate_relations_of_nested_rules_and_conditions(  # noqa: C901
+        self, rules_data: DictList
+    ) -> None:
+        """
+        Check whether every rule and condition is associated with the segment
+        """
 
-    def validate_segment_rules_conditions_limit(
+        def collect_ids(rules_data: DictList) -> None:
+            for rule_data in rules_data:
+                if rule_id := rule_data.get("id"):
+                    rules_ids.add(rule_id)
+                for condition_data in rule_data.get("conditions", []):
+                    if condition_id := condition_data.get("id"):
+                        rule_condition_ids.add((rule_id, condition_id))
+                collect_ids(rule_data.get("rules", []))
+
+        rules_ids: set[int] = set()
+        rule_condition_ids: set[tuple[int | None, int]] = set()
+        collect_ids(rules_data)
+        condition_ids = {condition_id for _, condition_id in rule_condition_ids}
+
+        if not self.instance:
+            # A new segment can never receive any existing rule or condition
+            if rules_ids or rule_condition_ids:
+                raise ValidationError({"segment": "Mismatched segment is not allowed"})
+            return
+
+        # Edge case but saves energy <3
+        if None in (rule_id for rule_id, _ in rule_condition_ids):
+            raise ValidationError({"segment": "Cannot move conditions between rules"})
+
+        # Replacing all rules is OK
+        if not (rules_ids or condition_ids):
+            return
+
+        segments_from_rules = set(
+            SegmentRule.objects.annotate(
+                actual_segment_id=Coalesce(
+                    "segment_id",
+                    "rule__segment_id",
+                ),
+            )
+            .filter(pk__in=rules_ids)
+            .values_list("actual_segment_id", flat=True)
+        )
+
+        # Ensure this is the only segment associated with the rules
+        if segments_from_rules != {self.instance.pk}:  # type: ignore[union-attr]
+            raise ValidationError({"segment": "Mismatched segment is not allowed"})
+
+        existing_rule_conditions_ids = set(
+            Condition.objects.filter(
+                pk__in=condition_ids,
+            ).values_list("rule_id", "id")
+        )
+
+        # Ensure existing conditions continue belonging to their rules
+        if not rule_condition_ids <= existing_rule_conditions_ids:
+            raise ValidationError({"segment": "Cannot move conditions between rules"})
+
+    def _remove_segment_rules_conditions_marked_for_deletion(
         self,
-        rules_data: list[dict[str, Any]],
+        rules_data: DictList,
+    ) -> None:
+        """
+        Remove rules and conditions marked for deletion from input
+
+        NOTE: This is to support previous API design, in which any nested rules
+        or conditions including both an `"id"` field and `"delete": true` were
+        later soft-deleted in the database.
+
+        TODO: Deprecate this in favor of not sending unwanted rules and
+        conditions in the input.
+        """
+        for r in range(len(rules_data)):
+            if (rule := rules_data[r]).get("delete") is True:
+                del rules_data[r]
+                continue
+            for c in range(len(conditions := rule.get("conditions", []))):
+                if conditions[c].get("delete") is True:
+                    del conditions[c]
+            if subrules := rule.get("rules", []):
+                self._remove_segment_rules_conditions_marked_for_deletion(subrules)
+
+    def _validate_project_segment_limit(self, project: Project) -> None:
+        segment_count = Segment.live_objects.filter(project=project).count()
+        if segment_count >= project.max_segments_allowed:
+            msg = "The project has reached the maximum allowed segments limit."
+            raise ValidationError({"project": msg})
+
+    def _validate_segment_rules_conditions_limit(
+        self,
+        rules_data: DictList,
     ) -> None:
         if self.instance and getattr(self.instance, "whitelisted_segment", None):
             return
 
-        count = self._calculate_condition_count(rules_data)
-
-        if count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
-            raise ValidationError(
-                {
-                    "segment": (
-                        f"The segment has {count} conditions, which exceeds the maximum "
-                        f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
-                    )
-                }
+        condition_count = self._calculate_condition_count(rules_data)
+        if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
+            msg = (
+                f"The segment has {condition_count} conditions, which exceeds the maximum "
+                f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
             )
+            raise ValidationError({"segment": msg})
 
     def _calculate_condition_count(
         self,
-        rules_data: list[dict[str, Any]],
+        rules_data: DictList,
     ) -> int:
-        count: int = 0
-
+        count = 0
         for rule_data in rules_data:
-            child_rules: list[dict[str, Any]] = rule_data.get("rules", [])
+            child_rules: DictList = rule_data.get("rules", [])
             if child_rules:
                 count += self._calculate_condition_count(child_rules)
-            conditions: list[dict[str, Any]] = rule_data.get("conditions", [])
+            conditions: DictList = rule_data.get("conditions", [])
             for condition in conditions:
                 if condition.get("delete", False) is True:
                     continue
