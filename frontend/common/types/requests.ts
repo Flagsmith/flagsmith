@@ -74,9 +74,10 @@ export type RegisterRequest = {
   utm_data?: UtmsType
 }
 
+export type StageActionBody = { enabled: boolean; segment_id?: number }
 export interface StageActionRequest {
-  action_type: StageActionType
-  action_body: { enabled: boolean; segment_id?: number }
+  action_type: StageActionType | ''
+  action_body: StageActionBody
 }
 
 export interface ReleasePipelineRequest {
@@ -90,7 +91,7 @@ export interface UpdateReleasePipelineRequest extends ReleasePipelineRequest {
   id: number
 }
 
-export type PipelineStageRequest = {
+export interface PipelineStageRequest {
   name: string
   environment: number
   order: number
