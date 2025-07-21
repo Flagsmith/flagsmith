@@ -50,7 +50,7 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
         ]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        super().validate(attrs)
+        attrs = super().validate(attrs)
         if attrs.get("operator") != PERCENTAGE_SPLIT and not attrs.get("property"):
             raise ValidationError({"property": ["This field may not be blank."]})
         return attrs
@@ -59,6 +59,11 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
         # Conversion to correct value type is handled elsewhere
         data["value"] = str(data["value"]) if "value" in data else None
         return super().to_internal_value(data)
+
+    def create(self, validated_data: dict[str, Any]) -> Condition:
+        if self.context.get("is_creating_segment"):
+            validated_data["created_with_segment"] = True
+        return super().create(validated_data)
 
 
 class _BaseSegmentRuleSerializer(WritableNestedModelSerializer):
@@ -158,8 +163,11 @@ class SegmentSerializer(WritableNestedModelSerializer, SerializerWithMetadata):
 
         metadata_data = validated_data.pop("metadata", [])
 
+        self.context["is_creating_segment"] = True
         segment: Segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+
         self.update_metadata(segment, metadata_data)
+
         return segment
 
     def update(
