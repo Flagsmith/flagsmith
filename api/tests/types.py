@@ -30,3 +30,7 @@ class GetIdentityFlagsResponseJSONCallable(Protocol):
         identity_identifier: str = "test-identity",
         **traits,
     ) -> dict: ...  # type: ignore[type-arg]
+
+
+class EnableFeaturesFixture(Protocol):
+    def __call__(self, *feature_names: str) -> None: ...
