@@ -3,6 +3,7 @@ from itertools import chain
 from typing import TYPE_CHECKING, Dict, List, Optional
 from uuid import UUID
 
+from flag_engine.context.types import EvaluationContext
 from flag_engine.environments.integrations.models import IntegrationModel
 from flag_engine.environments.models import (
     EnvironmentAPIKeyModel,
@@ -416,6 +417,27 @@ def map_identity_to_engine(
         identity_features=identity_feature_state_models,  # type: ignore[arg-type]
         identity_traits=identity_trait_models,
     )
+
+
+def map_engine_identity_to_context(
+    identity: IdentityModel,
+) -> "EvaluationContext":
+    """
+    A special mapper to produce a minimal EvaluationContext
+    in an environment-less form.
+    Used when an environment object is not available,
+    like when evaluating segments in UI, which happens at the project level.
+    """
+    return {
+        "environment": {"key": identity.environment_api_key, "name": ""},
+        "identity": {
+            "identifier": identity.identifier,
+            "key": str(identity.django_id or identity.composite_key),
+            "traits": {
+                trait.trait_key: trait.trait_value for trait in identity.identity_traits
+            },
+        },
+    }
 
 
 def _get_prioritised_feature_states(
