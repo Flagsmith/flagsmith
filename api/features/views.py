@@ -385,11 +385,11 @@ class FeatureViewSet(viewsets.ModelViewSet):  # type: ignore[type-arg]
     def get_evaluation_data(self, request, pk, project_pk):  # type: ignore[no-untyped-def]
         feature = get_object_or_404(Feature, pk=pk)
 
-        query_serializer = GetUsageDataQuerySerializer(data=request.query_params)
-        query_serializer.is_valid(raise_exception=True)
+        filters = GetUsageDataQuerySerializer(data=request.query_params)
+        filters.is_valid(raise_exception=True)
 
         usage_data = get_feature_evaluation_data(
-            feature=feature, **query_serializer.data
+            feature=feature, **filters.validated_data
         )
         serializer = FeatureEvaluationDataSerializer(usage_data, many=True)
 
