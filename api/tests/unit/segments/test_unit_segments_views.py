@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from flag_engine.segments.constants import EQUAL
+from flag_engine.segments.constants import ALL_RULE, EQUAL
 from pytest_django import DjangoAssertNumQueries
 from pytest_django.fixtures import SettingsWrapper
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
@@ -1206,6 +1206,164 @@ def test_create_segment_with_required_metadata_returns_201(
         == required_a_segment_metadata_field.id
     )
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
+
+
+def test_create_segment__with_existing_rule__responds_400(
+    admin_client: APIClient,
+    project: Project,
+    segment_rule: SegmentRule,
+) -> None:
+    # When
+    response = admin_client.post(
+        f"/api/v1/projects/{project.pk}/segments/",
+        data={
+            "name": "Test Segment",
+            "description": "This is the description",
+            "project": project.pk,
+            "rules": [
+                {"id": segment_rule.pk, "type": "ALL", "rules": [], "conditions": []}
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST, response.data
+    assert response.json()["segment"] == ["Mismatched segment is not allowed"]
+
+
+def test_update_segment__moving_existing_condition_onto_new_rule__responds_400(
+    admin_client: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    existing_condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+    )
+
+    # When
+    response = admin_client.patch(
+        f"/api/v1/projects/{segment.project.pk}/segments/{segment.pk}/",
+        data={
+            "rules": [
+                {
+                    "type": "ALL",
+                    "rules": [],
+                    "conditions": [
+                        {
+                            "id": existing_condition.pk,
+                            "property": "foo",
+                            "operator": EQUAL,
+                            "value": "bar",
+                        },
+                    ],
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST, response.data
+    assert response.json()["segment"] == ["Cannot move conditions between rules"]
+
+
+def test_update_segment__empty_non_split_condition__responds_400(
+    admin_client: APIClient,
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # When
+    response = admin_client.patch(
+        f"/api/v1/projects/{segment.project.pk}/segments/{segment.pk}/",
+        data={
+            "rules": [
+                {
+                    "id": segment_rule.pk,
+                    "type": "ALL",
+                    "rules": [],
+                    "conditions": [
+                        {
+                            # "property": "not-provided",
+                            "operator": EQUAL,
+                            "value": "👀",
+                        },
+                    ],
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == status.HTTP_400_BAD_REQUEST, response.data
+    assert response.json()["rules"][0]["conditions"][0]["property"] == [
+        "This field may not be blank."
+    ]
+
+
+def test_update_segment__nested_objects__updates_rules_conditions_recursively(
+    admin_client: APIClient,
+    segment: Segment,
+) -> None:
+    # Given
+    rule1 = SegmentRule.objects.create(segment=segment, type=SegmentRule.ANY_RULE)
+    rule2 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ANY_RULE)
+    rule2_condition1 = Condition.objects.create(
+        rule=rule2,
+        property="rule2_condition1",
+        operator=EQUAL,
+        value="rule2_value1",
+    )
+    rule2_condition2 = Condition.objects.create(
+        rule=rule2,
+        property="rule2_condition2",
+        operator=EQUAL,
+        value="rule2_value2",
+    )
+
+    # When
+    response = admin_client.patch(
+        f"/api/v1/projects/{segment.project.pk}/segments/{segment.pk}/",
+        data={
+            "rules": [
+                {
+                    "id": rule1.pk,
+                    "type": "ALL",  # Changed
+                    "rules": [
+                        {
+                            "id": rule2.pk,
+                            "type": "ANY",
+                            "conditions": [
+                                {
+                                    "id": rule2_condition1.pk,
+                                    "property": "new_rule2_condition1",
+                                    "operator": rule2_condition1.operator,
+                                    "value": "new_rule2_condition1_value",
+                                },
+                                # rule2_condition2 is deleted
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        format="json",
+    )
+
+    # Then
+    assert response.status_code == 200
+    rule1.refresh_from_db()
+    rule2_condition1.refresh_from_db()
+    rule2_condition2.refresh_from_db()
+    assert rule1.type == ALL_RULE
+    assert rule2_condition1.property == "new_rule2_condition1"
+    assert rule2_condition1.value == "new_rule2_condition1_value"
+    assert rule2_condition2.deleted
 
 
 @pytest.mark.parametrize(

@@ -223,7 +223,7 @@ class SegmentSerializer(WritableNestedModelSerializer, SerializerWithMetadata):
                 raise ValidationError({"segment": "Mismatched segment is not allowed"})
             return
 
-        # Edge case but saves energy <3
+        # Prevent adding existing conditions to new rules — edge case but saves energy <3
         if None in (rule_id for rule_id, _ in rule_condition_ids):
             raise ValidationError({"segment": "Cannot move conditions between rules"})
 
