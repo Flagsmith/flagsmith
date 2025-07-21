@@ -1,10 +1,12 @@
 import pytest
+from django.utils import timezone
 
 from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
     RELEASE_PIPELINE_DELETED_MESSAGE,
 )
 from environments.models import Environment
+from features.models import EnvironmentFeatureVersion, Feature
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
 from features.release_pipelines.core.models import (
     PipelineStage,
@@ -138,6 +140,28 @@ def test_release_pipeline_get_delete_log_message(
     assert release_pipeline.get_delete_log_message(release_pipeline) == expected_message
 
 
+def test_release_pipeline_unpublish(
+    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
+) -> None:
+    # Given - the pipeline is already published
+    release_pipeline.publish(admin_user)
+
+    # When
+    release_pipeline.unpublish(admin_user)
+
+    # Then
+    assert release_pipeline.published_at is None
+    assert release_pipeline.published_by is None
+
+
+def test_should_raise_error_when_unpublishing_unpublished_pipeline(
+    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
+) -> None:
+    # When/ Then
+    with pytest.raises(InvalidPipelineStateError, match="Pipeline is not published."):
+        release_pipeline.unpublish(admin_user)
+
+
 def test_clone_release_pipeline(
     release_pipeline: ReleasePipeline,
     environment: Environment,
@@ -241,3 +265,31 @@ def test_clone_release_pipeline(
 
             # source action still points to the original stage
             assert source_action.stage == source_stage
+
+
+def test_release_pipeline_has_feature_in_flight(
+    release_pipeline: ReleasePipeline,
+    environment: Environment,
+    pipeline_stage_enable_feature_on_enter: PipelineStage,
+    admin_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given an unpublished environment feature version
+    feature = release_pipeline.project.features.first()
+    environment_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment,
+        pipeline_stage=pipeline_stage_enable_feature_on_enter,
+        published_at=None,
+    )
+
+    # Then
+    assert release_pipeline.has_feature_in_flight() is True
+
+    # Next, publish the environment feature version
+    environment_version.published_at = timezone.now()
+    environment_version.published_by = admin_user
+    environment_version.save()
+
+    # Then
+    assert release_pipeline.has_feature_in_flight() is False
