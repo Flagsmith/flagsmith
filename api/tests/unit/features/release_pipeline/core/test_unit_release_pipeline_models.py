@@ -6,7 +6,7 @@ from audit.constants import (
     RELEASE_PIPELINE_DELETED_MESSAGE,
 )
 from environments.models import Environment
-from features.models import EnvironmentFeatureVersion, Feature
+from features.models import Feature
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
 from features.release_pipelines.core.models import (
     PipelineStage,
@@ -16,6 +16,7 @@ from features.release_pipelines.core.models import (
     StageActionType,
     StageTriggerType,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from segments.models import Segment
 from users.models import FFAdminUser
 
@@ -275,7 +276,6 @@ def test_release_pipeline_has_feature_in_flight(
     feature: Feature,
 ) -> None:
     # Given an unpublished environment feature version
-    feature = release_pipeline.project.features.first()
     environment_version = EnvironmentFeatureVersion.objects.create(
         feature=feature,
         environment=environment,
