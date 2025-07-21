@@ -1,4 +1,5 @@
 import {
+  useCloneReleasePipelineMutation,
   useDeleteReleasePipelineMutation,
   usePublishReleasePipelineMutation,
 } from 'common/services/useReleasePipelines'
@@ -74,6 +75,17 @@ const ReleasePipelinesList = ({
       isSuccess: isDeletingSuccess,
     },
   ] = useDeleteReleasePipelineMutation()
+
+  const [
+    cloneReleasePipeline,
+    {
+      error: cloneReleasePipelineError,
+      isError: isCloningError,
+      isLoading: isCloning,
+      isSuccess: isCloningSuccess,
+    },
+  ] = useCloneReleasePipelineMutation()
+
   const [
     publishReleasePipeline,
     {
@@ -90,6 +102,10 @@ const ReleasePipelinesList = ({
       return toast('Release pipeline published successfully')
     }
 
+    if (isCloningSuccess) {
+      return toast('Release pipeline cloned successfully')
+    }
+
     if (isPublishingError) {
       return toast(
         publishReleasePipelineError?.data?.detail ??
@@ -97,7 +113,12 @@ const ReleasePipelinesList = ({
         'danger',
       )
     }
-  }, [isPublishingSuccess, isPublishingError, publishReleasePipelineError])
+  }, [
+    isPublishingSuccess,
+    isPublishingError,
+    publishReleasePipelineError,
+    isCloningSuccess,
+  ])
 
   useEffect(() => {
     if (isDeletingSuccess) {
@@ -111,7 +132,21 @@ const ReleasePipelinesList = ({
         'danger',
       )
     }
-  }, [isDeletingSuccess, isDeletingError, deleteReleasePipelineError])
+
+    if (isCloningError) {
+      return toast(
+        cloneReleasePipelineError?.data?.detail ??
+          'Something went wrong while cloning the release pipeline',
+        'danger',
+      )
+    }
+  }, [
+    isDeletingSuccess,
+    isDeletingError,
+    deleteReleasePipelineError,
+    isCloningError,
+    cloneReleasePipelineError,
+  ])
 
   if (isLoading) {
     return (
@@ -151,6 +186,13 @@ const ReleasePipelinesList = ({
       }: ReleasePipeline) => {
         const isPublished = !!published_at
 
+        const getTooltip = (action: string) => {
+          if (isPublished) {
+            return `Cannot ${action} a published release pipeline`
+          }
+          return undefined
+        }
+
         return (
           <Row key={id} className='list-item'>
             <Row
@@ -182,24 +224,32 @@ const ReleasePipelinesList = ({
               <DropdownMenu
                 items={[
                   {
-                    disabled: isPublishing || !!published_at,
+                    disabled: isPublishing || isPublished,
                     icon: 'edit' as IconName,
-                    label: 'Edit Release Pipeline',
+                    label: 'Edit',
                     onClick: () => {
                       history.push(
                         `/project/${projectId}/release-pipelines/${id}/edit`,
                       )
                     },
-                    tooltip: published_at
-                      ? 'Cannot edit a published release pipeline'
-                      : undefined,
+                    tooltip: getTooltip('edit'),
+                  },
+                  {
+                    disabled: isCloning,
+                    icon: 'copy' as IconName,
+                    label: 'Clone',
+                    onClick: () =>
+                      cloneReleasePipeline({
+                        pipelineId: id,
+                        projectId: Number(projectId),
+                      }),
                   },
                   ...(!isPublished
                     ? [
                         {
                           disabled: isPublishing,
                           icon: 'checkmark-circle' as IconName,
-                          label: 'Publish Release Pipeline',
+                          label: 'Publish',
                           onClick: () => {
                             publishReleasePipeline({
                               pipelineId: id,
@@ -210,15 +260,16 @@ const ReleasePipelinesList = ({
                       ]
                     : []),
                   {
-                    disabled: isDeleting,
+                    disabled: isDeleting || isPublished,
                     icon: 'trash-2',
-                    label: 'Remove Release Pipeline',
+                    label: 'Remove',
                     onClick: () => {
                       deleteReleasePipeline({
                         pipelineId: id,
                         projectId: Number(projectId),
                       })
                     },
+                    tooltip: getTooltip('remove'),
                   },
                 ]}
               />
