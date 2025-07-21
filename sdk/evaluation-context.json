@@ -24,16 +24,16 @@
             "type": "object"
         },
         "IdentityContext": {
-            "description": "Represents an identity context for feature flag evaluation.\n    ",
+            "description": "Represents an identity context for feature flag evaluation.",
             "properties": {
                 "identifier": {
-                    "description": "The unique identifier for the identity, used for segment and multivariate feature flag targeting.",
+                    "description": "A unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI.",
                     "title": "Identifier",
                     "type": "string",
                     "x-flagsmith-engine-path": "$.identity.identifier"
                 },
                 "key": {
-                    "description": "Key used when selecting multivariate feature, or % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depends on Flagsmith implementation.",
+                    "description": "Key used when selecting a value for a multivariate feature, or for % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depending on Flagsmith implementation.",
                     "title": "Key",
                     "type": "string",
                     "x-flagsmith-engine-path": "$.identity.key"
@@ -55,7 +55,7 @@
             "type": "object"
         }
     },
-    "description": "Represents a context object containing the necessary information\nto evaluate Flagsmith feature flags for a given environment,\n(optionally) identity, feature, and segments.",
+    "description": "Represents a context object containing the necessary information to evaluate Flagsmith feature flags.",
     "properties": {
         "environment": {
             "$ref": "#/$defs/EnvironmentContext"
