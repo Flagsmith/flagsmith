@@ -1227,6 +1227,7 @@ def test_environment_create_with_use_v2_feature_versioning_true(
     assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
 
 
 def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(
@@ -1245,21 +1246,37 @@ def test_environment_clone_from_versioned_environment_with_use_v2_feature_versio
     assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
 
 
 def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(
     project: Project,
     environment: Environment,
     feature: Feature,
+    segment_featurestate: FeatureState,
     enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
     enable_features("enable_feature_versioning_for_new_environments")
 
+    # Ensure that v2 versioning is not enabled for this test as we explicitly
+    # want to test that we can clone from v1 -> v2 successsfully.
+    environment.use_v2_feature_versioning = False
+    environment.save()
+
     # When
     new_environment = environment.clone(name="new-environment")
 
     # Then
-    assert not EnvironmentFeatureVersion.objects.filter(
+    assert new_environment.use_v2_feature_versioning
+
+    # we only expect a single environment feature version as we are essentially
+    # taking a snapshot and creating a new environment.
+    efv = EnvironmentFeatureVersion.objects.get(
         environment=new_environment, feature=feature
-    ).exists()
+    )
+
+    # But we expect 2 feature states, each with the same version
+    latest_feature_states = get_environment_flags_queryset(new_environment)
+    assert latest_feature_states.count() == 2
+    assert {fs.environment_feature_version for fs in latest_feature_states} == {efv}

@@ -58,7 +58,7 @@ export const removeIdentity = (
         if (res.error) {
           toast('Identity could not be removed', 'danger')
         } else {
-          toast('Identity removed')
+          toast('Identity successfully removed')
         }
       })
     },

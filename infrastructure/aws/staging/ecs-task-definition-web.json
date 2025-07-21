@@ -218,10 +218,6 @@
                     "value": "True"
                 },
                 {
-                    "name": "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED",
-                    "value": "True"
-                },
-                {
                     "name": "FLAGSMITH_ON_FLAGSMITH_SERVER_OFFLINE_MODE",
                     "value": "False"
                 },

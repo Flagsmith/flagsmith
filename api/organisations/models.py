@@ -1,4 +1,5 @@
-from typing import Any
+from datetime import timedelta
+from typing import TYPE_CHECKING, Any
 
 from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
@@ -13,6 +14,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
+from flag_engine.identities.traits.types import TraitValue
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
@@ -124,6 +126,14 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
         return f"org.{self.id}"
 
+    @property
+    def flagsmith_on_flagsmith_api_traits(self) -> dict[str, TraitValue]:
+        return {
+            "organisation.id": self.id,
+            "organisation.name": self.name,
+            "subscription.plan": self.subscription.plan,
+        }
+
     def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
             susbcription_metadata = self.subscription.get_subscription_metadata()
@@ -213,7 +223,8 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
                 args=(
                     self.user.id,
                     self.organisation.id,
-                )
+                ),
+                delay_until=timezone.now() + timedelta(minutes=3),
             )
 
 

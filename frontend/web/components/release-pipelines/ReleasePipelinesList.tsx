@@ -31,7 +31,17 @@ const NoReleasePipelines = ({ projectId }: { projectId: string }) => {
         >
           Create Release Pipeline
         </Button>
-        <Button theme='outline'>Learn more</Button>
+        <Button
+          theme='outline'
+          onClick={() => {
+            window.open(
+              'https://docs.flagsmith.com/advanced-use/release-pipelines/',
+              '_blank',
+            )
+          }}
+        >
+          Learn more
+        </Button>
       </Row>
     </div>
   )

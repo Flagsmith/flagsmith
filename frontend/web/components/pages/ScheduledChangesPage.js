@@ -9,6 +9,7 @@ import { Link, withRouter } from 'react-router-dom'
 import PlanBasedBanner, {
   featureDescriptions,
 } from 'components/PlanBasedAccess'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const ChangeRequestsPage = class extends Component {
   static displayName = 'ChangeRequestsPage'
@@ -121,7 +122,7 @@ const ChangeRequestsPage = class extends Component {
                           <div className='list-item-subtitle mt-1'>
                             Created{' '}
                             {moment(created_at).format('Do MMM YYYY HH:mma')} by{' '}
-                            {user && user.first_name} {user && user.last_name}
+                            {getUserDisplayName(user)}
                           </div>
                         </Flex>
                         <div className='table-column'>

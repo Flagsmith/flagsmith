@@ -65,6 +65,7 @@ import { PermissionRow } from './PermissionRow'
 import Utils from 'common/utils/utils'
 import RemoveViewPermissionModal from './RemoveViewPermissionModal'
 import { useHistory } from 'react-router-dom'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const Project = require('common/project')
 
@@ -792,7 +793,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         return `the ${group?.name ?? ''} group`
       }
       if (user) {
-        return `${user.first_name ?? ''} ${user.last_name ?? ''}`
+        return `${getUserDisplayName(user)}`
       }
       if (role) {
         return role.name
@@ -1011,7 +1012,7 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
       <EditPermissionsModal
-        name={`${user.first_name} ${user.last_name}`}
+        name={`${getUserDisplayName(user)}`}
         id={id}
         onSave={onSaveUser}
         level={level}
