@@ -16,7 +16,7 @@ import os
 import warnings
 from datetime import datetime, time, timedelta
 
-import dj_database_url  # type: ignore[import-untyped]
+import dj_database_url
 import django_stubs_ext
 import prometheus_client
 import pytz
@@ -167,7 +167,7 @@ SILENCED_SYSTEM_CHECKS = ["axes.W002"]
 SITE_ID = 1
 
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
-DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
+DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
 DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
 NUM_DB_REPLICAS = 0
@@ -260,14 +260,14 @@ elif "DJANGO_DB_NAME" in os.environ:
 
 # Task processor database — OPTIONALLY SEPARATED
 TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
-TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default=None)
+TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default="")
 TASK_PROCESSOR_DATABASE_PASSWORD = env(
     "TASK_PROCESSOR_DATABASE_PASSWORD",
-    default=None,
+    default="",
 )
-TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default=None)
-TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default=None)
-TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default=None)
+TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default="")
+TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default="")
+TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default="")
 
 if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no cover
     if TASK_PROCESSOR_DATABASE_URL:
