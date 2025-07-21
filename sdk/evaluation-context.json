@@ -6,12 +6,14 @@
                 "key": {
                     "description": "An environment's unique identifier.",
                     "title": "Key",
-                    "type": "string"
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.environment.key"
                 },
                 "name": {
                     "description": "An environment's human-readable name.",
                     "title": "Name",
-                    "type": "string"
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.environment.name"
                 }
             },
             "required": [
@@ -27,12 +29,14 @@
                 "identifier": {
                     "description": "The unique identifier for the identity, used for segment and multivariate feature flag targeting.",
                     "title": "Identifier",
-                    "type": "string"
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.identity.identifier"
                 },
                 "key": {
                     "description": "Key used when selecting multivariate feature, or % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depends on Flagsmith implementation.",
                     "title": "Key",
-                    "type": "string"
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.identity.key"
                 },
                 "traits": {
                     "additionalProperties": {
