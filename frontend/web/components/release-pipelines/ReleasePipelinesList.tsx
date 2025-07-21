@@ -1,7 +1,6 @@
 import {
   useCloneReleasePipelineMutation,
   useDeleteReleasePipelineMutation,
-  usePublishReleasePipelineMutation,
 } from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { useHistory } from 'react-router-dom'
@@ -11,8 +10,9 @@ import DropdownMenu from 'components/base/DropdownMenu'
 import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
 import { useEffect } from 'react'
+import ChangeReleasePipelineStatusModal from './ChangeReleasePipelineStatusModal'
 
-const NoReleasePipelines = ({ projectId }: { projectId: string }) => {
+const NoReleasePipelines = ({ projectId }: { projectId: number }) => {
   const history = useHistory()
 
   return (
@@ -51,7 +51,7 @@ const NoReleasePipelines = ({ projectId }: { projectId: string }) => {
 type ReleasePipelinesListProps = {
   data: PagedResponse<ReleasePipeline> | undefined
   isLoading: boolean
-  projectId: string
+  projectId: number
   page: number
   pageSize: number
   onPageChange: (page: number) => void
@@ -86,39 +86,13 @@ const ReleasePipelinesList = ({
     },
   ] = useCloneReleasePipelineMutation()
 
-  const [
-    publishReleasePipeline,
-    {
-      error: publishReleasePipelineError,
-      isError: isPublishingError,
-      isLoading: isPublishing,
-      isSuccess: isPublishingSuccess,
-    },
-  ] = usePublishReleasePipelineMutation()
-  const pipelinesList = data?.results
-
   useEffect(() => {
-    if (isPublishingSuccess) {
-      return toast('Release pipeline published successfully')
-    }
-
     if (isCloningSuccess) {
       return toast('Release pipeline cloned successfully')
     }
+  }, [isCloningSuccess])
 
-    if (isPublishingError) {
-      return toast(
-        publishReleasePipelineError?.data?.detail ??
-          'Something went wrong while publishing the release pipeline',
-        'danger',
-      )
-    }
-  }, [
-    isPublishingSuccess,
-    isPublishingError,
-    publishReleasePipelineError,
-    isCloningSuccess,
-  ])
+  const pipelinesList = data?.results
 
   useEffect(() => {
     if (isDeletingSuccess) {
@@ -147,6 +121,21 @@ const ReleasePipelinesList = ({
     isCloningError,
     cloneReleasePipelineError,
   ])
+
+  const openChangeReleasePipelineStatusModal = (
+    projectId: number,
+    pipelineId: number,
+    isPublished: boolean,
+  ) => {
+    openModal2(
+      isPublished ? 'Unpublish Release Pipeline' : 'Publish Release Pipeline',
+      <ChangeReleasePipelineStatusModal
+        isPublished={isPublished}
+        pipelineId={pipelineId}
+        projectId={projectId}
+      />,
+    )
+  }
 
   if (isLoading) {
     return (
@@ -185,7 +174,7 @@ const ReleasePipelinesList = ({
         stages_count,
       }: ReleasePipeline) => {
         const isPublished = !!published_at
-
+        const canUnpublish = isPublished && !features?.length
         const getTooltip = (action: string) => {
           if (isPublished) {
             return `Cannot ${action} a published release pipeline`
@@ -224,7 +213,7 @@ const ReleasePipelinesList = ({
               <DropdownMenu
                 items={[
                   {
-                    disabled: isPublishing || isPublished,
+                    disabled: isPublished,
                     icon: 'edit' as IconName,
                     label: 'Edit',
                     onClick: () => {
@@ -233,6 +222,23 @@ const ReleasePipelinesList = ({
                       )
                     },
                     tooltip: getTooltip('edit'),
+                  },
+                  {
+                    disabled: isPublished && !canUnpublish,
+                    icon: isPublished
+                      ? 'minus-circle'
+                      : ('checkmark-circle' as IconName),
+                    label: isPublished ? 'Unpublish' : 'Publish',
+                    onClick: () =>
+                      openChangeReleasePipelineStatusModal(
+                        projectId,
+                        id,
+                        isPublished,
+                      ),
+                    tooltip:
+                      isPublished && !canUnpublish
+                        ? 'Cannot unpublish a release pipeline with in-flight features'
+                        : undefined,
                   },
                   {
                     disabled: isCloning,
@@ -244,21 +250,6 @@ const ReleasePipelinesList = ({
                         projectId: Number(projectId),
                       }),
                   },
-                  ...(!isPublished
-                    ? [
-                        {
-                          disabled: isPublishing,
-                          icon: 'checkmark-circle' as IconName,
-                          label: 'Publish',
-                          onClick: () => {
-                            publishReleasePipeline({
-                              pipelineId: id,
-                              projectId: Number(projectId),
-                            })
-                          },
-                        },
-                      ]
-                    : []),
                   {
                     disabled: isDeleting || isPublished,
                     icon: 'trash-2',

@@ -48,7 +48,7 @@ const ReleasePipelinesPage = () => {
         <ReleasePipelinesList
           data={data}
           isLoading={isLoading}
-          projectId={projectId}
+          projectId={Number(projectId)}
           page={page}
           pageSize={pageSize}
           onPageChange={setPage}

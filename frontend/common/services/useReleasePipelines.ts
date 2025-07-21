@@ -97,6 +97,16 @@ export const releasePipelinesService = service
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/remove-feature/`,
         }),
       }),
+      unpublishReleasePipeline: builder.mutation<
+        Res['releasePipeline'],
+        Req['publishReleasePipeline']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+        query: (query: Req['publishReleasePipeline']) => ({
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/unpublish-pipeline/`,
+        }),
+      }),
       updateReleasePipeline: builder.mutation<
         Res['releasePipeline'],
         Req['updateReleasePipeline']
@@ -171,6 +181,7 @@ export const {
   useGetReleasePipelinesQuery,
   usePublishReleasePipelineMutation,
   useRemoveFeatureMutation,
+  useUnpublishReleasePipelineMutation,
   useUpdateReleasePipelineMutation,
   // END OF EXPORTS
 } = releasePipelinesService
