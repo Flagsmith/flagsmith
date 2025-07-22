@@ -34,7 +34,7 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
@@ -797,6 +797,49 @@ def test_get_flags__server_key_only_feature__return_expected(
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert not response.json()
+
+
+def test_get_flags_cache(
+    environment: Environment,
+    feature: Feature,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project_two_feature: Feature,
+    project_two_environment: Environment,
+    use_local_mem_cache_for_cache_middleware: None,
+) -> None:
+    # Given
+    url = reverse("api-v1:flags")
+
+    # Create clients for two separate environments
+    environment_one_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key}
+    )
+    project_two_environment_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: project_two_environment.api_key}
+    )
+    # Fetch flags for both environments once to warm the cache
+    environment_one_response = environment_one_client.get(url)
+    assert environment_one_response.status_code == status.HTTP_200_OK
+
+    project_two_environment_response = project_two_environment_client.get(url)
+    assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+    #  When
+    with django_assert_num_queries(0):
+        for _ in range(10):
+            environment_one_response = environment_one_client.get(url)
+            assert environment_one_response.status_code == status.HTTP_200_OK
+
+            project_two_environment_response = project_two_environment_client.get(url)
+            assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+            # Then
+            # Each response must return the correct feature for its environment
+            assert environment_one_response.json()[0]["feature"]["id"] == feature.id
+            assert (
+                project_two_environment_response.json()[0]["feature"]["id"]
+                == project_two_feature.id
+            )
 
 
 def test_get_flags__server_key_only_feature__server_key_auth__return_expected(

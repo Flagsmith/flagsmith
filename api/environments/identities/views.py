@@ -10,13 +10,14 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from app.pagination import CustomPagination
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from core.request_origin import RequestOrigin
 from edge_api.identities.tasks import forward_identity_request
 from environments.identities.models import Identity
@@ -161,6 +162,7 @@ class SDKIdentities(SDKAPIView):
         query_serializer=SDKIdentitiesQuerySerializer(),
         operation_id="identify_user",
     )
+    @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
         cache_page(
             timeout=settings.GET_IDENTITIES_ENDPOINT_CACHE_SECONDS,
