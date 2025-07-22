@@ -10,6 +10,7 @@ from django.db.models import Max, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 from drf_yasg import openapi  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import mixins, serializers, status, viewsets
@@ -24,7 +25,7 @@ from rest_framework.response import Response
 from app.pagination import CustomPagination
 from app_analytics.analytics_db_service import get_feature_evaluation_data
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from core.request_origin import RequestOrigin
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.identities.models import Identity
@@ -782,6 +783,7 @@ class SDKFeatureStates(GenericAPIView):  # type: ignore[type-arg]
         query_serializer=SDKFeatureStatesQuerySerializer(),
         responses={200: FeatureStateSerializerFull(many=True)},
     )
+    @method_decorator(vary_on_headers(SDK_ENVIRONMENT_KEY_HEADER))
     @method_decorator(
         cache_page(
             timeout=settings.GET_FLAGS_ENDPOINT_CACHE_SECONDS,

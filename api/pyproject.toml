@@ -133,7 +133,7 @@ environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^5.3.0"
+flagsmith-flag-engine = "^5.4.3"
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
@@ -207,7 +207,7 @@ flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.1.0" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.2.1" }
 
 
 [tool.poetry.group.dev.dependencies]
