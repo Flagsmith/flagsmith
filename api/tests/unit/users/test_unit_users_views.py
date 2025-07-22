@@ -934,20 +934,29 @@ def test_list_user_groups(
     }
 
 
+datetime_format = "%Y-%m-%dT%H:%M:%SZ"
+
+
 @freeze_time("2024-01-01T10:00:00Z")
 @pytest.mark.parametrize(
     "last_login,expected_last_login",
     [
-        (None, "2024-01-01T10:00:00Z"),
-        ("2023-01-01T10:00:00Z", "2024-01-01T10:00:00Z"),
-        ("2024-01-01T09:59:00Z", "2024-01-01T09:59:00Z"),
+        (None, datetime.strptime("2024-01-01T10:00:00Z", datetime_format)),
+        (
+            datetime.strptime("2023-01-01T10:00:00Z", datetime_format),
+            datetime.strptime("2024-01-01T10:00:00Z", datetime_format),
+        ),
+        (
+            datetime.strptime("2024-01-01T09:59:00Z", datetime_format),
+            datetime.strptime("2024-01-01T09:59:00Z", datetime_format),
+        ),
     ],
 )
 def test_get_me_view_updates_last_login(
     api_client: APIClient,
     test_user: FFAdminUser,
     last_login: datetime | None,
-    expected_last_login: str,
+    expected_last_login: datetime,
 ) -> None:
     # Given
     test_user.last_login = last_login
@@ -966,8 +975,5 @@ def test_get_me_view_updates_last_login(
     assert response.status_code == status.HTTP_200_OK
     test_user.refresh_from_db()
 
-    expected_last_login_datetime = datetime.strptime(
-        expected_last_login, "%Y-%m-%dT%H:%M:%SZ"
-    )
-    expected_last_login_with_tz = timezone.make_aware(expected_last_login_datetime)
+    expected_last_login_with_tz = timezone.make_aware(expected_last_login)
     assert test_user.last_login == expected_last_login_with_tz
