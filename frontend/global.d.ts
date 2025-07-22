@@ -15,10 +15,30 @@ type Crisp = {
   // The push method accepts a CrispCommand array.
   push: (command: CrispCommand) => void
 }
-
+declare namespace UniversalAnalytics {
+  interface PageviewFieldsObject {
+    hitType: 'pageview' | 'event'
+    location?: string
+    page?: string
+    title?: string
+    [key: string]: any
+  }
+}
 export declare const openModal: (name?: string) => Promise<void>
 declare global {
+  function ga(
+    command: 'send',
+    fields: UniversalAnalytics.PageviewFieldsObject,
+  ): void
   const $crisp: Crisp
+  const delighted: {
+    survey: (opts: {
+      createdAt: string
+      email: string
+      name: string
+      properties: Record<string, any>
+    }) => void
+  }
   const openModal: (
     title: ReactNode,
     body?: ReactNode,
@@ -53,5 +73,11 @@ declare global {
   const Tooltip: FC<TooltipProps>
   interface Window {
     $crisp: Crisp
+    engagement: {
+      init(apiKey: string, options?: InitOptions): void
+      plugin(): unknown
+      boot(options: BootOptions): Promise<void>
+      // …other methods like setThemeMode, forwardEvent, etc.
+    }
   }
 }
