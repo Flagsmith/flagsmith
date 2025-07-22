@@ -7,7 +7,6 @@ import {
   Operator,
   SegmentCondition,
   SegmentConditionsError,
-  SegmentProperty,
   SegmentRule,
 } from 'common/types/responses'
 import Input from 'components/base/forms/Input'
@@ -16,7 +15,6 @@ import Button from 'components/base/forms/Button'
 import RuleInputValue from './RuleInputValue'
 import ErrorMessage from 'components/ErrorMessage'
 import classNames from 'classnames'
-import { components } from 'react-select/lib/components'
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
@@ -76,52 +74,35 @@ export default class Rule extends PureComponent<{
           </Row>
         )}
         <Row noWrap className='rule align-items-center justify-content-between'>
-          <Select
-            data-test={`${this.props['data-test']}-property-${i}`}
-            placeholder={'Trait / Context value'}
-            value={rule.property}
-            onChange={(e: SegmentProperty) =>
-              this.setRuleProperty(i, 'property', e)
+          <Tooltip
+            title={
+              <Input
+                readOnly={this.props.readOnly}
+                data-test={`${this.props['data-test']}-property-${i}`}
+                value={`${rule.property}`}
+                inputClassName={classNames({
+                  'border-danger': ruleErrors?.property,
+                })}
+                style={{
+                  width: '135px',
+                }}
+                placeholder={
+                  operator && operator === 'PERCENTAGE_SPLIT'
+                    ? 'Trait (N/A)'
+                    : 'Trait *'
+                }
+                onChange={(e: InputEvent) =>
+                  this.setRuleProperty(i, 'property', {
+                    value: Utils.safeParseEventValue(e),
+                  })
+                }
+                disabled={operator && operator === 'PERCENTAGE_SPLIT'}
+              />
             }
-            options={[
-              { value: '$.identity.identifier', label: 'Identifier' },
-              { value: '$.environment.name', label: 'Environment Name' },
-              // { value: '$.global.timestamp', label: 'Current Datetime' }   // Think on this once we support timestamp comparisons
-            ]}
-            style={{ width: '200px' }}
-            components={{
-              Menu: ({ ...props }: any) => {
-                return (
-                  <components.Menu {...props}>
-                    <React.Fragment>
-                      {props.children}
-                      {props.selectProps.inputValue && <div className='text-center mb-4'>
-                        <Button
-                          theme='outline'
-                          onClick={() => {
-                            const prop = { value: props.selectProps.inputValue, label: props.selectProps.inputValue }
-                            this.setRuleProperty(i, 'property', prop)
-                            props.setValue(prop)
-                          }}
-                        >
-                          Use "{props.selectProps.inputValue}" trait
-                        </Button>
-                      </div>
-                      }
-                    </React.Fragment>
-                  </components.Menu>
-                )
-              },
-              Option: ({ children, data, innerProps, innerRef }: any) => (
-                <div ref={innerRef} {...innerProps} className='react-select__option'>
-                  {children}
-                  {!!data.feature && (
-                    <div className='unread ml-2 px-2'>Feature-Specific</div>
-                  )}
-                </div>
-              ),
-            }}
-          />
+            place='top'
+          >
+            {Constants.strings.USER_PROPERTY_DESCRIPTION}
+          </Tooltip>
           {this.props.readOnly ? (
             find(operators, { value: operator })!.label
           ) : (
@@ -205,7 +186,7 @@ export default class Rule extends PureComponent<{
   setRuleProperty = (
     i: number,
     prop: string,
-    { value, label }: { value: string | boolean, label?: string },
+    { value }: { value: string | boolean },
   ) => {
     const rule = cloneDeep(this.props.rule)
 
@@ -235,25 +216,26 @@ export default class Rule extends PureComponent<{
 
     // remove append if one was added
 
-    if (prop == 'property') {
-      rules[i].property = { value: `${value}`, label }
-
-    } else {
-
-      const formattedValue =
-        prop === 'value' && value !== null ? `${value}` : value
+    const formattedValue =
+      prop === 'value' && value !== null ? `${value}` : value
+    const invalidPercentageSplit =
+      prop === 'value' &&
+      rules[i].operator === 'PERCENTAGE_SPLIT' &&
+      (`${value}`?.match(/\D/) || (value as any) > 100)
+    if (!invalidPercentageSplit) {
+      // split operator by append
+      // @ts-ignore
       rules[i][prop] =
         prop === 'operator' ? formattedValue?.split(':')[0] : formattedValue
-
     }
-    // if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
-    //   rules[i].property = { value: '' }
-    //   rules[i].value = ''
-    // }
 
+    if (prop === 'operator' && value === 'PERCENTAGE_SPLIT') {
+      rules[i].property = ''
+      rules[i].value = ''
+    }
 
     if (prop === 'delete') {
-      rules[i].property = { value: 'deleted' }
+      rules[i].property = 'deleted'
       rules[i].value = 'deleted'
     }
 
