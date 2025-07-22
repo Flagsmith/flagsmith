@@ -1,5 +1,4 @@
 import React, { FC, useState } from 'react'
-import classNames from 'classnames'
 import JSONReference from 'components/JSONReference'
 import Button from 'components/base/forms/Button'
 import Tabs from 'components/base/forms/Tabs'
@@ -25,18 +24,13 @@ import UserGroupList from 'components/UserGroupList'
 import { useGetRolesQuery } from 'common/services/useRole'
 import AppActions from 'common/dispatcher/app-actions'
 import { RouterChildContext, useHistory } from 'react-router-dom'
-import map from 'lodash/map'
 import Input from 'components/base/forms/Input'
 import ErrorMessage from 'components/ErrorMessage'
 import PanelSearch from 'components/PanelSearch'
-import Format from 'common/utils/format'
 import moment from 'moment'
-import PermissionsTabs from 'components/PermissionsTabs'
 import sortBy from 'lodash/sortBy'
-import UserAction from 'components/UserAction'
 import Icon from 'components/Icon'
 import RolesTable from 'components/RolesTable'
-import UsersGroups from 'components/UsersGroups'
 import PlanBasedBanner, { getPlanBasedOption } from 'components/PlanBasedAccess'
 import { useHasPermission } from 'common/providers/Permission'
 import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
@@ -45,7 +39,7 @@ import {
   useGetUserInvitesQuery,
   useResendUserInviteMutation,
 } from 'common/services/useInvites'
-import InspectPermissions from 'components/inspect-permissions/InspectPermissions'
+import OrganisationUsersTable from 'components/users-permissions/OrganisationUsersTable/OrganisationUsersTable'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type UsersAndPermissionsPageType = {
@@ -72,7 +66,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   inviteLinks,
   isLoading,
   organisation,
-  router,
   subscriptionMeta,
   users,
 }) => {
@@ -110,9 +103,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
     ? noEmailProvider
     : Constants.organisationPermissions('Admin')
 
-  const roleChanged = (id: number, { value: role }: { value: string }) => {
-    AppActions.updateUserRole(id, role)
-  }
   const { data: roles } = useGetRolesQuery({ organisation_id: organisation.id })
 
   const editGroup = (group: UserGroupSummary) => {
@@ -135,86 +125,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const overSeats = paymentsEnabled && organisation.num_seats > max_seats
   const [role, setRole] = useState<'ADMIN' | 'USER'>('ADMIN')
 
-  const editUserPermissions = (user: User, organisationId: number) => {
-    openModal(
-      getUserDisplayName(user),
-      <div>
-        <Tabs uncontrolled hideNavOnSingleTab>
-          {user.role !== 'ADMIN' && (
-            <TabItem tabLabel='Permissions'>
-              <div className='pt-4'>
-                <PermissionsTabs
-                  uncontrolled
-                  user={user}
-                  orgId={organisationId}
-                />
-              </div>
-            </TabItem>
-          )}
-          <TabItem tabLabel='Groups'>
-            <div className='pt-4'>
-              <UsersGroups user={user} orgId={organisationId} />
-            </div>
-          </TabItem>
-        </Tabs>
-      </div>,
-      'p-0 side-modal',
-    )
-  }
-
-  const inspectPermissions = (user: User, organisationId: number) => {
-    openModal(
-      getUserDisplayName(user),
-      <div>
-        <Tabs uncontrolled hideNavOnSingleTab>
-          <TabItem tabLabel='Permissions'>
-            <div className='pt-4'>
-              <InspectPermissions
-                uncontrolled
-                user={user}
-                orgId={organisationId}
-              />
-            </div>
-          </TabItem>
-        </Tabs>
-      </div>,
-      'p-0 side-modal',
-    )
-  }
-
-  const formatLastLoggedIn = (last_login: string | undefined) => {
-    if (!last_login) return 'Never'
-
-    const diff = moment().diff(moment(last_login), 'days')
-    if (diff >= 30) {
-      return (
-        <div className='mb-1'>
-          {`${diff} days ago`}
-          <br />
-          <div className='list-item-subtitle'>
-            {moment(last_login).format('Do MMM YYYY')}
-          </div>
-        </div>
-      )
-    }
-    return 'Within 30 days'
-  }
-
-  const deleteUser = (id: number, userDisplayName: string) => {
-    openConfirm({
-      body: (
-        <div>
-          Are you sure you want to remove the user{' '}
-          <strong>{userDisplayName}</strong> from the organisation? This action
-          cannot be undone.
-        </div>
-      ),
-      destructive: true,
-      onYes: () => AppActions.deleteUser(id),
-      title: 'Delete User',
-      yesText: 'Confirm',
-    })
-  }
   const deleteInvite = (id: number) => {
     openConfirm({
       body: (
@@ -240,10 +150,6 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
   const needsUpgradeForAdditionalSeats =
     (overSeats && (!verifySeatsLimit || !autoSeats)) ||
     (!autoSeats && usedSeats)
-
-  const isInspectPermissionsEnabled = Utils.getFlagsmithHasFeature(
-    'inspect_permissions',
-  )
 
   return (
     <div className='app-container container'>
@@ -494,178 +400,10 @@ const UsersAndPermissionsInner: FC<UsersAndPermissionsInnerType> = ({
                               </div>
                             </form>
                           )}
-                        <PanelSearch
-                          id='org-members-list'
-                          title='Members'
-                          className='no-pad'
-                          header={
-                            <Row className='table-header'>
-                              <Flex className='table-column px-3'>User</Flex>
-                              <div
-                                className='table-column'
-                                style={{
-                                  minWidth: widths[0],
-                                }}
-                              >
-                                Role
-                              </div>
-                              <div
-                                style={{
-                                  width: widths[1],
-                                }}
-                                className='table-column'
-                              >
-                                Last logged in
-                              </div>
-                              <div
-                                style={{
-                                  width: widths[2],
-                                }}
-                                className='table-column text-center'
-                              >
-                                Actions
-                              </div>
-                            </Row>
-                          }
-                          items={users}
-                          itemHeight={65}
-                          renderRow={(user) => {
-                            const {
-                              email,
-                              first_name,
-                              id,
-                              last_login,
-                              last_name,
-                              role,
-                            } = user
-
-                            const onRemoveClick = () => {
-                              deleteUser(
-                                id,
-                                Format.userDisplayName({
-                                  email,
-                                  firstName: first_name,
-                                  lastName: last_name,
-                                }),
-                              )
-                            }
-                            const onEditClick = () => {
-                              editUserPermissions(user, organisation.id)
-                            }
-                            return (
-                              <Row
-                                data-test={`user-${email}`}
-                                space
-                                className={classNames('list-item clickable')}
-                                onClick={onEditClick}
-                                key={id}
-                              >
-                                <Flex className='table-column px-3 font-weight-medium'>
-                                  {`${first_name} ${last_name}`}{' '}
-                                  {id === AccountStore.getUserId() && '(You)'}
-                                  <div className='list-item-subtitle mt-1'>
-                                    {email}
-                                  </div>
-                                </Flex>
-
-                                <div
-                                  style={{
-                                    width: widths[0],
-                                  }}
-                                  className='table-column'
-                                >
-                                  <div>
-                                    {organisation.role === 'ADMIN' &&
-                                    id !== AccountStore.getUserId() ? (
-                                      <div>
-                                        <Select
-                                          data-test='select-role'
-                                          placeholder='Select a role'
-                                          value={
-                                            role && {
-                                              label: Constants.roles[role],
-                                              value: role,
-                                            }
-                                          }
-                                          onChange={(e: InputEvent) =>
-                                            roleChanged(
-                                              id,
-                                              Utils.safeParseEventValue(e),
-                                            )
-                                          }
-                                          options={map(
-                                            Constants.roles,
-                                            (label, value) =>
-                                              value === 'ADMIN'
-                                                ? {
-                                                    label,
-                                                    value,
-                                                  }
-                                                : getPlanBasedOption(
-                                                    {
-                                                      label,
-                                                      value,
-                                                    },
-                                                    'RBAC',
-                                                  ),
-                                          )}
-                                          menuPortalTarget={document.body}
-                                          menuPosition='absolute'
-                                          menuPlacement='auto'
-                                          className='react-select select-xsm'
-                                        />
-                                      </div>
-                                    ) : (
-                                      <div className='px-3 fs-small lh-sm'>
-                                        {Constants.roles[role] || ''}
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div
-                                  style={{
-                                    width: widths[1],
-                                  }}
-                                  className='table-column'
-                                >
-                                  <div className='fs-small lh-sm'>
-                                    {formatLastLoggedIn(last_login)}
-                                  </div>
-                                </div>
-                                <div
-                                  style={{
-                                    width: widths[2],
-                                  }}
-                                  className='table-column d-flex justify-content-end'
-                                >
-                                  <UserAction
-                                    onRemove={onRemoveClick}
-                                    onEdit={onEditClick}
-                                    canRemove={AccountStore.isAdmin()}
-                                    canEdit={AccountStore.isAdmin()}
-                                    canInspectPermissions={
-                                      isInspectPermissionsEnabled &&
-                                      AccountStore.isAdmin()
-                                    }
-                                    onInspectPermissions={() => {
-                                      inspectPermissions(user, organisation.id)
-                                    }}
-                                  />
-                                </div>
-                              </Row>
-                            )
-                          }}
-                          renderNoResults={
-                            <div>You have no users in this organisation.</div>
-                          }
-                          filterRow={(item: User, search: string) => {
-                            const strToSearch = `${item.first_name} ${item.last_name} ${item.email}`
-                            return (
-                              strToSearch
-                                .toLowerCase()
-                                .indexOf(search.toLowerCase()) !== -1
-                            )
-                          }}
+                        <OrganisationUsersTable
+                          organisation={organisation}
+                          users={users}
+                          widths={widths}
                         />
                         <div id='select-portal' />
                       </FormGroup>
