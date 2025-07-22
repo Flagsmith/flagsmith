@@ -143,7 +143,11 @@ const RuleConditionPropertySelect = ({
       <Select
         data-test={dataTest}
         placeholder={'Trait / Context value'}
-        value={{ label: displayedLabel, value: propertyValue }}
+        value={
+          localCurrentValue
+            ? { label: displayedLabel, value: propertyValue }
+            : null
+        }
         onBlur={() => {
           setRuleProperty(ruleIndex, 'property', { value: localCurrentValue })
         }}
