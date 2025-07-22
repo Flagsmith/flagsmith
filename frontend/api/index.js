@@ -118,15 +118,11 @@ app.get('/config/project-overrides', (req, res) => {
     },
   ]
   let output = values.map(getVariable).join('')
-  let dynatrace = ''
   res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate')
   res.setHeader('content-type', 'application/javascript')
   res.send(`window.projectOverrides = {
         ${output}
-    };
-    
-    ${dynatrace}
-    `)
+    };`)
 })
 
 // Optionally proxy the API to get around CSRF issues, exposing the API to the world
