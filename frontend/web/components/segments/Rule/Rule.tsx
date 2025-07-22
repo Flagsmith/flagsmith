@@ -14,6 +14,9 @@ import RuleConditionRow from './components/RuleConditionRow'
 const splitIfValue = (v: string | null | number, append: string) =>
   append && typeof v === 'string' ? v.split(append) : [v === null ? '' : v]
 
+const isInvalidPercentageSplit = (value: string | boolean | number) =>
+  `${value}`?.match(/\D/) || (parseInt(value?.toString() || '0') as any) > 100
+
 interface RuleProps {
   index: number
   operators: Operator[]
@@ -34,6 +37,8 @@ const Rule: React.FC<RuleProps> = ({
   rule,
   showDescription,
 }) => {
+  const { conditions: rules } = rule
+
   const updateCondition = (
     conditionIndex: number,
     updates: Partial<SegmentCondition>,
@@ -71,12 +76,23 @@ const Rule: React.FC<RuleProps> = ({
     }
 
     if (prevOperator?.append !== newOperator?.append) {
-      const cleanValue = splitIfValue(condition.value, prevOperator?.append)[0]
+      const cleanValue = splitIfValue(condition?.value, prevOperator?.append)[0]
       updates.value = cleanValue + (newOperator?.append || '')
     }
 
-    if (operatorValue === 'PERCENTAGE_SPLIT' && !condition.property) {
-      updates.property = RuleContextValues.IDENTITY_KEY
+    if (operatorValue === 'PERCENTAGE_SPLIT') {
+      if (!condition.property) {
+        updates.property = RuleContextValues.IDENTITY_KEY
+      }
+
+      const invalidPercentageSplit =
+        condition?.value && isInvalidPercentageSplit(condition.value)
+
+      if (invalidPercentageSplit) {
+        updates.value = ''
+      } else {
+        updates.value = updates.value?.toString().split(':')[0]
+      }
     }
 
     updateCondition(conditionIndex, updates)
@@ -86,6 +102,15 @@ const Rule: React.FC<RuleProps> = ({
     conditionIndex: number,
     value: string | boolean,
   ) => {
+    const condition = rule.conditions[conditionIndex]
+
+    if (
+      condition?.operator === 'PERCENTAGE_SPLIT' &&
+      isInvalidPercentageSplit(value)
+    ) {
+      // If the value is invalid for split, we do not update
+      value = condition?.value?.toString() || ''
+    }
     updateCondition(conditionIndex, { value })
   }
 
@@ -96,7 +121,7 @@ const Rule: React.FC<RuleProps> = ({
   const setRuleProperty = (
     i: number,
     prop: string,
-    { value }: { value: string | boolean },
+    { value }: { value: string | boolean | number },
   ) => {
     switch (prop) {
       case 'property':
@@ -106,7 +131,7 @@ const Rule: React.FC<RuleProps> = ({
         setConditionOperator(i, value as string)
         break
       case 'value':
-        setConditionValue(i, value)
+        setConditionValue(i, `${value}`)
         break
       case 'description':
         setDescriptionValue(i, value as string)
@@ -131,8 +156,6 @@ const Rule: React.FC<RuleProps> = ({
       conditions: rules.concat([{ ...Constants.defaultRule }]),
     })
   }, [rule, onChange])
-
-  const { conditions: rules } = rule
 
   return (
     <div className='panel-rule-wrapper overflow-visible'>
