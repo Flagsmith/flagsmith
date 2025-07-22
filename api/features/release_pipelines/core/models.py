@@ -1,6 +1,4 @@
 import typing
-import uuid
-from copy import deepcopy
 
 from django.core.validators import MaxValueValidator
 from django.db import models
@@ -81,17 +79,6 @@ class ReleasePipeline(
         self.published_by = None
         self.save()
 
-    def clone(self) -> "ReleasePipeline":
-        clone = deepcopy(self)
-        clone.id = None
-        clone.uuid = uuid.uuid4()
-        clone.published_at = None
-        clone.published_by = None
-        clone.save()
-        for stage in self.stages.all():
-            stage.clone(target_pipeline=clone)
-        return clone
-
     def get_first_stage(self) -> "PipelineStage | None":
         return self.stages.order_by("order").first()
 
@@ -109,9 +96,10 @@ class ReleasePipeline(
         return RELEASE_PIPELINE_DELETED_MESSAGE % self.name
 
     def has_feature_in_flight(self) -> bool:
-        return EnvironmentFeatureVersion.objects.filter(  # type: ignore[no-any-return]
+        has_feature_in_flight: bool = EnvironmentFeatureVersion.objects.filter(
             published_at__isnull=True, pipeline_stage__in=self.stages.all()
         ).exists()
+        return has_feature_in_flight
 
     def _get_project(self) -> Project:
         return self.project
@@ -146,16 +134,6 @@ class PipelineStage(models.Model):
             .first()
         )
 
-    def clone(self, target_pipeline: ReleasePipeline) -> "PipelineStage":
-        clone = deepcopy(self)
-        clone.id = None
-        clone.pipeline = target_pipeline
-        clone.save()
-        self.trigger.clone(target_stage=clone)
-        for action in self.actions.all():
-            action.clone(target_stage=clone)
-        return clone
-
 
 class PipelineStageTrigger(models.Model):
     trigger_type = models.CharField(
@@ -171,13 +149,6 @@ class PipelineStageTrigger(models.Model):
         on_delete=models.CASCADE,
     )
 
-    def clone(self, target_stage: PipelineStage) -> "PipelineStageTrigger":
-        clone = deepcopy(self)
-        clone.id = None
-        clone.stage = target_stage
-        clone.save()
-        return clone
-
 
 class PipelineStageAction(models.Model):
     action_type = models.CharField(
@@ -191,10 +162,3 @@ class PipelineStageAction(models.Model):
         related_name="actions",
         on_delete=models.CASCADE,
     )
-
-    def clone(self, target_stage: PipelineStage) -> "PipelineStageAction":
-        clone = deepcopy(self)
-        clone.id = None
-        clone.stage = target_stage
-        clone.save()
-        return clone
