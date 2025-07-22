@@ -256,6 +256,8 @@ export type User = {
   last_login: string
   uuid: string
   onboarding: Onboarding
+  // TODO: Use enum
+  role: string
 }
 export type GroupUser = Omit<User, 'role'> & {
   group_admin: boolean

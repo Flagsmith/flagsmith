@@ -1,8 +1,10 @@
 import json
+from datetime import timedelta
 from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import user_logged_out
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
@@ -141,6 +143,17 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
                 DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
             )
         )
+
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        if not user.last_login or timezone.now() - user.last_login > timedelta(
+            minutes=settings.LAST_LOGIN_UPDATE_THRESHOLD_MINUTES
+        ):
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
+        resp: Response = super().retrieve(request, *args, **kwargs)
+        return resp
 
     @action(
         detail=False,
