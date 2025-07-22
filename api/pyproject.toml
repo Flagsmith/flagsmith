@@ -208,7 +208,7 @@ flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.1.0" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.2.1" }
 
 
 [tool.poetry.group.dev.dependencies]
