@@ -17,7 +17,11 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.test import APIClient
 
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER, STRING
+from core.constants import (
+    FLAGSMITH_UPDATED_AT_HEADER,
+    SDK_ENVIRONMENT_KEY_HEADER,
+    STRING,
+)
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
@@ -336,6 +340,49 @@ def test_identities_endpoint_returns_all_feature_states_for_identity_if_feature_
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.data["flags"]) == 2
+
+
+def test_get_flags_for_identities_with_cache(
+    environment: Environment,
+    feature: Feature,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    use_local_mem_cache_for_cache_middleware: None,
+    project_two_feature: Feature,
+    project_two_environment: Environment,
+) -> None:
+    # Given
+    base_url = reverse("api-v1:sdk-identities")
+    url = base_url + "?identifier=some-identifier"
+
+    # Create clients for two separate environments
+    environment_one_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key}
+    )
+    project_two_environment_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: project_two_environment.api_key}
+    )
+
+    #  When
+    # We hit the flags endpoint 10 times for each identity
+    # Only the first request per environment should trigger database queries
+    with django_assert_num_queries(20):  # 2 identities × 10 queries each
+        for _ in range(100):
+            environment_one_response = environment_one_client.get(url)
+            assert environment_one_response.status_code == status.HTTP_200_OK
+
+            project_two_environment_response = project_two_environment_client.get(url)
+            assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+            # Then
+            # Each response must return the correct feature for its environment
+            assert (
+                environment_one_response.json()["flags"][0]["feature"]["id"]
+                == feature.id
+            )
+            assert (
+                project_two_environment_response.json()["flags"][0]["feature"]["id"]
+                == project_two_feature.id
+            )
 
 
 @mock.patch("integrations.amplitude.amplitude.AmplitudeWrapper.identify_user_async")
