@@ -4,10 +4,9 @@ import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
 const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 import { loadReoScript } from 'reodotdev'
-
-import freeEmailDomains from 'free-email-domains'
 import { groupBy } from 'lodash'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
+
 global.API = {
   ajaxHandler(store, res) {
     switch (res.status) {
@@ -62,42 +61,11 @@ global.API = {
   },
   alias(id, user = {}) {
     if (Project.excludeAnalytics?.includes(id)) return
-    if (Project.mixpanel) {
-      mixpanel.alias(id)
-    }
 
     if (enableDynatrace && user?.id) {
       dtrum.identifyUser(`${user.id}`)
     }
     Utils.setupCrisp()
-    if (Project.heap) {
-      heap.identify(id)
-      const user = AccountStore.model
-      const orgs =
-        (user &&
-          user.organisations &&
-          _.map(
-            user.organisations,
-            (o) => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`,
-          ).join(',')) ||
-        ''
-      const plans = AccountStore.getPlans()
-      heap.addUserProperties({
-        // use human-readable names
-        '$first_name': user.first_name,
-
-        '$last_name': user.last_name,
-        'USER_ID': id,
-        email: id,
-        'isCompanyEmail':
-          !user.email.includes('@gmail') &&
-          !user.email.includes('@yahoo') &&
-          !user.email.includes('@hotmail') &&
-          !user.email.includes('@icloud'),
-        orgs,
-        'plan': plans && plans.join(','),
-      })
-    }
     if (Project.reo) {
       const reoPromise = loadReoScript({ clientID: Project.reo })
       reoPromise.then((Reo) => {
@@ -128,8 +96,9 @@ global.API = {
     }
     if (Project.amplitude) {
       amplitude.setUserId(id)
-      const identify = new amplitude.Identify().set('email', id)
-      amplitude.identify(identify)
+      API.trackTraits({
+        email: id,
+      })
       if (typeof window.engagement !== 'undefined') {
         window.engagement.boot({
           integrations: [
@@ -218,36 +187,6 @@ global.API = {
   identify(id, user = {}) {
     if (Project.excludeAnalytics?.includes(id)) return
     try {
-      const orgs =
-        (user &&
-          user.organisations &&
-          _.map(
-            user.organisations,
-            (o) => `${o.name} #${o.id}(${o.role})[${o.num_seats}]`,
-          ).join(',')) ||
-        ''
-      if (Project.mixpanel) {
-        mixpanel.identify(id)
-        const plans = AccountStore.getPlans()
-
-        mixpanel.people.set({
-          '$email': id,
-          // use human-readable names
-          '$first_name': user.first_name,
-
-          '$last_name': user.last_name,
-          // only reserved properties need the $
-          'USER_ID': id,
-          'isCompanyEmail':
-            !user.email.includes('@gmail') &&
-            !user.email.includes('@yahoo') &&
-            !user.email.includes('@hotmail') &&
-            !user.email.includes('@icloud'),
-          orgs,
-          'plan': plans && plans.join(','),
-        })
-      }
-
       if (enableDynatrace && user?.id) {
         dtrum.identifyUser(`${user.id}`)
       }
@@ -297,41 +236,16 @@ global.API = {
       )
       const selectedRole = selectedOrg?.role //ADMIN | USER
       const selectedOrgName = selectedOrg?.name
-      if (Project.heap) {
-        const plans = AccountStore.getPlans()
-        heap.identify(id)
-        heap.addUserProperties({
-          // use human-readable names
-          '$first_name': user.first_name,
-          '$last_name': user.last_name,
-          'USER_ID': id,
-          email: id,
-          'isCompanyEmail':
-            !user.email.includes('@gmail') &&
-            !user.email.includes('@yahoo') &&
-            !user.email.includes('@hotmail') &&
-            !user.email.includes('@icloud'),
-          orgs,
-          'plan': plans && plans.join(','),
-        })
-      }
 
-      if (Project.amplitude) {
-        amplitude.setUserId(id)
-        const identify = new amplitude.Identify()
-          .set('email', id)
-          .set('name', { 'first': user.first_name, 'last': user.last_name })
-          .set('organisation', selectedOrgName)
-          .set('role', selectedRole)
-          .set('plan', selectedPlanName)
-          .set(
-            'tasks',
-            (user.onboarding?.tasks || [])?.map((v) => v.name),
-          )
-          .set('integrations', user.onboarding?.tools?.integrations || [])
-
-        amplitude.identify(identify)
-      }
+      API.trackTraits({
+        email: id,
+        integrations: user.onboarding?.tools?.integrations || [],
+        name: { 'first': user.first_name, 'last': user.last_name },
+        organisation: selectedOrgName,
+        plan: selectedPlanName,
+        role: selectedRole,
+        tasks: (user.onboarding?.tasks || [])?.map((v) => v.name),
+      })
       API.flagsmithIdentify()
     } catch (e) {
       console.error('Error identifying', e)
@@ -352,20 +266,7 @@ global.API = {
       tag,
     })
   },
-  register(email, firstName, lastName) {
-    if (Project.excludeAnalytics?.includes(email)) return
-    if (Project.mixpanel) {
-      mixpanel.register({
-        'Email': email,
-        'First Name': firstName,
-        'Last Name': lastName,
-      })
-    }
-  },
   reset() {
-    if (Project.mixpanel) {
-      mixpanel.reset()
-    }
     return flagsmith.logout()
   },
   setCookie(key, v) {
@@ -432,11 +333,6 @@ global.API = {
       })
     }
 
-    if (Project.heap) {
-      heap.track(data.event, {
-        category: data.category,
-      })
-    }
     if (Project.amplitude) {
       const eventData = {
         category: data.category,
@@ -444,18 +340,6 @@ global.API = {
       }
 
       amplitude.track(data.event, eventData)
-    }
-    if (Project.mixpanel) {
-      if (!data) {
-        console.error('Passed null event data')
-      }
-      console.info('track', data)
-      if (!data || !data.category || !data.event) {
-        console.error('Invalid event provided', data)
-      }
-      mixpanel.track(data.event, {
-        category: data.category,
-      })
     }
   },
   trackPage(title) {
@@ -467,19 +351,14 @@ global.API = {
         title,
       })
     }
-    if (Project.heap) {
-      heap.track(`Page View  - ${title}`, {
-        location: document.location.href,
-        page: document.location.pathname,
-        title,
-      })
-    }
-    if (Project.mixpanel) {
-      mixpanel.track(`Page View  - ${title}`, {
-        location: document.location.href,
-        page: document.location.pathname,
-        title,
-      })
+  },
+  trackTraits(traits) {
+    if (Project.amplitude && traits) {
+      const identifyObj = new amplitude.Identify()
+      for (const [key, value] of Object.entries(traits)) {
+        identifyObj.set(key, value)
+      }
+      amplitude.identify(identifyObj)
     }
   },
 }

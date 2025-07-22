@@ -83,7 +83,6 @@ module.exports = {
     'hljs': true,
     'hot': true,
     'isMobile': true,
-    'mixpanel': true,
     'moment': true,
     'oneOfType': true,
     'openConfirm': true,

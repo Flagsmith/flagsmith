@@ -139,10 +139,7 @@ const GettingStartedPage: FC = () => {
     )
   }
 
-  if (
-    !hasSubmittedIntegrations &&
-    Utils.getFlagsmithHasFeature('integration_onboarding')
-  ) {
+  if (true) {
     return (
       <IntegrationSelect onComplete={() => setCompletedIntegrations(true)} />
     )
