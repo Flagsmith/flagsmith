@@ -425,8 +425,7 @@ def map_engine_identity_to_context(
     """
     A special mapper to produce a minimal EvaluationContext
     in an environment-less form.
-    Used when an environment object is not available,
-    like when evaluating segments in UI, which happens at the project level.
+    Used when an environment object is not available, like when evaluating segments for webhooks.
     """
     return {
         "environment": {"key": identity.environment_api_key, "name": ""},
