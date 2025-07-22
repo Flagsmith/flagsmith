@@ -29,7 +29,7 @@ const API = {
       store.goneABitWest()
       return
     }
-    if ('data' in res && res.data) {
+    if (res.data) {
       store.error = res.data
       store.goneABitWest()
       return
@@ -51,12 +51,14 @@ const API = {
         store.goneABitWest()
       })
       .catch(() => {
-        store.goneABitWest()
+        if (store) {
+          store.goneABitWest()
+        }
       })
   },
 
-  alias(id: string | number, user: Partial<AccountModel> = {}): void {
-    if (Project.excludeAnalytics?.includes(String(id))) return
+  alias(id: string, user: Partial<AccountModel> = {}): void {
+    if (Project.excludeAnalytics?.includes(id)) return
 
     Utils.setupCrisp()
     if (Project.reo) {
@@ -89,8 +91,8 @@ const API = {
     }
 
     if (Project.amplitude) {
-      amplitude.setUserId(String(id))
-      API.trackTraits({ email: String(id) })
+      amplitude.setUserId(id)
+      API.trackTraits({ email: id })
       if (window.engagement) {
         window.engagement.boot({
           integrations: [
