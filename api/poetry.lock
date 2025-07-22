@@ -2004,13 +2004,13 @@ files = []
 develop = false
 
 [package.dependencies]
-release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "feat/release-pipeline-logic-v1", subdirectory = "flagsmith-release-pipelines-logic"}
+release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "fix/move-clone-to-service-layer", subdirectory = "flagsmith-release-pipelines-logic"}
 
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "v0.1.0"
-resolved_reference = "b75b2dea7a9b0e67fe78800305e73130cbb73509"
+reference = "v0.2.1"
+resolved_reference = "6faa6b784954dc15e65f7dc80097824b23bdfecf"
 
 [[package]]
 name = "flagsmith-split-testing"
@@ -4309,8 +4309,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "feat/release-pipeline-logic-v1"
-resolved_reference = "df9a4b160204fd0eeab69bf678d74b5de941d5ac"
+reference = "fix/move-clone-to-service-layer"
+resolved_reference = "186bea4cfba82208e827ea5a66ad4df2cd094b9a"
 subdirectory = "flagsmith-release-pipelines-logic"
 
 [[package]]
@@ -5405,4 +5405,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "a77fbee7bc35ae5c1732a54ae358a949c10ba017523dcdbc5e999b62d2888236"
+content-hash = "6316753c1b1b6ef97aa160d885eb1c6e8b78eca9570e69c7e67298bf95151aa5"

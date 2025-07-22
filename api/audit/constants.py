@@ -67,8 +67,13 @@ DATETIME_FORMAT = "%d/%m/%Y %H:%M:%S"
 
 
 RELEASE_PIPELINE_CREATED_MESSAGE = "Release Pipeline: %s created"
+RELEASE_PIPELINE_CLONED_MESSAGE = "Release Pipeline: %s cloned"
+RELEASE_PIPELINE_UPDATED_MESSAGE = "Release Pipeline: %s updated"
 RELEASE_PIPELINE_PUBLISHED_MESSAGE = "Release Pipeline: %s published"
-# TODO: Add audit log for pipeline update
+RELEASE_PIPELINE_UNPUBLISHED_MESSAGE = "Release Pipeline: %s Converted to Draft"
 RELEASE_PIPELINE_DELETED_MESSAGE = "Release Pipeline: %s deleted"
 RELEASE_PIPELINE_FEATURE_ADDED_MESSAGE = "Feature: %s added to Release Pipeline: %s"
+RELEASE_PIPELINE_FEATURE_REMOVED_MESSAGE = (
+    "Feature: %s removed from Release Pipeline: %s"
+)
 FEATURE_STATE_UPDATED_BY_RELEASE_PIPELINE_MESSAGE = "Flag state / Remote config updated for feature: %s by Release pipeline: %s (stage: %s)"
