@@ -77,14 +77,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
   }
   return (
     <div className='bg-light100 pb-5'>
-      <div className='container-fluid mt-4 px-3'>
-        <PageTitle title={'Use Feature Flags with your favourite tools'}>
-          Select which tools you current use. This information will help us
-          surface the integrations we currently have and also prioritize
-          additional development work on integrations in our pipeline.
-        </PageTitle>
-      </div>
-      <div className='container-fluid'>
+      <div className='container-fluid pt-4'>
         <div className='row'>
           <div className=' d-none col-md-3 d-md-flex col-xl-2 h-100 flex-column mx-0 px-0'>
             <div className='mx-md-3'>
@@ -100,18 +93,47 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
             </div>
           </div>
           <div className='col-md-9 col-xxl-7 h-100'>
-            <div className='col-md-6 mx-2 mb-2'>
-              <Input
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  setSearch(Utils.safeParseEventValue(e))
-                }}
-                value={search}
-                type='text'
-                className='w-100'
-                placeholder='Search'
-                search
-              />
+            <PageTitle title={'Use Feature Flags with your favourite tools'}>
+              Select which tools you current use. This information will help us
+              surface the integrations we currently have and also prioritize
+              additional development work on integrations in our pipeline.
+            </PageTitle>
+            <div className='row'>
+              <div className='col-md-6 px-3'>
+                <Input
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setSearch(Utils.safeParseEventValue(e))
+                  }}
+                  value={search}
+                  type='text'
+                  className='w-100'
+                  placeholder='Search'
+                  search
+                />
+              </div>
+              <div className='col-md-6'>
+                <div className='sticky d-flex justify-content-end gap-4'>
+                  <Button
+                    data-test='skip-integrations'
+                    onClick={skip}
+                    style={{ width: 120 }}
+                    theme='secondary'
+                  >
+                    Skip
+                  </Button>
+                  <Button
+                    data-test='submit-integrations'
+                    onClick={submit}
+                    disabled={!selectedIntegrations?.length || isLoading}
+                    style={{ width: 120 }}
+                    theme='primary'
+                  >
+                    Confirm
+                  </Button>
+                </div>
+              </div>
             </div>
+
             <div className='d-flex my-2 mx-2 flex-wrap gap-2'>
               {selectedIntegrations.map((label) => (
                 <div
@@ -131,7 +153,7 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               ))}
             </div>
             <div
-              style={{ height: 'calc(100vh - 450px)' }}
+              style={{ height: 'calc(100vh - 350px)' }}
               className='overflow-scroll overflow-x-hidden d-flex flex-column m-0  pt-0 custom-scroll'
             >
               {!!Constants.integrationCategoryDescriptions[
@@ -201,25 +223,6 @@ const IntegrationSelect: FC<IntegrationSelectType> = ({ onComplete }) => {
               </div>
             </div>
             <hr className='mb-5 mt-0' />
-            <div className='sticky d-flex justify-content-end gap-4'>
-              <Button
-                data-test='skip-integrations'
-                onClick={skip}
-                style={{ width: 120 }}
-                theme='secondary'
-              >
-                Skip
-              </Button>
-              <Button
-                data-test='submit-integrations'
-                onClick={submit}
-                disabled={!selectedIntegrations?.length || isLoading}
-                style={{ width: 120 }}
-                theme='primary'
-              >
-                Confirm
-              </Button>
-            </div>
           </div>
         </div>
       </div>
