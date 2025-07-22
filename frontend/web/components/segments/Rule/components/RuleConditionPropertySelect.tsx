@@ -140,7 +140,6 @@ const RuleConditionPropertySelect = ({
 
   return (
     <>
-      {propertyValue}
       <Select
         data-test={dataTest}
         placeholder={'Trait / Context value'}
