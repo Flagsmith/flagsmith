@@ -1,22 +1,19 @@
 import PageTitle from 'components/PageTitle'
 import { useGetReleasePipelinesQuery } from 'common/services/useReleasePipelines'
 import { Button } from 'components/base/forms/Button'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import ReleasePipelinesList from 'components/release-pipelines/ReleasePipelinesList'
 import { useState } from 'react'
 import PlanBasedAccess from 'components/PlanBasedAccess'
-
-interface RouteParams {
-  projectId: string
-}
+import { useRouteContext } from 'components/providers/RouteContext'
 
 const ReleasePipelinesPage = () => {
   const history = useHistory()
-  const match = useRouteMatch<RouteParams>()
+
+  const { projectId } = useRouteContext()
   const [page, setPage] = useState(1)
   const pageSize = 10
-  const { projectId } = match.params
   const { data, isLoading } = useGetReleasePipelinesQuery({
     page,
     page_size: pageSize,
@@ -48,7 +45,7 @@ const ReleasePipelinesPage = () => {
         <ReleasePipelinesList
           data={data}
           isLoading={isLoading}
-          projectId={projectId}
+          projectId={projectId ?? NaN}
           page={page}
           pageSize={pageSize}
           onPageChange={setPage}
