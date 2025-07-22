@@ -17,8 +17,10 @@ import GettingStartedResource from 'components/onboarding/GettingStartedResource
 import { links, resources } from 'components/onboarding/data/onboarding.data'
 import { useGetProfileQuery } from 'common/services/useProfile'
 import IntegrationSelect from 'components/IntegrationSelect'
+import { useGetBuildVersionQuery } from 'common/services/useBuildVersion'
 
 const GettingStartedPage: FC = () => {
+  useGetBuildVersionQuery({})
   useEffect(() => {
     document.body.classList.add('full-screen')
     return () => {
@@ -115,15 +117,23 @@ const GettingStartedPage: FC = () => {
       name: 'integrations',
       title: 'Integrations',
     },
-    {
-      complete: !!segments?.results?.length,
-      description:
-        "Compare Flagsmith's free open source and commercial features",
-      duration: 1,
-      link: 'https://docs.flagsmith.com/version-comparison',
-      name: 'version-comparison',
-      title: 'Version comparison',
-    },
+    Utils.isSaas()
+      ? {
+          description:
+            'Explore private cloud and on-prem hosting options for additional security',
+          duration: 5,
+          link: 'https://www.flagsmith.com/on-premises-and-private-cloud-hosting',
+          name: 'self-hosting-overview',
+          title: 'Self-Hosting Overview',
+        }
+      : {
+          description:
+            "Compare Flagsmith's free open source and commercial features",
+          duration: 1,
+          link: 'https://docs.flagsmith.com/version-comparison',
+          name: 'version-comparison',
+          title: 'Version Comparison',
+        },
   ]
 
   const { data, isLoading } = useGetProfileQuery({})
