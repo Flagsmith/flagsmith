@@ -1,20 +1,20 @@
 import React, { FC, useEffect, useMemo } from 'react'
-import TagValues from './tags/TagValues'
-import ConfirmToggleFeature from './modals/ConfirmToggleFeature'
-import ConfirmRemoveFeature from './modals/ConfirmRemoveFeature'
-import CreateFlagModal from './modals/CreateFlag'
+import TagValues from 'components/tags/TagValues'
+import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
+import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
+import CreateFlagModal from 'components/modals/CreateFlag'
 import ProjectStore from 'common/stores/project-store'
 import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
-import Icon from './Icon'
+import Icon from 'components/Icon'
 import FeatureValue from './FeatureValue'
 import FeatureAction from './FeatureAction'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
-import Tag from './tags/Tag'
-import Button from './base/forms/Button'
-import SegmentOverridesIcon from './SegmentOverridesIcon'
-import IdentityOverridesIcon from './IdentityOverridesIcon'
+import Tag from 'components/tags/Tag'
+import Button from 'components/base/forms/Button'
+import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
+import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
 import StaleFlagWarning from './StaleFlagWarning'
 import UnhealthyFlagWarning from './UnhealthyFlagWarning'
 import {
@@ -27,11 +27,12 @@ import {
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import API from 'project/api'
-import Switch from './Switch'
+import Switch from 'components/Switch'
 import AccountStore from 'common/stores/account-store'
-import CondensedFeatureRow from './CondensedFeatureRow'
+import CondensedFeatureRow from 'components/CondensedFeatureRow'
 import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import FeatureName from './FeatureName'
 
 interface FeatureRowProps {
   disableControls?: boolean
@@ -256,10 +257,10 @@ const FeatureRow: FC<FeatureRowProps> = ({
   }
 
   return (
-    <Row
+    <div
       className={classNames(
-        `list-item ${isReadOnly ? '' : 'clickable'} ${
-          isCompact ? 'py-0 list-item-xs fs-small' : 'py-1'
+        `d-flex align-items-center list-item 'py-0 list-item-xs fs-small' ${
+          isReadOnly ? '' : 'clickable'
         }`,
         className,
       )}
@@ -272,116 +273,88 @@ const FeatureRow: FC<FeatureRowProps> = ({
     >
       <Flex className='table-column'>
         <Row>
-          <Flex>
-            <Row>
-              <Row
-                className='font-weight-medium'
-                style={{
-                  lineHeight: 1,
-                  wordBreak: 'break-all',
-                }}
-              >
-                <span>
-                  {created_date ? (
-                    <Tooltip place='right' title={name}>
-                      {isCompact && description ? `${description}` : ''}
-                    </Tooltip>
-                  ) : (
-                    name
-                  )}
+          <FeatureName name={projectFlag.name} />
+          <SegmentOverridesIcon
+            onClick={(e) => {
+              e.stopPropagation()
+              editFeature(
+                projectFlag,
+                environmentFlags?.[id],
+                Constants.featurePanelTabs.SEGMENT_OVERRIDES,
+              )
+            }}
+            count={projectFlag.num_segment_overrides}
+          />
+          <IdentityOverridesIcon
+            onClick={(e) => {
+              e.stopPropagation()
+              editFeature(
+                projectFlag,
+                environmentFlags?.[id],
+                Constants.featurePanelTabs.IDENTITY_OVERRIDES,
+              )
+            }}
+            count={projectFlag.num_identity_overrides}
+            showPlusIndicator={showPlusIndicator}
+          />
+          {projectFlag.is_server_key_only && (
+            <Tooltip
+              title={
+                <span
+                  className='chip me-2 chip--xs bg-primary text-white'
+                  style={{ border: 'none' }}
+                >
+                  <span>{'Server-side only'}</span>
                 </span>
-                <Button
-                  onClick={copyFeature}
-                  theme='icon'
-                  className='ms-2 me-2'
-                >
-                  <Icon name='copy' />
-                </Button>
-              </Row>
-              <SegmentOverridesIcon
-                onClick={(e) => {
-                  e.stopPropagation()
-                  editFeature(
-                    projectFlag,
-                    environmentFlags?.[id],
-                    Constants.featurePanelTabs.SEGMENT_OVERRIDES,
-                  )
-                }}
-                count={projectFlag.num_segment_overrides}
-              />
-              <IdentityOverridesIcon
-                onClick={(e) => {
-                  e.stopPropagation()
-                  editFeature(
-                    projectFlag,
-                    environmentFlags?.[id],
-                    Constants.featurePanelTabs.IDENTITY_OVERRIDES,
-                  )
-                }}
-                count={projectFlag.num_identity_overrides}
-                showPlusIndicator={showPlusIndicator}
-              />
-              {projectFlag.is_server_key_only && (
-                <Tooltip
-                  title={
-                    <span
-                      className='chip me-2 chip--xs bg-primary text-white'
-                      style={{ border: 'none' }}
-                    >
-                      <span>{'Server-side only'}</span>
-                    </span>
-                  }
-                  place='top'
-                >
-                  {
-                    'Prevent this feature from being accessed with client-side SDKs.'
-                  }
-                </Tooltip>
-              )}
-              <TagValues
-                projectId={`${projectId}`}
-                value={projectFlag.tags}
-                onClick={(tag) => {
-                  if (tag?.type === 'UNHEALTHY') {
-                    openFeatureHealthTab(id)
-                  }
-                }}
-              >
-                {projectFlag.is_archived && (
-                  <Tag className='chip--xs' tag={Constants.archivedTag} />
-                )}
-              </TagValues>
-              {!!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
-              {isFeatureHealthEnabled && !!isCompact && (
-                <UnhealthyFlagWarning
-                  featureUnhealthyEvents={featureUnhealthyEvents}
-                  onClick={(e) => {
-                    e?.stopPropagation()
-                    openFeatureHealthTab(id)
-                  }}
-                />
-              )}
-            </Row>
-            {!isCompact && <StaleFlagWarning projectFlag={projectFlag} />}
-            {isFeatureHealthEnabled && !isCompact && (
-              <UnhealthyFlagWarning
-                featureUnhealthyEvents={featureUnhealthyEvents}
-                onClick={(e) => {
-                  e?.stopPropagation()
-                  openFeatureHealthTab(id)
-                }}
-              />
+              }
+              place='top'
+            >
+              {
+                'Prevent this feature from being accessed with client-side SDKs.'
+              }
+            </Tooltip>
+          )}
+          <TagValues
+            projectId={`${projectId}`}
+            value={projectFlag.tags}
+            onClick={(tag) => {
+              if (tag?.type === 'UNHEALTHY') {
+                openFeatureHealthTab(id)
+              }
+            }}
+          >
+            {projectFlag.is_archived && (
+              <Tag className='chip--xs' tag={Constants.archivedTag} />
             )}
-            {description && !isCompact && (
-              <div
-                className='list-item-subtitle'
-                style={{ lineHeight: '20px', width: width[4] }}
-              >
-                {description}
-              </div>
-            )}
-          </Flex>
+          </TagValues>
+          <StaleFlagWarning projectFlag={projectFlag} />
+          {isFeatureHealthEnabled && !!isCompact && (
+            <UnhealthyFlagWarning
+              featureUnhealthyEvents={featureUnhealthyEvents}
+              onClick={(e) => {
+                e?.stopPropagation()
+                openFeatureHealthTab(id)
+              }}
+            />
+          )}
         </Row>
+        {isFeatureHealthEnabled && !isCompact && (
+          <UnhealthyFlagWarning
+            featureUnhealthyEvents={featureUnhealthyEvents}
+            onClick={(e) => {
+              e?.stopPropagation()
+              openFeatureHealthTab(id)
+            }}
+          />
+        )}
+        {description && !isCompact && (
+          <div
+            className='list-item-subtitle'
+            style={{ lineHeight: '20px', width: width[4] }}
+          >
+            {description}
+          </div>
+        )}
       </Flex>
       <div className='table-column' style={{ width: width[0] }}>
         <FeatureValue
@@ -452,7 +425,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
           onCopyName={copyFeature}
         />
       </div>
-    </Row>
+    </div>
   )
 }
 

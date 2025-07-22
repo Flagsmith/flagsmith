@@ -5,7 +5,7 @@ import {
   FeatureState,
   ProjectFlag,
 } from 'common/types/responses'
-import FeatureValue from './FeatureValue'
+import FeatureValue from './feature-summary/FeatureValue'
 import SegmentOverridesIcon from './SegmentOverridesIcon'
 import IdentityOverridesIcon from './IdentityOverridesIcon'
 import Constants from 'common/constants'

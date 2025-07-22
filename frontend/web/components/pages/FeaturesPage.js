@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import CreateFlagModal from 'components/modals/CreateFlag'
 import TryIt from 'components/TryIt'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import Permission from 'common/providers/Permission'

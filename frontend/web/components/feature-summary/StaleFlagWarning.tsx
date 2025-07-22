@@ -5,7 +5,7 @@ import { Project, ProjectFlag } from 'common/types/responses'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
-import Tooltip from './Tooltip'
+import Tooltip from 'components/Tooltip'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 
