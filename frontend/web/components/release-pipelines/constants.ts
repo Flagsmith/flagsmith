@@ -1,3 +1,4 @@
+import { PipelineStageRequest, StageActionRequest } from 'common/types/requests'
 import { StageActionType, StageTriggerType } from 'common/types/responses'
 
 const TRIGGER_OPTIONS: { label: string; value: StageTriggerType }[] = [
@@ -36,4 +37,29 @@ const TIME_UNIT_OPTIONS = [
   { label: 'Minute(s)', value: TimeUnit.MINUTE },
 ]
 
-export { TRIGGER_OPTIONS, FLAG_ACTION_OPTIONS, TIME_UNIT_OPTIONS, TimeUnit }
+const NEW_PIPELINE_STAGE_ACTION_TYPE = ''
+const NEW_PIPELINE_STAGE_ACTION = {
+  action_body: { enabled: false },
+  action_type: NEW_PIPELINE_STAGE_ACTION_TYPE,
+} as StageActionRequest
+
+const NEW_PIPELINE_STAGE: PipelineStageRequest = {
+  actions: [NEW_PIPELINE_STAGE_ACTION],
+  environment: -1,
+  name: '',
+  order: 0,
+  trigger: {
+    trigger_body: null,
+    trigger_type: StageTriggerType.ON_ENTER,
+  },
+}
+
+export {
+  TRIGGER_OPTIONS,
+  FLAG_ACTION_OPTIONS,
+  TIME_UNIT_OPTIONS,
+  TimeUnit,
+  NEW_PIPELINE_STAGE,
+  NEW_PIPELINE_STAGE_ACTION,
+  NEW_PIPELINE_STAGE_ACTION_TYPE,
+}

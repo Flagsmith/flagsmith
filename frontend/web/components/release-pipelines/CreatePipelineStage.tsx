@@ -9,14 +9,18 @@ import {
 } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
-import { TIME_UNIT_OPTIONS, TimeUnit, TRIGGER_OPTIONS } from './constants'
-import { StageAction } from 'common/types/responses'
+import {
+  NEW_PIPELINE_STAGE,
+  NEW_PIPELINE_STAGE_ACTION,
+  TIME_UNIT_OPTIONS,
+  TimeUnit,
+  TRIGGER_OPTIONS,
+} from './constants'
 import moment from 'moment'
 import Input from 'components/base/forms/Input'
-import { PipelineStageRequest } from 'common/types/requests'
+import { PipelineStageRequest, StageActionRequest } from 'common/types/requests'
 import PipelineStageActions from './PipelineStageActions'
 
-type DraftStageType = PipelineStageRequest
 type TimeUnitType = (typeof TimeUnit)[keyof typeof TimeUnit]
 
 const CreatePipelineStage = ({
@@ -26,8 +30,8 @@ const CreatePipelineStage = ({
   showRemoveButton,
   stageData,
 }: {
-  stageData: DraftStageType
-  onChange: (stageData: DraftStageType) => void
+  stageData: PipelineStageRequest
+  onChange: (stageData: PipelineStageRequest) => void
   projectId: number
   showRemoveButton?: boolean
   onRemove?: () => void
@@ -73,8 +77,8 @@ const CreatePipelineStage = ({
   }, [environmentsData])
 
   const handleOnChange = (
-    fieldName: keyof DraftStageType,
-    value: string | number | StageTrigger | Omit<StageAction, 'id'>[],
+    fieldName: keyof PipelineStageRequest,
+    value: string | number | StageTrigger | StageActionRequest[],
   ) => {
     onChange({ ...stageData, [fieldName]: value })
   }
@@ -104,25 +108,36 @@ const CreatePipelineStage = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [environmentWithFeatureVersioningOptions, stageData])
 
-  const handleSegmentChange = (option: { value: number; label: string }) => {
-    if (option?.value) {
-      const actions = stageData.actions.map((action) => {
-        if (action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT) {
-          return {
-            ...action,
-            action_body: { ...action.action_body, segment_id: option?.value },
-          }
-        }
-        return action
-      })
-
-      handleOnChange('actions', actions)
+  const handleSegmentChange = (
+    option: { value: number; label: string },
+    actionIndex: number,
+  ) => {
+    if (!option?.value) {
+      return
     }
+
+    const actions = stageData.actions.map((action, idx) => {
+      if (
+        action.action_type === StageActionType.TOGGLE_FEATURE_FOR_SEGMENT &&
+        idx === actionIndex
+      ) {
+        return {
+          ...action,
+          action_body: { ...action.action_body, segment_id: option?.value },
+        }
+      }
+      return action
+    })
+
+    handleOnChange('actions', actions)
   }
 
-  const handleActionChange = (option: { value: string; label: string }) => {
+  const handleActionChange = (
+    option: { value: string; label: string },
+    actionIndex: number,
+  ) => {
     if (option.value === '') {
-      return handleOnChange('actions', [])
+      return
     }
 
     const isSegment = option.value.includes('FOR_SEGMENT')
@@ -134,7 +149,23 @@ const CreatePipelineStage = ({
 
     const action_body = { enabled }
 
-    handleOnChange('actions', [{ action_body, action_type }])
+    const actions = stageData.actions.map((action, idx) => {
+      if (idx === actionIndex) {
+        return { action_body, action_type }
+      }
+      return action
+    })
+    handleOnChange('actions', actions)
+  }
+
+  const handleAddAction = () => {
+    const defaultDraftAction = NEW_PIPELINE_STAGE_ACTION
+    handleOnChange('actions', [...stageData.actions, defaultDraftAction])
+  }
+
+  const handleRemoveAction = (index: number) => {
+    const actions = stageData.actions.filter((_, i) => i !== index)
+    handleOnChange('actions', actions)
   }
 
   const setWaitForTrigger = (time: number, unit: TimeUnitType) => {
@@ -281,10 +312,11 @@ const CreatePipelineStage = ({
         projectId={projectId}
         onActionChange={handleActionChange}
         onSegmentChange={handleSegmentChange}
+        onAddAction={handleAddAction}
+        onRemoveAction={handleRemoveAction}
       />
     </div>
   )
 }
 
-export type { DraftStageType }
 export default CreatePipelineStage

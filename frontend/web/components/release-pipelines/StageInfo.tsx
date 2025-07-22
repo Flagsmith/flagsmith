@@ -47,14 +47,17 @@ const StageInfo = ({
                 stageData?.trigger?.trigger_type,
                 stageData?.trigger?.trigger_body,
               )}
-              {stageData?.actions?.map((action) => {
+              {stageData?.actions?.map((action, index) => {
                 return (
-                  <div key={action.id}>
+                  <div key={action.id} className='mt-1'>
                     <FlagActionDetail
                       actionBody={action.action_body}
                       actionType={action.action_type}
                       projectId={projectId}
                     />
+                    {index < stageData?.actions?.length - 1 && (
+                      <div className='mt-1'>And</div>
+                    )}
                   </div>
                 )
               })}
