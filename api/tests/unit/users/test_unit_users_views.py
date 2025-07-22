@@ -1,6 +1,6 @@
 import json
 import typing
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 from dateutil.relativedelta import relativedelta
