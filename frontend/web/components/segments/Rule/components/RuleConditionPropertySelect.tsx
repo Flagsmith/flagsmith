@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
-import { RuleContextValues } from 'common/types/rules.types'
+import { RuleContextLabels, RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
 
@@ -18,6 +18,7 @@ interface RuleConditionPropertySelectProps {
     property: string,
     value: { value: string | boolean },
   ) => void
+  operator: string
 }
 
 const GroupLabel = ({
@@ -48,36 +49,47 @@ const GroupLabel = ({
 
 const RuleConditionPropertySelect = ({
   dataTest,
+  operator,
   propertyValue,
   ruleIndex,
   setRuleProperty,
 }: RuleConditionPropertySelectProps) => {
-  const ALLOWED_CONTEXT_VALUES = [
-    RuleContextValues.IDENTIFIER,
-    RuleContextValues.ENVIRONMENT_NAME,
+  const ALLOWED_CONTEXT_VALUES: OptionType[] = [
+    {
+      label: RuleContextLabels.IDENTITY_KEY,
+      value: RuleContextValues.IDENTITY_KEY,
+    },
+    {
+      label: RuleContextLabels.IDENTIFIER,
+      value: RuleContextValues.IDENTIFIER,
+    },
+    {
+      label: RuleContextLabels.ENVIRONMENT_NAME,
+      value: RuleContextValues.ENVIRONMENT_NAME,
+    },
   ]
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
 
   const isContextPropertyEnabled =
     Utils.getFlagsmithHasFeature('context_values')
 
-  const contextValues: OptionType[] = JSON.parse(
-    Utils.getFlagsmithValue('context_values') || '{}',
-  )
-
   useEffect(() => {
     setLocalCurrentValue(propertyValue)
-  }, [propertyValue])
+
+    if (operator === 'PERCENTAGE_SPLIT' && !propertyValue) {
+      setRuleProperty(ruleIndex, 'property', {
+        value: RuleContextValues.IDENTITY_KEY,
+      })
+    }
+  }, [propertyValue, operator, ruleIndex, setRuleProperty])
 
   // Filter invalid context values from flagsmith and format them as options
-  const contextOptions = contextValues
-    ?.filter((contextValue: OptionType) =>
-      ALLOWED_CONTEXT_VALUES.includes(contextValue.value as RuleContextValues),
-    )
-    ?.map((contextValue: OptionType) => ({
+  const contextOptions = ALLOWED_CONTEXT_VALUES?.map(
+    (contextValue: OptionType) => ({
       label: contextValue?.label,
       value: contextValue?.value,
-    }))
+    }),
+  )
 
   const isValueFromContext = !!contextOptions.find(
     (option) => option.value === localCurrentValue,
@@ -87,10 +99,9 @@ const RuleConditionPropertySelect = ({
     contextOptions.find((option) => option.value === propertyValue)?.label ||
     propertyValue
 
-  const optionsWithTrait = [
-    ...(isValueFromContext || !localCurrentValue
-      ? []
-      : [
+  const traitAsGroupedOptions =
+    !isValueFromContext && localCurrentValue
+      ? [
           {
             label: (
               <GroupLabel
@@ -100,19 +111,36 @@ const RuleConditionPropertySelect = ({
             ),
             options: [{ label: localCurrentValue, value: localCurrentValue }],
           },
-        ]),
-    ...(isContextPropertyEnabled && contextOptions?.length > 0
+        ]
+      : []
+
+  const contextAsGroupedOptions =
+    isContextPropertyEnabled && contextOptions?.length > 0
       ? [
           {
-            label: <GroupLabel groupName='Context' />,
-            options: contextValues,
+            label: (
+              <GroupLabel
+                groupName='Context'
+                tooltipText={
+                  operator === 'PERCENTAGE_SPLIT'
+                    ? Constants.strings.PERCENTAGE_SPLIT_DEFAULT_TO_IDENTITY_KEY
+                    : undefined
+                }
+              />
+            ),
+            options: contextOptions,
           },
         ]
-      : []),
+      : []
+
+  const optionsWithTrait = [
+    ...traitAsGroupedOptions,
+    ...contextAsGroupedOptions,
   ]
 
   return (
     <>
+      {propertyValue}
       <Select
         data-test={dataTest}
         placeholder={'Trait / Context value'}

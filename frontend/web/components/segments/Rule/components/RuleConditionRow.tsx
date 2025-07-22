@@ -84,6 +84,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           ruleIndex={ruleIndex}
           setRuleProperty={setRuleProperty}
           propertyValue={rule.property}
+          operator={rule.operator}
         />
         {readOnly ? (
           !!find(operators, { value: operator })?.label

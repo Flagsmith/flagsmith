@@ -695,6 +695,8 @@ const Constants = {
       'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
     ORGANISATION_DESCRIPTION:
       'This is used to create a default organisation for team members to create and manage projects.',
+    PERCENTAGE_SPLIT_DEFAULT_TO_IDENTITY_KEY:
+      'If no value is provided, the identity key will be used as the default value for split operator.',
     REMOTE_CONFIG_DESCRIPTION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
@@ -705,8 +707,6 @@ const Constants = {
       'Organise your flags with tags, tagging your features as "<strong>protected</strong>" will prevent them from accidentally being deleted.',
     TOOLTIP_METADATA_DESCRIPTION: (entity: string) =>
       `Add Custom fields in your <strong>${entity}</strong>, you can define the custom fields in the project settings.`,
-    TRAITS_DISABLED_FOR_OPERATOR:
-      'Traits are not supported for the selected operator',
     USER_PROPERTY_DESCRIPTION:
       'The name of the user trait or custom property belonging to the user, e.g. firstName',
     WEBHOOKS_DESCRIPTION:

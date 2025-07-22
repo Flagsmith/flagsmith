@@ -75,16 +75,8 @@ const Rule: React.FC<RuleProps> = ({
       updates.value = cleanValue + (newOperator?.append || '')
     }
 
-    if (operatorValue === 'PERCENTAGE_SPLIT') {
-      const isPropertyContext = [
-        RuleContextValues.IDENTIFIER?.toString(),
-        RuleContextValues.ENVIRONMENT_NAME?.toString(),
-      ].includes(condition.property)
-
-      if (!isPropertyContext) {
-        updates.property = ''
-        updates.value = ''
-      }
+    if (operatorValue === 'PERCENTAGE_SPLIT' && !condition.property) {
+      updates.property = RuleContextValues.IDENTITY_KEY
     }
 
     updateCondition(conditionIndex, updates)
