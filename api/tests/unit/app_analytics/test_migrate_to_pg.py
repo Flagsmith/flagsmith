@@ -1,5 +1,4 @@
 import pytest
-from django.conf import settings
 from django.utils import timezone
 from pytest_mock import MockerFixture
 
@@ -7,10 +6,7 @@ from app_analytics.migrate_to_pg import migrate_feature_evaluations
 from app_analytics.models import FeatureEvaluationBucket
 
 
-@pytest.mark.skipif(
-    "analytics" not in settings.DATABASES,
-    reason="Skip test if analytics database is not configured",
-)
+@pytest.mark.skip_if_no_analytics_db
 @pytest.mark.django_db(databases=["analytics", "default"])
 def test_migrate_feature_evaluations(mocker: MockerFixture) -> None:
     # Given

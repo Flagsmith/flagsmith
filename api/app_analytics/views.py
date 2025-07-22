@@ -16,6 +16,9 @@ from app_analytics.analytics_db_service import (
     get_usage_data,
 )
 from app_analytics.cache import FeatureEvaluationCache
+from app_analytics.mappers import (
+    map_request_to_labels,
+)
 from environments.authentication import EnvironmentKeyAuthentication
 from environments.permissions.permissions import EnvironmentKeyPermissions
 from features.models import FeatureState
@@ -31,7 +34,7 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
-feature_evaluation_cache = FeatureEvaluationCache()  # type: ignore[no-untyped-call]
+feature_evaluation_cache = FeatureEvaluationCache()
 
 
 class SDKAnalyticsFlagsV2(CreateAPIView):  # type: ignore[type-arg]
@@ -82,9 +85,12 @@ class SDKAnalyticsFlags(CreateAPIView):  # type: ignore[type-arg]
 
             def save(self, **kwargs: typing.Any) -> None:
                 request = self.context["request"]
-                for feature_name, eval_count in self.validated_data.items():
+                for feature_name, evaluation_count in self.validated_data.items():
                     feature_evaluation_cache.track_feature_evaluation(
-                        request.environment.id, feature_name, eval_count
+                        environment_id=request.environment.id,
+                        feature_name=feature_name,
+                        evaluation_count=evaluation_count,
+                        labels=map_request_to_labels(request),
                     )
 
         return _AnalyticsSerializer
@@ -147,7 +153,7 @@ def get_usage_data_view(request, organisation_pk=None):  # type: ignore[no-untyp
     filters.is_valid(raise_exception=True)
 
     organisation = Organisation.objects.get(id=organisation_pk)
-    usage_data = get_usage_data(organisation, **filters.data)
+    usage_data = get_usage_data(organisation, **filters.validated_data)
     serializer = UsageDataSerializer(usage_data, many=True)
 
     return Response(serializer.data)
