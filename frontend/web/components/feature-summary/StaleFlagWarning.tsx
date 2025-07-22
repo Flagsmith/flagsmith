@@ -43,7 +43,7 @@ const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
     <Tooltip
       title={
         <span
-          className='fs-caption d-flex align-items-center'
+          className='fs-caption lh-lg d-flex align-items-center'
           style={{ color: Constants.tagColors[2] }}
         >
           Created {daysAgo} days ago

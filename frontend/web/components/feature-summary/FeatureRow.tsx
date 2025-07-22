@@ -56,7 +56,7 @@ interface FeatureRowProps {
   onCloseEditModal?: () => void
 }
 
-const width = [220, 70, 55, 70, 450]
+const width = [220, 50, 55, 70, 450]
 
 const FeatureRow: FC<FeatureRowProps> = ({
   className,
@@ -259,7 +259,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
   return (
     <div
       className={classNames(
-        `d-flex align-items-center list-item 'py-0 list-item-xs fs-small' ${
+        `d-flex align-items-lg-center flex-column flex-lg-row list-item 'py-0 list-item-xs fs-small' ${
           isReadOnly ? '' : 'clickable'
         }`,
         className,
@@ -271,49 +271,52 @@ const FeatureRow: FC<FeatureRowProps> = ({
         !isReadOnly && editFeature(projectFlag, environmentFlags?.[id])
       }
     >
-      <Flex className='table-column'>
-        <Row>
-          <FeatureName name={projectFlag.name} />
-          <SegmentOverridesIcon
-            onClick={(e) => {
-              e.stopPropagation()
-              editFeature(
-                projectFlag,
-                environmentFlags?.[id],
-                Constants.featurePanelTabs.SEGMENT_OVERRIDES,
-              )
-            }}
-            count={projectFlag.num_segment_overrides}
-          />
-          <IdentityOverridesIcon
-            onClick={(e) => {
-              e.stopPropagation()
-              editFeature(
-                projectFlag,
-                environmentFlags?.[id],
-                Constants.featurePanelTabs.IDENTITY_OVERRIDES,
-              )
-            }}
-            count={projectFlag.num_identity_overrides}
-            showPlusIndicator={showPlusIndicator}
-          />
-          {projectFlag.is_server_key_only && (
-            <Tooltip
-              title={
-                <span
-                  className='chip me-2 chip--xs bg-primary text-white'
-                  style={{ border: 'none' }}
-                >
-                  <span>{'Server-side only'}</span>
-                </span>
-              }
-              place='top'
-            >
-              {
-                'Prevent this feature from being accessed with client-side SDKs.'
-              }
-            </Tooltip>
-          )}
+      <div className='table-column flex-1 flex-column px-0'>
+        <div className='d-flex flex-column flex-lg-row align-items-md-center mx-0'>
+          <div className='d-flex align-items-center'>
+            <FeatureName name={projectFlag.name} />
+            <SegmentOverridesIcon
+              onClick={(e) => {
+                e.stopPropagation()
+                editFeature(
+                  projectFlag,
+                  environmentFlags?.[id],
+                  Constants.featurePanelTabs.SEGMENT_OVERRIDES,
+                )
+              }}
+              count={projectFlag.num_segment_overrides}
+            />
+            <IdentityOverridesIcon
+              onClick={(e) => {
+                e.stopPropagation()
+                editFeature(
+                  projectFlag,
+                  environmentFlags?.[id],
+                  Constants.featurePanelTabs.IDENTITY_OVERRIDES,
+                )
+              }}
+              count={projectFlag.num_identity_overrides}
+              showPlusIndicator={showPlusIndicator}
+            />
+            {projectFlag.is_server_key_only && (
+              <Tooltip
+                title={
+                  <span
+                    className='chip me-2 chip--xs bg-primary text-white'
+                    style={{ border: 'none' }}
+                  >
+                    <span>{'Server-side only'}</span>
+                  </span>
+                }
+                place='top'
+              >
+                {
+                  'Prevent this feature from being accessed with client-side SDKs.'
+                }
+              </Tooltip>
+            )}
+          </div>
+
           <TagValues
             projectId={`${projectId}`}
             value={projectFlag.tags}
@@ -328,7 +331,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
             )}
           </TagValues>
           <StaleFlagWarning projectFlag={projectFlag} />
-          {isFeatureHealthEnabled && !!isCompact && (
+          {isFeatureHealthEnabled && (
             <UnhealthyFlagWarning
               featureUnhealthyEvents={featureUnhealthyEvents}
               onClick={(e) => {
@@ -337,93 +340,89 @@ const FeatureRow: FC<FeatureRowProps> = ({
               }}
             />
           )}
-        </Row>
-        {isFeatureHealthEnabled && !isCompact && (
-          <UnhealthyFlagWarning
-            featureUnhealthyEvents={featureUnhealthyEvents}
-            onClick={(e) => {
-              e?.stopPropagation()
-              openFeatureHealthTab(id)
-            }}
-          />
-        )}
+        </div>
         {description && !isCompact && (
           <div
-            className='list-item-subtitle'
-            style={{ lineHeight: '20px', width: width[4] }}
+            className='list-item-subtitle d-none d-lg-block'
+            style={{ lineHeight: '20px' }}
           >
             {description}
           </div>
         )}
-      </Flex>
-      <div className='table-column' style={{ width: width[0] }}>
-        <FeatureValue
-          onClick={() =>
-            !isReadOnly && editFeature(projectFlag, environmentFlags?.[id])
-          }
-          value={environmentFlags?.[id]?.feature_state_value ?? null}
-          data-test={`feature-value-${index}`}
-        />
       </div>
-      <div
-        className='table-column'
-        style={{ width: width[1] }}
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
-      >
-        <Switch
-          disabled={!permission || isReadOnly}
-          data-test={`feature-switch-${index}${
-            environmentFlags?.[id]?.enabled ? '-on' : '-off'
-          }`}
-          checked={environmentFlags?.[id]?.enabled}
-          onChange={onChange}
-        />
-      </div>
+      <div className='d-flex align-items-center'>
+        <div
+          className='table-column px-1 px-lg-2 flex-1 flex-lg-auto'
+          style={{ width: width[0] }}
+        >
+          <FeatureValue
+            onClick={() =>
+              !isReadOnly && editFeature(projectFlag, environmentFlags?.[id])
+            }
+            value={environmentFlags?.[id]?.feature_state_value ?? null}
+            data-test={`feature-value-${index}`}
+          />
+        </div>
+        <div
+          className='table-column'
+          style={{ width: width[1] }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+        >
+          <Switch
+            disabled={!permission || isReadOnly}
+            data-test={`feature-switch-${index}${
+              environmentFlags?.[id]?.enabled ? '-on' : '-off'
+            }`}
+            checked={environmentFlags?.[id]?.enabled}
+            onChange={onChange}
+          />
+        </div>
 
-      <div
-        className='table-column'
-        style={{ width: isCompact ? width[2] : width[3] }}
-        onClick={(e) => {
-          e.stopPropagation()
-        }}
-      >
-        <FeatureAction
-          projectId={projectId}
-          featureIndex={index}
-          readOnly={isReadOnly}
-          protectedTags={protectedTags}
-          tags={projectFlag.tags}
-          isCompact={isCompact}
-          hideAudit={
-            AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit
-          }
-          hideRemove={hideRemove}
-          hideHistory={!environment?.use_v2_feature_versioning}
-          onShowHistory={() => {
-            if (disableControls) return
-            editFeature(
-              projectFlag,
-              environmentFlags?.[id],
-              Constants.featurePanelTabs.HISTORY,
-            )
+        <div
+          className='table-column px-1 px-lg-2'
+          style={{ width: isCompact ? width[2] : width[3] }}
+          onClick={(e) => {
+            e.stopPropagation()
           }}
-          onShowAudit={() => {
-            if (disableControls) return
-            history.push(
-              `/project/${projectId}/audit-log?env=${environment?.id}&search=${projectFlag.name}`,
-              '',
-            )
-          }}
-          onRemove={() => {
-            if (disableControls) return
-            confirmRemove(projectFlag, () => {
-              removeFlag?.(projectId, projectFlag)
-            })
-          }}
-          onCopyName={copyFeature}
-        />
+        >
+          <FeatureAction
+            projectId={projectId}
+            featureIndex={index}
+            readOnly={isReadOnly}
+            protectedTags={protectedTags}
+            tags={projectFlag.tags}
+            isCompact={isCompact}
+            hideAudit={
+              AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit
+            }
+            hideRemove={hideRemove}
+            hideHistory={!environment?.use_v2_feature_versioning}
+            onShowHistory={() => {
+              if (disableControls) return
+              editFeature(
+                projectFlag,
+                environmentFlags?.[id],
+                Constants.featurePanelTabs.HISTORY,
+              )
+            }}
+            onShowAudit={() => {
+              if (disableControls) return
+              history.push(
+                `/project/${projectId}/audit-log?env=${environment?.id}&search=${projectFlag.name}`,
+                '',
+              )
+            }}
+            onRemove={() => {
+              if (disableControls) return
+              confirmRemove(projectFlag, () => {
+                removeFlag?.(projectId, projectFlag)
+              })
+            }}
+            onCopyName={copyFeature}
+          />
+        </div>
       </div>
     </div>
   )
