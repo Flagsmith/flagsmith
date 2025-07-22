@@ -2,7 +2,6 @@ import * as amplitude from '@amplitude/analytics-browser'
 import data from 'common/data/base/_data'
 import isFreeEmailDomain from 'common/utils/isFreeEmailDomain'
 
-const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
 import { loadReoScript } from 'reodotdev'
 import { groupBy } from 'lodash'
 import getUserDisplayName from 'common/utils/getUserDisplayName'
@@ -61,10 +60,6 @@ global.API = {
   },
   alias(id, user = {}) {
     if (Project.excludeAnalytics?.includes(id)) return
-
-    if (enableDynatrace && user?.id) {
-      dtrum.identifyUser(`${user.id}`)
-    }
     Utils.setupCrisp()
     if (Project.reo) {
       const reoPromise = loadReoScript({ clientID: Project.reo })
@@ -187,10 +182,6 @@ global.API = {
   identify(id, user = {}) {
     if (Project.excludeAnalytics?.includes(id)) return
     try {
-      if (enableDynatrace && user?.id) {
-        dtrum.identifyUser(`${user.id}`)
-      }
-
       const planNames = {
         enterprise: 'Enterprise',
         free: 'Free',

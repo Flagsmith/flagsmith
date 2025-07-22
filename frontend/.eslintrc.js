@@ -74,7 +74,6 @@ module.exports = {
     'closeModal2': true,
     'delighted': true,
     'describe': true,
-    'dtrum': true,
     'em': true,
     'flagsmith': true,
     'ga': true,
