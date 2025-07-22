@@ -29,7 +29,6 @@ module.exports = {
     'CodeHelp': true,
     'Column': true,
     'Cookies': true,
-    'DYNATRACE_URL': true,
     'Dispatcher': true,
     'E2E': true,
     'ES6Component': true,
