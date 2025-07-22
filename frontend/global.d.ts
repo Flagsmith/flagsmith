@@ -76,7 +76,6 @@ declare global {
       init(apiKey: string, options?: InitOptions): void
       plugin(): unknown
       boot(options: BootOptions): Promise<void>
-      // …other methods like setThemeMode, forwardEvent, etc.
     }
   }
 }
