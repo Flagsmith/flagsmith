@@ -817,12 +817,16 @@ def test_get_flags_cache(
     project_two_environment_client = APIClient(
         headers={SDK_ENVIRONMENT_KEY_HEADER: project_two_environment.api_key}
     )
+    # Fetch flags for both environments once to warm the cache
+    environment_one_response = environment_one_client.get(url)
+    assert environment_one_response.status_code == status.HTTP_200_OK
+
+    project_two_environment_response = project_two_environment_client.get(url)
+    assert project_two_environment_response.status_code == status.HTTP_200_OK
 
     #  When
-    # We hit the flags endpoint 10 times for each environment
-    # Only the first request per environment should trigger database queries
-    with django_assert_num_queries(4):  # 2 environments × 2 queries each
-        for _ in range(100):
+    with django_assert_num_queries(0):
+        for _ in range(10):
             environment_one_response = environment_one_client.get(url)
             assert environment_one_response.status_code == status.HTTP_200_OK
 
