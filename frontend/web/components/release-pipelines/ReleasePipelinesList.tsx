@@ -1,7 +1,4 @@
-import {
-  useCloneReleasePipelineMutation,
-  useDeleteReleasePipelineMutation,
-} from 'common/services/useReleasePipelines'
+import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
@@ -11,6 +8,7 @@ import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
 import { useEffect } from 'react'
 import ChangeReleasePipelineStatusModal from './ChangeReleasePipelineStatusModal'
+import CloneReleasePipelineModal from './CloneReleasePipelineModal'
 
 const NoReleasePipelines = ({ projectId }: { projectId: number }) => {
   const history = useHistory()
@@ -76,22 +74,6 @@ const ReleasePipelinesList = ({
     },
   ] = useDeleteReleasePipelineMutation()
 
-  const [
-    cloneReleasePipeline,
-    {
-      error: cloneReleasePipelineError,
-      isError: isCloningError,
-      isLoading: isCloning,
-      isSuccess: isCloningSuccess,
-    },
-  ] = useCloneReleasePipelineMutation()
-
-  useEffect(() => {
-    if (isCloningSuccess) {
-      return toast('Release pipeline cloned successfully')
-    }
-  }, [isCloningSuccess])
-
   const pipelinesList = data?.results
 
   useEffect(() => {
@@ -106,21 +88,7 @@ const ReleasePipelinesList = ({
         'danger',
       )
     }
-
-    if (isCloningError) {
-      return toast(
-        cloneReleasePipelineError?.data?.detail ??
-          'Something went wrong while cloning the release pipeline',
-        'danger',
-      )
-    }
-  }, [
-    isDeletingSuccess,
-    isDeletingError,
-    deleteReleasePipelineError,
-    isCloningError,
-    cloneReleasePipelineError,
-  ])
+  }, [isDeletingSuccess, isDeletingError, deleteReleasePipelineError])
 
   const openChangeReleasePipelineStatusModal = (
     projectId: number,
@@ -241,14 +209,16 @@ const ReleasePipelinesList = ({
                         : undefined,
                   },
                   {
-                    disabled: isCloning,
                     icon: 'copy' as IconName,
                     label: 'Clone',
                     onClick: () =>
-                      cloneReleasePipeline({
-                        pipelineId: id,
-                        projectId: Number(projectId),
-                      }),
+                      openModal2(
+                        'Clone Release Pipeline',
+                        <CloneReleasePipelineModal
+                          pipelineId={id}
+                          projectId={Number(projectId)}
+                        />,
+                      ),
                   },
                   {
                     disabled: isDeleting || isPublished,

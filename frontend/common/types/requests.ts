@@ -743,6 +743,7 @@ export type Req = {
   cloneReleasePipeline: {
     projectId: number
     pipelineId: number
+    name: string
   }
   // END OF TYPES
 }

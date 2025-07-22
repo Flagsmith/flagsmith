@@ -26,6 +26,9 @@ export const releasePipelinesService = service
       >({
         invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
         query: (query: Req['cloneReleasePipeline']) => ({
+          body: {
+            name: query.name,
+          },
           method: 'POST',
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/clone/`,
         }),
