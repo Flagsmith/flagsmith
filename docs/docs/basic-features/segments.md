@@ -245,15 +245,11 @@ You can use Percentage Split to drive [A/B tests](/advanced-use/ab-testing) and
 [staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
 
 Percentage Split deterministically assigns an Identity to a bucket based on a provided [context value](#context-values)
-or a trait. This means that Segment overrides that use Percentage Split will always result in the same feature value for
-a given identity in the chosen context.
+or a trait. This means that Segment overrides that use Percentage Split will always result in the same feature state and value for
+a given identity.
 
 If you create a Segment with a single Percentage Split rule of 10% over identifier, Identities who are members of that  
 split will be guaranteed to also be in that split if it is changed to a value higher than 10%.
-
-Percentage Split deterministically assigns a "bucket" to each identity based on a provided identifier or a
-[context value](#context-values). This means that Segment overrides that use Percentage Split will always result in the
-same feature value for a given identity in the chosen context.
 
 If the Percentage Split is reduced in value, some Identities will be removed from that Percentage Split to maintain the
 balance. The algorithm is fairly simple and good to understand - it is
