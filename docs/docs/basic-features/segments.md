@@ -99,10 +99,11 @@ flag is:
 In addition to identity [traits](managing-identities.md#identity-traits), you can use the following context values as
 Segment rule properties:
 
-- **Identifier**: a unique string value used to identify your identity. Useful for bucketing via the
+- **Identifier**: a unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI. Useful for bucketing via the
   [`% Split`](?operators=percent#operator-details) operator, or managing a list of users via the
   [`In`](?operators=in#operator-details) operator.
-- **Environment Name**: the name of your Flagsmith environment. Useful for restricting Segments to certain environments.
+- **Identity Key**: a key used when selecting a value for a multivariate feature, or for % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depending on Flagsmith implementation.
+- **Environment Name**: an environment's human-readable name. Useful for restricting Segments to certain environments.
 
 Context values can be used to control your targeting more precisely:
 
