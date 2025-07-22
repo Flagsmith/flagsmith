@@ -1975,13 +1975,13 @@ test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "5.3.0"
+version = "5.4.3"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 groups = ["main", "dev", "split-testing", "workflows"]
 files = [
-    {file = "flagsmith-flag-engine-5.3.0.tar.gz", hash = "sha256:87007f6a312cf11b2c201acd54b30f17de8aa039c3c56af431f1ed3c743fa84c"},
+    {file = "flagsmith-flag-engine-5.4.3.tar.gz", hash = "sha256:a11b9e46c5dcfc1f45f8829864c90a4a3bd032b1a18d987ee9a33a0e5f3ef615"},
 ]
 
 [package.dependencies]
@@ -5419,4 +5419,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "aae1427dac385f7f8a559228f3c80be40cc3c4e44220c6936e450c86da208100"
+content-hash = "a2a6709fbd9d92160e6d9bbd9542ac9a1a2a0c944cb7d05f8ddd4cfba438bb63"

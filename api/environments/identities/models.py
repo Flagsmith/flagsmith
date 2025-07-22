@@ -3,7 +3,8 @@ from itertools import chain
 
 from django.db import models
 from django.db.models import Prefetch, Q
-from flag_engine.segments.evaluator import evaluate_identity_in_segment
+from flag_engine.context.mappers import map_environment_identity_to_context
+from flag_engine.segments.evaluator import is_context_in_segment
 
 from environments.identities.managers import IdentityManager
 from environments.identities.traits.models import Trait
@@ -170,10 +171,15 @@ class Identity(models.Model):
         for segment in all_segments:
             engine_segment = map_segment_to_engine(segment)
 
-            if evaluate_identity_in_segment(
+            context = map_environment_identity_to_context(
+                environment=self.environment,
                 identity=engine_identity,
-                segment=engine_segment,
                 override_traits=engine_traits,
+            )
+
+            if is_context_in_segment(
+                context=context,
+                segment=engine_segment,
             ):
                 matching_segments.append(segment)
 
