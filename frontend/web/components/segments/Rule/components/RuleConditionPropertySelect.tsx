@@ -4,7 +4,8 @@ import { RuleContextLabels, RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
 
-interface OptionType {
+export interface OptionType {
+  enabled?: boolean
   label: string
   value: string
 }
@@ -19,6 +20,8 @@ interface RuleConditionPropertySelectProps {
     value: { value: string | boolean },
   ) => void
   operator: string
+  allowedContextValues: OptionType[]
+  isValueFromContext: boolean
 }
 
 const GroupLabel = ({
@@ -48,52 +51,56 @@ const GroupLabel = ({
 }
 
 const RuleConditionPropertySelect = ({
+  allowedContextValues,
   dataTest,
+  isValueFromContext,
   operator,
   propertyValue,
   ruleIndex,
   setRuleProperty,
 }: RuleConditionPropertySelectProps) => {
-  const ALLOWED_CONTEXT_VALUES: OptionType[] = [
-    {
-      label: RuleContextLabels.IDENTITY_KEY,
-      value: RuleContextValues.IDENTITY_KEY,
-    },
-    {
-      label: RuleContextLabels.IDENTIFIER,
-      value: RuleContextValues.IDENTIFIER,
-    },
-    {
-      label: RuleContextLabels.ENVIRONMENT_NAME,
-      value: RuleContextValues.ENVIRONMENT_NAME,
-    },
-  ]
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
-
   const isContextPropertyEnabled =
     Utils.getFlagsmithHasFeature('context_values')
 
-  useEffect(() => {
-    setLocalCurrentValue(propertyValue)
+  //   const ALLOWED_CONTEXT_VALUES: OptionType[] = [
+  //   {
+  //     enabled: operator === 'PERCENTAGE_SPLIT',
+  //     label: RuleContextLabels.IDENTITY_KEY,
+  //     value: RuleContextValues.IDENTITY_KEY,
+  //   },
+  //   {
+  //     label: RuleContextLabels.IDENTIFIER,
+  //     value: RuleContextValues.IDENTIFIER,
+  //   },
+  //   {
+  //     label: RuleContextLabels.ENVIRONMENT_NAME,
+  //     value: RuleContextValues.ENVIRONMENT_NAME,
+  //   },
+  // ]?.filter((option) => !!option.enabled || isContextPropertyEnabled)
 
-    if (operator === 'PERCENTAGE_SPLIT' && !propertyValue) {
+  // TODO: Clean this up when enabled
+  useEffect(() => {
+    const isPropInvalidWithSplit =
+      !propertyValue ||
+      (!isContextPropertyEnabled &&
+        propertyValue !== RuleContextValues.IDENTITY_KEY)
+    if (operator === 'PERCENTAGE_SPLIT' && isPropInvalidWithSplit) {
       setRuleProperty(ruleIndex, 'property', {
         value: RuleContextValues.IDENTITY_KEY,
       })
     }
-  }, [propertyValue, operator, ruleIndex, setRuleProperty])
+    setLocalCurrentValue(propertyValue)
+    //eslint-disable-next-line
+  }, [propertyValue, operator, ruleIndex, isContextPropertyEnabled])
 
   // Filter invalid context values from flagsmith and format them as options
-  const contextOptions = ALLOWED_CONTEXT_VALUES?.map(
+  const contextOptions = allowedContextValues?.map(
     (contextValue: OptionType) => ({
       label: contextValue?.label,
       value: contextValue?.value,
     }),
   )
-
-  const isValueFromContext = !!contextOptions.find(
-    (option) => option.value === localCurrentValue,
-  )?.value
 
   const displayedLabel =
     contextOptions.find((option) => option.value === propertyValue)?.label ||
@@ -115,7 +122,7 @@ const RuleConditionPropertySelect = ({
       : []
 
   const contextAsGroupedOptions =
-    isContextPropertyEnabled && contextOptions?.length > 0
+    contextOptions?.length > 0
       ? [
           {
             label: (
@@ -151,7 +158,9 @@ const RuleConditionPropertySelect = ({
         onBlur={() => {
           setRuleProperty(ruleIndex, 'property', { value: localCurrentValue })
         }}
-        isSearchable={true}
+        isSearchable={
+          operator !== 'PERCENTAGE_SPLIT' || isContextPropertyEnabled
+        }
         onInputChange={(e: string, metadata: any) => {
           if (metadata.action !== 'input-change') {
             return
@@ -165,6 +174,9 @@ const RuleConditionPropertySelect = ({
         }}
         options={[...optionsWithTrait]}
         style={{ width: '200px' }}
+        noOptionsMessage={() => {
+          return 'Start typing to select a trait'
+        }}
       />
     </>
   )

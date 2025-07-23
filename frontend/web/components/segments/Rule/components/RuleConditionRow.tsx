@@ -9,8 +9,12 @@ import {
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
-import RuleConditionPropertySelect from './RuleConditionPropertySelect'
+import RuleConditionPropertySelect, {
+  OptionType,
+} from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
+import { RuleContextValues } from 'common/types/rules.types'
+import { RuleContextLabels } from 'common/types/rules.types'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -66,6 +70,30 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     ? 'Value (N/A)'
     : operatorObj?.valuePlaceholder || 'Value'
 
+  // TODO: Move this to the parent component in next iteration
+  const isContextPropertyEnabled =
+    Utils.getFlagsmithHasFeature('context_values')
+
+  const ALLOWED_CONTEXT_VALUES: OptionType[] = [
+    {
+      enabled: operator === 'PERCENTAGE_SPLIT',
+      label: RuleContextLabels.IDENTITY_KEY,
+      value: RuleContextValues.IDENTITY_KEY,
+    },
+    {
+      label: RuleContextLabels.IDENTIFIER,
+      value: RuleContextValues.IDENTIFIER,
+    },
+    {
+      label: RuleContextLabels.ENVIRONMENT_NAME,
+      value: RuleContextValues.ENVIRONMENT_NAME,
+    },
+  ]?.filter((option) => !!option.enabled || isContextPropertyEnabled)
+
+  const isValueFromContext = !!ALLOWED_CONTEXT_VALUES.find(
+    (option) => option.value === rule.property,
+  )?.value
+
   return (
     <div className='rule__row reveal' key={ruleIndex}>
       {hasOr && (
@@ -85,6 +113,8 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           setRuleProperty={setRuleProperty}
           propertyValue={rule.property}
           operator={rule.operator}
+          allowedContextValues={ALLOWED_CONTEXT_VALUES || []}
+          isValueFromContext={isValueFromContext}
         />
         {readOnly ? (
           !!find(operators, { value: operator })?.label
@@ -152,6 +182,16 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
               setRuleProperty(ruleIndex, 'description', value)
             }}
           />
+        </Row>
+      )}
+      {isLastRule && isValueFromContext && isContextPropertyEnabled && (
+        <Row className='mt-2'>
+          <div className='d-flex align-items-center gap-1'>
+            <Icon name='info-outlined' width={16} height={16} />
+            <span>
+              Context properties are only compatible with remote evaluation
+            </span>
+          </div>
         </Row>
       )}
       {(ruleErrors?.property || ruleErrors?.value) && (
