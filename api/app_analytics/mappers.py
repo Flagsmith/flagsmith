@@ -121,10 +121,13 @@ def map_input_labels_to_labels(input_labels: InputLabels) -> Labels:
             labels["user_agent"] = value
             continue
         elif label == "user_agent":
+            # fastuaparser classifies unrecognized UAs as "Other" — assume these to
+            # represent server-side SDKs.
             parsed_ua_string: str = parse_ua(value)
-            # Assume UA strings categorised as "Other" to represent server-side SDKs.
-            # Skip browser SDKs that don't send the special header.
-            if parsed_ua_string.split(" - ")[0] != "Other":
+            is_server_side_sdk = parsed_ua_string.startswith("Other - ")
+            
+            # Skip browser SDKs that don't send the special header
+            if not is_server_side_sdk:
                 continue
         labels[label] = value
     return labels
