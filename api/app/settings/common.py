@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.postgres",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "rest_framework",
@@ -1025,7 +1026,6 @@ LINKEDIN_PARTNER_TRACKING = env("LINKEDIN_PARTNER_TRACKING", default=False)
 GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
 HEADWAY_API_KEY = env("HEADWAY_API_KEY", default=None)
 CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
-MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 REO_API_KEY = env("REO_API_KEY", default=None)
@@ -1238,7 +1238,8 @@ DEFAULT_DOMAIN = "app.flagsmith.com"
 
 # Define the cooldown duration, in seconds, for password reset emails
 PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
-
+# Define the threshold, in minutes, for updating the last login timestamp
+LAST_LOGIN_UPDATE_THRESHOLD_MINUTES = env.int("LAST_LOGIN_UPDATE_THRESHOLD_MINUTES", 30)
 # Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
 MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)
 
