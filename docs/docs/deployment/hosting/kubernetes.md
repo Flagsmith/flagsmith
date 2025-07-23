@@ -385,8 +385,8 @@ The following table lists the configurable parameters of the chart and their def
 | `postgresqlUsername`                               |                                                                           | `postgres`                     |
 | `postgresqlPassword`                               |                                                                           | `flagsmith`                    |
 | `databaseExternal.enabled`                         | use an external database. Specify database URL, or all parts.             | `false`                        |
-| `databaseExternal.url`                             | See [schema](https://github.com/kennethreitz/dj-database-url#url-schema). |                                |
-| `databaseExternal.type`                            | Note: Only postgres supported by default images.                          | `postgres`                     |
+| `databaseExternal.url`                             | See [schema](https://github.com/jazzband/dj-database-url#url-schema). |                                |
+| `databaseExternal.type`                            | Note: Only Postgres is fully supported by default images. [Other databases](https://github.com/jazzband/dj-database-url#supported-databases) not guaranteed to work.                          | `postgres`                     |
 | `databaseExternal.port`                            |                                                                           | 5432                           |
 | `databaseExternal.database`                        | Name of the database within the server                                    |                                |
 | `databaseExternal.username`                        |                                                                           |                                |
