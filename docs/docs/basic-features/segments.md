@@ -109,7 +109,7 @@ Context values can be used to control your targeting more precisely:
 
 ### Gradual rollout across tenants
 
-Suppose your application supports users who can belong to multiple organisations. Now imagine you want to roll out a new
+Suppose your application supports users who can belong to multiple organisations. Now, you want to roll out a new
 feature to 20% of your organisations, ensuring that users only have access to the feature when they are part of an organisation included in that 20%. If they switch to an organisation outside this group, they will no longer have access to the feature.
 
 Here's how you might define a segment to achieve this:
