@@ -50,7 +50,7 @@ export type SegmentCondition = {
   description?: string
   operator: string
   property: string
-  value: string | number | null
+  value: string | number | boolean | null
 }
 
 export type SegmentConditionsError = {

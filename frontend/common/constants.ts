@@ -695,6 +695,8 @@ const Constants = {
       'See which identities have specific overridden values for this feature.<br/>Identity overrides take priority over segment overrides and environment values.',
     ORGANISATION_DESCRIPTION:
       'This is used to create a default organisation for team members to create and manage projects.',
+    PERCENTAGE_SPLIT_DEFAULT_TO_IDENTITY_KEY:
+      'If no value is provided, the identity key will be used as the default value for split operator.',
     REMOTE_CONFIG_DESCRIPTION:
       'Features can have values as well as being simply on or off, e.g. a font size for a banner or an environment variable for a server.',
     REMOTE_CONFIG_DESCRIPTION_VARIATION:
