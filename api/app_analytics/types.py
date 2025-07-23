@@ -54,4 +54,7 @@ Label = Literal[
     "user_agent",
 ]
 
+InputLabel = Label | Literal["sdk_user_agent"]
+
 Labels: TypeAlias = dict[Label, str]
+InputLabels: TypeAlias = dict[InputLabel, str]
