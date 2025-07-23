@@ -34,7 +34,7 @@ You will need to provide:
 
 - The title of the Change Request
 - Optionally a description of the reason for the Change Request
-- Any number of assignees. These people will receive an email alerting them of the Change Request
+- Assigness - specify either individual users or members of a group. These users will receive an email alerting them of the Change Request
 
 ## Approving a Change Request
 
