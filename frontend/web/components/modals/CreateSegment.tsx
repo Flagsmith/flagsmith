@@ -33,7 +33,7 @@ import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
-import Rule from './Rule'
+import Rule from 'components/segments/Rule/Rule'
 import TabItem from 'components/base/forms/TabItem'
 import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -267,6 +267,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
       }
     })
   }, [valueChanged, isEdit])
+
   useEffect(() => {
     setInterceptClose(onClosing)
     return () => setInterceptClose(null)
@@ -366,6 +367,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
+                  index={i}
                   operators={operators!}
                   onChange={(v: SegmentRule) => {
                     setValueChanged(true)
