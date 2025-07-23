@@ -331,18 +331,6 @@ class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSeriali
     class Meta(CreateFeatureSerializer.Meta):
         fields = CreateFeatureSerializer.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
-    def get_project(
-        self,
-        validated_data: dict[str, typing.Any] | None = None,
-    ) -> Project:
-        project = self.context.get("project")
-        if project:
-            return project  # type: ignore[no-any-return]
-        else:
-            raise serializers.ValidationError(
-                "Unable to retrieve project for metadata validation."
-            )
-
     def update(
         self, instance: models.Model, validated_data: dict[str, typing.Any]
     ) -> Feature:

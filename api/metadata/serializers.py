@@ -103,21 +103,40 @@ class MetadataSerializer(serializers.ModelSerializer[Metadata]):
         return attrs
 
 
-class SerializerWithMetadata(serializers.Serializer[Model]):
-    def get_organisation(
-        self,
-        validated_data: dict[str, Any] | None = None,
-    ) -> Organisation:
-        return self.get_project(validated_data).organisation
+class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
+    def _get_organisation(self, validated_data: dict[str, Any]) -> Organisation:
+        return self._get_project(validated_data).organisation
 
-    # TODO: Repurpose this function in favor not requiring overriding it
-    def get_project(
-        self,
-        validated_data: dict[str, Any] | None = None,
-    ) -> Project:
-        raise NotImplementedError()
+    def _get_project(self, validated_data: dict[str, Any]) -> Project:
+        try:  # Attempt to find the project in the serializer context
+            assert isinstance(project := self.context["project"], Project)
+            return project
+        except (KeyError, AssertionError):
+            pass
 
-    def get_required_for_object(
+        try:  # Attempt to retrieve the project from validated data
+            assert isinstance(project := validated_data["project"], Project)
+            return project
+        except (KeyError, AssertionError):
+            pass
+
+        try:  # Attempt to obtain the project to which the object belongs
+            assert isinstance(project := self.instance.project, Project)  # type: ignore[union-attr]
+            return project
+        except AttributeError:
+            pass
+
+        try:  # Attempt to obtain the project from the URL
+            assert (project_pk := self.context["view"].kwargs["project_pk"])
+            return Project.objects.get(pk=project_pk)  # type: ignore[no-any-return]
+        except (KeyError, AssertionError):
+            pass
+
+        raise serializers.ValidationError(
+            "Unable to retrieve project for metadata validation."
+        )
+
+    def _get_required_for_object(
         self,
         requirement: MetadataModelFieldRequirement,
         data: dict[str, Any],
@@ -129,6 +148,33 @@ class SerializerWithMetadata(serializers.Serializer[Model]):
         except AttributeError:
             raise ValueError(f"`{method_name}` method does not exist")
         return instance
+
+    def _validate_required_metadata(self, data: dict[str, Any]) -> None:
+        metadata = data.get("metadata", [])
+        content_type = ContentType.objects.get_for_model(self.Meta.model)
+        organisation = self._get_organisation(data)
+        requirements = MetadataModelFieldRequirement.objects.filter(
+            model_field__content_type=content_type,
+            model_field__field__organisation=organisation,
+        )
+
+        for requirement in requirements:
+            required_for = self._get_required_for_object(requirement, data)
+            if required_for.pk == requirement.object_id:
+                if not any(
+                    field["model_field"] == requirement.model_field
+                    for field in metadata
+                ):
+                    raise serializers.ValidationError(
+                        {
+                            "metadata": f"Missing required metadata field: {requirement.model_field.field.name}"
+                        }
+                    )
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        self._validate_required_metadata(attrs)
+        return attrs
 
     def update_metadata(
         self,
@@ -166,39 +212,6 @@ class SerializerWithMetadata(serializers.Serializer[Model]):
                         "field_value": metadata_item["field_value"],
                     },
                 )
-
-    def validate_required_metadata(
-        self,
-        data: dict[str, Any],
-    ) -> None:
-        metadata = data.get("metadata", [])
-
-        content_type = ContentType.objects.get_for_model(self.Meta.model)
-
-        organisation = self.get_organisation(data)
-
-        requirements = MetadataModelFieldRequirement.objects.filter(
-            model_field__content_type=content_type,
-            model_field__field__organisation=organisation,
-        )
-
-        for requirement in requirements:
-            required_for = self.get_required_for_object(requirement, data)
-            if required_for.pk == requirement.object_id:
-                if not any(
-                    field["model_field"] == requirement.model_field
-                    for field in metadata
-                ):
-                    raise serializers.ValidationError(
-                        {
-                            "metadata": f"Missing required metadata field: {requirement.model_field.field.name}"
-                        }
-                    )
-
-    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        attrs = super().validate(attrs)
-        self.validate_required_metadata(attrs)
-        return attrs
 
     class Meta:
         model: Type[Model] = Model

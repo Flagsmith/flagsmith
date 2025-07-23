@@ -112,7 +112,7 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
         ]
 
 
-class SegmentSerializer(WritableNestedModelSerializer, SerializerWithMetadata):
+class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
     rules = SegmentRuleSerializer(
         many=True,
     )
@@ -137,21 +137,9 @@ class SegmentSerializer(WritableNestedModelSerializer, SerializerWithMetadata):
             raise ValidationError(
                 {"rules": "Segment cannot be created without any rules."}
             )
-        self.validate_required_metadata(attrs)
         self._validate_segment_rules_conditions_limit(attrs["rules"])
         self._validate_relations_of_nested_rules_and_conditions(attrs["rules"])
         return attrs
-
-    def get_project(
-        self,
-        validated_data: dict[str, Any] | None = None,
-    ) -> Project:
-        project: Project
-        if validated_data and "project" in validated_data:
-            project = validated_data["project"]
-            return project
-        project = Project.objects.get(id=self.context["view"].kwargs["project_pk"])
-        return project
 
     def create(self, validated_data: dict[str, Any]) -> Segment:
         project = validated_data["project"]
