@@ -1,7 +1,7 @@
 import typing
 
 from django.db.models import Q
-from flag_engine.segments.evaluator import evaluate_identity_in_segment
+from flag_engine.segments.evaluator import is_context_in_segment
 from rest_framework import serializers
 
 from features.serializers import FeatureStateSerializerFull
@@ -9,7 +9,11 @@ from integrations.common.serializers import (
     BaseEnvironmentIntegrationModelSerializer,
 )
 from segments.models import Segment
-from util.mappers.engine import map_identity_to_engine, map_segment_to_engine
+from util.mappers.engine import (
+    map_engine_identity_to_context,
+    map_identity_to_engine,
+    map_segment_to_engine,
+)
 
 from .models import WebhookConfiguration
 
@@ -33,8 +37,9 @@ class SegmentSerializer(serializers.ModelSerializer):  # type: ignore[type-arg]
             with_overrides=False,
         )
         engine_segment = map_segment_to_engine(obj)
-        return evaluate_identity_in_segment(
-            identity=engine_identity,
+        context = map_engine_identity_to_context(engine_identity)
+        return is_context_in_segment(
+            context=context,
             segment=engine_segment,
         )
 

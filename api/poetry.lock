@@ -1192,15 +1192,18 @@ files = [
 
 [[package]]
 name = "dj-database-url"
-version = "0.5.0"
+version = "3.0.1"
 description = "Use Database URLs in your Django Application."
 optional = false
 python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "dj-database-url-0.5.0.tar.gz", hash = "sha256:4aeaeb1f573c74835b0686a2b46b85990571159ffc21aa57ecd4d1e1cb334163"},
-    {file = "dj_database_url-0.5.0-py2.py3-none-any.whl", hash = "sha256:851785365761ebe4994a921b433062309eb882fedd318e1b0fcecc607ed02da9"},
+    {file = "dj_database_url-3.0.1-py3-none-any.whl", hash = "sha256:43950018e1eeea486bf11136384aec0fe55b29fe6fd8a44553231b85661d9383"},
+    {file = "dj_database_url-3.0.1.tar.gz", hash = "sha256:8994961efb888fc6bf8c41550870c91f6f7691ca751888ebaa71442b7f84eff8"},
 ]
+
+[package.dependencies]
+Django = ">=4.2"
 
 [[package]]
 name = "django"
@@ -1255,6 +1258,18 @@ files = [
 django = ">=3.2"
 django-ipware = ">=3"
 setuptools = "*"
+
+[[package]]
+name = "django-cockroachdb"
+version = "4.2"
+description = "Django backend for CockroachDB"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "django-cockroachdb-4.2.tar.gz", hash = "sha256:f58d6fadf9b7e9d83309f842d0c8ea9b17d85405069f2b66982058a7ba3ba7d3"},
+    {file = "django_cockroachdb-4.2-py3-none-any.whl", hash = "sha256:04fb842d2462a10108552f56683d8fe0e99c60b85e35bd5ad08250251807868e"},
+]
 
 [[package]]
 name = "django-cors-headers"
@@ -1960,13 +1975,13 @@ test-tools = ["pyfakefs (>=5,<6)", "pytest-django (>=4,<5)"]
 
 [[package]]
 name = "flagsmith-flag-engine"
-version = "5.3.0"
+version = "5.4.3"
 description = "Flag engine for the Flagsmith API."
 optional = false
 python-versions = "*"
 groups = ["main", "dev", "split-testing", "workflows"]
 files = [
-    {file = "flagsmith-flag-engine-5.3.0.tar.gz", hash = "sha256:87007f6a312cf11b2c201acd54b30f17de8aa039c3c56af431f1ed3c743fa84c"},
+    {file = "flagsmith-flag-engine-5.4.3.tar.gz", hash = "sha256:a11b9e46c5dcfc1f45f8829864c90a4a3bd032b1a18d987ee9a33a0e5f3ef615"},
 ]
 
 [package.dependencies]
@@ -2004,13 +2019,13 @@ files = []
 develop = false
 
 [package.dependencies]
-release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "feat/release-pipeline-logic-v1", subdirectory = "flagsmith-release-pipelines-logic"}
+release-pipelines-logic = {git = "https://github.com/Flagsmith/flagsmith-private/", rev = "fix/move-clone-to-service-layer", subdirectory = "flagsmith-release-pipelines-logic"}
 
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "v0.1.0"
-resolved_reference = "b75b2dea7a9b0e67fe78800305e73130cbb73509"
+reference = "v0.2.1"
+resolved_reference = "6faa6b784954dc15e65f7dc80097824b23bdfecf"
 
 [[package]]
 name = "flagsmith-split-testing"
@@ -4242,7 +4257,6 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
-    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -4309,8 +4323,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/Flagsmith/flagsmith-private/"
-reference = "feat/release-pipeline-logic-v1"
-resolved_reference = "df9a4b160204fd0eeab69bf678d74b5de941d5ac"
+reference = "fix/move-clone-to-service-layer"
+resolved_reference = "186bea4cfba82208e827ea5a66ad4df2cd094b9a"
 subdirectory = "flagsmith-release-pipelines-logic"
 
 [[package]]
@@ -5405,4 +5419,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "a77fbee7bc35ae5c1732a54ae358a949c10ba017523dcdbc5e999b62d2888236"
+content-hash = "a2a6709fbd9d92160e6d9bbd9542ac9a1a2a0c944cb7d05f8ddd4cfba438bb63"

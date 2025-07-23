@@ -1,7 +1,4 @@
-import {
-  useDeleteReleasePipelineMutation,
-  usePublishReleasePipelineMutation,
-} from 'common/services/useReleasePipelines'
+import { useDeleteReleasePipelineMutation } from 'common/services/useReleasePipelines'
 import { PagedResponse, ReleasePipeline } from 'common/types/responses'
 import { useHistory } from 'react-router-dom'
 import Button from 'components/base/forms/Button'
@@ -10,8 +7,10 @@ import DropdownMenu from 'components/base/DropdownMenu'
 import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
 import { useEffect } from 'react'
+import ChangeReleasePipelineStatusModal from './ChangeReleasePipelineStatusModal'
+import CloneReleasePipelineModal from './CloneReleasePipelineModal'
 
-const NoReleasePipelines = ({ projectId }: { projectId: string }) => {
+const NoReleasePipelines = ({ projectId }: { projectId: number }) => {
   const history = useHistory()
 
   return (
@@ -50,7 +49,7 @@ const NoReleasePipelines = ({ projectId }: { projectId: string }) => {
 type ReleasePipelinesListProps = {
   data: PagedResponse<ReleasePipeline> | undefined
   isLoading: boolean
-  projectId: string
+  projectId: number
   page: number
   pageSize: number
   onPageChange: (page: number) => void
@@ -74,30 +73,8 @@ const ReleasePipelinesList = ({
       isSuccess: isDeletingSuccess,
     },
   ] = useDeleteReleasePipelineMutation()
-  const [
-    publishReleasePipeline,
-    {
-      error: publishReleasePipelineError,
-      isError: isPublishingError,
-      isLoading: isPublishing,
-      isSuccess: isPublishingSuccess,
-    },
-  ] = usePublishReleasePipelineMutation()
+
   const pipelinesList = data?.results
-
-  useEffect(() => {
-    if (isPublishingSuccess) {
-      return toast('Release pipeline published successfully')
-    }
-
-    if (isPublishingError) {
-      return toast(
-        publishReleasePipelineError?.data?.detail ??
-          'Something went wrong while publishing the release pipeline',
-        'danger',
-      )
-    }
-  }, [isPublishingSuccess, isPublishingError, publishReleasePipelineError])
 
   useEffect(() => {
     if (isDeletingSuccess) {
@@ -111,7 +88,27 @@ const ReleasePipelinesList = ({
         'danger',
       )
     }
-  }, [isDeletingSuccess, isDeletingError, deleteReleasePipelineError])
+
+  }, [
+    isDeletingSuccess,
+    isDeletingError,
+    deleteReleasePipelineError,
+  ])
+
+  const openChangeReleasePipelineStatusModal = (
+    projectId: number,
+    pipelineId: number,
+    isPublished: boolean,
+  ) => {
+    openModal2(
+      isPublished ? 'Unpublish Release Pipeline' : 'Publish Release Pipeline',
+      <ChangeReleasePipelineStatusModal
+        isPublished={isPublished}
+        pipelineId={pipelineId}
+        projectId={projectId}
+      />,
+    )
+  }
 
   if (isLoading) {
     return (
@@ -150,6 +147,14 @@ const ReleasePipelinesList = ({
         stages_count,
       }: ReleasePipeline) => {
         const isPublished = !!published_at
+        const canUnpublish = isPublished && !features?.length
+
+        const getTooltip = (action: string) => {
+          if (isPublished) {
+            return `Cannot ${action} a published release pipeline`
+          }
+          return undefined
+        }
 
         return (
           <Row key={id} className='list-item'>
@@ -182,43 +187,56 @@ const ReleasePipelinesList = ({
               <DropdownMenu
                 items={[
                   {
-                    disabled: isPublishing || !!published_at,
+                    disabled: isPublished,
                     icon: 'edit' as IconName,
-                    label: 'Edit Release Pipeline',
+                    label: 'Edit',
                     onClick: () => {
                       history.push(
                         `/project/${projectId}/release-pipelines/${id}/edit`,
                       )
                     },
-                    tooltip: published_at
-                      ? 'Cannot edit a published release pipeline'
-                      : undefined,
+                    tooltip: getTooltip('edit'),
                   },
-                  ...(!isPublished
-                    ? [
-                        {
-                          disabled: isPublishing,
-                          icon: 'checkmark-circle' as IconName,
-                          label: 'Publish Release Pipeline',
-                          onClick: () => {
-                            publishReleasePipeline({
-                              pipelineId: id,
-                              projectId: Number(projectId),
-                            })
-                          },
-                        },
-                      ]
-                    : []),
                   {
-                    disabled: isDeleting,
+                    disabled: isPublished && !canUnpublish,
+                    icon: isPublished
+                      ? 'minus-circle'
+                      : ('checkmark-circle' as IconName),
+                    label: isPublished ? 'Unpublish' : 'Publish',
+                    onClick: () =>
+                      openChangeReleasePipelineStatusModal(
+                        projectId,
+                        id,
+                        isPublished,
+                      ),
+                    tooltip:
+                      isPublished && !canUnpublish
+                        ? 'Cannot unpublish a release pipeline with in-flight features'
+                        : undefined,
+                  },
+                  {
+                    icon: 'copy' as IconName,
+                    label: 'Clone',
+                    onClick: () =>
+                      openModal2(
+                        'Clone Release Pipeline',
+                        <CloneReleasePipelineModal
+                          pipelineId={id}
+                          projectId={Number(projectId)}
+                        />,
+                      ),
+                  },
+                  {
+                    disabled: isDeleting || isPublished,
                     icon: 'trash-2',
-                    label: 'Remove Release Pipeline',
+                    label: 'Remove',
                     onClick: () => {
                       deleteReleasePipeline({
                         pipelineId: id,
                         projectId: Number(projectId),
                       })
                     },
+                    tooltip: getTooltip('remove'),
                   },
                 ]}
               />

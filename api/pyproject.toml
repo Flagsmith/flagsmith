@@ -112,7 +112,7 @@ pyparsing = "~2.4.7"
 requests = "~2.32.4"
 six = "~1.16.0"
 whitenoise = "~6.0.0"
-dj-database-url = "~0.5.0"
+dj-database-url = "~3.0.1"
 drf-nested-routers = "~0.92.1"
 shortuuid = "~1.0.1"
 sendgrid-django = "~4.2.0"
@@ -133,7 +133,7 @@ environs = "^14.1.1"
 django-lifecycle = "~1.2.4"
 drf-writable-nested = "~0.6.2"
 django-filter = "~2.4.0"
-flagsmith-flag-engine = "^5.3.0"
+flagsmith-flag-engine = "^5.4.3"
 boto3 = "~1.35.95"
 slack-sdk = "~3.9.0"
 asgiref = "~3.8.1"
@@ -166,6 +166,7 @@ tzdata = "^2024.1"
 djangorestframework-simplejwt = "^5.3.1"
 structlog = "^24.4.0"
 prometheus-client = "^0.21.1"
+django_cockroachdb = "~4.2"
 
 [tool.poetry.group.auth-controller]
 optional = true
@@ -207,7 +208,7 @@ flagsmith-split-testing = { git = "https://github.com/flagsmith/flagsmith-split-
 optional = true
 
 [tool.poetry.group.release-pipelines.dependencies]
-flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.1.0" }
+flagsmith-private = { git = "https://github.com/Flagsmith/flagsmith-private/", rev = "v0.2.1" }
 
 
 [tool.poetry.group.dev.dependencies]

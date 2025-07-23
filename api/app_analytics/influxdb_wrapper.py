@@ -46,6 +46,10 @@ DEFAULT_DROP_COLUMNS = (
     "host",
 )
 
+GET_MULTIPLE_EVENTS_LIST_GROUP_CLAUSE = (
+    f"|> group(columns: {json.dumps(['resource', *LABELS])}) "
+)
+
 
 def get_range_bucket_mappings(date_start: datetime) -> str:
     now = timezone.now()
@@ -263,8 +267,8 @@ def get_multiple_event_list_for_organisation(
         date_stop=date_stop,
         filters=build_filter_string(filters),
         extra=(
-            f"|> group(columns: {json.dumps(LABELS)}) "
-            '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
+            GET_MULTIPLE_EVENTS_LIST_GROUP_CLAUSE
+            + '|> aggregateWindow(every: 24h, fn: sum, timeSrc: "_start")'
         ),
     )
 

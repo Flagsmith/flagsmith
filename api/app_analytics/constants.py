@@ -20,7 +20,7 @@ TRACK_HEADERS: dict[str, Label] = {
     "Flagsmith-Application-Version": "client_application_version",
     "User-Agent": "user_agent",
 }
-LABELS: tuple[Label, ...] = get_args(Label)
+LABELS: tuple[str, ...] = tuple(str(label) for label in get_args(Label))
 
 NO_ANALYTICS_DATABASE_CONFIGURED_WARNING = (
     "No analytics database configured. "
