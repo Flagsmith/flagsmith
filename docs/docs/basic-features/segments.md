@@ -7,8 +7,8 @@ import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 # Segments
 
 A segment is a subset of [identities](/basic-features/managing-identities.md), defined by a set of rules that match
-identity [traits](managing-identities.md#identity-traits). An identity always belongs to a single environment and can
-belong to any number of segments.
+identity [traits](managing-identities.md#identity-traits) or other [context values](#context-values). An identity always
+belongs to a single environment and can belong to any number of segments.
 
 Once you have defined a segment, you can create **segment overrides** for features within an environment. A segment
 override allows you to control the state of a feature only for identities that belong to a specific segment. This is
@@ -69,14 +69,14 @@ Segment rules are evaluated in order, i.e. from top to bottom when viewed in the
 
 For example, consider the following segment:
 
-1. 10% percentage split
+1. 10% percentage split over identifier
 2. `is_subscriber = true`
 
 This segment would first select 10% of _all_ identities, and then choose subscribers from that cohort. Instead, if we
 used the opposite order:
 
 1. `is_subscriber = true`
-2. 10% percentage split
+2. 10% percentage split over identifier
 
 This would first select all subscriber identities, and then randomly choose 10% of them.
 
@@ -93,6 +93,60 @@ flag is:
 1. Identity overrides
 2. Segment overrides
 3. Default value for the current environment
+
+## Context values
+
+:::warning
+
+Currently, context values are only available for remote evaluation. In local evaluation, rules using context values will evaluate to `false`.
+
+:::
+
+In addition to identity [traits](managing-identities.md#identity-traits), you can use the following context values as
+Segment rule properties:
+
+- **Identifier**: a unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI. Useful for bucketing via the
+  [`% Split`](?operators=percent#operator-details) operator, or managing a list of users via the
+  [`In`](?operators=in#operator-details) operator.
+- **Identity Key**: a key used when selecting a value for a multivariate feature, or for % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depending on Flagsmith implementation.
+- **Environment Name**: an environment's human-readable name. Useful for restricting Segments to certain environments.
+
+Context values can be used to control your targeting more precisely:
+
+### Gradual rollout across tenants
+
+Suppose your application supports users who can belong to multiple organisations. Now, you want to roll out a new
+feature to 20% of your organisations, ensuring that users only have access to the feature when they are part of an organisation included in that 20%. If they switch to an organisation outside this group, they will no longer have access to the feature.
+
+Here's how you might define a segment to achieve this:
+
+| Rule Order | Property                  | Operator | Value |
+| ---------- | ------------------------- | -------- | ----- |
+| 1          | `organisation_name` Trait | % Split  | 20    |
+
+This setup, along with a segment override, instructs the evaluation engine to enable the feature if the user's current organisation belongs to consistent 20% of all organisations.
+
+:::info Use transient traits for multi-tenancy
+
+To avoid persisting the `organisation_name` trait on the user identity, mark it as
+[transient](../advanced-use/transient-traits.md).
+
+:::
+
+### Restrict evaluation to select environments
+
+Segments and segment overrides are defined at the project level. This means they apply across all environments, so you
+may want to restrict your targeting to specific environments — for example, to avoid exposing features in production
+while still running complex evaluations in staging or development.
+
+Here’s how you could define such a segment:
+
+| Rule Order | Property         | Operator            | Value        |
+| ---------- | ---------------- | ------------------- | ------------ |
+| 1          | Environment Name | Does Not Match (!=) | `production` |
+| 2          | Identifier       | % Split             | 20           |
+
+This setup will enable the feature for 20% of users, but only in non-production environments.
 
 ## Trait data types
 
@@ -193,16 +247,15 @@ Versions are compared as defined by the [Semantic Versioning specification](http
 </TabItem>
 <TabItem value="percent" label="Percentage Split">
 
-Percentage Split is the only operator that does not require a trait. You can use it to drive
-[A/B tests](/advanced-use/ab-testing) and
+You can use Percentage Split to drive [A/B tests](/advanced-use/ab-testing) and
 [staged feature rollouts](/guides-and-examples/staged-feature-rollouts#creating-staged-rollouts).
 
-Percentage Split deterministically assigns a "bucket" to each identity solely based on its ID and not any traits,
-meaning that Segment overrides that use Percentage Split will always result in the same feature value for a given
-identity.
+Percentage Split deterministically assigns an Identity to a bucket based on a provided [context value](#context-values)
+or a trait. This means that Segment overrides that use Percentage Split will always result in the same feature state and value for
+a given identity.
 
-If you create a Segment with a single Percentage Split rule, Identities who are members of that split when the split
-value is set to, say, 10% will be guaranteed to also be in that split if it is changed to a value higher than 10%.
+If you create a Segment with a single Percentage Split rule of 10% over identifier, Identities who are members of that  
+split will be guaranteed to also be in that split if it is changed to a value higher than 10%.
 
 If the Percentage Split is reduced in value, some Identities will be removed from that Percentage Split to maintain the
 balance. The algorithm is fairly simple and good to understand - it is
