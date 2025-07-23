@@ -1,9 +1,6 @@
 from typing import Any, Callable, Dict
 
 import pytest
-from common.metadata.serializers import (
-    MetadataSerializer,
-)
 from django.contrib.contenttypes.models import ContentType
 
 from metadata.models import (
@@ -11,7 +8,7 @@ from metadata.models import (
     MetadataField,
     MetadataModelField,
 )
-from metadata.serializers import MetaDataModelFieldSerializer
+from metadata.serializers import MetaDataModelFieldSerializer, MetadataSerializer
 from organisations.models import Organisation
 from projects.models import Project
 

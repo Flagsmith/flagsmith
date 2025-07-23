@@ -9,10 +9,6 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
-from common.metadata.serializers import (
-    MetadataSerializer,
-    SerializerWithMetadata,
-)
 from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
@@ -28,6 +24,7 @@ from environments.sdk.serializers_mixins import (
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,

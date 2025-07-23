@@ -1,10 +1,6 @@
 import logging
 from typing import Any
 
-from common.metadata.serializers import (
-    MetadataSerializer,
-    SerializerWithMetadata,
-)
 from django.conf import settings
 from django.db.models.functions import Coalesce
 from drf_writable_nested.serializers import WritableNestedModelSerializer
@@ -15,6 +11,7 @@ from rest_framework_recursive.fields import (  # type: ignore[import-untyped]
     RecursiveField,
 )
 
+from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
@@ -145,7 +142,6 @@ class SegmentSerializer(WritableNestedModelSerializer, SerializerWithMetadata):
         self._validate_relations_of_nested_rules_and_conditions(attrs["rules"])
         return attrs
 
-    # Needed by SerializerWithMetadata.get_organisation
     def get_project(
         self,
         validated_data: dict[str, Any] | None = None,
