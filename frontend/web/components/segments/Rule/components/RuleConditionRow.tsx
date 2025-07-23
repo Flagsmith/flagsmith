@@ -195,7 +195,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           <div className='d-flex align-items-center gap-1'>
             <Icon name='info-outlined' width={16} height={16} />
             <span>
-              Context properties are only compatible with remote evaluation
+              Context values are only compatible with remote evaluation
             </span>
           </div>
         </Row>

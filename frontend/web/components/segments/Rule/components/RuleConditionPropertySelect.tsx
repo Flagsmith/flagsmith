@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
-import { RuleContextLabels, RuleContextValues } from 'common/types/rules.types'
+import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
 
@@ -62,22 +62,6 @@ const RuleConditionPropertySelect = ({
   const [localCurrentValue, setLocalCurrentValue] = useState(propertyValue)
   const isContextPropertyEnabled =
     Utils.getFlagsmithHasFeature('context_values')
-
-  //   const ALLOWED_CONTEXT_VALUES: OptionType[] = [
-  //   {
-  //     enabled: operator === 'PERCENTAGE_SPLIT',
-  //     label: RuleContextLabels.IDENTITY_KEY,
-  //     value: RuleContextValues.IDENTITY_KEY,
-  //   },
-  //   {
-  //     label: RuleContextLabels.IDENTIFIER,
-  //     value: RuleContextValues.IDENTIFIER,
-  //   },
-  //   {
-  //     label: RuleContextLabels.ENVIRONMENT_NAME,
-  //     value: RuleContextValues.ENVIRONMENT_NAME,
-  //   },
-  // ]?.filter((option) => !!option.enabled || isContextPropertyEnabled)
 
   // TODO: Clean this up when enabled
   useEffect(() => {
