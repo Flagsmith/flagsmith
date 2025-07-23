@@ -98,7 +98,7 @@ flag is:
 
 :::warning
 
-Currently, Context values are only available for remote evaluation. In Local evaluation, rules using Context values will evaluate to `false`.
+Currently, context values are only available for remote evaluation. In local evaluation, rules using context values will evaluate to `false`.
 
 :::
 
