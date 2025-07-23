@@ -96,6 +96,12 @@ flag is:
 
 ## Context values
 
+:::warning
+
+Currently, Context values are only available for remote evaluation. In Local evaluation, rules using Context values will evaluate to `false`.
+
+:::
+
 In addition to identity [traits](managing-identities.md#identity-traits), you can use the following context values as
 Segment rule properties:
 
