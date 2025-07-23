@@ -20,6 +20,19 @@ export const releasePipelinesService = service
           url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/add-feature/`,
         }),
       }),
+      cloneReleasePipeline: builder.mutation<
+        Res['releasePipeline'],
+        Req['cloneReleasePipeline']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'ReleasePipelines' }],
+        query: (query: Req['cloneReleasePipeline']) => ({
+          body: {
+            name: query.name,
+          },
+          method: 'POST',
+          url: `projects/${query.projectId}/release-pipelines/${query.pipelineId}/clone/`,
+        }),
+      }),
       createReleasePipeline: builder.mutation<
         Res['releasePipeline'],
         Req['createReleasePipeline']
@@ -168,6 +181,7 @@ export async function removeFeatureFromReleasePipeline(
 
 export const {
   useAddFeatureToReleasePipelineMutation,
+  useCloneReleasePipelineMutation,
   useCreateReleasePipelineMutation,
   useDeleteReleasePipelineMutation,
   useGetReleasePipelineQuery,

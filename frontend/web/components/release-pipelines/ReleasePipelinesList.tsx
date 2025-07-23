@@ -8,6 +8,7 @@ import PanelSearch from 'components/PanelSearch'
 import Tag from 'components/tags/Tag'
 import { useEffect } from 'react'
 import ChangeReleasePipelineStatusModal from './ChangeReleasePipelineStatusModal'
+import CloneReleasePipelineModal from './CloneReleasePipelineModal'
 
 const NoReleasePipelines = ({ projectId }: { projectId: number }) => {
   const history = useHistory()
@@ -87,7 +88,12 @@ const ReleasePipelinesList = ({
         'danger',
       )
     }
-  }, [isDeletingSuccess, isDeletingError, deleteReleasePipelineError])
+
+  }, [
+    isDeletingSuccess,
+    isDeletingError,
+    deleteReleasePipelineError,
+  ])
 
   const openChangeReleasePipelineStatusModal = (
     projectId: number,
@@ -207,6 +213,18 @@ const ReleasePipelinesList = ({
                       isPublished && !canUnpublish
                         ? 'Cannot unpublish a release pipeline with in-flight features'
                         : undefined,
+                  },
+                  {
+                    icon: 'copy' as IconName,
+                    label: 'Clone',
+                    onClick: () =>
+                      openModal2(
+                        'Clone Release Pipeline',
+                        <CloneReleasePipelineModal
+                          pipelineId={id}
+                          projectId={Number(projectId)}
+                        />,
+                      ),
                   },
                   {
                     disabled: isDeleting || isPublished,
