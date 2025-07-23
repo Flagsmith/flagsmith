@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.188.1](https://github.com/Flagsmith/flagsmith/compare/v2.188.0...v2.188.1) (2025-07-23)
+
+
+### Bug Fixes
+
+* Incorrect InfluxDB query for usage data ([#5818](https://github.com/Flagsmith/flagsmith/issues/5818)) ([3de3a7d](https://github.com/Flagsmith/flagsmith/commit/3de3a7ddbc568783a1b6b4692f2500da27c0982f))
+* Incorrect mapper behaviour for SDK metrics ([#5816](https://github.com/Flagsmith/flagsmith/issues/5816)) ([1eede39](https://github.com/Flagsmith/flagsmith/commit/1eede391b9427a2c3327b3aecdecf16d49d8a2ba))
+
 ## [2.188.0](https://github.com/Flagsmith/flagsmith/compare/v2.187.0...v2.188.0) (2025-07-23)
 
 
