@@ -9,6 +9,7 @@ import Tag from 'components/tags/Tag'
 import { useEffect } from 'react'
 import ChangeReleasePipelineStatusModal from './ChangeReleasePipelineStatusModal'
 import CloneReleasePipelineModal from './CloneReleasePipelineModal'
+import DeleteReleasePipelineModal from './DeleteReleasePipelineModal'
 
 const NoReleasePipelines = ({ projectId }: { projectId: number }) => {
   const history = useHistory()
@@ -88,12 +89,7 @@ const ReleasePipelinesList = ({
         'danger',
       )
     }
-
-  }, [
-    isDeletingSuccess,
-    isDeletingError,
-    deleteReleasePipelineError,
-  ])
+  }, [isDeletingSuccess, isDeletingError, deleteReleasePipelineError])
 
   const openChangeReleasePipelineStatusModal = (
     projectId: number,
@@ -148,6 +144,7 @@ const ReleasePipelinesList = ({
       }: ReleasePipeline) => {
         const isPublished = !!published_at
         const canUnpublish = isPublished && !features?.length
+        const canDelete = !features?.length
 
         const getTooltip = (action: string) => {
           if (isPublished) {
@@ -222,21 +219,26 @@ const ReleasePipelinesList = ({
                         'Clone Release Pipeline',
                         <CloneReleasePipelineModal
                           pipelineId={id}
-                          projectId={Number(projectId)}
+                          projectId={projectId}
                         />,
                       ),
                   },
                   {
-                    disabled: isDeleting || isPublished,
+                    disabled: !canDelete,
                     icon: 'trash-2',
                     label: 'Remove',
                     onClick: () => {
-                      deleteReleasePipeline({
-                        pipelineId: id,
-                        projectId: Number(projectId),
-                      })
+                      openModal2(
+                        'Remove Release Pipeline',
+                        <DeleteReleasePipelineModal
+                          pipelineId={id}
+                          projectId={projectId}
+                        />,
+                      )
                     },
-                    tooltip: getTooltip('remove'),
+                    tooltip: canDelete
+                      ? undefined
+                      : 'Cannot remove a release pipeline with in-flight features',
                   },
                 ]}
               />
