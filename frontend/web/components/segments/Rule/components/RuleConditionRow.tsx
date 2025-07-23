@@ -94,6 +94,12 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     (option) => option.value === rule.property,
   )?.value
 
+  const showEvaluationContextWarning =
+    isLastRule && isValueFromContext && isContextPropertyEnabled
+  const isSkippingEvaluationContextWarning =
+    operator === 'PERCENTAGE_SPLIT' &&
+    rule.property === RuleContextValues.IDENTITY_KEY
+
   return (
     <div className='rule__row reveal' key={ruleIndex}>
       {hasOr && (
@@ -184,7 +190,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           />
         </Row>
       )}
-      {isLastRule && isValueFromContext && isContextPropertyEnabled && (
+      {showEvaluationContextWarning && !isSkippingEvaluationContextWarning && (
         <Row className='mt-2'>
           <div className='d-flex align-items-center gap-1'>
             <Icon name='info-outlined' width={16} height={16} />
