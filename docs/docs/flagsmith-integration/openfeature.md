@@ -1,7 +1,7 @@
 ---
 description: OpenFeature
 sidebar_label: OpenFeature
-sidebar_position: 2
+sidebar_position: 50
 ---
 
 # OpenFeature

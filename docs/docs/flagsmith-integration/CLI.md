@@ -1,7 +1,7 @@
 ---
 description: Flagsmith Command Line Interface (CLI)
 sidebar_label: CLI
-sidebar_position: 6
+sidebar_position: 40
 ---
 
 # Flagsmith CLI

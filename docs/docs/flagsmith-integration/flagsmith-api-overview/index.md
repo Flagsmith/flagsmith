@@ -1,6 +1,7 @@
 ---
 title: Flagsmith API Overview
 sidebar_label: Overview
+sidebar_position: 10
 ---
 
 The Flagsmith API is divided into two distinct parts, each serving a different purpose. Understanding the difference is key to integrating with Flagsmith effectively.
