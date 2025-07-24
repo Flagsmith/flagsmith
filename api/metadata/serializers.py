@@ -213,12 +213,6 @@ class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
         except AttributeError:
             pass
 
-        try:  # Attempt to obtain the project from the URL
-            assert (project_pk := self.context["view"].kwargs["project_pk"])
-            return Project.objects.get(pk=project_pk)  # type: ignore[no-any-return]
-        except (KeyError, AssertionError):
-            pass
-
         raise serializers.ValidationError(
             "Unable to retrieve project for metadata validation."
         )
