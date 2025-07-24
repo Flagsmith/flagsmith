@@ -104,37 +104,13 @@ class MetadataSerializer(serializers.ModelSerializer[Metadata]):
 
 
 class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
-    def _get_organisation(self, validated_data: dict[str, Any]) -> Organisation:
-        return self._get_project(validated_data).organisation
+    """
+    Add metadata functionality to a serializer
 
-    def _get_project(self, validated_data: dict[str, Any]) -> Project:
-        try:  # Attempt to find the project in the serializer context
-            assert isinstance(project := self.context["project"], Project)
-            return project
-        except (KeyError, AssertionError):
-            pass
-
-        try:  # Attempt to retrieve the project from validated data
-            assert isinstance(project := validated_data["project"], Project)
-            return project
-        except (KeyError, AssertionError):
-            pass
-
-        try:  # Attempt to obtain the project to which the object belongs
-            assert isinstance(project := self.instance.project, Project)  # type: ignore[union-attr]
-            return project
-        except AttributeError:
-            pass
-
-        try:  # Attempt to obtain the project from the URL
-            assert (project_pk := self.context["view"].kwargs["project_pk"])
-            return Project.objects.get(pk=project_pk)  # type: ignore[no-any-return]
-        except (KeyError, AssertionError):
-            pass
-
-        raise serializers.ValidationError(
-            "Unable to retrieve project for metadata validation."
-        )
+    TODO:
+    - Improve class name. This is more of a mixin than a base class.
+    - Avoid implicit method calling, e.g. from _get_required_for_object.
+    """
 
     def _get_required_for_object(
         self,
@@ -152,7 +128,7 @@ class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
     def _validate_required_metadata(self, data: dict[str, Any]) -> None:
         metadata = data.get("metadata", [])
         content_type = ContentType.objects.get_for_model(self.Meta.model)
-        organisation = self._get_organisation(data)
+        organisation = self.get_organisation(data)
         requirements = MetadataModelFieldRequirement.objects.filter(
             model_field__content_type=content_type,
             model_field__field__organisation=organisation,
@@ -212,6 +188,40 @@ class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
                         "field_value": metadata_item["field_value"],
                     },
                 )
+
+    # NOTE: Implicitly required by _validate_required_metadata
+    def get_organisation(self, validated_data: dict[str, Any]) -> Organisation:
+        return self.get_project(validated_data).organisation
+
+    # NOTE: Implicitly required by _validate_required_metadata
+    def get_project(self, validated_data: dict[str, Any]) -> Project:
+        try:  # Attempt to find the project in the serializer context
+            assert isinstance(project := self.context["project"], Project)
+            return project
+        except (KeyError, AssertionError):
+            pass
+
+        try:  # Attempt to retrieve the project from validated data
+            assert isinstance(project := validated_data["project"], Project)
+            return project
+        except (KeyError, AssertionError):
+            pass
+
+        try:  # Attempt to obtain the project to which the object belongs
+            assert isinstance(project := self.instance.project, Project)  # type: ignore[union-attr]
+            return project
+        except AttributeError:
+            pass
+
+        try:  # Attempt to obtain the project from the URL
+            assert (project_pk := self.context["view"].kwargs["project_pk"])
+            return Project.objects.get(pk=project_pk)  # type: ignore[no-any-return]
+        except (KeyError, AssertionError):
+            pass
+
+        raise serializers.ValidationError(
+            "Unable to retrieve project for metadata validation."
+        )
 
     class Meta:
         model: Type[Model] = Model
