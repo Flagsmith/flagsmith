@@ -121,7 +121,7 @@ class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
         method_name = f"get_{model_name}"
         try:
             instance: Model = getattr(self, method_name)(data)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             raise ValueError(f"`{method_name}` method does not exist")
         return instance
 
@@ -207,15 +207,9 @@ class SerializerWithMetadata(serializers.Serializer):  # type: ignore[type-arg]
         except (KeyError, AssertionError):
             pass
 
-        try:  # Attempt to obtain the project to which the object belongs
-            assert isinstance(project := self.instance.project, Project)  # type: ignore[union-attr]
-            return project
-        except AttributeError:
-            pass
-
-        raise serializers.ValidationError(
-            "Unable to retrieve project for metadata validation."
-        )
+        # Resort to obtain the project to which the object belongs
+        assert isinstance(project := self.instance.project, Project)  # type: ignore[union-attr]
+        return project
 
     class Meta:
         model: Type[Model] = Model
