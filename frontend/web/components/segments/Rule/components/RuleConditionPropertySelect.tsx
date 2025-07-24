@@ -3,12 +3,9 @@ import Utils from 'common/utils/utils'
 import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
-
-export interface OptionType {
-  enabled?: boolean
-  label: string
-  value: string
-}
+import SearchableDropdown, {
+  OptionType,
+} from 'components/base/SearchableDropdown'
 
 interface RuleConditionPropertySelectProps {
   ruleIndex: number
@@ -131,24 +128,20 @@ const RuleConditionPropertySelect = ({
 
   return (
     <>
-      <Select
-        data-test={dataTest}
+      <SearchableDropdown
+        dataTest={dataTest}
+        value={propertyValue}
         placeholder={'Trait / Context value'}
-        value={
-          localCurrentValue
-            ? { label: displayedLabel, value: propertyValue }
-            : null
-        }
+        options={optionsWithTrait}
+        noOptionsMessage={'Start typing to select a trait'}
         onBlur={() => {
           setRuleProperty(ruleIndex, 'property', { value: localCurrentValue })
         }}
-        isSearchable={
-          operator !== 'PERCENTAGE_SPLIT' || isContextPropertyEnabled
-        }
         onInputChange={(e: string, metadata: any) => {
           if (metadata.action !== 'input-change') {
             return
           }
+          console.log('e', e)
           setLocalCurrentValue(e)
         }}
         onChange={(e: { value: string; label: string }) => {
@@ -156,11 +149,7 @@ const RuleConditionPropertySelect = ({
             value: Utils.safeParseEventValue(e?.value),
           })
         }}
-        options={[...optionsWithTrait]}
-        style={{ width: '200px' }}
-        noOptionsMessage={() => {
-          return 'Start typing to select a trait'
-        }}
+        displayedLabel={displayedLabel}
       />
     </>
   )

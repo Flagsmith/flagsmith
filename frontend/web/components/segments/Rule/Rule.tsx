@@ -26,6 +26,7 @@ interface RuleProps {
   showDescription?: boolean
   'data-test'?: string
   errors: SegmentConditionsError[]
+  projectId: number
 }
 
 const Rule: React.FC<RuleProps> = ({
@@ -33,6 +34,7 @@ const Rule: React.FC<RuleProps> = ({
   errors,
   onChange,
   operators,
+  projectId,
   readOnly,
   rule,
   showDescription,
@@ -174,6 +176,7 @@ const Rule: React.FC<RuleProps> = ({
             addRule={addRule}
             rules={rules}
             data-test={`${dataTest}`}
+            projectId={projectId}
           />
         ))}
       </div>

@@ -32,6 +32,7 @@ interface RuleConditionRowProps {
   removeRule: (i: number) => void
   addRule: () => void
   rules: SegmentCondition[]
+  projectId: number
 }
 
 const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
@@ -39,6 +40,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   'data-test': dataTest,
   errors: ruleErrors,
   operators,
+  projectId,
   readOnly,
   removeRule,
   rule,
@@ -94,6 +96,10 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     (option) => option.value === rule.property,
   )?.value
 
+  const showEnvironmentInput =
+    operator !== 'PERCENTAGE_SPLIT' &&
+    rule.property === RuleContextValues.ENVIRONMENT_NAME
+
   const showEvaluationContextWarning =
     isLastRule && isValueFromContext && isContextPropertyEnabled
   const isSkippingEvaluationContextWarning =
@@ -112,7 +118,10 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           <Flex className='or-divider__line' />
         </Row>
       )}
-      <Row noWrap className='rule align-items-center justify-content-between'>
+      <Row
+        noWrap
+        className='rule align-items-center justify-content-between gap-1'
+      >
         <RuleConditionPropertySelect
           dataTest={`${dataTest}-property-${ruleIndex}`}
           ruleIndex={ruleIndex}
@@ -142,8 +151,9 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           placeholder={valuePlaceholder}
           disabled={operatorObj && operatorObj.hideValue}
           style={{ width: '135px' }}
-          onChange={(e: InputEvent) => {
-            const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
+          projectId={projectId}
+          showEnvironmentInput={showEnvironmentInput}
+          onChange={(value: string) => {
             setRuleProperty(ruleIndex, 'value', {
               value:
                 operatorObj && operatorObj.append

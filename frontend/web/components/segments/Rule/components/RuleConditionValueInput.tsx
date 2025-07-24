@@ -7,16 +7,19 @@ import Utils from 'common/utils/utils'
 
 import { getDarkMode } from 'project/darkMode'
 import ModalHR from 'components/modals/ModalHR'
+import EnvironmentSelectDropdown from './EnvironmentSelectDropdown'
 
 type RuleConditionValueInputProps = {
   'data-test'?: string
   value: string | number | boolean
   style?: React.CSSProperties
   placeholder?: string
-  onChange?: (e: InputEvent) => void
+  onChange?: (value: string) => void
   disabled?: boolean
   readOnly?: boolean
   isValid?: boolean
+  projectId?: number
+  showEnvironmentInput?: boolean
 }
 
 const TextAreaModal = ({
@@ -74,7 +77,8 @@ const TextAreaModal = ({
               value: { value: textAreaValue },
               writable: false,
             })
-            onChange?.(event)
+            const value = Utils.getTypedValue(Utils.safeParseEventValue(event))
+            onChange?.(value)
             closeModal2()
           }}
         >
@@ -122,56 +126,71 @@ const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
 
   const showIcon = hasWarning || isLongText
   const isDarkMode = getDarkMode()
-
   return (
     <div className='relative'>
-      <Input
-        type='text'
-        {...props}
-        inputClassName={
-          showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
-        }
-      />
-      {showIcon && (
-        <div style={{ position: 'absolute', right: 5, top: 9 }}>
-          <Tooltip
-            title={
-              <div
-                className={`flex ${
-                  isDarkMode ? 'bg-white' : 'bg-black'
-                } bg-opacity-10 rounded-2 p-1 ${
-                  hasWarning ? '' : 'cursor-pointer'
-                }`}
-                onClick={() => {
-                  if (hasWarning) return
-                  openModal2(
-                    'Edit Value',
-                    <TextAreaModal
-                      value={value}
-                      onChange={props.onChange}
-                      isValid={props.isValid}
-                    />,
-                  )
-                }}
-              >
-                <Icon
-                  name={hasWarning ? 'warning' : 'expand'}
-                  fill={
-                    hasWarning
-                      ? undefined
-                      : `${isDarkMode ? '#fff' : '#1A2634'}`
-                  }
-                  width={18}
-                  height={18}
-                />
-              </div>
+      {props.showEnvironmentInput ? (
+        <EnvironmentSelectDropdown
+          value={value}
+          onChange={(value: string) => props.onChange?.(value)}
+          projectId={props.projectId}
+          dataTest={props['data-test']}
+        />
+      ) : (
+        <>
+          <Input
+            type='text'
+            {...props}
+            inputClassName={
+              showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
             }
-            place='top'
-            effect='solid'
-          >
-            {validate()}
-          </Tooltip>
-        </div>
+            style={{ width: '100%' }}
+            onChange={(e: InputEvent) => {
+              const value = Utils.safeParseEventValue(e)
+              props.onChange?.(value)
+            }}
+          />
+          {showIcon && (
+            <div style={{ position: 'absolute', right: 5, top: 9 }}>
+              <Tooltip
+                title={
+                  <div
+                    className={`flex ${
+                      isDarkMode ? 'bg-white' : 'bg-black'
+                    } bg-opacity-10 rounded-2 p-1 ${
+                      hasWarning ? '' : 'cursor-pointer'
+                    }`}
+                    onClick={() => {
+                      if (hasWarning) return
+                      openModal2(
+                        'Edit Value',
+                        <TextAreaModal
+                          value={value}
+                          onChange={props.onChange}
+                          isValid={props.isValid}
+                        />,
+                      )
+                    }}
+                  >
+                    <Icon
+                      name={hasWarning ? 'warning' : 'expand'}
+                      fill={
+                        hasWarning
+                          ? undefined
+                          : `${isDarkMode ? '#fff' : '#1A2634'}`
+                      }
+                      width={18}
+                      height={18}
+                    />
+                  </div>
+                }
+                place='top'
+                effect='solid'
+              >
+                {validate()}
+              </Tooltip>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
