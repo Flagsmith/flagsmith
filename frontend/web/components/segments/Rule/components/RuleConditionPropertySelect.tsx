@@ -89,9 +89,9 @@ const RuleConditionPropertySelect = ({
   const displayedLabel =
     contextOptions.find((option) => option.value === propertyValue)?.label ||
     propertyValue
-
+  const isEditing = localCurrentValue !== propertyValue
   const traitAsGroupedOptions =
-    !isValueFromContext && localCurrentValue
+    localCurrentValue && (!isValueFromContext || isEditing)
       ? [
           {
             label: (
