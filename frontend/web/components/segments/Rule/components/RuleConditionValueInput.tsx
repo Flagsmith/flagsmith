@@ -89,8 +89,14 @@ const TextAreaModal = ({
   )
 }
 
-const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
-  const value = props.value
+const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
+  isValid,
+  onChange,
+  projectId,
+  showEnvironmentInput,
+  value,
+  ...props
+}) => {
   const hasLeadingWhitespace = typeof value === 'string' && /^\s/.test(value)
   const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
   const isOnlyWhitespace =
@@ -128,11 +134,11 @@ const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
   const isDarkMode = getDarkMode()
   return (
     <div className='relative'>
-      {props.showEnvironmentInput ? (
+      {showEnvironmentInput && projectId ? (
         <EnvironmentSelectDropdown
           value={value}
-          onChange={(value: string) => props.onChange?.(value)}
-          projectId={props.projectId || 0}
+          onChange={(value: string) => onChange?.(value)}
+          projectId={projectId}
           dataTest={props['data-test']}
         />
       ) : (
@@ -146,7 +152,7 @@ const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
             style={{ width: '100%' }}
             onChange={(e: InputEvent) => {
               const value = Utils.safeParseEventValue(e)
-              props.onChange?.(value)
+              onChange?.(value)
             }}
           />
           {showIcon && (
@@ -165,8 +171,8 @@ const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
                         'Edit Value',
                         <TextAreaModal
                           value={value}
-                          onChange={props.onChange}
-                          isValid={props.isValid}
+                          onChange={onChange}
+                          isValid={isValid}
                         />,
                       )
                     }}

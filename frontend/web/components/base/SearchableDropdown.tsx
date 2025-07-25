@@ -20,7 +20,7 @@ interface SearchableDropdownProps {
   displayedLabel?: string
   noOptionsMessage?: string
   maxMenuHeight?: number
-  onBlur?: (e: OptionType) => void
+  onBlur?: (e: OptionType | null) => void
   onInputChange?: (e: string, metadata: any) => void
   onChange?: (e: OptionType) => void
 }
