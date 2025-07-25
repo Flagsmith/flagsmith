@@ -145,6 +145,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
         <>
           <Input
             type='text'
+            data-test={props['data-test']}
             value={value}
             inputClassName={
               showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
