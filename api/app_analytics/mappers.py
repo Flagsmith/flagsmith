@@ -3,6 +3,7 @@ from functools import partial
 from typing import Any, Iterable
 
 from django.http import HttpRequest
+from fastuaparser import parse_ua  # type: ignore[import-untyped]
 from influxdb_client.client.flux_table import FluxTable
 from pydantic import Field, create_model
 from pydantic.type_adapter import TypeAdapter
@@ -14,6 +15,7 @@ from app_analytics.types import (
     AnnotatedAPIUsageBucket,
     AnnotatedAPIUsageKey,
     FeatureEvaluationCacheKey,
+    InputLabels,
     Labels,
     TrackFeatureEvaluationsByEnvironmentData,
     TrackFeatureEvaluationsByEnvironmentKwargs,
@@ -112,6 +114,24 @@ def map_flux_tables_to_feature_evaluation_data(
     ]
 
 
+def map_input_labels_to_labels(input_labels: InputLabels) -> Labels:
+    labels: Labels = {}
+    for label, value in input_labels.items():
+        if label == "sdk_user_agent":
+            labels["user_agent"] = value
+            continue
+        elif label == "user_agent":
+            # fastuaparser classifies unrecognized UAs as "Other" — assume these to
+            # represent server-side SDKs.
+            parsed_ua_string: str = parse_ua(value)
+            is_server_side_sdk = parsed_ua_string.startswith("Other")
+            # Skip browser SDKs that don't send the special header.
+            if not is_server_side_sdk:
+                continue
+        labels[label] = value
+    return labels
+
+
 def map_request_to_labels(request: HttpRequest) -> Labels:
     if not (
         get_client("local", local_eval=True)
@@ -119,12 +139,12 @@ def map_request_to_labels(request: HttpRequest) -> Labels:
         .is_feature_enabled("sdk_metrics_labels")
     ):
         return {}
-    result: Labels = _RequestHeaderLabelsModel.model_validate(
+    labels: InputLabels = _RequestHeaderLabelsModel.model_validate(
         request.headers,
     ).model_dump(
         exclude_unset=True,
     )
-    return result
+    return map_input_labels_to_labels(labels)
 
 
 def map_feature_evaluation_cache_to_track_feature_evaluations_by_environment_kwargs(

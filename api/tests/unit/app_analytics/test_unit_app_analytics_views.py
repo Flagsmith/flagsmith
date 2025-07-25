@@ -565,6 +565,21 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
                 "user_agent": "python-requests/2.31.0",
             },
         ),
+        (
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
+            },
+            {},
+        ),
+        (
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/1.0.0",
+            },
+            {
+                "user_agent": "flagsmith-js-sdk/1.0.0",
+            },
+        ),
     ],
 )
 def test_sdk_analytics_flags_v1(
