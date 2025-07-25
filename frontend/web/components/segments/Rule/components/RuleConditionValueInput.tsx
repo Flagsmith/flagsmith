@@ -132,7 +132,7 @@ const RuleConditionValueInput = (props: RuleConditionValueInputProps) => {
         <EnvironmentSelectDropdown
           value={value}
           onChange={(value: string) => props.onChange?.(value)}
-          projectId={props.projectId}
+          projectId={props.projectId || 0}
           dataTest={props['data-test']}
         />
       ) : (

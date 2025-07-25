@@ -39,22 +39,20 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   value,
 }) => {
   return (
-    <>
-      <Select
-        data-test={dataTest}
-        placeholder={placeholder}
-        value={value ? { label: displayedLabel || value, value: value } : null}
-        onBlur={onBlur}
-        isSearchable={isSearchable}
-        onInputChange={onInputChange}
-        onChange={onChange}
-        options={options}
-        maxMenuHeight={maxMenuHeight}
-        {...(noOptionsMessage
-          ? { noOptionsMessage: () => noOptionsMessage }
-          : {})}
-      />
-    </>
+    <Select
+      data-test={dataTest}
+      placeholder={placeholder}
+      value={value ? { label: displayedLabel || value, value: value } : null}
+      onBlur={onBlur}
+      isSearchable={isSearchable}
+      onInputChange={onInputChange}
+      onChange={onChange}
+      options={options}
+      maxMenuHeight={maxMenuHeight}
+      {...(noOptionsMessage
+        ? { noOptionsMessage: () => noOptionsMessage }
+        : {})}
+    />
   )
 }
 

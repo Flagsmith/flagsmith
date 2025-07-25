@@ -141,7 +141,6 @@ const RuleConditionPropertySelect = ({
           if (metadata.action !== 'input-change') {
             return
           }
-          console.log('e', e)
           setLocalCurrentValue(e)
         }}
         onChange={(e: { value: string; label: string }) => {

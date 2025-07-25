@@ -9,7 +9,7 @@ interface EnvironmentSelectDropdownProps {
   projectId: number
   dataTest?: string
   onChange?: (value: string) => void
-  value?: string | number | null
+  value?: string | number | boolean | null
 }
 const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
   dataTest,
@@ -29,7 +29,9 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
   return (
     <SearchableDropdown
       options={options}
-      value={value?.toString() || null}
+      value={
+        options.find((opt) => opt.value === value?.toString())?.value ?? null
+      }
       placeholder={'Environment'}
       noOptionsMessage={'No environment matches your search'}
       maxMenuHeight={240}
