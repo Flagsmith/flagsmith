@@ -96,8 +96,8 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     (option) => option.value === rule.property,
   )?.value
 
-  const showEnvironmentInput =
-    operator !== 'PERCENTAGE_SPLIT' &&
+  const showEnvironmentDropdown =
+    !['PERCENTAGE_SPLIT', 'IN'].includes(rule.operator) &&
     rule.property === RuleContextValues.ENVIRONMENT_NAME
 
   const showEvaluationContextWarning =
@@ -152,7 +152,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           disabled={operatorObj && operatorObj.hideValue}
           style={{ width: '135px' }}
           projectId={projectId}
-          showEnvironmentInput={showEnvironmentInput}
+          showEnvironmentDropdown={showEnvironmentDropdown}
           onChange={(value: string) => {
             setRuleProperty(ruleIndex, 'value', {
               value:

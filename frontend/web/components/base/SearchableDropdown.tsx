@@ -1,3 +1,4 @@
+import Icon from 'components/Icon'
 import React from 'react'
 
 export interface OptionType {
@@ -9,6 +10,32 @@ export interface OptionType {
 export interface GroupedOptionType {
   label: React.ReactNode
   options: OptionType[]
+}
+
+export const GroupLabel = ({
+  groupName,
+  tooltipText,
+}: {
+  groupName: string
+  tooltipText?: string
+}) => {
+  return (
+    <div className='d-flex align-items-center gap-1'>
+      <div>{groupName}</div>
+      {tooltipText && (
+        <Tooltip
+          title={
+            <h5 className='mb-1 cursor-pointer'>
+              <Icon name='info-outlined' height={16} width={16} />
+            </h5>
+          }
+          place='right'
+        >
+          {tooltipText}
+        </Tooltip>
+      )}
+    </div>
+  )
 }
 
 interface SearchableDropdownProps {
@@ -23,11 +50,13 @@ interface SearchableDropdownProps {
   onBlur?: (e: OptionType | null) => void
   onInputChange?: (e: string, metadata: any) => void
   onChange?: (e: OptionType) => void
+  isMulti?: boolean
 }
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   dataTest,
   displayedLabel,
+  isMulti,
   isSearchable,
   maxMenuHeight,
   noOptionsMessage,
@@ -49,6 +78,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       onChange={onChange}
       options={options}
       maxMenuHeight={maxMenuHeight}
+      isMulti={isMulti}
       {...(noOptionsMessage
         ? { noOptionsMessage: () => noOptionsMessage }
         : {})}

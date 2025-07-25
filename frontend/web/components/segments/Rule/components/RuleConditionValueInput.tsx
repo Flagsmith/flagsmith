@@ -19,7 +19,7 @@ type RuleConditionValueInputProps = {
   readOnly?: boolean
   isValid?: boolean
   projectId?: number
-  showEnvironmentInput?: boolean
+  showEnvironmentDropdown?: boolean
 }
 
 const TextAreaModal = ({
@@ -93,7 +93,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   isValid,
   onChange,
   projectId,
-  showEnvironmentInput,
+  showEnvironmentDropdown,
   value,
   ...props
 }) => {
@@ -131,9 +131,10 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
 
   const showIcon = hasWarning || isLongText
   const isDarkMode = getDarkMode()
+
   return (
     <div className='relative'>
-      {showEnvironmentInput && projectId ? (
+      {showEnvironmentDropdown && projectId ? (
         <EnvironmentSelectDropdown
           value={value}
           onChange={(value: string) => onChange?.(value)}

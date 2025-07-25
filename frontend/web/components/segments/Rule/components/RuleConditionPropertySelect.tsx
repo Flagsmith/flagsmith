@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Utils from 'common/utils/utils'
 import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
-import Icon from 'components/Icon'
+import { GroupLabel } from 'components/base/SearchableDropdown'
 import SearchableDropdown, {
   OptionType,
 } from 'components/base/SearchableDropdown'
@@ -19,32 +19,6 @@ interface RuleConditionPropertySelectProps {
   operator: string
   allowedContextValues: OptionType[]
   isValueFromContext: boolean
-}
-
-const GroupLabel = ({
-  groupName,
-  tooltipText,
-}: {
-  groupName: string
-  tooltipText?: string
-}) => {
-  return (
-    <div className='d-flex align-items-center gap-1'>
-      <div>{groupName}</div>
-      {tooltipText && (
-        <Tooltip
-          title={
-            <h5 className='mb-1 cursor-pointer'>
-              <Icon name='info-outlined' height={16} width={16} />
-            </h5>
-          }
-          place='right'
-        >
-          {tooltipText}
-        </Tooltip>
-      )}
-    </div>
-  )
 }
 
 const RuleConditionPropertySelect = ({

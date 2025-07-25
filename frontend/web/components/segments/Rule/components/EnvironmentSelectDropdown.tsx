@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import SearchableDropdown, {
+  GroupLabel,
   OptionType,
 } from 'components/base/SearchableDropdown'
 import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
@@ -17,25 +18,66 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
   projectId,
   value,
 }) => {
+  const [localCurrentValue, setLocalCurrentValue] = useState(value || '')
   const { data } = useGetEnvironmentsQuery({ projectId: projectId?.toString() })
   const environments = data?.results
 
-  const options =
-    environments?.map((environment) => ({
-      label: Utils.capitalize(environment.name),
-      value: environment.name,
-    })) || []
+  useEffect(() => {
+    setLocalCurrentValue(value || '')
+  }, [value])
+
+  const isEditing = localCurrentValue !== value
+  const isExistingEnvironment = environments?.find(
+    (environment) => environment.name === value,
+  )
+
+  const customSelectionAsOption =
+    isEditing || !isExistingEnvironment
+      ? [
+          {
+            label: <GroupLabel groupName='Custom selection' />,
+            options: [
+              {
+                label: localCurrentValue?.toString(),
+                value: localCurrentValue?.toString(),
+              },
+            ],
+          },
+        ]
+      : []
+
+  const environmentOptions = [
+    {
+      label: <GroupLabel groupName='Environments' />,
+      options:
+        environments?.map((environment) => ({
+          label: Utils.capitalize(environment.name),
+          value: environment.name,
+        })) || [],
+    },
+  ]
+
+  const allOptions = [...customSelectionAsOption, ...environmentOptions]
 
   return (
     <SearchableDropdown
-      options={options}
-      value={
-        options.find((opt) => opt.value === value?.toString())?.value ?? null
-      }
+      options={allOptions}
+      value={value?.toString() || null}
       placeholder={'Environment'}
       noOptionsMessage={'No environment matches your search'}
-      maxMenuHeight={240}
+      maxMenuHeight={400}
       dataTest={dataTest}
+      onInputChange={(e: string, metadata: any) => {
+        if (metadata.action !== 'input-change') {
+          return
+        }
+        setLocalCurrentValue(e)
+      }}
+      onBlur={() => {
+        if (onChange && localCurrentValue !== value) {
+          onChange(localCurrentValue?.toString() || '')
+        }
+      }}
       onChange={(e: OptionType) => {
         if (onChange) {
           onChange(e.value)
