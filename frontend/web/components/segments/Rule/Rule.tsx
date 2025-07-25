@@ -89,7 +89,6 @@ const Rule: React.FC<RuleProps> = ({
 
       const invalidPercentageSplit =
         condition?.value && isInvalidPercentageSplit(condition.value)
-
       if (invalidPercentageSplit) {
         updates.value = ''
       } else {
@@ -105,7 +104,6 @@ const Rule: React.FC<RuleProps> = ({
     value: string | boolean,
   ) => {
     const condition = rule.conditions[conditionIndex]
-
     if (
       condition?.operator === 'PERCENTAGE_SPLIT' &&
       isInvalidPercentageSplit(value)

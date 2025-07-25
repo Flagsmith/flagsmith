@@ -101,7 +101,6 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
   const hasTrailingWhitespace = typeof value === 'string' && /\s$/.test(value)
   const isOnlyWhitespace =
     typeof value === 'string' && value.length >= 1 && value.trim() === ''
-
   const hasBothLeadingAndTrailingWhitespace =
     hasLeadingWhitespace && hasTrailingWhitespace
   const hasWarning =
@@ -145,7 +144,7 @@ const RuleConditionValueInput: React.FC<RuleConditionValueInputProps> = ({
         <>
           <Input
             type='text'
-            {...props}
+            value={value}
             inputClassName={
               showIcon ? `pr-5 ${hasWarning ? 'border-warning' : ''}` : ''
             }
