@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.contrib.postgres.fields import HStoreField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django_lifecycle import (  # type: ignore[import-untyped]
@@ -59,7 +58,7 @@ class APIUsageRaw(models.Model):
     host = models.CharField(max_length=255)
     resource = models.IntegerField(choices=Resource.choices)
     count = models.PositiveIntegerField(default=1)
-    labels = HStoreField(default=dict)
+    labels = models.JSONField(default=dict)
 
     class Meta:
         index_together = (("environment_id", "created_at"),)
@@ -70,7 +69,7 @@ class AbstractBucket(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     created_at = models.DateTimeField()
     total_count = models.PositiveIntegerField()
     environment_id = models.PositiveIntegerField()
-    labels = HStoreField(default=dict)
+    labels = models.JSONField(default=dict)
 
     class Meta:
         abstract = True
@@ -107,7 +106,7 @@ class FeatureEvaluationRaw(models.Model):
     environment_id = models.PositiveIntegerField()
     evaluation_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    labels = HStoreField(default=dict)
+    labels = models.JSONField(default=dict)
 
     # Both stored for tracking multivariate split testing.
     identity_identifier = models.CharField(max_length=2000, null=True, default=None)
