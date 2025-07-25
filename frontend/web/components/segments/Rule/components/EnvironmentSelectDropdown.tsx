@@ -31,7 +31,7 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
       options={options}
       value={value?.toString() || null}
       placeholder={'Environment'}
-      noOptionsMessage={'Start typing to select an environment'}
+      noOptionsMessage={'No environment matches your search'}
       maxMenuHeight={240}
       dataTest={dataTest}
       onChange={(e: OptionType) => {
