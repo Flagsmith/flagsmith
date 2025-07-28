@@ -7,9 +7,9 @@ import Tabs from '@theme/Tabs'; import TabItem from '@theme/TabItem';
 
 # Segments
 
-A segment is a subset of [identities](/basic-features/managing-identities.md), defined by a set of rules that match identity [traits](managing-identities.md#identity-traits). An identity always belongs to a single environment and can belong to any number of segments.
+A segment is a subset of [identities](../identities), defined by a set of rules that match identity [traits](../identities#identity-traits). An identity always belongs to a single environment and can belong to any number of segments.
 
-Once you have defined a segment, you can create **segment overrides** for features within an environment. A segment override allows you to control the state of a feature only for identities that belong to a specific segment. This is similar to how [identity overrides](managing-identities.md#identity-overrides) let you control the state of features for an explicit set of identities that is known in advance.
+Once you have defined a segment, you can create **segment overrides** for features within an environment. A segment override allows you to control the state of a feature only for identities that belong to a specific segment. This is similar to how [identity overrides](../identities#identity-overrides) let you control the state of features for an explicit set of identities that is known in advance.
 
 Because segments are driven by identity traits, your application must identify the user when retrieving flags in order for segment overrides to be applied. If your user is not identified, no overrides will be applied and all flags will be returned exactly as they are defined in the current environment.
 
@@ -17,7 +17,7 @@ Segments and segment overrides can be used to implement many scenarios. For exam
 
 - Test features in production before they are released by overriding them only for internal users or a QA team
 - Deliver features only to "power users" who have logged in a certain number of times, have used specific functionality within your application, or any combination of factors
-- Force a group of users into a specific [A/B test](advanced-use/ab-testing.md) variation by overriding weightings on [multivariate flags](managing-features.md#multi-variate-flags)
+- Force a group of users into a specific [A/B test](advanced-use/ab-testing.md) variation by overriding weightings on [multivariate flags](../../basic-features/managing-features.md#multi-variate-flags)
 - Override behaviour based on the [application version number](/guides-and-examples/mobile-app-versioning.md), e.g. by using the SemVer rule operators
 - Control features based on the time of day, date, weekday, etc. by passing it as a trait when evaluating flags for an identity
 
@@ -108,4 +108,4 @@ The following string trait values will evaluate to `true`:
 ## What's next
 
 - Learn more about [segment rule operators](./segment-rule-operators.md) 
-- Learn about [targeting and rollouts](/flagsmith-concepts/targeting-and-rollouts.md) 
+- Learn about [targeting and rollouts](../targeting-and-rollouts) 
