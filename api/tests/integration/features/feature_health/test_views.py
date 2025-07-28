@@ -20,6 +20,16 @@ def expected_created_by(
     return None
 
 
+@pytest.fixture
+def expected_dismissed_by(
+    admin_client_auth_type: AdminClientAuthType,
+    admin_user_email: str,
+) -> str:
+    if admin_client_auth_type == "user":
+        return admin_user_email
+    return "test_key"
+
+
 def test_feature_health_providers__get__expected_response(
     project: int,
     admin_client_new: APIClient,
@@ -74,6 +84,70 @@ def test_feature_health_providers__delete__expected_response(
     assert response.status_code == 204
     response = admin_client_new.get(url)
     assert response.json() == []
+
+
+def test_feature_health_events__dismiss__unauthorized__expected_response(
+    project: int,
+    unhealthy_feature_health_event: int,
+    test_user_client: APIClient,
+) -> None:
+    # Given
+    feature_health_events_dismiss_url = reverse(
+        "api-v1:projects:feature-health-events-dismiss",
+        args=[project, unhealthy_feature_health_event],
+    )
+
+    # When
+    response = test_user_client.post(feature_health_events_dismiss_url)
+
+    # Then
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "You do not have permission to perform this action."
+    }
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_feature_health_events__dismiss__expected_response(
+    project: int,
+    unhealthy_feature: int,
+    unhealthy_feature_health_event: int,
+    admin_client_new: APIClient,
+    expected_dismissed_by: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_health_events_url = reverse(
+        "api-v1:projects:feature-health-events-list", args=[project]
+    )
+    feature_health_events_dismiss_url = reverse(
+        "api-v1:projects:feature-health-events-dismiss",
+        args=[project, unhealthy_feature_health_event],
+    )
+
+    # When
+    with freeze_time("2023-01-19T10:09:47.325132+00:00"):
+        response = admin_client_new.post(feature_health_events_dismiss_url)
+
+    # Then
+    assert response.status_code == 204
+    response = admin_client_new.get(feature_health_events_url)
+    assert response.json() == [
+        {
+            "created_at": "2023-01-19T10:09:47.325132Z",
+            "environment": None,
+            "feature": unhealthy_feature,
+            "id": mocker.ANY,
+            "provider_name": "Sample",
+            "reason": {
+                "text_blocks": [
+                    {"text": f"Manually dismissed by {expected_dismissed_by}"}
+                ],
+                "url_blocks": [],
+            },
+            "type": "HEALTHY",
+        },
+    ]
 
 
 def test_webhook__invalid_path__expected_response(

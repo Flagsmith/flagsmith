@@ -1,9 +1,12 @@
+import json
 import typing
 
 import structlog
 
+from api_keys.user import APIKeyUser
 from environments.models import Environment
 from features.feature_health.constants import (
+    FEATURE_HEALTH_EVENT_MANUALLY_DISMISSED_MESSAGE,
     UNHEALTHY_TAG_COLOUR,
     UNHEALTHY_TAG_LABEL,
 )
@@ -17,8 +20,10 @@ from features.feature_health.models import (
     FeatureHealthProviderName,
 )
 from features.feature_health.providers import grafana, sample
+from features.feature_health.types import FeatureHealthEventReason
 from features.models import Feature
 from projects.tags.models import Tag, TagType
+from users.models import FFAdminUser
 
 if typing.TYPE_CHECKING:
     from features.feature_health.types import FeatureHealthProviderResponse
@@ -107,3 +112,46 @@ def update_feature_unhealthy_tag(feature: "Feature") -> None:
         else:
             feature.tags.remove(unhealthy_tag)
         feature.save()
+
+
+def dismiss_feature_health_event(
+    feature_health_event: FeatureHealthEvent,
+    dismissed_by: FFAdminUser | APIKeyUser,
+) -> None:
+    from features.feature_health import tasks
+
+    if (
+        FeatureHealthEventType(feature_health_event.type)
+        == FeatureHealthEventType.UNHEALTHY
+    ):
+        reason: FeatureHealthEventReason = {
+            "text_blocks": [
+                {
+                    "text": FEATURE_HEALTH_EVENT_MANUALLY_DISMISSED_MESSAGE
+                    % dismissed_by,
+                }
+            ],
+            "url_blocks": [],
+        }
+
+        FeatureHealthEvent.objects.create(
+            feature=feature_health_event.feature,
+            environment=feature_health_event.environment,
+            type=FeatureHealthEventType.HEALTHY,
+            reason=json.dumps(reason),
+            provider_name=feature_health_event.provider_name,
+            external_id=feature_health_event.external_id,
+        )
+
+        tasks.update_feature_unhealthy_tag.delay(
+            args=(feature_health_event.feature.id,),
+        )
+        return
+
+    logger.warning(
+        "feature-health-event-dismissal-not-supported",
+        feature_health_event_id=feature_health_event.id,
+        feature_health_event_external_id=feature_health_event.external_id,
+        feature_health_event_type=feature_health_event.type,
+        provider_name=feature_health_event.provider_name,
+    )
