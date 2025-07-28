@@ -1,6 +1,9 @@
-import { User } from 'common/types/responses'
+import { AccountModel, User } from 'common/types/responses'
 
-export default function (user: User | undefined, defaultName = 'Unknown') {
+export default function (
+  user: AccountModel | undefined,
+  defaultName = 'Unknown',
+) {
   if (!user) {
     return defaultName
   }
