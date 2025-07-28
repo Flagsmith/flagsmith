@@ -50,7 +50,6 @@ def project_overrides(request: Request) -> HttpResponse:
         "preventSignup": "PREVENT_SIGNUP",
         "reo": "REO_API_KEY",
         "sentry": "SENTRY_API_KEY",
-        "useSecureCookies": "USE_SECURE_COOKIES",
     }
 
     override_data = {
@@ -58,6 +57,15 @@ def project_overrides(request: Request) -> HttpResponse:
         for key, value in config_mapping_dict.items()
         if getattr(settings, value, None) is not None
     }
+    is_secure_request = request.is_secure()
+    override_data["useSecureCookies"] = is_secure_request or settings.USE_SECURE_COOKIES
+    if settings.COOKIE_SAME_SITE:
+        same_site = settings.COOKIE_SAME_SITE
+    elif is_secure_request:
+        same_site = "None"
+    else:
+        same_site = "Lax"
+    override_data["cookieSameSite"] = same_site
 
     return HttpResponse(
         content="window.projectOverrides = " + json.dumps(override_data),
