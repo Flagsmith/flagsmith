@@ -34,7 +34,7 @@ from audit.constants import (
     IDENTITY_FEATURE_STATE_UPDATED_MESSAGE,
 )
 from audit.models import AuditLog, RelatedObjectType  # type: ignore[attr-defined]
-from core.constants import FLAGSMITH_UPDATED_AT_HEADER
+from core.constants import FLAGSMITH_UPDATED_AT_HEADER, SDK_ENVIRONMENT_KEY_HEADER
 from environments.dynamodb import (
     DynamoEnvironmentV2Wrapper,
     DynamoIdentityWrapper,
@@ -799,6 +799,49 @@ def test_get_flags__server_key_only_feature__return_expected(
     assert not response.json()
 
 
+def test_get_flags_cache(
+    environment: Environment,
+    feature: Feature,
+    django_assert_num_queries: DjangoAssertNumQueries,
+    project_two_feature: Feature,
+    project_two_environment: Environment,
+    use_local_mem_cache_for_cache_middleware: None,
+) -> None:
+    # Given
+    url = reverse("api-v1:flags")
+
+    # Create clients for two separate environments
+    environment_one_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: environment.api_key}
+    )
+    project_two_environment_client = APIClient(
+        headers={SDK_ENVIRONMENT_KEY_HEADER: project_two_environment.api_key}
+    )
+    # Fetch flags for both environments once to warm the cache
+    environment_one_response = environment_one_client.get(url)
+    assert environment_one_response.status_code == status.HTTP_200_OK
+
+    project_two_environment_response = project_two_environment_client.get(url)
+    assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+    #  When
+    with django_assert_num_queries(0):
+        for _ in range(10):
+            environment_one_response = environment_one_client.get(url)
+            assert environment_one_response.status_code == status.HTTP_200_OK
+
+            project_two_environment_response = project_two_environment_client.get(url)
+            assert project_two_environment_response.status_code == status.HTTP_200_OK
+
+            # Then
+            # Each response must return the correct feature for its environment
+            assert environment_one_response.json()[0]["feature"]["id"] == feature.id
+            assert (
+                project_two_environment_response.json()[0]["feature"]["id"]
+                == project_two_feature.id
+            )
+
+
 def test_get_flags__server_key_only_feature__server_key_auth__return_expected(
     api_client: APIClient,
     environment_api_key: EnvironmentAPIKey,
@@ -872,25 +915,97 @@ def test_get_feature_evaluation_data(
     )
     url = f"{base_url}?environment_id={environment.id}"
     mocked_get_feature_evaluation_data = mocker.patch(
-        "features.views.get_feature_evaluation_data", autospec=True
+        "features.views.get_feature_evaluation_data",
+        autospec=True,
     )
+    today = date.today()
     mocked_get_feature_evaluation_data.return_value = [
-        FeatureEvaluationData(count=10, day=date.today()),
-        FeatureEvaluationData(count=10, day=date.today() - timedelta(days=1)),
+        FeatureEvaluationData(count=10, day=today),
+        FeatureEvaluationData(
+            count=10,
+            day=today,
+            labels={"client_application_name": "web"},
+        ),
+        FeatureEvaluationData(count=10, day=today - timedelta(days=1)),
     ]
     # When
     response = admin_client_new.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == 2
-    assert response.json()[0] == {"day": str(date.today()), "count": 10}
-    assert response.json()[1] == {
-        "day": str(date.today() - timedelta(days=1)),
-        "count": 10,
-    }
+    assert response.json() == [
+        {
+            "count": 10,
+            "day": str(today),
+            "labels": None,
+        },
+        {
+            "count": 10,
+            "day": str(today),
+            "labels": {
+                "client_application_name": "web",
+                "client_application_version": None,
+                "user_agent": None,
+            },
+        },
+        {
+            "count": 10,
+            "day": str(today - timedelta(days=1)),
+            "labels": None,
+        },
+    ]
     mocked_get_feature_evaluation_data.assert_called_with(
-        feature=feature, period=30, environment_id=environment.id
+        feature=feature, period_days=30, environment_id=environment.id
+    )
+
+
+def test_get_feature_evaluation_data__labels_filter__returns_expected(
+    project: Project,
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+    admin_client_new: APIClient,
+) -> None:
+    # Given
+    base_url = reverse(
+        "api-v1:projects:project-features-get-evaluation-data",
+        args=[project.id, feature.id],
+    )
+    url = f"{base_url}?environment_id={environment.id}&client_application_name=web"
+    mocked_get_feature_evaluation_data = mocker.patch(
+        "features.views.get_feature_evaluation_data",
+        autospec=True,
+    )
+    today = date.today()
+    mocked_get_feature_evaluation_data.return_value = [
+        FeatureEvaluationData(
+            count=10,
+            day=today,
+            labels={"client_application_name": "web"},
+        ),
+    ]
+
+    # When
+    response = admin_client_new.get(url)
+
+    # Then
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == [
+        {
+            "count": 10,
+            "day": str(today),
+            "labels": {
+                "client_application_name": "web",
+                "client_application_version": None,
+                "user_agent": None,
+            },
+        },
+    ]
+    mocked_get_feature_evaluation_data.assert_called_with(
+        feature=feature,
+        period_days=30,
+        environment_id=environment.id,
+        labels_filter={"client_application_name": "web"},
     )
 
 

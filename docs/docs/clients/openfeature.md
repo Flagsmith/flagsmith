@@ -15,7 +15,7 @@ and that of OpenFeature, is to recommend using OpenFeature as the default SDK in
 
 OpenFeature is being actively worked on; we encourage anyone interested Feature Flags and Open Source to get involved!
 
-## Flagsmith OpenFeature Providers
+## Flagsmith [OpenFeature](https://www.flagsmith.com/openfeature) Providers
 
 We currently offer [OpenFeature Providers](https://docs.openfeature.dev/docs/reference/concepts/provider) for the
 following languages:

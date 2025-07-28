@@ -21,6 +21,7 @@ from drf_yasg.utils import swagger_serializer_method  # type: ignore[import-unty
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
+from app_analytics.serializers import LabelsQuerySerializerMixin, LabelsSerializer
 from environments.identities.models import Identity
 from environments.sdk.serializers_mixins import (
     HideSensitiveFieldsSerializerMixin,
@@ -597,6 +598,7 @@ class FeatureInfluxDataSerializer(serializers.Serializer):  # type: ignore[type-
 class FeatureEvaluationDataSerializer(serializers.Serializer):  # type: ignore[type-arg]
     day = serializers.CharField()
     count = serializers.IntegerField()
+    labels = LabelsSerializer(allow_null=True)
 
 
 class GetInfluxDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
@@ -605,9 +607,12 @@ class GetInfluxDataQuerySerializer(serializers.Serializer):  # type: ignore[type
     aggregate_every = serializers.CharField(required=False, default="24h")
 
 
-class GetUsageDataQuerySerializer(serializers.Serializer):  # type: ignore[type-arg]
+class GetUsageDataQuerySerializer(LabelsQuerySerializerMixin, serializers.Serializer):  # type: ignore[type-arg]
     period = serializers.IntegerField(
-        required=False, default=30, help_text="number of days"
+        required=False,
+        default=30,
+        help_text="number of days",
+        source="period_days",
     )
     environment_id = serializers.IntegerField(required=True)
 

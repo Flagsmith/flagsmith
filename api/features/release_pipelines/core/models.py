@@ -7,9 +7,7 @@ from django.utils import timezone
 from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
     RELEASE_PIPELINE_DELETED_MESSAGE,
-    RELEASE_PIPELINE_PUBLISHED_MESSAGE,
 )
-from audit.models import AuditLog
 from audit.related_object_type import RelatedObjectType
 from core.models import (
     SoftDeleteExportableModel,
@@ -17,6 +15,7 @@ from core.models import (
 )
 from features.release_pipelines.core.constants import MAX_PIPELINE_STAGES
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
+from features.versioning.models import EnvironmentFeatureVersion
 from projects.models import Project
 from users.models import FFAdminUser
 
@@ -72,7 +71,13 @@ class ReleasePipeline(
         self.published_at = timezone.now()
         self.published_by = published_by
         self.save()
-        self._create_pipeline_published_audit_log()
+
+    def unpublish(self, unpublished_by: FFAdminUser) -> None:
+        if self.published_at is None:
+            raise InvalidPipelineStateError("Pipeline is not published.")
+        self.published_at = None
+        self.published_by = None
+        self.save()
 
     def get_first_stage(self) -> "PipelineStage | None":
         return self.stages.order_by("order").first()
@@ -90,17 +95,14 @@ class ReleasePipeline(
     ) -> typing.Optional[str]:
         return RELEASE_PIPELINE_DELETED_MESSAGE % self.name
 
+    def has_feature_in_flight(self) -> bool:
+        has_feature_in_flight: bool = EnvironmentFeatureVersion.objects.filter(
+            published_at__isnull=True, pipeline_stage__in=self.stages.all()
+        ).exists()
+        return has_feature_in_flight
+
     def _get_project(self) -> Project:
         return self.project
-
-    def _create_pipeline_published_audit_log(self) -> None:
-        AuditLog.objects.create(
-            related_object_id=self.id,
-            related_object_type=RelatedObjectType.RELEASE_PIPELINE.name,
-            project=self._get_project(),
-            log=RELEASE_PIPELINE_PUBLISHED_MESSAGE % self.name,
-            author=self.published_by,
-        )
 
 
 class PipelineStage(models.Model):

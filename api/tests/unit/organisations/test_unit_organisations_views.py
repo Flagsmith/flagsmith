@@ -138,7 +138,6 @@ def test_non_superuser_can_create_new_organisation_by_default(
         Organisation.objects.get(name=org_name).webhook_notification_email
         == webhook_notification_email
     )
-    assert HubspotTracker.objects.filter(user=staff_user).exists()
 
 
 def test_colliding_hubspot_cookies_are_ignored(

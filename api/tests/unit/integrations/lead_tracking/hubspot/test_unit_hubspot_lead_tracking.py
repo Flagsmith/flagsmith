@@ -1,10 +1,13 @@
 import typing
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
 import responses
+from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
+from rest_framework.test import APIRequestFactory
 from task_processor.task_run_method import TaskRunMethod
 
 from integrations.lead_tracking.hubspot.constants import (
@@ -13,6 +16,10 @@ from integrations.lead_tracking.hubspot.constants import (
     HUBSPOT_ROOT_FORM_URL,
 )
 from integrations.lead_tracking.hubspot.lead_tracker import HubspotLeadTracker
+from integrations.lead_tracking.hubspot.services import (
+    register_hubspot_tracker_and_track_user,
+)
+from integrations.lead_tracking.hubspot.tasks import track_hubspot_lead_v2
 from organisations.models import (
     HubspotOrganisation,
     Organisation,
@@ -112,22 +119,29 @@ def test_create_organisation_lead_skips_all_tracking_when_lead_exists(
     mock_client_existing_contact.create_company.assert_not_called()
 
 
+@pytest.mark.freeze_time("2023-01-19T09:09:47+00:00")
 def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_associations(
     organisation: Organisation,
     enable_hubspot: None,
     mock_client_existing_contact: MagicMock,
     mocker: MockerFixture,
+    settings: SettingsWrapper,
 ) -> None:
     # Given
     domain = "example.com"
-    mocker.patch("users.models.create_hubspot_contact_for_user")
-
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
     user = FFAdminUser.objects.create(
         email=f"new.user@{domain}",
         first_name="Frank",
         last_name="Louis",
         marketing_consent_given=True,
     )
+    HubspotTracker.objects.create(user=user, hubspot_cookie="tracker")
+
+    mock_track_hubspot_lead_v2 = mocker.patch(
+        "organisations.models.track_hubspot_lead_v2"
+    )
+
     mock_client_existing_contact.get_company_by_domain.return_value = {
         "id": HUBSPOT_COMPANY_ID,
         "properties": {"name": domain},
@@ -136,15 +150,20 @@ def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_association
         "id": HUBSPOT_COMPANY_ID,
         "properties": {"name": organisation.name},
     }
-
-    HubspotTracker.objects.create(user=user, hubspot_cookie="tracker")
-    assert HubspotLead.objects.filter(hubspot_id=HUBSPOT_USER_ID).exists() is False
     assert getattr(organisation, "hubspot_organisation", None) is None
     # When
     user.add_organisation(organisation, role=OrganisationRole.ADMIN)
 
     # Then
+    mock_track_hubspot_lead_v2.delay.assert_called_once_with(
+        args=(user.id, organisation.id),
+        delay_until=timezone.now() + timedelta(minutes=3),
+    )
+
+    # Triggering it manually to void the delay
+    track_hubspot_lead_v2(user.id, organisation.id)
     organisation.refresh_from_db()
+    assert organisation.hubspot_organisation is not None
     assert organisation.hubspot_organisation.hubspot_id == HUBSPOT_COMPANY_ID
 
     mock_client_existing_contact.create_company.assert_not_called()
@@ -157,7 +176,7 @@ def test_hubspot_user_org_hook_creates_hubspot_user_and_organisation_association
     mock_client_existing_contact.get_contact.assert_called_once_with(user)
 
 
-def test_create_organisation_lead_creates_contact_when_not_found(
+def test_create_organisation_lead_creates_contact_when_not_found_but_not_company(
     organisation: Organisation,
     mocker: MockerFixture,
 ) -> None:
@@ -190,16 +209,8 @@ def test_create_organisation_lead_creates_contact_when_not_found(
 
     assert mock_client.get_contact.call_count == 2
     mock_client.create_lead_form.assert_called_once_with(user=user)
-    mock_client.create_company.assert_called_once_with(
-        name=organisation.name,
-        active_subscription="free",
-        organisation_id=organisation.id,
-        domain="example.com",
-    )
-    mock_client.associate_contact_to_company.assert_called_once_with(
-        contact_id=HUBSPOT_USER_ID,
-        company_id=HUBSPOT_COMPANY_ID,
-    )
+    mock_client.create_company.assert_not_called()  # We rely on Hubspot creating contacts
+    mock_client.associate_contact_to_company.assert_not_called()
 
 
 def test_create_organisation_lead_creates_contact_for_existing_org(
@@ -394,7 +405,7 @@ def test_create_leads_skips_association_on_missing_ids(
         tracker, "_get_or_create_user_hubspot_id", return_value=hubspot_contact_id
     )
     mocker.patch.object(
-        tracker, "_get_or_create_organisation_hubspot_id", return_value=hubspot_org_id
+        tracker, "_get_organisation_hubspot_id", return_value=hubspot_org_id
     )
 
     # When
@@ -402,3 +413,30 @@ def test_create_leads_skips_association_on_missing_ids(
 
     # Then
     mock_client.associate_contact_to_company.assert_not_called()
+
+
+def test_register_hubspot_tracker_and_track_user_fallback_to_request_user(
+    mocker: MockerFixture, staff_user: FFAdminUser, settings: SettingsWrapper
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+
+    mock_register_hubspot_tracker = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.register_hubspot_tracker"
+    )
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    factory = APIRequestFactory()
+    request = factory.get("/")
+    request.user = staff_user
+
+    # When
+    register_hubspot_tracker_and_track_user(request)
+
+    # Then
+    mock_register_hubspot_tracker.assert_called_once_with(request, None)
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(
+        args=(staff_user.id,)
+    )
