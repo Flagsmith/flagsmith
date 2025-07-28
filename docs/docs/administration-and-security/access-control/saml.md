@@ -32,7 +32,7 @@ If you are self-hosting Flagsmith, TLS is required. Encrypted SAML assertions ar
 
 :::tip
 
-If your identity provider is Okta, use the [Flagsmith Okta application](/administration-and-security/access-control/index)
+If your identity provider is Okta, use the [Flagsmith Okta application](./index.md)
 instead of following these steps.
 
 :::
