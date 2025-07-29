@@ -302,7 +302,6 @@ const config: Config = {
     ],
 
     scripts: [
-        '/js/crisp-chat.js',
         {
             src: '//js-eu1.hs-scripts.com/143451822.js',
             async: true,
@@ -316,9 +315,9 @@ const config: Config = {
             "data-project-color": "#5e60cc",
             "data-project-logo": "http://docs.flagsmith.com/img/logo.svg",
             "data-answer-cta-button-enabled": "true",
-            "data-answer-cta-button-link": "",
+            "data-answer-cta-button-link": "/support/",
             "data-answer-cta-button-text": "Still need help? Reach out to our support team",
-            "data-modal-disclaimer": "Results are AI generated from our product documentation. [Contact Support to speak to a human](https://help.flagsmith.com/en/).", 
+            "data-modal-disclaimer": "Results are AI generated from our product documentation. [Contact Support to speak to a human](https://help.flagsmith.com/en/).",
             async: true,
         },
     ],
