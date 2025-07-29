@@ -43,12 +43,13 @@ def unhealthy_feature(
 
 @pytest.fixture
 def unhealthy_feature_health_event(
+    project: int,
     unhealthy_feature: int,
     admin_client_new: APIClient,
 ) -> int:
     url = reverse(
         "api-v1:projects:feature-health-events-list",
-        args=[unhealthy_feature],
+        args=[project],
     )
     response = admin_client_new.get(url)
     unhealthy_feature_health_event_id: int = response.json()[0]["id"]
