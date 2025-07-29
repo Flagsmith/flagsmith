@@ -234,5 +234,13 @@ def test_delete_user():  # type: ignore[no-untyped-def]
     assert Organisation.objects.filter(name="org1").count() == 1
 
 
-def test_user_email_domain_property():  # type: ignore[no-untyped-def]
-    assert FFAdminUser(email="test@example.com").email_domain == "example.com"
+@pytest.mark.parametrize(
+    "email, expected_email_domain",
+    [
+        ("test@example.com", "example.com"),
+        ("test@subdomain.example.co.uk", "subdomain.example.co.uk"),
+        ("incorrect_email", None),
+    ],
+)
+def test_user_email_domain_property(email, expected_email_domain):  # type: ignore[no-untyped-def]
+    assert FFAdminUser(email=email).email_domain == expected_email_domain
