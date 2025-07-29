@@ -6,7 +6,6 @@ import PageTitle from 'components/PageTitle'
 import CondensedRow from 'components/CondensedRow'
 import InputGroup from 'components/base/forms/InputGroup'
 import Button from 'components/base/forms/Button'
-import AccountProvider from 'common/providers/AccountProvider'
 import API from 'project/api'
 import AppActions from 'common/dispatcher/app-actions'
 import Utils from 'common/utils/utils'
@@ -15,6 +14,7 @@ import Project from 'common/project'
 import AccountStore from 'common/stores/account-store'
 import { Account } from 'common/types/responses'
 import CheckboxGroup from 'components/base/forms/CheckboxGroup'
+import OrganisationStore from 'common/stores/organisation-store'
 
 const CreateOrganisationPage: React.FC = () => {
   const [name, setName] = useState<string>('')
@@ -22,6 +22,19 @@ const CreateOrganisationPage: React.FC = () => {
   const focusTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const history = useHistory()
   const [hosting, setHosting] = useState(['public_saas'])
+  const [accountStoreSaving, setAccountStoreSaving] = useState(
+    AccountStore.isSaving,
+  )
+
+  useEffect(() => {
+    const onChangeAccountStore = () => {
+      setAccountStoreSaving(AccountStore.isSaving)
+    }
+    AccountStore.on('change', onChangeAccountStore)
+    return () => {
+      OrganisationStore.off('change', onChangeAccountStore)
+    }
+  }, [])
 
   useEffect(() => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
@@ -83,85 +96,76 @@ const CreateOrganisationPage: React.FC = () => {
       <PageTitle title='Create your organisation'>
         Organisations allow you to manage multiple projects within a team.
       </PageTitle>
-      <AccountProvider onSave={onSave}>
-        {(
-          { isSaving }: { isSaving: boolean },
-          { createOrganisation }: { createOrganisation: (name: any) => void },
-        ) => (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (Project.capterraKey) {
-                const parts = Project.capterraKey.split(',')
-                Utils.appendImage(
-                  `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
-                )
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (Project.capterraKey) {
+            const parts = Project.capterraKey.split(',')
+            Utils.appendImage(
+              `https://ct.capterra.com/capterra_tracker.gif?vid=${parts[0]}&vkey=${parts[1]}`,
+            )
+          }
+          AppActions.createOrganisation(name)
+        }}
+      >
+        <CondensedRow>
+          <InputGroup
+            ref={inputRef as any}
+            inputProps={{ className: 'full-width', name: 'orgName' }}
+            title='Organisation Name'
+            placeholder='E.g. ACME Ltd'
+            onChange={(e: InputEvent) => setName(Utils.safeParseEventValue(e))}
+          />
+          {Utils.isSaas() && (
+            <InputGroup
+              inputProps={{ className: 'full-width', name: 'orgName' }}
+              title={
+                <div>
+                  What is your company's desired hosting option?{' '}
+                  <a
+                    className='text-primary'
+                    href='https://docs.flagsmith.com/version-comparison'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    View Docs
+                  </a>
+                </div>
               }
-              createOrganisation(name)
-            }}
-          >
-            <CondensedRow>
-              <InputGroup
-                ref={inputRef as any}
-                inputProps={{ className: 'full-width', name: 'orgName' }}
-                title='Organisation Name'
-                placeholder='E.g. ACME Ltd'
-                onChange={(e: InputEvent) =>
-                  setName(Utils.safeParseEventValue(e))
-                }
-              />
-              {Utils.isSaas() && (
-                <InputGroup
-                  inputProps={{ className: 'full-width', name: 'orgName' }}
-                  title={
-                    <div>
-                      What is your company's desired hosting option?{' '}
-                      <a
-                        className='text-primary'
-                        href='https://docs.flagsmith.com/version-comparison'
-                        target='_blank'
-                        rel='noreferrer'
-                      >
-                        View Docs
-                      </a>
-                    </div>
-                  }
-                  component={
-                    <CheckboxGroup
-                      onChange={setHosting}
-                      selectedValues={hosting}
-                      items={[
-                        {
-                          label: 'Public SaaS (Multi Tenant)',
-                          value: 'public_saas',
-                        },
-                        {
-                          label: 'Private SaaS (Single Tenant)',
-                          value: 'private_saas',
-                        },
-                        {
-                          label: 'Self Hosted (in your own cloud)',
-                          value: 'self_hosted',
-                        },
-                      ]}
-                    />
-                  }
+              component={
+                <CheckboxGroup
+                  onChange={setHosting}
+                  selectedValues={hosting}
+                  items={[
+                    {
+                      label: 'Public SaaS (Multi Tenant)',
+                      value: 'public_saas',
+                    },
+                    {
+                      label: 'Private SaaS (Single Tenant)',
+                      value: 'private_saas',
+                    },
+                    {
+                      label: 'Self Hosted (in your own cloud)',
+                      value: 'self_hosted',
+                    },
+                  ]}
                 />
-              )}
+              }
+            />
+          )}
 
-              <div className='text-right'>
-                <Button
-                  type='submit'
-                  disabled={isSaving || !name}
-                  id='create-org-btn'
-                >
-                  Create Organisation
-                </Button>
-              </div>
-            </CondensedRow>
-          </form>
-        )}
-      </AccountProvider>
+          <div className='text-right'>
+            <Button
+              type='submit'
+              disabled={accountStoreSaving || !name}
+              id='create-org-btn'
+            >
+              Create Organisation
+            </Button>
+          </div>
+        </CondensedRow>
+      </form>
     </div>
   )
 }
