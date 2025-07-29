@@ -46,7 +46,6 @@ def project_overrides(request: Request) -> HttpResponse:
         "hideInviteLinks": "DISABLE_INVITE_LINKS",
         "linkedinPartnerTracking": "LINKEDIN_PARTNER_TRACKING",
         "maintenance": "MAINTENANCE_MODE",
-        "mixpanel": "MIXPANEL_API_KEY",
         "preventEmailPassword": "PREVENT_EMAIL_PASSWORD",
         "preventSignup": "PREVENT_SIGNUP",
         "reo": "REO_API_KEY",

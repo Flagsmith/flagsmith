@@ -119,6 +119,6 @@ class SDKAnalyticsFlagsSerializer(serializers.Serializer):  # type: ignore[type-
 
 def _get_label_fields() -> dict[str, serializers.Field[Any, Any, Any, Any]]:
     return {
-        str(label): serializers.CharField(allow_null=True, required=False)
+        label: serializers.CharField(allow_null=True, required=False)
         for label in LABELS
     }

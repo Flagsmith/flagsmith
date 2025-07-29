@@ -8,7 +8,7 @@ import Format from 'common/utils/format'
 import { PermissionRow } from 'components/PermissionRow'
 import { useGetAvailablePermissionsQuery } from 'common/services/useAvailablePermissions'
 
-import DerivedPermissionsList from 'components/derived-permissions/DerivedPermissionsList'
+import DerivedPermissionsList from 'components/users-permissions/derived-permissions/DerivedPermissionsList'
 import BooleanDotIndicator from 'components/BooleanDotIndicator'
 
 const Permissions = ({
