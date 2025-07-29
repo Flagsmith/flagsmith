@@ -328,20 +328,19 @@ const FeaturesPage = class extends Component {
                               this.state.showArchived ||
                               this.state.tags?.length
                                 ? this.createFeaturePermission((perm) => (
-                                    <div className='text-right'>
-                                      <Button
-                                        disabled={
-                                          !perm ||
-                                          readOnly ||
-                                          featureLimitAlert.percentage >= 100
-                                        }
-                                        data-test='show-create-feature-btn'
-                                        id='show-create-feature-btn'
-                                        onClick={this.newFlag}
-                                      >
-                                        Create Feature
-                                      </Button>
-                                    </div>
+                                    <Button
+                                      disabled={
+                                        !perm ||
+                                        readOnly ||
+                                        featureLimitAlert.percentage >= 100
+                                      }
+                                      className='w-100'
+                                      data-test='show-create-feature-btn'
+                                      id='show-create-feature-btn'
+                                      onClick={this.newFlag}
+                                    >
+                                      Create Feature
+                                    </Button>
                                   ))
                                 : null}
                             </>
@@ -397,7 +396,7 @@ const FeaturesPage = class extends Component {
                                     }}
                                     value={this.state.search}
                                   />
-                                  <Row className='flex-fill justify-content-end'>
+                                  <Row className='flex-row py-2 py-lg-0 px-1 px-lg-0 flex-fill justify-content-lg-end'>
                                     {hasFilters && (
                                       <ClearFilters onClick={clearFilters} />
                                     )}
