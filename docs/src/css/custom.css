@@ -9,6 +9,7 @@
 .hidden {
     display: none !important;
 }
+/*Prevents kapa from immediately showing before crisp on support pages*/
 #kapa-widget-container {
   display: none;
 }
