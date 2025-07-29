@@ -4,7 +4,7 @@ from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
 from environments.models import Environment
-from features.feature_health.models import FeatureHealthEvent
+from features.feature_health.models import FeatureHealthEvent, FeatureHealthEventType
 from features.feature_health.services import (
     dismiss_feature_health_event,
     get_provider_response,
@@ -53,7 +53,7 @@ def test_dismiss_feature_health_event__healthy_event__log_expected(
         environment=environment,
         provider_name="Sample",
         external_id="test_external_id",
-        type="UNHEALTHY",
+        type=FeatureHealthEventType.HEALTHY,
     )
 
     # When
