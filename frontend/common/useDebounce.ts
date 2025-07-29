@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
-export default function useThrottle(func: any, delay: number) {
+export default function useDebounce(func: any, delay: number) {
   const [timeout, saveTimeout] = useState<NodeJS.Timeout | null>(null)
 
-  const throttledFunc = function () {
+  const debouncedFunc = function () {
     //eslint-disable-next-line
         const args = arguments
     if (timeout) {
@@ -20,10 +20,10 @@ export default function useThrottle(func: any, delay: number) {
     saveTimeout(newTimeout)
   }
 
-  return throttledFunc as typeof func
+  return debouncedFunc as typeof func
 }
 /* Usage example:
-const searchItems =  useThrottle((search:string) => {
+const searchItems = useDebounce((search:string) => {
   doThing()
-}, 100)
+}, 500)
 */

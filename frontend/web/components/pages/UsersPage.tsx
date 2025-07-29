@@ -8,7 +8,7 @@ import {
   deleteIdentity,
   useGetIdentitiesQuery,
 } from 'common/services/useIdentity'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import { Req } from 'common/types/requests'
 import CreateUserModal from 'components/modals/CreateUser'
 import PanelSearch from 'components/PanelSearch'
@@ -76,16 +76,7 @@ const UsersPage: FC<{ props: any }> = (props) => {
     pages: Req['getIdentities']['pages']
   }>({ number: 1, pageType: undefined, pages: undefined })
 
-  const { search, searchInput, setSearchInput } = useSearchThrottle(
-    Utils.fromParam().search,
-    () => {
-      setPage({
-        number: 1,
-        pageType: undefined,
-        pages: undefined,
-      })
-    },
-  )
+  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const isEdge = Utils.getIsEdge()
   const showAliases = isEdge && Utils.getFlagsmithHasFeature('identity_aliases')
 
