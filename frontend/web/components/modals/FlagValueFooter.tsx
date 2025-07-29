@@ -97,6 +97,8 @@ const FlagValueFooter = ({
       : openReleasePipelineModal,
   }
 
+  const isFeatureInReleasePipeline = !!releasePipeline?.id
+
   return (
     <Permission level='project' permission='ADMIN' id={projectId}>
       {({ permission: projectAdmin }) => (
@@ -160,7 +162,11 @@ const FlagValueFooter = ({
                       data-test='update-feature-btn'
                       id='update-feature-btn'
                       disabled={
-                        !savePermission || isSaving || !featureName || isInvalid
+                        !savePermission ||
+                        isSaving ||
+                        !featureName ||
+                        isInvalid ||
+                        isFeatureInReleasePipeline
                       }
                       dropdownItems={[
                         ...(isReleasePipelineEnabled &&
