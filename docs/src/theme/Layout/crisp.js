@@ -26,6 +26,7 @@ export default function CrispLoader() {
 
         if (location.pathname.replace(/\//g, '') === 'support') {
             window.$crisp.push(['do', 'chat:show']);
+            window.$crisp.push(['do', 'chat:open']);
             window.__isCrispVisible = true;
             if (kapaEl) kapaEl.style.display = 'none';
         } else {
