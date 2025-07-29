@@ -1,4 +1,3 @@
-import API from './api'
 import { storageGet, storageSet } from 'common/safeLocalStorage'
 
 export const getDarkMode = () => {
