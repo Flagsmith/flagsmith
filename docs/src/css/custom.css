@@ -9,7 +9,9 @@
 .hidden {
     display: none !important;
 }
-
+#kapa-widget-container {
+  display: none;
+}
 @font-face {
     font-family: 'Open Sans Regular';
     src: url('/static/fonts/open-sans-regular.woff') format('woff');

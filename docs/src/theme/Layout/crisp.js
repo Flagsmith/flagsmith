@@ -32,7 +32,7 @@ export default function CrispLoader() {
         } else {
             window.$crisp.push(['do', 'chat:hide']);
             window.__isCrispVisible = false;
-            if (kapaEl) kapaEl.style.display = '';
+            if (kapaEl) kapaEl.style.display = 'block';
         }
     }, [location.pathname]);
 

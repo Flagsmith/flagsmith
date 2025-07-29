@@ -312,7 +312,7 @@ const config: Config = {
             src: "https://widget.kapa.ai/kapa-widget.bundle.js",
             "data-website-id": "bbb5a478-1363-4c1e-84b5-cdba2c58e5ad",
             "data-project-name": "Flagsmith",
-            "data-project-color": "#5e60cc",
+            "data-project-color": "#6633FF",
             "data-project-logo": "http://docs.flagsmith.com/img/logo.svg",
             "data-answer-cta-button-enabled": "true",
             "data-answer-cta-button-link": "/support/",
