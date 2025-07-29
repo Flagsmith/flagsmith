@@ -80,4 +80,4 @@ Use the "Compare" menu item to get an overview of how flag values differ between
 
 ### Flag Comparison
 
-You can also view a the values of a single Flag against all the Environments within the Project:
+You can also view the values of a single Flag against all the Environments within the Project:
