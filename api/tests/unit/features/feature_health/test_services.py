@@ -3,7 +3,13 @@ import uuid
 from pytest_mock import MockerFixture
 from pytest_structlog import StructuredLogCapture
 
-from features.feature_health.services import get_provider_response
+from environments.models import Environment
+from features.feature_health.models import FeatureHealthEvent
+from features.feature_health.services import (
+    dismiss_feature_health_event,
+    get_provider_response,
+)
+from features.models import Feature
 
 
 def test_get_provider_response__invalid_provider__return_none__log_expected(
@@ -33,3 +39,34 @@ def test_get_provider_response__invalid_provider__return_none__log_expected(
         },
     ]
     assert isinstance(log.events[0]["exc_info"], KeyError)
+
+
+def test_dismiss_feature_health_event__healthy_event__log_expected(
+    feature: Feature,
+    environment: Environment,
+    mocker: MockerFixture,
+    log: "StructuredLogCapture",
+) -> None:
+    # Given
+    healthy_event = FeatureHealthEvent.objects.create(
+        feature=feature,
+        environment=environment,
+        provider_name="Sample",
+        external_id="test_external_id",
+        type="UNHEALTHY",
+    )
+
+    # When
+    dismiss_feature_health_event(healthy_event, mocker.MagicMock())
+
+    # Then
+    assert log.events == [
+        {
+            "event": "feature-health-event-dismissal-not-supported",
+            "feature_health_event_external_id": healthy_event.external_id,
+            "feature_health_event_id": healthy_event.id,
+            "feature_health_event_type": healthy_event.type,
+            "level": "warning",
+            "provider_name": healthy_event.provider_name,
+        },
+    ]

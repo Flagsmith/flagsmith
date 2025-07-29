@@ -171,6 +171,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -195,6 +196,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2023-01-19T09:09:47.325132Z",
             "environment": None,
             "feature": feature,
@@ -230,6 +232,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -253,6 +256,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2023-01-19T09:09:47.325132Z",
             "environment": environment,
             "feature": feature,
@@ -271,6 +275,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -296,6 +301,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2023-01-19T09:09:48.325132Z",
             "environment": None,
             "feature": unhealthy_feature,
@@ -347,6 +353,7 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
     grafana_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -409,6 +416,7 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2025-02-12T21:06:50Z",
             "environment": None,
             "feature": feature,
@@ -428,6 +436,7 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
     grafana_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -576,6 +585,7 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
         # second firing alert has not been resolved
         # and provided an environment label
         {
+            "id": mocker.ANY,
             "created_at": "2025-02-12T21:07:50Z",
             "environment": environment,
             "feature": feature,
@@ -585,6 +595,7 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
         },
         # first firing alert has been resolved
         {
+            "id": mocker.ANY,
             "created_at": "2025-02-12T21:12:50Z",
             "environment": None,
             "feature": feature,
