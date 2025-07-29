@@ -12,7 +12,7 @@ import ActionButton from 'components/ActionButton'
 import ActionItem from 'components/shared/ActionItem'
 import { calculateListPosition } from 'common/utils/calculateListPosition'
 
-interface FeatureActionProps {
+export interface FeatureActionProps {
   projectId: string
   featureIndex: number
   readOnly: boolean
@@ -25,11 +25,13 @@ interface FeatureActionProps {
   onCopyName: () => void
   onShowAudit: () => void
   onRemove: () => void
+  e2e: boolean
 }
 
 type ActionType = 'copy' | 'audit' | 'history' | 'remove'
 
 export const FeatureAction: FC<FeatureActionProps> = ({
+  e2e,
   featureIndex,
   hideAudit,
   hideHistory,
@@ -44,8 +46,6 @@ export const FeatureAction: FC<FeatureActionProps> = ({
   tags,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false)
-  const [top, setTop] = useState<number>(0)
-  const [left, setLeft] = useState<number>(0)
   const btnRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -84,8 +84,6 @@ export const FeatureAction: FC<FeatureActionProps> = ({
     )
     listRef.current.style.top = `${top}px`
     listRef.current.style.left = `${left}px`
-    setTop(top)
-    setLeft(left)
   }, [isOpen])
 
   const isProtected = !!protectedTags?.length
@@ -94,13 +92,14 @@ export const FeatureAction: FC<FeatureActionProps> = ({
       <div ref={btnRef}>
         <ActionButton
           onClick={() => setIsOpen(true)}
-          data-test={`feature-action-${featureIndex}`}
+          data-test={e2e ? `feature-action-${featureIndex}` : undefined}
         />
       </div>
 
       {isOpen && (
         <div ref={listRef} className='feature-action__list'>
           <ActionItem
+            e2e={e2e}
             icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
             label='Copy Feature Name'
             handleActionClick={() => {
@@ -112,6 +111,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           />
           {!hideAudit && (
             <ActionItem
+              e2e={e2e}
               icon={<Icon name='list' width={18} fill='#9DA4AE' />}
               label='Show Audit Logs'
               handleActionClick={() => {
@@ -124,6 +124,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           )}
           {!hideHistory && (
             <ActionItem
+              e2e={e2e}
               icon={<Icon name='clock' width={18} fill='#9DA4AE' />}
               label='Show History'
               handleActionClick={() => {
@@ -148,6 +149,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                   <Tooltip
                     title={
                       <ActionItem
+                        e2e={e2e}
                         icon={<Icon name='trash-2' width={18} fill='#9DA4AE' />}
                         label='Remove feature'
                         handleActionClick={() => {
@@ -162,23 +164,24 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                       />
                     }
                   >
-                    {isProtected &&
-                      `<span>This feature has been tagged with the permanent tag${
-                        protectedTags?.length > 1 ? 's' : ''
-                      } ${protectedTags
-                        ?.map((tag) => {
-                          const tagColor = Utils.colour(getTagColor(tag))
-                          return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
-                            tagColor,
-                          ).fade(0.92)};border-color:${tagColor.darken(
-                            0.1,
-                          )};color:${tagColor.darken(0.1)};'>
+                    {isProtected
+                      ? `<span>This feature has been tagged with the permanent tag${
+                          protectedTags?.length > 1 ? 's' : ''
+                        } ${protectedTags
+                          ?.map((tag) => {
+                            const tagColor = Utils.colour(getTagColor(tag))
+                            return `<strong class='chip chip--xs d-inline-block ms-1' style='background:${color(
+                              tagColor,
+                            ).fade(0.92)};border-color:${tagColor.darken(
+                              0.1,
+                            )};color:${tagColor.darken(0.1)};'>
                         ${tag.label}
                       </strong>`
-                        })
-                        .join('')}. Please remove the tag${
-                        protectedTags?.length > 1 ? 's' : ''
-                      } before attempting to delete this flag.</span>`}
+                          })
+                          .join('')}. Please remove the tag${
+                          protectedTags?.length > 1 ? 's' : ''
+                        } before attempting to delete this flag.</span>`
+                      : null}
                   </Tooltip>,
                 )
               }

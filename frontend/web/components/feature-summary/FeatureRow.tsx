@@ -1,5 +1,4 @@
 import React, { FC, useEffect, useMemo } from 'react'
-import TagValues from 'components/tags/TagValues'
 import ConfirmToggleFeature from 'components/modals/ConfirmToggleFeature'
 import ConfirmRemoveFeature from 'components/modals/ConfirmRemoveFeature'
 import CreateFlagModal from 'components/modals/CreateFlag'
@@ -8,20 +7,14 @@ import Constants from 'common/constants'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
 import Icon from 'components/Icon'
 import FeatureValue from './FeatureValue'
-import FeatureAction from './FeatureAction'
+import FeatureAction, { FeatureActionProps } from './FeatureAction'
 import { getViewMode } from 'common/useViewMode'
 import classNames from 'classnames'
-import Tag from 'components/tags/Tag'
 import Button from 'components/base/forms/Button'
-import SegmentOverridesIcon from 'components/SegmentOverridesIcon'
-import IdentityOverridesIcon from 'components/IdentityOverridesIcon'
-import StaleFlagWarning from './StaleFlagWarning'
-import UnhealthyFlagWarning from './UnhealthyFlagWarning'
 import {
   Environment,
   FeatureListProviderActions,
   FeatureListProviderData,
-  FeatureState,
   ProjectFlag,
   ReleasePipeline,
 } from 'common/types/responses'
@@ -33,8 +26,10 @@ import CondensedFeatureRow from 'components/CondensedFeatureRow'
 import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 import FeatureName from './FeatureName'
+import FeatureDescription from './FeatureDescription'
+import FeatureTags from './FeatureTags'
 
-interface FeatureRowProps {
+export interface FeatureRowProps {
   disableControls?: boolean
   environmentFlags: FeatureListProviderData['environmentFlags']
   environmentId: string
@@ -58,26 +53,27 @@ interface FeatureRowProps {
 
 const width = [220, 50, 55, 70, 450]
 
-const FeatureRow: FC<FeatureRowProps> = ({
-  className,
-  condensed = false,
-  disableControls,
-  environmentFlags,
-  environmentId,
-  fadeEnabled,
-  fadeValue,
-  hideAudit = false,
-  hideRemove = false,
-  index,
-  onCloseEditModal,
-  permission,
-  projectFlag,
-  projectId,
-  readOnly = false,
-  removeFlag,
-  style,
-  toggleFlag,
-}) => {
+const FeatureRow: FC<FeatureRowProps> = (props) => {
+  const {
+    className,
+    condensed = false,
+    disableControls,
+    environmentFlags,
+    environmentId,
+    fadeEnabled,
+    fadeValue,
+    hideAudit = false,
+    hideRemove = false,
+    index,
+    onCloseEditModal,
+    permission,
+    projectFlag,
+    projectId,
+    readOnly = false,
+    removeFlag,
+    style,
+    toggleFlag,
+  } = props
   const protectedTags = useProtectedTags(projectFlag, projectId)
   const history = useHistory()
 
@@ -94,7 +90,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
       'create-feature-modal',
     )?.length
     if (`${id}` === feature && !isModalOpen) {
-      editFeature(projectFlag, environmentFlags?.[id])
+      editFeature()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [environmentFlags, projectFlag])
@@ -149,17 +145,15 @@ const FeatureRow: FC<FeatureRowProps> = ({
       projectFlag?.multivariate_options?.length ||
       Utils.changeRequestsEnabled(environment?.minimum_change_request_approvals)
     ) {
-      editFeature(projectFlag, environmentFlags?.[id])
+      editFeature()
       return
     }
     confirmToggle()
   }
 
-  const editFeature = (
-    projectFlag: ProjectFlag,
-    environmentFlag?: FeatureState,
-    tab?: string,
-  ) => {
+  const editFeature = (tab?: string) => {
+    const projectFlag = props.projectFlag
+    const environmentFlag = environmentFlags?.[id]
     if (disableControls) {
       return
     }
@@ -213,25 +207,15 @@ const FeatureRow: FC<FeatureRowProps> = ({
     )
   }
 
-  const openFeatureHealthTab = (id: number) => {
-    editFeature(
-      projectFlag,
-      environmentFlags?.[id],
-      Constants.featurePanelTabs.FEATURE_HEALTH,
-    )
-  }
-
   const isReadOnly = readOnly || Utils.getFlagsmithHasFeature('read_only_mode')
   const isFeatureHealthEnabled = Utils.getFlagsmithHasFeature('feature_health')
 
-  const { created_date, description, id, name } = projectFlag
+  const { description, id } = projectFlag
   const environment = ProjectStore.getEnvironment(
     environmentId,
   ) as Environment | null
 
   const isCompact = getViewMode() === 'compact'
-  const showPlusIndicator =
-    projectFlag?.is_num_identity_overrides_complete === false
 
   if (condensed) {
     return (
@@ -255,121 +239,103 @@ const FeatureRow: FC<FeatureRowProps> = ({
       />
     )
   }
-
+  const featureActionProps: Omit<FeatureActionProps, 'e2e'> = {
+    featureIndex: index,
+    hideAudit: AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit,
+    hideHistory: !environment?.use_v2_feature_versioning,
+    hideRemove,
+    onCopyName: copyFeature,
+    onRemove: () => {
+      if (disableControls) return
+      confirmRemove(projectFlag, () => {
+        removeFlag?.(projectId, projectFlag)
+      })
+    },
+    onShowAudit: () => {
+      if (disableControls) return
+      history.push(
+        `/project/${projectId}/audit-log?env=${environment?.id}&search=${projectFlag.name}`,
+        '',
+      )
+    },
+    onShowHistory: () => {
+      if (disableControls) return
+      editFeature(Constants.featurePanelTabs.HISTORY)
+    },
+    projectId,
+    protectedTags,
+    readOnly: isReadOnly,
+    tags: projectFlag.tags,
+  }
   return (
-    <div
-      className={classNames(
-        `d-flex align-items-lg-center flex-column flex-lg-row list-item 'py-0 list-item-xs fs-small' ${
-          isReadOnly ? '' : 'clickable'
-        }`,
-        className,
-      )}
-      key={id}
-      space
-      data-test={`feature-item-${index}`}
-      onClick={() =>
-        !isReadOnly && editFeature(projectFlag, environmentFlags?.[id])
-      }
-    >
-      <div className='table-column flex-1 flex-column px-0'>
-        <div className='d-flex flex-column flex-lg-row align-items-md-center mx-0'>
-          <div className='d-flex align-items-center'>
-            <FeatureName name={projectFlag.name} />
-            <SegmentOverridesIcon
-              onClick={(e) => {
-                e.stopPropagation()
-                editFeature(
-                  projectFlag,
-                  environmentFlags?.[id],
-                  Constants.featurePanelTabs.SEGMENT_OVERRIDES,
-                )
-              }}
-              count={projectFlag.num_segment_overrides}
-            />
-            <IdentityOverridesIcon
-              onClick={(e) => {
-                e.stopPropagation()
-                editFeature(
-                  projectFlag,
-                  environmentFlags?.[id],
-                  Constants.featurePanelTabs.IDENTITY_OVERRIDES,
-                )
-              }}
-              count={projectFlag.num_identity_overrides}
-              showPlusIndicator={showPlusIndicator}
-            />
-            {projectFlag.is_server_key_only && (
-              <Tooltip
-                title={
-                  <span
-                    className='chip me-2 chip--xs bg-primary text-white'
-                    style={{ border: 'none' }}
-                  >
-                    <span>{'Server-side only'}</span>
-                  </span>
-                }
-                place='top'
-              >
-                {
-                  'Prevent this feature from being accessed with client-side SDKs.'
-                }
-              </Tooltip>
-            )}
-          </div>
-
-          <TagValues
-            projectId={`${projectId}`}
-            value={projectFlag.tags}
-            onClick={(tag) => {
-              if (tag?.type === 'UNHEALTHY') {
-                openFeatureHealthTab(id)
-              }
-            }}
-          >
-            {projectFlag.is_archived && (
-              <Tag className='chip--xs' tag={Constants.archivedTag} />
-            )}
-          </TagValues>
-          <StaleFlagWarning projectFlag={projectFlag} />
-          {isFeatureHealthEnabled && (
-            <UnhealthyFlagWarning
-              featureUnhealthyEvents={featureUnhealthyEvents}
-              onClick={(e) => {
-                e?.stopPropagation()
-                openFeatureHealthTab(id)
-              }}
-            />
-          )}
-        </div>
-        {description && !isCompact && (
-          <div
-            className='list-item-subtitle d-none d-lg-block'
-            style={{ lineHeight: '20px' }}
-          >
-            {description}
-          </div>
+    <>
+      <div
+        className={classNames(
+          `d-none d-lg-flex align-items-lg-center flex-lg-row list-item py-0 list-item-xs fs-small' ${
+            isReadOnly ? '' : 'clickable'
+          }`,
+          className,
         )}
-      </div>
-      <div className='d-flex align-items-center'>
-        <div
-          className='table-column px-1 px-lg-2 flex-1 flex-lg-auto'
-          style={{ width: width[0] }}
-        >
-          <FeatureValue
-            onClick={() =>
-              !isReadOnly && editFeature(projectFlag, environmentFlags?.[id])
-            }
-            value={environmentFlags?.[id]?.feature_state_value ?? null}
-            data-test={`feature-value-${index}`}
-          />
+        key={id}
+        data-test={`feature-item-${index}`}
+        onClick={() => !isReadOnly && editFeature()}
+      >
+        <div className='table-column ps-2 px-0 flex-1'>
+          <div className='mx-0 flex-1 flex-column'>
+            <div className='d-flex align-items-center'>
+              <FeatureName name={projectFlag.name} />
+              <FeatureTags
+                editFeature={editFeature}
+                projectFlag={projectFlag}
+              />
+            </div>
+            {!isCompact && <FeatureDescription description={description} />}
+          </div>
+          <div className='d-none d-lg-flex align-items-center'>
+            <div
+              className='table-column px-1 px-lg-2 flex-1 flex-lg-auto'
+              style={{ width: width[0] }}
+            >
+              <FeatureValue
+                onClick={() => !isReadOnly && editFeature()}
+                value={environmentFlags?.[id]?.feature_state_value ?? null}
+                data-test={`feature-value-${index}`}
+              />
+            </div>
+            <div
+              className='table-column'
+              style={{ width: width[1] }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <Switch
+                disabled={!permission || isReadOnly}
+                data-test={`feature-switch-${index}${
+                  environmentFlags?.[id]?.enabled ? '-on' : '-off'
+                }`}
+                checked={environmentFlags?.[id]?.enabled}
+                onChange={onChange}
+              />
+            </div>
+            <div
+              className='table-column px-1 px-lg-2'
+              style={{ width: isCompact ? width[2] : width[3] }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <FeatureAction {...featureActionProps} e2e={true} />
+            </div>
+          </div>
         </div>
-        <div
-          className='table-column'
-          style={{ width: width[1] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
+      </div>
+      <div className='d-flex flex-column justify-content-center px-2 list-item py-1  d-lg-none'>
+        <div className='d-flex align-items-center'>
+          <div className='flex-1 align-items-center flex-wrap'>
+            <FeatureName name={projectFlag.name} />
+            <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
+          </div>
           <Switch
             disabled={!permission || isReadOnly}
             data-test={`feature-switch-${index}${
@@ -379,52 +345,8 @@ const FeatureRow: FC<FeatureRowProps> = ({
             onChange={onChange}
           />
         </div>
-
-        <div
-          className='table-column px-1 px-lg-2'
-          style={{ width: isCompact ? width[2] : width[3] }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
-        >
-          <FeatureAction
-            projectId={projectId}
-            featureIndex={index}
-            readOnly={isReadOnly}
-            protectedTags={protectedTags}
-            tags={projectFlag.tags}
-            isCompact={isCompact}
-            hideAudit={
-              AccountStore.getOrganisationRole() !== 'ADMIN' || hideAudit
-            }
-            hideRemove={hideRemove}
-            hideHistory={!environment?.use_v2_feature_versioning}
-            onShowHistory={() => {
-              if (disableControls) return
-              editFeature(
-                projectFlag,
-                environmentFlags?.[id],
-                Constants.featurePanelTabs.HISTORY,
-              )
-            }}
-            onShowAudit={() => {
-              if (disableControls) return
-              history.push(
-                `/project/${projectId}/audit-log?env=${environment?.id}&search=${projectFlag.name}`,
-                '',
-              )
-            }}
-            onRemove={() => {
-              if (disableControls) return
-              confirmRemove(projectFlag, () => {
-                removeFlag?.(projectId, projectFlag)
-              })
-            }}
-            onCopyName={copyFeature}
-          />
-        </div>
       </div>
-    </div>
+    </>
   )
 }
 
