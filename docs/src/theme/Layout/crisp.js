@@ -24,7 +24,7 @@ export default function CrispLoader() {
 
         const kapaEl = document.getElementById('kapa-widget-container');
 
-        if (location.pathname === '/support/') {
+        if (location.pathname.replace(/\//g, '') === 'support') {
             window.$crisp.push(['do', 'chat:show']);
             window.__isCrispVisible = true;
             if (kapaEl) kapaEl.style.display = 'none';
