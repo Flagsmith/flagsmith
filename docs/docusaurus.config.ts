@@ -317,7 +317,7 @@ const config: Config = {
             "data-answer-cta-button-enabled": "true",
             "data-answer-cta-button-link": "/support/",
             "data-answer-cta-button-text": "Still need help? Reach out to our support team",
-            "data-modal-disclaimer": "Results are AI generated from our product documentation. [Contact Support to speak to a human](https://docs.flagsmith.com/support).",
+            "data-modal-disclaimer": "Results are AI generated from our product documentation. [Contact Support to speak to a human](/support).",
             async: true,
         },
     ],
