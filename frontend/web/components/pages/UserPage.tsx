@@ -61,7 +61,7 @@ import SegmentsIcon from 'components/svg/SegmentsIcon'
 import UsersIcon from 'components/svg/UsersIcon'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 
 const width = [200, 48, 78]
 
@@ -141,11 +141,7 @@ const UserPage: FC = () => {
     useState<Record<string, IdentityFeatureState>>()
   const [preselect, setPreselect] = useState(Utils.fromParam().flag)
   const [segmentsPage, setSegmentsPage] = useState(1)
-  const {
-    search,
-    searchInput: segmentSearchInput,
-    setSearchInput: setSegmentSearchInput,
-  } = useSearchThrottle('')
+  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
   const {
     data: segments,
     isFetching: isFetchingSegments,
@@ -951,9 +947,9 @@ const UserPage: FC = () => {
                             className='no-pad'
                             title='Segments'
                             isLoading={isFetchingSegments}
-                            search={segmentSearchInput}
+                            search={searchInput}
                             onChange={(e) => {
-                              setSegmentSearchInput(
+                              setSearchInput(
                                 Utils.safeParseEventValue(e),
                               )
                             }}

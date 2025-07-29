@@ -8,7 +8,7 @@ import ConversionEventSelect from 'components/ConversionEventSelect'
 import InfoMessage from 'components/InfoMessage'
 import PanelSearch from 'components/PanelSearch'
 import ErrorMessage from 'components/ErrorMessage'
-import useSearchThrottle from 'common/useSearchThrottle'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 import { useGetSplitTestQuery } from 'common/services/useSplitTest'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronForward } from 'ionicons/icons'
@@ -20,14 +20,13 @@ interface RouteParams {
   projectId: string
 }
 
-const pageSize = 10
 const widths = [200, 200, 150]
 const innerWidths = [200, 150, 150]
 
 const SplitTestPage: FC = () => {
   const match = useRouteMatch<RouteParams>()
   const environmentId = match?.params?.environmentId
-  const { search, searchInput, setSearchInput } = useSearchThrottle()
+  const { searchInput, setSearchInput } = useDebouncedSearch()
   const [conversion_event_type_id, setConversionEvent] = useState<
     number | null
   >(null)
