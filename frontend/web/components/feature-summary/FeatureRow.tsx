@@ -325,13 +325,13 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
                 e.stopPropagation()
               }}
             >
-              <FeatureAction {...featureActionProps} e2e={true} />
+              <FeatureAction {...featureActionProps} />
             </div>
           </div>
         </div>
       </div>
       <div className='d-flex flex-column justify-content-center px-2 list-item py-1  d-lg-none'>
-        <div className='d-flex align-items-center'>
+        <div className='d-flex gap-2 align-items-center'>
           <div className='flex-1 align-items-center flex-wrap'>
             <FeatureName name={projectFlag.name} />
             <FeatureTags editFeature={editFeature} projectFlag={projectFlag} />
@@ -344,6 +344,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
             checked={environmentFlags?.[id]?.enabled}
             onChange={onChange}
           />
+          <FeatureAction {...featureActionProps} disableE2E={true} />
         </div>
       </div>
     </>

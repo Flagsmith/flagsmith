@@ -25,13 +25,13 @@ export interface FeatureActionProps {
   onCopyName: () => void
   onShowAudit: () => void
   onRemove: () => void
-  e2e: boolean
+  disableE2E?: boolean
 }
 
 type ActionType = 'copy' | 'audit' | 'history' | 'remove'
 
 export const FeatureAction: FC<FeatureActionProps> = ({
-  e2e,
+  disableE2E,
   featureIndex,
   hideAudit,
   hideHistory,
@@ -92,14 +92,14 @@ export const FeatureAction: FC<FeatureActionProps> = ({
       <div ref={btnRef}>
         <ActionButton
           onClick={() => setIsOpen(true)}
-          data-test={e2e ? `feature-action-${featureIndex}` : undefined}
+          data-test={!disableE2E ? `feature-action-${featureIndex}` : undefined}
         />
       </div>
 
       {isOpen && (
         <div ref={listRef} className='feature-action__list'>
           <ActionItem
-            e2e={e2e}
+            disableE2E={disableE2E}
             icon={<Icon name='copy' width={18} fill='#9DA4AE' />}
             label='Copy Feature Name'
             handleActionClick={() => {
@@ -111,7 +111,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           />
           {!hideAudit && (
             <ActionItem
-              e2e={e2e}
+              disableE2E={disableE2E}
               icon={<Icon name='list' width={18} fill='#9DA4AE' />}
               label='Show Audit Logs'
               handleActionClick={() => {
@@ -124,7 +124,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
           )}
           {!hideHistory && (
             <ActionItem
-              e2e={e2e}
+              e2edisableE2E={disableE2E}
               icon={<Icon name='clock' width={18} fill='#9DA4AE' />}
               label='Show History'
               handleActionClick={() => {
@@ -149,7 +149,7 @@ export const FeatureAction: FC<FeatureActionProps> = ({
                   <Tooltip
                     title={
                       <ActionItem
-                        e2e={e2e}
+                        disableE2E={disableE2E}
                         icon={<Icon name='trash-2' width={18} fill='#9DA4AE' />}
                         label='Remove feature'
                         handleActionClick={() => {
