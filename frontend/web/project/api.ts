@@ -27,6 +27,7 @@ const API = {
       return
     }
     if (res instanceof Error) {
+      console.error(res)
       store.error = res
       store.goneABitWest()
       return
