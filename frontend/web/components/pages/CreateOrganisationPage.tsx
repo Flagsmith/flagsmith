@@ -30,9 +30,27 @@ const CreateOrganisationPage: React.FC = () => {
     const onChangeAccountStore = () => {
       setAccountStoreSaving(AccountStore.isSaving)
     }
+    const onSave = (id: string | number) => {
+      AppActions.selectOrganisation(id)
+      API.setCookie('organisation', `${id}`)
+
+      if (Utils.isSaas()) {
+        API.trackTraits({
+          hosting_preferences: hosting,
+        })
+      }
+
+      if (Utils.getFlagsmithHasFeature('welcome_page')) {
+        history.push('/getting-started')
+      } else {
+        history.push(Utils.getOrganisationHomePage(id))
+      }
+    }
     AccountStore.on('change', onChangeAccountStore)
+    AccountStore.on('saved', onSave)
     return () => {
       OrganisationStore.off('change', onChangeAccountStore)
+      OrganisationStore.off('saved', onSave)
     }
   }, [])
 
@@ -49,23 +67,6 @@ const CreateOrganisationPage: React.FC = () => {
       }
     }
   }, [])
-
-  const onSave = (id: string | number) => {
-    AppActions.selectOrganisation(id)
-    API.setCookie('organisation', `${id}`)
-
-    if (Utils.isSaas()) {
-      API.trackTraits({
-        hosting_preferences: hosting,
-      })
-    }
-
-    if (Utils.getFlagsmithHasFeature('welcome_page')) {
-      history.push('/getting-started')
-    } else {
-      history.push(Utils.getOrganisationHomePage(id))
-    }
-  }
 
   if (
     Project.superUserCreateOnly &&
