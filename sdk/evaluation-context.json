@@ -23,6 +23,68 @@
             "title": "EnvironmentContext",
             "type": "object"
         },
+        "FeatureContext": {
+            "description": "Represents a feature context for feature flag evaluation.",
+            "properties": {
+                "key": {
+                    "description": "Key used when selecting a value for a multivariate feature. Set to an internal identifier or a UUID, depending on Flagsmith implementation.",
+                    "title": "Key",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The name of the feature.",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "enabled": {
+                    "description": "Indicates whether the feature is enabled in the environment.",
+                    "title": "Enabled",
+                    "type": "boolean"
+                },
+                "value": {
+                    "description": "A default environment value for the feature. If the feature is multivariate, this will be the control value.",
+                    "title": "Value",
+                    "type": "string"
+                },
+                "variants": {
+                    "default": [],
+                    "description": "An array of environment default values associated with the feature. Contains a single value for standard features, or multiple values for multivariate features.",
+                    "items": {
+                        "$ref": "#/$defs/FeatureValue"
+                    },
+                    "title": "Variants",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "enabled",
+                "value"
+            ],
+            "title": "FeatureContext",
+            "type": "object"
+        },
+        "FeatureValue": {
+            "description": "Represents a multivariate value for a feature flag.",
+            "properties": {
+                "value": {
+                    "description": "The value of the feature.",
+                    "title": "Value",
+                    "type": "string"
+                },
+                "weight": {
+                    "description": "The weight of the feature value variant, as a percentage number (i.e. 100.0).",
+                    "title": "Weight",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "value"
+            ],
+            "title": "FeatureValue",
+            "type": "object"
+        },
         "IdentityContext": {
             "description": "Represents an identity context for feature flag evaluation.",
             "properties": {
@@ -39,12 +101,20 @@
                     "x-flagsmith-engine-path": "$.identity.key"
                 },
                 "traits": {
-                    "additionalProperties": {
-                        "type": "string"
-                    },
+                    "anyOf": [
+                        {
+                            "additionalProperties": {
+                                "type": "string"
+                            },
+                            "type": "object"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "default": null,
                     "description": "A map of traits associated with the identity, where the key is the trait name and the value is the trait value.",
-                    "title": "Traits",
-                    "type": "object"
+                    "title": "Traits"
                 }
             },
             "required": [
@@ -53,12 +123,84 @@
             ],
             "title": "IdentityContext",
             "type": "object"
+        },
+        "SegmentContext": {
+            "description": "Represents a segment context for feature flag evaluation.",
+            "properties": {
+                "id": {
+                    "description": "The unique identifier for the segment.",
+                    "title": "ID",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The name of the segment.",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "rules": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/SegmentRule"
+                    },
+                    "title": "Rules",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "id",
+                "name",
+                "rules"
+            ],
+            "title": "SegmentContext",
+            "type": "object"
+        },
+        "SegmentRule": {
+            "description": "Represents a rule within a segment for feature flag evaluation.",
+            "properties": {
+                "name": {
+                    "description": "The name of the segment rule.",
+                    "title": "Name",
+                    "type": "string"
+                },
+                "conditions": {
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "boolean"
+                            }
+                        ]
+                    },
+                    "description": "Conditions that define the segment rule.",
+                    "title": "Conditions",
+                    "type": "object"
+                },
+                "sub_rules": {
+                    "additionalProperties": {
+                        "$ref": "#/$defs/SegmentRule"
+                    },
+                    "description": "Sub-rules nested within the segment rule.",
+                    "title": "Sub-rules",
+                    "type": "object"
+                }
+            },
+            "required": [
+                "name",
+                "conditions"
+            ],
+            "title": "SegmentRule",
+            "type": "object"
         }
     },
-    "description": "Represents a context object containing the necessary information to evaluate Flagsmith feature flags.",
+    "description": "Represents a context object containing the necessary information to evaluate\\nFlagsmith feature flags.",
     "properties": {
         "environment": {
-            "$ref": "#/$defs/EnvironmentContext"
+            "$ref": "#/$defs/EnvironmentContext",
+            "description": "Environment context required for evaluation."
         },
         "identity": {
             "anyOf": [
@@ -69,7 +211,24 @@
                     "type": "null"
                 }
             ],
-            "default": null
+            "default": null,
+            "description": "Identity context used for identity-based evaluation; optional."
+        },
+        "segments": {
+            "additionalProperties": {
+                "$ref": "#/$defs/SegmentContext"
+            },
+            "description": "Segments applicable to the evaluation context.",
+            "title": "Segments",
+            "type": "object"
+        },
+        "features": {
+            "additionalProperties": {
+                "$ref": "#/$defs/FeatureContext"
+            },
+            "description": "Features to be evaluated in the context.",
+            "title": "Features",
+            "type": "object"
         }
     },
     "required": [
