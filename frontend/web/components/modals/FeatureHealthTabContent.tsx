@@ -14,9 +14,11 @@ import {
   FeatureHealthEventReasonTextBlock,
   FeatureHealthEventReasonUrlBlock,
 } from 'common/types/responses'
+import AppActions from 'common/dispatcher/app-actions'
 
 type FeatureHealthTabContentProps = {
   projectId: number
+  environmentId: number
 }
 
 const EventTextBlocks = ({
@@ -109,6 +111,7 @@ const EventURLBlocks = ({
 }
 
 const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
+  environmentId,
   projectId,
 }) => {
   const { data: healthEvents, isLoading } = useGetHealthEventsQuery(
@@ -122,8 +125,10 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
   useEffect(() => {
     if (isDismissed) {
       toast('Event dismissed')
+      // Refetch features after dismissing the health event
+      AppActions.refreshFeatures(projectId, environmentId)
     }
-  }, [isDismissed])
+  }, [isDismissed, projectId, environmentId])
 
   useEffect(() => {
     if (dismissError) {
