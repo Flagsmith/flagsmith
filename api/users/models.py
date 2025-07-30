@@ -194,7 +194,10 @@ class FFAdminUser(LifecycleModel, AbstractUser):  # type: ignore[django-manager-
 
     @property
     def email_domain(self):  # type: ignore[no-untyped-def]
-        return self.email.split("@")[1]
+        email_parts = self.email.split("@")
+        if len(email_parts) > 1:
+            return email_parts[1]
+        return None
 
     def get_full_name(self):  # type: ignore[no-untyped-def]
         if not self.first_name:
