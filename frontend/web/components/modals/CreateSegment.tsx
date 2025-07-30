@@ -8,7 +8,6 @@ import React, {
 } from 'react'
 
 import Constants from 'common/constants'
-import useSearchThrottle from 'common/useSearchThrottle'
 import AccountStore from 'common/stores/account-store'
 import {
   EdgePagedResponse,
@@ -31,7 +30,7 @@ import AssociatedSegmentOverrides from './AssociatedSegmentOverrides'
 import Button from 'components/base/forms/Button'
 import InfoMessage from 'components/InfoMessage'
 import InputGroup from 'components/base/forms/InputGroup'
-import Rule from './Rule'
+import Rule from 'components/segments/Rule/Rule'
 import TabItem from 'components/base/forms/TabItem'
 import Tabs from 'components/base/forms/Tabs'
 import ConfigProvider from 'common/providers/ConfigProvider'
@@ -46,6 +45,7 @@ import { useCreateProjectChangeRequestMutation } from 'common/services/useProjec
 import ExistingProjectChangeRequestAlert from 'components/ExistingProjectChangeRequestAlert'
 import CreateSegmentRulesTabForm from './CreateSegmentRulesTabForm'
 import CreateSegmentUsersTabContent from './CreateSegmentUsersTabContent'
+import useDebouncedSearch from 'common/useDebouncedSearch'
 
 type PageType = {
   number: number
@@ -400,6 +400,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                   readOnly={readOnly}
                   data-test={`rule-${displayIndex}`}
                   rule={rule}
+                  index={i}
                   operators={operators!}
                   onChange={(v: SegmentRule) => {
                     setValueChanged(true)
@@ -652,16 +653,7 @@ const LoadingCreateSegment: FC<LoadingCreateSegmentType> = (props) => {
     pages: undefined,
   })
 
-  const { search, searchInput, setSearchInput } = useSearchThrottle(
-    Utils.fromParam().search,
-    () => {
-      setPage({
-        number: 1,
-        pageType: undefined,
-        pages: undefined,
-      })
-    },
-  )
+  const { search, searchInput, setSearchInput } = useDebouncedSearch('')
 
   useEffect(() => {
     if (segmentData) {

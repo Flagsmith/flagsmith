@@ -1,38 +1,19 @@
 import pytest
+from django.utils import timezone
 
 from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
     RELEASE_PIPELINE_DELETED_MESSAGE,
-    RELEASE_PIPELINE_PUBLISHED_MESSAGE,
 )
-from audit.models import AuditLog
-from audit.related_object_type import RelatedObjectType
 from environments.models import Environment
+from features.models import Feature
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
 from features.release_pipelines.core.models import (
     PipelineStage,
     ReleasePipeline,
 )
+from features.versioning.models import EnvironmentFeatureVersion
 from users.models import FFAdminUser
-
-
-def test_release_pipeline_publish_creates_audit_log(
-    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
-) -> None:
-    # When
-    release_pipeline.publish(admin_user)
-
-    # Then
-    assert (
-        AuditLog.objects.filter(
-            related_object_id=release_pipeline.id,
-            related_object_type=RelatedObjectType.RELEASE_PIPELINE.name,
-            project=release_pipeline.project,
-            log=RELEASE_PIPELINE_PUBLISHED_MESSAGE % release_pipeline.name,
-            author=admin_user,
-        ).exists()
-        is True
-    )
 
 
 def test_release_pipeline_publish_raises_error_if_pipeline_is_already_published(
@@ -153,3 +134,52 @@ def test_release_pipeline_get_delete_log_message(
 
     # Then
     assert release_pipeline.get_delete_log_message(release_pipeline) == expected_message
+
+
+def test_release_pipeline_unpublish(
+    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
+) -> None:
+    # Given - the pipeline is already published
+    release_pipeline.publish(admin_user)
+
+    # When
+    release_pipeline.unpublish(admin_user)
+
+    # Then
+    assert release_pipeline.published_at is None
+    assert release_pipeline.published_by is None
+
+
+def test_should_raise_error_when_unpublishing_unpublished_pipeline(
+    release_pipeline: ReleasePipeline, admin_user: FFAdminUser
+) -> None:
+    # When/ Then
+    with pytest.raises(InvalidPipelineStateError, match="Pipeline is not published."):
+        release_pipeline.unpublish(admin_user)
+
+
+def test_release_pipeline_has_feature_in_flight(
+    release_pipeline: ReleasePipeline,
+    environment: Environment,
+    pipeline_stage_enable_feature_on_enter: PipelineStage,
+    admin_user: FFAdminUser,
+    feature: Feature,
+) -> None:
+    # Given an unpublished environment feature version
+    environment_version = EnvironmentFeatureVersion.objects.create(
+        feature=feature,
+        environment=environment,
+        pipeline_stage=pipeline_stage_enable_feature_on_enter,
+        published_at=None,
+    )
+
+    # Then
+    assert release_pipeline.has_feature_in_flight() is True
+
+    # Next, publish the environment feature version
+    environment_version.published_at = timezone.now()
+    environment_version.published_by = admin_user
+    environment_version.save()
+
+    # Then
+    assert release_pipeline.has_feature_in_flight() is False

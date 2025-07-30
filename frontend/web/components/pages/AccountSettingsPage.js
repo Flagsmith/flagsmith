@@ -1,5 +1,5 @@
 // import propTypes from 'prop-types';
-import React, { Component } from 'react'
+import React, { Component, ReactNode } from 'react'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import _data from 'common/data/base/_data'
@@ -287,7 +287,7 @@ class AccountSettingsPage extends Component {
                     <Setting
                       onChange={(v) => {
                         flagsmith.setTrait('json_inspect', v).then(() => {
-                          toast('Updated')
+                          toast('Updated JSON References setting')
                         })
                       }}
                       checked={flagsmith.getTrait('json_inspect')}

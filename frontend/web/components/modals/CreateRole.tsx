@@ -39,6 +39,7 @@ import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
 import { RouteComponentProps } from 'react-router-dom'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 type TabRef = {
   onClosing: () => Promise<void>
   tabChanged: () => boolean
@@ -469,7 +470,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   className='chip my-1 justify-content-between'
                 >
                   <span className='font-weight-bold'>
-                    {u.first_name} {u.last_name}
+                    {getUserDisplayName(u)}
                   </span>
                   <span className='chip-icon ion'>
                     <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />

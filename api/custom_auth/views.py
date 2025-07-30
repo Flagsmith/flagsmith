@@ -1,8 +1,10 @@
 import json
+from datetime import timedelta
 from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import user_logged_out
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from djoser.views import TokenCreateView, UserViewSet  # type: ignore[import-untyped]
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
@@ -30,7 +32,7 @@ from custom_auth.mfa.trench.serializers import CodeLoginSerializer
 from custom_auth.mfa.trench.utils import user_token_generator
 from custom_auth.serializers import CustomUserDelete
 from integrations.lead_tracking.hubspot.services import (
-    register_hubspot_tracker,
+    register_hubspot_tracker_and_track_user,
 )
 from users.constants import DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE
 from users.models import FFAdminUser
@@ -128,7 +130,8 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         response = super().create(request, *args, **kwargs)
-        register_hubspot_tracker(request, user=self.user)
+        register_hubspot_tracker_and_track_user(request, user=self.user)
+
         if settings.COOKIE_AUTH_ENABLED:
             authorise_response(self.user, response)
         return response  # type: ignore[no-any-return]
@@ -140,6 +143,17 @@ class FFAdminUserViewSet(UserViewSet):  # type: ignore[misc]
                 DEFAULT_DELETE_ORPHAN_ORGANISATIONS_VALUE,
             )
         )
+
+    def retrieve(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        user = request.user
+        assert isinstance(user, FFAdminUser)
+        if not user.last_login or timezone.now() - user.last_login > timedelta(
+            minutes=settings.LAST_LOGIN_UPDATE_THRESHOLD_MINUTES
+        ):
+            user.last_login = timezone.now()
+            user.save(update_fields=["last_login"])
+        resp: Response = super().retrieve(request, *args, **kwargs)
+        return resp
 
     @action(
         detail=False,

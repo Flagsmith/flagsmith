@@ -1,3 +1,5 @@
+from django.db.models import Prefetch, Q
+from django.utils import timezone
 from task_processor.decorators import (
     register_task_handler,
 )
@@ -10,7 +12,11 @@ from environments.models import (
     environment_v2_wrapper,
     environment_wrapper,
 )
+from features.multivariate.models import MultivariateFeatureStateValue
 from features.versioning.models import EnvironmentFeatureVersion
+from features.versioning.versioning_service import (
+    get_environment_flags_list,
+)
 from sse import (  # type: ignore[attr-defined]
     send_environment_update_message_for_environment,
     send_environment_update_message_for_project,
@@ -63,34 +69,42 @@ def clone_environment_feature_states(
     source = Environment.objects.get(id=source_environment_id)
     clone = Environment.objects.get(id=clone_environment_id)
 
-    # Since identities are closely tied to the environment
-    # it does not make much sense to clone them, hence
-    # only clone feature states without identities
-    queryset = source.feature_states.filter(identity=None)
+    now = timezone.now()
 
-    if source.use_v2_feature_versioning:
-        # Grab the latest feature versions from the source environment.
-        latest_environment_feature_versions = (
-            EnvironmentFeatureVersion.objects.get_latest_versions_as_queryset(
-                environment_id=source.id
+    source_feature_states = get_environment_flags_list(
+        environment=source,
+        additional_prefetch_related_args=[
+            Prefetch(
+                "multivariate_feature_state_values",
+                queryset=MultivariateFeatureStateValue.objects.select_related(
+                    "multivariate_feature_option"
+                ),
             )
-        )
+        ],
+        additional_filters=Q(identity__isnull=True),
+    )
 
-        # Create a dictionary holding the environment feature versions (unique per feature)
-        # to use in the cloned environment.
-        clone_environment_feature_versions = {
-            efv.feature_id: efv.clone_to_environment(environment=clone)
-            for efv in latest_environment_feature_versions
-        }
+    # Since, in versioned environments, we only want to create a single version for
+    # each feature to create a 'snapshot' of the source environment, we keep a local
+    # cache of EnvironmentFeatureVersion objects to avoid having to use get_or_create
+    # and hit the db unnecessarily.
+    efv_by_feature_id: dict[int, EnvironmentFeatureVersion] = {}
 
-        for feature_state in queryset.filter(
-            environment_feature_version__in=latest_environment_feature_versions
-        ):
-            clone_efv = clone_environment_feature_versions[feature_state.feature_id]
-            feature_state.clone(clone, environment_feature_version=clone_efv)
-    else:
-        for feature_state in queryset:
-            feature_state.clone(clone, live_from=feature_state.live_from)
+    for feature_state in source_feature_states:
+        kwargs = {"env": clone}
+
+        if clone.use_v2_feature_versioning:
+            if not (efv := efv_by_feature_id.get(feature_state.feature_id)):
+                efv = EnvironmentFeatureVersion.create_initial_version(
+                    environment=clone, feature=feature_state.feature
+                )
+                efv_by_feature_id[feature_state.feature_id] = efv
+
+            kwargs.update(environment_feature_version=efv)
+        else:
+            kwargs.update(live_from=now)
+
+        feature_state.clone(**kwargs)
 
     clone.is_creating = False
     clone.save()

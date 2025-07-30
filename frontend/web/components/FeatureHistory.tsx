@@ -13,6 +13,7 @@ import DateList from './DateList'
 import classNames from 'classnames'
 import PlanBasedBanner from './PlanBasedAccess'
 import { useGetSubscriptionMetadataQuery } from 'common/services/useSubscriptionMetadata'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const widths = [250, 150]
 type FeatureHistoryPageType = {
@@ -99,11 +100,7 @@ const FeatureHistory: FC<FeatureHistoryPageType> = ({
                       <div className='font-weight-medium d-flex gap-2 align-items-center mb-1'>
                         {moment(v.live_from).format('HH:mma')}
                         <div className='text-muted fw-normal text-small'>
-                          {user
-                            ? `${user.first_name || ''} ${
-                                user.last_name || ''
-                              } `
-                            : 'System '}
+                          {user ? `${getUserDisplayName(user)} ` : 'System '}
                         </div>
                         {!i && <span className='chip chip--xs px-2'>Live</span>}
                       </div>

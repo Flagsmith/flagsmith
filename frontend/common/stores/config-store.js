@@ -1,6 +1,4 @@
 import Project from 'common/project'
-import { setDarkMode } from 'project/darkMode'
-import { storageGet } from 'common/safeLocalStorage'
 
 const Dispatcher = require('../dispatcher/dispatcher')
 const BaseStore = require('./base/_store')
@@ -11,10 +9,6 @@ const controller = {
     store.loading()
   },
   loaded(oldFlags) {
-    //todo: Remove this after a few weeks have passed
-    if (storageGet('dark_mode') === null) {
-      setDarkMode(flagsmith.hasFeature('dark_mode'))
-    }
     if (!oldFlags || !Object.keys(oldFlags).length) {
       store.loaded()
     } else {
@@ -41,15 +35,12 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
   }
 })
 
-const enableDynatrace = !!window.enableDynatrace && typeof dtrum !== 'undefined'
-
 flagsmith
   .init({
     AsyncStorage,
     api: Project.flagsmithClientAPI,
     cacheFlags: true,
     enableAnalytics: Project.flagsmithAnalytics,
-    enableDynatrace,
     environmentID: Project.flagsmith,
     onChange: controller.loaded,
     realtime: Project.flagsmithRealtime,

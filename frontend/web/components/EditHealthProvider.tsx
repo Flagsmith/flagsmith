@@ -113,7 +113,7 @@ const EditHealthProvider: FC<EditHealthProviderType> = ({
 
   useEffect(() => {
     if (isDeleteSuccess) {
-      toast('Provider deleted successfully', 'success')
+      toast('Provider deleted successfully')
     }
   }, [isDeleteSuccess])
 

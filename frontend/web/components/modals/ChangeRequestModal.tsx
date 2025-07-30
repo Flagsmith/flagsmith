@@ -14,6 +14,7 @@ import moment from 'moment'
 import Utils from 'common/utils/utils'
 import { Approval, ChangeRequest, User } from 'common/types/responses'
 import { Req } from 'common/types/requests'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 interface ChangeRequestModalProps {
   changeRequest?: ChangeRequest
@@ -202,7 +203,7 @@ const ChangeRequestModal: FC<ChangeRequestModalProps> = ({
                                 style={{ marginBottom: 4, marginTop: 4 }}
                               >
                                 <span className='font-weight-bold'>
-                                  {u.first_name} {u.last_name}
+                                  {getUserDisplayName(u)}
                                 </span>
                                 <span className='chip-icon ion'>
                                   <IonIcon icon={close} />

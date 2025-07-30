@@ -15,7 +15,7 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     AFTER_DELETE,
     AFTER_SAVE,
     AFTER_UPDATE,
-    BEFORE_CREATE,
+    BEFORE_SAVE,
     LifecycleModel,
     hook,
 )
@@ -197,7 +197,9 @@ class Environment(
         ):
             environment_document_cache.delete(self.api_key)
 
-    @hook(BEFORE_CREATE)  # type: ignore[misc]
+    # Use the BEFORE_SAVE hook instead of BEFORE_CREATE to account for the logic in the
+    # Environment.clone() method
+    @hook(BEFORE_SAVE, when="pk", is_now=None)  # type: ignore[misc]
     def enable_v2_versioning(self) -> None:
         if self.use_v2_feature_versioning:
             # if the environment has already been created with versioning enabled,
@@ -208,10 +210,7 @@ class Environment(
         organisation = self.project.organisation
         enable_v2_versioning = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={
-                "organisation_id": organisation.id,
-                "subscription.plan": organisation.subscription.plan,
-            },
+            traits=organisation.flagsmith_on_flagsmith_api_traits,
         ).is_feature_enabled("enable_feature_versioning_for_new_environments")
         self.use_v2_feature_versioning = enable_v2_versioning
 

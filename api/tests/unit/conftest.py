@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-from django.core.cache import BaseCache
+from django.core.cache import BaseCache, caches
+from django.core.cache.backends.locmem import LocMemCache
 from pytest_django.fixtures import SettingsWrapper
 from pytest_mock import MockerFixture
 
@@ -232,3 +233,23 @@ def populate_environment_document_cache(
     persistent_environment_document_cache.get.return_value = (
         map_environment_to_environment_document(environment)
     )
+
+
+@pytest.fixture()
+def use_local_mem_cache_for_cache_middleware(mocker: MockerFixture) -> None:
+    # Ensure the default cache is LocMemCache
+    default_cache = caches["default"]
+    assert isinstance(default_cache, LocMemCache)
+
+    # Patch CacheMiddleware to use 'default' cache and a non-zero timeout
+    # This is necessary because override_settings doesn't reliably affect middleware behavior
+    from django.middleware.cache import CacheMiddleware
+
+    original_init = CacheMiddleware.__init__
+
+    def custom_init(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        original_init(self, *args, **kwargs)
+        self.page_timeout = 10  # enable caching for the view
+        self.cache_alias = "default"  # force use of in-memory test cache
+
+    mocker.patch.object(CacheMiddleware, "__init__", custom_init)

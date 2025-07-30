@@ -39,6 +39,7 @@ from features.workflows.core.models import ChangeRequest
 from organisations.models import Organisation, OrganisationRole
 from projects.models import EdgeV2MigrationStatus, Project
 from segments.models import Segment
+from tests.types import EnableFeaturesFixture
 from users.models import FFAdminUser
 from util.mappers import map_environment_to_environment_document
 
@@ -1211,10 +1212,10 @@ def test_environment_metric_query_helpers_match_expected_counts(
 def test_environment_create_with_use_v2_feature_versioning_true(
     project: Project,
     feature: Feature,
-    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_v2_versioning_for_new_environments()
+    enable_features("enable_feature_versioning_for_new_environments")
 
     # When
     new_environment = Environment.objects.create(
@@ -1226,16 +1227,17 @@ def test_environment_create_with_use_v2_feature_versioning_true(
     assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
 
 
 def test_environment_clone_from_versioned_environment_with_use_v2_feature_versioning_true(
     project: Project,
     environment_v2_versioning: Environment,
     feature: Feature,
-    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_v2_versioning_for_new_environments()
+    enable_features("enable_feature_versioning_for_new_environments")
 
     # When
     new_environment = environment_v2_versioning.clone(name="new-environment")
@@ -1244,21 +1246,37 @@ def test_environment_clone_from_versioned_environment_with_use_v2_feature_versio
     assert EnvironmentFeatureVersion.objects.filter(
         environment=new_environment, feature=feature
     ).exists()
+    assert new_environment.use_v2_feature_versioning
 
 
 def test_environment_clone_from_non_versioned_environment_with_use_v2_feature_versioning_true(
     project: Project,
     environment: Environment,
     feature: Feature,
-    enable_v2_versioning_for_new_environments: typing.Callable[[], None],
+    segment_featurestate: FeatureState,
+    enable_features: EnableFeaturesFixture,
 ) -> None:
     # Given
-    enable_v2_versioning_for_new_environments()
+    enable_features("enable_feature_versioning_for_new_environments")
+
+    # Ensure that v2 versioning is not enabled for this test as we explicitly
+    # want to test that we can clone from v1 -> v2 successsfully.
+    environment.use_v2_feature_versioning = False
+    environment.save()
 
     # When
     new_environment = environment.clone(name="new-environment")
 
     # Then
-    assert not EnvironmentFeatureVersion.objects.filter(
+    assert new_environment.use_v2_feature_versioning
+
+    # we only expect a single environment feature version as we are essentially
+    # taking a snapshot and creating a new environment.
+    efv = EnvironmentFeatureVersion.objects.get(
         environment=new_environment, feature=feature
-    ).exists()
+    )
+
+    # But we expect 2 feature states, each with the same version
+    latest_feature_states = get_environment_flags_queryset(new_environment)
+    assert latest_feature_states.count() == 2
+    assert {fs.environment_feature_version for fs in latest_feature_states} == {efv}
