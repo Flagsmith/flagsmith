@@ -44,11 +44,22 @@ jobs:
 
           EXCLUDE_PATTERNS = os.environ["EXCLUDE_PATTERNS"].replace(" ", "").split(",")
 
-          def is_file_binary(file_path: Path) -> bool:
-              """Check if a file is binary."""
+          def should_skip_file(file_path: Path) -> bool:
+              """Whether to skip a file based on its size or content"""
+              file_size = file_path.stat().st_size
+              if file_size == 0:  # Empty files are irrelevant
+                  return True
+              if file_size > 1024 * 1024:  # Large files are likely binary
+                  return True
               with file_path.open("rb") as file:
-                  chunk = file.read(1024)
-              return b'\0' in chunk
+                  chunk = file.read(4096)  # A text file rarely contains null bytes
+                  if b'\0' in chunk:
+                      return True
+                  try:
+                      chunk.decode('utf-8')
+                  except UnicodeDecodeError:  # Decoding likely fails for binary files
+                      return True
+              return False
 
           def find_references(feature_names: list[str]) -> Generator[tuple[str, str, int], None, None]:
               """Search for references to a feature name in the codebase."""
@@ -58,7 +69,7 @@ jobs:
                       continue
                   if not path.is_file():
                       continue
-                  if is_file_binary(path):
+                  if should_skip_file(path):
                       continue
                   context: deque[str] = deque(maxlen=2)
                   with path.open("r", encoding="utf-8", errors="ignore") as file:
