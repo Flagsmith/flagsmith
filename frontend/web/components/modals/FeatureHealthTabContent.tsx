@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Icon from 'components/Icon'
 import Constants from 'common/constants'
-import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
+import {
+  useDismissHealthEventMutation,
+  useGetHealthEventsQuery,
+} from 'common/services/useHealthEvents'
 import Button from 'components/base/forms/Button'
 import moment from 'moment'
 import Collapse from '@material-ui/core/Collapse'
@@ -113,6 +116,25 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
     { skip: !projectId },
   )
 
+  const [dismissHealthEvent, { error: dismissError, isSuccess: isDismissed }] =
+    useDismissHealthEventMutation()
+
+  useEffect(() => {
+    if (isDismissed) {
+      toast('Event dismissed')
+    }
+  }, [isDismissed])
+
+  useEffect(() => {
+    if (dismissError) {
+      toast('Failed to dismiss event', 'danger')
+    }
+  }, [dismissError])
+
+  const handleDismiss = (eventId: number) => {
+    dismissHealthEvent({ eventId, projectId })
+  }
+
   if (isLoading) {
     return (
       <div className='text-center'>
@@ -143,13 +165,31 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
                   className='ms-1 mr-1'
                   icon={warning}
                 />
-                <h6 className='mb-0'>{event.provider_name} Provider</h6>
+                <div>
+                  <Row>
+                    <h6 className='mb-0'>{event.provider_name} Provider</h6>
+                    <div className='ml-2'>
+                      <Tooltip title={moment(event.created_at).fromNow()}>
+                        {moment(event.created_at).format('Do MMM YYYY HH:mma')}
+                      </Tooltip>
+                    </div>
+                  </Row>
+                </div>
               </div>
-              <div>
-                <Tooltip title={moment(event.created_at).fromNow()}>
-                  {moment(event.created_at).format('Do MMM YYYY HH:mma')}
+              <Row>
+                <Button
+                  className='mr-1'
+                  size='xSmall'
+                  theme='secondary'
+                  onClick={() => handleDismiss(event.id)}
+                >
+                  Dismiss
+                </Button>
+                <Tooltip title={<Icon width={18} name='info-outlined' />}>
+                  When dismissed, this event will no longer be shown in the
+                  Unhealthy Events list.
                 </Tooltip>
-              </div>
+              </Row>
             </div>
             <div className='d-flex' style={{ gap: 96 }}>
               <EventTextBlocks textBlocks={event?.reason?.text_blocks} />
