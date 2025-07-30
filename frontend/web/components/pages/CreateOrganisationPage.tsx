@@ -30,7 +30,9 @@ const CreateOrganisationPage: React.FC = () => {
     const onChangeAccountStore = () => {
       setAccountStoreSaving(AccountStore.isSaving)
     }
-    const onSave = (id: string | number) => {
+    const onSave = () => {
+      //@ts-ignore
+      const id = AccountStore.savedId
       AppActions.selectOrganisation(id)
       API.setCookie('organisation', `${id}`)
 
