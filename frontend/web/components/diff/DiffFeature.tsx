@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useState } from 'react'
 import {
   FeatureConflict,
-  FeatureState,
   FeatureStateWithConflict,
 } from 'common/types/responses'
 import Tabs from 'components/base/forms/Tabs'

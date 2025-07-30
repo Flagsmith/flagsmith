@@ -10,23 +10,14 @@ import React, {
 import InputGroup from 'components/base/forms/InputGroup'
 import Tabs from 'components/base/forms/Tabs'
 import TabItem from 'components/base/forms/TabItem'
-import RolePermissionsList from 'components/RolePermissionsList'
+
 import {
   useCreateRoleMutation,
   useGetRoleQuery,
   useUpdateRoleMutation,
 } from 'common/services/useRole'
 
-import { EditPermissionsModal } from 'components/EditPermissions'
-import OrganisationStore from 'common/stores/organisation-store'
-import ProjectFilter from 'components/ProjectFilter'
-import {
-  Environment,
-  Project,
-  Role,
-  User,
-  UserGroup,
-} from 'common/types/responses'
+import { Role, User, UserGroup } from 'common/types/responses'
 import { setInterceptClose } from './base/ModalDefault'
 import UserSelect from 'components/UserSelect'
 import MyGroupsSelect from 'components/MyGroupsSelect'
@@ -44,11 +35,11 @@ import { close as closeIcon } from 'ionicons/icons'
 import { IonIcon } from '@ionic/react'
 import Utils from 'common/utils/utils'
 import Button from 'components/base/forms/Button'
-import Input from 'components/base/forms/Input'
 import SettingsButton from 'components/SettingsButton'
 import PermissionsTabs from 'components/PermissionsTabs'
 import AccountStore from 'common/stores/account-store'
-
+import { RouteComponentProps } from 'react-router-dom'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 type TabRef = {
   onClosing: () => Promise<void>
   tabChanged: () => boolean
@@ -60,9 +51,12 @@ type CreateRoleType = {
   organisationId?: number
   role?: Role
   users?: User[]
+  history?: RouteComponentProps['history']
 }
+
 const CreateRole: FC<CreateRoleType> = ({
   groups,
+  history,
   isEdit,
   onComplete,
   organisationId,
@@ -437,7 +431,12 @@ const CreateRole: FC<CreateRoleType> = ({
     }
 
     return isEdit ? (
-      <Tabs value={tab} onChange={changeTab} buttonTheme='text'>
+      <Tabs
+        value={tab}
+        onChange={changeTab}
+        buttonTheme='text'
+        history={history}
+      >
         <TabItem
           tabLabel={<Row className='justify-content-center'>General</Row>}
         >
@@ -471,7 +470,7 @@ const CreateRole: FC<CreateRoleType> = ({
                   className='chip my-1 justify-content-between'
                 >
                   <span className='font-weight-bold'>
-                    {u.first_name} {u.last_name}
+                    {getUserDisplayName(u)}
                   </span>
                   <span className='chip-icon ion'>
                     <IonIcon icon={closeIcon} style={{ fontSize: '13px' }} />
@@ -544,4 +543,3 @@ const CreateRole: FC<CreateRoleType> = ({
   )
 }
 export default CreateRole
-module.exports = CreateRole

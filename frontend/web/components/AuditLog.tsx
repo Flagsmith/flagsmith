@@ -2,8 +2,8 @@ import React, { FC, ReactNode, useEffect, useRef, useState } from 'react' // we 
 import Utils from 'common/utils/utils'
 import { AuditLogItem, Environment } from 'common/types/responses'
 import { useGetAuditLogsQuery } from 'common/services/useAuditLog'
-import useSearchThrottle from 'common/useSearchThrottle'
-import { Link, withRouter } from 'react-router-dom'
+import useDebouncedSearch from 'common/useDebouncedSearch'
+import { Link } from 'react-router-dom'
 import ProjectStore from 'common/stores/project-store'
 import Button from './base/forms/Button'
 import Tag from './tags/Tag'
@@ -24,27 +24,12 @@ type AuditLogType = {
   onPageChange?: (page: number) => void
   searchPanel?: ReactNode
   onErrorChange?: (err: boolean) => void
-  match: {
-    params: {
-      environmentId: string
-      projectId: string
-    }
-  }
 }
 
 const widths = [210, 310, 150]
 const AuditLog: FC<AuditLogType> = (props) => {
   const [page, setPage] = useState(Utils.fromParam().page ?? 1)
-  const { search, searchInput, setSearchInput } = useSearchThrottle(
-    Utils.fromParam().search,
-    () => {
-      if (searchInput !== search) {
-        return setPage(1)
-      }
-
-      setPage(Utils.fromParam().page)
-    },
-  )
+  const { search, searchInput, setSearchInput } = useDebouncedSearch()
   const { data: subscriptionMeta } = useGetSubscriptionMetadataQuery({
     id: AccountStore.getOrganisation()?.id,
   })
@@ -298,4 +283,4 @@ const AuditLogWrapper: FC<AuditLogWrapperType> = (props) => {
   )
 }
 
-export default withRouter(AuditLogWrapper as any)
+export default AuditLogWrapper

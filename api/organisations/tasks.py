@@ -126,10 +126,7 @@ def handle_api_usage_notifications() -> None:
     ):
         feature_enabled = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={
-                "organisation_id": organisation.id,
-                "subscription.plan": organisation.subscription.plan,
-            },
+            traits=organisation.flagsmith_on_flagsmith_api_traits,
         ).is_feature_enabled("api_usage_alerting")
         if not feature_enabled:
             logger.info(
@@ -199,10 +196,7 @@ def charge_for_api_call_count_overages():  # type: ignore[no-untyped-def]
     ):
         flags = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={
-                "organisation_id": organisation.id,
-                "subscription.plan": organisation.subscription.plan,
-            },
+            traits=organisation.flagsmith_on_flagsmith_api_traits,
         )
         if not flags.is_feature_enabled("api_usage_overage_charges"):
             continue
@@ -326,10 +320,7 @@ def restrict_use_due_to_api_limit_grace_period_over() -> None:
     for organisation in organisations:
         flags = flagsmith_client.get_identity_flags(
             organisation.flagsmith_identifier,
-            traits={
-                "organisation_id": organisation.id,
-                "subscription.plan": organisation.subscription.plan,
-            },
+            traits=organisation.flagsmith_on_flagsmith_api_traits,
         )
 
         stop_serving = flags.is_feature_enabled("api_limiting_stop_serving_flags")

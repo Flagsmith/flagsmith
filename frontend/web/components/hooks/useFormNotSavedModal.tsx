@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { RouterChildContext } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { Modal, ModalHeader, ModalBody } from 'reactstrap'
 import Button from 'components/base/forms/Button'
 
@@ -22,7 +22,6 @@ interface UseFormNotSavedModalOptions {
 }
 
 const useFormNotSavedModal = (
-  history: RouterChildContext['router']['history'],
   options: UseFormNotSavedModalOptions = {},
 ): UseFormNotSavedModalReturn => {
   const {
@@ -33,6 +32,8 @@ const useFormNotSavedModal = (
   const [isDirty, setIsDirty] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [nextLocation, setNextLocation] = useState<Location | null>(null)
+
+  const history = useHistory()
 
   const unblockRef = useRef<(() => void) | null>(null)
   useEffect(() => {

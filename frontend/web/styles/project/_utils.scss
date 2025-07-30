@@ -211,6 +211,7 @@
 
 .overflow-ellipsis {
     width: 100%;
+    text-overflow: ellipsis;
     >* {
         white-space: nowrap;
         overflow: hidden;
@@ -222,6 +223,8 @@
 .blur {
     filter: blur(5px);
 }
+
+.overflow-y-auto{ overflow-y: auto}
 
 .user-select-none {
     user-select: none;
@@ -252,4 +255,14 @@
     display: none;
   }
   background-color: $bg-light200;
+}
+
+@include media-breakpoint-up(md) {
+    .left-md-0 {
+        left:0;
+    }
+}
+
+.overflow-x-hidden{
+  overflow-x: hidden !important;
 }

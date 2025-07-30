@@ -23,13 +23,14 @@ import {
   FeatureListProviderData,
   FeatureState,
   ProjectFlag,
+  ReleasePipeline,
 } from 'common/types/responses'
 import Utils from 'common/utils/utils'
 import API from 'project/api'
 import Switch from './Switch'
 import AccountStore from 'common/stores/account-store'
 import CondensedFeatureRow from './CondensedFeatureRow'
-import { RouterChildContext } from 'react-router'
+import { useHistory } from 'react-router-dom'
 import { useGetHealthEventsQuery } from 'common/services/useHealthEvents'
 
 interface FeatureRowProps {
@@ -50,7 +51,7 @@ interface FeatureRowProps {
   fadeValue?: boolean
   hideAudit?: boolean
   hideRemove?: boolean
-  history?: RouterChildContext['router']['history']
+  releasePipelines?: ReleasePipeline[]
   onCloseEditModal?: () => void
 }
 
@@ -66,7 +67,6 @@ const FeatureRow: FC<FeatureRowProps> = ({
   fadeValue,
   hideAudit = false,
   hideRemove = false,
-  history,
   index,
   onCloseEditModal,
   permission,
@@ -78,6 +78,7 @@ const FeatureRow: FC<FeatureRowProps> = ({
   toggleFlag,
 }) => {
   const protectedTags = useProtectedTags(projectFlag, projectId)
+  const history = useHistory()
 
   const { data: healthEvents } = useGetHealthEventsQuery(
     { projectId: String(projectFlag.project) },

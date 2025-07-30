@@ -1,5 +1,160 @@
 # Changelog
 
+## [2.188.1](https://github.com/Flagsmith/flagsmith/compare/v2.188.0...v2.188.1) (2025-07-23)
+
+
+### Bug Fixes
+
+* Incorrect InfluxDB query for usage data ([#5818](https://github.com/Flagsmith/flagsmith/issues/5818)) ([3de3a7d](https://github.com/Flagsmith/flagsmith/commit/3de3a7ddbc568783a1b6b4692f2500da27c0982f))
+* Incorrect mapper behaviour for SDK metrics ([#5816](https://github.com/Flagsmith/flagsmith/issues/5816)) ([1eede39](https://github.com/Flagsmith/flagsmith/commit/1eede391b9427a2c3327b3aecdecf16d49d8a2ba))
+
+## [2.188.0](https://github.com/Flagsmith/flagsmith/compare/v2.187.0...v2.188.0) (2025-07-23)
+
+
+### Features
+
+* adds multiple actions to release pipeline stage ([#5767](https://github.com/Flagsmith/flagsmith/issues/5767)) ([57489b7](https://github.com/Flagsmith/flagsmith/commit/57489b7a03a66bdc16ea0b2043128edade4f293a))
+* adds unpublish release pipeline action ([#5797](https://github.com/Flagsmith/flagsmith/issues/5797)) ([a22e219](https://github.com/Flagsmith/flagsmith/commit/a22e219841878cfd066550d40ce7d7f22ea10f30))
+* Backend for Context values ([#5798](https://github.com/Flagsmith/flagsmith/issues/5798)) ([d06acd3](https://github.com/Flagsmith/flagsmith/commit/d06acd3abdb6ca652c06ada8a03963d8d9049f41))
+* Backend for SDK metrics ([#5623](https://github.com/Flagsmith/flagsmith/issues/5623)) ([cd4f166](https://github.com/Flagsmith/flagsmith/commit/cd4f166a9a026bda5147fb337d10d50cb28da66a))
+* frontend context values in segment ([#5766](https://github.com/Flagsmith/flagsmith/issues/5766)) ([9115f16](https://github.com/Flagsmith/flagsmith/commit/9115f16d33fbff92ccf0372fd4e042a6fa16a815))
+* improve last login data ([#5745](https://github.com/Flagsmith/flagsmith/issues/5745)) ([759c789](https://github.com/Flagsmith/flagsmith/commit/759c78957a34a48ca765cf8045ae5f8068784dd3))
+* Release pipelines logic v0.2.1 ([#5763](https://github.com/Flagsmith/flagsmith/issues/5763)) ([e977ace](https://github.com/Flagsmith/flagsmith/commit/e977aced78d5e1bd77b7bbd6969c2a3efda387a2))
+* Show Self hosting overview for saas in welcome page ([#5751](https://github.com/Flagsmith/flagsmith/issues/5751)) ([15b23b0](https://github.com/Flagsmith/flagsmith/commit/15b23b0df55ea28e965370b646439666d1bcd350))
+
+
+### Bug Fixes
+
+* body overflow ([#5754](https://github.com/Flagsmith/flagsmith/issues/5754)) ([ebbaae9](https://github.com/Flagsmith/flagsmith/commit/ebbaae9e89e7f887229aa2df241de95f84ecfba4))
+* **cache_page:** use vary on header with env api key ([#5800](https://github.com/Flagsmith/flagsmith/issues/5800)) ([28821fa](https://github.com/Flagsmith/flagsmith/commit/28821fa2f3f34f1e0e93752b7637f3ff84c2b0cc))
+* Integrations size ([#5733](https://github.com/Flagsmith/flagsmith/issues/5733)) ([0b6ec10](https://github.com/Flagsmith/flagsmith/commit/0b6ec1018df47ade9c2e62654e8d461ade6228bb))
+
+
+### Dependency Updates
+
+* bump dj-database-url from v0.5.0 to v3.0.1, add django_cockroachdb ([#5789](https://github.com/Flagsmith/flagsmith/issues/5789)) ([70d4b59](https://github.com/Flagsmith/flagsmith/commit/70d4b59042064cc3add446c806f49ccc0ec6e11e))
+* bump on-headers and compression in /docs ([#5785](https://github.com/Flagsmith/flagsmith/issues/5785)) ([b566ff6](https://github.com/Flagsmith/flagsmith/commit/b566ff66fe52f97a1e63ad07b2a819bfd0f8e9ea))
+
+## [2.187.0](https://github.com/Flagsmith/flagsmith/compare/v2.186.0...v2.187.0) (2025-07-16)
+
+
+### Features
+
+* add release pipeline paywall ([#5696](https://github.com/Flagsmith/flagsmith/issues/5696)) ([d2ec6ce](https://github.com/Flagsmith/flagsmith/commit/d2ec6ced8c6cb4881f688d412f95a07a48f46fa3))
+* Adds release pipeline status to feature modal ([#5575](https://github.com/Flagsmith/flagsmith/issues/5575)) ([1ed4a89](https://github.com/Flagsmith/flagsmith/commit/1ed4a89cbb95ea2cf4f0fd2b1a40abaf1098f1c1))
+* Beta feature flags ([#5722](https://github.com/Flagsmith/flagsmith/issues/5722)) ([ad9729b](https://github.com/Flagsmith/flagsmith/commit/ad9729b7bfa638455ff9377bfd070f3b90f7ae5e))
+* collect and track utms at signup ([#5630](https://github.com/Flagsmith/flagsmith/issues/5630)) ([e433c2f](https://github.com/Flagsmith/flagsmith/commit/e433c2f76cfe9c04fed58a415120bda2c4015e2f))
+* enable feature versioning for new environments ([#5108](https://github.com/Flagsmith/flagsmith/issues/5108)) ([e9c16e1](https://github.com/Flagsmith/flagsmith/commit/e9c16e194a682b8897a4b95cbd344eb331b62935))
+* Expose "Enable real-time flags" option when self-hosting, add docs ([#4836](https://github.com/Flagsmith/flagsmith/issues/4836)) ([0e4c136](https://github.com/Flagsmith/flagsmith/commit/0e4c1366f8a34eaae3536a554af6b7d977bc6499))
+* generate-a-auth-cookie-on-oauth-succesful-logins ([#5670](https://github.com/Flagsmith/flagsmith/issues/5670)) ([4528877](https://github.com/Flagsmith/flagsmith/commit/4528877e77d74f8b5027a66000a027ca9d4cf0c6))
+* integrations onboarding ([#5497](https://github.com/Flagsmith/flagsmith/issues/5497)) ([fc216c8](https://github.com/Flagsmith/flagsmith/commit/fc216c84d23d3e671bbb6d8cb33134c7c6586845))
+* removes feature from release pipeline ([#5688](https://github.com/Flagsmith/flagsmith/issues/5688)) ([4981172](https://github.com/Flagsmith/flagsmith/commit/49811729b54fb087faf3c42d1118c8e47965b6a6))
+
+
+### Bug Fixes
+
+* Add missing Swagger schema for GET feature by ID ([#5713](https://github.com/Flagsmith/flagsmith/issues/5713)) ([d688c09](https://github.com/Flagsmith/flagsmith/commit/d688c097d8ab97890f326a73da58078a0d5c109f))
+* add-offset-to-dropdown-if-out-of-screen ([#5753](https://github.com/Flagsmith/flagsmith/issues/5753)) ([7bb6a58](https://github.com/Flagsmith/flagsmith/commit/7bb6a580560fdec81b107b7cb83be94d6eddb36b))
+* e2e not able to connect to db ([#5750](https://github.com/Flagsmith/flagsmith/issues/5750)) ([d30de50](https://github.com/Flagsmith/flagsmith/commit/d30de5061ee08fd6849396800d3ca263e4548277))
+* Environments don't preserve feature versioning when cloned ([#5740](https://github.com/Flagsmith/flagsmith/issues/5740)) ([bca7ed1](https://github.com/Flagsmith/flagsmith/commit/bca7ed145b4d0daa05581919d95cdd89068aab0f))
+* Improve Sentry documentation ([#5695](https://github.com/Flagsmith/flagsmith/issues/5695)) ([9f24435](https://github.com/Flagsmith/flagsmith/commit/9f2443525f3dc1be0747643292df51aecfe0c278))
+* Refactor toasts ([#5720](https://github.com/Flagsmith/flagsmith/issues/5720)) ([7747fa7](https://github.com/Flagsmith/flagsmith/commit/7747fa71da2e15e03d5736510de610de412cacd8))
+* rely-solely-on-hubspot-to-create-organisations ([#5739](https://github.com/Flagsmith/flagsmith/issues/5739)) ([4b676b5](https://github.com/Flagsmith/flagsmith/commit/4b676b5b4503420d7fc7edff2015bea16b59b4f3))
+* removed-homepage-resetting-dark-mode ([#5700](https://github.com/Flagsmith/flagsmith/issues/5700)) ([4985794](https://github.com/Flagsmith/flagsmith/commit/49857942798efb4271789690894ba23e037ccbbc))
+* trigger create hubspot user post tracker ([#5711](https://github.com/Flagsmith/flagsmith/issues/5711)) ([567ffee](https://github.com/Flagsmith/flagsmith/commit/567ffee411a1d7e6f28e1507f78bdfa83aea32c5))
+* User display name ([#5719](https://github.com/Flagsmith/flagsmith/issues/5719)) ([d8bcfc7](https://github.com/Flagsmith/flagsmith/commit/d8bcfc79a43d72a2f24222340fe22b0a23741302))
+
+
+### Infrastructure (Flagsmith SaaS Only)
+
+* configure FoF keys and URL in ECS API instances ([#5738](https://github.com/Flagsmith/flagsmith/issues/5738)) ([a18a1e1](https://github.com/Flagsmith/flagsmith/commit/a18a1e193f73d7e8a76011ce6cd498fdf7dd2d01))
+* disable offline-mode in Flagsmith for API ECS instances ([#5737](https://github.com/Flagsmith/flagsmith/issues/5737)) ([86e82d8](https://github.com/Flagsmith/flagsmith/commit/86e82d867ea005686d3e47c1af474b303ff67cd1))
+
+## [2.186.0](https://github.com/Flagsmith/flagsmith/compare/v2.185.0...v2.186.0) (2025-07-02)
+
+
+### Features
+
+* **BE:** release pipeline v0.1.0 ([#5496](https://github.com/Flagsmith/flagsmith/issues/5496)) ([de7c278](https://github.com/Flagsmith/flagsmith/commit/de7c278dd405281efe1d7101e7a5130dd11fb59a))
+* Edit Release Pipeline Feature ([#5650](https://github.com/Flagsmith/flagsmith/issues/5650)) ([64f7f29](https://github.com/Flagsmith/flagsmith/commit/64f7f295638a0bd2cc8c961bec63c516befb4eff))
+* Make dark mode local ([#5680](https://github.com/Flagsmith/flagsmith/issues/5680)) ([54af554](https://github.com/Flagsmith/flagsmith/commit/54af5542a32a4fec5c9772a42b31f79ea34395b0))
+* mobile nav ([#5561](https://github.com/Flagsmith/flagsmith/issues/5561)) ([57fc7de](https://github.com/Flagsmith/flagsmith/commit/57fc7deb0d3fec90ef1768fb84e9b7c0269201f4))
+
+
+### Bug Fixes
+
+* Headway padding ([#5690](https://github.com/Flagsmith/flagsmith/issues/5690)) ([655bfee](https://github.com/Flagsmith/flagsmith/commit/655bfee3aff64a80ca2c38024668137ecb681a27))
+
+## [2.185.0](https://github.com/Flagsmith/flagsmith/compare/v2.184.0...v2.185.0) (2025-07-01)
+
+
+### Features
+
+* Add explicit ordering for segment rule conditions ([#5671](https://github.com/Flagsmith/flagsmith/issues/5671)) ([f124c76](https://github.com/Flagsmith/flagsmith/commit/f124c76b967f67792143dbf629dedd7bdf0c5c63))
+* Release Pipeline Publish and Add Flag ([#5542](https://github.com/Flagsmith/flagsmith/issues/5542)) ([5b89995](https://github.com/Flagsmith/flagsmith/commit/5b899950c734983d106a5806991e91ddb1c3acae))
+* use-project-id-from-context ([#5547](https://github.com/Flagsmith/flagsmith/issues/5547)) ([71a0863](https://github.com/Flagsmith/flagsmith/commit/71a0863f35beab9290775892ba87b7938b6616bd))
+
+
+### Bug Fixes
+
+* fix cookie validation in authentication  ([#5621](https://github.com/Flagsmith/flagsmith/issues/5621)) ([30a7c8c](https://github.com/Flagsmith/flagsmith/commit/30a7c8c64bfeedd1b8f2d066f2742eb0dcf0b9ec))
+* hubspot attribution issues ([#5560](https://github.com/Flagsmith/flagsmith/issues/5560)) ([251508a](https://github.com/Flagsmith/flagsmith/commit/251508a71d5a052c216138d21bf1b00c72efd929))
+* Navigate to change request after creation ([#5655](https://github.com/Flagsmith/flagsmith/issues/5655)) ([4b54c64](https://github.com/Flagsmith/flagsmith/commit/4b54c64e8942006b55d732b73906fde1b822ab32))
+* optional-and-default-values-for-tasks-in-me-endpoint ([#5646](https://github.com/Flagsmith/flagsmith/issues/5646)) ([0235f18](https://github.com/Flagsmith/flagsmith/commit/0235f186510032e37a40dd64eb4dca39fce685b0))
+* Panel styles ([#5649](https://github.com/Flagsmith/flagsmith/issues/5649)) ([6a2ba6d](https://github.com/Flagsmith/flagsmith/commit/6a2ba6dab3e56f8bc423d869377f5f0aa4d9dd4d))
+
+
+### Dependency Updates
+
+* bump pbkdf2 from 3.1.2 to 3.1.3 in /docs ([#5644](https://github.com/Flagsmith/flagsmith/issues/5644)) ([dbfbf21](https://github.com/Flagsmith/flagsmith/commit/dbfbf21eec1fd325bcb612fb825a9e517f118de6))
+* bump urllib3 from 2.3.0 to 2.5.0 in /api ([#5622](https://github.com/Flagsmith/flagsmith/issues/5622)) ([23aa20f](https://github.com/Flagsmith/flagsmith/commit/23aa20f89c62c2f9d9161b4771f7342e7e08814e))
+
+## [2.184.0](https://github.com/Flagsmith/flagsmith/compare/v2.183.0...v2.184.0) (2025-06-18)
+
+
+### Features
+
+* Add `make` shortcut to run both API and worker ([#5565](https://github.com/Flagsmith/flagsmith/issues/5565)) ([c1eed05](https://github.com/Flagsmith/flagsmith/commit/c1eed0563ba479fa1eee6f1ca728b8d09dbdaf1c))
+* Add wait for trigger to release pipelines ([#5523](https://github.com/Flagsmith/flagsmith/issues/5523)) ([c9a287d](https://github.com/Flagsmith/flagsmith/commit/c9a287d7ecbe27e62379ee4e25fb357459e3f00a))
+* frontend-report-environment-metrics ([#5447](https://github.com/Flagsmith/flagsmith/issues/5447)) ([9182c41](https://github.com/Flagsmith/flagsmith/commit/9182c416e1d416f66c9bdeded5e85bd1102053b2))
+* Integrate with Sentry feature flag Change Tracking ([#5531](https://github.com/Flagsmith/flagsmith/issues/5531)) ([4d415a1](https://github.com/Flagsmith/flagsmith/commit/4d415a10cf3e1b171dca9f9b982dd1c3c09f3e01))
+* Release Pipelines UI ([#5509](https://github.com/Flagsmith/flagsmith/issues/5509)) ([461e30b](https://github.com/Flagsmith/flagsmith/commit/461e30b6967b6503886ec879e62dc8c67ee57b43))
+
+
+### Bug Fixes
+
+* deduplicate metrics live features states ([#5571](https://github.com/Flagsmith/flagsmith/issues/5571)) ([7cb3758](https://github.com/Flagsmith/flagsmith/commit/7cb3758ec6d057230d678b2b0df3aa38d9697c59))
+* Fix Sentry Change Tracking response handling ([#5573](https://github.com/Flagsmith/flagsmith/issues/5573)) ([982f0d8](https://github.com/Flagsmith/flagsmith/commit/982f0d861f6b6e3d5db07c000240192716fe9957))
+* handle (ignore) unrecognised analytics data ([#5564](https://github.com/Flagsmith/flagsmith/issues/5564)) ([a2164a6](https://github.com/Flagsmith/flagsmith/commit/a2164a6aa7f020f9f89ff202753ddda58421e384))
+* Handle bad input before checking permission ([#5502](https://github.com/Flagsmith/flagsmith/issues/5502)) ([68f6847](https://github.com/Flagsmith/flagsmith/commit/68f6847c44e5aefa6b8d6a184727c75aee8e653f))
+* use-query-from-workflow-list-change-request ([#5568](https://github.com/Flagsmith/flagsmith/issues/5568)) ([54131af](https://github.com/Flagsmith/flagsmith/commit/54131af71389381241f8cbaa33e130823d34a13d))
+
+
+### Dependency Updates
+
+* bump protobuf from 4.23.4 to 4.25.8 in /api ([#5574](https://github.com/Flagsmith/flagsmith/issues/5574)) ([449ec6f](https://github.com/Flagsmith/flagsmith/commit/449ec6f9e3c0dbbc0eff6022a321ebc83e9e2902))
+
+## [2.183.0](https://github.com/Flagsmith/flagsmith/compare/v2.182.0...v2.183.0) (2025-06-10)
+
+
+### Features
+
+* report environment metrics api ([#5430](https://github.com/Flagsmith/flagsmith/issues/5430)) ([ad1f3c1](https://github.com/Flagsmith/flagsmith/commit/ad1f3c1b490b5976a663c3b1abe461f7f02775a7))
+
+
+### Bug Fixes
+
+* Disable e2e tests in draft PRs ([#5549](https://github.com/Flagsmith/flagsmith/issues/5549)) ([a92127d](https://github.com/Flagsmith/flagsmith/commit/a92127d3a954da5796f4a785aaed528d9595044b))
+* Silence warning when receiving analytics for unknown flags ([#5552](https://github.com/Flagsmith/flagsmith/issues/5552)) ([cf303c7](https://github.com/Flagsmith/flagsmith/commit/cf303c78a89998ff568dcf5c2aca10189c28ae36))
+
+
+### Dependency Updates
+
+* bump django from 4.2.21 to 4.2.22 in /api ([#5550](https://github.com/Flagsmith/flagsmith/issues/5550)) ([60662fb](https://github.com/Flagsmith/flagsmith/commit/60662fb4126d974dc6f9913e1634d4799235830d))
+* bump requests from 2.32.3 to 2.32.4 in /api ([#5554](https://github.com/Flagsmith/flagsmith/issues/5554)) ([e1c7a19](https://github.com/Flagsmith/flagsmith/commit/e1c7a192a87c098229217f14056c8b4778e0906b))
+* bump setuptools from 70.0.0 to 78.1.1 in /api ([#5470](https://github.com/Flagsmith/flagsmith/issues/5470)) ([8ebf949](https://github.com/Flagsmith/flagsmith/commit/8ebf949c87a8b226ac9810be76cd50d2a6ea1b57))
+* remove explicit dependency on `packaging` module ([#5538](https://github.com/Flagsmith/flagsmith/issues/5538)) ([0f463cc](https://github.com/Flagsmith/flagsmith/commit/0f463ccad6f30892d422ca11cd9414bc8d6cdccd))
+
 ## [2.182.0](https://github.com/Flagsmith/flagsmith/compare/v2.181.0...v2.182.0) (2025-06-04)
 
 

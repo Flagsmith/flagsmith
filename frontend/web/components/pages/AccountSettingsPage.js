@@ -1,5 +1,5 @@
 // import propTypes from 'prop-types';
-import React, { Component } from 'react'
+import React, { Component, ReactNode } from 'react'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
 import _data from 'common/data/base/_data'
@@ -15,13 +15,15 @@ import ChangeEmailAddress from 'components/modals/ChangeEmailAddress'
 import ConfirmDeleteAccount from 'components/modals/ConfirmDeleteAccount'
 import Icon from 'components/Icon'
 import PageTitle from 'components/PageTitle'
-import { Link } from 'react-router-dom'
+import { withRouter } from 'react-router-dom'
 import InfoMessage from 'components/InfoMessage'
-import Constants from 'common/constants'
 import Setting from 'components/Setting'
+import AccountProvider from 'common/providers/AccountProvider'
+import DarkModeSwitch from 'components/DarkModeSwitch'
+import SettingTitle from 'components/SettingTitle'
 
-class TheComponent extends Component {
-  static displayName = 'TheComponent'
+class AccountSettingsPage extends Component {
+  static displayName = 'AccountSettingsPage'
 
   static propTypes = {}
 
@@ -175,153 +177,149 @@ class TheComponent extends Component {
                     Log Out
                   </Button>
                 }
-                title={'Account'}
+                title={'Account Settings'}
               />
-              <Tabs uncontrolled className='mt-0'>
+              <Tabs uncontrolled className='mt-0' history={this.props.history}>
                 <TabItem tabLabel='General'>
-                  <div className='mt-4'>
-                    <h5 className='mb-5'>General Settings</h5>
+                  <div className='mt-4 col-md-8'>
+                    <SettingTitle>Account Information</SettingTitle>
                     <JSONReference
                       showNamesButton
                       title={'User'}
                       json={AccountStore.getUser()}
                     />
-                    <div className='col-md-6'>
-                      <form className='mb-0' onSubmit={this.save}>
-                        {!['LDAP', 'SAML'].includes(
-                          AccountStore.model.auth_type,
-                        ) && (
-                          <div>
-                            <InputGroup
-                              className='mt-2'
-                              title='Email Address'
-                              data-test='firstName'
-                              inputProps={{
-                                className: 'full-width',
-                                name: 'groupName',
-                                readOnly: true,
-                              }}
-                              value={email}
-                              onChange={(e) =>
-                                this.setState({
-                                  first_name: Utils.safeParseEventValue(e),
-                                })
+                    <form className='mb-0' onSubmit={this.save}>
+                      {!['LDAP', 'SAML'].includes(
+                        AccountStore.model.auth_type,
+                      ) && (
+                        <div>
+                          <InputGroup
+                            className='mt-2'
+                            title='Email Address'
+                            data-test='firstName'
+                            inputProps={{
+                              className: 'full-width',
+                              name: 'groupName',
+                              readOnly: true,
+                            }}
+                            value={email}
+                            onChange={(e) =>
+                              this.setState({
+                                first_name: Utils.safeParseEventValue(e),
+                              })
+                            }
+                            type='text'
+                            name='Email Address'
+                          />
+                          <div className='text-right'>
+                            <Button
+                              onClick={() =>
+                                openModal(
+                                  'Change Email Address',
+                                  <ChangeEmailAddress
+                                    onComplete={() => {
+                                      closeModal()
+                                      AppActions.logout()
+                                    }}
+                                  />,
+                                  'p-0',
+                                )
                               }
-                              type='text'
-                              name='Email Address'
-                            />
-                            <div className='text-right mt-5'>
-                              <Button
-                                onClick={() =>
-                                  openModal(
-                                    'Change Email Address',
-                                    <ChangeEmailAddress
-                                      onComplete={() => {
-                                        closeModal()
-                                        AppActions.logout()
-                                      }}
-                                    />,
-                                    'p-0',
-                                  )
-                                }
-                                id='change-email-button'
-                                data-test='change-email-button'
-                                type='button'
-                                class='input-group-addon'
-                              >
-                                Change Email Address
-                              </Button>
-                            </div>
+                              id='change-email-button'
+                              data-test='change-email-button'
+                              type='button'
+                              class='input-group-addon'
+                            >
+                              Change Email Address
+                            </Button>
                           </div>
-                        )}
-                        <InputGroup
-                          className='mt-2 mb-4'
-                          title='First Name'
-                          data-test='firstName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                          }}
-                          value={first_name}
-                          onChange={(e) =>
-                            this.setState({
-                              first_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          isValid={first_name && first_name.length}
-                          type='text'
-                          name='First Name*'
-                        />
-                        <InputGroup
-                          className='mb-5'
-                          title='Last Name'
-                          data-test='lastName'
-                          inputProps={{
-                            className: 'full-width',
-                            name: 'groupName',
-                          }}
-                          value={last_name}
-                          onChange={(e) =>
-                            this.setState({
-                              last_name: Utils.safeParseEventValue(e),
-                            })
-                          }
-                          isValid={last_name && last_name.length}
-                          type='text'
-                          name='Last Name*'
-                        />
-                        {error && <ErrorMessage>{error}</ErrorMessage>}
-                        <div className='text-right mt-2'>
-                          <Button
-                            type='submit'
-                            disabled={isSaving || !first_name || !last_name}
-                          >
-                            Save Details
-                          </Button>
                         </div>
-                      </form>
-                    </div>
-                    <hr className='py-0 my-4' />
-                    <div className='col-md-6'>
-                      <Setting
-                        onChange={(v) => {
-                          flagsmith.setTrait('json_inspect', v).then(() => {
-                            toast('Updated')
-                          })
+                      )}
+                      <InputGroup
+                        className='mt-2'
+                        title='First Name'
+                        data-test='firstName'
+                        inputProps={{
+                          className: 'full-width',
+                          name: 'groupName',
                         }}
-                        checked={flagsmith.getTrait('json_inspect')}
-                        title={'Show JSON References'}
-                        description={`Enabling this will allow you to inspect the JSON of entities such as features within the platform.`}
+                        value={first_name}
+                        onChange={(e) =>
+                          this.setState({
+                            first_name: Utils.safeParseEventValue(e),
+                          })
+                        }
+                        isValid={first_name && first_name.length}
+                        type='text'
+                        name='First Name*'
                       />
-                    </div>
-                    <hr className='py-0 my-4' />
-                    <div className='col-md-6'>
-                      <Row className='mt-4' space>
-                        <div className='col-md-7 pl-0'>
-                          <h5>Delete Account</h5>
-                          <p className='fs-small lh-sm mb-0'>
-                            Your account data will be permanently deleted.
-                          </p>
-                        </div>
+                      <InputGroup
+                        className='mb-5'
+                        title='Last Name'
+                        data-test='lastName'
+                        inputProps={{
+                          className: 'full-width',
+                          name: 'groupName',
+                        }}
+                        value={last_name}
+                        onChange={(e) =>
+                          this.setState({
+                            last_name: Utils.safeParseEventValue(e),
+                          })
+                        }
+                        isValid={last_name && last_name.length}
+                        type='text'
+                        name='Last Name*'
+                      />
+                      {error && <ErrorMessage>{error}</ErrorMessage>}
+                      <div className='text-right'>
                         <Button
-                          id='delete-user-btn'
-                          data-test='delete-user-btn'
-                          onClick={() =>
-                            this.confirmDeleteAccount(
-                              lastUserOrganisations,
-                              id,
-                              email,
-                              auth_type,
-                            )
-                          }
-                          className='btn-with-icon btn-remove'
+                          type='submit'
+                          disabled={isSaving || !first_name || !last_name}
                         >
-                          <Icon name='trash-2' width={20} fill='#EF4D56' />
+                          Save Details
                         </Button>
-                      </Row>
-                    </div>
+                      </div>
+                    </form>
+                    <SettingTitle>Appearance</SettingTitle>
+                    <DarkModeSwitch />
+                    <SettingTitle>Developer</SettingTitle>
+                    <Setting
+                      onChange={(v) => {
+                        flagsmith.setTrait('json_inspect', v).then(() => {
+                          toast('Updated JSON References setting')
+                        })
+                      }}
+                      checked={flagsmith.getTrait('json_inspect')}
+                      title={'Show JSON References'}
+                      description={`Enabling this will allow you to inspect the JSON of entities such as features within the platform.`}
+                    />
+                    <SettingTitle danger>Delete Account</SettingTitle>
+                    <Row className='' space>
+                      <div className='pl-0'>
+                        <p className='fs-small lh-sm mb-0'>
+                          Your account data will be permanently deleted.
+                        </p>
+                      </div>
+                      <Button
+                        id='delete-user-btn'
+                        data-test='delete-user-btn'
+                        onClick={() =>
+                          this.confirmDeleteAccount(
+                            lastUserOrganisations,
+                            id,
+                            email,
+                            auth_type,
+                          )
+                        }
+                        theme='danger'
+                      >
+                        Delete Account
+                      </Button>
+                    </Row>
                   </div>
                 </TabItem>
+
                 <TabItem tabLabel='API Keys'>
                   <div className='mt-6'>
                     <div className='col-md-6'>
@@ -462,4 +460,4 @@ class TheComponent extends Component {
   }
 }
 
-export default ConfigProvider(TheComponent)
+export default withRouter(ConfigProvider(AccountSettingsPage))

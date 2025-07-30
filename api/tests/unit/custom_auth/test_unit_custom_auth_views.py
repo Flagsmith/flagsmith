@@ -1,12 +1,15 @@
 import json
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from django.urls import reverse
+from freezegun import freeze_time
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from users.models import FFAdminUser
+from users.models import FFAdminUser, HubspotTracker
 
 
 def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> None:
@@ -26,13 +29,39 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
     assert response_json["uuid"] == str(staff_user.uuid)
 
 
-def test_get_me_should_return_onboarding_object(db: None) -> None:
+@pytest.mark.parametrize(
+    "onboarding_data, expected_response",
+    [
+        (None, None),
+        (
+            {"tasks": [{"name": "task-1"}]},
+            {"tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}]},
+        ),
+        (
+            {"tools": {"completed": True, "integrations": ["integration-1"]}},
+            {
+                "tasks": [],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+        ),
+        (
+            {
+                "tasks": [{"name": "task-1"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+            },
+        ),
+    ],
+)
+@freeze_time("2025-01-01T12:00:00Z")
+def test_get_me_should_return_onboarding_object(
+    db: None, onboarding_data: dict[str, Any], expected_response: dict[str, Any]
+) -> None:
     # Given
-    onboarding = {
-        "tasks": [{"name": "task-1"}],
-        "tools": {"completed": True, "integrations": ["integration-1"]},
-    }
-    onboarding_serialized = json.dumps(onboarding)
+    onboarding_serialized = json.dumps(onboarding_data)
     new_user = FFAdminUser.objects.create(
         email="testuser@mail.com",
         onboarding_data=onboarding_serialized,
@@ -49,13 +78,7 @@ def test_get_me_should_return_onboarding_object(db: None) -> None:
     # Then
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
-    assert response_json["onboarding"] is not None
-    assert response_json["onboarding"].get("tools", {}).get("completed") is True
-    assert response_json["onboarding"].get("tools", {}).get("integrations") == [
-        "integration-1"
-    ]
-    assert response_json["onboarding"].get("tasks") is not None
-    assert response_json["onboarding"].get("tasks", [])[0].get("name") == "task-1"
+    assert response_json["onboarding"] == expected_response
 
 
 @pytest.mark.parametrize(
@@ -120,3 +143,74 @@ def test_patch_user_onboarding_returns_error_if_tasks_and_tools_are_missing(
     assert response.json() == {
         "non_field_errors": ["At least one of 'tasks' or 'tools' must be provided."]
     }
+
+
+def test_create_user_calls_hubspot_tracking_and_creates_hubspot_contact(
+    mocker: MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    hubspot_cookie = "1234567890"
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "sign_up_type": "NO_INVITE",
+        "hubspotutk": hubspot_cookie,
+    }
+
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    # When
+    response = staff_client.post(url, data=data, format="json")
+
+    user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+    assert hubspot_tracker is not None
+    assert hubspot_tracker.hubspot_cookie == hubspot_cookie
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert user is not None
+
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))
+
+
+def test_create_user_does_not_create_hubspot_tracking_if_no_cookie_is_provided(
+    mocker: MagicMock,
+    db: None,
+    settings: SettingsWrapper,
+    staff_client: APIClient,
+) -> None:
+    # Given
+    settings.ENABLE_HUBSPOT_LEAD_TRACKING = True
+    data = {
+        "first_name": "new",
+        "last_name": "user",
+        "email": "test@exemple.fr",
+        "password": "password123456!=&",
+        "sign_up_type": "NO_INVITE",
+    }
+
+    mock_create_hubspot_contact_for_user = mocker.patch(
+        "integrations.lead_tracking.hubspot.services.create_hubspot_contact_for_user"
+    )
+
+    url = reverse("api-v1:custom_auth:ffadminuser-list")
+    # When
+    response = staff_client.post(url, data=data, format="json")
+
+    user = FFAdminUser.objects.filter(email="test@exemple.fr").first()
+    hubspot_tracker = HubspotTracker.objects.filter(user=user).first()
+    assert hubspot_tracker is None
+    # Then
+    assert response.status_code == status.HTTP_201_CREATED
+    assert user is not None
+
+    mock_create_hubspot_contact_for_user.delay.assert_called_once_with(args=(user.id,))

@@ -16,7 +16,7 @@ import os
 import warnings
 from datetime import datetime, time, timedelta
 
-import dj_database_url  # type: ignore[import-untyped]
+import dj_database_url
 import django_stubs_ext
 import prometheus_client
 import pytz
@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.postgres",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "rest_framework",
@@ -113,6 +114,7 @@ INSTALLED_APPS = [
     "features.multivariate",
     "features.versioning",
     "features.workflows.core",
+    "features.release_pipelines.core",
     "segments",
     "app",
     "e2etests",
@@ -123,6 +125,7 @@ INSTALLED_APPS = [
     "projects.tags",
     "api_keys",
     "webhooks",
+    "metrics",
     "onboarding",
     # 2FA
     "custom_auth.mfa.trench",
@@ -165,7 +168,7 @@ SILENCED_SYSTEM_CHECKS = ["axes.W002"]
 SITE_ID = 1
 
 db_conn_max_age = env.int("DJANGO_DB_CONN_MAX_AGE", 60)
-DJANGO_DB_CONN_MAX_AGE = None if db_conn_max_age == -1 else db_conn_max_age
+DJANGO_DB_CONN_MAX_AGE = 0 if db_conn_max_age == -1 else db_conn_max_age
 
 DATABASE_ROUTERS = ["app.routers.PrimaryReplicaRouter"]
 NUM_DB_REPLICAS = 0
@@ -258,14 +261,14 @@ elif "DJANGO_DB_NAME" in os.environ:
 
 # Task processor database — OPTIONALLY SEPARATED
 TASK_PROCESSOR_DATABASE_URL = env("TASK_PROCESSOR_DATABASE_URL", default=None)
-TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default=None)
+TASK_PROCESSOR_DATABASE_USER = env("TASK_PROCESSOR_DATABASE_USER", default="")
 TASK_PROCESSOR_DATABASE_PASSWORD = env(
     "TASK_PROCESSOR_DATABASE_PASSWORD",
-    default=None,
+    default="",
 )
-TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default=None)
-TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default=None)
-TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default=None)
+TASK_PROCESSOR_DATABASE_HOST = env("TASK_PROCESSOR_DATABASE_HOST", default="")
+TASK_PROCESSOR_DATABASE_PORT = env("TASK_PROCESSOR_DATABASE_PORT", default="")
+TASK_PROCESSOR_DATABASE_NAME = env("TASK_PROCESSOR_DATABASE_NAME", default="")
 
 if TASK_PROCESSOR_DATABASE_URL or TASK_PROCESSOR_DATABASE_NAME:  # pragma: no cover
     if TASK_PROCESSOR_DATABASE_URL:
@@ -1023,7 +1026,6 @@ LINKEDIN_PARTNER_TRACKING = env("LINKEDIN_PARTNER_TRACKING", default=False)
 GOOGLE_ANALYTICS_API_KEY = env("GOOGLE_ANALYTICS_API_KEY", default=None)
 HEADWAY_API_KEY = env("HEADWAY_API_KEY", default=None)
 CRISP_CHAT_API_KEY = env("CRISP_CHAT_API_KEY", default=None)
-MIXPANEL_API_KEY = env("MIXPANEL_API_KEY", default=None)
 SENTRY_API_KEY = env("SENTRY_API_KEY", default=None)
 AMPLITUDE_API_KEY = env("AMPLITUDE_API_KEY", default=None)
 REO_API_KEY = env("REO_API_KEY", default=None)
@@ -1065,6 +1067,14 @@ if WORKFLOWS_LOGIC_INSTALLED:
 
     if importlib.util.find_spec("workflows_logic.stale_flags") is not None:
         INSTALLED_APPS.append("workflows_logic.stale_flags")
+
+RELEASE_PIPELINES_LOGIC_INSTALLED = (
+    importlib.util.find_spec("release_pipelines_logic") is not None
+)
+
+if RELEASE_PIPELINES_LOGIC_INSTALLED:  # pragma: no cover
+    INSTALLED_APPS.append("release_pipelines_logic")
+
 
 # Additional functionality for restricting authentication to a set of authentication methods in Flagsmith SaaS
 AUTH_CONTROLLER_INSTALLED = importlib.util.find_spec("auth_controller") is not None
@@ -1192,35 +1202,6 @@ CORS_ALLOW_HEADERS = [
     "X-E2E-Test-Auth-Token",
 ]
 
-# use a separate boolean setting so that we add it to the API containers in environments
-# where we're running the task processor, so we avoid creating unnecessary tasks
-ENABLE_PIPEDRIVE_LEAD_TRACKING = env.bool("ENABLE_PIPEDRIVE_LEAD_TRACKING", False)
-PIPEDRIVE_API_TOKEN = env.str("PIPEDRIVE_API_TOKEN", None)
-PIPEDRIVE_BASE_API_URL = env.str(
-    "PIPEDRIVE_BASE_API_URL", "https://flagsmith.pipedrive.com/api/v1"
-)
-PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY = env.str(
-    "PIPEDRIVE_DOMAIN_ORGANIZATION_FIELD_KEY", None
-)
-PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_SIGN_UP_TYPE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_DEAL_FIELD_KEY", None
-)
-PIPEDRIVE_API_LEAD_SOURCE_VALUE = env.str(
-    "PIPEDRIVE_API_LEAD_SOURCE_VALUE", "App Sign-up"
-)
-PIPEDRIVE_IGNORE_DOMAINS = env.list(
-    "PIPEDRIVE_IGNORE_DOMAINS",
-    subcast=str,
-    default=[],
-)
-PIPEDRIVE_IGNORE_DOMAINS_REGEX = env("PIPEDRIVE_IGNORE_DOMAINS_REGEX", "")
-PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID = env(
-    "PIPEDRIVE_LEAD_LABEL_EXISTING_CUSTOMER_ID", None
-)
-
 # Hubspot settings
 HUBSPOT_ACCESS_TOKEN = env.str("HUBSPOT_ACCESS_TOKEN", None)
 ENABLE_HUBSPOT_LEAD_TRACKING = env.bool("ENABLE_HUBSPOT_LEAD_TRACKING", False)
@@ -1257,7 +1238,8 @@ DEFAULT_DOMAIN = "app.flagsmith.com"
 
 # Define the cooldown duration, in seconds, for password reset emails
 PASSWORD_RESET_EMAIL_COOLDOWN = env.int("PASSWORD_RESET_EMAIL_COOLDOWN", 60 * 60 * 24)
-
+# Define the threshold, in minutes, for updating the last login timestamp
+LAST_LOGIN_UPDATE_THRESHOLD_MINUTES = env.int("LAST_LOGIN_UPDATE_THRESHOLD_MINUTES", 30)
 # Limit the count of password reset emails that can be dispatched within the `PASSWORD_RESET_EMAIL_COOLDOWN` timeframe.
 MAX_PASSWORD_RESET_EMAILS = env.int("MAX_PASSWORD_RESET_EMAILS", 5)
 
@@ -1384,6 +1366,10 @@ if not 0 <= FEATURE_VALUE_LIMIT <= 2000000:  # pragma: no cover
     )
 
 SEGMENT_RULES_CONDITIONS_LIMIT = env.int("SEGMENT_RULES_CONDITIONS_LIMIT", 100)
+
+SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED = env.bool(
+    "SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED", default=False
+)
 
 WEBHOOK_BACKOFF_BASE = env.int("WEBHOOK_BACKOFF_BASE", default=2)
 WEBHOOK_BACKOFF_RETRIES = env.int("WEBHOOK_BACKOFF_RETRIES", default=3)

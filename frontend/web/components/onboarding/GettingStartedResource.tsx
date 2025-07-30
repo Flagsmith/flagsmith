@@ -1,13 +1,7 @@
 import React, { FC } from 'react'
+import { Resource } from './data/onboarding.data'
 
-type ResourceLinkType = {
-  image: string
-  url: string
-  title: string
-  description: string
-}
-
-const GettingStartedResource: FC<ResourceLinkType> = ({
+const GettingStartedResource: FC<Resource> = ({
   description,
   image,
   title,
@@ -23,18 +17,18 @@ const GettingStartedResource: FC<ResourceLinkType> = ({
                 aspectRatio: '155 / 200',
                 height: 150,
                 objectFit: 'cover',
-                objectPosition: 'center',
+                objectPosition: 'top',
               }}
               className=' rounded'
-              src={image}
+              {...image}
             />
           </div>
           <div className='h-100 d-flex flex-column justify-content-center p-3'>
             <h6 className={`d-flex align-items-center gap-1`}>{title}</h6>
 
-            <h6 className='fw-normal d-flex text-muted flex-1'>
+            <span className='fw-normal fs-small  text-muted '>
               {description}
-            </h6>
+            </span>
           </div>
         </div>
       </div>

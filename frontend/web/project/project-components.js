@@ -86,8 +86,15 @@ global.ToggleChip = ToggleChip
 const Option = (props) => {
   return (
     <components.Option {...props}>
-      <div className={'d-flex justify-content-between align-items-center'}>
-        {props.data.label}
+      <div
+        className={`d-flex justify-content-between align-items-center ${
+          props.data.isDisabled ? 'text-muted cursor-not-allowed' : ''
+        }`}
+      >
+        <div>
+          {props.data.label}
+          <div className='text-small'>{props.data.description}</div>
+        </div>
         {props.isSelected && (
           <IonIcon icon={checkmarkCircle} className='text-primary' />
         )}

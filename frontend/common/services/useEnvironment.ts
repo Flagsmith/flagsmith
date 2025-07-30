@@ -12,6 +12,15 @@ export const environmentService = service
           url: `environments/${query.id}/`,
         }),
       }),
+      getEnvironmentMetrics: builder.query<
+        Res['environmentMetrics'],
+        Req['getEnvironmentMetrics']
+      >({
+        providesTags: () => [{ id: 'METRICS', type: 'Environment' }],
+        query: (query: Req['getEnvironmentMetrics']) => ({
+          url: `environments/${query.id}/metrics/`,
+        }),
+      }),
       getEnvironments: builder.query<
         Res['environments'],
         Req['getEnvironments']
@@ -75,6 +84,7 @@ export async function updateEnvironment(
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useGetEnvironmentMetricsQuery,
   useGetEnvironmentQuery,
   useGetEnvironmentsQuery,
   useUpdateEnvironmentMutation,

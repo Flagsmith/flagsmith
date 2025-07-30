@@ -27,7 +27,7 @@ if (params.token) {
 }
 
 // Render the React application to the DOM
-const res = Project.cookieAuthEnabled ? 'true' : API.getCookie('t')
+const res = API.getCookie('t')
 
 const event = API.getEvent()
 if (event) {
@@ -109,13 +109,4 @@ if (!E2E && Project.crispChat && !isWidget) {
     s.async = 1
     d.getElementsByTagName('head')[0].appendChild(s)
   })()
-}
-
-if (!E2E && Project.zendesk && !isWidget) {
-  const script = document.createElement('script')
-  script.type = 'text/javascript'
-  script.id = 'ze-snippet'
-  script.async = true
-  script.src = `https://static.zdassets.com/ekr/snippet.js?key=${Project.zendesk}`
-  document.getElementsByTagName('head')[0].appendChild(script)
 }

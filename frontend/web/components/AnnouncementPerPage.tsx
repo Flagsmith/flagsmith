@@ -1,10 +1,9 @@
-import { get } from 'lodash'
 import React, { FC } from 'react'
 import InfoMessage from './InfoMessage'
 import flagsmith from 'flagsmith'
 import Utils from 'common/utils/utils'
 import { AnnouncementValueType } from './Announcement'
-import { matchPath } from 'react-router'
+import { matchPath } from 'react-router-dom'
 import { routes } from 'web/routes'
 
 type AnnouncementPerPageValueType = AnnouncementValueType & {
@@ -76,17 +75,19 @@ const AnnouncementPerPage: FC<AnnouncementPerPageType> = ({ pathname }) => {
   return (
     <>
       {showAnnouncementPerPage && announcementInPage && (
-        <InfoMessage
-          title={announcementPerPageValue?.title}
-          isClosable={announcementPerPageValue?.isClosable}
-          close={() => closeAnnouncement(announcementPerPageValue?.id)}
-          buttonText={announcementPerPageValue?.buttonText}
-          url={announcementPerPageValue?.url}
-        >
-          <div>
-            <div>{announcementPerPageValue?.description}</div>
-          </div>
-        </InfoMessage>
+        <div className='mt-4'>
+          <InfoMessage
+            title={announcementPerPageValue?.title}
+            isClosable={announcementPerPageValue?.isClosable}
+            close={() => closeAnnouncement(announcementPerPageValue?.id)}
+            buttonText={announcementPerPageValue?.buttonText}
+            url={announcementPerPageValue?.url}
+          >
+            <div>
+              <div>{announcementPerPageValue?.description}</div>
+            </div>
+          </InfoMessage>
+        </div>
       )}
     </>
   )

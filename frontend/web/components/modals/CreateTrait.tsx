@@ -101,7 +101,7 @@ const CreateTrait: FC<CreateTraitProps> = ({
   const TRAITS_ID_MAXLENGTH = Constants.forms.maxLength.TRAITS_ID
 
   return (
-    <ProjectProvider id={`${projectId}`}>
+    <ProjectProvider id={parseInt(projectId?.toString())}>
       {({ project }: { project: any }) => (
         <form
           id='create-trait-modal'

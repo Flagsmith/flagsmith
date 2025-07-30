@@ -19,6 +19,7 @@ from integrations.heap.views import HeapConfigurationViewSet
 from integrations.mixpanel.views import MixpanelConfigurationViewSet
 from integrations.rudderstack.views import RudderstackConfigurationViewSet
 from integrations.segment.views import SegmentConfigurationViewSet
+from integrations.sentry.views import SentryChangeTrackingConfigurationViewSet
 from integrations.slack.views import (
     SlackEnvironmentViewSet,
     SlackGetChannelsViewSet,
@@ -31,7 +32,12 @@ from .permissions.views import (
     UserEnvironmentPermissionsViewSet,
     UserPermissionGroupEnvironmentPermissionsViewSet,
 )
-from .views import EnvironmentAPIKeyViewSet, EnvironmentViewSet, WebhookViewSet
+from .views import (
+    EnvironmentAPIKeyViewSet,
+    EnvironmentMetricsViewSet,
+    EnvironmentViewSet,
+    WebhookViewSet,
+)
 
 router = routers.DefaultRouter()
 router.register(r"", EnvironmentViewSet, basename="environment")
@@ -45,6 +51,9 @@ environments_router.register(
 )
 environments_router.register(
     r"webhooks", WebhookViewSet, basename="environment-webhooks"
+)
+environments_router.register(
+    r"metrics", EnvironmentMetricsViewSet, basename="environment-metrics"
 )
 environments_router.register(
     r"featurestates",
@@ -90,6 +99,11 @@ environments_router.register(
     r"integrations/mixpanel",
     MixpanelConfigurationViewSet,
     basename="integrations-mixpanel",
+)
+environments_router.register(
+    r"integrations/sentry",
+    SentryChangeTrackingConfigurationViewSet,
+    basename="integrations-sentry",
 )
 environments_router.register(
     r"integrations/slack", SlackEnvironmentViewSet, basename="integrations-slack"

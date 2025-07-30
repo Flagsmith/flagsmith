@@ -62,9 +62,10 @@ import OrganisationProvider from 'common/providers/OrganisationProvider'
 import { useHasPermission } from 'common/providers/Permission'
 import PlanBasedAccess from './PlanBasedAccess'
 import { PermissionRow } from './PermissionRow'
-import { RouterChildContext } from 'react-router'
 import Utils from 'common/utils/utils'
 import RemoveViewPermissionModal from './RemoveViewPermissionModal'
+import { useHistory } from 'react-router-dom'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 const Project = require('common/project')
 
@@ -82,7 +83,6 @@ type EditPermissionModalType = {
   parentSettingsLink?: string
   roleTabTitle?: string
   permissions?: UserPermission[]
-  router?: RouterChildContext['router']
   user?: User
   role?: Role
   roles?: Role[]
@@ -158,9 +158,10 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
       permissionChanged,
       role,
       roles,
-      router,
       user,
     } = props
+
+    const history = useHistory()
 
     const [entityPermissions, setEntityPermissions] =
       useState<EntityPermissions>({
@@ -792,7 +793,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
         return `the ${group?.name ?? ''} group`
       }
       if (user) {
-        return `${user.first_name ?? ''} ${user.last_name ?? ''}`
+        return `${getUserDisplayName(user)}`
       }
       if (role) {
         return role.name
@@ -909,7 +910,7 @@ const _EditPermissionsModal: FC<EditPermissionModalType> = withAdminPermissions(
                   <a
                     onClick={() => {
                       if (parentSettingsLink) {
-                        router?.history?.push(parentSettingsLink)
+                        history.push(parentSettingsLink)
                       }
                       closeModal()
                     }}
@@ -1003,15 +1004,15 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
     permissions,
     roleTabTitle,
     roles,
-    router,
     tabClassName,
   } = props
+
   const [tab, setTab] = useState()
   const editUserPermissions = (user: User) => {
     openModal(
       `Edit ${Format.camelCase(level)} Permissions`,
       <EditPermissionsModal
-        name={`${user.first_name} ${user.last_name}`}
+        name={`${getUserDisplayName(user)}`}
         id={id}
         onSave={onSaveUser}
         level={level}
@@ -1019,7 +1020,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentLevel={parentLevel}
         parentSettingsLink={parentSettingsLink}
         user={user}
-        router={router}
       />,
       'p-0 side-modal',
     )
@@ -1038,7 +1038,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         parentLevel={parentLevel}
         parentSettingsLink={parentSettingsLink}
         group={group}
-        router={router}
       />,
       'p-0 side-modal',
     )
@@ -1052,7 +1051,6 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
         envId={envId}
         level={level}
         role={role}
-        router={router}
       />,
       'p-0 side-modal',
     )
@@ -1074,7 +1072,13 @@ const EditPermissions: FC<EditPermissionsType> = (props) => {
           Learn about User Roles.
         </Button>
       </p>
-      <Tabs urlParam='type' value={tab} onChange={setTab} theme='pill'>
+      <Tabs
+        urlParam='type'
+        value={tab}
+        onChange={setTab}
+        theme='pill'
+        history={history}
+      >
         <TabItem tabLabel='Users'>
           <OrganisationProvider>
             {({ isLoading, users }) => (

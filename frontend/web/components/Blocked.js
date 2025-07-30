@@ -4,10 +4,6 @@ import Payment from './modals/Payment'
 import BlockedOrgInfo from './BlockedOrgInfo'
 
 const Blocked = class extends React.Component {
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   static displayName = 'HomePage'
 
   constructor(props, context) {

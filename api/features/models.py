@@ -580,11 +580,11 @@ class FeatureState(
         # it has a feature_segment or an identity
         return not (other.feature_segment_id or other.identity_id)
 
-    def __str__(self):  # type: ignore[no-untyped-def]
+    def __str__(self) -> str:
         s = f"Feature {self.feature.name} - Enabled: {self.enabled}"
         if self.environment is not None:
             s = f"{self.environment} - {s}"
-        elif self.identity is not None:
+        if self.identity is not None:
             s = f"Identity {self.identity.identifier} - {s}"
         return s
 

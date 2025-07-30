@@ -433,3 +433,7 @@
 .row-gap-4 {
     row-gap: $spacer;
 }
+
+.row-gap-2 {
+    row-gap: $spacer * 0.5;
+}

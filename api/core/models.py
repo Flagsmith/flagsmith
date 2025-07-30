@@ -66,7 +66,9 @@ class SoftDeleteExportableManager(UUIDNaturalKeyManagerMixin, SoftDeleteManager)
 
 
 class SoftDeleteExportableModel(SoftDeleteObject, AbstractBaseExportableModel):  # type: ignore[misc]
-    objects = SoftDeleteExportableManager()  # type: ignore[misc]
+    objects: typing.ClassVar[SoftDeleteExportableManager] = (
+        SoftDeleteExportableManager()
+    )
 
     class Meta:
         abstract = True

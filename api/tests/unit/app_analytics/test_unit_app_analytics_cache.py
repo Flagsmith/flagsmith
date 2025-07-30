@@ -5,6 +5,7 @@ from pytest_mock import MockerFixture
 
 from app_analytics.cache import APIUsageCache, FeatureEvaluationCache
 from app_analytics.models import Resource
+from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 
 
 def test_api_usage_cache(
@@ -26,14 +27,16 @@ def test_api_usage_cache(
         for _ in range(10):
             for resource in Resource:
                 cache.track_request(
-                    resource,
-                    host,
-                    environment_key_1,
+                    resource=resource,
+                    host=host,
+                    environment_key=environment_key_1,
+                    labels={},
                 )
                 cache.track_request(
-                    resource,
-                    host,
-                    environment_key_2,
+                    resource=resource,
+                    host=host,
+                    environment_key=environment_key_2,
+                    labels={},
                 )
 
         # make sure track_request task was not called
@@ -44,9 +47,10 @@ def test_api_usage_cache(
 
         # let's track another request(to trigger flush)
         cache.track_request(
-            Resource.FLAGS,
-            host,
-            environment_key_1,
+            resource=Resource.FLAGS,
+            host=host,
+            environment_key=environment_key_1,
+            labels={},
         )
 
         # Then - track request lambda was called for every resource and environment_key combination
@@ -59,6 +63,7 @@ def test_api_usage_cache(
                         "host": host,
                         "environment_key": environment_key_1,
                         "count": 11 if resource == Resource.FLAGS else 10,
+                        "labels": {},
                     }
                 )
             )
@@ -69,6 +74,7 @@ def test_api_usage_cache(
                         "host": host,
                         "environment_key": environment_key_2,
                         "count": 10,
+                        "labels": {},
                     }
                 )
             )
@@ -79,99 +85,131 @@ def test_api_usage_cache(
 
         # and track another request
         cache.track_request(
-            Resource.FLAGS,
-            host,
-            environment_key_1,
+            resource=Resource.FLAGS,
+            host=host,
+            environment_key=environment_key_1,
+            labels={},
         )
 
         # finally, make sure track_request task was not called
         assert not mocked_track_request_task.called
 
 
-def test_feature_evaluation_cache(  # type: ignore[no-untyped-def]
+def test_feature_evaluation_cache(
     mocker: MockerFixture,
     settings: SettingsWrapper,
-):
+) -> None:
     # Given
     settings.FEATURE_EVALUATION_CACHE_SECONDS = 60
-    settings.USE_POSTGRES_FOR_ANALYTICS = False
-    settings.INFLUXDB_TOKEN = "token"
 
     mocked_track_evaluation_task = mocker.patch(
-        "app_analytics.cache.track_feature_evaluation"
-    )
-    mocked_track_feature_evaluation_influxdb_task = mocker.patch(
-        "app_analytics.cache.track_feature_evaluation_influxdb"
+        "app_analytics.cache.track_feature_evaluations_by_environment"
     )
     environment_1_id = 1
     environment_2_id = 2
     feature_1_name = "feature_1_name"
     feature_2_name = "feature_2_name"
 
-    cache = FeatureEvaluationCache()  # type: ignore[no-untyped-call]
+    cache = FeatureEvaluationCache()
     now = timezone.now()
 
     with freeze_time(now) as frozen_time:
         # Track some feature evaluations
         for _ in range(10):
-            cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)
-            cache.track_feature_evaluation(environment_1_id, feature_2_name, 1)
-            cache.track_feature_evaluation(environment_2_id, feature_2_name, 1)
-
-        # Make sure the internal tasks were not called
-        assert not mocked_track_evaluation_task.delay.called
-        assert not mocked_track_feature_evaluation_influxdb_task.delay.called
+            cache.track_feature_evaluation(
+                environment_id=environment_1_id,
+                feature_name=feature_1_name,
+                evaluation_count=1,
+                labels={},
+            )
+            cache.track_feature_evaluation(
+                environment_id=environment_1_id,
+                feature_name=feature_2_name,
+                evaluation_count=1,
+                labels={},
+            )
+            cache.track_feature_evaluation(
+                environment_id=environment_2_id,
+                feature_name=feature_2_name,
+                evaluation_count=1,
+                labels={},
+            )
 
         # Now, let's move the time forward
         frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
 
         # track another evaluation(to trigger cache flush)
-        cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)
-
-        # Then
-        mocked_track_feature_evaluation_influxdb_task.delay.assert_has_calls(
-            [
-                mocker.call(
-                    kwargs={
-                        "environment_id": environment_1_id,
-                        "feature_evaluations": {
-                            feature_1_name: 11,
-                            feature_2_name: 10,
-                        },
-                    },
-                ),
-                mocker.call(
-                    kwargs={
-                        "environment_id": environment_2_id,
-                        "feature_evaluations": {feature_2_name: 10},
-                    },
-                ),
-            ]
+        cache.track_feature_evaluation(
+            environment_id=environment_1_id,
+            feature_name=feature_1_name,
+            evaluation_count=1,
+            labels={},
         )
-        # task responsible for tracking evaluation using postgres was not called
-        assert not mocked_track_evaluation_task.delay.called
 
-        # Next, let's enable postgres tracking
-        settings.USE_POSTGRES_FOR_ANALYTICS = True
-
-        # rest the mock
-        mocked_track_feature_evaluation_influxdb_task.reset_mock()
-
-        # Track another evaluation
-        cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)
+        cache.track_feature_evaluation(
+            environment_id=environment_1_id,
+            feature_name=feature_1_name,
+            evaluation_count=1,
+            labels={"client_application_name": "test-app"},
+        )
 
         # move time forward again
         frozen_time.tick(settings.FEATURE_EVALUATION_CACHE_SECONDS + 1)  # type: ignore[arg-type]
 
         # track another one(to trigger cache flush)
-        cache.track_feature_evaluation(environment_1_id, feature_1_name, 1)
+        cache.track_feature_evaluation(
+            environment_id=environment_1_id,
+            feature_name=feature_1_name,
+            evaluation_count=1,
+            labels={},
+        )
 
         # Assert that the call was made with only the data tracked after the flush interval.
-        mocked_track_evaluation_task.delay.assert_called_once_with(
-            kwargs={
-                "environment_id": environment_1_id,
-                "feature_evaluations": {feature_1_name: 2},
-            }
-        )
-        # and the task for influx was not called
-        assert not mocked_track_feature_evaluation_influxdb_task.delay.called
+        assert mocked_track_evaluation_task.delay.call_args_list == [
+            mocker.call(
+                kwargs={
+                    "environment_id": 1,
+                    "feature_evaluations": [
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1_name",
+                            labels={},
+                            evaluation_count=11,
+                        ),
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_2_name",
+                            labels={},
+                            evaluation_count=10,
+                        ),
+                    ],
+                }
+            ),
+            mocker.call(
+                kwargs={
+                    "environment_id": 2,
+                    "feature_evaluations": [
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_2_name",
+                            labels={},
+                            evaluation_count=10,
+                        )
+                    ],
+                }
+            ),
+            mocker.call(
+                kwargs={
+                    "environment_id": 1,
+                    "feature_evaluations": [
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1_name",
+                            labels={"client_application_name": "test-app"},
+                            evaluation_count=1,
+                        ),
+                        TrackFeatureEvaluationsByEnvironmentData(
+                            feature_name="feature_1_name",
+                            labels={},
+                            evaluation_count=1,
+                        ),
+                    ],
+                }
+            ),
+        ]

@@ -83,10 +83,11 @@
 }
 .select-xsm .react-select {
   &__control {
+    min-height: $input-height-xsm;
     height: $input-height-xsm;
   }
   &__value-container {
-    padding: 6px 0px 6px 12px;
+    padding: 4px 0px 4px 12px;
   }
   &__single-value {
     line-height: $line-height-sm;

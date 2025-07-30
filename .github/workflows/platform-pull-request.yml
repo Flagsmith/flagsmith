@@ -144,7 +144,7 @@ jobs:
         github_private_cloud_token=${{ secrets.GH_PRIVATE_ACCESS_TOKEN }}
 
   run-e2e-tests:
-    if: '!cancelled()'
+    if: github.event.pull_request.draft == false && !cancelled()
     needs: [permissions-check, docker-build-api, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:
@@ -161,7 +161,7 @@ jobs:
         runs-on: [depot-ubuntu-latest-16, depot-ubuntu-latest-arm-16]
 
   run-e2e-tests-private-cloud:
-    if: needs.permissions-check.outputs.can-write == 'true' && !cancelled()
+    if: github.event.pull_request.draft == false && !cancelled() && needs.permissions-check.outputs.can-write == 'true'
     needs: [permissions-check, docker-build-private-cloud, docker-build-e2e]
     uses: ./.github/workflows/.reusable-docker-e2e-tests.yml
     with:

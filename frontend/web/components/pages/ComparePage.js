@@ -7,18 +7,21 @@ import CompareFeatures from 'components/CompareFeatures'
 import ConfigProvider from 'common/providers/ConfigProvider'
 import CompareIdentities from 'components/CompareIdentities'
 import PageTitle from 'components/PageTitle'
+import { withRouter } from 'react-router-dom'
+import {
+  RouteContext,
+  useRouteContext,
+} from 'components/providers/RouteContext'
 
-class TheComponent extends Component {
-  static displayName = 'TheComponent'
+class ComparePage extends Component {
+  static contextType = RouteContext
+  static displayName = 'ComparePage'
 
   static propTypes = {}
 
-  static contextTypes = {
-    router: propTypes.object.isRequired,
-  }
-
   constructor(props) {
     super(props)
+    this.projectId = props.routeContext.projectId
   }
 
   render() {
@@ -27,25 +30,25 @@ class TheComponent extends Component {
         <PageTitle className='mb-2' title={'Compare'}>
           Compare data across your environments, features and identities.
         </PageTitle>
-        <Tabs className='mt-0' urlParam='tab'>
+        <Tabs className='mt-0' urlParam='tab' history={this.props.history}>
           <TabItem tabLabel='Environments'>
             <div className='mt-4'>
               <CompareEnvironments
-                projectId={this.props.match.params.projectId}
+                projectId={this.projectId}
                 environmentId={this.props.match.params.environmentId}
               />
             </div>
           </TabItem>
           <TabItem tabLabel='Feature Values'>
             <div className='mt-4'>
-              <CompareFeatures projectId={this.props.match.params.projectId} />
+              <CompareFeatures projectId={this.projectId} />
             </div>
           </TabItem>
           <TabItem tabLabel='Identities'>
             <div className='mt-4'>
               <CompareIdentities
                 environmentId={this.props.match.params.environmentId}
-                projectId={this.props.match.params.projectId}
+                projectId={this.projectId}
               />
             </div>
           </TabItem>
@@ -55,4 +58,9 @@ class TheComponent extends Component {
   }
 }
 
-module.exports = ConfigProvider(TheComponent)
+const ComparePageWithContext = (props) => {
+  const context = useRouteContext()
+  return <ComparePage {...props} routeContext={context} />
+}
+
+module.exports = withRouter(ConfigProvider(ComparePageWithContext))

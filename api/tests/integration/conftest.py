@@ -160,7 +160,7 @@ def identity_with_traits_matching_segment(  # type: ignore[no-untyped-def]
 
 
 @pytest.fixture()
-def sdk_client(environment_api_key):  # type: ignore[no-untyped-def]
+def sdk_client(environment_api_key: str) -> APIClient:
     client = APIClient()
     client.credentials(HTTP_X_ENVIRONMENT_KEY=environment_api_key)
     return client

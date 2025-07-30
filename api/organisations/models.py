@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from typing import TYPE_CHECKING, Any
+from datetime import timedelta
+from typing import Any
 
 from common.core.utils import is_enterprise, is_saas
 from django.conf import settings
@@ -16,12 +14,13 @@ from django_lifecycle import (  # type: ignore[import-untyped]
     LifecycleModelMixin,
     hook,
 )
+from flag_engine.identities.traits.types import TraitValue
 from simple_history.models import HistoricalRecords  # type: ignore[import-untyped]
 
 from core.models import SoftDeleteExportableModel
 from features.versioning.constants import DEFAULT_VERSION_LIMIT_DAYS
 from integrations.lead_tracking.hubspot.tasks import (
-    track_hubspot_lead,
+    track_hubspot_lead_v2,
     update_hubspot_active_subscription,
 )
 from organisations.chargebee import (  # type: ignore[attr-defined]
@@ -120,9 +119,20 @@ class Organisation(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
             self.has_paid_subscription() and self.subscription.cancellation_date is None
         )
 
+    def has_enterprise_subscription(self) -> bool:
+        return self.is_paid and self.subscription.is_enterprise
+
     @property
     def flagsmith_identifier(self):  # type: ignore[no-untyped-def]
         return f"org.{self.id}"
+
+    @property
+    def flagsmith_on_flagsmith_api_traits(self) -> dict[str, TraitValue]:
+        return {
+            "organisation.id": self.id,
+            "organisation.name": self.name,
+            "subscription.plan": self.subscription.plan,
+        }
 
     def over_plan_seats_limit(self, additional_seats: int = 0):  # type: ignore[no-untyped-def]
         if self.has_paid_subscription():
@@ -209,11 +219,12 @@ class UserOrganisation(LifecycleModelMixin, models.Model):  # type: ignore[misc]
     @hook(AFTER_CREATE)
     def register_hubspot_lead_tracking(self):  # type: ignore[no-untyped-def]
         if settings.ENABLE_HUBSPOT_LEAD_TRACKING:
-            track_hubspot_lead.delay(
+            track_hubspot_lead_v2.delay(
                 args=(
                     self.user.id,
                     self.organisation.id,
-                )
+                ),
+                delay_until=timezone.now() + timedelta(minutes=3),
             )
 
 
@@ -278,6 +289,10 @@ class Subscription(LifecycleModelMixin, SoftDeleteExportableModel):  # type: ign
     @property
     def subscription_plan_family(self) -> SubscriptionPlanFamily:
         return SubscriptionPlanFamily.get_by_plan_id(self.plan)  # type: ignore[arg-type]
+
+    @property
+    def is_enterprise(self) -> bool:
+        return self.subscription_plan_family == SubscriptionPlanFamily.ENTERPRISE
 
     @hook(AFTER_SAVE, when="plan", has_changed=True)
     def update_api_limit_access_block(self):  # type: ignore[no-untyped-def]
@@ -553,29 +568,20 @@ class OrganisationSubscriptionInformationCache(LifecycleModelMixin, models.Model
             "feature_history_visibility_days": self.feature_history_visibility_days,
         }
 
-    def is_billing_terms_dates_set(self) -> bool:
-        return (
-            self.current_billing_term_starts_at is not None
-            and self.current_billing_term_ends_at is not None
-        )
-
     def has_active_billing_periods(self) -> bool:
         """
         Returns True if current date is within the billing term.
         If either start or end date is None, returns False.
         """
-        if not self.is_billing_terms_dates_set():
+        starts_at, ends_at = (
+            self.current_billing_term_starts_at,
+            self.current_billing_term_ends_at,
+        )
+
+        if starts_at is None or ends_at is None:
             return False
 
-        if TYPE_CHECKING:
-            assert self.current_billing_term_starts_at is not None
-            assert self.current_billing_term_ends_at is not None
-
-        starts_at = self.current_billing_term_starts_at
-        ends_at = self.current_billing_term_ends_at
-        now = timezone.now()
-
-        return starts_at <= now <= ends_at
+        return starts_at <= timezone.now() <= ends_at
 
 
 class OrganisationAPIUsageNotification(models.Model):

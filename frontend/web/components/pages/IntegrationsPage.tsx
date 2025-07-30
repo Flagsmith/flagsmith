@@ -9,26 +9,39 @@ import Utils from 'common/utils/utils'
 import AccountStore from 'common/stores/account-store'
 import API from 'project/api'
 import { useGetProjectQuery } from 'common/services/useProject'
+import { useRouteContext } from 'components/providers/RouteContext'
 
-type IntegrationsPageType = {
-  match: {
-    params: {
-      projectId: string
-    }
-  }
+export const integrationCategories = [
+  'Analytics',
+  'Authentication',
+  'CI/CD',
+  'Developer tools',
+  'Infrastructure',
+  'Messaging',
+  'Monitoring',
+  'Webhooks',
+] as const
+export type IntegrationSummary = {
+  categories: (typeof integrationCategories)[number][]
+  image: string
+  title: string
 }
-const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
+
+const IntegrationsPage: FC = () => {
+  const { projectId } = useRouteContext()
   useEffect(() => {
     API.trackPage(Constants.pages.INTEGRATIONS)
   }, [])
 
   const integrations = Object.keys(Utils.getIntegrationData())
   const { isLoading: permissionsLoading, permission } = useHasPermission({
-    id: match.params.projectId,
+    id: projectId,
     level: 'project',
     permission: 'ADMIN',
   })
-  const { data: project } = useGetProjectQuery({ id: match.params.projectId })
+  const { data: project } = useGetProjectQuery({
+    id: projectId?.toString() || '',
+  })
   return (
     <div className='app-container container'>
       <PageTitle title={'Integrations'}>
@@ -59,7 +72,7 @@ const IntegrationsPage: FC<IntegrationsPageType> = ({ match }) => {
               <div>
                 {project && (
                   <IntegrationList
-                    projectId={match.params.projectId}
+                    projectId={projectId?.toString() || ''}
                     integrations={integrations}
                   />
                 )}

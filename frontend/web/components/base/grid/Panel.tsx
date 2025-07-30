@@ -22,11 +22,9 @@ class Panel extends PureComponent<PanelProps> {
         {(title || action) && (
           <div className='panel-heading mb-2'>
             <Row space>
-              {title && (
-                <Row className='flex-1 mr-3'>
-                  <h5 className='m-b-0 title'>{title}</h5>
-                </Row>
-              )}
+              <Row className='flex-1 mr-3'>
+                {title && <h5 className='m-b-0 title'>{title}</h5>}
+              </Row>
               {action}
             </Row>
           </div>
