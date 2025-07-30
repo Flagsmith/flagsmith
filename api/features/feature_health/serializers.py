@@ -56,6 +56,7 @@ class FeatureHealthEventSerializer(serializers.ModelSerializer[FeatureHealthEven
     class Meta:
         model = FeatureHealthEvent
         fields = read_only_fields = (
+            "id",
             "created_at",
             "environment",
             "feature",

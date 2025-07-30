@@ -6,6 +6,7 @@ from pytest_mock import MockerFixture
 from environments.models import Environment
 from features.feature_health.models import (
     FeatureHealthEvent,
+    FeatureHealthEventType,
     FeatureHealthProvider,
 )
 from features.models import Feature
@@ -63,48 +64,48 @@ def test_feature_health_event__get_latest_by_feature__return_expected(
 
     latest_provider1_event = FeatureHealthEvent.objects.create(
         feature=feature,
-        type="UNHEALTHY",
+        type=FeatureHealthEventType.UNHEALTHY,
         provider_name="provider1",
     )
     latest_provider1_environment_event = FeatureHealthEvent.objects.create(
         feature=feature,
-        type="UNHEALTHY",
+        type=FeatureHealthEventType.UNHEALTHY,
         provider_name="provider1",
         environment=environment,
     )
     with freeze_time(now - datetime.timedelta(hours=1)):
         older_provider1_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="HEALTHY",
+            type=FeatureHealthEventType.HEALTHY,
             provider_name="provider1",
         )
         older_provider1_environment_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="HEALTHY",
+            type=FeatureHealthEventType.HEALTHY,
             provider_name="provider1",
             environment=environment,
         )
         latest_provider_1_environment_2_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="UNHEALTHY",
+            type=FeatureHealthEventType.UNHEALTHY,
             provider_name="provider1",
             environment=environment_2,
         )
     with freeze_time(now - datetime.timedelta(hours=2)):
         latest_provider2_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="UNHEALTHY",
+            type=FeatureHealthEventType.UNHEALTHY,
             provider_name="provider2",
         )
         older_provider_1_environment_2_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="HEALTHY",
+            type=FeatureHealthEventType.HEALTHY,
             provider_name="provider1",
             environment=environment_2,
         )
     unrelated_feature_event = FeatureHealthEvent.objects.create(
         feature=unrelated_feature,
-        type="UNHEALTHY",
+        type=FeatureHealthEventType.UNHEALTHY,
         provider_name="provider1",
     )
 
@@ -140,30 +141,30 @@ def test_feature_health_event__get_latest_by_project__return_expected(
 
     latest_provider1_event = FeatureHealthEvent.objects.create(
         feature=feature,
-        type="UNHEALTHY",
+        type=FeatureHealthEventType.UNHEALTHY,
         provider_name="provider1",
     )
     with freeze_time(now - datetime.timedelta(hours=1)):
         older_provider1_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="HEALTHY",
+            type=FeatureHealthEventType.HEALTHY,
             provider_name="provider1",
         )
     with freeze_time(now - datetime.timedelta(hours=2)):
         latest_provider2_event = FeatureHealthEvent.objects.create(
             feature=feature,
-            type="UNHEALTHY",
+            type=FeatureHealthEventType.UNHEALTHY,
             provider_name="provider2",
         )
     with freeze_time(now - datetime.timedelta(hours=3)):
         another_feature_event = FeatureHealthEvent.objects.create(
             feature=another_feature,
-            type="UNHEALTHY",
+            type=FeatureHealthEventType.UNHEALTHY,
             provider_name="provider1",
         )
     unrelated_feature_event = FeatureHealthEvent.objects.create(
         feature=unrelated_feature,
-        type="UNHEALTHY",
+        type=FeatureHealthEventType.UNHEALTHY,
         provider_name="provider1",
     )
 
