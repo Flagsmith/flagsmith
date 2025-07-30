@@ -122,36 +122,35 @@ def dismiss_feature_health_event(
 
     if (
         FeatureHealthEventType(feature_health_event.type)
-        == FeatureHealthEventType.UNHEALTHY
+        != FeatureHealthEventType.UNHEALTHY
     ):
-        reason: FeatureHealthEventReason = {
-            "text_blocks": [
-                {
-                    "text": FEATURE_HEALTH_EVENT_MANUALLY_DISMISSED_MESSAGE
-                    % dismissed_by,
-                }
-            ],
-            "url_blocks": [],
-        }
-
-        FeatureHealthEvent.objects.create(
-            feature=feature_health_event.feature,
-            environment=feature_health_event.environment,
-            type=FeatureHealthEventType.HEALTHY,
-            reason=json.dumps(reason),
+        logger.warning(
+            "feature-health-event-dismissal-not-supported",
+            feature_health_event_id=feature_health_event.id,
+            feature_health_event_external_id=feature_health_event.external_id,
+            feature_health_event_type=feature_health_event.type,
             provider_name=feature_health_event.provider_name,
-            external_id=feature_health_event.external_id,
-        )
-
-        tasks.update_feature_unhealthy_tag.delay(
-            args=(feature_health_event.feature.id,),
         )
         return
 
-    logger.warning(
-        "feature-health-event-dismissal-not-supported",
-        feature_health_event_id=feature_health_event.id,
-        feature_health_event_external_id=feature_health_event.external_id,
-        feature_health_event_type=feature_health_event.type,
+    reason: FeatureHealthEventReason = {
+        "text_blocks": [
+            {
+                "text": FEATURE_HEALTH_EVENT_MANUALLY_DISMISSED_MESSAGE % dismissed_by,
+            }
+        ],
+        "url_blocks": [],
+    }
+
+    FeatureHealthEvent.objects.create(
+        feature=feature_health_event.feature,
+        environment=feature_health_event.environment,
+        type=FeatureHealthEventType.HEALTHY,
+        reason=json.dumps(reason),
         provider_name=feature_health_event.provider_name,
+        external_id=feature_health_event.external_id,
+    )
+
+    tasks.update_feature_unhealthy_tag.delay(
+        args=(feature_health_event.feature.id,),
     )
