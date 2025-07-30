@@ -1,5 +1,40 @@
 # Changelog
 
+## [2.188.1](https://github.com/Flagsmith/flagsmith/compare/v2.188.0...v2.188.1) (2025-07-23)
+
+
+### Bug Fixes
+
+* Incorrect InfluxDB query for usage data ([#5818](https://github.com/Flagsmith/flagsmith/issues/5818)) ([3de3a7d](https://github.com/Flagsmith/flagsmith/commit/3de3a7ddbc568783a1b6b4692f2500da27c0982f))
+* Incorrect mapper behaviour for SDK metrics ([#5816](https://github.com/Flagsmith/flagsmith/issues/5816)) ([1eede39](https://github.com/Flagsmith/flagsmith/commit/1eede391b9427a2c3327b3aecdecf16d49d8a2ba))
+
+## [2.188.0](https://github.com/Flagsmith/flagsmith/compare/v2.187.0...v2.188.0) (2025-07-23)
+
+
+### Features
+
+* adds multiple actions to release pipeline stage ([#5767](https://github.com/Flagsmith/flagsmith/issues/5767)) ([57489b7](https://github.com/Flagsmith/flagsmith/commit/57489b7a03a66bdc16ea0b2043128edade4f293a))
+* adds unpublish release pipeline action ([#5797](https://github.com/Flagsmith/flagsmith/issues/5797)) ([a22e219](https://github.com/Flagsmith/flagsmith/commit/a22e219841878cfd066550d40ce7d7f22ea10f30))
+* Backend for Context values ([#5798](https://github.com/Flagsmith/flagsmith/issues/5798)) ([d06acd3](https://github.com/Flagsmith/flagsmith/commit/d06acd3abdb6ca652c06ada8a03963d8d9049f41))
+* Backend for SDK metrics ([#5623](https://github.com/Flagsmith/flagsmith/issues/5623)) ([cd4f166](https://github.com/Flagsmith/flagsmith/commit/cd4f166a9a026bda5147fb337d10d50cb28da66a))
+* frontend context values in segment ([#5766](https://github.com/Flagsmith/flagsmith/issues/5766)) ([9115f16](https://github.com/Flagsmith/flagsmith/commit/9115f16d33fbff92ccf0372fd4e042a6fa16a815))
+* improve last login data ([#5745](https://github.com/Flagsmith/flagsmith/issues/5745)) ([759c789](https://github.com/Flagsmith/flagsmith/commit/759c78957a34a48ca765cf8045ae5f8068784dd3))
+* Release pipelines logic v0.2.1 ([#5763](https://github.com/Flagsmith/flagsmith/issues/5763)) ([e977ace](https://github.com/Flagsmith/flagsmith/commit/e977aced78d5e1bd77b7bbd6969c2a3efda387a2))
+* Show Self hosting overview for saas in welcome page ([#5751](https://github.com/Flagsmith/flagsmith/issues/5751)) ([15b23b0](https://github.com/Flagsmith/flagsmith/commit/15b23b0df55ea28e965370b646439666d1bcd350))
+
+
+### Bug Fixes
+
+* body overflow ([#5754](https://github.com/Flagsmith/flagsmith/issues/5754)) ([ebbaae9](https://github.com/Flagsmith/flagsmith/commit/ebbaae9e89e7f887229aa2df241de95f84ecfba4))
+* **cache_page:** use vary on header with env api key ([#5800](https://github.com/Flagsmith/flagsmith/issues/5800)) ([28821fa](https://github.com/Flagsmith/flagsmith/commit/28821fa2f3f34f1e0e93752b7637f3ff84c2b0cc))
+* Integrations size ([#5733](https://github.com/Flagsmith/flagsmith/issues/5733)) ([0b6ec10](https://github.com/Flagsmith/flagsmith/commit/0b6ec1018df47ade9c2e62654e8d461ade6228bb))
+
+
+### Dependency Updates
+
+* bump dj-database-url from v0.5.0 to v3.0.1, add django_cockroachdb ([#5789](https://github.com/Flagsmith/flagsmith/issues/5789)) ([70d4b59](https://github.com/Flagsmith/flagsmith/commit/70d4b59042064cc3add446c806f49ccc0ec6e11e))
+* bump on-headers and compression in /docs ([#5785](https://github.com/Flagsmith/flagsmith/issues/5785)) ([b566ff6](https://github.com/Flagsmith/flagsmith/commit/b566ff66fe52f97a1e63ad07b2a819bfd0f8e9ea))
+
 ## [2.187.0](https://github.com/Flagsmith/flagsmith/compare/v2.186.0...v2.187.0) (2025-07-16)
 
 

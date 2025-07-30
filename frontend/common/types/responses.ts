@@ -50,7 +50,7 @@ export type SegmentCondition = {
   description?: string
   operator: string
   property: string
-  value: string | number | null
+  value: string | number | boolean | null
 }
 
 export type SegmentConditionsError = {
@@ -554,6 +554,7 @@ export type SubscriptionMeta = {
 export type Account = {
   first_name: string
   last_name: string
+  date_joined: string
   sign_up_type: SignupType
   id: number
   email: string
@@ -800,7 +801,7 @@ export type Webhook = {
   updated_at: string
 }
 
-export type AccountModel = User & {
+export type AccountModel = Account & {
   organisations: Organisation[]
 }
 

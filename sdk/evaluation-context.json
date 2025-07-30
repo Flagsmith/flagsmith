@@ -1,118 +1,69 @@
 {
     "$defs": {
-        "EnvironmentEvaluationContext": {
+        "EnvironmentContext": {
+            "description": "Represents an environment context for feature flag evaluation.",
             "properties": {
-                "api_key": {
-                    "title": "Api Key",
-                    "type": "string"
-                }
-            },
-            "required": [
-                "api_key"
-            ],
-            "title": "EnvironmentEvaluationContext",
-            "type": "object"
-        },
-        "FeatureEvaluationContext": {
-            "properties": {
+                "key": {
+                    "description": "An environment's unique identifier.",
+                    "title": "Key",
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.environment.key"
+                },
                 "name": {
+                    "description": "An environment's human-readable name.",
                     "title": "Name",
-                    "type": "string"
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.environment.name"
                 }
             },
             "required": [
+                "key",
                 "name"
             ],
-            "title": "FeatureEvaluationContext",
+            "title": "EnvironmentContext",
             "type": "object"
         },
-        "IdentityEvaluationContext": {
+        "IdentityContext": {
+            "description": "Represents an identity context for feature flag evaluation.",
             "properties": {
                 "identifier": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "title": "Identifier"
+                    "description": "A unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI.",
+                    "title": "Identifier",
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.identity.identifier"
+                },
+                "key": {
+                    "description": "Key used when selecting a value for a multivariate feature, or for % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depending on Flagsmith implementation.",
+                    "title": "Key",
+                    "type": "string",
+                    "x-flagsmith-engine-path": "$.identity.key"
                 },
                 "traits": {
                     "additionalProperties": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/$defs/TraitEvaluationContext"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
+                        "type": "string"
                     },
+                    "description": "A map of traits associated with the identity, where the key is the trait name and the value is the trait value.",
                     "title": "Traits",
                     "type": "object"
-                },
-                "transient": {
-                    "anyOf": [
-                        {
-                            "type": "boolean"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "title": "Transient"
-                }
-            },
-            "required": [],
-            "title": "IdentityEvaluationContext",
-            "type": "object"
-        },
-        "TraitEvaluationContext": {
-            "properties": {
-                "value": {},
-                "transient": {
-                    "type": "boolean",
-                    "default": false,
-                    "title": "Transient"
                 }
             },
             "required": [
-                "value"
+                "identifier",
+                "key"
             ],
-            "title": "TraitEvaluationContext",
+            "title": "IdentityContext",
             "type": "object"
         }
     },
+    "description": "Represents a context object containing the necessary information to evaluate Flagsmith feature flags.",
     "properties": {
         "environment": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/EnvironmentEvaluationContext"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null
+            "$ref": "#/$defs/EnvironmentContext"
         },
         "identity": {
             "anyOf": [
                 {
-                    "$ref": "#/$defs/IdentityEvaluationContext"
-                },
-                {
-                    "type": "null"
-                }
-            ],
-            "default": null
-        },
-        "feature": {
-            "anyOf": [
-                {
-                    "$ref": "#/$defs/FeatureEvaluationContext"
+                    "$ref": "#/$defs/IdentityContext"
                 },
                 {
                     "type": "null"
@@ -121,6 +72,9 @@
             "default": null
         }
     },
-    "title": "FlagsmithEvaluationContext",
+    "required": [
+        "environment"
+    ],
+    "title": "EvaluationContext",
     "type": "object"
 }
