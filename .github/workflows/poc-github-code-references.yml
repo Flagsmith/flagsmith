@@ -8,10 +8,11 @@ on:
   workflow_dispatch:
 
 env:
-  FLAGSMITH_PUBLIC_KEY: ENktaJnfLVbLifybz34JmX
+  EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
   FLAGSMITH_EDGE_API_URL: https://edge.api.flagsmith.com
-  PYTHON_VERSION: '3.13'
+  FLAGSMITH_PUBLIC_KEY: ENktaJnfLVbLifybz34JmX
   PYTHON_REQUESTS_VERSION: '2.32.4'
+  PYTHON_VERSION: '3.13'
 
 jobs:
   collect-code-references:
@@ -41,7 +42,7 @@ jobs:
 
           import requests
 
-          EXCLUDE_PATTERNS = ["node_modules", "venv", ".git", "cache", "build", "htmlcov", "docs", ".json", "tests"]
+          EXCLUDE_PATTERNS = os.environ["EXCLUDE_PATTERNS"].replace(" ", "").split(",")
 
           def is_file_binary(file_path: Path) -> bool:
               """Check if a file is binary."""
