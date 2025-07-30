@@ -52,7 +52,7 @@ const CreateOrganisationPage: React.FC = () => {
       OrganisationStore.off('change', onChangeAccountStore)
       OrganisationStore.off('saved', onSave)
     }
-  }, [])
+  }, [hosting, history])
 
   useEffect(() => {
     API.trackPage(Constants.pages.CREATE_ORGANISATION)
