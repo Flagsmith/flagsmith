@@ -41,7 +41,7 @@ jobs:
 
           import requests
 
-          EXCLUDE_PATTERNS = ["node_modules", "venv", ".git", "cache", "build", "htmlcov", "docs", ".json"]
+          EXCLUDE_PATTERNS = ["node_modules", "venv", ".git", "cache", "build", "htmlcov", "docs", ".json", "tests"]
 
           def is_file_binary(file_path: Path) -> bool:
               """Check if a file is binary."""
@@ -68,7 +68,7 @@ jobs:
                                   continue
                               if (
                                   re.search(fr"""[A-Z][A-Z0-9_]{3,}\s*=\s*(['"]){feature_name}\1""", line) or  # Constant assignment
-                                  re.search(fr"""(?ism:(?:feature|flag)[^\(]*\(.*(["']){feature_name})\1""", "".join(context))  # Function call
+                                  re.search(fr"""(?i:(?:feature|flag)\w*\(\s*(["']){feature_name})\1""", "".join(context))  # Function call
                               ):
                                   yield feature_name, str(path), line_number
 
