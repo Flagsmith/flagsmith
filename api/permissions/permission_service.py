@@ -211,7 +211,12 @@ def user_has_organisation_permission(
     )
     filter_ = base_filter & Q(id=organisation.id)
 
-    return Organisation.objects.filter(filter_).exists()  # type: ignore[no-any-return]
+    queryset = Organisation.objects.filter(filter_)
+
+    # Final check to verify that user belongs to organisation
+    queryset = queryset.filter(users=user)
+
+    return queryset.exists()  # type: ignore[no-any-return]
 
 
 def master_api_key_has_organisation_permission(
