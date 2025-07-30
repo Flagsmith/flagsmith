@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { components } from 'react-select/lib/components'
 import Utils from 'common/utils/utils'
 import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
@@ -61,20 +62,21 @@ const RuleConditionPropertySelect = ({
     contextOptions.find((option) => option.value === propertyValue)?.label ||
     propertyValue
   const isEditing = localCurrentValue !== propertyValue
-  const traitAsGroupedOptions =
+  const showTraitOptions =
     localCurrentValue && (!isValueFromContext || isEditing)
-      ? [
-          {
-            label: (
-              <GroupLabel
-                groupName='Traits'
-                tooltipText={Constants.strings.USER_PROPERTY_DESCRIPTION}
-              />
-            ),
-            options: [{ label: localCurrentValue, value: localCurrentValue }],
-          },
-        ]
-      : []
+  const traitAsGroupedOptions = showTraitOptions
+    ? [
+        {
+          label: (
+            <GroupLabel
+              groupName='Traits'
+              tooltipText={Constants.strings.USER_PROPERTY_DESCRIPTION}
+            />
+          ),
+          options: [{ label: localCurrentValue, value: localCurrentValue }],
+        },
+      ]
+    : []
 
   const contextAsGroupedOptions =
     contextOptions?.length > 0
@@ -100,6 +102,8 @@ const RuleConditionPropertySelect = ({
     ...contextAsGroupedOptions,
   ]
 
+  const showTitle = !showTraitOptions && operator !== 'PERCENTAGE_SPLIT'
+
   return (
     <>
       <SearchableDropdown
@@ -123,6 +127,25 @@ const RuleConditionPropertySelect = ({
           })
         }}
         displayedLabel={displayedLabel}
+        components={{
+          Menu: ({ ...props }: any) => {
+            return (
+              <components.Menu {...props}>
+                <React.Fragment>
+                  {showTitle && (
+                    <p
+                      style={{ fontStyle: 'italic', paddingTop: 6 }}
+                      className='mb-0 faint text-center'
+                    >
+                      Pick a context or type a trait name
+                    </p>
+                  )}
+                  {props.children}
+                </React.Fragment>
+              </components.Menu>
+            )
+          },
+        }}
       />
     </>
   )

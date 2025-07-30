@@ -1,6 +1,5 @@
 import Icon from 'components/Icon'
 import React from 'react'
-
 export interface OptionType {
   enabled?: boolean
   label: string
@@ -51,9 +50,11 @@ interface SearchableDropdownProps {
   onInputChange?: (e: string, metadata: any) => void
   onChange?: (e: OptionType) => void
   isMulti?: boolean
+  components?: any
 }
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
+  components,
   dataTest,
   displayedLabel,
   isMulti,
@@ -67,6 +68,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   placeholder,
   value,
 }) => {
+  console.log('components', components)
   return (
     <Select
       data-test={dataTest}
@@ -82,6 +84,9 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       {...(noOptionsMessage
         ? { noOptionsMessage: () => noOptionsMessage }
         : {})}
+      isClearable
+      className='react-select searchable-dropdown'
+      components={components}
     />
   )
 }
