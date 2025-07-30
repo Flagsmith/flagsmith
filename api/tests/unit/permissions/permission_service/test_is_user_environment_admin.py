@@ -8,9 +8,14 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
+from organisations.models import Organisation, UserOrganisation
 from permissions.permission_service import is_user_environment_admin
-from projects.models import UserPermissionGroupProjectPermission, UserProjectPermission
-from users.models import FFAdminUser
+from projects.models import (
+    Project,
+    UserPermissionGroupProjectPermission,
+    UserProjectPermission,
+)
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, environment):  # type: ignore[no-untyped-def]  # noqa: E501
@@ -98,3 +103,36 @@ def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_
 
     # Then - the user should not be admin of the environment
     assert is_user_environment_admin(user, environment) is False
+
+
+def test_is_user_environment_admin__does_not_return_environment_for_orphan_group_permission(
+    organisation: Organisation,
+    project: Project,
+    environment: Environment,
+    user_permission_group: UserPermissionGroup,
+    environment_permission_using_user_permission_group: UserPermissionGroupEnvironmentPermission,
+    staff_user: FFAdminUser,
+) -> None:
+    """
+    Specific test to verify that a user no longer has permission to access resources via a group,
+    if they no longer belong to the organisation.
+
+    Note that a user should never be a member of a group without being a member of the organisation
+    but this test exists to ensure no security holes.
+    """
+
+    # Given
+    staff_user.add_to_group(group=user_permission_group)
+
+    environment_permission_using_user_permission_group.admin = True
+    environment_permission_using_user_permission_group.save()
+
+    assert is_user_environment_admin(user=staff_user, environment=environment)
+
+    # When
+    # We delete the user organisation to remove the user from the organisation, without
+    # allowing any signals / hooks to run.
+    UserOrganisation.objects.filter(user=staff_user, organisation=organisation).delete()
+
+    # Then
+    assert not is_user_environment_admin(user=staff_user, environment=environment)
