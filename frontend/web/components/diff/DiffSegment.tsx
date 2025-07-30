@@ -66,11 +66,7 @@ const DiffSegment: FC<DiffSegmentType> = ({ newSegment, oldSegment }) => {
         )}
         <div className='d-flex ml-0 me-0 flex-column'>
           <label className='mb-0'>Rules</label>
-          {diff.changes?.map((diff, index) => (
-            <>
-              <DiffRule key={index} diff={diff} index={index} />
-            </>
-          ))}
+          <DiffString oldValue={diff.oldString} newValue={diff.newString} />
         </div>
       </div>
     </div>
@@ -105,7 +101,7 @@ const DiffRule: FC<DiffRuleType> = ({ diff, index }) => {
     <>
       <SegmentRuleDivider rule={rule} index={index} className='mt-0 mb-1' />
       {diff?.rules?.map((v, i) => (
-        <div className="mb-2 p-2">
+        <div className='mb-2 p-2'>
           <DiffRule key={i} diff={v} index={i} />
         </div>
       ))}

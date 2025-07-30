@@ -26,8 +26,8 @@ import PanelSearch from 'components/PanelSearch'
 import JSONReference from 'components/JSONReference'
 import moment from 'moment'
 import Icon from 'components/Icon'
-import v from 'refractor/lang/v'
 import ConfigProvider from 'common/providers/ConfigProvider'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type ChangeRequestsPageType = {
   router: RouterChildContext['router']

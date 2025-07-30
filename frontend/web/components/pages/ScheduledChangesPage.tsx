@@ -17,6 +17,7 @@ import JSONReference from 'components/JSONReference'
 import Icon from 'components/Icon'
 import { IonIcon } from '@ionic/react'
 import { calendar } from 'ionicons/icons'
+import getUserDisplayName from 'common/utils/getUserDisplayName'
 
 type ScheduledChangesPageType = {
   router: RouterChildContext['router']
@@ -124,7 +125,7 @@ const ScheduledChangesPage: FC<ScheduledChangesPageType> = ({ match }) => {
                         <div className='list-item-subtitle mt-1'>
                           Created{' '}
                           {moment(created_at).format('Do MMM YYYY HH:mma')} by{' '}
-                          {user && user.first_name} {user && user.last_name}
+                          {getUserDisplayName(user)}
                         </div>
                       </Flex>
                       <div className='table-column'>

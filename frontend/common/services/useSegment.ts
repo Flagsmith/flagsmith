@@ -9,33 +9,6 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 
-export function addVersionOfToSegment(segment: Segment): Segment {
-  const cloneDeep = <T>(obj: T): T => JSON.parse(JSON.stringify(obj))
-
-  const updatedSegment = cloneDeep(segment)
-
-  const processCondition = (condition: SegmentCondition): SegmentCondition => {
-    return {
-      ...condition,
-      version_of: condition.version_of || condition.id,
-    }
-  }
-
-  const processRule = (rule: SegmentRule): SegmentRule => {
-    return {
-      ...rule,
-      conditions: rule.conditions.map(processCondition),
-      rules: rule.rules.map(processRule),
-      version_of: rule.version_of || rule.id,
-    }
-  }
-
-  return {
-    ...updatedSegment,
-    rules: updatedSegment.rules.map(processRule),
-  }
-}
-
 export const segmentService = service
   .enhanceEndpoints({ addTagTypes: ['Segment'] })
   .injectEndpoints({
@@ -98,7 +71,7 @@ export const segmentService = service
         ],
         queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
           const result = await baseQuery({
-            body: addVersionOfToSegment(query.segment),
+            body: query.segment,
             method: 'PUT',
             url: `projects/${query.projectId}/segments/${query.segment.id}/`,
           })

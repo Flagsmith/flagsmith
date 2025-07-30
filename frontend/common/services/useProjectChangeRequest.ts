@@ -4,7 +4,7 @@ import { service } from 'common/service'
 import Utils from 'common/utils/utils'
 import transformCorePaging from 'common/transformCorePaging'
 import { getStore } from 'common/store'
-import { addVersionOfToSegment, segmentService } from './useSegment'
+import { segmentService } from './useSegment'
 
 export const projectChangeRequestService = service
   .enhanceEndpoints({ addTagTypes: ['ProjectChangeRequest'] })
@@ -35,10 +35,7 @@ export const projectChangeRequestService = service
         invalidatesTags: [{ id: 'LIST', type: 'ProjectChangeRequest' }],
         queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
           const result = await baseQuery({
-            body: {
-              ...query.data,
-              segments: query.data.segments?.map(addVersionOfToSegment),
-            },
+            body: query.data,
             method: 'POST',
             url: `projects/${query.project_id}/change-requests/`,
           })
