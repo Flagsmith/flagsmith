@@ -236,6 +236,14 @@ def _is_user_object_admin(
     ModelClass = type(object_)
     base_filter = get_base_permission_filter(user, ModelClass)  # type: ignore[arg-type]
     filter_ = base_filter & Q(id=object_.id)
+
+    if ModelClass is Project:
+        filter_ = filter_ & Q(organisation__users=user)
+    elif ModelClass is Environment:
+        filter_ = filter_ & Q(project__organisation__users=user)
+    else:
+        raise ValueError(f"Unexpected object type {type(object_)}")
+
     return ModelClass.objects.filter(filter_).exists()
 
 
