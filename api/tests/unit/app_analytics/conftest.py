@@ -11,7 +11,9 @@ def use_analytics_db(request: pytest.FixtureRequest) -> None:
     """
     if "analytics" not in settings.DATABASES:  # pragma: no cover
         pytest.skip("No analytics database configured, skipping")
+        return
     request.applymarker(pytest.mark.django_db(databases=["default", "analytics"]))
+    request.getfixturevalue("db")
 
 
 @pytest.fixture(autouse=True)
