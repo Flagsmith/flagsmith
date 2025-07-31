@@ -192,6 +192,7 @@ export type Req = {
   getAvailablePermissions: { level: PermissionLevel }
   getTag: { id: string }
   getHealthEvents: { projectId: number | string }
+  dismissHealthEvent: { projectId: number | string; eventId: number }
   getHealthProviders: { projectId: number }
   createHealthProvider: { projectId: number; name: string }
   deleteHealthProvider: { projectId: number; name: string }

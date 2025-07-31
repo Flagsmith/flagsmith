@@ -1934,6 +1934,7 @@ const CreateFlag = class extends Component {
                                     >
                                       <FeatureHealthTabContent
                                         projectId={projectFlag.project}
+                                        environmentId={this.props.environmentId}
                                       />
                                     </TabItem>
                                   )}
