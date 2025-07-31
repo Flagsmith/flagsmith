@@ -10,7 +10,7 @@ on:
 env:
   EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
   FLAGSMITH_EDGE_API_URL: https://edge.api.flagsmith.com
-  FLAGSMITH_PUBLIC_KEY: ENktaJnfLVbLifybz34JmX
+  FLAGSMITH_ENVIRONMENT_KEY: ENktaJnfLVbLifybz34JmX
   PYTHON_REQUESTS_VERSION: '2.32.4'
   PYTHON_VERSION: '3.13'
 
@@ -83,7 +83,7 @@ jobs:
                               # TODO: Add more sophisticated matching, e.g. feature names defined as constants
 
           # Fetch visible features
-          all_flags = requests.get(f"${{ env.FLAGSMITH_EDGE_API_URL }}/api/v1/flags", headers={"X-Environment-Key": "${{ env.FLAGSMITH_PUBLIC_KEY }}"}).json()
+          all_flags = requests.get(f"${{ env.FLAGSMITH_EDGE_API_URL }}/api/v1/flags", headers={"X-Environment-Key": "${{ env.FLAGSMITH_ENVIRONMENT_KEY }}"}).json()
           feature_names = sorted([flag["feature"]["name"] for flag in all_flags])
           print("Feature names:", feature_names)
 
