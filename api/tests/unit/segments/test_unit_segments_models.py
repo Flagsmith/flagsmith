@@ -354,3 +354,45 @@ def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
 
     # Then
     assert len(mocked_tasks.mock_calls) == 1
+
+
+def test_system_segment_get_skip_create_audit_log(system_segment: Segment) -> None:
+    # When
+    result = system_segment.get_skip_create_audit_log()
+
+    # Then
+    assert result is True
+
+
+def test_system_segment_rule_get_skip_create_audit_log(system_segment: Segment) -> None:
+    # Given
+    segment_rule = SegmentRule.objects.create(
+        segment=system_segment,
+        type=SegmentRule.ALL_RULE,
+    )
+
+    # When
+    result = segment_rule.get_skip_create_audit_log()
+
+    # Then
+    assert result is True
+
+
+def test_system_segment_condition_get_skip_create_audit_log(
+    system_segment: Segment,
+) -> None:
+    # Given
+    segment_rule = SegmentRule.objects.create(
+        segment=system_segment,
+        type=SegmentRule.ALL_RULE,
+    )
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+    )
+    # When
+    result = condition.get_skip_create_audit_log()
+    # Then
+    assert result is True

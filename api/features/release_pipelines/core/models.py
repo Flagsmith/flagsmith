@@ -1,8 +1,11 @@
 import typing
+from datetime import datetime
 
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Q, QuerySet
 from django.utils import timezone
+from django_lifecycle import BEFORE_CREATE, LifecycleModelMixin, hook
 
 from audit.constants import (
     RELEASE_PIPELINE_CREATED_MESSAGE,
@@ -39,6 +42,7 @@ class StageActionType(models.TextChoices):
         "UPDATE_FEATURE_VALUE_FOR_SEGMENT",
         "Update Feature Value for a specific segment",
     )
+    PHASED_ROLLOUT = ("PHASED_ROLLOUT", "Create Phased Rollout")
 
 
 class ReleasePipeline(
@@ -95,10 +99,22 @@ class ReleasePipeline(
     ) -> typing.Optional[str]:
         return RELEASE_PIPELINE_DELETED_MESSAGE % self.name
 
+    def get_feature_versions_in_pipeline_qs(
+        self,
+    ) -> QuerySet[EnvironmentFeatureVersion]:
+        base_qs = EnvironmentFeatureVersion.objects.filter(
+            pipeline_stage__pipeline=self
+        )
+        phased_rollout_action_filter = Q(phased_rollout_state__isnull=False) & Q(
+            phased_rollout_state__is_rollout_complete=False
+        )
+        all_other_action_filters = Q(published_at__isnull=True)
+        return base_qs.filter(all_other_action_filters | phased_rollout_action_filter)
+
     def has_feature_in_flight(self) -> bool:
-        has_feature_in_flight: bool = EnvironmentFeatureVersion.objects.filter(
-            published_at__isnull=True, pipeline_stage__in=self.stages.all()
-        ).exists()
+        has_feature_in_flight: bool = (
+            self.get_feature_versions_in_pipeline_qs().exists()
+        )
         return has_feature_in_flight
 
     def _get_project(self) -> Project:
@@ -134,6 +150,37 @@ class PipelineStage(models.Model):
             .first()
         )
 
+    def get_phased_rollout_action(self) -> "PipelineStageAction | None":
+        return self.actions.filter(action_type=StageActionType.PHASED_ROLLOUT).first()
+
+    def get_in_stage_feature_versions_qs(self) -> QuerySet[EnvironmentFeatureVersion]:
+        phased_rollout_action_filter = Q(
+            phased_rollout_state__isnull=False,
+            phased_rollout_state__is_rollout_complete=False,
+        )
+        all_other_action_filters = Q(
+            published_at__isnull=True, phased_rollout_state__isnull=True
+        )
+
+        return self.environment_feature_versions.filter(
+            all_other_action_filters | phased_rollout_action_filter
+        )
+
+    def get_completed_feature_versions_qs(
+        self, completed_after: datetime = timezone.now()
+    ) -> QuerySet[EnvironmentFeatureVersion]:
+        phased_rollout_action_filter = Q(
+            phased_rollout_state__is_rollout_complete=True,
+            phased_rollout_state__last_updated_at__gte=completed_after,
+        )
+        all_other_action_filters = Q(
+            published_at__gte=completed_after, phased_rollout_state__isnull=True
+        )
+
+        return self.environment_feature_versions.filter(
+            all_other_action_filters | phased_rollout_action_filter
+        )
+
 
 class PipelineStageTrigger(models.Model):
     trigger_type = models.CharField(
@@ -162,3 +209,54 @@ class PipelineStageAction(models.Model):
         related_name="actions",
         on_delete=models.CASCADE,
     )
+
+
+class PhasedRolloutState(LifecycleModelMixin, models.Model):
+    initial_split = models.FloatField(
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(100.0),
+        ]
+    )
+    increase_by = models.FloatField(
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(100.0),
+        ]
+    )
+    increase_every = models.DurationField()
+    current_split = models.FloatField(
+        validators=[
+            MinValueValidator(0.0),
+            MaxValueValidator(100.0),
+        ]
+    )
+    rollout_segment = models.ForeignKey(
+        "segments.Segment",
+        related_name="phased_rollout_state",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+    is_rollout_complete = models.BooleanField(default=False)
+    last_updated_at = models.DateTimeField(auto_now=True)
+
+    @hook(BEFORE_CREATE)
+    def set_initial_split(self) -> None:
+        if self.current_split is None:
+            self.current_split = self.initial_split
+
+    def increase_split(self) -> float:
+        self.current_split = min(self.current_split + self.increase_by, 100.0)
+        self.save()
+
+        # Update the segment value
+        condition = self.rollout_segment.rules.first().conditions.first()
+        condition.value = str(self.current_split)
+        condition.save()
+        return self.current_split
+
+    def complete_rollout(self) -> None:
+        self.rollout_segment.delete()
+        self.is_rollout_complete = True
+        self.save()
