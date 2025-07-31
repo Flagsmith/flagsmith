@@ -233,7 +233,7 @@
             "type": "object"
         }
     },
-    "description": "Represents a context object containing the necessary information to evaluate\\nFlagsmith feature flags.",
+    "description": "A context object containing the necessary information to evaluate Flagsmith feature flags.",
     "properties": {
         "environment": {
             "$ref": "#/$defs/EnvironmentContext",
