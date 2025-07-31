@@ -89,7 +89,7 @@ jobs:
 
           # Find code references
           code_references = [
-              (feature_name, file_path, line_number)
+              {"feature_name": feature_name, "file_path": file_path, "line_number": line_number}
               for feature_name, file_path, line_number in find_references(feature_names)
           ]
 
@@ -110,8 +110,9 @@ jobs:
               exit(0)
 
           references_by_feature = defaultdict(list)
-          for feature_name, file_path, line_number in sorted(code_references):
-              references_by_feature[feature_name].append((file_path, line_number))
+          sorted_code_references = sorted(code_references, key=lambda x: (x['feature_name'], x['file_path'], x['line_number']))
+          for reference in sorted_code_references:
+              references_by_feature[reference['feature_name']].append((reference['file_path'], reference['line_number']))
 
           print("Code References:")
           for feature_name, references in references_by_feature.items():
