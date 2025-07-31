@@ -10,7 +10,9 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Core API**](/edge-api/Overview.md#core-api): Flagsmith's private API for programmatic control of the platform.
 
-- [**Edge API / Edge Proxy**](/advanced-use/edge-api.md): Flagsmith's publicly accessible API, specifically intended for use with our SDKs.
+- [**Edge API**](/advanced-use/edge-api.md): Flagsmith's publicly accessible API, specifically intended for use with our SDKs.
+
+- [**Edge Proxy**](/advanced-use/edge-proxy.md): A self-hosted service that provides a local, low-latency interface to the Flagsmith API.
 
 - [**Environment**](/basic-features/index.md#environments): Environments are a way to separate the configuration of your features. A project can have any number of environments.
 
@@ -20,7 +22,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Feature Flag**](/basic-features/index.md): A boolean or multivariate switch to enable/disable features or set their values dynamically without deploying code.
 
-- [**Identity**](/basic-features/managing-identities.md): An identity represents a specific user within a particular environment. Identities allow you to manage and override feature settings for individual users, and the same user can have different features enabled in different environments.
+- [**Identity**](/basic-features/managing-identities.md): An entity within a particular environment, against which you can manage and override feature settings.
 
 - [**Local Evaluation Mode**](/clients/index.md#local-evaluation): A mode where the SDK evaluates feature flags locally using a downloaded environment document, reducing latency and API calls.
 
@@ -36,6 +38,6 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Segment**](/basic-features/segments.md): A group of identities defined by traits (e.g., logins, device, location, or custom traits). You can override feature defaults for segments, such as enabling features for a "power user" group.
 
-- [**Staged Rollout**](/guides-and-examples/staged-feature-rollouts.md): Gradually enabling a feature for increasing percentages of users to reduce risk.
+- [**Staged Rollout**](/guides-and-examples/staged-feature-rollouts.md): Gradually enabling a feature for increasing percentages of your identities to reduce risk.
 
 - [**Trait**](/basic-features/managing-identities.md#identity-traits): A key-value pair associated with an identity that can store any type of data.
