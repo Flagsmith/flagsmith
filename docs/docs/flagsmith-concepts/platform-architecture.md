@@ -12,7 +12,7 @@ Flagsmith architecture supports a range of deployment models to suit different o
 
 The most important components in Flagsmith's architecture are:
 
-- **Frontend Dashboard**: A web interface for managing projects, environments, feature flags, and user permissions. This is where most configuration and management tasks are performed.
+- **Frontend dashboard**: A web interface for managing projects, environments, feature flags, and user permissions. This is where most configuration and management tasks are performed.
 - **Core API**: RESTful API that powers the dashboard and SDKs. These endpoints are used for automation, integrations, and direct management of Flagsmith resources.
 - **Edge API**: A globally distributed API for low-latency flag evaluation, especially useful for applications with users around the world.
 - **SDKs**: Client libraries (available for many languages and platforms) that connect your applications and services to Flagsmith, enabling real-time feature flag evaluation and remote configuration.

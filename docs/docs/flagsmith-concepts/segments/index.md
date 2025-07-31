@@ -31,9 +31,9 @@ Segment definitions _are_ served to clients running in [local evaluation mode](/
 
 ## Creating project or feature-specific segments
 
-Segments created from the Segments page of the Flagsmith dashboard can be used to override any feature within a single project.
+Segments created from the segments page of the Flagsmith dashboard can be used to override any feature within a single project.
 
-To create a segment override, click on a feature in a specific environment and go to the Segment Overrides tab.
+To create a segment override, click on a feature in a specific environment and go to the segment overrides tab.
 
 If you need to create a segment that will only ever be used to override a single feature, you can create a **feature-specific segment** by clicking on "Create Feature-Specific Segment" when creating a segment override. Feature-specific segments are otherwise functionally identical to project segments. By default, feature-specific segments are not shown in the Segments page, unless you enable the "Include Feature-Specific" option.
 
