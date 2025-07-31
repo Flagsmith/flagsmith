@@ -47,7 +47,6 @@
                     "type": "string"
                 },
                 "variants": {
-                    "default": [],
                     "description": "An array of environment default values associated with the feature. Contains a single value for standard features, or multiple values for multivariate features.",
                     "items": {
                         "$ref": "#/$defs/FeatureValue"
@@ -57,7 +56,7 @@
                 }
             },
             "required": [
-                "id",
+                "key",
                 "name",
                 "enabled",
                 "value"
@@ -127,9 +126,9 @@
         "SegmentContext": {
             "description": "Represents a segment context for feature flag evaluation.",
             "properties": {
-                "id": {
-                    "description": "The unique identifier for the segment.",
-                    "title": "ID",
+                "key": {
+                    "description": "Key used for % split segmentation.",
+                    "title": "Key",
                     "type": "string"
                 },
                 "name": {
@@ -138,46 +137,84 @@
                     "type": "string"
                 },
                 "rules": {
-                    "additionalProperties": {
+                    "items": {
                         "$ref": "#/$defs/SegmentRule"
                     },
                     "title": "Rules",
-                    "type": "object"
+                    "type": "array"
                 }
             },
             "required": [
-                "id",
+                "key",
                 "name",
                 "rules"
             ],
             "title": "SegmentContext",
             "type": "object"
         },
+        "SegmentCondition": {
+            "description": "Represents a condition within a segment rule for feature flag evaluation.",
+            "properties": {
+                "path": {
+                    "description": "The path to the trait or value in the evaluation context.",
+                    "title": "Property",
+                    "type": "string"
+                },
+                "operator": {
+                    "description": "The operator to use for evaluating the condition.",
+                    "title": "Operator",
+                    "type": "string",
+                    "enum": [
+                        "EQUAL",
+                        "GREATER_THAN",
+                        "LESS_THAN",
+                        "LESS_THAN_INCLUSIVE",
+                        "CONTAINS",
+                        "GREATER_THAN_INCLUSIVE",
+                        "NOT_CONTAINS",
+                        "NOT_EQUAL",
+                        "REGEX",
+                        "PERCENTAGE_SPLIT",
+                        "MODULO",
+                        "IS_SET",
+                        "IS_NOT_SET",
+                        "IN"
+                    ]
+                },
+                "value": {
+                    "description": "The value to compare against the trait or context value.",
+                    "title": "Value",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "path",
+                "operator",
+                "value"
+            ],
+            "title": "SegmentCondition",
+            "type": "object"
+        },
         "SegmentRule": {
             "description": "Represents a rule within a segment for feature flag evaluation.",
             "properties": {
-                "name": {
-                    "description": "The name of the segment rule.",
-                    "title": "Name",
-                    "type": "string"
+                "type": {
+                    "description": "Segment rule type. Represents a logical quantifier for the conditions and sub-rules.",
+                    "title": "Type",
+                    "type": "string",
+                    "enum": [
+                        "ALL",
+                        "ANY",
+                        "NONE"
+                    ]
                 },
                 "conditions": {
-                    "additionalProperties": {
-                        "anyOf": [
-                            {
-                                "type": "string"
-                            },
-                            {
-                                "type": "integer"
-                            },
-                            {
-                                "type": "boolean"
-                            }
-                        ]
+                    "description": "Conditions that must be met for the rule to apply.",
+                    "items": {
+                        "$ref": "#/$defs/SegmentCondition"
                     },
-                    "description": "Conditions that define the segment rule.",
                     "title": "Conditions",
-                    "type": "object"
+                    "type": "array"
                 },
                 "sub_rules": {
                     "additionalProperties": {
@@ -189,7 +226,7 @@
                 }
             },
             "required": [
-                "name",
+                "type",
                 "conditions"
             ],
             "title": "SegmentRule",
