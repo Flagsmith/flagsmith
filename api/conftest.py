@@ -267,16 +267,11 @@ def staff_client(staff_user):  # type: ignore[no-untyped-def]
 
 @pytest.fixture()
 def organisation(
-    db: None, admin_user: FFAdminUser, staff_user: FFAdminUser, test_user: FFAdminUser
+    db: None, admin_user: FFAdminUser, staff_user: FFAdminUser
 ) -> Organisation:
     org: Organisation = Organisation.objects.create(name="Test Org")
     admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
-
-    # TODO: consolidate staff user and test user - they seem to do the same thing,
-    #  but are just being used in different tests
     staff_user.add_organisation(org, role=OrganisationRole.USER)
-    test_user.add_organisation(org, role=OrganisationRole.USER)
-
     return org
 
 

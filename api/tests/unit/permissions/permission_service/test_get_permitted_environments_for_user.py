@@ -14,7 +14,7 @@ from environments.permissions.models import (
     UserEnvironmentPermission,
     UserPermissionGroupEnvironmentPermission,
 )
-from organisations.models import Organisation
+from organisations.models import Organisation, UserOrganisation
 from permissions.models import PermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
 from projects.models import (
@@ -175,8 +175,6 @@ def test_get_permitted_environments_for_user__does_not_return_environment_for_or
     """
 
     # Given
-    staff_user.add_to_group(group=user_permission_group)
-
     environment_permission_using_user_permission_group.permissions.add(
         view_environment_permission
     )

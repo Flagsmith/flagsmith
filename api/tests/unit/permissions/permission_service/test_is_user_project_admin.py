@@ -68,7 +68,7 @@ def test_is_user_project_admin_returns_false_for_user_with_incorrect_permission(
     assert is_user_project_admin(admin_user, organisation_two_project_one) is False
 
 
-def test_is_user_environment_admin__does_not_return_environment_for_orphan_group_permission(
+def test_is_user_project_admin__does_not_return_project_for_orphan_group_permission(
     organisation: Organisation,
     project: Project,
     user_permission_group: UserPermissionGroup,
@@ -84,8 +84,6 @@ def test_is_user_environment_admin__does_not_return_environment_for_orphan_group
     """
 
     # Given
-    staff_user.add_to_group(group=user_permission_group)
-
     project_permission_using_user_permission_group.admin = True
     project_permission_using_user_permission_group.save()
 
