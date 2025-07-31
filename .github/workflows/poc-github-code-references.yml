@@ -6,6 +6,7 @@ on:
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight UTC
   workflow_dispatch:
+  pull_request:  # DROPME
 
 env:
   EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
@@ -27,12 +28,16 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests==${{ env.PYTHON_REQUESTS_VERSION }}
+          pip install uv==0.8.4
 
       - name: Collect code references
         id: collect
-        shell: python
         run: |
+          uv run - <<EOF
+          # /// script
+          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
+          # ///
           import json
           import os
           import re
@@ -97,6 +102,7 @@ jobs:
           json_references = json.dumps(code_references)
           with open(os.environ["GITHUB_OUTPUT"], "a") as gh_output:
               print(f"code_references={json_references}", file=gh_output)
+          EOF
 
       - name: Display code references
         shell: python
