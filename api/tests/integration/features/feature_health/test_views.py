@@ -89,7 +89,7 @@ def test_feature_health_providers__delete__expected_response(
 def test_feature_health_events__dismiss__unauthorized__expected_response(
     project: int,
     unhealthy_feature_health_event: int,
-    test_user_client: APIClient,
+    staff_client: APIClient,
 ) -> None:
     # Given
     feature_health_events_dismiss_url = reverse(
@@ -98,7 +98,7 @@ def test_feature_health_events__dismiss__unauthorized__expected_response(
     )
 
     # When
-    response = test_user_client.post(feature_health_events_dismiss_url)
+    response = staff_client.post(feature_health_events_dismiss_url)
 
     # Then
     assert response.status_code == 403
