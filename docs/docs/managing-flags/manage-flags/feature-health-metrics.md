@@ -4,7 +4,7 @@ sidebar_label: Feature Health Metrics
 sidebar_position: 4
 ---
 
-Feature Health enables you to monitor observability metrics within Flagsmith, specifically in relation to your Features and Environments. When your observability provider sends alert notifications, Flagsmith can mark Features (and optionally Environments) as **Unhealthy**, providing details about the alerts. This assists your team in responding quickly and making informed decisions.
+Feature health enables you to monitor observability metrics within Flagsmith, specifically in relation to your features and environments. When your observability provider sends alert notifications, Flagsmith can mark features (and optionally environments) as **unhealthy**, providing details about the alerts. This assists your team in responding quickly and making informed decisions.
 
 :::info
 
@@ -24,7 +24,7 @@ Feature Health is in Beta, please email support@flagsmith.com or chat with us <a
 1. Go to your **Project Settings** in Flagsmith.
 2. Navigate to the **Feature Health** section.
 3. Choose your desired provider from the **Provider Name** drop-down menu (e.g., Grafana/Prometheus Alertmanager or Sample).
-4. Click **Create** and copy the Webhook URL.
+4. Click **Create** and copy the webhook URL.
 
 ---
 
@@ -32,7 +32,7 @@ Feature Health is in Beta, please email support@flagsmith.com or chat with us <a
 
 ### Grafana / Prometheus Alertmanager
 
-[Learn more](/integrations/apm/grafana/#feature-health-provider-setup) about configuring Grafana / Prometheus Alertmanager Feature Health provider.
+[Learn more](/integrations/apm/grafana/#feature-health-provider-setup) about configuring Grafana / Prometheus Alertmanager feature health provider.
 
 ### Sample Provider
 
@@ -40,7 +40,7 @@ We provide a Sample Provider for your custom integrations. To create a Sample Fe
 
 1. Go to Project Settings > Feature Health.
 2. Select "Sample" from the Provider Name drop-down menu.
-3. Click Create and copy the Webhook URL.
+3. Click Create and copy the webhook URL.
 
 You can use the webhook in your custom integration. Refer to the payload schema below:
 
@@ -115,5 +115,5 @@ You can use the webhook in your custom integration. Refer to the payload schema 
 
 ## What's next?
 
-- For more on observability integrations, see the [Integrations documentation](/integrations/).
+- For more on observability integrations, see the [integrations documentation](/integrations/).
 - Need help or want to join the Beta? Contact [support@flagsmith.com](mailto:support@flagsmith.com) or chat with us in-app.

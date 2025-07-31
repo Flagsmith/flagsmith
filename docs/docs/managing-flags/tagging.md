@@ -4,7 +4,7 @@ sidebar_label: Tagging
 sidebar_position: 2
 ---
 
-You can create tags within Flagsmith and tag Flags in order to organise them. Tags can also be used to filter the list of Flags in the event that you have a large number of them.
+You can create tags within Flagsmith and tag flags in order to organise them. Tags can also be used to filter the list of flags in the event that you have a large number of them.
 
 This guide explains how to create and apply tags to feature flags within Flagsmith, as well as some tagging good practices and conventions.
 
@@ -41,7 +41,7 @@ You can quickly find and manage flags by using the **tag filter** in the Feature
 
 :::info Protected Tags
 
-Tags with the following names will prevent users from being able to delete tagged Flags via the dashboard:
+Tags with the following names will prevent users from being able to delete tagged flags via the dashboard:
 
 - `protected`
 - `donotdelete`

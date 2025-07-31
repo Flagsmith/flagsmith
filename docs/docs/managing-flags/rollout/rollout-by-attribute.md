@@ -4,7 +4,7 @@ sidebar_label: Rollout by Attribute
 sidebar_position: 1
 ---
 
-This guide explains how to enable a feature for specific users based on their attributes (traits) in Flagsmith using Segments and Segment Overrides. Attributes can include user role, subscription plan, application version, or device type.
+This guide explains how to enable a feature for specific users based on their attributes (traits) in Flagsmith using segments and segment overrides. Attributes can include user role, subscription plan, application version, or device type.
 
 ## Prerequisites
 
@@ -46,13 +46,13 @@ Done! Now you can test with users who match (and don’t match) the segment to e
 
 ## Advanced Use Cases
 
-- You can combine attribute rules with a **% Split** rule for staged rollouts (e.g., only 10% of "pro" users).
+- You can combine attribute rules with a **% split** rule for staged rollouts (e.g., only 10% of "pro" users).
 - You can use operators such as `In`, `SemVer`, `Modulo`, etc., for more complex targeting.
 
 ---
 
 ## What's next
 
-- Read the [Segments documentation](../../basic-features/segments.md) to understand how they work and their relationship with overrides.
-- See the [Staged Feature Rollouts guide](./rollout-by-percentage.md) to combine attribute rules with percentage-based rollouts for gradual releases.
-- Understand [Managing Identities](../../basic-features/managing-identities.md) to ensure consistent user identification and attribute management across your application.
+- Read the [segments documentation](../../basic-features/segments.md) to understand how they work and their relationship with overrides.
+- See the [staged feature rollouts guide](./rollout-by-percentage.md) to combine attribute rules with percentage-based rollouts for gradual releases.
+- Understand [managing identities](../../basic-features/managing-identities.md) to ensure consistent user identification and attribute management across your application.

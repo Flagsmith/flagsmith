@@ -45,7 +45,7 @@ If you just want to toggle the feature flag *on* or *off*, use the switch under 
 :::
 
 3. On the **Value** tab, you can set the flag to be on or off, as well as edit a value for it. Click **Update Feature Value** to save your changes.
-4. Optionally, create segment-specific features and define **Segment Overrides**. Refer to the documentation to learn more about [Segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
+4. Optionally, create segment-specific features and define **segment overrides**. Refer to the documentation to learn more about [segments](../basic-features/segments.md). Save any changes by clicking the **Update Segment Overrides** button.
 5. On the **Settings** tab, you can:
     - Add tags to your feature flag.
     - Assign it to specific *users* and *groups*.
