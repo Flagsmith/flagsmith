@@ -134,7 +134,7 @@ def test_grafana_organisation_view__delete_configuration__return_expected(
 
 
 def test_grafana_organisation_view__create_configuration__non_admin__return_expected(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,
 ) -> None:
@@ -148,7 +148,7 @@ def test_grafana_organisation_view__create_configuration__non_admin__return_expe
     )
 
     # When
-    response = test_user_client.post(
+    response = staff_client.post(
         url,
         data=json.dumps(data),
         content_type="application/json",
@@ -159,7 +159,7 @@ def test_grafana_organisation_view__create_configuration__non_admin__return_expe
 
 
 def test_grafana_organisation_view__get_configuration__non_admin__return_expected(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,
 ) -> None:
@@ -170,14 +170,14 @@ def test_grafana_organisation_view__get_configuration__non_admin__return_expecte
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_grafana_organisation_view__delete_configuration__non_admin__return_expected(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     organisation: Organisation,
     grafana_organisation_configuration: GrafanaOrganisationConfiguration,
 ) -> None:
@@ -188,7 +188,7 @@ def test_grafana_organisation_view__delete_configuration__non_admin__return_expe
     )
 
     # When
-    response = test_user_client.delete(url)
+    response = staff_client.delete(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN

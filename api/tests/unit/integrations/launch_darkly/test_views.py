@@ -45,7 +45,7 @@ def test_launch_darkly_import_request_view__list__return_expected(
         {
             "completed_at": None,
             "created_at": mocker.ANY,
-            "created_by": "user@example.com",
+            "created_by": "staff@example.com",
             "id": import_request.id,
             "project": project.id,
             "status": {

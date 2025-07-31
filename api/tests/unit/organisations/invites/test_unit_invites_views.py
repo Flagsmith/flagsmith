@@ -1,8 +1,11 @@
 import json
+import typing
+import uuid
 from datetime import timedelta
 
 import pytest
 from chargebee import APIError as ChargebeeAPIError  # type: ignore[import-untyped]
+from django.contrib.auth.models import AbstractUser
 from django.urls import reverse
 from django.utils import timezone
 from pytest_django.fixtures import SettingsWrapper
@@ -153,11 +156,19 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-def]
-    test_user, test_user_client, organisation, user_permission_group, subscription
-):
+def test_join_organisation_with_permission_groups(
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    subscription: Subscription,
+    api_client: APIClient,
+) -> None:
     # Given
-    invite = Invite.objects.create(email=test_user.email, organisation=organisation)
+    new_user = FFAdminUser.objects.create(
+        email=f"example{uuid.uuid4()}@example.com",
+    )
+    api_client.force_authenticate(user=new_user)
+
+    invite = Invite.objects.create(email=new_user.email, organisation=organisation)
     invite.permission_groups.add(user_permission_group)
 
     # update subscription to add another seat
@@ -168,14 +179,14 @@ def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-de
     data = {"hubspotutk": "somehubspotdata"}
 
     # When
-    response = test_user_client.post(url, data)
-    test_user.refresh_from_db()
+    response = api_client.post(url, data)
+    new_user.refresh_from_db()
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    assert organisation in test_user.organisations.all()
-    assert user_permission_group in test_user.permission_groups.all()
+    assert organisation in new_user.organisations.all()
+    assert user_permission_group in new_user.permission_groups.all()
     # and invite is deleted
     with pytest.raises(Invite.DoesNotExist):
         invite.refresh_from_db()
@@ -287,7 +298,7 @@ def test_update_invite_returns_405(  # type: ignore[no-untyped-def]
     ],
 )
 def test_join_organisation_returns_400_if_exceeds_plan_limit(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
     settings: SettingsWrapper,
@@ -296,7 +307,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     settings.ENABLE_CHARGEBEE = True
     url = reverse(url, args=[invite_object.hash])
     # When
-    response = test_user_client.post(url)
+    response = staff_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -315,7 +326,7 @@ def test_join_organisation_returns_400_if_exceeds_plan_limit(
     ],
 )
 def test_join_organisation_returns_400_if_payment_fails(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     invite_object: Invite | InviteLink,
     url: str,
     subscription: Subscription,
@@ -349,7 +360,7 @@ def test_join_organisation_returns_400_if_payment_fails(
     )
 
     # When
-    response = test_user_client.post(url)
+    response = staff_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -359,15 +370,22 @@ def test_join_organisation_returns_400_if_payment_fails(
     )
 
 
-def test_join_organisation_from_link_returns_403_if_invite_links_disabled(  # type: ignore[no-untyped-def]
-    test_user_client, organisation, invite_link, settings
-):
+def test_join_organisation_from_link_returns_403_if_invite_links_disabled(
+    organisation: Organisation,
+    invite_link: InviteLink,
+    settings: SettingsWrapper,
+    django_user_model: typing.Type[AbstractUser],
+    api_client: APIClient,
+) -> None:
     # Given
     settings.DISABLE_INVITE_LINKS = True
     url = reverse("api-v1:users:user-join-organisation-link", args=[invite_link.hash])
 
+    new_user = django_user_model.objects.create(email=f"user{uuid.uuid4()}@example.com")
+    api_client.force_authenticate(user=new_user)
+
     # When
-    response = test_user_client.post(url)
+    response = api_client.post(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN

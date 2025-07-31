@@ -359,14 +359,15 @@ def test_get_usage_data__labels_filter__returns_expected(
     )
 
 
-def test_get_usage_data_for_non_admin_user_returns_403(  # type: ignore[no-untyped-def]
-    mocker, test_user_client, organisation
-):
+def test_get_usage_data_for_non_admin_user_returns_403(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
     # Given
     url = reverse("api-v1:organisations:usage-data", args=[organisation.id])
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -393,16 +394,17 @@ def test_get_total_usage_count(mocker, admin_client, organisation):  # type: ign
     mocked_get_total_events_count.assert_called_once_with(organisation)
 
 
-def test_get_total_usage_count_for_non_admin_user_returns_403(  # type: ignore[no-untyped-def]
-    mocker, test_user_client, organisation
-):
+def test_get_total_usage_count_for_non_admin_user_returns_403(
+    staff_client: APIClient,
+    organisation: Organisation,
+) -> None:
     # Given
     url = reverse(
         "api-v1:organisations:usage-data-total-count",
         args=[organisation.id],
     )
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN
