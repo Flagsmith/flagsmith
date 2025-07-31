@@ -719,6 +719,7 @@ export type HealthEventReason = {
 }
 
 export type HealthEvent = {
+  id: number
   created_at: string
   environment: number
   feature: number
