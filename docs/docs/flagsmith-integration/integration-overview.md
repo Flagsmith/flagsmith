@@ -35,7 +35,7 @@ To get the most out of Flagsmith, you'll want to identify your users. This allow
 -   Gradually roll out features to a percentage of your users.
 -   Target features to specific segments of users.
 
-An **Identity** represents a single user in your application. You can also store **Traits** against an identity. Traits are key-value pairs that describe a user, for example, their subscription plan, their location, or how many times they've logged in.
+An **identity** represents a single user in your application. You can also store **traits** against an identity. Traits are key-value pairs that describe a user, for example, their subscription plan, their location, or how many times they've logged in.
 
 You can learn more in our documentation on [Managing Identities](../basic-features/managing-identities.md).
 
