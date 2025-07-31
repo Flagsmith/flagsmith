@@ -153,11 +153,15 @@ def test_update_invite_link_returns_405(invite_link, admin_client, organisation)
     assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
-def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-def]
-    test_user, test_user_client, organisation, user_permission_group, subscription
-):
+def test_join_organisation_with_permission_groups(
+    staff_user: FFAdminUser,
+    staff_client: APIClient,
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    subscription: Subscription,
+) -> None:
     # Given
-    invite = Invite.objects.create(email=test_user.email, organisation=organisation)
+    invite = Invite.objects.create(email=staff_user.email, organisation=organisation)
     invite.permission_groups.add(user_permission_group)
 
     # update subscription to add another seat
@@ -168,14 +172,14 @@ def test_join_organisation_with_permission_groups(  # type: ignore[no-untyped-de
     data = {"hubspotutk": "somehubspotdata"}
 
     # When
-    response = test_user_client.post(url, data)
-    test_user.refresh_from_db()
+    response = staff_client.post(url, data)
+    staff_user.refresh_from_db()
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
-    assert organisation in test_user.organisations.all()
-    assert user_permission_group in test_user.permission_groups.all()
+    assert organisation in staff_user.organisations.all()
+    assert user_permission_group in staff_user.permission_groups.all()
     # and invite is deleted
     with pytest.raises(Invite.DoesNotExist):
         invite.refresh_from_db()

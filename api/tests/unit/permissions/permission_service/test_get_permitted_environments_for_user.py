@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
@@ -6,8 +8,15 @@ from common.environments.permissions import (
 )
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
+from environments.models import Environment
 from environments.permissions.models import EnvironmentPermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
+from projects.models import (
+    Project,
+    UserPermissionGroupProjectPermission,
+    UserProjectPermission,
+)
+from users.models import FFAdminUser
 
 
 def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]
@@ -30,15 +39,21 @@ def test_get_permitted_environments_for_user_returns_all_environments_for_org_ad
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # type: ignore[no-untyped-def]  # noqa: E501
-    test_user, environment, project, project_admin, project_two_environment
-):
+def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # noqa: E501
+    staff_user: FFAdminUser,
+    environment: Environment,
+    project: Project,
+    project_admin: typing.Union[
+        UserProjectPermission, UserPermissionGroupProjectPermission
+    ],
+    project_two_environment: Environment,
+) -> None:
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         # Then
         assert (
-            get_permitted_environments_for_user(test_user, project, permission).count()
+            get_permitted_environments_for_user(staff_user, project, permission).count()
             == 1
         )
 
