@@ -152,8 +152,8 @@ configure a role to create change requests only for features tagged with "market
 
 | Permission         | Ability                                                                                                                              |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Create Project     | Allows creating projects in the organisation. Users are automatically granted Administrator permissions on any projects they create. |
-| Manage User Groups | Allows adding or removing users from any group.                                                                                      |
+| Create project     | Allows creating projects in the organisation. Users are automatically granted Administrator permissions on any projects they create. |
+| Manage user groups | Allows adding or removing users from any group.                                                                                      |
 
 ### Project
 
@@ -162,11 +162,11 @@ configure a role to create change requests only for features tagged with "market
 | Permission         | Ability                                                                                                                                      | Supports Tags |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
 | Administrator      | Grants full read and write access to all environments, features, and segments.                                                               |               |
-| View Project       | Allows viewing this project. The project is hidden from users without this permission.                                                       |               |
-| Create Environment | Allows creating new environments in this project. Users are automatically granted Administrator permissions on any environments they create. |               |
-| Create Feature     | Allows creating new features in all environments.                                                                                            |               |
-| Delete Feature     | Allows deleting features from all environments.                                                                                              | Yes           |
-| Manage Segments    | Grants write access to segments in this project.                                                                                             |               |
+| View project       | Allows viewing this project. The project is hidden from users without this permission.                                                       |               |
+| Create environment | Allows creating new environments in this project. Users are automatically granted Administrator permissions on any environments they create. |               |
+| Create feature     | Allows creating new features in all environments.                                                                                            |               |
+| Delete feature     | Allows deleting features from all environments.                                                                                              | Yes           |
+| Manage segments    | Grants write access to segments in this project.                                                                                             |               |
 | View audit log     | Allows viewing all audit log entries for this project.                                                                                       |               |
 
 ### Environment
@@ -174,10 +174,10 @@ configure a role to create change requests only for features tagged with "market
 | Permission               | Ability                                                                                                                  | Supports Tags |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------- |
 | Administrator            | Grants full read and write access to all feature states, overrides, identities, and change requests in this environment. |               |
-| View Environment         | Allows viewing this environment. The environment is hidden from users without this permission.                           |               |
-| Update Feature State     | Allows updating any feature state or values in this environment.                                                         | Yes           |
-| Manage Identities        | Grants read and write access to identities in this environment.                                                          |               |
-| Manage Segment Overrides | Grants write access to segment overrides in this environment.                                                            |               |
-| Create Change Request    | Allows creating change requests for features in this environment.                                                        | Yes           |
-| Approve Change Request   | Allows approving or denying change requests in this environment.                                                         | Yes           |
-| View Identities          | Grants read-only access to identities in this environment.                                                               |               |
+| View environment         | Allows viewing this environment. The environment is hidden from users without this permission.                           |               |
+| Update feature state     | Allows updating any feature state or values in this environment.                                                         | Yes           |
+| Manage identities        | Grants read and write access to identities in this environment.                                                          |               |
+| Manage segment overrides | Grants write access to segment overrides in this environment.                                                            |               |
+| Create change request    | Allows creating change requests for features in this environment.                                                        | Yes           |
+| Approve change request   | Allows approving or denying change requests in this environment.                                                         | Yes           |
+| View identities          | Grants read-only access to identities in this environment.                                                               |               |

@@ -10,16 +10,13 @@ There may be use-cases where you want to prevent client-side SDKs from setting t
 setting `plan=silver` as a trait, and then enabling/disabling features based on that plan, a malicious user could, with
 a client-side SDK, update their trait to `plan=gold` and unlock features they have not paid for.
 
-You can prevent this by disabling the "Persist traits when using client-side SDK keys" option. This option defaults to "On".
-Turning it "Off" will not allow client-side SDKs to write Traits to Flagsmith. In order to write traits, you will need
-to use a [server-side SDK and server-side Key](/clients).
+You can prevent this by disabling the "Persist traits when using client-side SDK keys" option. This option defaults to "On". Turning it "Off" will not allow client-side SDKs to write traits to Flagsmith. In order to write traits, you will need to use a [server-side SDK and server-side Key](/clients).
 
 This is a per-Environment setting.
 
 ## Environment Banners
 
-You can optionally provide a coloured banner for your Environments in each Environment Settings page. This helps you
-identify sensitive Environments before toggling Flags.
+You can optionally provide a coloured banner for your environments in each Environment Settings page. This helps you identify sensitive environments before toggling flags.
 
 ## Hide Sensitive Data
 

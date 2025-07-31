@@ -52,7 +52,7 @@ You can create multiple SAML configurations if you have multiple identity provid
 
 When creating a SAML configuration, the following options are available:
 
-**Name:** (**Required**) A unique, URL-friendly name for the SAML configuration. This name must be unique across all Flagsmith organisations and forms part of the URL that your identity provider will post SAML messages to during authentication. Users must type this name when clicking "Single Sign-On" at the login screen. It cannot be changed after the SAML configuration is created.
+**Name:** (**required**) A unique, URL-friendly name for the SAML configuration. This name must be unique across all Flagsmith organisations and forms part of the URL that your identity provider will post SAML messages to during authentication. Users must type this name when clicking "Single Sign-On" at the login screen. It cannot be changed after the SAML configuration is created.
 
 **Allow IdP-initiated**: If enabled, users will be able to log in directly from your identity provider without needing to visit the Flagsmith login page.
 

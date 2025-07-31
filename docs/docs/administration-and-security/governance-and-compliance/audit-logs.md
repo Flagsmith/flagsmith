@@ -21,19 +21,19 @@ Flagsmith records the following events into the Audit Log.
 
 ### Environments
 
-- New environment created within a Project
+- New environment created within a project
 - Environment meta-data updated
 
 ### Flags
 
-- New Flag created
+- New flag created
 - Flag state changed
 - Flag deleted
 - Multivariate flag state changed
 
 ### Segments
 
-- New Segment created
+- New segment created
 - Segment rule updated
 - Segment condition added
 - Segment condition updated

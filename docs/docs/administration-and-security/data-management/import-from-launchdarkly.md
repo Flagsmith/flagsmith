@@ -19,7 +19,7 @@ import has finished.
 
 ## Prerequisites
 
-- **LaunchDarkly Access Token**: You will need an Access Token from your LaunchDarkly account. To generate the token:
+- **LaunchDarkly access token**: You will need an access token from your LaunchDarkly account. To generate the token:
     1. Log in to your LaunchDarkly account.
     2. Navigate to **Account settings** > **Authorization** > **Access tokens**.
     3. Create a new Access Token.
@@ -36,7 +36,7 @@ Follow these steps to set up the integration and initiate the import:
 
 1.  Import into Flagsmith:
     - Create a new project within Flagsmith, or select an existing one.
-    - Go to **Project Settings** > **Import**.
+    - Go to **project settings** > **Import**.
     - Paste the Access Token previously generated into the provided field.
 2.  Start the import: The import process will begin immediately upon adding the token.
 
@@ -52,13 +52,13 @@ All of the LaunchDarkly `Environments` within the Project will be copied into Fl
 
 LaunchDarkly `Flags` will be copied into Flagsmith as follows:
 
-#### Boolean Flags
+#### Boolean flags
 
 Boolean LaunchDarkly flags are imported into Flagsmith with the appropriate boolean state, with no flag value set on the Flagsmith side.
 
 Boolean values will be taken from the `_summary -> on` field of within LaunchDarkly.
 
-#### Multivariate Flags
+#### Multivariate flags
 
 Multivariate LaunchDarkly flags will be imported into Flagsmith as MultiVariate Flagsmith flag values.
 

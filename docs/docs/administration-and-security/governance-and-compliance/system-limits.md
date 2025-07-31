@@ -8,19 +8,19 @@ In order to ensure consistent performance, Flagsmith has the following limitatio
 
 ### Entity Counts
 
-- **400** Features per Project
-- **100** Segments per Project
-- **100** Segment Overrides per Environment
-- **100** Segment Rules Conditions
+- **400** features per project
+- **100** segments per project
+- **100** segment overrides per environment
+- **100** segment rules conditions
 
 ### Entity Data Elements
 
-- Maximum size of a Flag String Value is **20,000 bytes**
-- Maximum size of an Identity Trait Value is **2,000 bytes**
+- Maximum size of a flag string value is **20,000 bytes**
+- Maximum size of an identity trait value is **2,000 bytes**
 
 ### Segment Data Elements
 
-- Maximum size of a Segment Rule Value is **1,000 bytes**
+- Maximum size of a segment rule value is **1,000 bytes**
 
 ## Overriding Limits
 

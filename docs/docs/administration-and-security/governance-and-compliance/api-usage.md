@@ -2,9 +2,7 @@
 title: API Usage
 ---
 
-Flagsmith will track API calls made by the SDKS and store them in its data-store. You can view this data by going to the
-Organisation settings page and clicking on **Usage**. You can also drill down into Projects and Environments. Flagsmith
-tracks the following request types:
+Flagsmith will track API calls made by the SDKS and store them in its data-store. You can view this data by going to the Organisation settings page and clicking on **Usage**. You can also drill down into Projects and Environments. Flagsmith tracks the following request types:
 
 1. Get Flags
 2. Get Identity Flags
