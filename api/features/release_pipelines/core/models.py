@@ -39,6 +39,7 @@ class StageActionType(models.TextChoices):
         "UPDATE_FEATURE_VALUE_FOR_SEGMENT",
         "Update Feature Value for a specific segment",
     )
+    PHASED_ROLLOUT = ("PHASED_ROLLOUT", "Create Phased Rollout")
 
 
 class ReleasePipeline(
@@ -133,6 +134,9 @@ class PipelineStage(models.Model):
             .order_by("order")
             .first()
         )
+
+    def has_phased_rollout_action(self) -> bool:
+        return self.actions.filter(action_type=StageActionType.PHASED_ROLLOUT).exists()
 
 
 class PipelineStageTrigger(models.Model):

@@ -91,6 +91,14 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         null=True,
         blank=True,
     )
+    rollout_segment = models.ForeignKey(
+        "segments.Segment",
+        related_name="environment_feature_versions",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    rollout_segment_data = models.JSONField(null=True, blank=True)
 
     objects = EnvironmentFeatureVersionManager()  # type: ignore[misc]
 
