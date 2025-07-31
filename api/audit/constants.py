@@ -77,3 +77,7 @@ RELEASE_PIPELINE_FEATURE_REMOVED_MESSAGE = (
     "Feature: %s removed from Release Pipeline: %s"
 )
 FEATURE_STATE_UPDATED_BY_RELEASE_PIPELINE_MESSAGE = "Flag state / Remote config updated for feature: %s by Release pipeline: %s (stage: %s)"
+PHASED_ROLLOUT_STATE_CREATED_MESSAGE = (
+    "Phased rollout created for feature: %s by release pipeline: %s (stage: %s)"
+)
+PHASED_ROLLOUT_STATE_UPDATED_MESSAGE = "Phased rollout split changed from '%s%%' to '%s%%' for feature '%s' by release pipeline '%s' (stage: '%s')"

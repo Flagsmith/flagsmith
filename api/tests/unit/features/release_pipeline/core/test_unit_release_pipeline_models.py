@@ -9,10 +9,12 @@ from environments.models import Environment
 from features.models import Feature
 from features.release_pipelines.core.exceptions import InvalidPipelineStateError
 from features.release_pipelines.core.models import (
+    PhasedRolloutState,
     PipelineStage,
     ReleasePipeline,
 )
 from features.versioning.models import EnvironmentFeatureVersion
+from segments.models import Segment
 from users.models import FFAdminUser
 
 
@@ -183,3 +185,43 @@ def test_release_pipeline_has_feature_in_flight(
 
     # Then
     assert release_pipeline.has_feature_in_flight() is False
+
+
+def test_phased_rollout_state_increase_split_does_not_exceed_100(
+    phased_rollout_state: PhasedRolloutState,
+) -> None:
+    # Given
+    initial_split = phased_rollout_state.initial_split
+    increase_by = 50
+    phased_rollout_state.increase_by = increase_by
+    phased_rollout_state.save()
+
+    # When
+    phased_rollout_state.increase_split()
+    # Then
+    assert phased_rollout_state.current_split == initial_split + increase_by
+    assert (
+        phased_rollout_state.rollout_segment.rules.first().conditions.first().value  # type: ignore[union-attr]
+        == str(phased_rollout_state.current_split)
+    )
+
+    # Next, increase the split again
+    phased_rollout_state.increase_split()
+
+    # Then - the split did not exceed 100
+    assert phased_rollout_state.current_split == 100
+    assert (
+        phased_rollout_state.rollout_segment.rules.first().conditions.first().value  # type: ignore[union-attr]
+        == str(100.0)
+    )
+
+
+def test_phased_rollout_complete_rollout(
+    phased_rollout_state: PhasedRolloutState,
+    rollout_segment: Segment,
+) -> None:
+    # When
+    phased_rollout_state.complete_rollout()
+    # Then
+    assert phased_rollout_state.is_rollout_complete is True
+    assert Segment.objects.filter(id=rollout_segment.id).exists() is False
