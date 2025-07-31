@@ -6,17 +6,17 @@ sidebar_position: 20
 
 ## Overview
 
-Flag Analytics allow you to track how often individual Flags are evaluated within the Flagsmith SDK.
+Flag analytics allow you to track how often individual Flags are evaluated within the Flagsmith SDK.
 
-To view Analytics for a particular flag, browse to the relevant environment and click on a single flag to edit that flag.
+To view Analytics for a particular Flag, browse to the relevant environment and click on a single Flag to edit that Flag.
 
 ![Image](/img/flag-analytics.png)
 
-Flag Analytics can be really useful when removing flags from Flagsmith. More often than not, flags can be removed from your codebase and platform once they have been rolled out and everyone is comfortable with them running in production.
+Flag analytics can be really useful when removing flags from Flagsmith. More often than not, flags can be removed from your codebase and platform once they have been rolled out and everyone is comfortable with them running in production.
 
-Once you have removed the evaluation code from your code base, its nice to be sure that all references to that flag have been removed, and that removing the flag itself from Flagsmith will not cause any unforeseen issues. Flag Analytics help with this.
+Once you have removed the evaluation code from your code base, its nice to be sure that all references to that flag have been removed, and that removing the flag itself from Flagsmith will not cause any unforeseen issues. Flag analytics help with this.
 
-Flag Analytics can also be helpful when identifying integration issues. Occasionally errors can creep into your code that cause multiple needless evaluations of a flag. Again, these analytics can help isolate these situations.
+Flag analytics can also be helpful when identifying integration issues. Occasionally errors can creep into your code that cause multiple needless evaluations of a flag. Again, these analytics can help isolate these situations.
 
 ## Enabling Flag Analytics?
 
