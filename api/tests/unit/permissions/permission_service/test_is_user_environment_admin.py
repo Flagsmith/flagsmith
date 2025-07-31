@@ -122,8 +122,6 @@ def test_is_user_environment_admin__does_not_return_environment_for_orphan_group
     """
 
     # Given
-    staff_user.add_to_group(group=user_permission_group)
-
     environment_permission_using_user_permission_group.admin = True
     environment_permission_using_user_permission_group.save()
 

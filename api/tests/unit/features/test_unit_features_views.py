@@ -1050,6 +1050,7 @@ def test_create_segment_override_staff(
     staff_user: FFAdminUser,
     staff_client: APIClient,
     manage_segment_overrides_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
 ) -> None:
     # Given
     url = reverse(
@@ -1065,9 +1066,6 @@ def test_create_segment_override_staff(
         "enabled": enabled,
         "feature_segment": {"segment": segment.id},
     }
-    user_environment_permission = UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=False, environment=environment
-    )
     user_environment_permission.permissions.add(manage_segment_overrides_permission)
 
     response = staff_client.post(
