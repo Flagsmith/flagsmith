@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.189.0](https://github.com/Flagsmith/flagsmith/compare/v2.188.1...v2.189.0) (2025-07-31)
+
+
+### Features
+
+* add clone action to release pipelines list ([#5791](https://github.com/Flagsmith/flagsmith/issues/5791)) ([4153c09](https://github.com/Flagsmith/flagsmith/commit/4153c09e404b45cfd2cfe85343782d9135e41469))
+* adds dismiss health event ([#5863](https://github.com/Flagsmith/flagsmith/issues/5863)) ([7ef35f9](https://github.com/Flagsmith/flagsmith/commit/7ef35f923fa139464239f394456bbb2cc7ef4575))
+* adds in-flight feature validation for delete action ([#5824](https://github.com/Flagsmith/flagsmith/issues/5824)) ([5146bbf](https://github.com/Flagsmith/flagsmith/commit/5146bbf4193beacb71969b7c061fe70cfa2bf291))
+* disable value and segment change for in-flight feature ([#5853](https://github.com/Flagsmith/flagsmith/issues/5853)) ([9f815cd](https://github.com/Flagsmith/flagsmith/commit/9f815cd8756315778fe8f1cb74554a2e6ac5d3e7))
+* **feature-health:** Backend for health event dismissal ([#5845](https://github.com/Flagsmith/flagsmith/issues/5845)) ([c1a7c10](https://github.com/Flagsmith/flagsmith/commit/c1a7c10876d9ec86ab8cea98de293f499ec38d9a))
+* Process `User-Agent` strings ([#5823](https://github.com/Flagsmith/flagsmith/issues/5823)) ([1411f54](https://github.com/Flagsmith/flagsmith/commit/1411f54728be5fe3bf98ed62c2ebbbe431934d81))
+
+
+### Bug Fixes
+
+* **ci:** Incorrect PR title when opening flagsmith-charts PRs ([#5821](https://github.com/Flagsmith/flagsmith/issues/5821)) ([c5fc2c7](https://github.com/Flagsmith/flagsmith/commit/c5fc2c71b2320a9a5bede481a9f4721d365b6a6b))
+* incorrect-is-editing-property-check ([#5826](https://github.com/Flagsmith/flagsmith/issues/5826)) ([d9efa0a](https://github.com/Flagsmith/flagsmith/commit/d9efa0a0a873b0a7ad9acdbae06503249e2b6e5e))
+* Reduce frequency of identity search requests in frontend ([#5379](https://github.com/Flagsmith/flagsmith/issues/5379)) ([#5850](https://github.com/Flagsmith/flagsmith/issues/5850)) ([41986fb](https://github.com/Flagsmith/flagsmith/commit/41986fbeb717823b4d69c86a6583ae399a408348))
+* use-errors-from-api-on-login ([#5847](https://github.com/Flagsmith/flagsmith/issues/5847)) ([264ba65](https://github.com/Flagsmith/flagsmith/commit/264ba651aa1fcf84eacf1b684e3acd35ae4619ce))
+
 ## [2.188.1](https://github.com/Flagsmith/flagsmith/compare/v2.188.0...v2.188.1) (2025-07-23)
 
 

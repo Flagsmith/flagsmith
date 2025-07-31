@@ -20,6 +20,16 @@ def expected_created_by(
     return None
 
 
+@pytest.fixture
+def expected_dismissed_by(
+    admin_client_auth_type: AdminClientAuthType,
+    admin_user_email: str,
+) -> str:
+    if admin_client_auth_type == "user":
+        return admin_user_email
+    return "test_key"
+
+
 def test_feature_health_providers__get__expected_response(
     project: int,
     admin_client_new: APIClient,
@@ -76,6 +86,70 @@ def test_feature_health_providers__delete__expected_response(
     assert response.json() == []
 
 
+def test_feature_health_events__dismiss__unauthorized__expected_response(
+    project: int,
+    unhealthy_feature_health_event: int,
+    test_user_client: APIClient,
+) -> None:
+    # Given
+    feature_health_events_dismiss_url = reverse(
+        "api-v1:projects:feature-health-events-dismiss",
+        args=[project, unhealthy_feature_health_event],
+    )
+
+    # When
+    response = test_user_client.post(feature_health_events_dismiss_url)
+
+    # Then
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "You do not have permission to perform this action."
+    }
+
+
+@pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
+def test_feature_health_events__dismiss__expected_response(
+    project: int,
+    unhealthy_feature: int,
+    unhealthy_feature_health_event: int,
+    admin_client_new: APIClient,
+    expected_dismissed_by: str,
+    mocker: MockerFixture,
+) -> None:
+    # Given
+    feature_health_events_url = reverse(
+        "api-v1:projects:feature-health-events-list", args=[project]
+    )
+    feature_health_events_dismiss_url = reverse(
+        "api-v1:projects:feature-health-events-dismiss",
+        args=[project, unhealthy_feature_health_event],
+    )
+
+    # When
+    with freeze_time("2023-01-19T10:09:47.325132+00:00"):
+        response = admin_client_new.post(feature_health_events_dismiss_url)
+
+    # Then
+    assert response.status_code == 204
+    response = admin_client_new.get(feature_health_events_url)
+    assert response.json() == [
+        {
+            "created_at": "2023-01-19T10:09:47.325132Z",
+            "environment": None,
+            "feature": unhealthy_feature,
+            "id": mocker.ANY,
+            "provider_name": "Sample",
+            "reason": {
+                "text_blocks": [
+                    {"text": f"Manually dismissed by {expected_dismissed_by}"}
+                ],
+                "url_blocks": [],
+            },
+            "type": "HEALTHY",
+        },
+    ]
+
+
 def test_webhook__invalid_path__expected_response(
     api_client: APIClient,
 ) -> None:
@@ -97,6 +171,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -121,6 +196,7 @@ def test_webhook__sample_provider__post__expected_feature_health_event_created__
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2023-01-19T09:09:47.325132Z",
             "environment": None,
             "feature": feature,
@@ -156,6 +232,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -179,6 +256,7 @@ def test_webhook__sample_provider__post_with_environment_expected_feature_health
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2023-01-19T09:09:47.325132Z",
             "environment": environment,
             "feature": feature,
@@ -197,6 +275,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     sample_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -222,6 +301,7 @@ def test_webhook__unhealthy_feature__post__expected_feature_health_event_created
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2023-01-19T09:09:48.325132Z",
             "environment": None,
             "feature": unhealthy_feature,
@@ -273,6 +353,7 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
     grafana_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -335,6 +416,7 @@ def test_webhook__grafana_provider__post__expected_feature_health_event_created(
     response = admin_client_new.get(feature_health_events_url)
     assert response.json() == [
         {
+            "id": mocker.ANY,
             "created_at": "2025-02-12T21:06:50Z",
             "environment": None,
             "feature": feature,
@@ -354,6 +436,7 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
     grafana_feature_health_provider_webhook_url: str,
     api_client: APIClient,
     admin_client_new: APIClient,
+    mocker: MockerFixture,
 ) -> None:
     # Given
     feature_health_events_url = reverse(
@@ -502,6 +585,7 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
         # second firing alert has not been resolved
         # and provided an environment label
         {
+            "id": mocker.ANY,
             "created_at": "2025-02-12T21:07:50Z",
             "environment": environment,
             "feature": feature,
@@ -511,6 +595,7 @@ def test_webhook__grafana_provider__post__multiple__expected_feature_health_even
         },
         # first firing alert has been resolved
         {
+            "id": mocker.ANY,
             "created_at": "2025-02-12T21:12:50Z",
             "environment": None,
             "feature": feature,

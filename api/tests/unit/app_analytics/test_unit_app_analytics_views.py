@@ -408,8 +408,7 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(  # type: ignore[n
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["default", "analytics"])
+@pytest.mark.use_analytics_db
 def test_set_sdk_analytics_flags_with_identifier(
     api_client: APIClient,
     environment: Environment,
@@ -450,8 +449,7 @@ def test_set_sdk_analytics_flags_with_identifier(
     assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["default", "analytics"])
+@pytest.mark.use_analytics_db
 def test_set_sdk_analytics_flags_without_identifier(
     api_client: APIClient,
     environment: Environment,

@@ -42,6 +42,21 @@ def unhealthy_feature(
 
 
 @pytest.fixture
+def unhealthy_feature_health_event(
+    project: int,
+    unhealthy_feature: int,
+    admin_client_new: APIClient,
+) -> int:
+    url = reverse(
+        "api-v1:projects:feature-health-events-list",
+        args=[project],
+    )
+    response = admin_client_new.get(url)
+    unhealthy_feature_health_event_id: int = response.json()[0]["id"]
+    return unhealthy_feature_health_event_id
+
+
+@pytest.fixture
 def grafana_feature_health_provider_webhook_url(
     project: int, admin_client_new: APIClient
 ) -> str:

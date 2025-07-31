@@ -44,8 +44,7 @@ def cache(organisation: Organisation) -> OrganisationSubscriptionInformationCach
     )
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_usage_data_from_local_db(organisation, environment, settings):  # type: ignore[no-untyped-def]
     environment_id = environment.id
     now = timezone.now()
@@ -102,8 +101,7 @@ def test_get_usage_data_from_local_db(organisation, environment, settings):  # t
         assert data.day == today - timedelta(days=29 - count)
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-untyped-def]
     organisation: Organisation,
     project: Project,
@@ -150,8 +148,7 @@ def test_get_usage_data_from_local_db_project_id_filter(  # type: ignore[no-unty
     assert list(usage_data_for_project_two)[0].flags == total_count  # 1 environment
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_usage_data_from_local_db__environment_filter__returns_expected(
     organisation: Organisation,
     environment: Environment,
@@ -197,8 +194,7 @@ def test_get_usage_data_from_local_db__environment_filter__returns_expected(
     ]
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_usage_data_from_local_db__labels_filter__returns_expected(
     organisation: Organisation,
     environment: Environment,
@@ -270,8 +266,7 @@ def test_get_usage_data_from_local_db__labels_filter__returns_expected(
     ]
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_total_events_count(organisation, environment, settings):  # type: ignore[no-untyped-def]
     settings.USE_POSTGRES_FOR_ANALYTICS = True
     environment_id = environment.id
@@ -322,8 +317,7 @@ def test_get_total_events_count(organisation, environment, settings):  # type: i
     assert total_events_count == 20 * len(Resource) * 30
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_feature_evaluation_data_from_local_db(
     feature: Feature,
     environment: Environment,
@@ -391,8 +385,7 @@ def test_get_feature_evaluation_data_from_local_db(
         assert data.day == today - timedelta(days=29 - i)
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_get_feature_evaluation_data_from_local_db__labels_filter__returns_expected(
     feature: Feature,
     environment: Environment,
