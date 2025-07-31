@@ -1159,7 +1159,7 @@ def test_list_feature_states_from_simple_view_set(
     # add another organisation with a project, environment and feature (which should be
     # excluded)
     another_organisation = Organisation.objects.create(name="another_organisation")
-    admin_user.add_organisation(another_organisation)  # type: ignore[no-untyped-call]
+    admin_user.add_organisation(another_organisation)
     another_project = Project.objects.create(
         name="another_project", organisation=another_organisation
     )

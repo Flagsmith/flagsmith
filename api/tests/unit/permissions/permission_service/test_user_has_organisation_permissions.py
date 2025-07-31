@@ -1,3 +1,4 @@
+from organisations.models import Organisation, UserOrganisation
 from organisations.permissions.models import (
     OrganisationPermissionModel,
     UserOrganisationPermission,
@@ -7,7 +8,9 @@ from organisations.permissions.permissions import (
     CREATE_PROJECT,
     MANAGE_USER_GROUPS,
 )
+from permissions.models import PermissionModel
 from permissions.permission_service import user_has_organisation_permission
+from users.models import FFAdminUser, UserPermissionGroup
 
 
 def test_user_has_organisation_permission_returns_false_if_user_does_not_have_permission(  # type: ignore[no-untyped-def]  # noqa: E501
@@ -100,4 +103,47 @@ def test_user_has_organisation_permission_returns_true_if_user_has_permission_vi
     assert (
         user_has_organisation_permission(test_user, organisation, MANAGE_USER_GROUPS)
         is True
+    )
+
+
+def test_user_has_organisation_permission__returns_false_for_orphan_group_permission(
+    organisation: Organisation,
+    user_permission_group: UserPermissionGroup,
+    staff_user: FFAdminUser,
+    create_project_permission: PermissionModel,
+) -> None:
+    """
+    Specific test to verify that a user no longer has permission to access resources via a group,
+    if they no longer belong to the organisation.
+
+    Note that a user should never be a member of a group without being a member of the organisation
+    but this test exists to ensure no security holes.
+    """
+
+    # Given
+    staff_user.add_to_group(group=user_permission_group)
+
+    group_organisation_permission = (
+        UserPermissionGroupOrganisationPermission.objects.create(
+            organisation=organisation, group=user_permission_group
+        )
+    )
+    group_organisation_permission.permissions.add(create_project_permission)
+
+    assert user_has_organisation_permission(
+        user=staff_user,
+        organisation=organisation,
+        permission_key=CREATE_PROJECT,
+    )
+
+    # When
+    # We delete the user organisation to remove the user from the organisation, without
+    # allowing any signals / hooks to run.
+    UserOrganisation.objects.filter(user=staff_user, organisation=organisation).delete()
+
+    # Then
+    assert not user_has_organisation_permission(
+        user=staff_user,
+        organisation=organisation,
+        permission_key=CREATE_PROJECT,
     )
