@@ -8,10 +8,9 @@ from app_analytics.models import (
     Resource,
 )
 
-pytestmark = pytest.mark.skip_if_no_analytics_db
+pytestmark = pytest.mark.use_analytics_db
 
 
-@pytest.mark.django_db(databases=["analytics"])
 def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore[no-untyped-def]
     # Given
     created_at = timezone.now()
@@ -40,7 +39,6 @@ def test_creating_overlapping_api_usage_bucket_raises_error(db):  # type: ignore
         )
 
 
-@pytest.mark.django_db(databases=["analytics"])
 def test_creating_overlapping_feature_evaluation_bucket_raises_error(db):  # type: ignore[no-untyped-def]
     # Given
     created_at = timezone.now()

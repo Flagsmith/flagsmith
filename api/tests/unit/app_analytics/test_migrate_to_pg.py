@@ -6,8 +6,7 @@ from app_analytics.migrate_to_pg import migrate_feature_evaluations
 from app_analytics.models import FeatureEvaluationBucket
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_migrate_feature_evaluations(mocker: MockerFixture) -> None:
     # Given
     feature_name = "test_feature_one"
