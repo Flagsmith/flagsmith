@@ -24,7 +24,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**Local Evaluation Mode**](/clients/index.md#local-evaluation): A mode where the SDK evaluates feature flags locally using a downloaded environment document, reducing latency and API calls.
 
-- [**Multivariate Flag**](/basic-features/managing-features.md#multi-variate-flags): A feature flag that can take on multiple values (not just on/off), useful for A/B testing and gradual rollouts.
+- [**Multivariate Flag**](/basic-features/managing-features.md#multi-variate-flags): A feature flag that can take on multiple values (not just on/off), useful for A/B testing.
 
 - [**Organisation**](/basic-features/index.md#organisations): Organisations are a way for you and other team members to manage projects and their features. Users can be members of multiple organisations.
 
@@ -34,7 +34,7 @@ This glossary provides concise definitions for some of the key concepts within F
 
 - [**SDK (Software Development Kit)**](/clients/): Client libraries provided by Flagsmith for integrating feature flagging into applications.
 
-- [**Segment**](/basic-features/segments.md): A group of users defined by traits (e.g., logins, device, location, or custom traits). You can override feature defaults for segments, such as enabling features for a "power user" group.
+- [**Segment**](/basic-features/segments.md): A group of identities defined by traits (e.g., logins, device, location, or custom traits). You can override feature defaults for segments, such as enabling features for a "power user" group.
 
 - [**Staged Rollout**](/guides-and-examples/staged-feature-rollouts.md): Gradually enabling a feature for increasing percentages of users to reduce risk.
 

@@ -14,8 +14,8 @@ This tutorial will guide you through the core concepts of integrating Flagsmith 
 
 By the end of this tutorial, you will be able to:
 
-- Create a Project and your first Flag in the Flagsmith dashboard.
-- Import the Flagsmith Javascript SDK into your web page.
+- Create a Project and your first flag in the Flagsmith dashboard.
+- Import the Flagsmith JavaScript SDK into your web page.
 - Connect to the Flagsmith API and retrieve your flags.
 - Update your application's behaviour based on a flag's value.
 
@@ -24,12 +24,12 @@ By the end of this tutorial, you will be able to:
 You will need access to a Flagsmith instance (either using the SaaS platform or self-hosted) and a basic understanding of HTML and JavaScript.
 
 :::tip
-If you're using the SaaS platform, log in at [Flagsmith.com](https://flagsmith.com/). If you're self-hosting, log in to your deployed instance.
+If you're using the SaaS platform, log in at [app.flagsmith.com](https://app.flagsmith.com/). If you're self-hosting, log in to your deployed instance.
 :::
 
 ## 1. Create a Project and Flag in the Dashboard
 
-We are going to create an Organisation (if you have not already), a Project, and your first Flag.
+We are going to create an organisation (if you haven't already), a project, and your first flag.
 
 ![Create Organisation](/img/quickstart/demo_create_1.png)
 
