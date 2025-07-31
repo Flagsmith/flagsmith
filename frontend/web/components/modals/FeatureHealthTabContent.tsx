@@ -125,7 +125,6 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
   useEffect(() => {
     if (isDismissed) {
       toast('Event dismissed')
-      // Refetch features after dismissing the health event
       AppActions.refreshFeatures(projectId, environmentId)
     }
   }, [isDismissed, projectId, environmentId])
