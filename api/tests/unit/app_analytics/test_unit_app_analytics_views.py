@@ -408,8 +408,7 @@ def test_get_total_usage_count_for_non_admin_user_returns_403(  # type: ignore[n
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["default", "analytics"])
+@pytest.mark.use_analytics_db
 def test_set_sdk_analytics_flags_with_identifier(
     api_client: APIClient,
     environment: Environment,
@@ -450,8 +449,7 @@ def test_set_sdk_analytics_flags_with_identifier(
     assert feature_evaluation_raw.evaluation_count is feature_request_count  # type: ignore[union-attr]
 
 
-@pytest.mark.skip_if_no_analytics_db
-@pytest.mark.django_db(databases=["default", "analytics"])
+@pytest.mark.use_analytics_db
 def test_set_sdk_analytics_flags_without_identifier(
     api_client: APIClient,
     environment: Environment,
@@ -563,6 +561,21 @@ def test_set_sdk_analytics_flags_with_identifier__influx__calls_expected(
                 "client_application_name": "web",
                 "client_application_version": "1.0",
                 "user_agent": "python-requests/2.31.0",
+            },
+        ),
+        (
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
+            },
+            {},
+        ),
+        (
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0",
+                "Flagsmith-SDK-User-Agent": "flagsmith-js-sdk/1.0.0",
+            },
+            {
+                "user_agent": "flagsmith-js-sdk/1.0.0",
             },
         ),
     ],

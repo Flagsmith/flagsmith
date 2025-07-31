@@ -554,6 +554,7 @@ export type SubscriptionMeta = {
 export type Account = {
   first_name: string
   last_name: string
+  date_joined: string
   sign_up_type: SignupType
   id: number
   email: string
@@ -718,6 +719,7 @@ export type HealthEventReason = {
 }
 
 export type HealthEvent = {
+  id: number
   created_at: string
   environment: number
   feature: number
@@ -800,7 +802,7 @@ export type Webhook = {
   updated_at: string
 }
 
-export type AccountModel = User & {
+export type AccountModel = Account & {
   organisations: Organisation[]
 }
 
