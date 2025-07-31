@@ -79,7 +79,8 @@
                 }
             },
             "required": [
-                "value"
+                "value",
+                "weight"
             ],
             "title": "FeatureValue",
             "type": "object"
@@ -217,17 +218,16 @@
                     "type": "array"
                 },
                 "sub_rules": {
-                    "additionalProperties": {
+                    "items": {
                         "$ref": "#/$defs/SegmentRule"
                     },
                     "description": "Sub-rules nested within the segment rule.",
                     "title": "Sub-rules",
-                    "type": "object"
+                    "type": "array"
                 }
             },
             "required": [
-                "type",
-                "conditions"
+                "type"
             ],
             "title": "SegmentRule",
             "type": "object"
@@ -249,7 +249,7 @@
                 }
             ],
             "default": null,
-            "description": "Identity context used for identity-based evaluation; optional."
+            "description": "Identity context used for identity-based evaluation."
         },
         "segments": {
             "additionalProperties": {
