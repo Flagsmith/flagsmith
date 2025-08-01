@@ -197,29 +197,20 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
         if self.instance and getattr(self.instance, "whitelisted_segment", None):
             return
 
-        condition_count = self._calculate_condition_count(rules_data)
+        def _calculate_condition_count(rules_data: DictList) -> int:
+            return sum(
+                len(rule.get("conditions", []))
+                + _calculate_condition_count(rule.get("rules", []))
+                for rule in rules_data
+            )
+
+        condition_count = _calculate_condition_count(rules_data)
         if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
             msg = (
                 f"The segment has {condition_count} conditions, which exceeds the maximum "
                 f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
             )
             raise ValidationError({"segment": msg})
-
-    def _calculate_condition_count(
-        self,
-        rules_data: DictList,
-    ) -> int:
-        count = 0
-        for rule_data in rules_data:
-            child_rules: DictList = rule_data.get("rules", [])
-            if child_rules:
-                count += self._calculate_condition_count(child_rules)
-            conditions: DictList = rule_data.get("conditions", [])
-            for condition in conditions:
-                if condition.get("delete", False) is True:
-                    continue
-                count += 1
-        return count
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
