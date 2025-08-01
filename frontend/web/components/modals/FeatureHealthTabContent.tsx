@@ -15,7 +15,6 @@ import {
   FeatureHealthEventReasonUrlBlock,
 } from 'common/types/responses'
 import AppActions from 'common/dispatcher/app-actions'
-import { RouterChildContext } from 'react-router-dom'
 
 type FeatureHealthTabContentProps = {
   projectId: number
@@ -137,7 +136,7 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
       toast('Event dismissed')
       AppActions.refreshFeatures(projectId, environmentId)
     }
-  }, [isDismissed, projectId, environmentId, history, featureId])
+  }, [isDismissed, projectId, environmentId, featureId])
 
   useEffect(() => {
     if (dismissError) {
