@@ -849,9 +849,16 @@ export type StageTrigger = {
 export enum StageActionType {
   TOGGLE_FEATURE = 'TOGGLE_FEATURE',
   TOGGLE_FEATURE_FOR_SEGMENT = 'TOGGLE_FEATURE_FOR_SEGMENT',
+  PHASED_ROLLOUT = 'PHASED_ROLLOUT',
 }
 
-export type StageActionBody = { enabled: boolean; segment_id?: number }
+export type StageActionBody = {
+  enabled: boolean
+  segment_id?: number
+  initial_split?: number
+  increase_by?: number
+  increase_every?: string
+}
 export interface StageAction {
   id: number
   action_type: StageActionType

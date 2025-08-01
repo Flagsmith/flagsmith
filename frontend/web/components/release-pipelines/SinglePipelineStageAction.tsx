@@ -1,19 +1,24 @@
-import { StageActionRequest } from 'common/types/requests'
+import { StageActionBody, StageActionRequest } from 'common/types/requests'
 import Utils from 'common/utils/utils'
 import InputGroup from 'components/base/forms/InputGroup'
 import { FLAG_ACTION_OPTIONS } from './constants'
 import Icon from 'components/Icon'
+import { StageActionType } from 'common/types/responses'
+import PhasedRolloutAction from './PhasedRolloutAction'
+import { useMemo } from 'react'
 
 const getActionType = (action: StageActionRequest | undefined) => {
   if (!action) {
     return
   }
 
-  if (action.action_body.enabled) {
-    return action.action_type
+  if (action.action_type.includes('TOGGLE_FEATURE')) {
+    return `${action.action_type}${
+      action.action_body.enabled ? '' : '_DISABLE'
+    }`
   }
 
-  return `${action.action_type}_DISABLE`
+  return action.action_type
 }
 
 const getSegment = (action: StageActionRequest | undefined) => {
@@ -28,7 +33,11 @@ interface SinglePipelineStageActionProps {
   actionIndex?: number
   action?: StageActionRequest
   onRemoveAction?: (id: number) => void
-  onActionChange: (option: { value: string; label: string }, id: number) => void
+  onActionChange: (
+    stageIndex: number,
+    actionType: StageActionType,
+    actionBody: StageActionBody,
+  ) => void
   onSegmentChange: (
     option: { value: number; label: string },
     id: number,
@@ -46,6 +55,22 @@ const SinglePipelineStageAction = ({
   onSegmentChange,
   segmentOptions,
 }: SinglePipelineStageActionProps) => {
+  const isPhasedRolloutEnabled = Utils.getFlagsmithHasFeature(
+    'pipelines-phased-rollout',
+  )
+
+  const actionOptions = useMemo(() => {
+    return FLAG_ACTION_OPTIONS.filter((option) => {
+      if (
+        isPhasedRolloutEnabled &&
+        option.value === StageActionType.PHASED_ROLLOUT
+      ) {
+        return true
+      }
+      return option.value !== StageActionType.PHASED_ROLLOUT
+    })
+  }, [isPhasedRolloutEnabled])
+
   return (
     <>
       <Row>
@@ -63,13 +88,34 @@ const SinglePipelineStageAction = ({
                   maxMenuHeight={180}
                   value={Utils.toSelectedValue(
                     getActionType(action),
-                    FLAG_ACTION_OPTIONS,
+                    actionOptions,
                     { label: 'Select an action', value: '' },
                   )}
-                  options={FLAG_ACTION_OPTIONS}
-                  onChange={(option: { value: string; label: string }) =>
-                    onActionChange(option, actionIndex)
-                  }
+                  options={actionOptions}
+                  onChange={(option: { value: string; label: string }) => {
+                    if (option.value.includes('TOGGLE_FEATURE')) {
+                      const isSegment = option.value.includes('FOR_SEGMENT')
+                      const enabled = !option.value.includes('DISABLE')
+
+                      const action_type = isSegment
+                        ? StageActionType.TOGGLE_FEATURE_FOR_SEGMENT
+                        : StageActionType.TOGGLE_FEATURE
+
+                      const action_body = { enabled }
+
+                      return onActionChange(
+                        actionIndex,
+                        action_type,
+                        action_body,
+                      )
+                    }
+
+                    return onActionChange(
+                      actionIndex,
+                      option.value as StageActionType,
+                      { enabled: true },
+                    )
+                  }}
                 />
               </div>
               {onRemoveAction && (
@@ -107,6 +153,15 @@ const SinglePipelineStageAction = ({
           />
         </FormGroup>
       )}
+      {isPhasedRolloutEnabled &&
+        action?.action_type === StageActionType.PHASED_ROLLOUT && (
+          <PhasedRolloutAction
+            action={action}
+            onActionChange={(actionType, actionBody) =>
+              onActionChange(actionIndex, actionType, actionBody)
+            }
+          />
+        )}
     </>
   )
 }

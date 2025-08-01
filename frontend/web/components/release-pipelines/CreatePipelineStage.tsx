@@ -3,25 +3,17 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import InputGroup from 'components/base/forms/InputGroup'
 import Utils from 'common/utils/utils'
 import {
+  StageActionBody,
   StageActionType,
   StageTrigger,
   StageTriggerType,
 } from 'common/types/responses'
 import Button from 'components/base/forms/Button'
 import Icon from 'components/Icon'
-import {
-  NEW_PIPELINE_STAGE,
-  NEW_PIPELINE_STAGE_ACTION,
-  TIME_UNIT_OPTIONS,
-  TimeUnit,
-  TRIGGER_OPTIONS,
-} from './constants'
-import moment from 'moment'
-import Input from 'components/base/forms/Input'
+import { NEW_PIPELINE_STAGE_ACTION, TRIGGER_OPTIONS } from './constants'
 import { PipelineStageRequest, StageActionRequest } from 'common/types/requests'
 import PipelineStageActions from './PipelineStageActions'
-
-type TimeUnitType = (typeof TimeUnit)[keyof typeof TimeUnit]
+import TimeIntervalInput from './TimeInput'
 
 const CreatePipelineStage = ({
   onChange,
@@ -41,15 +33,6 @@ const CreatePipelineStage = ({
   )
 
   const [searchInput, setSearchInput] = useState('')
-
-  // These are not fetched directly from stageData because
-  // it gives more flexibility to the user to set 24h or 1 day
-  const [amountOfTime, setAmountOfTime] = useState(
-    existingWaitForTime?.amountOfTime || 1,
-  )
-  const [selectedTimeUnit, setSelectedTimeUnit] = useState<TimeUnitType>(
-    existingWaitForTime?.timeUnit || TimeUnit.DAY,
-  )
 
   const { data: environmentsData, isLoading: isEnvironmentsLoading } =
     useGetEnvironmentsQuery(
@@ -81,18 +64,6 @@ const CreatePipelineStage = ({
     value: string | number | StageTrigger | StageActionRequest[],
   ) => {
     onChange({ ...stageData, [fieldName]: value })
-  }
-
-  function formatDurationToHHMMSS(duration: moment.Duration) {
-    const totalSeconds = duration.asSeconds()
-
-    const hours = Math.floor(totalSeconds / 3600)
-    const minutes = Math.floor((totalSeconds % 3600) / 60)
-    const seconds = Math.floor(totalSeconds % 60)
-
-    return `${hours}:${String(minutes).padStart(2, '0')}:${String(
-      seconds,
-    ).padStart(2, '0')}`
   }
 
   useEffect(() => {
@@ -133,28 +104,17 @@ const CreatePipelineStage = ({
   }
 
   const handleActionChange = (
-    option: { value: string; label: string },
     actionIndex: number,
+    actionType: StageActionType,
+    actionBody: StageActionBody,
   ) => {
-    if (option.value === '') {
-      return
-    }
-
-    const isSegment = option.value.includes('FOR_SEGMENT')
-    const enabled = !option.value.includes('DISABLE')
-
-    const action_type = isSegment
-      ? StageActionType.TOGGLE_FEATURE_FOR_SEGMENT
-      : StageActionType.TOGGLE_FEATURE
-
-    const action_body = { enabled }
-
     const actions = stageData.actions.map((action, idx) => {
       if (idx === actionIndex) {
-        return { action_body, action_type }
+        return { action_body: actionBody, action_type: actionType }
       }
       return action
     })
+
     handleOnChange('actions', actions)
   }
 
@@ -168,28 +128,7 @@ const CreatePipelineStage = ({
     handleOnChange('actions', actions)
   }
 
-  const setWaitForTrigger = (time: number, unit: TimeUnitType) => {
-    setAmountOfTime(time)
-    setSelectedTimeUnit(unit)
-
-    const duration = moment.duration(time, unit)
-    const formatted = formatDurationToHHMMSS(duration)
-
-    handleOnChange('trigger', {
-      trigger_body: { wait_for: formatted },
-      trigger_type: StageTriggerType.WAIT_FOR,
-    } as StageTrigger)
-  }
-
   const handleTriggerChange = (option: { value: string; label: string }) => {
-    if (option.value === StageTriggerType.WAIT_FOR) {
-      const time = 1
-      const unit = TimeUnit.DAY
-
-      setWaitForTrigger(time, unit)
-      return
-    }
-
     handleOnChange('trigger', {
       trigger_body: null,
       trigger_type: option.value,
@@ -281,30 +220,15 @@ const CreatePipelineStage = ({
       </FormGroup>
       {selectedTrigger?.value === StageTriggerType.WAIT_FOR && (
         <FormGroup className='pl-4 d-flex align-items-center'>
-          <div className='flex-1 mr-3'>
-            <Input
-              value={`${amountOfTime}`}
-              inputClassName='input flex-1'
-              name='amount-of-time'
-              isValid={amountOfTime > 0}
-              min={1}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                const value = Utils.safeParseEventValue(e)
-                setWaitForTrigger(Number(value) || 1, selectedTimeUnit)
-              }}
-              type='number'
-              placeholder='Amount of time'
-            />
-          </div>
-          <div className='w-50'>
-            <Select
-              value={Utils.toSelectedValue(selectedTimeUnit, TIME_UNIT_OPTIONS)}
-              options={TIME_UNIT_OPTIONS}
-              onChange={(option: { value: string; label: string }) =>
-                setWaitForTrigger(amountOfTime, option.value as TimeUnit)
-              }
-            />
-          </div>
+          <TimeIntervalInput
+            interval={existingWaitForTime?.trigger_body?.wait_for}
+            onIntervalChange={(interval) => {
+              handleOnChange('trigger', {
+                trigger_body: { wait_for: interval },
+                trigger_type: StageTriggerType.WAIT_FOR,
+              } as StageTrigger)
+            }}
+          />
         </FormGroup>
       )}
       <PipelineStageActions
