@@ -15,7 +15,7 @@ import {
   ProjectFlag,
   TagStrategy,
 } from 'common/types/responses'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow from 'components/feature-summary/FeatureRow'
 import Button from 'components/base/forms/Button'
 import { useCreateFlagsmithProjectImportMutation } from 'common/services/useFlagsmithProjectImport'
 import ErrorMessage from 'components/ErrorMessage'
