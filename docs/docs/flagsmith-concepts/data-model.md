@@ -6,7 +6,7 @@ sidebar_position: 10
 
 Flagsmith uses a flexible data model to help you manage feature flags and remote configurations across multiple projects, environments, and user groups.
 
-Here's a high-level overview of the Flagsmith data model. Fear not - it's not as complex as it looks!
+Here's a high-level overview of the Flagsmith data model. 
 
 ![Image](/img/flagsmith-model.svg)
 
@@ -33,7 +33,7 @@ For more information, see [Identities](/basic-features/managing-identities).
 You can store any number of traits against an identity. Traits are key-value pairs that can store any type of data. Some examples of traits that you might store against an identity include:
 - The number of times the user has logged in.
 - Whether they have accepted the application terms and conditions.
-- Their preferred application theme.
+Their theme preference (eg. dark mode)
 - Whether they have performed certain actions within your application.
 
 For more information, see [Traits](/basic-features/managing-identities.md#identity-traits).
