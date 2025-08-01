@@ -102,7 +102,9 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
     def get_initial(self) -> dict[str, Any]:
         initial_data: dict[str, Any] = super().get_initial()
         if rules_data := initial_data.get("rules"):
-            self._remove_segment_rules_conditions_marked_for_deletion(rules_data)
+            initial_data["rules"] = self._get_rules_and_conditions_without_deleted(
+                rules_data
+            )
         return initial_data
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -153,10 +155,9 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
 
         return instance
 
-    def _remove_segment_rules_conditions_marked_for_deletion(
-        self,
-        rules_data: DictList,
-    ) -> None:
+    def _get_rules_and_conditions_without_deleted(
+        self, rules_data: DictList
+    ) -> DictList:
         """
         Remove rules and conditions marked for deletion from input
 
@@ -167,15 +168,21 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
         TODO: Deprecate this in favor of not sending unwanted rules and
         conditions in the input.
         """
-        for r in range(len(rules_data)):
-            if (rule := rules_data[r]).get("delete") is True:
-                del rules_data[r]
-                continue
-            for c in range(len(conditions := rule.get("conditions", []))):
-                if conditions[c].get("delete") is True:
-                    del conditions[c]
-            if subrules := rule.get("rules", []):
-                self._remove_segment_rules_conditions_marked_for_deletion(subrules)
+        return [
+            {
+                **rule_data,
+                "conditions": [
+                    condition_data
+                    for condition_data in rule_data.get("conditions", [])
+                    if not condition_data.get("delete")
+                ],
+                "rules": self._get_rules_and_conditions_without_deleted(
+                    rule_data.get("rules", [])
+                ),
+            }
+            for rule_data in rules_data
+            if not rule_data.get("delete")
+        ]
 
     def _validate_project_segment_limit(self, project: Project) -> None:
         segment_count = Segment.live_objects.filter(project=project).count()
