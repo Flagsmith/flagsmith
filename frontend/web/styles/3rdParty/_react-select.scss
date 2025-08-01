@@ -4,6 +4,26 @@
   input[type='text'] {
     border: none;
   }
+
+  &.searchable-dropdown .react-select {
+    &__indicator-separator {
+      display: block;
+      opacity: 0.5;
+    }
+    &__indicator {
+      color: $text-icon-light-grey;
+      padding: 0px 6px 0px 8px;
+      cursor: pointer;
+      &:hover {
+        color: $text-icon-light-grey;
+      }
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
   &__indicator-separator {
     display: none;
   }

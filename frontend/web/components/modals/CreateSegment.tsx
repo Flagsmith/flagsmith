@@ -374,6 +374,7 @@ const CreateSegment: FC<CreateSegmentType> = ({
                     updateRule(0, i, v)
                   }}
                   errors={error?.data?.rules?.[0]?.rules?.[i]?.conditions}
+                  projectId={projectId}
                 />
               </div>
             )
