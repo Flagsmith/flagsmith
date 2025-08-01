@@ -1,0 +1,127 @@
+name: 'PoC: GitHub Code References'
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:
+
+env:
+  EXCLUDE_PATTERNS: node_modules,venv,.git,cache,build,htmlcov,docs,.json,tests
+  FLAGSMITH_EDGE_API_URL: https://edge.api.flagsmith.com
+  FLAGSMITH_ENVIRONMENT_KEY: ENktaJnfLVbLifybz34JmX
+  PYTHON_REQUESTS_VERSION: '2.32.4'
+  PYTHON_VERSION: '3.13'
+
+jobs:
+  collect-code-references:
+    runs-on: depot-ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Collect code references
+        id: collect
+        run: |
+          uv run - <<EOF
+          # /// script
+          # requires-python = "==${{ env.PYTHON_VERSION }}"
+          # dependencies = ["requests==${{ env.PYTHON_REQUESTS_VERSION }}"]
+          # ///
+          import json
+          import os
+          import re
+          from collections import deque
+          from pathlib import Path
+          from typing import Generator
+
+          import requests
+
+          EXCLUDE_PATTERNS = os.environ["EXCLUDE_PATTERNS"].replace(" ", "").split(",")
+
+          def should_skip_file(file_path: Path) -> bool:
+              """Whether to skip a file based on its size or content"""
+              file_size = file_path.stat().st_size
+              if file_size == 0:  # Empty files are irrelevant
+                  return True
+              if file_size > 1024 * 1024:  # Large files are likely binary
+                  return True
+              with file_path.open("rb") as file:
+                  chunk = file.read(4096)  # A text file rarely contains null bytes
+                  if b'\0' in chunk:
+                      return True
+                  try:
+                      chunk.decode('utf-8')
+                  except UnicodeDecodeError:  # Decoding likely fails for binary files
+                      return True
+              return False
+
+          def find_references(feature_names: list[str]) -> Generator[tuple[str, str, int], None, None]:
+              """Search for references to a feature name in the codebase."""
+              all_files = Path('.').glob("**/*")
+              for path in all_files:
+                  if any(pattern in str(path).lower() for pattern in EXCLUDE_PATTERNS):
+                      continue
+                  if not path.is_file():
+                      continue
+                  if should_skip_file(path):
+                      continue
+                  context: deque[str] = deque(maxlen=2)
+                  with path.open("r", encoding="utf-8", errors="ignore") as file:
+                      for line_number, line in enumerate(file, start=1):
+                          context.append(line)
+                          for feature_name in feature_names:
+                              if feature_name not in line:  # Match feature name
+                                  continue
+                              if re.search(fr"""(?i:(?:feature|flag)\w*\(\s*(["']){feature_name})\1""", "".join(context)):  # Function calls
+                                  yield feature_name, str(path), line_number
+                              # TODO: Add more sophisticated matching, e.g. feature names defined as constants
+
+          # Fetch visible features
+          all_flags = requests.get(f"${{ env.FLAGSMITH_EDGE_API_URL }}/api/v1/flags", headers={"X-Environment-Key": "${{ env.FLAGSMITH_ENVIRONMENT_KEY }}"}).json()
+          feature_names = sorted([flag["feature"]["name"] for flag in all_flags])
+          print("Feature names:", feature_names)
+
+          # Find code references
+          code_references = [
+              {"feature_name": feature_name, "file_path": file_path, "line_number": line_number}
+              for feature_name, file_path, line_number in find_references(feature_names)
+          ]
+
+          # Output to GHA
+          json_references = json.dumps(code_references)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as gh_output:
+              print(f"code_references={json_references}", file=gh_output)
+          EOF
+
+      - name: Display code references
+        shell: python
+        run: |
+          import json
+          from collections import defaultdict
+
+          code_references = json.loads('''${{ steps.collect.outputs.code_references }}''')
+          if not code_references:
+              print("No code references found.")
+              exit(0)
+
+          references_by_feature = defaultdict(list)
+          sorted_code_references = sorted(code_references, key=lambda x: (x['feature_name'], x['file_path'], x['line_number']))
+          for reference in sorted_code_references:
+              references_by_feature[reference['feature_name']].append((reference['file_path'], reference['line_number']))
+
+          print("Code References:")
+          for feature_name, references in references_by_feature.items():
+              print(f"\nFeature: {feature_name}")
+              for file_path, line_number in references:
+                  print(f"  - {file_path}:{line_number}")
+
+      # TODO
+      # - name: Upload code references
