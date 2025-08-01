@@ -1078,6 +1078,11 @@ const CreateFlag = class extends Component {
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
 
+              console.log(
+                'this.props.hasUnhealthyEvents',
+                this.props.hasUnhealthyEvents,
+              )
+
               return (
                 <Permission
                   level='project'
@@ -1935,6 +1940,7 @@ const CreateFlag = class extends Component {
                                       <FeatureHealthTabContent
                                         projectId={projectFlag.project}
                                         environmentId={this.props.environmentId}
+                                        featureId={projectFlag.id}
                                       />
                                     </TabItem>
                                   )}
