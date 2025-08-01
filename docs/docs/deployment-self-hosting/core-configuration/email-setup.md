@@ -6,15 +6,13 @@ sidebar_position: 30
 
 :::note
 
-You can self host Flagsmith without setting up an email server/gateway. You can invite additional users to the platform
-using invitation links, and the platform will run fine without email.
+You can self host Flagsmith without setting up an email server/gateway. You can invite additional users to the platform using invitation links, and the platform will run fine without email.
 
 :::
 
 :::tip
 
-Flagsmith makes use of the `django_site` table to provide the domain name for email template links. You will need to
-configure the record in this table to point to your domain for email links to work.
+Flagsmith makes use of the `django_site` table to provide the domain name for email template links. You will need to configure the record in this table to point to your domain for email links to work.
 
 :::
 
