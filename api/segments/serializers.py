@@ -2,14 +2,10 @@ import logging
 from typing import Any
 
 from django.conf import settings
-from django.db.models.functions import Coalesce
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework_recursive.fields import (  # type: ignore[import-untyped]
-    RecursiveField,
-)
 
 from metadata.serializers import MetadataSerializer, SerializerWithMetadata
 from projects.models import Project
@@ -21,29 +17,19 @@ DictList = list[dict[str, Any]]
 
 
 class ConditionSerializer(serializers.ModelSerializer[Condition]):
-    id = serializers.IntegerField(
-        read_only=False,
-        required=False,
-    )
     delete = serializers.BooleanField(
         write_only=True,
         required=False,
-    )
-    version_of = RecursiveField(
-        required=False,
-        allow_null=True,
     )
 
     class Meta:
         model = Condition
         fields = [
-            "id",
             "operator",
             "property",
             "value",
             "description",
             "delete",
-            "version_of",
         ]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
@@ -64,10 +50,6 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
 
 
 class _BaseSegmentRuleSerializer(WritableNestedModelSerializer):
-    id = serializers.IntegerField(
-        read_only=False,
-        required=False,
-    )
     delete = serializers.BooleanField(
         write_only=True,
         required=False,
@@ -76,21 +58,15 @@ class _BaseSegmentRuleSerializer(WritableNestedModelSerializer):
         many=True,
         required=False,
     )
-    version_of = RecursiveField(
-        required=False,
-        allow_null=True,
-    )
 
 
 class _NestedSegmentRuleSerializer(_BaseSegmentRuleSerializer):
     class Meta:
         model = SegmentRule
         fields = [
-            "id",
             "type",
             "conditions",
             "delete",
-            "version_of",
         ]
 
 
@@ -103,12 +79,10 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
     class Meta:
         model = SegmentRule
         fields = [
-            "id",
             "type",
             "rules",
             "conditions",
             "delete",
-            "version_of",
         ]
 
 
@@ -138,7 +112,6 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
                 {"rules": "Segment cannot be created without any rules."}
             )
         self._validate_segment_rules_conditions_limit(attrs["rules"])
-        self._validate_relations_of_nested_rules_and_conditions(attrs["rules"])
         return attrs
 
     def create(self, validated_data: dict[str, Any]) -> Segment:
@@ -179,66 +152,6 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
             raise
 
         return instance
-
-    def _validate_relations_of_nested_rules_and_conditions(  # noqa: C901
-        self, rules_data: DictList
-    ) -> None:
-        """
-        Check whether every rule and condition is associated with the segment
-        """
-
-        def collect_ids(rules_data: DictList) -> None:
-            for rule_data in rules_data:
-                if rule_id := rule_data.get("id"):
-                    rules_ids.add(rule_id)
-                for condition_data in rule_data.get("conditions", []):
-                    if condition_id := condition_data.get("id"):
-                        rule_condition_ids.add((rule_id, condition_id))
-                collect_ids(rule_data.get("rules", []))
-
-        rules_ids: set[int] = set()
-        rule_condition_ids: set[tuple[int | None, int]] = set()
-        collect_ids(rules_data)
-        condition_ids = {condition_id for _, condition_id in rule_condition_ids}
-
-        if not self.instance:
-            # A new segment can never receive any existing rule or condition
-            if rules_ids or rule_condition_ids:
-                raise ValidationError({"segment": "Mismatched segment is not allowed"})
-            return
-
-        # Prevent adding existing conditions to new rules — edge case but saves energy <3
-        if None in (rule_id for rule_id, _ in rule_condition_ids):
-            raise ValidationError({"segment": "Cannot move conditions between rules"})
-
-        # Replacing all rules is OK
-        if not (rules_ids or condition_ids):
-            return
-
-        segments_from_rules = set(
-            SegmentRule.objects.annotate(
-                actual_segment_id=Coalesce(
-                    "segment_id",
-                    "rule__segment_id",
-                ),
-            )
-            .filter(pk__in=rules_ids)
-            .values_list("actual_segment_id", flat=True)
-        )
-
-        # Ensure this is the only segment associated with the rules
-        if segments_from_rules != {self.instance.pk}:  # type: ignore[union-attr]
-            raise ValidationError({"segment": "Mismatched segment is not allowed"})
-
-        existing_rule_conditions_ids = set(
-            Condition.objects.filter(
-                pk__in=condition_ids,
-            ).values_list("rule_id", "id")
-        )
-
-        # Ensure existing conditions continue belonging to their rules
-        if not rule_condition_ids <= existing_rule_conditions_ids:
-            raise ValidationError({"segment": "Cannot move conditions between rules"})
 
     def _remove_segment_rules_conditions_marked_for_deletion(
         self,
