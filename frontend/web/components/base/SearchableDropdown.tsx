@@ -68,7 +68,6 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   placeholder,
   value,
 }) => {
-  console.log('components', components)
   return (
     <Select
       data-test={dataTest}
