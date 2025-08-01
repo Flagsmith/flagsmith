@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Icon from 'components/Icon'
 import Constants from 'common/constants'
 import {
@@ -15,10 +15,12 @@ import {
   FeatureHealthEventReasonUrlBlock,
 } from 'common/types/responses'
 import AppActions from 'common/dispatcher/app-actions'
+import { RouterChildContext } from 'react-router-dom'
 
 type FeatureHealthTabContentProps = {
   projectId: number
   environmentId: number
+  featureId: number
 }
 
 const EventTextBlocks = ({
@@ -112,6 +114,7 @@ const EventURLBlocks = ({
 
 const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
   environmentId,
+  featureId,
   projectId,
 }) => {
   const { data: healthEvents, isLoading } = useGetHealthEventsQuery(
@@ -119,15 +122,22 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
     { skip: !projectId },
   )
 
-  const [dismissHealthEvent, { error: dismissError, isSuccess: isDismissed }] =
-    useDismissHealthEventMutation()
+  const unhealthyEvents = useMemo(
+    () => healthEvents?.filter((event) => event.type === 'UNHEALTHY'),
+    [healthEvents],
+  )
+
+  const [
+    dismissHealthEvent,
+    { error: dismissError, isLoading: isDismissing, isSuccess: isDismissed },
+  ] = useDismissHealthEventMutation()
 
   useEffect(() => {
     if (isDismissed) {
       toast('Event dismissed')
       AppActions.refreshFeatures(projectId, environmentId)
     }
-  }, [isDismissed, projectId, environmentId])
+  }, [isDismissed, projectId, environmentId, history, featureId])
 
   useEffect(() => {
     if (dismissError) {
@@ -151,7 +161,12 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
     <div>
       <h5 className='mb-4'>Unhealthy Events</h5>
       <div className='d-flex flex-column gap-4'>
-        {healthEvents?.map((event) => (
+        {unhealthyEvents?.length === 0 && (
+          <div className='text-center'>
+            <p>No unhealthy events found</p>
+          </div>
+        )}
+        {unhealthyEvents?.map((event) => (
           <div
             className='border-1 p-3'
             style={{
@@ -185,9 +200,10 @@ const FeatureHealthTabContent: React.FC<FeatureHealthTabContentProps> = ({
                   className='mr-1'
                   size='xSmall'
                   theme='secondary'
+                  disabled={isDismissing}
                   onClick={() => handleDismiss(event.id)}
                 >
-                  Dismiss
+                  {isDismissing ? 'Dismissing' : 'Dismiss'}
                 </Button>
                 <Tooltip title={<Icon width={18} name='info-outlined' />}>
                   When dismissed, this event will no longer be shown in the
