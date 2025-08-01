@@ -179,11 +179,18 @@ class OnboardingTaskSerializer(serializers.Serializer[None]):
 class PatchOnboardingSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True, required=False)
     tools = OnboardingToolsSerializer(required=False)
+    hosting_preferences = serializers.ListField(
+        child=serializers.CharField(), required=False, allow_empty=True
+    )
 
     def validate(self, data: dict[str, Any]) -> dict[str, Any]:
-        if "tasks" not in data and "tools" not in data:
+        if (
+            "tasks" not in data
+            and "tools" not in data
+            and "hosting_preferences" not in data
+        ):
             raise serializers.ValidationError(
-                "At least one of 'tasks' or 'tools' must be provided."
+                "At least one of 'tasks' or 'tools' or 'hosting_preferences' must be provided."
             )
         return data
 
@@ -191,6 +198,9 @@ class PatchOnboardingSerializer(serializers.Serializer[None]):
 class OnboardingResponseTypeSerializer(serializers.Serializer[None]):
     tasks = OnboardingTaskSerializer(many=True, required=False, default=list)
     tools = OnboardingToolsSerializer(required=False)
+    hosting_preferences = serializers.ListField(
+        child=serializers.CharField(), required=False, allow_empty=True
+    )
 
 
 class CustomCurrentUserSerializer(DjoserUserSerializer):  # type: ignore[misc]
