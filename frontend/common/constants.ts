@@ -634,6 +634,7 @@ const Constants = {
     'AUDIT_LOG': 'Audit Log Page',
     'COMING_SOON': 'Coming Soon Page',
     'CREATE_ENVIRONMENT': 'Create Environment Page',
+    'CREATE_ORGANISATION': 'Create Organisation Page',
     'DOCUMENTATION': 'Documentation Page',
     'ENVIRONMENT_SETTINGS': 'Environment Settings Page',
     'FEATURES': 'Features Page',
