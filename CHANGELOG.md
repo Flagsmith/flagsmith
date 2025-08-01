@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.190.0](https://github.com/Flagsmith/flagsmith/compare/v2.189.0...v2.190.0) (2025-08-01)
+
+
+### Features
+
+* add save and publish pipeline ([#5827](https://github.com/Flagsmith/flagsmith/issues/5827)) ([e59b3c6](https://github.com/Flagsmith/flagsmith/commit/e59b3c610d4b20fb1a0b0ef066ab7523b85fcc70))
+
+
+### Bug Fixes
+
+* split-operator-to-remove-append ([#5871](https://github.com/Flagsmith/flagsmith/issues/5871)) ([df27bb1](https://github.com/Flagsmith/flagsmith/commit/df27bb1ab0a49f037dc83fe97f76324bb9c34859))
+* **tests:** Improper `skip_if_no_analytics_db` marker behaviour ([#5876](https://github.com/Flagsmith/flagsmith/issues/5876)) ([de61b8b](https://github.com/Flagsmith/flagsmith/commit/de61b8b4ccdaab13bd03634942c620bebd1772ca))
+
 ## [2.189.0](https://github.com/Flagsmith/flagsmith/compare/v2.188.1...v2.189.0) (2025-07-31)
 
 
