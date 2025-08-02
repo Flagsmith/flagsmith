@@ -293,19 +293,19 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         ):
             return FeatureStateSerializerSmall(instance=feature_state).data
 
-    def get_num_segment_overrides(self, instance) -> int:  # type: ignore[no-untyped-def]
+    def get_num_segment_overrides(self, instance: Feature) -> int:
         try:
             return self.context["overrides_data"][instance.id].num_segment_overrides  # type: ignore[no-any-return]
         except (KeyError, AttributeError):
             return 0
 
-    def get_num_identity_overrides(self, instance) -> int | None:  # type: ignore[no-untyped-def]
+    def get_num_identity_overrides(self, instance: Feature) -> int | None:
         try:
             return self.context["overrides_data"][instance.id].num_identity_overrides  # type: ignore[no-any-return]
         except (KeyError, AttributeError):
             return None
 
-    def get_is_num_identity_overrides_complete(self, instance) -> int | None:  # type: ignore[no-untyped-def]  # noqa: E501
+    def get_is_num_identity_overrides_complete(self, instance: Feature) -> int | None:
         try:
             return self.context["overrides_data"][  # type: ignore[no-any-return]
                 instance.id
