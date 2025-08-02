@@ -1,5 +1,5 @@
-import typing
 from datetime import datetime
+from typing import Any
 
 import django.core.exceptions
 from common.features.multivariate.serializers import (
@@ -9,7 +9,6 @@ from common.features.serializers import (
     CreateSegmentOverrideFeatureStateSerializer,
     FeatureStateValueSerializer,
 )
-from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     WritableNestedModelSerializer,
 )
@@ -24,7 +23,7 @@ from environments.sdk.serializers_mixins import (
 )
 from integrations.github.constants import GitHubEventType
 from integrations.github.github import call_github_task
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from users.serializers import (
     UserIdsSerializer,
@@ -269,7 +268,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
 
         return name
 
-    def validate(self, attrs):  # type: ignore[no-untyped-def]
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         view = self.context["view"]
         project_id = str(view.kwargs.get("project_pk"))
         if not project_id.isdigit():
@@ -288,7 +287,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
     )
     def get_environment_feature_state(  # type: ignore[return]
         self, instance: Feature
-    ) -> dict[str, typing.Any] | None:
+    ) -> dict[str, Any] | None:
         if (feature_states := self.context.get("feature_states")) and (
             feature_state := feature_states.get(instance.id)
         ):
@@ -300,13 +299,13 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         except (KeyError, AttributeError):
             return 0
 
-    def get_num_identity_overrides(self, instance) -> typing.Optional[int]:  # type: ignore[no-untyped-def]
+    def get_num_identity_overrides(self, instance) -> int | None:  # type: ignore[no-untyped-def]
         try:
             return self.context["overrides_data"][instance.id].num_identity_overrides  # type: ignore[no-any-return]
         except (KeyError, AttributeError):
             return None
 
-    def get_is_num_identity_overrides_complete(self, instance) -> typing.Optional[int]:  # type: ignore[no-untyped-def]  # noqa: E501
+    def get_is_num_identity_overrides_complete(self, instance) -> int | None:  # type: ignore[no-untyped-def]  # noqa: E501
         try:
             return self.context["overrides_data"][  # type: ignore[no-any-return]
                 instance.id
@@ -325,19 +324,23 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         return getattr(instance, "last_modified_in_current_environment", None)
 
 
-class FeatureSerializerWithMetadata(SerializerWithMetadata, CreateFeatureSerializer):
+class FeatureSerializerWithMetadata(MetadataSerializerMixin, CreateFeatureSerializer):
     metadata = MetadataSerializer(required=False, many=True)
 
     class Meta(CreateFeatureSerializer.Meta):
         fields = CreateFeatureSerializer.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
-    def update(
-        self, instance: models.Model, validated_data: dict[str, typing.Any]
-    ) -> Feature:
-        metadata_items = validated_data.pop("metadata", [])
-        feature = typing.cast(Feature, super().update(instance, validated_data))
-        self.update_metadata(feature, metadata_items)
-        feature.refresh_from_db()
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        project = self.instance.project if self.instance else self.context["project"]  # type: ignore[union-attr]
+        organisation = project.organisation
+        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        return attrs
+
+    def update(self, feature: Feature, validated_data: dict[str, Any]) -> Feature:
+        metadata = validated_data.pop("metadata", [])
+        feature = super().update(feature, validated_data)
+        self._update_metadata(feature, metadata)
         return feature
 
 

@@ -1,17 +1,18 @@
-import logging
 from typing import Any
 
+import structlog
 from django.conf import settings
+from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
 from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from metadata.serializers import MetadataSerializer, SerializerWithMetadata
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from projects.models import Project
 from segments.models import Condition, Segment, SegmentRule
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 DictList = list[dict[str, Any]]
 
@@ -86,74 +87,60 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
         ]
 
 
-class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
-    rules = SegmentRuleSerializer(
-        many=True,
-    )
-    metadata = MetadataSerializer(
-        required=False,
-        many=True,
-    )
+class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
+    rules = SegmentRuleSerializer(many=True, required=True, allow_empty=False)
+    metadata = MetadataSerializer(required=False, many=True)
 
     class Meta:
         model = Segment
-        fields = "__all__"
+        fields = [
+            "id",
+            "uuid",
+            "created_at",
+            "updated_at",
+            "name",
+            "description",
+            "project",
+            "feature",
+            "version_of",
+            "change_request",
+            "rules",
+            "metadata",
+        ]
 
     def get_initial(self) -> dict[str, Any]:
-        initial_data: dict[str, Any] = super().get_initial()
-        if rules_data := initial_data.get("rules"):
-            initial_data["rules"] = self._get_rules_and_conditions_without_deleted(
-                rules_data
-            )
-        return initial_data
+        attrs: dict[str, Any] = super().get_initial()
+        attrs["rules"] = self._get_rules_and_conditions_without_deleted(attrs["rules"])
+        return attrs
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = super().validate(attrs)
-        if not attrs.get("rules"):
-            raise ValidationError(
-                {"rules": "Segment cannot be created without any rules."}
-            )
+        project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
+        organisation = project.organisation
+        self._validate_required_metadata(organisation, attrs.get("metadata", []))
         self._validate_segment_rules_conditions_limit(attrs["rules"])
+        self._validate_project_segment_limit(project)
         return attrs
 
-    def create(self, validated_data: dict[str, Any]) -> Segment:
-        project = validated_data["project"]
-        self._validate_project_segment_limit(project)
-
-        metadata_data = validated_data.pop("metadata", [])
-
+    def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         self.context["is_creating_segment"] = True
-        segment: Segment = super().create(validated_data)  # type: ignore[no-untyped-call]
-
-        self.update_metadata(segment, metadata_data)
-
+        metadata_data = validated_data.pop("metadata", [])
+        segment = super().create(validated_data)  # type: ignore[no-untyped-call]
+        self._update_metadata(segment, metadata_data)
         return segment
 
-    def update(
-        self,
-        instance: Segment,
-        validated_data: dict[str, Any],
-    ) -> Segment:
-        metadata_data = validated_data.pop("metadata", [])
-
-        # Create a version of the segment now that we're updating.
-        cloned_segment = instance.deep_clone()
+    def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
+        metadata = validated_data.pop("metadata", [])
+        with transaction.atomic():
+            segment_revision = segment.deep_clone()
+            segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
         logger.info(
-            f"Updating cloned segment {cloned_segment.id} for original segment {instance.id}"
+            "segment-revision-created",
+            original_segment_id=segment.id,
+            revision_id=segment_revision.id,
         )
-
-        try:
-            self.update_metadata(instance, metadata_data)
-            instance = super().update(instance, validated_data)  # type: ignore[no-untyped-call]
-        except Exception:
-            # Roll back ¯\_(ツ)_/¯
-            instance.refresh_from_db()
-            instance.version = cloned_segment.version
-            instance.save()
-            cloned_segment.hard_delete()
-            raise
-
-        return instance
+        self._update_metadata(segment, metadata)
+        return segment
 
     def _get_rules_and_conditions_without_deleted(
         self, rules_data: DictList
@@ -187,30 +174,30 @@ class SegmentSerializer(SerializerWithMetadata, WritableNestedModelSerializer):
     def _validate_project_segment_limit(self, project: Project) -> None:
         segment_count = Segment.live_objects.filter(project=project).count()
         if segment_count >= project.max_segments_allowed:
-            msg = "The project has reached the maximum allowed segments limit."
-            raise ValidationError({"project": msg})
+            raise ValidationError(
+                {
+                    "project": "The project has reached the maximum allowed segments limit."
+                }
+            )
 
-    def _validate_segment_rules_conditions_limit(
-        self,
-        rules_data: DictList,
-    ) -> None:
+    def _validate_segment_rules_conditions_limit(self, rules_data: DictList) -> None:
         if self.instance and getattr(self.instance, "whitelisted_segment", None):
             return
 
-        def _calculate_condition_count(rules_data: DictList) -> int:
+        def _count_conditions(rules_data: DictList) -> int:
             return sum(
                 len(rule.get("conditions", []))
-                + _calculate_condition_count(rule.get("rules", []))
+                + _count_conditions(rule.get("rules", []))
                 for rule in rules_data
             )
 
-        condition_count = _calculate_condition_count(rules_data)
+        condition_count = _count_conditions(rules_data)
         if condition_count > settings.SEGMENT_RULES_CONDITIONS_LIMIT:
-            msg = (
-                f"The segment has {condition_count} conditions, which exceeds the maximum "
-                f"condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
+            raise ValidationError(
+                {
+                    "segment": f"The segment has {condition_count} conditions, which exceeds the maximum condition count of {settings.SEGMENT_RULES_CONDITIONS_LIMIT}."
+                }
             )
-            raise ValidationError({"segment": msg})
 
 
 class SegmentSerializerBasic(serializers.ModelSerializer):  # type: ignore[type-arg]
