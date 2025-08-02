@@ -100,37 +100,6 @@ class Segment(
 
         return False
 
-    @staticmethod
-    def id_exists_in_rules_data(rules_data: typing.List[dict]) -> bool:  # type: ignore[type-arg]
-        """
-        Given a list of segment rules, return whether any of the rules or conditions contain an id.
-
-        :param rules_data: list of segment rules (in the form {"id": 1, "rules": [], "conditions": [], "typing": ""})
-        :return: boolean value detailing whether any id attributes were found
-        """
-
-        _rules_data = deepcopy(rules_data)
-        for rule_data in _rules_data:
-            if rule_data.get("id"):
-                return True
-
-            conditions_to_check = rule_data.get("conditions", [])
-            rules_to_check = rule_data.get("rules", [])
-
-            while rules_to_check:
-                rule = rules_to_check.pop()
-                if rule.get("id"):
-                    return True
-                rules_to_check.extend(rule.get("rules", []))
-                conditions_to_check.extend(rule.get("conditions", []))
-
-            while conditions_to_check:
-                condition = conditions_to_check.pop()
-                if condition.get("id"):
-                    return True
-
-        return False
-
     @hook(BEFORE_CREATE, when="version_of", is_now=None)
     def set_default_version_to_one_if_new_segment(self):  # type: ignore[no-untyped-def]
         if self.version is None:
