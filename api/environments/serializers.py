@@ -1,15 +1,10 @@
-import typing
-from typing import cast
+from typing import Any
 
-from common.metadata.serializers import (
-    MetadataSerializer,
-    SerializerWithMetadata,
-)
-from django.db import models
 from rest_framework import serializers
 
 from environments.models import Environment, EnvironmentAPIKey, Webhook
 from features.serializers import FeatureStateSerializerFull
+from metadata.serializers import MetadataSerializer, MetadataSerializerMixin
 from organisations.models import Subscription
 from organisations.subscriptions.serializers.mixins import (
     ReadOnlyIfNotValidPlanMixin,
@@ -77,7 +72,7 @@ class EnvironmentSerializerLight(serializers.ModelSerializer):  # type: ignore[t
 
 
 class EnvironmentSerializerWithMetadata(
-    SerializerWithMetadata,
+    MetadataSerializerMixin,
     DeleteBeforeUpdateWritableNestedModelSerializer,
     EnvironmentSerializerLight,
 ):
@@ -86,26 +81,19 @@ class EnvironmentSerializerWithMetadata(
     class Meta(EnvironmentSerializerLight.Meta):
         fields = EnvironmentSerializerLight.Meta.fields + ("metadata",)  # type: ignore[assignment]
 
-    def get_project(
-        self,
-        validated_data: dict[str, typing.Any] | None = None,
-    ) -> Project:
-        if self.instance:
-            return self.instance.project  # type: ignore[no-any-return,union-attr]
-        elif validated_data and "project" in validated_data:
-            return validated_data["project"]  # type: ignore[no-any-return]
-
-        raise serializers.ValidationError(
-            "Unable to retrieve project for metadata validation."
-        )
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        project = self.instance.project if self.instance else attrs["project"]  # type: ignore[union-attr]
+        organisation = project.organisation
+        self._validate_required_metadata(organisation, attrs.get("metadata", []))
+        return attrs
 
     def update(
-        self, instance: models.Model, validated_data: dict[str, typing.Any]
+        self, environment: Environment, validated_data: dict[str, Any]
     ) -> Environment:
-        metadata_items = validated_data.pop("metadata", [])
-        environment = cast(Environment, super().update(instance, validated_data))
-        self.update_metadata(environment, metadata_items)
-        environment.refresh_from_db()
+        metadata = validated_data.pop("metadata", [])
+        environment = super().update(environment, validated_data)
+        self._update_metadata(environment, metadata)
         return environment
 
 
@@ -134,7 +122,7 @@ class CreateUpdateEnvironmentSerializer(
             )
         ]
 
-    def get_subscription(self) -> typing.Optional[Subscription]:
+    def get_subscription(self) -> Subscription | None:
         view = self.context["view"]
 
         if view.action == "create":

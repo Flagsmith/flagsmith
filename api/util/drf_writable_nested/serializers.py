@@ -1,6 +1,5 @@
 from typing import Any
 
-from django.db import models
 from drf_writable_nested import (  # type: ignore[attr-defined]
     NestedCreateMixin,
     NestedUpdateMixin,
@@ -11,11 +10,11 @@ from rest_framework import serializers
 class NestedUpdateMixinDeleteBeforeUpdate(NestedUpdateMixin):
     """
     ref: https://github.com/beda-software/drf-writable-nested/issues/158
+
+    TODO: Explore a [seemingly] known solution: https://github.com/beda-software/drf-writable-nested?tab=readme-ov-file#validation-problem-for-nested-serializers-with-unique-fields-on-update
     """
 
-    def update(
-        self, instance: models.Model, validated_data: dict[str, Any]
-    ) -> models.Model:
+    def update(self, instance, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         relations, reverse_relations = self._extract_relations(validated_data)  # type: ignore[no-untyped-call]
 
         # Create or update direct relations (foreign key, one-to-one)

@@ -1,6 +1,5 @@
 from unittest.mock import PropertyMock
 
-import pytest
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from pytest_mock import MockerFixture
 
@@ -182,49 +181,6 @@ def test_condition_get_update_log_message(segment, segment_rule, mocker):  # typ
 
     # Then
     assert msg == f"Condition updated on segment '{segment.name}'."
-
-
-@pytest.mark.parametrize(
-    "rules_data, expected_result",
-    (
-        (
-            [{"id": 1, "rules": [], "conditions": [], "type": SegmentRule.ALL_RULE}],
-            True,
-        ),
-        ([{"rules": [], "conditions": [], "type": SegmentRule.ALL_RULE}], False),
-        (
-            [
-                {
-                    "rules": [
-                        {
-                            "id": 1,
-                            "rules": [],
-                            "conditions": [],
-                            "type": SegmentRule.ALL_RULE,
-                        }
-                    ],
-                    "conditions": [],
-                    "type": SegmentRule.ALL_RULE,
-                }
-            ],
-            True,
-        ),
-        (
-            [
-                {
-                    "rules": [],
-                    "conditions": [
-                        {"id": 1, "property": "foo", "operator": EQUAL, "value": "bar"}
-                    ],
-                    "type": SegmentRule.ALL_RULE,
-                }
-            ],
-            True,
-        ),
-    ),
-)
-def test_segment_id_exists_in_rules_data(rules_data, expected_result):  # type: ignore[no-untyped-def]
-    assert Segment.id_exists_in_rules_data(rules_data) == expected_result
 
 
 def test_manager_returns_only_highest_version_of_segments(

@@ -2,16 +2,19 @@ from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.db.models import Model
 from rest_framework import serializers
 
-from util.drf_writable_nested.serializers import (
-    DeleteBeforeUpdateWritableNestedModelSerializer,
-)
-
-from .models import (
+from metadata.models import (
+    Metadata,
     MetadataField,
     MetadataModelField,
     MetadataModelFieldRequirement,
+)
+from organisations.models import Organisation
+from util.drf_writable_nested.serializers import (
+    DeleteBeforeUpdateWritableNestedModelSerializer,
 )
 
 
@@ -83,3 +86,67 @@ class ContentTypeSerializer(serializers.ModelSerializer):  # type: ignore[type-a
     class Meta:
         model = ContentType
         fields = ("id", "app_label", "model")
+
+
+class MetadataSerializer(serializers.ModelSerializer[Metadata]):
+    class Meta:
+        model = Metadata
+        fields = ("id", "model_field", "field_value")
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = super().validate(attrs)
+        model_field = attrs["model_field"].field
+        if not model_field.is_field_value_valid(attrs["field_value"]):
+            raise serializers.ValidationError(
+                f"Invalid value for field {model_field.name}"
+            )
+        return attrs
+
+
+class MetadataSerializerMixin:
+    """
+    Functionality for serializers that need to handle metadata
+    """
+
+    def _validate_required_metadata(
+        self, organisation: Organisation, metadata: list[dict[str, Any]]
+    ) -> None:
+        content_type = ContentType.objects.get_for_model(self.Meta.model)  # type: ignore[attr-defined]
+        requirements = MetadataModelFieldRequirement.objects.filter(
+            model_field__content_type=content_type,
+            model_field__field__organisation=organisation,
+        ).select_related("model_field__field")
+
+        metadata_fields = {field["model_field"] for field in metadata}
+        for requirement in requirements:
+            if requirement.model_field not in metadata_fields:
+                field_name = requirement.model_field.field.name
+                raise serializers.ValidationError(
+                    {"metadata": f"Missing required metadata field: {field_name}"}
+                )
+
+    def _update_metadata(
+        self,
+        instance: Model,
+        metadata_data: list[dict[str, Any]],
+    ) -> None:
+        content_type = ContentType.objects.get_for_model(type(instance))
+        existing_metadata = Metadata.objects.filter(
+            object_id=instance.pk,
+            content_type=content_type,
+        )
+
+        new_metadata = [
+            Metadata(
+                model_field=model_field,
+                content_type=content_type,
+                object_id=instance.pk,
+                field_value=metadata_item["field_value"],
+            )
+            for metadata_item in metadata_data
+            if (model_field := metadata_item["model_field"]) and model_field.pk
+        ]
+
+        with transaction.atomic():
+            existing_metadata.delete()
+            Metadata.objects.bulk_create(new_metadata)
