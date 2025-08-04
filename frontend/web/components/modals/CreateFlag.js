@@ -1078,10 +1078,6 @@ const CreateFlag = class extends Component {
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
 
-              console.log(
-                'this.props.hasUnhealthyEvents',
-                this.props.hasUnhealthyEvents,
-              )
 
               return (
                 <Permission
