@@ -305,7 +305,7 @@ class CreateFeatureSerializer(DeleteBeforeUpdateWritableNestedModelSerializer):
         except (KeyError, AttributeError):
             return None
 
-    def get_is_num_identity_overrides_complete(self, instance: Feature) -> int | None:
+    def get_is_num_identity_overrides_complete(self, instance: Feature) -> bool | None:
         try:
             return self.context["overrides_data"][  # type: ignore[no-any-return]
                 instance.id
