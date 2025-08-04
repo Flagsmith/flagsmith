@@ -1065,40 +1065,6 @@ def test_create_segment_with_required_metadata_returns_201(
     assert response.json()["metadata"][0]["field_value"] == str(field_value)
 
 
-def test_update_segment__empty_non_split_condition__responds_400(
-    admin_client: APIClient,
-    segment: Segment,
-    segment_rule: SegmentRule,
-) -> None:
-    # When
-    response = admin_client.patch(
-        f"/api/v1/projects/{segment.project.pk}/segments/{segment.pk}/",
-        data={
-            "rules": [
-                {
-                    "id": segment_rule.pk,
-                    "type": "ALL",
-                    "rules": [],
-                    "conditions": [
-                        {
-                            # "property": "not-provided",
-                            "operator": EQUAL,
-                            "value": "👀",
-                        },
-                    ],
-                },
-            ],
-        },
-        format="json",
-    )
-
-    # Then
-    assert response.status_code == status.HTTP_400_BAD_REQUEST, response.data
-    assert response.json()["rules"][0]["conditions"][0]["property"] == [
-        "This field may not be blank."
-    ]
-
-
 @pytest.mark.parametrize(
     "client",
     [lazy_fixture("admin_master_api_key_client"), lazy_fixture("admin_client")],

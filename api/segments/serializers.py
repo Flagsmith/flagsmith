@@ -4,7 +4,6 @@ import structlog
 from django.conf import settings
 from django.db import transaction
 from drf_writable_nested.serializers import WritableNestedModelSerializer
-from flag_engine.segments.constants import PERCENTAGE_SPLIT
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -32,12 +31,6 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
             "description",
             "delete",
         ]
-
-    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        attrs = super().validate(attrs)
-        if attrs.get("operator") != PERCENTAGE_SPLIT and not attrs.get("property"):
-            raise ValidationError({"property": ["This field may not be blank."]})
-        return attrs
 
     def to_internal_value(self, data: dict[str, Any]) -> Any:
         # Conversion to correct value type is handled elsewhere
