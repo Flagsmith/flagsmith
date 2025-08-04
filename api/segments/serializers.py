@@ -96,7 +96,6 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
             "project",
             "feature",
             "version_of",
-            "change_request",
             "rules",
             "metadata",
         ]
