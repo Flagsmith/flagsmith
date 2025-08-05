@@ -182,7 +182,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
       <CreateFlagModal
         hideTagsByType={['UNHEALTHY']}
         hasUnhealthyEvents={
-          isFeatureHealthEnabled && featureUnhealthyEvents?.length
+          isFeatureHealthEnabled && !!featureUnhealthyEvents?.length
         }
         history={history}
         environmentId={environmentId}
@@ -227,7 +227,7 @@ const FeatureRow: FC<FeatureRowProps> = (props) => {
         permission={permission}
         editFeature={editFeature}
         hasUnhealthyEvents={
-          isFeatureHealthEnabled && featureUnhealthyEvents?.length
+          isFeatureHealthEnabled && !!featureUnhealthyEvents?.length
         }
         onChange={onChange}
         style={style}
