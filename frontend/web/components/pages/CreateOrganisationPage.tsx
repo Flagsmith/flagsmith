@@ -27,7 +27,8 @@ const CreateOrganisationPage: React.FC = () => {
     AccountStore.isSaving,
   )
   const [updateTools] = useUpdateOnboardingMutation({})
-
+  const showHostingPreferences =
+    Utils.isSaas() && Utils.getFlagsmithHasFeature('hosting_preferences')
   useEffect(() => {
     const onChangeAccountStore = () => {
       setAccountStoreSaving(AccountStore.isSaving)
@@ -38,7 +39,7 @@ const CreateOrganisationPage: React.FC = () => {
       AppActions.selectOrganisation(id)
       API.setCookie('organisation', `${id}`)
 
-      if (Utils.isSaas()) {
+      if (showHostingPreferences) {
         updateTools({
           hosting_preferences: hosting,
         })
@@ -121,7 +122,7 @@ const CreateOrganisationPage: React.FC = () => {
             placeholder='E.g. ACME Ltd'
             onChange={(e: InputEvent) => setName(Utils.safeParseEventValue(e))}
           />
-          {Utils.isSaas() && (
+          {showHostingPreferences && (
             <InputGroup
               inputProps={{ className: 'full-width', name: 'orgName' }}
               title={
