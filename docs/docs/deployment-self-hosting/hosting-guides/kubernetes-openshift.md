@@ -28,7 +28,7 @@ helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith
 kubectl -n flagsmith port-forward svc/flagsmith-frontend 8080:8080
 ```
 
-Then view `http://localhost:8080` in a browser. This will install the chart using default options, in a new namespace `flagsmith`.
+Then view `http://localhost:8080` in a browser. This will install the chart using default options in a new namespace called `flagsmith`.
 
 Refer to the chart's default [`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) file to learn which values are expected by the chart. You can use it as a reference for building your own values file:
 
@@ -57,11 +57,11 @@ Then access `http://localhost:8080` in a browser.
 
 #### In a cluster that has an ingress controller, using the frontend proxy
 
-In this configuration, api requests are proxied by the frontend. This is simpler to configure, but introduces some latency.
+In this configuration, API requests are proxied by the frontend. This is simpler to configure but introduces some latency.
 
-Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any associated DNS changes.
+Set the following values for Flagsmith, with changes as needed to accommodate your ingress controller and any associated DNS changes.
 
-Eg in the `charts/flagsmith/values.yaml` file:
+For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 ingress:
@@ -73,11 +73,11 @@ ingress:
 
 Then, once any out-of-cluster DNS or CDN changes have been applied, access `https://flagsmith.[MYDOMAIN]` in a browser.
 
-#### In a cluster that has an ingress controller, using separate ingresses for frontend and api
+#### In a cluster that has an ingress controller, using separate ingresses for frontend and API
 
-Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any associated DNS changes. Also, set the `FLAGSMITH_API_URL` env-var such that the URL is reachable from a browser accessing the frontend.
+Set the following values for Flagsmith, with changes as needed to accommodate your ingress controller and any associated DNS changes. Also, set the `FLAGSMITH_API_URL` environment variable such that the URL is reachable from a browser accessing the frontend.
 
-Eg in the `charts/flagsmith/values.yaml` file:
+For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 ingress:
@@ -109,7 +109,7 @@ Then, once any out-of-cluster DNS or CDN changes have been applied, access `http
 
 If using minikube, enable ingress with `minikube addons enable ingress`.
 
-Then set the following values for flagsmith in the `charts/flagsmith/values.yaml` file:
+Then set the following values for Flagsmith in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 ingress:
@@ -121,7 +121,7 @@ ingress:
 
 and apply. This will create two ingress resources.
 
-Run `minikube ip`. Set this ip and `flagsmith.local` in your `/etc/hosts`, eg:
+Run `minikube ip`. Set this IP and `flagsmith.local` in your `/etc/hosts`, for example:
 
 ```txt
 192.168.99.99 flagsmith.local
@@ -135,11 +135,11 @@ By default, the chart creates its own PostgreSQL server within the cluster, refe
 
 :::caution
 
-We recommend running an externally managed database in production, either by deploying your own Postgres instance in your cluster, or using a service like [AWS RDS](https://aws.amazon.com/rds/postgresql/).
+We recommend running an externally managed database in production, either by deploying your own PostgreSQL instance in your cluster or using a service like [AWS RDS](https://aws.amazon.com/rds/postgresql/).
 
 :::
 
-You can provide configuration options to the postgres database by modifying the values, for example the below changes the max_connections in the `charts/flagsmith/values.yaml` file:
+You can provide configuration options to the PostgreSQL database by modifying the values. For example, the below changes the max_connections in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 postgresql:
@@ -151,11 +151,11 @@ postgresql:
 
 ### External Database configuration
 
-To connect the Flagsmith API to an external PostgreSQL server set the values under `databaseExternal`, eg in the `charts/flagsmith/values.yaml` file:
+To connect the Flagsmith API to an external PostgreSQL server, set the values under `databaseExternal`. For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 postgresql:
- enabled: false # turn off the chart-managed postgres
+ enabled: false # turn off the chart-managed PostgreSQL
 
 databaseExternal:
  enabled: true
@@ -177,9 +177,9 @@ databaseExternal:
 
 :::caution
 
-Due to a [bug](https://bugs.python.org/issue33342) in python's urllib module, passwords containing `[`, `]` or `#` chars must be urlencoded.
+Due to a [bug](https://bugs.python.org/issue33342) in Python's urllib module, passwords containing `[`, `]` or `#` characters must be URL-encoded.
 
-e.g.
+For example:
 
 `postgres://user:pass[word@localhost/flagsmith`
 
@@ -193,13 +193,13 @@ should be provided as:
 
 :::caution
 
-It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY) value in your helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
+It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY) value in your Helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
 
 If you are using our Helm charts and don't provide a `secretKey`, one will be generated for you and shared across the running pods, but this will change upon redeployment, which you probably don't want to happen.
 
 :::
 
-The chart handles most environment variables required, but see the [API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can be set using `api.extraEnv`, eg in the `charts/flagsmith/values.yaml` file:
+The chart handles most environment variables required, but see the [API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can be set using `api.extraEnv`. For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
@@ -215,7 +215,7 @@ TODO: recommend some defaults
 
 ### Replicas
 
-By default, 1 replica of each of the frontend and api is used.
+By default, 1 replica of each of the frontend and API is used.
 
 ### Deployment strategy
 
@@ -223,7 +223,7 @@ For each of the deployments, you can set `deploymentStrategy`. By default this i
 Kubernetes behaviour, but you can set this to an object to adjust this. See
 [https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy].
 
-Eg in the `charts/flagsmith/values.yaml` file:
+For example, in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
@@ -236,13 +236,11 @@ api:
 
 ### PgBouncer
 
-By default, Flagsmith connects directly to the database - either in-cluster, or external. Can enable PgBouncer with
-`pgbouncer.enabled: true` to have Flagsmith connect to PgBouncer, and PgBouncer connect to the database.
+By default, Flagsmith connects directly to the database - either in-cluster or external. You can enable PgBouncer with `pgbouncer.enabled: true` to have Flagsmith connect to PgBouncer, and zPgBouncer connect to the database.
 
 ### All-in-one Docker image
 
-The Docker image at [https://hub.docker.com/r/flagsmith/flagsmith/] contains both the API and the frontend. To make use
-of this, set the following values:
+The Docker image at [https://hub.docker.com/r/flagsmith/flagsmith/] contains both the API and the frontend. To make use of this, set the following values:
 
 ```yaml
 api:
@@ -252,12 +250,11 @@ api:
  separateApiAndFrontend: false
 ```
 
-This switches off the Kubernetes deployment for the frontend. However, the ingress and service are retained, but all
-requests are handled by the API deployment.
+This switches off the Kubernetes deployment for the frontend. However, the ingress and service are retained, but all requests are handled by the API deployment.
 
 ### InfluxDB
 
-By default, Flagsmith uses Postgres to store time series data. You can alternatively use Influx to track:
+By default, Flagsmith uses PostgreSQL to store time series data. You can alternatively use InfluxDB to track:
 
 - SDK API traffic
 - SDK Flag Evaluations
@@ -266,7 +263,7 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 
 ### Task Processor
 
-The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the values to set to configure the task processor using the helm chart.
+The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the values to set to configure the task processor using the Helm chart.
 
 ## Chart Values
 
@@ -274,16 +271,16 @@ The following table lists the configurable parameters of the chart and their def
 
 | Parameter                                          | Description                                                               | Default                        |
 | -------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------ |
-| `api.image.repository`                             | docker image repository for flagsmith api                                 | `flagsmith/flagsmith-api`      |
-| `api.image.tag`                                    | docker image tag for flagsmith api                                        | appVersion                     |
+| `api.image.repository`                             | Docker image repository for Flagsmith API                                 | `flagsmith/flagsmith-api`      |
+| `api.image.tag`                                    | Docker image tag for Flagsmith API                                        | appVersion                     |
 | `api.image.imagePullPolicy`                        |                                                                           | `IfNotPresent`                 |
 | `api.image.imagePullSecrets`                       |                                                                           | `[]`                           |
-| `api.separateApiAndFrontend`                       | Set to false if using flagsmith/flagsmith image for the api               | `true`                         |
-| `api.replicacount`                                 | number of replicas for the flagsmith api, `null` to unset                 | 1                              |
+| `api.separateApiAndFrontend`                       | Set to false if using flagsmith/flagsmith image for the API               | `true`                         |
+| `api.replicacount`                                 | Number of replicas for the Flagsmith API, `null` to unset                 | 1                              |
 | `api.deploymentStrategy`                           | See "Deployment strategy" above                                           |                                |
-| `api.resources`                                    | resources per pod for the flagsmith api                                   | `{}`                           |
-| `api.podLabels`                                    | additional labels to apply to pods for the flagsmith api                  | `{}`                           |
-| `api.extraEnv`                                     | extra environment variables to set for the flagsmith api                  | `{}`                           |
+| `api.resources`                                    | Resources per pod for the Flagsmith API                                   | `{}`                           |
+| `api.podLabels`                                    | Additional labels to apply to pods for the Flagsmith API                  | `{}`                           |
+| `api.extraEnv`                                     | Extra environment variables to set for the Flagsmith API                  | `{}`                           |
 | `api.secretKey`                                    | See `secretKey` docs above                                                | `null`                         |
 | `api.secretKeyFromExistingSecret.enabled`          | Set to true to use a secret key stored in an existing k8s secret          | `false`                        |
 | `api.secretKeyFromExistingSecret.name`             | The name of the secret key k8s secret                                     | `null`                         |
@@ -292,7 +289,7 @@ The following table lists the configurable parameters of the chart and their def
 | `api.tolerations`                                  |                                                                           | `[]`                           |
 | `api.affinity`                                     |                                                                           | `{}`                           |
 | `api.podSecurityContext`                           |                                                                           | `{}`                           |
-| `api.defaultPodSecurityContext.enabled`            | whether to use the default security context                               | `true`                         |
+| `api.defaultPodSecurityContext.enabled`            | Whether to use the default security context                               | `true`                         |
 | `api.livenessProbe.failureThreshold`               |                                                                           | 5                              |
 | `api.livenessProbe.initialDelaySeconds`            |                                                                           | 10                             |
 | `api.livenessProbe.periodSeconds`                  |                                                                           | 10                             |
@@ -308,21 +305,21 @@ The following table lists the configurable parameters of the chart and their def
 | `api.dbWaiter.image.tag`                           |                                                                           | `latest`                       |
 | `api.dbWaiter.image.imagePullPolicy`               |                                                                           | `IfNotPresent`                 |
 | `api.dbWaiter.timeoutSeconds`                      | Time before init container will retry                                     | 30                             |
-| `frontend.enabled`                                 | Whether the flagsmith frontend is enabled                                 | `true`                         |
-| `frontend.image.repository`                        | docker image repository for flagsmith frontend                            | `flagsmith/flagsmith-frontend` |
-| `frontend.image.tag`                               | docker image tag for flagsmith frontend                                   | appVersion                     |
+| `frontend.enabled`                                 | Whether the Flagsmith frontend is enabled                                 | `true`                         |
+| `frontend.image.repository`                        | Docker image repository for Flagsmith frontend                            | `flagsmith/flagsmith-frontend` |
+| `frontend.image.tag`                               | Docker image tag for Flagsmith frontend                                   | appVersion                     |
 | `frontend.image.imagePullPolicy`                   |                                                                           | `IfNotPresent`                 |
 | `frontend.image.imagePullSecrets`                  |                                                                           | `[]`                           |
-| `frontend.replicacount`                            | number of replicas for the flagsmith frontend, `null` to unset            | 1                              |
+| `frontend.replicacount`                            | Number of replicas for the Flagsmith frontend, `null` to unset            | 1                              |
 | `frontend.deploymentStrategy`                      | See "Deployment strategy" above                                           |                                |
-| `frontend.resources`                               | resources per pod for the flagsmith frontend                              | `{}`                           |
-| `frontend.apiProxy.enabled`                        | proxy API requests to the API service within the cluster                  | `true`                         |
-| `frontend.extraEnv`                                | extra environment variables to set for the flagsmith frontend             | `{}`                           |
+| `frontend.resources`                               | Resources per pod for the Flagsmith frontend                              | `{}`                           |
+| `frontend.apiProxy.enabled`                        | Proxy API requests to the API service within the cluster                  | `true`                         |
+| `frontend.extraEnv`                                | Extra environment variables to set for the Flagsmith frontend             | `{}`                           |
 | `frontend.nodeSelector`                            |                                                                           | `{}`                           |
 | `frontend.tolerations`                             |                                                                           | `[]`                           |
 | `frontend.affinity`                                |                                                                           | `{}`                           |
 | `api.podSecurityContext`                           |                                                                           | `{}`                           |
-| `api.defaultPodSecurityContext.enabled`            | whether to use the default security context                               | `true`                         |
+| `api.defaultPodSecurityContext.enabled`            | Whether to use the default security context                               | `true`                         |
 | `frontend.livenessProbe.failureThreshold`          |                                                                           | 20                             |
 | `frontend.livenessProbe.initialDelaySeconds`       |                                                                           | 20                             |
 | `frontend.livenessProbe.periodSeconds`             |                                                                           | 10                             |
@@ -360,27 +357,27 @@ The following table lists the configurable parameters of the chart and their def
 | `taskProcessor.tolerations`                        |                                                                           | `[]`                           |
 | `taskProcessor.affinity`                           |                                                                           | `{}`                           |
 | `taskProcessor.podSecurityContext`                 |                                                                           | `{}`                           |
-| `taskProcessor.defaultPodSecurityContext.enabled`  | whether to use the default security context                               | `true`                         |
-| `devPostgresql.enabled`                            | if `true`, creates in-cluster PostgreSQL database                         | `true`                         |
-| `postgresql.serviceAccount.enabled`                | creates a serviceaccount for the postgres pod                             | `true`                         |
+| `taskProcessor.defaultPodSecurityContext.enabled`  | Whether to use the default security context                               | `true`                         |
+| `devPostgresql.enabled`                            | If `true`, creates in-cluster PostgreSQL database                         | `true`                         |
+| `postgresql.serviceAccount.enabled`                | Creates a service account for the PostgreSQL pod                          | `true`                         |
 | `nameOverride`                                     |                                                                           | `flagsmith-postgres`           |
 | `postgresqlDatabase`                               |                                                                           | `flagsmith`                    |
 | `postgresqlUsername`                               |                                                                           | `postgres`                     |
 | `postgresqlPassword`                               |                                                                           | `flagsmith`                    |
-| `databaseExternal.enabled`                         | use an external database. Specify database URL, or all parts.             | `false`                        |
+| `databaseExternal.enabled`                         | Use an external database. Specify database URL, or all parts.             | `false`                        |
 | `databaseExternal.url`                             | See [schema](https://github.com/kennethreitz/dj-database-url#url-schema). |                                |
-| `databaseExternal.type`                            | Note: Only postgres supported by default images.                          | `postgres`                     |
+| `databaseExternal.type`                            | Note: Only PostgreSQL supported by default images.                        | `postgres`                     |
 | `databaseExternal.port`                            |                                                                           | 5432                           |
 | `databaseExternal.database`                        | Name of the database within the server                                    |                                |
 | `databaseExternal.username`                        |                                                                           |                                |
 | `databaseExternal.password`                        |                                                                           |                                |
 | `databaseExternal.urlFromExistingSecret.enabled`   | Reference an existing secret containing the database URL.                 |                                |
 | `databaseExternal.urlFromExistingSecret.name`      | Name of referenced secret                                                 |                                |
-| `databaseExternal.urlFromExistingSecret.key`       | Key within the referenced secrt to use                                    |                                |
+| `databaseExternal.urlFromExistingSecret.key`       | Key within the referenced secret to use                                   |                                |
 | `influxdb2.enabled`                                |                                                                           | `true`                         |
 | `influxdb2.nameOverride`                           |                                                                           | `influxdb`                     |
-| `influxdb2.image.repository`                       | docker image repository for influxdb                                      | `quay.io/influxdb/influxdb`    |
-| `influxdb2.image.tag`                              | docker image tag for influxdb                                             | `v2.0.2`                       |
+| `influxdb2.image.repository`                       | Docker image repository for InfluxDB                                      | `quay.io/influxdb/influxdb`    |
+| `influxdb2.image.tag`                              | Docker image tag for InfluxDB                                             | `v2.0.2`                       |
 | `influxdb2.image.imagePullPolicy`                  |                                                                           | `IfNotPresent`                 |
 | `influxdb2.image.imagePullSecrets`                 |                                                                           | `[]`                           |
 | `influxdb2.adminUser.organization`                 |                                                                           | `influxdata`                   |
@@ -389,7 +386,7 @@ The following table lists the configurable parameters of the chart and their def
 | `influxdb2.adminUser.password`                     |                                                                           | randomly generated             |
 | `influxdb2.adminUser.token`                        |                                                                           | randomly generated             |
 | `influxdb2.persistence.enabled`                    |                                                                           | `false`                        |
-| `influxdb.resources`                               | resources per pod for the influxdb                                        | `{}`                           |
+| `influxdb.resources`                               | Resources per pod for the InfluxDB                                        | `{}`                           |
 | `influxdb.nodeSelector`                            |                                                                           | `{}`                           |
 | `influxdb.tolerations`                             |                                                                           | `[]`                           |
 | `influxdb.affinity`                                |                                                                           | `{}`                           |
@@ -406,7 +403,7 @@ The following table lists the configurable parameters of the chart and their def
 | `pgbouncer.image.tag`                              |                                                                           | `1.16.0`                       |
 | `pgbouncer.image.imagePullPolicy`                  |                                                                           | `IfNotPresent`                 |
 | `pgbouncer.image.imagePullSecrets`                 |                                                                           | `[]`                           |
-| `pgbouncer.replicaCount`                           | number of replicas for pgbouncer, `null` to unset                         | 1                              |
+| `pgbouncer.replicaCount`                           | Number of replicas for PgBouncer, `null` to unset                         | 1                              |
 | `pgbouncer.deploymentStrategy`                     | See "Deployment strategy" above                                           |                                |
 | `pgbouncer.podAnnotations`                         |                                                                           | `{}`                           |
 | `pgbouncer.resources`                              |                                                                           | `{}`                           |
@@ -449,7 +446,7 @@ The following table lists the configurable parameters of the chart and their def
 | `api.statsd.host`                                  | Host URL to receive statsd metrics                                        | `null`                         |
 | `api.statsd.hostFromNodeIp`                        | Set as true to use the node IP as the statsd host instead                 | `false`                        |
 | `api.statsd.port`                                  | Host port to receive statsd metrics                                       | `8125`                         |
-| `api.statsd.prefix`                                | Prefix to add to metric ids                                               | `flagsmith.api`                |
+| `api.statsd.prefix`                                | Prefix to add to metric IDs                                               | `flagsmith.api`                |
 | `common.labels`                                    | Labels to add to all resources                                            | `{}`                           |
 | `common.annotations`                               | Annotations to add to all resources                                       | `{}`                           |
 
@@ -457,21 +454,17 @@ The following table lists the configurable parameters of the chart and their def
 
 ## Key upgrade notes
 
-- [0.37.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.37.0): upgrades the bundled in-cluster Postgres.
-  This makes no effort to preserve data in the bundled in-cluster Postgres if it is in use. This also renames the
-  bundled in-cluster Postgres to have `dev-postgresql` in the name, to signify that it exists such that the chart can be
-  deployed self-contained, but that this Postgres instance is treated as disposable. All Flagsmith installations for
-  which the data is not disposable [should use an externally managed database](#provided-database-configuration).
+- [0.37.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.37.0): upgrades the bundled in-cluster PostgreSQL. This makes no effort to preserve data in the bundled in-cluster PostgreSQL if it is in use. This also renames the bundled in-cluster PostgreSQL to have `dev-postgresql` in the name, to signify that it exists such that the chart can be deployed self-contained, but that this PostgreSQL instance is treated as disposable. All Flagsmith installations for which the data is not disposable [should use an externally managed database](#provided-database-configuration).
 
 ## Development and contributing
 
 ### Requirements
 
-helm version > 3.0.2
+Helm version > 3.0.2
 
 ### To run locally
 
-You can test and run the application locally on OSX using `minikube` like this:
+You can test and run the application locally on macOS using `minikube` like this:
 
 ```bash
 # Install Docker for Desktop and then:
@@ -490,7 +483,7 @@ Install Chart without building a package:
 helm install flagsmith --debug ./flagsmith
 ```
 
-Run template and check kubernetes resouces are made:
+Run template and check Kubernetes resources are made:
 
 ```bash
 helm template flagsmith flagsmith --debug -f flagsmith/values.yaml
