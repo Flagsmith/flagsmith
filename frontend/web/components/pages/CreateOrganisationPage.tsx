@@ -15,6 +15,7 @@ import AccountStore from 'common/stores/account-store'
 import { Account } from 'common/types/responses'
 import CheckboxGroup from 'components/base/forms/CheckboxGroup'
 import OrganisationStore from 'common/stores/organisation-store'
+import { useUpdateOnboardingMutation } from 'common/services/useOnboarding'
 
 const CreateOrganisationPage: React.FC = () => {
   const [name, setName] = useState<string>('')
@@ -25,6 +26,7 @@ const CreateOrganisationPage: React.FC = () => {
   const [accountStoreSaving, setAccountStoreSaving] = useState(
     AccountStore.isSaving,
   )
+  const [updateTools] = useUpdateOnboardingMutation({})
 
   useEffect(() => {
     const onChangeAccountStore = () => {
@@ -37,7 +39,7 @@ const CreateOrganisationPage: React.FC = () => {
       API.setCookie('organisation', `${id}`)
 
       if (Utils.isSaas()) {
-        API.trackTraits({
+        updateTools({
           hosting_preferences: hosting,
         })
       }

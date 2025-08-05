@@ -31,7 +31,7 @@ export const segmentService = service
       deleteSegment: builder.mutation<Res['segment'], Req['deleteSegment']>({
         invalidatesTags: (q, e, arg) => [
           { id: `LIST${arg.projectId}`, type: 'Segment' },
-        ],
+        ],w
         query: (query: Req['deleteSegment']) => ({
           body: query,
           method: 'DELETE',
