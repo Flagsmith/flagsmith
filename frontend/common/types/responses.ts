@@ -242,6 +242,7 @@ export type GettingStartedTask = {
   completed_at?: string
 }
 export type Onboarding = {
+  hosting_preferences: ('public_saas' | 'private_saas' | 'self_hosted')[]
   tools: {
     completed: boolean
     integrations: string[]
