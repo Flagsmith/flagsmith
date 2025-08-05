@@ -906,14 +906,12 @@ def test_update_environment_metadata(  # type: ignore[no-untyped-def]
     # Then
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()["metadata"]) == 1
-
-    # value for metadata field a was updated
-    assert response.json()["metadata"][0]["field_value"] == str(updated_field_value)
-    environment_metadata_a.refresh_from_db()
-    environment_metadata_a.field_value = str(updated_field_value)
-
-    # and environment_metadata_b does not exists
-    assert Metadata.objects.filter(id=environment_metadata_b.id).exists() is False
+    assert list(environment.metadata.values("model_field_id", "field_value")) == [
+        {
+            "model_field_id": environment_metadata_a.model_field.id,
+            "field_value": str(updated_field_value),
+        }
+    ]
 
 
 def test_audit_log_entry_created_when_environment_updated(
