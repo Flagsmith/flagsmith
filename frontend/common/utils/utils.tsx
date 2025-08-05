@@ -32,6 +32,7 @@ import { TimeUnit } from 'components/release-pipelines/constants'
 import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
+
 export type PaidFeature =
   | 'FLAG_OWNERS'
   | 'RBAC'
