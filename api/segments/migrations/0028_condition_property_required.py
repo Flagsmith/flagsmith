@@ -18,7 +18,7 @@ def fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any],
 
 
 def reverse_fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any], None]:
-    def reverse_fill_property(apps: Apps, _: Any) -> None:
+    def reverse_fill_property(apps: Apps, _: Any) -> None:  # pragma: no cover
         model = apps.get_model("segments", model_name)
         model.objects.filter(
             operator="PERCENTAGE_SPLIT", property="$.identity.key"
