@@ -3,6 +3,28 @@
 from django.db import migrations, models
 
 
+def fill_percentage_split_property_for(model_name):
+    def fill_property(apps, schema_editor):
+        model = apps.get_model("segments", model_name)
+        model.objects.filter(
+            models.Q(operator="PERCENTAGE_SPLIT") & (
+                models.Q(property__isnull=True) | models.Q(property__regex=r"^\s*$")
+            )
+        ).update(property="$.identity.key")
+
+    return fill_property
+
+
+def reverse_fill_percentage_split_property_for(model_name):
+    def reverse_fill_property(apps, schema_editor):
+        model = apps.get_model("segments", model_name)
+        model.objects.filter(
+            operator="PERCENTAGE_SPLIT", property="$.identity.key"
+        ).update(property=None)
+
+    return reverse_fill_property
+
+
 class Migration(migrations.Migration):
     """
     Update condition.property to be non-nullable.
@@ -34,12 +56,12 @@ class Migration(migrations.Migration):
             name="property",
             field=models.CharField(max_length=1000, null=True),
         ),
-        migrations.RunSQL(
-            sql=r"UPDATE segments_condition SET property = '$.identity.key' WHERE operator = 'PERCENTAGE_SPLIT' AND (property IS NULL OR property !~ '\S')",
-            reverse_sql="UPDATE segments_condition SET property = '' WHERE operator = 'PERCENTAGE_SPLIT' AND property = '$.identity.key'",
+        migrations.RunPython(
+            code=fill_percentage_split_property_for("Condition"),
+            reverse_code=reverse_fill_percentage_split_property_for("Condition"),
         ),
-        migrations.RunSQL(
-            sql=r"UPDATE segments_historicalcondition SET property = '$.identity.key' WHERE operator = 'PERCENTAGE_SPLIT' AND (property IS NULL OR property !~ '\S')",
-            reverse_sql="UPDATE segments_historicalcondition SET property = '' WHERE operator = 'PERCENTAGE_SPLIT' AND property = '$.identity.key'",
+        migrations.RunPython(
+            code=fill_percentage_split_property_for("HistoricalCondition"),
+            reverse_code=reverse_fill_percentage_split_property_for("HistoricalCondition"),
         ),
     ]
