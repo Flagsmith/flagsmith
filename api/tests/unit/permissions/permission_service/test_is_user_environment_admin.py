@@ -1,7 +1,16 @@
+import typing
+
 import pytest
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
+from environments.models import Environment
+from environments.permissions.models import (
+    UserEnvironmentPermission,
+    UserPermissionGroupEnvironmentPermission,
+)
 from permissions.permission_service import is_user_environment_admin
+from projects.models import UserPermissionGroupProjectPermission, UserProjectPermission
+from users.models import FFAdminUser
 
 
 def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, environment):  # type: ignore[no-untyped-def]  # noqa: E501
@@ -15,11 +24,15 @@ def test_is_user_environment_admin_returns_true_for_org_admin(admin_user, enviro
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_is_user_environment_admin_returns_true_for_project_admin(  # type: ignore[no-untyped-def]
-    test_user, environment, project_admin
-):
+def test_is_user_environment_admin_returns_true_for_project_admin(
+    staff_user: FFAdminUser,
+    environment: Environment,
+    project_admin: typing.Union[
+        UserProjectPermission, UserPermissionGroupProjectPermission
+    ],
+) -> None:
     # Then
-    assert is_user_environment_admin(test_user, environment) is True
+    assert is_user_environment_admin(staff_user, environment) is True
 
 
 @pytest.mark.parametrize(
@@ -30,17 +43,21 @@ def test_is_user_environment_admin_returns_true_for_project_admin(  # type: igno
     ],
 )
 def test_is_user_environment_admin_returns_true_for_environment_admin(  # type: ignore[no-untyped-def]
-    test_user, environment, environment_admin
+    staff_user: FFAdminUser,
+    environment: Environment,
+    environment_admin: typing.Union[
+        UserEnvironmentPermission, UserPermissionGroupEnvironmentPermission
+    ],
 ):
     # Then
-    assert is_user_environment_admin(test_user, environment) is True
+    assert is_user_environment_admin(staff_user, environment) is True
 
 
-def test_is_user_environment_admin_returns_false_for_user_with_no_permission(  # type: ignore[no-untyped-def]
-    test_user,
-    environment,
-):
-    assert is_user_environment_admin(test_user, environment) is False
+def test_is_user_environment_admin_returns_false_for_user_with_no_permission(
+    staff_user: FFAdminUser,
+    environment: Environment,
+) -> None:
+    assert is_user_environment_admin(staff_user, environment) is False
 
 
 def test_is_user_environment_admin_returns_false_for_user_with_admin_permission_of_other_org(  # type: ignore[no-untyped-def]  # noqa: E501
