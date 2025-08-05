@@ -8,11 +8,9 @@ from django.db import migrations, models
 def fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any], None]:
     def fill_property(apps: Apps, _: Any) -> None:
         model = apps.get_model("segments", model_name)
-        model.objects.filter(
-            models.Q(operator="PERCENTAGE_SPLIT") & (
-                models.Q(property__isnull=True) | models.Q(property__regex=r"^\s*$")
-            )
-        ).update(property="$.identity.key")
+        model.objects.filter(operator="PERCENTAGE_SPLIT", property="").update(
+            property="$.identity.key",
+        )
 
     return fill_property
 
@@ -20,9 +18,9 @@ def fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any],
 def reverse_fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any], None]:
     def reverse_fill_property(apps: Apps, _: Any) -> None:  # pragma: no cover
         model = apps.get_model("segments", model_name)
-        model.objects.filter(
-            operator="PERCENTAGE_SPLIT", property="$.identity.key"
-        ).update(property=None)
+        model.objects.filter(operator="PERCENTAGE_SPLIT", property="$.identity.key").update(
+            property="",
+        )
 
     return reverse_fill_property
 
