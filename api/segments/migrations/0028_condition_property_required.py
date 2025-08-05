@@ -5,24 +5,18 @@ from django.apps.registry import Apps
 from django.db import migrations, models
 
 
-def fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any], None]:
-    def fill_property(apps: Apps, _: Any) -> None:
-        model = apps.get_model("segments", model_name)
-        model.objects.filter(operator="PERCENTAGE_SPLIT", property="").update(
-            property="$.identity.key",
-        )
-
-    return fill_property
+def fill_percentage_split_property(apps: Apps, _: Any) -> None:
+    model = apps.get_model("segments", "Condition")
+    model.objects.filter(operator="PERCENTAGE_SPLIT", property="").update(
+        property="$.identity.key",
+    )
 
 
-def reverse_fill_percentage_split_property_for(model_name: str) -> Callable[[Apps, Any], None]:
-    def reverse_fill_property(apps: Apps, _: Any) -> None:  # pragma: no cover
-        model = apps.get_model("segments", model_name)
-        model.objects.filter(operator="PERCENTAGE_SPLIT", property="$.identity.key").update(
-            property="",
-        )
-
-    return reverse_fill_property
+def reverse_fill_percentage_split_property(apps: Apps, _: Any) -> None:  # pragma: no cover
+    model = apps.get_model("segments", "Condition")
+    model.objects.filter(operator="PERCENTAGE_SPLIT", property="$.identity.key").update(
+        property="",
+    )
 
 
 class Migration(migrations.Migration):
@@ -57,11 +51,7 @@ class Migration(migrations.Migration):
             field=models.CharField(max_length=1000, null=True),
         ),
         migrations.RunPython(
-            code=fill_percentage_split_property_for("Condition"),
-            reverse_code=reverse_fill_percentage_split_property_for("Condition"),
-        ),
-        migrations.RunPython(
-            code=fill_percentage_split_property_for("HistoricalCondition"),
-            reverse_code=reverse_fill_percentage_split_property_for("HistoricalCondition"),
+            code=fill_percentage_split_property,
+            reverse_code=reverse_fill_percentage_split_property,
         ),
     ]
