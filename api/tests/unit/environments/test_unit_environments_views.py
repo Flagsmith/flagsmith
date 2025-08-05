@@ -5,9 +5,6 @@ from common.environments.permissions import (
     TAG_SUPPORTED_PERMISSIONS,
     VIEW_ENVIRONMENT,
 )
-from common.projects.permissions import (
-    CREATE_ENVIRONMENT,
-)
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
@@ -29,7 +26,8 @@ from features.models import Feature, FeatureState
 from features.versioning.models import EnvironmentFeatureVersion
 from metadata.models import Metadata, MetadataModelField
 from organisations.models import Organisation
-from projects.models import Project
+from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
 from tests.types import WithEnvironmentPermissionsCallable
 from users.models import FFAdminUser
@@ -131,20 +129,20 @@ def test_user_with_view_environment_permission_can_retrieve_environment(
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_can_clone_environment_with_create_environment_permission(  # type: ignore[no-untyped-def]
-    test_user,
-    test_user_client,
-    environment,
-    user_project_permission,
+def test_can_clone_environment_with_create_environment_permission(
+    staff_client: APIClient,
+    environment: Environment,
+    user_project_permission: UserProjectPermission,
+    create_environment_permission: PermissionModel,
 ) -> None:
     # Given
     env_name = "Cloned env"
-    user_project_permission.permissions.add(CREATE_ENVIRONMENT)
+    user_project_permission.permissions.add(create_environment_permission)
 
     url = reverse("api-v1:environments:environment-clone", args=[environment.api_key])
 
     # When
-    response = test_user_client.post(url, {"name": env_name})
+    response = staff_client.post(url, {"name": env_name})
 
     # Then
     assert response.status_code == status.HTTP_200_OK

@@ -111,7 +111,7 @@ def test_list_feature_export_with_filtered_environments(
 
 
 def test_list_feature_exports_unauthorized(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     project: Project,
     environment: Environment,
 ) -> None:
@@ -127,7 +127,7 @@ def test_list_feature_exports_unauthorized(
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == 403
