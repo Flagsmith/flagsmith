@@ -1298,3 +1298,9 @@ def enable_features(
         )
 
     return _enable_features
+
+
+@pytest.fixture(autouse=True)
+def clear_content_type_cache() -> typing.Generator[None, None, None]:
+    yield
+    ContentType.objects.clear_cache()
