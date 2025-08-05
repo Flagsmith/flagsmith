@@ -86,16 +86,25 @@ def get_permitted_projects_for_user(
         tag_ids=tag_ids,
     )
 
-    organisation_filter = Q(
+    # The user has access to any projects belonging to organisations
+    # they are an admin of
+    admin_organisations_filter = Q(
         organisation__userorganisation__user=user,
         organisation__userorganisation__role=OrganisationRole.ADMIN.name,
     )
-    project_ids_from_organisation = Project.objects.filter(
-        organisation_filter
+    project_ids_from_admin_organisations = Project.objects.filter(
+        admin_organisations_filter
     ).values_list("id", flat=True)
 
-    project_ids = project_ids_from_base_filter | set(project_ids_from_organisation)
-    return Project.objects.filter(id__in=project_ids)
+    project_ids = project_ids_from_base_filter | set(
+        project_ids_from_admin_organisations
+    )
+    queryset = Project.objects.filter(id__in=project_ids)
+
+    # Final check to ensure that the user is a member of the organisation
+    queryset = queryset.filter(organisation__users=user)
+
+    return queryset
 
 
 def get_permitted_projects_for_master_api_key(
@@ -154,6 +163,9 @@ def get_permitted_environments_for_user(
     if prefetch_metadata:
         queryset = queryset.prefetch_related("metadata")
 
+    # Final check to ensure the user is a member of the organisation
+    queryset = queryset.filter(project__organisation__users=user)
+
     # Description is defered due to Oracle support where a
     # query can't have a where clause if description is in
     # the select parameters. This leads to an N+1 query for
@@ -199,7 +211,12 @@ def user_has_organisation_permission(
     )
     filter_ = base_filter & Q(id=organisation.id)
 
-    return Organisation.objects.filter(filter_).exists()  # type: ignore[no-any-return]
+    queryset = Organisation.objects.filter(filter_)
+
+    # Final check to verify that user belongs to organisation
+    queryset = queryset.filter(users=user)
+
+    return queryset.exists()  # type: ignore[no-any-return]
 
 
 def master_api_key_has_organisation_permission(
@@ -219,6 +236,14 @@ def _is_user_object_admin(
     ModelClass = type(object_)
     base_filter = get_base_permission_filter(user, ModelClass)  # type: ignore[arg-type]
     filter_ = base_filter & Q(id=object_.id)
+
+    if ModelClass is Project:
+        filter_ = filter_ & Q(organisation__users=user)
+    elif ModelClass is Environment:
+        filter_ = filter_ & Q(project__organisation__users=user)
+    else:  # pragma: no cover
+        raise ValueError(f"Unexpected object type {type(object_)}")
+
     return ModelClass.objects.filter(filter_).exists()
 
 

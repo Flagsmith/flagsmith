@@ -1677,8 +1677,8 @@ def test_restrict_use_due_to_api_limit_grace_period_over(
         organisation5,
         organisation6,
     ]:
-        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)  # type: ignore[no-untyped-call]
-        staff_user.add_organisation(org, role=OrganisationRole.USER)  # type: ignore[no-untyped-call]
+        admin_user.add_organisation(org, role=OrganisationRole.ADMIN)
+        staff_user.add_organisation(org, role=OrganisationRole.USER)
 
     organisation5.subscription.plan = "scale-up-v2"
     organisation5.subscription.payment_method = CHARGEBEE
