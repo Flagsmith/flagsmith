@@ -54,6 +54,18 @@ def test_get_current_user(staff_user: FFAdminUser, staff_client: APIClient) -> N
                 "tools": {"completed": True, "integrations": ["integration-1"]},
             },
         ),
+        (
+            {
+                "tasks": [{"name": "task-1"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+                "hosting_preferences": ["hosting-preference-1, hosting-preference-2"],
+            },
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2025-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+                "hosting_preferences": ["hosting-preference-1, hosting-preference-2"],
+            },
+        ),
     ],
 )
 @freeze_time("2025-01-01T12:00:00Z")
@@ -96,6 +108,14 @@ def test_get_me_should_return_onboarding_object(
             },
             {"tasks", "tools"},
         ),
+        (
+            {
+                "tasks": [{"name": "task-1", "completed_at": "2024-01-01T12:00:00Z"}],
+                "tools": {"completed": True, "integrations": ["integration-1"]},
+                "hosting_preferences": ["hosting-preference-1, hosting-preference-2"],
+            },
+            {"tasks", "tools", "hosting_preferences"},
+        ),
     ],
 )
 def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
@@ -128,7 +148,7 @@ def test_patch_user_onboarding_updates_only_nested_objects_if_provided(
         ).get("integrations")
 
 
-def test_patch_user_onboarding_returns_error_if_tasks_and_tools_are_missing(
+def test_patch_user_onboarding_returns_error_if_preferences_tasks_and_tools_are_missing(
     staff_user: FFAdminUser,
     staff_client: APIClient,
 ) -> None:
@@ -141,7 +161,9 @@ def test_patch_user_onboarding_returns_error_if_tasks_and_tools_are_missing(
     # Then
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json() == {
-        "non_field_errors": ["At least one of 'tasks' or 'tools' must be provided."]
+        "non_field_errors": [
+            "At least one of 'tasks' or 'tools' or 'hosting_preferences' must be provided."
+        ]
     }
 
 
