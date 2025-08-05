@@ -147,7 +147,7 @@ def test_should_remove_configuration_when_delete(
 
 
 def test_dynatrace_environment_view__no_permissions__return_expected(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     environment: Environment,
 ) -> None:
     # Given
@@ -162,7 +162,7 @@ def test_dynatrace_environment_view__no_permissions__return_expected(
     )
 
     # When
-    response = test_user_client.post(
+    response = staff_client.post(
         url,
         data=json.dumps(data),
         content_type="application/json",

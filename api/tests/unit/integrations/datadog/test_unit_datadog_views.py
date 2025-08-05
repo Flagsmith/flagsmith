@@ -156,7 +156,7 @@ def test_create_datadog_configuration_in_project_with_deleted_configuration(  # 
 
 
 def test_datadog_project_view__no_permissions__return_expected(
-    test_user_client: APIClient,
+    staff_client: APIClient,
     project: Project,
 ) -> None:
     # Given
@@ -168,7 +168,7 @@ def test_datadog_project_view__no_permissions__return_expected(
     url = reverse("api-v1:projects:integrations-datadog-list", args=[project.id])
 
     # When
-    response = test_user_client.post(
+    response = staff_client.post(
         url,
         data=json.dumps(data),
         content_type="application/json",

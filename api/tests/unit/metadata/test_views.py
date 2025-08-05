@@ -113,7 +113,8 @@ def test_retrieve_metadata_fields(admin_client, a_metadata_field):  # type: igno
 
 
 def test_create_metadata_field_returns_403_for_non_org_admin(  # type: ignore[no-untyped-def]
-    test_user_client, organisation
+    staff_client: APIClient,
+    organisation: Organisation,
 ):
     url = reverse("api-v1:metadata:metadata-fields-list")
     field_name = "some_id"
@@ -122,7 +123,7 @@ def test_create_metadata_field_returns_403_for_non_org_admin(  # type: ignore[no
     data = {"name": field_name, "type": field_type, "organisation": organisation.id}
 
     # When
-    response = test_user_client.post(
+    response = staff_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 

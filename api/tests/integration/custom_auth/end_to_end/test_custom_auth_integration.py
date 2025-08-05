@@ -1,5 +1,6 @@
 import json
 import re
+import uuid
 from collections import ChainMap
 
 import pyotp
@@ -574,20 +575,35 @@ def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
         assert response.status_code == status.HTTP_200_OK
 
 
-def test_delete_token(test_user, auth_token):  # type: ignore[no-untyped-def]
+@pytest.mark.django_db
+def test_delete_token(api_client: APIClient, db: None) -> None:
     # Given
-    url = reverse("api-v1:custom_auth:delete-token")
-    client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token.key}")
+    register_url = reverse("api-v1:custom_auth:ffadminuser-list")
+    password = FFAdminUser.objects.make_random_password()
+    register_data = {
+        "first_name": "test",
+        "last_name": "user",
+        "email": f"user{uuid.uuid4()}@example.com",
+        "password": password,
+        "re_password": password,
+    }
+    response = api_client.post(
+        register_url, data=json.dumps(register_data), content_type="application/json"
+    )
+    auth_token = response.json()["key"]
+
+    delete_token_url = reverse("api-v1:custom_auth:delete-token")
+    client = APIClient(HTTP_AUTHORIZATION=f"Token {auth_token}")
 
     # When
-    response = client.delete(url)
+    response = client.delete(delete_token_url)
 
     # Then
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    # and - if we try to delete the token again(i.e: access anything that uses is_authenticated)
-    # we should will get 401
-    assert client.delete(url).status_code == status.HTTP_401_UNAUTHORIZED
+    # and - if we try to delete the token again (i.e: access anything that uses
+    # is_authenticated) we will get 401
+    assert client.delete(delete_token_url).status_code == status.HTTP_401_UNAUTHORIZED
 
 
 def test_register_with_sign_up_type(client, db, settings):  # type: ignore[no-untyped-def]

@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 from common.environments.permissions import (
     MANAGE_IDENTITIES,
@@ -6,8 +8,19 @@ from common.environments.permissions import (
 )
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 
-from environments.permissions.models import EnvironmentPermissionModel
+from environments.models import Environment
+from environments.permissions.models import (
+    EnvironmentPermissionModel,
+    UserEnvironmentPermission,
+)
+from permissions.models import PermissionModel
 from permissions.permission_service import get_permitted_environments_for_user
+from projects.models import (
+    Project,
+    UserPermissionGroupProjectPermission,
+    UserProjectPermission,
+)
+from users.models import FFAdminUser
 
 
 def test_get_permitted_environments_for_user_returns_all_environments_for_org_admin(  # type: ignore[no-untyped-def]
@@ -30,15 +43,21 @@ def test_get_permitted_environments_for_user_returns_all_environments_for_org_ad
         (lazy_fixture("project_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # type: ignore[no-untyped-def]  # noqa: E501
-    test_user, environment, project, project_admin, project_two_environment
-):
+def test_get_permitted_environments_for_user_returns_all_the_environments_for_project_admin(  # noqa: E501
+    staff_user: FFAdminUser,
+    environment: Environment,
+    project: Project,
+    project_admin: typing.Union[
+        UserProjectPermission, UserPermissionGroupProjectPermission
+    ],
+    project_two_environment: Environment,
+) -> None:
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         # Then
         assert (
-            get_permitted_environments_for_user(test_user, project, permission).count()
+            get_permitted_environments_for_user(staff_user, project, permission).count()
             == 1
         )
 
@@ -50,53 +69,69 @@ def test_get_permitted_environments_for_user_returns_all_the_environments_for_pr
         (lazy_fixture("environment_admin_via_user_permission_group")),
     ],
 )
-def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(  # type: ignore[no-untyped-def]  # noqa: E501
-    test_user, environment, project, environment_admin, project_two_environment
-):
+def test_get_permitted_environments_for_user_returns_the_environment_for_environment_admin(  # noqa: E501
+    staff_user: FFAdminUser,
+    environment: Environment,
+    project: Project,
+    environment_admin: typing.Union[
+        UserEnvironmentPermission, UserPermissionGroupProjectPermission
+    ],
+    project_two_environment: Environment,
+) -> None:
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         # Then
         assert (
-            get_permitted_environments_for_user(test_user, project, permission).count()
+            get_permitted_environments_for_user(staff_user, project, permission).count()
             == 1
         )
 
 
-def test_get_permitted_environments_for_user_returns_correct_environment(  # type: ignore[no-untyped-def]
-    test_user,
-    environment,
-    project_two_environment,
-    project,
-    environment_permission_using_user_permission,
-    environment_permission_using_user_permission_group,
-):
+def test_get_permitted_environments_for_user_returns_correct_environment(
+    staff_user: FFAdminUser,
+    environment: Environment,
+    project_two_environment: Environment,
+    project: Project,
+    view_environment_permission: PermissionModel,
+    update_feature_state_permission: PermissionModel,
+    manage_identities_permission: PermissionModel,
+    environment_permission_using_user_permission: UserEnvironmentPermission,
+    environment_permission_using_user_permission_group: UserPermissionGroupProjectPermission,
+) -> None:
     # First, let's assert that the user does not have access to any environment
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         assert (
-            get_permitted_environments_for_user(test_user, project, permission).count()
+            get_permitted_environments_for_user(staff_user, project, permission).count()
             == 0
         )
     # Next, let's give user some permissions using `user_permission`
     permissions_as_user = [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
-    environment_permission_using_user_permission.permissions.add(*permissions_as_user)
+    environment_permission_using_user_permission.permissions.add(
+        *PermissionModel.objects.filter(key__in=permissions_as_user)
+    )
 
     # Next, let's assert that the environment is returned only for those permissions (and not for others).
     for permission in EnvironmentPermissionModel.objects.all().values_list(
         "key", flat=True
     ):
         environment_count = get_permitted_environments_for_user(
-            test_user, project, permission
+            staff_user, project, permission
         ).count()
 
-        assert environment_count == 0 if permission not in permissions_as_user else 1
+        assert environment_count == 0 if permission not in permissions_as_user else 1, (
+            f"Failed for permission {permission}"
+        )
 
     # Next, let's give some more permissions using `user_permission_group`
-    permissions_as_group = [UPDATE_FEATURE_STATE, MANAGE_IDENTITIES]
+    permissions_as_group = [
+        UPDATE_FEATURE_STATE,
+        MANAGE_IDENTITIES,
+    ]
     environment_permission_using_user_permission_group.permissions.add(
-        *permissions_as_group
+        *PermissionModel.objects.filter(key__in=permissions_as_group)
     )
 
     # And assert again
@@ -104,7 +139,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(  # typ
         "key", flat=True
     ):
         environment_count = get_permitted_environments_for_user(
-            test_user, project, permission
+            staff_user, project, permission
         ).count()
 
         assert (

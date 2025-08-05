@@ -197,9 +197,12 @@ def test_create_feature_segment(segment, feature, environment, client):  # type:
     assert response_json["id"]
 
 
-def test_create_feature_segment_without_permission_returns_403(  # type: ignore[no-untyped-def]
-    segment, feature, environment, test_user_client
-):
+def test_create_feature_segment_without_permission_returns_403(
+    segment: Segment,
+    feature: Feature,
+    environment: Environment,
+    staff_client: APIClient,
+) -> None:
     # Given
     data = {
         "feature": feature.id,
@@ -209,7 +212,7 @@ def test_create_feature_segment_without_permission_returns_403(  # type: ignore[
     url = reverse("api-v1:features:feature-segment-list")
 
     # When
-    response = test_user_client.post(
+    response = staff_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -357,11 +360,11 @@ def test_update_priority_for_staff(
 
 
 def test_update_priority_returns_403_if_user_does_not_have_permission(  # type: ignore[no-untyped-def]
-    feature_segment,
-    project,
-    environment,
-    feature,
-    test_user_client,
+    feature_segment: FeatureSegment,
+    project: Project,
+    environment: Environment,
+    feature: Feature,
+    staff_client: APIClient,
 ):
     # Given
     url = reverse("api-v1:features:feature-segment-update-priorities")
@@ -371,7 +374,7 @@ def test_update_priority_returns_403_if_user_does_not_have_permission(  # type: 
     ]
 
     # When
-    response = test_user_client.post(
+    response = staff_client.post(
         url, data=json.dumps(data), content_type="application/json"
     )
 
@@ -444,16 +447,20 @@ def test_get_feature_segment_by_uuid_for_staff(
     assert json_response["uuid"] == str(feature_segment.uuid)
 
 
-def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(  # type: ignore[no-untyped-def]
-    feature_segment, project, test_user_client, environment, feature
-):
+def test_get_feature_segment_by_uuid_returns_404_if_user_does_not_have_access(
+    feature_segment: FeatureSegment,
+    project: Project,
+    staff_client: APIClient,
+    environment: Environment,
+    feature: Feature,
+) -> None:
     # Given
     url = reverse(
         "api-v1:features:feature-segment-get-by-uuid", args=[feature_segment.uuid]
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_404_NOT_FOUND

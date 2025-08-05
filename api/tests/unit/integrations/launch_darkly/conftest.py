@@ -59,13 +59,13 @@ def ld_client_class_mock(
 def import_request(
     ld_client_class_mock: MagicMock,
     project: Project,
-    test_user: FFAdminUser,
+    staff_user: FFAdminUser,
     ld_project_key: str,
     ld_token: str,
 ) -> LaunchDarklyImportRequest:
     return create_import_request(
         project=project,
-        user=test_user,
+        user=staff_user,
         ld_project_key=ld_project_key,
         ld_token=ld_token,
     )
