@@ -310,7 +310,7 @@ class Condition(
     )
 
     operator = models.CharField(choices=CONDITION_TYPES, max_length=500)
-    property = models.CharField(max_length=1000)
+    property = models.CharField(null=True, max_length=1000)
     value = models.CharField(
         max_length=settings.SEGMENT_CONDITION_VALUE_LIMIT, blank=True, null=True
     )
