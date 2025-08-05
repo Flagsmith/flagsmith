@@ -381,7 +381,7 @@ def test_join_organisation_from_link_returns_403_if_invite_links_disabled(
     settings.DISABLE_INVITE_LINKS = True
     url = reverse("api-v1:users:user-join-organisation-link", args=[invite_link.hash])
 
-    new_user = django_user_model.objects.create(email=f"user{uuid.uuid4()}@example.com")
+    new_user = FFAdminUser.objects.create(email=f"user{uuid.uuid4()}@example.com")
     api_client.force_authenticate(user=new_user)
 
     # When

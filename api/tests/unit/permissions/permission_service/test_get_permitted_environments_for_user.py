@@ -110,10 +110,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
     # Next, let's give user some permissions using `user_permission`
     permissions_as_user = [VIEW_ENVIRONMENT, UPDATE_FEATURE_STATE]
     environment_permission_using_user_permission.permissions.add(
-        *[
-            PermissionModel.objects.get(key=permission)
-            for permission in permissions_as_user
-        ]
+        *PermissionModel.objects.filter(key__in=permissions_as_user)
     )
 
     # Next, let's assert that the environment is returned only for those permissions (and not for others).
@@ -134,10 +131,7 @@ def test_get_permitted_environments_for_user_returns_correct_environment(
         MANAGE_IDENTITIES,
     ]
     environment_permission_using_user_permission_group.permissions.add(
-        *[
-            PermissionModel.objects.get(key=permission)
-            for permission in permissions_as_group
-        ]
+        *PermissionModel.objects.filter(key__in=permissions_as_group)
     )
 
     # And assert again

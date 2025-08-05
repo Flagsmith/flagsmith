@@ -575,6 +575,7 @@ def test_get_user_is_not_throttled(  # type: ignore[no-untyped-def]
         assert response.status_code == status.HTTP_200_OK
 
 
+@pytest.mark.django_db
 def test_delete_token(api_client: APIClient, db: None) -> None:
     # Given
     register_url = reverse("api-v1:custom_auth:ffadminuser-list")
