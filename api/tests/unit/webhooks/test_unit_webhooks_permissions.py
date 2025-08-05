@@ -1,7 +1,7 @@
-import json
 from unittest import mock
 
 from django.test import RequestFactory
+from rest_framework.request import Request
 
 from environments.models import Environment
 from environments.permissions.models import UserEnvironmentPermission
@@ -129,25 +129,22 @@ def test_has_permission_returns_true_for_webhook_test_if_user_is_an_organisation
 
 
 def test_has_permission_returns_true_for_webhook_test_if_user_is_an_environment_admin(
-    environment: Environment, staff_user: FFAdminUser, rf: RequestFactory
+    environment: Environment,
+    staff_user: FFAdminUser,
+    user_environment_permission: UserEnvironmentPermission,
 ) -> None:
     # Given
-    UserEnvironmentPermission.objects.create(
-        user=staff_user, admin=True, environment=environment
-    )
-    mock_request = rf.post(
-        "/v1/webhooks/test",
-        data=json.dumps(
-            {
-                "webhook_url": "http://test.webhook.com",
-                "secret": "some-secret",
-                "payload": {"test": "data"},
-                "scope": {"type": "environment", "id": environment.api_key},
-            }
-        ),
-        content_type="application/json",
-    )
+    user_environment_permission.admin = True
+    user_environment_permission.save()
+
+    mock_request = mock.MagicMock(spec=Request)
     mock_request.user = staff_user
+    mock_request.data = {
+        "webhook_url": "http://test.webhook.com",
+        "secret": "some-secret",
+        "payload": {"test": "data"},
+        "scope": {"type": "environment", "id": environment.api_key},
+    }
 
     mock_view = mock.MagicMock(basename="webhooks", action="test", kwargs={})
     permission_class = TriggerSampleWebhookPermission()
