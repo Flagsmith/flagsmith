@@ -32,7 +32,6 @@ import { TimeUnit } from 'components/release-pipelines/constants'
 import getUserDisplayName from './getUserDisplayName'
 
 const semver = require('semver')
-
 export type PaidFeature =
   | 'FLAG_OWNERS'
   | 'RBAC'
@@ -50,6 +49,8 @@ export type PaidFeature =
   | 'CREATE_ADDITIONAL_PROJECT'
   | '2FA'
   | 'RELEASE_PIPELINES'
+
+export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
 
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
