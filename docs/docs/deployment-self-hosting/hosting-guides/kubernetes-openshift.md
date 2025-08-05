@@ -8,8 +8,7 @@ sidebar_position: 50
 
 This guide covers deploying Flagsmith on Kubernetes or OpenShift using our Helm charts.
 
-Check out our [Kubernetes Chart Repository on GitHub](https://github.com/Flagsmith/flagsmith-charts) and our
-[published Helm Charts](https://flagsmith.github.io/flagsmith-charts/).
+Check out our [Kubernetes Chart Repository on GitHub](https://github.com/Flagsmith/flagsmith-charts) and our [published Helm Charts](https://flagsmith.github.io/flagsmith-charts/).
 
 ### OpenShift
 
@@ -29,29 +28,22 @@ helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith
 kubectl -n flagsmith port-forward svc/flagsmith-frontend 8080:8080
 ```
 
-Then view `http://localhost:8080` in a browser. This will install the chart using default options, in a new namespace
-`flagsmith`.
+Then view `http://localhost:8080` in a browser. This will install the chart using default options, in a new namespace `flagsmith`.
 
-Refer to the chart's default
-[`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) file to learn
-which values are expected by the chart. You can use it as a reference for building your own values file:
+Refer to the chart's default [`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) file to learn which values are expected by the chart. You can use it as a reference for building your own values file:
 
 ```bash
 wget https://raw.githubusercontent.com/Flagsmith/flagsmith-charts/main/charts/flagsmith/values.yaml
 helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f values.yaml
 ```
 
-We would suggest only doing this when running the platform locally, and recommend reading the Helm docs for
-[installation](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package),
-[upgrading](https://helm.sh/docs/helm/helm_upgrade/) and
-[values](https://helm.sh/docs/chart_template_guide/values_files/) for further information.
+We would suggest only doing this when running the platform locally, and recommend reading the Helm docs for [installation](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package), [upgrading](https://helm.sh/docs/helm/helm_upgrade/) and [values](https://helm.sh/docs/chart_template_guide/values_files/) for further information.
 
 ## Configuration
 
 ### Ingress configuration
 
-The above is a quick way of gaining access to Flagsmith, but in many cases you will need to configure ingress to work
-with an ingress controller.
+The above is a quick way of gaining access to Flagsmith, but in many cases you will need to configure ingress to work with an ingress controller.
 
 #### Port forwarding
 
@@ -65,11 +57,9 @@ Then access `http://localhost:8080` in a browser.
 
 #### In a cluster that has an ingress controller, using the frontend proxy
 
-In this configuration, api requests are proxied by the frontend. This is simpler to configure, but introduces some
-latency.
+In this configuration, api requests are proxied by the frontend. This is simpler to configure, but introduces some latency.
 
-Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any
-associated DNS changes.
+Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any associated DNS changes.
 
 Eg in the `charts/flagsmith/values.yaml` file:
 
@@ -85,9 +75,7 @@ Then, once any out-of-cluster DNS or CDN changes have been applied, access `http
 
 #### In a cluster that has an ingress controller, using separate ingresses for frontend and api
 
-Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any
-associated DNS changes. Also, set the `FLAGSMITH_API_URL` env-var such that the URL is reachable from a browser
-accessing the frontend.
+Set the following values for flagsmith, with changes as needed to accommodate your ingress controller, and any associated DNS changes. Also, set the `FLAGSMITH_API_URL` env-var such that the URL is reachable from a browser accessing the frontend.
 
 Eg in the `charts/flagsmith/values.yaml` file:
 
@@ -143,19 +131,15 @@ Then access `http://flagsmith.local` in a browser.
 
 ### Provided Database configuration
 
-By default, the chart creates its own PostgreSQL server within the cluster, referencing
-[https://github.com/helm/charts/tree/master/stable/postgresql](https://github.com/helm/charts/tree/master/stable/postgresql)
-for the service.
+By default, the chart creates its own PostgreSQL server within the cluster, referencing [https://github.com/helm/charts/tree/master/stable/postgresql](https://github.com/helm/charts/tree/master/stable/postgresql) for the service.
 
 :::caution
 
-We recommend running an externally managed database in production, either by deploying your own Postgres instance in
-your cluster, or using a service like [AWS RDS](https://aws.amazon.com/rds/postgresql/).
+We recommend running an externally managed database in production, either by deploying your own Postgres instance in your cluster, or using a service like [AWS RDS](https://aws.amazon.com/rds/postgresql/).
 
 :::
 
-You can provide configuration options to the postgres database by modifying the values, for example the below changes
-the max_connections in the `charts/flagsmith/values.yaml` file:
+You can provide configuration options to the postgres database by modifying the values, for example the below changes the max_connections in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 postgresql:
@@ -167,8 +151,7 @@ postgresql:
 
 ### External Database configuration
 
-To connect the Flagsmith API to an external PostgreSQL server set the values under `databaseExternal`, eg in the
-`charts/flagsmith/values.yaml` file:
+To connect the Flagsmith API to an external PostgreSQL server set the values under `databaseExternal`, eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 postgresql:
@@ -194,8 +177,7 @@ databaseExternal:
 
 :::caution
 
-Due to a [bug](https://bugs.python.org/issue33342) in python's urllib module, passwords containing `[`, `]` or `#` chars
-must be urlencoded.
+Due to a [bug](https://bugs.python.org/issue33342) in python's urllib module, passwords containing `[`, `]` or `#` chars must be urlencoded.
 
 e.g.
 
@@ -211,18 +193,13 @@ should be provided as:
 
 :::caution
 
-It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY)
-value in your helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so
-that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
+It's important to define a [`secretKey`](https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SECRET_KEY) value in your helm chart when running in Kubernetes. Use a password manager to generate a random hash and set this so that all the API nodes are running with an identical `DJANGO_SECRET_KEY`.
 
-If you are using our Helm charts and don't provide a `secretKey`, one will be generated for you and shared across the
-running pods, but this will change upon redeployment, which you probably don't want to happen.
+If you are using our Helm charts and don't provide a `secretKey`, one will be generated for you and shared across the running pods, but this will change upon redeployment, which you probably don't want to happen.
 
 :::
 
-The chart handles most environment variables required, but see the
-[API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can
-be set using `api.extraEnv`, eg in the `charts/flagsmith/values.yaml` file:
+The chart handles most environment variables required, but see the [API readme](/deployment/hosting/locally-api#environment-variables) for all available configuration options. These can be set using `api.extraEnv`, eg in the `charts/flagsmith/values.yaml` file:
 
 ```yaml
 api:
@@ -239,12 +216,6 @@ TODO: recommend some defaults
 ### Replicas
 
 By default, 1 replica of each of the frontend and api is used.
-
-TODO: recommend some defaults.
-
-TODO: consider some autoscaling options.
-
-TODO: create a pod-disruption-budget
 
 ### Deployment strategy
 
@@ -295,8 +266,7 @@ By default, Flagsmith uses Postgres to store time series data. You can alternati
 
 ### Task Processor
 
-The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the
-values to set to configure the task processor using the helm chart.
+The task processor itself is documented [here](/deployment/configuration/task-processor). See the table below for the values to set to configure the task processor using the helm chart.
 
 ## Chart Values
 
