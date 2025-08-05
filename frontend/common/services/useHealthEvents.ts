@@ -6,6 +6,17 @@ export const healthService = service
   .enhanceEndpoints({ addTagTypes: ['HealthEvents'] })
   .injectEndpoints({
     endpoints: (builder) => ({
+      dismissHealthEvent: builder.mutation<
+        Res['healthEvents'],
+        Req['dismissHealthEvent']
+      >({
+        invalidatesTags: [{ id: 'LIST', type: 'HealthEvents' }],
+        query: (query: Req['dismissHealthEvent']) => ({
+          method: 'POST',
+          url: `projects/${query.projectId}/feature-health/events/${query.eventId}/dismiss/`,
+        }),
+      }),
+
       getHealthEvents: builder.query<
         Res['healthEvents'],
         Req['getHealthEvents']
@@ -31,9 +42,22 @@ export async function getHealthEvents(
   )
 }
 
+export async function dismissHealthEvent(
+  store: any,
+  data: Req['dismissHealthEvent'],
+  options?: Parameters<
+    typeof healthService.endpoints.dismissHealthEvent.initiate
+  >[1],
+) {
+  return store.dispatch(
+    healthService.endpoints.dismissHealthEvent.initiate(data, options),
+  )
+}
+
 // END OF FUNCTION_EXPORTS
 
 export const {
+  useDismissHealthEventMutation,
   useGetHealthEventsQuery,
   // END OF EXPORTS
 } = healthService

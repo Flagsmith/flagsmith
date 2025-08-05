@@ -23,7 +23,7 @@ from app_analytics.tasks import (
 from app_analytics.types import TrackFeatureEvaluationsByEnvironmentData
 from environments.models import Environment
 
-pytestmark = pytest.mark.skip_if_no_analytics_db
+pytestmark = pytest.mark.use_analytics_db
 
 
 def _create_api_usage_event(environment_id: int, when: datetime) -> APIUsageRaw:
@@ -40,7 +40,7 @@ def _create_api_usage_event(environment_id: int, when: datetime) -> APIUsageRaw:
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_api_usage_bucket_multiple_runs(
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -113,7 +113,7 @@ def test_populate_api_usage_bucket_multiple_runs(
     [(15, 60), (10, 60), (10, 30), (30, 30), (60, 60), (10, 10), (60, 60 * 4)],
 )
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_api_usage_bucket(
     freezer: FrozenDateTimeFactory,
     bucket_size: int,
@@ -153,7 +153,7 @@ def test_populate_api_usage_bucket(
         assert bucket.total_count == bucket_size
 
 
-@pytest.mark.django_db(databases=["analytics", "default"])
+@pytest.mark.use_analytics_db
 def test_track_request__postgres__inserts_expected(
     settings: SettingsWrapper,
     environment: Environment,
@@ -205,7 +205,7 @@ def test_track_request__influx__calls_expected(
     )
 
 
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_track_feature_evaluation(settings: SettingsWrapper) -> None:
     # Given
     settings.USE_POSTGRES_FOR_ANALYTICS = True
@@ -244,7 +244,7 @@ def test_track_feature_evaluation(settings: SettingsWrapper) -> None:
     )
 
 
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_track_feature_evaluation__influx__calls_expected(
     settings: SettingsWrapper,
     mocker: MockerFixture,
@@ -287,7 +287,7 @@ def test_track_feature_evaluation__influx__calls_expected(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:09:47.325132+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) -> None:
     # Given
     environment_id = 1
@@ -379,7 +379,7 @@ def test_populate_feature_evaluation_bucket_15m(freezer: FrozenDateTimeFactory) 
 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_feature_evaluation_bucket__upserts_buckets(
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -415,7 +415,7 @@ def test_populate_feature_evaluation_bucket__upserts_buckets(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_feature_evaluation_bucket__source_bucket_size__returns_expected(
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -465,7 +465,7 @@ def test_populate_feature_evaluation_bucket__source_bucket_size__returns_expecte
 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_api_usage_bucket__upserts_buckets(
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -501,7 +501,7 @@ def test_populate_api_usage_bucket__upserts_buckets(
 
 
 @pytest.mark.freeze_time("2023-01-19T09:00:00+00:00")
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_populate_api_usage_bucket_using_a_bucket(
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -548,7 +548,7 @@ def _create_feature_evaluation_event(
     return event
 
 
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:
     # When
     clean_up_old_analytics_data()
@@ -557,7 +557,7 @@ def test_clean_up_old_analytics_data_does_nothing_if_no_data() -> None:
     # no exception was raised
 
 
-@pytest.mark.django_db(databases=["analytics"])
+@pytest.mark.use_analytics_db
 def test_clean_up_old_analytics_data_removes_old_data(
     settings: SettingsWrapper,
 ) -> None:

@@ -9,7 +9,10 @@
 .hidden {
     display: none !important;
 }
-
+/*Prevents kapa from immediately showing before crisp on support pages*/
+#kapa-widget-container {
+  display: none;
+}
 @font-face {
     font-family: 'Open Sans Regular';
     src: url('/static/fonts/open-sans-regular.woff') format('woff');

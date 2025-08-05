@@ -16,7 +16,10 @@ import Utils from 'common/utils/utils'
 const API = {
   ajaxHandler(
     store: { error?: any; goneABitWest: () => void },
-    res: string | Error | { data?: any; text?: () => Promise<string> },
+    res:
+      | string
+      | Error
+      | { data?: any; text?: () => Promise<string>; status?: number },
   ): void {
     if (typeof res === 'string') {
       store.error = new Error(res)
@@ -47,7 +50,16 @@ const API = {
         try {
           err = JSON.parse(errorText)
         } catch {}
-        store.error = err
+        if (res?.status === 500) {
+          store.error =
+            'An unknown error occurred while logging in. Please try again later or contact an administrator.'
+        } else if (err.detail) {
+          store.error = err.detail
+        } else if (err.non_field_errors) {
+          store.error = err.non_field_errors[0]
+        } else {
+          store.error = err
+        }
         store.goneABitWest()
       })
       .catch(() => {
