@@ -51,6 +51,8 @@ export type PaidFeature =
   | '2FA'
   | 'RELEASE_PIPELINES'
 
+export type AppFeature = PaidFeature | 'FEATURE_HEALTH'
+
 // Define a type for plan categories
 type Plan = 'start-up' | 'scale-up' | 'enterprise' | null
 
