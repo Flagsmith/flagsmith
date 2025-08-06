@@ -64,6 +64,8 @@ class Migration(migrations.Migration):
                     END
                     $$;
                     """,
+                    # We don't want hstore in the database at all, 
+                    # so don't do anything for reverse SQL.
                     reverse_sql="",
                 ),
             ],
