@@ -3,6 +3,8 @@ title: Aptible
 sidebar_position: 30
 ---
 
+Thinking about running Flagsmith on Aptible? This guide will walk you through the steps to get your Flagsmith instance up and running smoothly on the Aptible platform. We'll cover the key configuration tweaks you'll need, how to set up your environment, and some handy tips to make sure everything works as expected. Let's get started!
+
 ## Prerequisites
 
 The options and health check routes described in this document are available from Flagsmith 2.130.0.
@@ -11,16 +13,12 @@ The options and health check routes described in this document are available fro
 
 Running Flagsmith on Aptible requires some configuration tweaks because of how Aptible's application lifecycle works:
 
-- Don't wait for the database to be available before the Flagsmith API starts. You can do this by setting the
-  `SKIP_WAIT_FOR_DB` environment variable.
-- Add `containers` as an allowed host to comply with Aptible's
-  [strict health checks](https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks#strict-health-checks).
+- Don't wait for the database to be available before the Flagsmith API starts. You can do this by setting the `SKIP_WAIT_FOR_DB` environment variable.
+- Add `containers` as an allowed host to comply with Aptible's [strict health checks](https://www.aptible.com/docs/core-concepts/apps/connecting-to-apps/app-endpoints/https-endpoints/health-checks#strict-health-checks).
 - Use the `before_release` tasks from `.aptible.yml` to run database migrations
 - Use a Procfile to only start the API and not perform database migrations on startup
 
-This configuration can be applied by adding the Procfile and `.aptible.yml` configuration files to a
-[Docker image](https://www.aptible.com/docs/core-concepts/apps/deploying-apps/image/deploying-with-docker-image/overview#how-do-i-deploy-from-docker-image)
-that you build starting from a Flagsmith base image:
+This configuration can be applied by adding the Procfile and `.aptible.yml` configuration files to a [Docker image](https://www.aptible.com/docs/core-concepts/apps/deploying-apps/image/deploying-with-docker-image/overview#how-do-i-deploy-from-docker-image) that you build starting from a Flagsmith base image:
 
 ```text title="Procfile"
 cmd: serve
@@ -49,8 +47,9 @@ ADD .aptible.yml /.aptible/.aptible.yml
 USER nobody
 ```
 
-Before deploying, set the environment variables for your database URL and allowed hosts from the Aptible dashboard, or
-using the Aptible CLI:
+## Environment Variables
+
+Before deploying, set the environment variables for your database URL and allowed hosts from the Aptible dashboard, or using the Aptible CLI:
 
 ```shell
 aptible config:set --app flagsmith \
@@ -60,8 +59,7 @@ aptible config:set --app flagsmith \
 
 ## Deployment
 
-After your image is built and pushed to a container registry that Aptible can access, you can deploy it using the
-Aptible CLI as you would any other application:
+After your image is built and pushed to a container registry that Aptible can access, you can deploy it using the Aptible CLI as you would any other application:
 
 ```shell
 aptible deploy --app flagsmith --docker-image example/my-flagsmith-aptible-image
@@ -71,6 +69,4 @@ Once Flagsmith is running in Aptible, make sure to create the first admin user b
 
 ## Limitations
 
-The steps described in this document do not deploy the
-[asynchronous task processor](/deployment/configuration/task-processor), which may affect performance in production
-workloads.
+The steps described in this document do not deploy the [asynchronous task processor](/deployment/configuration/task-processor), which may affect performance in production workloads.

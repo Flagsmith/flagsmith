@@ -22,7 +22,7 @@ This guide provides instructions for deploying Flagsmith using one-click install
 
 ![Fly.io](/img/logos/fly.io.svg)
 
-We're big fans of [Fly.io](https://Fly.io)! You can deploy to fly.io really easily:
+We're big fans of [Fly.io](https://fly.io)! You can deploy to Fly.io really easily:
 
 ```bash
 git clone git@github.com:Flagsmith/flagsmith.git
@@ -33,10 +33,8 @@ flyctl postgres attach --postgres-app flagsmith-flyio-db
 flyctl deploy
 ```
 
-Fly.io has a global application namespace, and so you may need to change the name of the application defined in
-[`fly.toml`](https://github.com/Flagsmith/flagsmith/blob/main/fly.toml) as well as the commands above.
+Fly.io has a global application namespace, and so you may need to change the name of the application defined in [`fly.toml`](https://github.com/Flagsmith/flagsmith/blob/main/fly.toml) as well as the commands above.
 
 ## Deploy to Caprover
 
-You can also deploy to a [Caprover Server](https://caprover.com/) with
-[One Click Apps](https://caprover.com/docs/one-click-apps.html). 
+You can also deploy to a [Caprover Server](https://caprover.com/) with [One Click Apps](https://caprover.com/docs/one-click-apps.html). 

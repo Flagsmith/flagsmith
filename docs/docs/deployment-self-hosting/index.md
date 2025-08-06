@@ -60,7 +60,7 @@ As your usage grows, you'll need to consider scaling and performance:
 Ongoing administration tasks to keep your deployment running smoothly:
 
 - **[Using the Django Admin](/deployment-self-hosting/administration-and-maintenance/using-the-django-admin)**: Access and manage your deployment through the admin interface
-- **[Upgrades and Rollbacks](/deployment-self-hosting/administration-and-maintenance/upgrades-and-rollbacks)**: Safely upgrade your deployment and rollback if needed
+- **[Upgrades and Rollbacks](/deployment-self-hosting/administration-and-maintenance/upgrades-and-rollbacks)**: Safely upgrade your deployment and roll back if needed
 - **[Troubleshooting](/deployment-self-hosting/administration-and-maintenance/troubleshooting)**: Common issues and their solutions
 
 ## Edge Proxy

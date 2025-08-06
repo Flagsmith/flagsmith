@@ -20,7 +20,13 @@ Support for our OpenShift Operator is only available with an [Enterprise plan](h
 
 Flagsmith runs on the OpenShift platform via our Helm charts. The rest of this guide is applicable for both Kubernetes and OpenShift.
 
-## Quick-start
+---
+
+## Quick Start Deployment
+
+### Basic Installation
+
+This is the simplest way to get Flagsmith running for testing or development.
 
 ```bash
 helm repo add flagsmith https://flagsmith.github.io/flagsmith-charts/
@@ -30,6 +36,8 @@ kubectl -n flagsmith port-forward svc/flagsmith-frontend 8080:8080
 
 Then view `http://localhost:8080` in a browser. This will install the chart using default options in a new namespace called `flagsmith`.
 
+### Using Custom Values (Optional)
+
 Refer to the chart's default [`values.yaml`](https://github.com/Flagsmith/flagsmith-charts/blob/main/charts/flagsmith/values.yaml) file to learn which values are expected by the chart. You can use it as a reference for building your own values file:
 
 ```bash
@@ -37,15 +45,17 @@ wget https://raw.githubusercontent.com/Flagsmith/flagsmith-charts/main/charts/fl
 helm install -n flagsmith --create-namespace flagsmith flagsmith/flagsmith -f values.yaml
 ```
 
+:::note
+
 We would suggest only doing this when running the platform locally, and recommend reading the Helm docs for [installation](https://helm.sh/docs/intro/using_helm/#helm-install-installing-a-package), [upgrading](https://helm.sh/docs/helm/helm_upgrade/) and [values](https://helm.sh/docs/chart_template_guide/values_files/) for further information.
 
-## Configuration
+:::
 
-### Ingress configuration
+---
 
 The above is a quick way of gaining access to Flagsmith, but in many cases you will need to configure ingress to work with an ingress controller.
 
-#### Port forwarding
+### Port forwarding
 
 In a terminal, run:
 
@@ -55,7 +65,7 @@ kubectl -n [flagsmith-namespace] port-forward svc/[flagsmith-release-name]-front
 
 Then access `http://localhost:8080` in a browser.
 
-#### In a cluster that has an ingress controller, using the frontend proxy
+### In a cluster that has an ingress controller, using the frontend proxy
 
 In this configuration, API requests are proxied by the frontend. This is simpler to configure but introduces some latency.
 
@@ -73,7 +83,7 @@ ingress:
 
 Then, once any out-of-cluster DNS or CDN changes have been applied, access `https://flagsmith.[MYDOMAIN]` in a browser.
 
-#### In a cluster that has an ingress controller, using separate ingresses for frontend and API
+### In a cluster that has an ingress controller, using separate ingresses for frontend and API
 
 Set the following values for Flagsmith, with changes as needed to accommodate your ingress controller and any associated DNS changes. Also, set the `FLAGSMITH_API_URL` environment variable such that the URL is reachable from a browser accessing the frontend.
 
@@ -103,7 +113,7 @@ frontend:
 
 Then, once any out-of-cluster DNS or CDN changes have been applied, access `https://flagsmith.[MYDOMAIN]` in a browser.
 
-#### Minikube ingress
+### Minikube ingress
 
 (See [https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/] for more details.)
 
@@ -452,17 +462,19 @@ The following table lists the configurable parameters of the chart and their def
 
 ---
 
-## Key upgrade notes
+## Key Upgrade Notes
 
 - [0.37.0](https://artifacthub.io/packages/helm/flagsmith/flagsmith/0.37.0): upgrades the bundled in-cluster PostgreSQL. This makes no effort to preserve data in the bundled in-cluster PostgreSQL if it is in use. This also renames the bundled in-cluster PostgreSQL to have `dev-postgresql` in the name, to signify that it exists such that the chart can be deployed self-contained, but that this PostgreSQL instance is treated as disposable. All Flagsmith installations for which the data is not disposable [should use an externally managed database](#provided-database-configuration).
 
-## Development and contributing
+---
+
+## Development and Contributing
 
 ### Requirements
 
 Helm version > 3.0.2
 
-### To run locally
+### Running Locally
 
 You can test and run the application locally on macOS using `minikube` like this:
 
@@ -475,7 +487,7 @@ helm install flagsmith --debug ./flagsmith
 minikube dashboard
 ```
 
-### Test chart installation
+### Test Chart Installation
 
 Install Chart without building a package:
 
@@ -489,7 +501,7 @@ Run template and check Kubernetes resources are made:
 helm template flagsmith flagsmith --debug -f flagsmith/values.yaml
 ```
 
-### Build chart package
+### Build Chart Package
 
 To build chart package run:
 

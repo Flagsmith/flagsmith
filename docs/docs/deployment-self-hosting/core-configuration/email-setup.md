@@ -6,7 +6,7 @@ sidebar_position: 30
 
 :::note
 
-You can self host Flagsmith without setting up an email server/gateway. You can invite additional users to the platform using invitation links, and the platform will run fine without email.
+You can self-host Flagsmith without setting up an email server/gateway. You can invite additional users to the platform using invitation links, and the platform will run fine without email.
 
 :::
 
@@ -16,13 +16,17 @@ Flagsmith makes use of the `django_site` table to provide the domain name for em
 
 :::
 
+## Required Environment Variables
+
 - `SENDER_EMAIL`: Email address from which emails are sent
 - `EMAIL_BACKEND`: One of:
   - `django.core.mail.backends.smtp.EmailBackend`
   - `sgbackend.SendGridBackend`
   - `django_ses.SESBackend`
 
-If using `django.core.mail.backends.smtp.EmailBackend` you will need to configure:
+## SMTP Configuration
+
+If using `django.core.mail.backends.smtp.EmailBackend`, you will need to configure:
 
 - `EMAIL_HOST` = env("EMAIL_HOST", default='localhost')
 - `EMAIL_HOST_USER` = env("EMAIL_HOST_USER", default=None)
@@ -30,14 +34,17 @@ If using `django.core.mail.backends.smtp.EmailBackend` you will need to configur
 - `EMAIL_PORT` = env("EMAIL_PORT", default=587)
 - `EMAIL_USE_TLS` = env.bool("EMAIL_USE_TLS", default=True)
 
-If using `sgbackend.SendGridBackend` you will need to configure:
+## SendGrid Configuration
 
-- `SENDGRID_API_KEY`: API key for the Sendgrid account
+If using `sgbackend.SendGridBackend`, you will need to configure:
 
-If using AWS SES you will need to configure:
+- `SENDGRID_API_KEY`: API key for the SendGrid account
 
-- `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains
-  your verified sender e-mail address. Defaults to us-east-1
-- `AWS_SES_REGION_ENDPOINT`: ses region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using SES.
+## AWS SES Configuration
+
+If using AWS SES, you will need to configure:
+
+- `AWS_SES_REGION_NAME`: If using Amazon SES as the email provider, specify the region (e.g. eu-central-1) that contains your verified sender email address. Defaults to us-east-1
+- `AWS_SES_REGION_ENDPOINT`: SES region endpoint, e.g. email.eu-central-1.amazonaws.com. Required when using SES.
 - `AWS_ACCESS_KEY_ID`: If using Amazon SES, these form part of your SES credentials.
 - `AWS_SECRET_ACCESS_KEY`: If using Amazon SES, these form part of your SES credentials. 

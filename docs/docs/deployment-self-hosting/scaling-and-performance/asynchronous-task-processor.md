@@ -1,16 +1,12 @@
 # Asynchronous Task Processor
 
-Flagsmith has the ability to consume asynchronous tasks using a separate task processor service. If flagsmith is run
-without the asynchronous processor, the flagsmith API will run any asynchronous tasks in a separate, unmanaged thread.
+Flagsmith has the ability to consume asynchronous tasks using a separate task processor service. If Flagsmith is run without the asynchronous processor, the Flagsmith API will run any asynchronous tasks in a separate, unmanaged thread.
 
 ## Running the Processor
 
-The task processor can be run using the `flagsmith/flagsmith-api` image with a slightly different entrypoint. It can be
-pointed to the same database that the API container is using, or instead, [it can use a separate
-database](#running-the-processor-with-a-separate-database) as broker and result storage.
+The task processor can be run using the `flagsmith/flagsmith-api` image with a slightly different entrypoint. It can be pointed to the same database that the API container is using, or instead, [it can use a separate database](#running-the-processor-with-a-separate-database) as broker and result storage.
 
-To enable the API sending tasks to the processor, you must set the `TASK_RUN_METHOD` environment variable to
-`"TASK_PROCESSOR"` in the `flagsmith` container running the Flagsmith application.
+To enable the API sending tasks to the processor, you must set the `TASK_RUN_METHOD` environment variable to `"TASK_PROCESSOR"` in the `flagsmith` container running the Flagsmith application.
 
 A basic docker-compose setup might look like:
 
@@ -47,9 +43,7 @@ flagsmith_processor:
 
 ## Configuring the Processor
 
-The processor exposes a number of configuration options to tune the processor to your needs / setup. These configuration
-options are via command line arguments when starting the processor. The default Flagsmith container entrypoint expects
-these options as `TASK_PROCESSOR_`-prefixed environment variables.
+The processor exposes a number of configuration options to tune the processor to your needs/setup. These configuration options are via command line arguments when starting the processor. The default Flagsmith container entrypoint expects these options as `TASK_PROCESSOR_`-prefixed environment variables.
 
 | Environment variable               | Argument            | Description                                                                | Default |
 | ---------------------------------- | ------------------- | -------------------------------------------------------------------------- | ------- |
@@ -60,14 +54,10 @@ these options as `TASK_PROCESSOR_`-prefixed environment variables.
 
 ## Running the Processor with a Separate Database
 
-The task processor can be run with a separate database for the task queue and results, which can be useful to separate
-infrastructure concerns. To do this, you need point the application — i.e. both the API and task processor services —
-to a different database than the primary database used by the API. This can be done in **one of the following ways:**
+The task processor can be run with a separate database for the task queue and results, which can be useful to separate infrastructure concerns. To do this, you need to point the application — i.e. both the API and task processor services — to a different database than the primary database used by the API. This can be done in **one of the following ways:**
 
 - Set the `TASK_PROCESSOR_DATABASE_URL` environment variable pointing to the task processor database.
-- Set the old-style environment variables `TASK_PROCESSOR_DATABASE_HOST`, `TASK_PROCESSOR_DATABASE_PORT`,
-  `TASK_PROCESSOR_DATABASE_USER`, `TASK_PROCESSOR_DATABASE_PASSWORD`, `TASK_PROCESSOR_DATABASE_NAME` to point to the
-  task processor database.
+- Set the old-style environment variables `TASK_PROCESSOR_DATABASE_HOST`, `TASK_PROCESSOR_DATABASE_PORT`, `TASK_PROCESSOR_DATABASE_USER`, `TASK_PROCESSOR_DATABASE_PASSWORD`, `TASK_PROCESSOR_DATABASE_NAME` to point to the task processor database.
 
 A basic docker-compose setup with a separate database might look like:
 
@@ -115,32 +105,25 @@ flagsmith_processor:
 
 ### Migrating from the Default Database (or back)
 
-As soon as the application starts with a separate task processor database, by default it will consume tasks from **both
-databases**, as to ensure that any remaining tasks in the default database are exhausted. This comes with a slight
-performance cost that **may impact your deployment**.
+As soon as the application starts with a separate task processor database, by default it will consume tasks from **both databases**, as to ensure that any remaining tasks in the default database are exhausted. This comes with a slight performance cost that **may impact your deployment**.
 
-This _default behavior_ is intended to help migrating from a _single database_ to a _separate database_ setup, and is
-managed by the following setting:
+This _default behaviour_ is intended to help migrating from a _single database_ to a _separate database_ setup, and is managed by the following setting:
 
 ```yaml
 # First, fetch any remaining tasks from the default database, then move onto the task processor database.
-TASK_PROCESSOR_DATABASES: default,task_processor  # Default behavior when a separate database is used
+TASK_PROCESSOR_DATABASES: default,task_processor  # Default behaviour when a separate database is used
 ```
 
-Once all tasks from the default database are consumed, it is recommended to update the `TASK_PROCESSOR_DATABASES`
-environment variable to only consume tasks from the task processor separate database:
+Once all tasks from the default database are consumed, it is recommended to update the `TASK_PROCESSOR_DATABASES` environment variable to only consume tasks from the task processor separate database:
 
 ```yaml
 # Only consume tasks from the task processor database.
 TASK_PROCESSOR_DATABASES: task_processor
 ```
 
-The above setting is also recommended for new deployments starting with a separate database layout, since there will be
-no pending tasks in the default database to consume.
+The above setting is also recommended for new deployments starting with a separate database layout, since there will be no pending tasks in the default database to consume.
 
-Optionally, or if you have any reason to move historical task processor data from one database to another, you can do
-so using Django's `loaddata` and `dumpdata` commands. This is a manual process, and you should ensure that the task
-processor is **not running while you do this**, as it may interfere with the data and/or tasks.
+Optionally, or if you have any reason to move historical task processor data from one database to another, you can do so using Django's `loaddata` and `dumpdata` commands. This is a manual process, and you should ensure that the task processor is **not running while you do this**, as it may interfere with the data and/or tasks.
 
 Assuming the above Docker Compose setup as example:
 
@@ -154,16 +137,13 @@ docker-compose run flagsmith python manage.py loaddata task_processor task_proce
 
 There are a number of options for monitoring the task processor's health.
 
-### Health checks
+### Health Checks
 
-A task processor container exposes `/health/readiness` and `/health/liveness` endpoints for readiness and liveness
-probes. The endpoints run simple availability checks. To include a test that enqueues a task and makes sure it's run
-to your readiness probe, set `ENABLE_TASK_PROCESSOR_HEALTH_CHECK` environment variable to `True`.
+A task processor container exposes `/health/readiness` and `/health/liveness` endpoints for readiness and liveness probes. The endpoints run simple availability checks. To include a test that enqueues a task and makes sure it's run to your readiness probe, set `ENABLE_TASK_PROCESSOR_HEALTH_CHECK` environment variable to `True`.
 
-### Task statistics
+### Task Statistics
 
-Both API and task processor expose an endpoint which returns task processor statistics in JSON format.
-This endpoint is available at `GET /processor/monitoring`. See an example response below:
+Both API and task processor expose an endpoint which returns task processor statistics in JSON format. This endpoint is available at `GET /processor/monitoring`. See an example response below:
 
 ```json
 {
