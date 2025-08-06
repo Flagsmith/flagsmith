@@ -124,11 +124,11 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata = validated_data.pop("metadata", [])
         with transaction.atomic():
-            segment_revision = segment.deep_clone()
+            segment_revision = segment.clone(is_revision=True)
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
         logger.info(
             "segment-revision-created",
-            original_segment_id=segment.id,
+            segment_id=segment.id,
             revision_id=segment_revision.id,
         )
         self._update_metadata(segment, metadata)

@@ -1,10 +1,10 @@
 from unittest.mock import PropertyMock
 
+import pytest
 from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
 from pytest_mock import MockerFixture
 
 from segments.models import Condition, Segment, SegmentRule
-from segments.services import SegmentCloneService
 
 
 def test_get_segment_returns_parent_segment_for_nested_rule(
@@ -187,13 +187,7 @@ def test_manager_returns_only_highest_version_of_segments(
     segment: Segment,
 ) -> None:
     # Given
-    # The built-in segment fixture is pre-versioned already.
-    assert segment.version == 2
-    assert segment.version_of == segment
-
-    cloned_segment = SegmentCloneService(segment).deep_clone()
-    assert cloned_segment.version == 2
-    assert segment.version == 3
+    cloned_segment = segment.clone(is_revision=True)
 
     # When
     queryset1 = Segment.live_objects.filter(id=cloned_segment.id)
@@ -256,8 +250,7 @@ def test_segment_rule_get_skip_create_audit_log_when_doesnt_skip(
 
 def test_segment_rule_get_skip_create_audit_log_when_skips(segment: Segment) -> None:
     # Given
-    cloned_segment = SegmentCloneService(segment).deep_clone()
-    assert cloned_segment != cloned_segment.version_of
+    cloned_segment = segment.clone(is_revision=True)
 
     segment_rule = SegmentRule.objects.create(
         segment=cloned_segment, type=SegmentRule.ALL_RULE
@@ -310,3 +303,117 @@ def test_delete_segment_only_schedules_one_task_for_audit_log_creation(
 
     # Then
     assert len(mocked_tasks.mock_calls) == 1
+
+
+def test_Segment_clone__can_create_standalone_segment_clone(
+    segment: Segment,
+) -> None:
+    # Given
+    segment.version = 5
+    segment.save()
+
+    # When
+    cloned_segment = segment.clone(name="another-segment", is_revision=False)
+
+    # Then
+    assert cloned_segment != segment
+    assert cloned_segment.name == "another-segment"
+    assert cloned_segment.version_of == cloned_segment
+    assert cloned_segment.version == 1
+
+
+def test_Segment_clone__empty_segment__returns_new_revision(
+    segment: Segment,
+) -> None:
+    # Given
+    original_version: int = segment.version  # type: ignore[assignment]
+
+    # When
+    cloned_segment = segment.clone(is_revision=True)
+
+    # Then
+    assert cloned_segment != segment
+    assert cloned_segment.version_of == segment
+    assert cloned_segment.version == original_version
+    assert segment.version == original_version + 1
+
+
+@pytest.mark.parametrize("is_revision", [True, False])
+def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rules_and_conditions(
+    is_revision: bool,
+    segment: Segment,
+) -> None:
+    # Given
+    rule1 = SegmentRule.objects.create(
+        segment=segment,
+        type=SegmentRule.ALL_RULE,
+    )
+    Condition.objects.create(
+        rule=rule1,
+        property="property1a",
+        operator=EQUAL,
+        value="value1a",
+    )
+    Condition.objects.create(
+        rule=rule1,
+        property="property1b",
+        operator=EQUAL,
+        value="value1b",
+    )
+    rule2 = SegmentRule.objects.create(
+        segment=segment,
+        type=SegmentRule.ANY_RULE,
+    )
+    Condition.objects.create(
+        rule=rule2,
+        property="property2a",
+        operator=EQUAL,
+        value="value2a",
+    )
+    rule3 = SegmentRule.objects.create(
+        rule=rule2,
+        type=SegmentRule.ALL_RULE,
+    )
+    Condition.objects.create(
+        rule=rule3,
+        property="property3a",
+        operator=EQUAL,
+        value="value3a",
+    )
+
+    # When
+    cloned_segment = segment.clone(is_revision=is_revision)
+
+    # Then
+    assert cloned_segment != segment
+    assert list(
+        SegmentRule.objects.filter(segment=cloned_segment)
+        .values("rule", "type")
+        .order_by("type")
+    ) == [
+        {"rule": None, "type": SegmentRule.ALL_RULE},
+        {"rule": None, "type": SegmentRule.ANY_RULE},
+    ]
+    assert list(
+        Condition.objects.filter(rule__segment=cloned_segment)
+        .values("property", "operator", "value")
+        .order_by("property")
+    ) == [
+        {"property": "property1a", "operator": EQUAL, "value": "value1a"},
+        {"property": "property1b", "operator": EQUAL, "value": "value1b"},
+        {"property": "property2a", "operator": EQUAL, "value": "value2a"},
+    ]
+    assert list(
+        SegmentRule.objects.filter(rule__segment=cloned_segment).values(
+            "rule__type", "type"
+        )
+    ) == [
+        {"rule__type": SegmentRule.ANY_RULE, "type": SegmentRule.ALL_RULE},
+    ]
+    assert list(
+        Condition.objects.filter(rule__rule__segment=cloned_segment).values(
+            "property", "operator", "value"
+        )
+    ) == [
+        {"property": "property3a", "operator": EQUAL, "value": "value3a"},
+    ]
