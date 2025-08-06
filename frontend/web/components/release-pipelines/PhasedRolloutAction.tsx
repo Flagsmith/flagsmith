@@ -20,9 +20,11 @@ const PhasedRolloutAction = ({
 }: PhasedRolloutActionProps) => {
   const [enabled, setEnabled] = useState(action.action_body.enabled)
   const [initialSplit, setInitialSplit] = useState(
-    action.action_body.initial_split,
+    action.action_body.initial_split || 0,
   )
-  const [increaseBy, setIncreaseBy] = useState(action.action_body.increase_by)
+  const [increaseBy, setIncreaseBy] = useState(
+    action.action_body.increase_by || 0,
+  )
   const [increaseEvery, setIncreaseEvery] = useState(
     action.action_body.increase_every,
   )
@@ -51,10 +53,11 @@ const PhasedRolloutAction = ({
     onActionChange?.(action.action_type as StageActionType, {
       ...action.action_body,
       enabled: enabled,
-      [field]: value,
       increase_by: increaseBy,
       increase_every: increaseEvery,
       initial_split: initialSplit,
+      // eslint-disable-next-line sort-keys-fix/sort-keys-fix
+      [field]: value,
     })
   }
 
