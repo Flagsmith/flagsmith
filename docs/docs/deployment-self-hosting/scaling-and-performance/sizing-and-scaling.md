@@ -4,8 +4,6 @@ description: Sizing and Scaling Flagsmith
 sidebar_position: 80
 ---
 
-## Overview
-
 Flagsmith has a very simple architecture, making it well understood when it comes to serving high loads.
 
 ## Frontend Dashboard
