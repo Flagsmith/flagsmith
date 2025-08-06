@@ -10,24 +10,62 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name="apiusagebucket",
-            name="labels",
-            field=models.JSONField(default=dict),
-        ),
-        migrations.AlterField(
-            model_name="apiusageraw",
-            name="labels",
-            field=models.JSONField(default=dict),
-        ),
-        migrations.AlterField(
-            model_name="featureevaluationbucket",
-            name="labels",
-            field=models.JSONField(default=dict),
-        ),
-        migrations.AlterField(
-            model_name="featureevaluationraw",
-            name="labels",
-            field=models.JSONField(default=dict),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AlterField(
+                    model_name="apiusagebucket",
+                    name="labels",
+                    field=models.JSONField(default=dict),
+                ),
+                migrations.AlterField(
+                    model_name="apiusageraw",
+                    name="labels",
+                    field=models.JSONField(default=dict),
+                ),
+                migrations.AlterField(
+                    model_name="featureevaluationbucket",
+                    name="labels",
+                    field=models.JSONField(default=dict),
+                ),
+                migrations.AlterField(
+                    model_name="featureevaluationraw",
+                    name="labels",
+                    field=models.JSONField(default=dict),
+                ),
+            ],
+            database_operations=[
+                migrations.RunSQL(
+                    # Only alter the columns that are currently hstore.
+                    # See 0006_add_labels to understand why we are doing this.
+                    sql="""
+                    DO $$
+                    BEGIN
+                        FOR relname IN
+                            SELECT c.relname
+                            FROM pg_class c
+                            JOIN pg_attribute a ON a.attrelid = c.oid
+                            JOIN pg_type t ON a.atttypid = t.oid
+                            WHERE c.relname IN (
+                                'app_analytics_apiusagebucket',
+                                'app_analytics_apiusageraw',
+                                'app_analytics_featureevaluationbucket',
+                                'app_analytics_featureevaluationraw'
+                            )
+                            AND a.attname = 'labels'
+                            AND t.typname = 'hstore'
+                        LOOP
+                            EXECUTE format(
+                                'ALTER TABLE %I
+                                 ALTER COLUMN labels TYPE jsonb USING hstore_to_json(labels),
+                                 ALTER COLUMN labels SET DEFAULT ''{}''::jsonb',
+                                relname
+                            );
+                        END LOOP;
+                    END
+                    $$;
+                    """,
+                    reverse_sql="",
+                ),
+            ],
         ),
     ]
