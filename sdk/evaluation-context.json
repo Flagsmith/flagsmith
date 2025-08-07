@@ -48,6 +48,11 @@
                     },
                     "title": "Variants",
                     "type": "array"
+                },
+                "priority": {
+                    "description": "Indicates the priority of the feature context. Higher values indicate higher priority in case when multiple feature contexts for the same feature are applicable",
+                    "title": "Priority",
+                    "type": "number"
                 }
             },
             "required": [
