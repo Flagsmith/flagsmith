@@ -1922,26 +1922,22 @@ typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 
 [[package]]
 name = "flagsmith"
-version = "3.9.2"
+version = "3.10.0"
 description = "Flagsmith Python SDK"
 optional = false
-python-versions = ">=3.8.1,<4"
+python-versions = "<4,>=3.8.1"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "flagsmith-3.10.0-py3-none-any.whl", hash = "sha256:e4be6921b5916663575951cf379edfc92765063e27e63f51486b3cf0bb8317c8"},
+    {file = "flagsmith-3.10.0.tar.gz", hash = "sha256:ca82f7b29bc50299bb3099f49428c7376b140083577574d0b273c2936d8c9c06"},
+]
 
 [package.dependencies]
-flagsmith-flag-engine = "^6.0.2"
-pydantic = "^2"
-requests = "^2.32.3"
-requests-futures = "^1.0.1"
-sseclient-py = "^1.8.0"
-
-[package.source]
-type = "git"
-url = "https://github.com/Flagsmith/flagsmith-python-client/"
-reference = "chore/bump-flag-engine-version"
-resolved_reference = "ec86b49a6215ebf18937f949d5783d170a0c5aa5"
+flagsmith-flag-engine = ">=6.0.2,<7.0.0"
+pydantic = ">=2,<3"
+requests = ">=2.32.3,<3.0.0"
+requests-futures = ">=1.0.1,<2.0.0"
+sseclient-py = ">=1.8.0,<2.0.0"
 
 [[package]]
 name = "flagsmith-auth-controller"
@@ -5443,4 +5439,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">3.11,<3.13"
-content-hash = "68dfc19ba66723480038e16be56f2e1fe71b5211c05198a29852ec81d1fec370"
+content-hash = "7e08c3be0eee29a140087331ed22378131e2cee7c87d333ff43d2abd1702b789"
