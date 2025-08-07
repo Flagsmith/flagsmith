@@ -39,6 +39,11 @@
                         }
                     ]
                 },
+                "reason": {
+                    "description": "Reason for the feature flag evaluation.",
+                    "title": "Reason",
+                    "type": "string"
+                },
                 "feature": {
                     "$ref": "#/$defs/FeatureResult"
                 }
