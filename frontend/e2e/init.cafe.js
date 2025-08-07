@@ -33,10 +33,9 @@ console.log(
 
 
 fixture`E2E Tests`.requestHooks(logger).before(async () => {
-  const token = "some-token"
-  // process.env.E2E_TEST_TOKEN
-  //   ? process.env.E2E_TEST_TOKEN
-  //   : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
+  const token = process.env.E2E_TEST_TOKEN
+    ? process.env.E2E_TEST_TOKEN
+    : process.env[`E2E_TEST_TOKEN_${Project.env.toUpperCase()}`]
     await flagsmith.init({
       api:Project.flagsmithClientAPI,
       environmentID:Project.flagsmith,
