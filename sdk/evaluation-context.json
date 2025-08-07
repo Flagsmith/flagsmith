@@ -13,7 +13,7 @@
                     "description": "An environment's human-readable name.",
                     "title": "Name",
                     "type": "string",
-                    "x-flagsmith-engine-path": "$.environment.name"
+                    "x-flagsmith-engine-condition-property": "$.environment.name"
                 }
             },
             "required": [
@@ -100,18 +100,15 @@
                     "x-flagsmith-engine-path": "$.identity.key"
                 },
                 "traits": {
-                    "anyOf": [
-                        {
-                            "additionalProperties": {
-                                "type": "string"
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
+                    "additionalProperties": {
+                        "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "type": "object",
                     "description": "A map of traits associated with the identity, where the key is the trait name and the value is the trait value.",
                     "title": "Traits"
                 }
