@@ -19,6 +19,25 @@ def test_get_segment_returns_parent_segment_for_nested_rule(
     assert rule3.get_segment() == segment
 
 
+def test_Condition_str__returns_readable_representation_of_condition(
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    condition = Condition.objects.create(
+        rule=segment_rule,
+        property="foo",
+        operator=EQUAL,
+        value="bar",
+    )
+
+    # When
+    result = str(condition)
+
+    # Then
+    assert result == "Condition for ALL rule for Segment - segment: foo EQUAL bar"
+
+
 def test_condition_get_create_log_message_for_condition_created_with_segment(  # type: ignore[no-untyped-def]
     segment, segment_rule, mocker
 ):

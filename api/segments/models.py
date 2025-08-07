@@ -316,7 +316,7 @@ class Condition(
 
     objects: typing.ClassVar[ConditionManager] = ConditionManager()
 
-    def __str__(self):  # type: ignore[no-untyped-def]
+    def __str__(self) -> str:
         return "Condition for %s: %s %s %s" % (
             str(self.rule),
             self.property,
