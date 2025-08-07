@@ -132,10 +132,19 @@
                     "type": "string"
                 },
                 "rules": {
+                    "description": "Rules that define the segment.",
                     "items": {
                         "$ref": "#/$defs/SegmentRule"
                     },
                     "title": "Rules",
+                    "type": "array"
+                },
+                "overrides": {
+                    "description": "Feature overrides for the segment.",
+                    "items": {
+                        "$ref": "#/$defs/FeatureContext"
+                    },
+                    "title": "Overrides",
                     "type": "array"
                 }
             },
