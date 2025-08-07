@@ -217,21 +217,22 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
-    def clean(self):  # type: ignore[no-untyped-def]
-        super().clean()
-        parents = [self.segment, self.rule]
-        num_parents = sum(parent is not None for parent in parents)
-        if num_parents != 1:
-            raise ValidationError(
-                "Segment rule must have exactly one parent, %d found",
-                num_parents,  # type: ignore[arg-type]
-            )
-
     def __str__(self):  # type: ignore[no-untyped-def]
         return "%s rule for %s" % (
             self.type,
             str(self.segment) if self.segment else str(self.rule),
         )
+
+    def clean(self) -> None:
+        super().clean()
+        self._validate_one_parent()
+
+    def _validate_one_parent(self) -> None:
+        parents = [self.segment, self.rule]
+        if (num_parents := sum(parent is not None for parent in parents)) != 1:
+            raise ValidationError(
+                f"SegmentRule must have exactly one parent, {num_parents} found"
+            )
 
     def get_skip_create_audit_log(self) -> bool:
         try:

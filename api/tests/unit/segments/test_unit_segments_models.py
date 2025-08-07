@@ -1,6 +1,9 @@
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import PropertyMock
 
 import pytest
+from django.core.exceptions import ValidationError
 from flag_engine.segments.constants import EQUAL
 from pytest_mock import MockerFixture
 
@@ -213,6 +216,33 @@ def test_manager_returns_only_highest_version_of_segments(
     assert queryset2.first() == cloned_segment
     assert queryset3.first() == segment
     assert queryset4.first() == segment
+
+
+@pytest.mark.parametrize(
+    "get_parents",
+    [
+        lambda segment, rule: {"segment": segment, "rule": rule},
+        lambda segment, rule: {"segment": None, "rule": None},
+    ],
+)
+def test_SegmentRule_clean__validates_rule_has_only_one_parent(
+    get_parents: Callable[[Segment, SegmentRule], dict[str, Any]],
+    segment: Segment,
+    segment_rule: SegmentRule,
+) -> None:
+    # Given
+    parents = get_parents(segment, segment_rule)
+    rule = SegmentRule(**parents)
+
+    # When
+    with pytest.raises(ValidationError) as exc_info:
+        rule.clean()
+
+    # Then
+    parents_count = sum(parent is not None for parent in parents.values())
+    assert exc_info.match(
+        f"SegmentRule must have exactly one parent, {parents_count} found"
+    )
 
 
 def test_segment_rule_get_skip_create_on_segment_hard_delete(
