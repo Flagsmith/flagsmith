@@ -5,7 +5,18 @@
     border: none;
   }
 
-  &.searchable-dropdown .react-select {
+
+  &__menu-list {
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none; 
+    }
+  }
+
+  &.clearable-dropdown .react-select {
     &__indicator-separator {
       display: block;
       opacity: 0.5;

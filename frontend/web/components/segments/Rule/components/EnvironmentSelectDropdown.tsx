@@ -32,7 +32,7 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
   )
 
   const customSelectionAsOption =
-    isEditing || !isExistingEnvironment
+    localCurrentValue && (isEditing || !isExistingEnvironment)
       ? [
           {
             label: <GroupLabel groupName='Custom selection' />,
@@ -65,7 +65,8 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
       value={value?.toString() || null}
       placeholder={'Environment'}
       noOptionsMessage={'No environment matches your search'}
-      maxMenuHeight={400}
+      isClearable={true}
+      maxMenuHeight={280}
       dataTest={dataTest}
       onInputChange={(e: string, metadata: any) => {
         if (metadata.action !== 'input-change') {
@@ -80,7 +81,7 @@ const EnvironmentSelectDropdown: React.FC<EnvironmentSelectDropdownProps> = ({
       }}
       onChange={(e: OptionType) => {
         if (onChange) {
-          onChange(e.value)
+          onChange(Utils.safeParseEventValue(e?.value || ''))
         }
       }}
     />

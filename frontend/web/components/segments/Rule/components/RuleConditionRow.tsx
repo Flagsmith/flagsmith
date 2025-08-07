@@ -9,12 +9,11 @@ import {
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
-import RuleConditionPropertySelect, {
-  OptionType,
-} from './RuleConditionPropertySelect'
+import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
 import { RuleContextLabels } from 'common/types/rules.types'
+import { OptionType } from 'components/base/SearchableDropdown'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -97,7 +96,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   )?.value
 
   const showEnvironmentDropdown =
-    !['PERCENTAGE_SPLIT', 'IN'].includes(rule.operator) &&
+    ['EQUAL', 'NOT_EQUAL'].includes(rule.operator) &&
     rule.property === RuleContextValues.ENVIRONMENT_NAME
 
   const showEvaluationContextWarning =

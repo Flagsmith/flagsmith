@@ -109,6 +109,7 @@ const RuleConditionPropertySelect = ({
       <SearchableDropdown
         dataTest={dataTest}
         value={propertyValue}
+        isClearable={true}
         placeholder={'Trait / Context value'}
         options={optionsWithTrait}
         noOptionsMessage={'Start typing to select a trait'}

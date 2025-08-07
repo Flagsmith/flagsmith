@@ -50,6 +50,7 @@ interface SearchableDropdownProps {
   onInputChange?: (e: string, metadata: any) => void
   onChange?: (e: OptionType) => void
   isMulti?: boolean
+  isClearable?: boolean
   components?: any
 }
 
@@ -57,6 +58,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   components,
   dataTest,
   displayedLabel,
+  isClearable = false,
   isMulti,
   isSearchable,
   maxMenuHeight,
@@ -68,7 +70,6 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   placeholder,
   value,
 }) => {
-  console.log('components', components)
   return (
     <Select
       data-test={dataTest}
@@ -84,8 +85,10 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       {...(noOptionsMessage
         ? { noOptionsMessage: () => noOptionsMessage }
         : {})}
-      isClearable
-      className='react-select searchable-dropdown'
+      isClearable={isClearable}
+      className={`react-select ${
+        isClearable && value ? 'clearable-dropdown' : ''
+      }`}
       components={components}
     />
   )
