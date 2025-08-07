@@ -235,28 +235,25 @@ class SegmentRule(
 
     def get_skip_create_audit_log(self) -> bool:
         try:
-            segment = self.get_segment()  # type: ignore[no-untyped-call]
+            segment = self.get_segment()
             if segment.deleted_at:
                 return True
-            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
+            return segment.version_of_id != segment.id
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
             return True
 
     def _get_project(self) -> typing.Optional[Project]:
-        return self.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
+        return self.get_segment().project
 
-    def get_segment(self):  # type: ignore[no-untyped-def]
+    def get_segment(self) -> Segment:
         """
-        rules can be a child of a parent rule instead of a segment, this method iterates back up the tree to find the
-        segment
-
-        TODO: denormalise the segment information so that we don't have to make multiple queries here in complex cases
+        Find the segment this rule belongs to
         """
-        rule = self
-        while not rule.segment_id:
-            rule = rule.rule  # type: ignore[assignment]
-        return rule.segment
+        if self.segment:
+            return self.segment
+        assert self.rule, "SegmentRule must belong to a segment or another rule"
+        return self.rule.get_segment()
 
 
 class ConditionManager(SoftDeleteExportableManager):
@@ -332,11 +329,11 @@ class Condition(
             if self.rule.deleted_at:
                 return True
 
-            segment = self.rule.get_segment()  # type: ignore[no-untyped-call]
+            segment = self.rule.get_segment()
             if segment.deleted_at:
                 return True
 
-            return segment.version_of_id != segment.id  # type: ignore[no-any-return]
+            return segment.version_of_id != segment.id
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
             # handle hard delete
             return True
@@ -356,15 +353,10 @@ class Condition(
         return self._get_segment().id
 
     def _get_segment(self) -> Segment:
-        """
-        Temporarily cache the segment on the condition object to reduce number of queries.
-        """
-        if not hasattr(self, "segment"):
-            setattr(self, "segment", self.rule.get_segment())  # type: ignore[no-untyped-call]
-        return self.segment  # type: ignore[no-any-return]
+        return self.rule.get_segment()
 
     def _get_project(self) -> typing.Optional[Project]:
-        return self.rule.get_segment().project  # type: ignore[no-untyped-call,no-any-return]
+        return self.rule.get_segment().project
 
 
 class WhitelistedSegment(models.Model):

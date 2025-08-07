@@ -1,7 +1,7 @@
 from unittest.mock import PropertyMock
 
 import pytest
-from flag_engine.segments.constants import EQUAL, PERCENTAGE_SPLIT
+from flag_engine.segments.constants import EQUAL
 from pytest_mock import MockerFixture
 
 from segments.models import Condition, Segment, SegmentRule
@@ -11,18 +11,12 @@ def test_get_segment_returns_parent_segment_for_nested_rule(
     segment: Segment,
 ) -> None:
     # Given
-    parent_rule = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
-    child_rule = SegmentRule.objects.create(rule=parent_rule, type=SegmentRule.ALL_RULE)
-    grandchild_rule = SegmentRule.objects.create(
-        rule=child_rule, type=SegmentRule.ALL_RULE
-    )
-    Condition.objects.create(operator=PERCENTAGE_SPLIT, value=0.1, rule=grandchild_rule)
+    rule1 = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
+    rule2 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
+    rule3 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
-    # When
-    new_segment = grandchild_rule.get_segment()
-
-    # Then
-    assert new_segment == segment
+    # When / then
+    assert rule3.get_segment() == segment
 
 
 def test_condition_get_create_log_message_for_condition_created_with_segment(  # type: ignore[no-untyped-def]
