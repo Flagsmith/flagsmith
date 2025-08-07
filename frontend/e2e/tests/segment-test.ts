@@ -26,8 +26,58 @@ import {
   waitAndRefresh,
   waitForElementVisible,
   cloneSegment,
+  setSegmentRule,
+  assertInputValue,
 } from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
+
+// Keep the last rule simple to facilitate update testing
+const segmentRules =  [
+  // rule 2 =18 || =17
+  {
+    name: 'age',
+    operator: 'EQUAL',
+    ors: [
+      {
+        name: 'age',
+        operator: 'EQUAL',
+        value: 17,
+      },
+    ],
+    value: 18,
+  },
+  //rule 2 >17 or <10
+  {
+    name: 'age',
+    operator: 'GREATER_THAN',
+    ors: [
+      {
+        name: 'age',
+        operator: 'LESS_THAN',
+        value: 10,
+      },
+    ],
+    value: 17,
+  },
+  // rule 3 !=20
+  {
+    name: 'age',
+    operator: 'NOT_EQUAL',
+    value: 20,
+  },
+  // Rule 4 <= 18
+  {
+    name: 'age',
+    operator: 'LESS_THAN_INCLUSIVE',
+    value: 18,
+  },
+  // Rule 5 >= 18
+  {
+    name: 'age',
+    operator: 'GREATER_THAN_INCLUSIVE',
+    value: 18,
+  },
+]
 
 export const testSegment1 = async (flagsmith: any) => {
   log('Login')
@@ -45,52 +95,20 @@ export const testSegment1 = async (flagsmith: any) => {
   // (=== 18 || === 19) && (> 17 || < 19) && (!=20) && (<=18) && (>=18)
   // Rule 1- Age === 18 || Age === 19
 
-  await createSegment(0, '18_or_19', [
-    // rule 2 =18 || =17
-    {
-      name: 'age',
-      operator: 'EQUAL',
-      ors: [
-        {
-          name: 'age',
-          operator: 'EQUAL',
-          value: 17,
-        },
-      ],
-      value: 18,
-    },
-    // rule 2 >17 or <10
-    {
-      name: 'age',
-      operator: 'GREATER_THAN',
-      ors: [
-        {
-          name: 'age',
-          operator: 'LESS_THAN',
-          value: 10,
-        },
-      ],
-      value: 17,
-    },
-    // rule 3 !=20
-    {
-      name: 'age',
-      operator: 'NOT_EQUAL',
-      value: 20,
-    },
-    // Rule 4 <= 18
-    {
-      name: 'age',
-      operator: 'LESS_THAN_INCLUSIVE',
-      value: 18,
-    },
-    // Rule 5 >= 18
-    {
-      name: 'age',
-      operator: 'GREATER_THAN_INCLUSIVE',
-      value: 18,
-    },
-  ])
+  await createSegment(0, '18_or_19', segmentRules)
+
+  log('Update segment')
+  await click(byId('segment-0-name'))
+  const lastRule = segmentRules[segmentRules.length - 1]
+  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value + 1)
+  await click(byId('update-segment'))
+  await closeModal()
+  await gotoSegments()
+  await click(byId('segment-0-name'))
+  await assertInputValue(byId(`rule-${segmentRules.length - 1}-value-0`), `${lastRule.value + 1}`)
+  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value)
+  await click(byId('update-segment'))
+  await closeModal()
 
   log('Add segment trait for user')
   await gotoTraits()
