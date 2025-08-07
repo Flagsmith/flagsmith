@@ -313,6 +313,8 @@ export const setSegmentOverrideIndex = async (
   await setText(byId(`sort-${index}`), `${newIndex}`)
 }
 
+export const assertInputValue = (selector: string, v: string) =>
+  t.expect(Selector(selector).value).eql(v)
 export const assertTextContent = (selector: string, v: string) =>
   t.expect(Selector(selector).textContent).eql(v)
 export const assertTextContentContains = (selector: string, v: string) =>
