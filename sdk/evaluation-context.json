@@ -211,7 +211,7 @@
                     "title": "Conditions",
                     "type": "array"
                 },
-                "sub_rules": {
+                "rules": {
                     "items": {
                         "$ref": "#/$defs/SegmentRule"
                     },
