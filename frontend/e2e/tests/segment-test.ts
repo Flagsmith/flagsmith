@@ -31,6 +31,7 @@ import {
 } from '../helpers.cafe'
 import { E2E_USER, PASSWORD } from '../config'
 
+// Keep the last rule simple to facilitate update testing
 const segmentRules =  [
   // rule 2 =18 || =17
   {
