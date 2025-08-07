@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.190.1](https://github.com/Flagsmith/flagsmith/compare/v2.190.0...v2.190.1) (2025-08-07)
+
+
+### Bug Fixes
+
+* Bring API docs back ([#5908](https://github.com/Flagsmith/flagsmith/issues/5908)) ([92ba39a](https://github.com/Flagsmith/flagsmith/commit/92ba39adb368aee26b8b44e42cc9b38cd0c05c8b))
+
 ## [2.190.0](https://github.com/Flagsmith/flagsmith/compare/v2.189.0...v2.190.0) (2025-08-07)
 
 
