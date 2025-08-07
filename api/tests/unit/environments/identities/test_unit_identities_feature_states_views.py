@@ -8,15 +8,18 @@ from common.environments.permissions import (
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
+from rest_framework.test import APIClient
 
 from core.constants import STRING
 from environments.identities.models import Identity
 from environments.models import Environment
+from environments.permissions.models import UserEnvironmentPermission
 from features.models import Feature, FeatureState, FeatureStateValue
 from features.multivariate.models import (
     MultivariateFeatureOption,
     MultivariateFeatureStateValue,
 )
+from permissions.models import PermissionModel
 from projects.models import Project
 from tests.unit.environments.helpers import get_environment_user_client
 
@@ -96,13 +99,13 @@ def test_user_with_update_feature_state_permission_can_update_identity_feature_s
     assert response.status_code == status.HTTP_201_CREATED
 
 
-def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(  # type: ignore[no-untyped-def]  # noqa: E501
-    environment,
-    identity,
-    test_user_client,
-    view_environment_permission,
-    user_environment_permission,
-):
+def test_user_with_view_environment_permission_can_retrieve_all_feature_states_for_identity(
+    environment: Environment,
+    identity: Identity,
+    staff_client: APIClient,
+    view_environment_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
+) -> None:
     # Given
     user_environment_permission.permissions.add(view_environment_permission)
 
@@ -112,7 +115,7 @@ def test_user_with_view_environment_permission_can_retrieve_all_feature_states_f
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK

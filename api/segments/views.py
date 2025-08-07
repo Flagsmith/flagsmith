@@ -2,9 +2,6 @@ import logging
 from typing import Any
 
 from common.projects.permissions import VIEW_PROJECT
-from common.segments.serializers import (
-    SegmentSerializer,
-)
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import status, viewsets
@@ -29,6 +26,7 @@ from .permissions import SegmentPermissions
 from .serializers import (
     CloneSegmentSerializer,
     SegmentListQuerySerializer,
+    SegmentSerializer,
 )
 from .services import SegmentCloneService
 

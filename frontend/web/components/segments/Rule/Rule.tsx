@@ -71,7 +71,10 @@ const Rule: React.FC<RuleProps> = ({
     )
     const newOperator = operators.find((op) => op.value === operatorValue)
 
-    const updates: Partial<SegmentCondition> = { operator: operatorValue }
+    // Split the append part of the operator as not handled by backend
+    const updates: Partial<SegmentCondition> = {
+      operator: operatorValue?.split(':')[0],
+    }
 
     if (newOperator?.hideValue) {
       updates.value = null

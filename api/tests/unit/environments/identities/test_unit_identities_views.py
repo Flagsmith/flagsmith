@@ -29,11 +29,13 @@ from environments.identities.models import Identity
 from environments.identities.traits.models import Trait
 from environments.identities.views import IdentityViewSet
 from environments.models import Environment, EnvironmentAPIKey
+from environments.permissions.models import UserEnvironmentPermission
 from environments.permissions.permissions import NestedEnvironmentPermissions
 from features.models import Feature, FeatureSegment, FeatureState
 from integrations.amplitude.models import AmplitudeConfiguration
 from organisations.models import Organisation
-from projects.models import Project
+from permissions.models import PermissionModel
+from projects.models import Project, UserProjectPermission
 from segments.models import Condition, Segment, SegmentRule
 
 
@@ -1331,16 +1333,16 @@ def test_post_identities__transient_traits__no_persistence(
     assert not Trait.objects.filter(trait_key=transient_trait_key).exists()
 
 
-def test_user_with_view_identities_permission_can_retrieve_identity(  # type: ignore[no-untyped-def]
-    environment,
-    identity,
-    test_user_client,
-    view_environment_permission,
-    view_identities_permission,
-    view_project_permission,
-    user_environment_permission,
-    user_project_permission,
-):
+def test_user_with_view_identities_permission_can_retrieve_identity(
+    environment: Environment,
+    identity: Identity,
+    staff_client: APIClient,
+    view_environment_permission: PermissionModel,
+    view_identities_permission: PermissionModel,
+    view_project_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
+    user_project_permission: UserProjectPermission,
+) -> None:
     # Given
 
     user_environment_permission.permissions.add(
@@ -1354,22 +1356,22 @@ def test_user_with_view_identities_permission_can_retrieve_identity(  # type: ig
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_user_with_view_environment_permission_can_not_list_identities(  # type: ignore[no-untyped-def]
-    environment,
-    identity,
-    test_user_client,
-    view_environment_permission,
-    manage_identities_permission,
-    view_project_permission,
-    user_environment_permission,
-    user_project_permission,
-):
+def test_user_with_view_environment_permission_can_not_list_identities(
+    environment: Environment,
+    identity: Identity,
+    staff_client: APIClient,
+    view_environment_permission: PermissionModel,
+    manage_identities_permission: PermissionModel,
+    view_project_permission: PermissionModel,
+    user_environment_permission: UserEnvironmentPermission,
+    user_project_permission: UserProjectPermission,
+) -> None:
     # Given
 
     user_environment_permission.permissions.add(view_environment_permission)
@@ -1381,7 +1383,7 @@ def test_user_with_view_environment_permission_can_not_list_identities(  # type:
     )
 
     # When
-    response = test_user_client.get(url)
+    response = staff_client.get(url)
 
     # Then
     assert response.status_code == status.HTTP_403_FORBIDDEN

@@ -497,6 +497,7 @@ def test_get_feature_states_for_identity__transient_identifier__empty_segment__r
                                 "rules": [],
                                 "conditions": [
                                     {
+                                        "property": "$.identity.key",
                                         "operator": "PERCENTAGE_SPLIT",
                                         "value": 0,
                                     }
