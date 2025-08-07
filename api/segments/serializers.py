@@ -25,7 +25,7 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
     class Meta:
         model = Condition
         fields = [
-            "pk",
+            "id",
             "operator",
             "property",
             "value",
@@ -59,7 +59,7 @@ class _NestedSegmentRuleSerializer(_BaseSegmentRuleSerializer):
     class Meta:
         model = SegmentRule
         fields = [
-            "pk",
+            "id",
             "type",
             "conditions",
             "delete",
@@ -75,7 +75,7 @@ class SegmentRuleSerializer(_BaseSegmentRuleSerializer):
     class Meta:
         model = SegmentRule
         fields = [
-            "pk",
+            "id",
             "type",
             "rules",
             "conditions",
