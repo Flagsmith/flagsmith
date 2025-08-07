@@ -31,11 +31,6 @@
                     "title": "Key",
                     "type": "string"
                 },
-                "name": {
-                    "description": "The name of the feature.",
-                    "title": "Name",
-                    "type": "string"
-                },
                 "enabled": {
                     "description": "Indicates whether the feature is enabled in the environment.",
                     "title": "Enabled",
@@ -57,7 +52,6 @@
             },
             "required": [
                 "key",
-                "name",
                 "enabled",
                 "value"
             ],
