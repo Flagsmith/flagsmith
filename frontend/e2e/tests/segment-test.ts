@@ -106,6 +106,8 @@ export const testSegment1 = async (flagsmith: any) => {
   await gotoSegments()
   await click(byId('segment-0-name'))
   await assertInputValue(byId(`rule-${segmentRules.length - 1}-value-0`), `${lastRule.value + 1}`)
+  await setSegmentRule(segmentRules.length - 1, 0, lastRule.name, lastRule.operator, lastRule.value)
+  await click(byId('update-segment'))
   await closeModal()
 
   log('Add segment trait for user')
