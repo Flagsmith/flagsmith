@@ -7,7 +7,7 @@
                     "description": "An environment's unique identifier.",
                     "title": "Key",
                     "type": "string",
-                    "x-flagsmith-engine-path": "$.environment.key"
+                    "x-flagsmith-engine-condition-property": "$.environment.key"
                 },
                 "name": {
                     "description": "An environment's human-readable name.",
@@ -91,13 +91,13 @@
                     "description": "A unique identifier for an identity, used for segment and multivariate feature flag targeting, and displayed in the Flagsmith UI.",
                     "title": "Identifier",
                     "type": "string",
-                    "x-flagsmith-engine-path": "$.identity.identifier"
+                    "x-flagsmith-engine-condition-property": "$.identity.identifier"
                 },
                 "key": {
                     "description": "Key used when selecting a value for a multivariate feature, or for % split segmentation. Set to an internal identifier or a composite value based on the environment key and identifier, depending on Flagsmith implementation.",
                     "title": "Key",
                     "type": "string",
-                    "x-flagsmith-engine-path": "$.identity.key"
+                    "x-flagsmith-engine-condition-property": "$.identity.key"
                 },
                 "traits": {
                     "additionalProperties": {
@@ -161,8 +161,8 @@
         "SegmentCondition": {
             "description": "Represents a condition within a segment rule for feature flag evaluation.",
             "properties": {
-                "path": {
-                    "description": "The path to the trait or value in the evaluation context.",
+                "property": {
+                    "description": "A reference to the identity trait or value in the evaluation context.",
                     "title": "Property",
                     "type": "string"
                 },
