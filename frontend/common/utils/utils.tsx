@@ -727,7 +727,6 @@ const Utils = Object.assign({}, require('./base/_utils'), {
       ])
       if (organisation) {
         $crisp.push(['set', 'user:company', formatOrganisation(organisation)])
-        console.log(user, organisation)
         $crisp.push([
           'set',
           'session:data',
