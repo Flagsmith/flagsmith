@@ -8,7 +8,7 @@ import { useGetEnvironmentsQuery } from 'common/services/useEnvironment'
 import Icon from 'components/Icon'
 import StageCard from './StageCard'
 import StageInfo from './StageInfo'
-import { PipelineStage } from 'common/types/responses'
+import { PipelineDetailStage } from 'common/types/responses'
 import { Environment } from 'common/types/responses'
 import { useRouteContext } from 'components/providers/RouteContext'
 import StageFeatureDetail from './StageFeatureDetail'
@@ -86,7 +86,7 @@ function ReleasePipelineDetail() {
 
   const getEnvironmentName = (
     environmentsData: Environment[] | undefined,
-    stageData: PipelineStage,
+    stageData: PipelineDetailStage,
   ) => {
     return (
       environmentsData?.find(
