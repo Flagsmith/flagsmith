@@ -27,7 +27,7 @@ const PhasedRolloutAction = ({
 
   const handleFieldChange = (
     field: 'enabled' | 'initial_split' | 'increase_by' | 'increase_every',
-    value: boolean | number | string,
+    value: boolean | number | string | undefined,
   ) => {
     const updatedState = { ...phasedRolloutState, [field]: value }
     setPhasedRolloutState(updatedState)
