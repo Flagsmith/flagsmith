@@ -35,6 +35,21 @@ from .managers import LiveSegmentManager, SegmentManager
 logger = logging.getLogger(__name__)
 
 
+class ConfiguredOrderManager(SoftDeleteExportableManager):
+    def get_queryset(
+        self,
+    ) -> models.QuerySet["Condition"]:
+        # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
+        # but avoid the weirdness of a setting-dependant migration
+        # and having to reload everything in tests
+        qs: models.QuerySet["Condition"]
+        if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
+            qs = super().get_queryset().order_by("id")
+        else:
+            qs = super().get_queryset()
+        return qs
+
+
 class Segment(
     LifecycleModelMixin,  # type: ignore[misc]
     SoftDeleteExportableModel,
@@ -180,6 +195,8 @@ class SegmentRule(
 
     history_record_class_path = "segments.models.HistoricalSegmentRule"
 
+    objects: typing.ClassVar[ConfiguredOrderManager] = ConfiguredOrderManager()
+
     def clean(self):  # type: ignore[no-untyped-def]
         super().clean()
         parents = [self.segment, self.rule]
@@ -270,21 +287,6 @@ class SegmentRule(
         return cloned_rule
 
 
-class ConditionManager(SoftDeleteExportableManager):
-    def get_queryset(
-        self,
-    ) -> models.QuerySet["Condition"]:
-        # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
-        # but avoid the weirdness of a setting-dependant migration
-        # and having to reload everything in tests
-        qs: models.QuerySet["Condition"]
-        if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
-            qs = super().get_queryset().order_by("id")
-        else:
-            qs = super().get_queryset()
-        return qs
-
-
 class Condition(
     SoftDeleteExportableModel,
     abstract_base_auditable_model_factory(["uuid"]),  # type: ignore[misc]
@@ -328,7 +330,7 @@ class Condition(
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
 
-    objects: typing.ClassVar[ConditionManager] = ConditionManager()
+    objects: typing.ClassVar[ConfiguredOrderManager] = ConfiguredOrderManager()
 
     def __str__(self):  # type: ignore[no-untyped-def]
         return "Condition for %s: %s %s %s" % (
