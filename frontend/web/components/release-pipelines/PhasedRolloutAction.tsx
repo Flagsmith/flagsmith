@@ -42,7 +42,7 @@ const PhasedRolloutAction = ({
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = Utils.safeParseEventValue(event)
-    handleFieldChange(field, value)
+    handleFieldChange(field, parseFloat(value) || undefined)
   }
 
   return (
