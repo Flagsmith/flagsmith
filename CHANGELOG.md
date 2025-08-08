@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.191.0](https://github.com/Flagsmith/flagsmith/compare/v2.190.1...v2.191.0) (2025-08-08)
+
+
+### Features
+
+* adds phased rollout action ([#5897](https://github.com/Flagsmith/flagsmith/issues/5897)) ([799d0ce](https://github.com/Flagsmith/flagsmith/commit/799d0ce7a36f0617f0bd53250150444949c1c3a7))
+
 ## [2.190.1](https://github.com/Flagsmith/flagsmith/compare/v2.190.0...v2.190.1) (2025-08-07)
 
 
