@@ -235,26 +235,10 @@ class SegmentRule(
             )
 
     def get_skip_create_audit_log(self) -> bool:
-        try:
-            segment = self.get_segment()
-            if segment.deleted_at:
-                return True
-            return segment.version_of_id != segment.id
-        except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
-            # handle hard delete
-            return True
-
-    def _get_project(self) -> typing.Optional[Project]:
-        return self.get_segment().project
-
-    def get_segment(self) -> Segment:
-        """
-        Find the segment this rule belongs to
-        """
-        if self.segment:
-            return self.segment
-        assert self.rule, "SegmentRule must belong to a segment or another rule"
-        return self.rule.get_segment()
+        # NOTE: We'll transition to storing rules and conditions in JSON so
+        # individual audit logs for rules and conditions is irrelevant.
+        # This model will be deleted as of https://github.com/Flagsmith/flagsmith/issues/5846
+        return True
 
 
 class ConditionManager(SoftDeleteExportableManager):
@@ -325,39 +309,23 @@ class Condition(
             self.value,
         )
 
-    def get_skip_create_audit_log(self) -> bool:
-        try:
-            if self.rule.deleted_at:
-                return True
+    def get_skip_create_audit_log(self) -> bool:  # pragma: no cover
+        # NOTE: We'll transition to storing rules and conditions in JSON so
+        # individual audit logs for rules and conditions is irrelevant.
+        # This model will be deleted as of https://github.com/Flagsmith/flagsmith/issues/5846
+        return True
 
-            segment = self.rule.get_segment()
-            if segment.deleted_at:
-                return True
+    def get_update_log_message(self, _: typing.Any) -> None:  # pragma: no cover
+        return None
 
-            return segment.version_of_id != segment.id
-        except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
-            # handle hard delete
-            return True
+    def get_create_log_message(self, _: typing.Any) -> None:  # pragma: no cover
+        return None
 
-    def get_update_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def]
-        return f"Condition updated on segment '{self._get_segment().name}'."
+    def get_delete_log_message(self, _: typing.Any) -> None:  # pragma: no cover
+        return None
 
-    def get_create_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
-        if not self.created_with_segment:
-            return f"Condition added to segment '{self._get_segment().name}'."
-
-    def get_delete_log_message(self, history_instance) -> typing.Optional[str]:  # type: ignore[no-untyped-def,return]
-        if not self._get_segment().deleted_at:
-            return f"Condition removed from segment '{self._get_segment().name}'."
-
-    def get_audit_log_related_object_id(self, history_instance) -> int:  # type: ignore[no-untyped-def]
-        return self._get_segment().id
-
-    def _get_segment(self) -> Segment:
-        return self.rule.get_segment()
-
-    def _get_project(self) -> typing.Optional[Project]:
-        return self.rule.get_segment().project
+    def get_audit_log_related_object_id(self, _: typing.Any) -> int:  # pragma: no cover
+        raise NotImplementedError("No longer used, will be removed soon.")
 
 
 class WhitelistedSegment(models.Model):
