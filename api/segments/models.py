@@ -79,6 +79,7 @@ class Segment(
 
     created_at = models.DateTimeField(null=True, auto_now_add=True)
     updated_at = models.DateTimeField(null=True, auto_now=True)
+    is_system_segment = models.BooleanField(default=False)
 
     objects = SegmentManager()  # type: ignore[misc]
 
@@ -92,6 +93,8 @@ class Segment(
         return "Segment - %s" % self.name
 
     def get_skip_create_audit_log(self) -> bool:
+        if self.is_system_segment:
+            return True
         try:
             if self.version_of_id and self.version_of_id != self.id:
                 return True
@@ -200,6 +203,8 @@ class SegmentRule(
         try:
             segment = self.get_segment()  # type: ignore[no-untyped-call]
             if segment.deleted_at:
+                return True
+            if segment.is_system_segment:
                 return True
             return segment.version_of_id != segment.id  # type: ignore[no-any-return]
         except (Segment.DoesNotExist, SegmentRule.DoesNotExist):
@@ -345,6 +350,8 @@ class Condition(
 
             segment = self.rule.get_segment()  # type: ignore[no-untyped-call]
             if segment.deleted_at:
+                return True
+            if segment.is_system_segment:
                 return True
 
             return segment.version_of_id != segment.id  # type: ignore[no-any-return]
