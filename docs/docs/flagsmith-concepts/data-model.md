@@ -10,7 +10,8 @@ Here's a high-level overview of the Flagsmith data model.
 
 ![Image](/img/flagsmith-model.svg)
 
-OK let's break this down.
+## Key Concepts
+Below you'll find a quick explanation of the main building blocks that make up the Flagsmith data model.
 
 ### Organisations
 Organisations allow you and other team members to manage projects and their features. A user can be a member of multiple organisations.
