@@ -1,9 +1,10 @@
 import { useGetSegmentsQuery } from 'common/services/useSegment'
-import { StageActionRequest } from 'common/types/requests'
+import { StageActionBody, StageActionRequest } from 'common/types/requests'
 
 import { useMemo } from 'react'
 import SinglePipelineStageAction from './SinglePipelineStageAction'
 import Button from 'components/base/forms/Button'
+import { StageActionType } from 'common/types/responses'
 
 interface PipelineStageActionsProps {
   actions: StageActionRequest[]
@@ -11,8 +12,9 @@ interface PipelineStageActionsProps {
   onAddAction: () => void
   onRemoveAction: (actionIndex: number) => void
   onActionChange: (
-    option: { value: string; label: string },
     stageIndex: number,
+    actionType: StageActionType,
+    actionBody: StageActionBody,
   ) => void
   onSegmentChange: (
     option: { value: number; label: string },

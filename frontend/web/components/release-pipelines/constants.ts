@@ -23,6 +23,10 @@ const FLAG_ACTION_OPTIONS = [
     label: 'Disable flag for segment',
     value: `${StageActionType.TOGGLE_FEATURE_FOR_SEGMENT}_DISABLE`,
   },
+  {
+    label: 'Phased rollout',
+    value: StageActionType.PHASED_ROLLOUT,
+  },
 ]
 
 enum TimeUnit {
