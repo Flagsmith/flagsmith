@@ -16,10 +16,9 @@ def test_get_segment_returns_parent_segment_for_nested_rule(
     # Given
     rule1 = SegmentRule.objects.create(segment=segment, type=SegmentRule.ALL_RULE)
     rule2 = SegmentRule.objects.create(rule=rule1, type=SegmentRule.ALL_RULE)
-    rule3 = SegmentRule.objects.create(rule=rule2, type=SegmentRule.ALL_RULE)
 
     # When / then
-    assert rule3.get_segment() == segment
+    assert rule2.get_segment() == segment
 
 
 def test_Condition_str__returns_readable_representation_of_condition(
