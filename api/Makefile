@@ -9,7 +9,7 @@ DOTENV_OVERRIDE_FILE ?= .env
 
 POETRY_VERSION ?= 2.1.1
 
-SAML_REVISION ?= v1.6.4
+SAML_REVISION ?= v1.6.5
 RBAC_REVISION ?= v0.11.6
 
 -include .env-local
