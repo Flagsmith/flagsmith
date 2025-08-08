@@ -5,7 +5,6 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import http_date
-from flag_engine.segments.constants import EQUAL
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -23,8 +22,7 @@ from features.models import (  # type: ignore[attr-defined]
 from features.multivariate.models import MultivariateFeatureOption
 from features.versioning.tasks import enable_v2_versioning
 from projects.models import Project
-from segments.models import Condition, Segment, SegmentRule
-from segments.services import SegmentCloneService
+from segments.models import Segment
 
 if TYPE_CHECKING:
     from pytest_django import DjangoAssertNumQueries
@@ -33,7 +31,7 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize(
-    "use_v2_feature_versioning, total_queries", [(True, 16), (False, 15)]
+    "use_v2_feature_versioning, total_queries", [(True, 12), (False, 11)]
 )
 def test_get_environment_document(
     organisation_one: "Organisation",
@@ -45,9 +43,6 @@ def test_get_environment_document(
 ) -> None:
     # Given
     project = organisation_one_project_one
-    project2 = Project.objects.create(
-        name="standin_project", organisation=organisation_two
-    )
 
     environment = Environment.objects.create(
         name="Test Environment",
@@ -65,38 +60,8 @@ def test_get_environment_document(
     for i in range(10):
         segment = Segment.objects.create(project=project)
 
-        # Create a shallow clone which should not be returned in the document.
-        SegmentCloneService(segment).shallow_clone(
-            name=f"disregarded-clone-{i}",
-            description=f"some-disregarded-clone-{i}",
-            change_request=None,
-        )
-
-        # Create some other segments to ensure that the segments manager was
-        # properly set.
-        Segment.objects.create(
-            project=project2,
-            name=f"standin_segment{i}",
-            description=f"Should not be selected {i}",
-        )
-        segment_rule = SegmentRule.objects.create(
-            segment=segment, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator=EQUAL,
-            property=f"property_{i}",
-            value=f"value_{i}",
-            rule=segment_rule,
-        )
-        nested_rule = SegmentRule.objects.create(
-            segment=segment, rule=segment_rule, type=SegmentRule.ALL_RULE
-        )
-        Condition.objects.create(
-            operator=EQUAL,
-            property=f"nested_prop_{i}",
-            value=f"nested_value_{i}",
-            rule=nested_rule,
-        )
+        # Segment revisions should not be included in the document
+        segment.clone(is_revision=True, name=f"revision_segment_{i}")
 
         # Let's create segment override for each segment too
         feature_segment = FeatureSegment.objects.create(
@@ -124,7 +89,7 @@ def test_get_environment_document(
             type=STRING,
         )
 
-    for i in range(10):
+        # Add a multivariate feature
         mv_feature = Feature.objects.create(
             name=f"mv_feature_{i}", project=project, type=MULTIVARIATE
         )
@@ -148,8 +113,9 @@ def test_get_environment_document(
 
     # Then
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()
     assert len(response.data["project"]["segments"]) == 10
+    assert len(response.data["feature_states"]) == 11
+    assert len(response.data["identity_overrides"]) == 10
     assert response.headers[FLAGSMITH_UPDATED_AT_HEADER] == str(
         environment.updated_at.timestamp()
     )
