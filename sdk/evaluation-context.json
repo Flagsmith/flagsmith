@@ -50,7 +50,7 @@
                     "type": "array"
                 },
                 "priority": {
-                    "description": "Indicates the priority of the feature context. Higher values indicate higher priority in case when multiple feature contexts for the same feature are applicable.",
+                    "description": "Priority of the feature context. Higher values indicate a higher priority when multiple contexts apply to the same feature.",
                     "title": "Priority",
                     "type": "number"
                 }
