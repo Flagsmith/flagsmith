@@ -38,11 +38,6 @@ class ConditionSerializer(serializers.ModelSerializer[Condition]):
         data["value"] = str(data["value"]) if "value" in data else None
         return super().to_internal_value(data)
 
-    def create(self, validated_data: dict[str, Any]) -> Condition:
-        if self.context.get("is_creating_segment"):
-            validated_data["created_with_segment"] = True
-        return super().create(validated_data)
-
 
 class _BaseSegmentRuleSerializer(WritableNestedModelSerializer):
     delete = serializers.BooleanField(
@@ -118,7 +113,6 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
         return attrs
 
     def create(self, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
-        self.context["is_creating_segment"] = True
         metadata_data = validated_data.pop("metadata", [])
         segment = super().create(validated_data)  # type: ignore[no-untyped-call]
         self._update_metadata(segment, metadata_data)
@@ -127,13 +121,14 @@ class SegmentSerializer(MetadataSerializerMixin, WritableNestedModelSerializer):
     def update(self, segment: Segment, validated_data: dict[str, Any]):  # type: ignore[no-untyped-def]
         metadata = validated_data.pop("metadata", [])
         with transaction.atomic():
-            segment_revision = segment.deep_clone()
+            if not segment.change_request:
+                segment_revision = segment.clone(is_revision=True)
+                logger.info(
+                    "segment-revision-created",
+                    segment_id=segment.id,
+                    revision_id=segment_revision.id,
+                )
             segment = super().update(segment, validated_data)  # type: ignore[no-untyped-call]
-        logger.info(
-            "segment-revision-created",
-            original_segment_id=segment.id,
-            revision_id=segment_revision.id,
-        )
         self._update_metadata(segment, metadata)
         return segment
 
