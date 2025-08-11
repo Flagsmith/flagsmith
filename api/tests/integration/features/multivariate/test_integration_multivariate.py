@@ -4,12 +4,6 @@ import pytest
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
-from rest_framework.test import APIClient
-
-from features.models import Feature
-from organisations.models import Organisation
-from projects.models import Project
-from users.models import FFAdminUser
 
 
 @pytest.mark.parametrize(

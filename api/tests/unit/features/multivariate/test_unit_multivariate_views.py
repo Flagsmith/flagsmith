@@ -1,6 +1,9 @@
+import json
 import uuid
+from unittest.mock import Mock
 
 import pytest
+from common.environments.permissions import UPDATE_FEATURE_STATE, VIEW_ENVIRONMENT
 from common.projects.permissions import (
     CREATE_FEATURE,
     VIEW_PROJECT,
@@ -8,13 +11,10 @@ from common.projects.permissions import (
 from django.urls import reverse
 from pytest_lazyfixture import lazy_fixture  # type: ignore[import-untyped]
 from rest_framework import status
-import json
-from features.multivariate.views import MultivariateFeatureOptionViewSet
-from projects.permissions import NestedProjectPermissions
-from unittest.mock import Mock
-from features.multivariate.views import MultivariateFeatureOptionPermissions
-from common.environments.permissions import UPDATE_FEATURE_STATE, VIEW_ENVIRONMENT
-from features.multivariate.models import MultivariateFeatureOption
+
+from features.multivariate.views import (
+    MultivariateFeatureOptionPermissions,
+)
 
 
 @pytest.mark.parametrize(

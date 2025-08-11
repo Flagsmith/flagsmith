@@ -7,7 +7,6 @@ from common.projects.permissions import (
 )
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import viewsets
-from environments.models import Environment
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +14,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from environments.models import Environment
 from features.models import Feature
 
 from .models import MultivariateFeatureOption
