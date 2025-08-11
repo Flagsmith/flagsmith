@@ -2,9 +2,22 @@ import React from 'react'
 import ValueEditor from 'components/ValueEditor' // we need this to make JSX compile
 import Constants from 'common/constants'
 import Icon from 'components/Icon'
+import InputGroup from 'components/base/forms/InputGroup'
+import Utils from 'common/utils/utils'
 import shallowEqual from 'fbjs/lib/shallowEqual'
 
-const VariationValue = ({
+interface VariationValueProps {
+  canCreateFeature: boolean
+  disabled: boolean
+  index: number
+  onChange: (value: any) => void
+  onRemove?: () => void
+  readOnlyValue: boolean
+  value: any
+  weightTitle: string
+}
+
+export const VariationValueInput: React.FC<VariationValueProps> = ({
   canCreateFeature,
   disabled,
   index,
@@ -44,7 +57,7 @@ const VariationValue = ({
                     onChange(newValue)
                   }
                 }}
-                onChange={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                   onChange({
                     ...value,
                     ...Utils.valueToFeatureState(
@@ -66,7 +79,7 @@ const VariationValue = ({
       <InputGroup
         type='text'
         data-test={`featureVariationWeight${Utils.featureStateToValue(value)}`}
-        onChange={(e) => {
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
           onChange({
             ...value,
             default_percentage_allocation: Utils.safeParseEventValue(e)
@@ -96,5 +109,3 @@ const VariationValue = ({
     )}
   </Row>
 )
-
-export default VariationValue

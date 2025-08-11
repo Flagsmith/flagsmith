@@ -1,10 +1,31 @@
 import React from 'react'
-import VariationValue from './VariationValue'
 import ValueEditor from 'components/ValueEditor'
 import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
+import { VariationValueInput } from './VariationValueInput'
+import Utils from 'common/utils/utils'
+interface VariationOptionsProps {
+  canCreateFeature: boolean
+  controlPercentage: number
+  controlValue: any
+  disabled: boolean
+  multivariateOptions: any[]
+  preventRemove: boolean
+  readOnlyValue: boolean
+  removeVariation: (i: number) => void
+  select: boolean
+  setValue: (value: any) => void
+  setVariations: (variations: any[]) => void
+  updateVariation: (
+    index: number,
+    value: any,
+    variationOverrides: any[],
+  ) => void
+  variationOverrides: any[]
+  weightTitle: string
+}
 
-export default function VariationOptions({
+export const VariationOptions: React.FC<VariationOptionsProps> = ({
   canCreateFeature,
   controlPercentage,
   controlValue,
@@ -19,7 +40,7 @@ export default function VariationOptions({
   updateVariation,
   variationOverrides,
   weightTitle,
-}) {
+}) => {
   const invalid = multivariateOptions.length && controlPercentage < 0
   if (!multivariateOptions || !multivariateOptions.length) {
     return null
@@ -127,12 +148,11 @@ export default function VariationOptions({
             </div>
           </div>
         ) : (
-          <VariationValue
+          <VariationValueInput
             key={i}
             index={i}
             canCreateFeature={canCreateFeature}
             readOnlyValue={readOnlyValue}
-            preventRemove={preventRemove || disabled}
             value={theValue}
             onChange={(e) => {
               updateVariation(i, e, variationOverrides)
@@ -140,7 +160,7 @@ export default function VariationOptions({
             weightTitle={weightTitle}
             disabled={disabled}
             onRemove={
-              preventRemove || disabled ? null : () => removeVariation(i)
+              preventRemove || disabled ? undefined : () => removeVariation(i)
             }
           />
         )
