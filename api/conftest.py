@@ -509,6 +509,16 @@ def trait(identity):  # type: ignore[no-untyped-def]
     )
 
 
+@pytest.fixture
+def mv_option_50_percent(feature):
+    return MultivariateFeatureOption.objects.create(
+        feature=feature,
+        default_percentage_allocation=50,
+        type="unicode",
+        string_value="test option",
+    ).id
+
+
 @pytest.fixture()
 def multivariate_feature(project):  # type: ignore[no-untyped-def]
     feature = Feature.objects.create(

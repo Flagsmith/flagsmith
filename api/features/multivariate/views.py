@@ -7,6 +7,7 @@ from common.projects.permissions import (
 )
 from drf_yasg.utils import swagger_auto_schema  # type: ignore[import-untyped]
 from rest_framework import viewsets
+from environments.models import Environment
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
@@ -24,7 +25,6 @@ class MultivariateFeatureOptionPermissions(IsAuthenticated):
     def has_permission(self, request: Request, view: APIView) -> bool:
         if not super().has_permission(request, view):
             return False
-
         action = getattr(view, "action", None)
         if action in ["update", "partial_update"]:
             environment_id = request.data.get("environment_id")
@@ -32,8 +32,6 @@ class MultivariateFeatureOptionPermissions(IsAuthenticated):
                 return False
 
             try:
-                from environments.models import Environment
-
                 environment = Environment.objects.get(id=environment_id)
                 return request.user.has_environment_permission(  # type: ignore[union-attr]
                     UPDATE_FEATURE_STATE, environment
@@ -54,6 +52,9 @@ class MultivariateFeatureOptionPermissions(IsAuthenticated):
         }
 
         action: str | None = getattr(view, "action", None)
+        if action in ["update", "partial_update"]:
+            return True
+
         permission = action_permission_map.get(action) if action else None
         if permission:
             return request.user.has_project_permission(permission, obj.feature.project)  # type: ignore[union-attr]
