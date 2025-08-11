@@ -31,6 +31,11 @@
                     "title": "Key",
                     "type": "string"
                 },
+                "feature_key": {
+                    "description": "Unique feature identifier.",
+                    "title": "Feature Key",
+                    "type": "string"
+                },
                 "name": {
                     "description": "Feature name.",
                     "title": "Name",
@@ -62,6 +67,7 @@
             },
             "required": [
                 "key",
+                "feature_key",
                 "name",
                 "enabled",
                 "value"

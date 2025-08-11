@@ -1,27 +1,17 @@
 {
     "$defs": {
-        "FeatureResult": {
+        "FlagResult": {
             "properties": {
-                "key": {
+                "feature_key": {
                     "description": "Unique feature identifier.",
-                    "title": "Key",
+                    "title": "Feature Key",
                     "type": "string"
                 },
                 "name": {
                     "description": "Feature name.",
                     "title": "Name",
                     "type": "string"
-                }
-            },
-            "required": [
-                "key",
-                "name"
-            ],
-            "title": "FeatureResult",
-            "type": "object"
-        },
-        "FlagResult": {
-            "properties": {
+                },
                 "enabled": {
                     "description": "Indicates if the feature flag is enabled.",
                     "title": "Enabled",
@@ -43,12 +33,11 @@
                     "description": "Reason for the feature flag evaluation.",
                     "title": "Reason",
                     "type": "string"
-                },
-                "feature": {
-                    "$ref": "#/$defs/FeatureResult"
                 }
             },
             "required": [
+                "feature_key",
+                "name",
                 "enabled",
                 "feature"
             ],
@@ -79,7 +68,7 @@
     "description": "Evaluation result object containing the used context, flag evaluation results, and segments used in the evaluation.",
     "properties": {
         "context": {
-            "$ref": "https://github.com/Flagsmith/flagsmith/blob/main/sdk/evaluation-context.json"
+            "$ref": "https://github.com/Flagsmith/flagsmith/blob/chore/features-contexts-in-eval-context-schema/sdk/evaluation-context.json"
         },
         "flags": {
             "description": "List of feature flags evaluated for the context.",
