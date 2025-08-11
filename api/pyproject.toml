@@ -191,7 +191,7 @@ flagsmith-ldap = { git = "https://github.com/flagsmith/flagsmith-ldap", tag = "v
 optional = true
 
 [tool.poetry.group.workflows.dependencies]
-workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", branch = "refactor/segment-change-requests" }
+workflows-logic = { git = "https://github.com/flagsmith/flagsmith-workflows", tag = "v3.0.0" }
 
 [tool.poetry.group.licensing]
 optional = true
