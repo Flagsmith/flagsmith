@@ -18,7 +18,7 @@ def test_multivariate_feature_options_view_set_get_permissions():  # type: ignor
     view_set = MultivariateFeatureOptionViewSet()
 
     # When
-    permissions = view_set.get_permissions()  # type: ignore[no-untyped-call]
+    permissions = view_set.get_permissions()
 
     # Then
     assert len(permissions) == 1
