@@ -5,6 +5,7 @@ import InfoMessage from 'components/InfoMessage'
 import ErrorMessage from 'components/ErrorMessage'
 
 export default function VariationOptions({
+  canCreateFeature,
   controlPercentage,
   controlValue,
   disabled,
@@ -129,6 +130,7 @@ export default function VariationOptions({
           <VariationValue
             key={i}
             index={i}
+            canCreateFeature={canCreateFeature}
             readOnlyValue={readOnlyValue}
             preventRemove={preventRemove || disabled}
             value={theValue}

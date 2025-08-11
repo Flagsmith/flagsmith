@@ -177,6 +177,7 @@ export default class Feature extends PureComponent {
             <FormGroup className='mb-0'>
               {(!!environmentVariations || !isEdit) && (
                 <VariationOptions
+                  canCreateFeature={this.props.canCreateFeature}
                   disabled={!!identity || readOnly}
                   controlValue={environmentFlag?.feature_state_value}
                   controlPercentage={controlPercentage}
