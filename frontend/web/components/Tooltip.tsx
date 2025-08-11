@@ -48,9 +48,14 @@ const Tooltip: FC<TooltipProps> = ({
   return (
     <>
       {title && (
-        <span className={titleClassName} data-for={id} data-tip>
+        <div
+          className={titleClassName}
+          data-for={id}
+          data-tip
+          style={{ width: 'fit-content' }}
+        >
           {title}
-        </span>
+        </div>
       )}
       {!!children && (
         <TooltipPortal renderInPortal={renderInPortal}>
