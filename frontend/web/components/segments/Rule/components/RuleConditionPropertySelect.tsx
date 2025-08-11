@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react'
+import { components } from 'react-select/lib/components'
 import Utils from 'common/utils/utils'
 import { RuleContextValues } from 'common/types/rules.types'
 import Constants from 'common/constants'
-import Icon from 'components/Icon'
-
-export interface OptionType {
-  enabled?: boolean
-  label: string
-  value: string
-}
+import { GroupLabel } from 'components/base/SearchableDropdown'
+import SearchableDropdown, {
+  OptionType,
+} from 'components/base/SearchableDropdown'
 
 interface RuleConditionPropertySelectProps {
   ruleIndex: number
@@ -22,32 +20,6 @@ interface RuleConditionPropertySelectProps {
   operator: string
   allowedContextValues: OptionType[]
   isValueFromContext: boolean
-}
-
-const GroupLabel = ({
-  groupName,
-  tooltipText,
-}: {
-  groupName: string
-  tooltipText?: string
-}) => {
-  return (
-    <div className='d-flex align-items-center gap-1'>
-      <div>{groupName}</div>
-      {tooltipText && (
-        <Tooltip
-          title={
-            <h5 className='mb-1 cursor-pointer'>
-              <Icon name='info-outlined' height={16} width={16} />
-            </h5>
-          }
-          place='right'
-        >
-          {tooltipText}
-        </Tooltip>
-      )}
-    </div>
-  )
 }
 
 const RuleConditionPropertySelect = ({
@@ -90,20 +62,21 @@ const RuleConditionPropertySelect = ({
     contextOptions.find((option) => option.value === propertyValue)?.label ||
     propertyValue
   const isEditing = localCurrentValue !== propertyValue
-  const traitAsGroupedOptions =
+  const showTraitOptions =
     localCurrentValue && (!isValueFromContext || isEditing)
-      ? [
-          {
-            label: (
-              <GroupLabel
-                groupName='Traits'
-                tooltipText={Constants.strings.USER_PROPERTY_DESCRIPTION}
-              />
-            ),
-            options: [{ label: localCurrentValue, value: localCurrentValue }],
-          },
-        ]
-      : []
+  const traitAsGroupedOptions = showTraitOptions
+    ? [
+        {
+          label: (
+            <GroupLabel
+              groupName='Traits'
+              tooltipText={Constants.strings.USER_PROPERTY_DESCRIPTION}
+            />
+          ),
+          options: [{ label: localCurrentValue, value: localCurrentValue }],
+        },
+      ]
+    : []
 
   const contextAsGroupedOptions =
     contextOptions?.length > 0
@@ -129,22 +102,20 @@ const RuleConditionPropertySelect = ({
     ...contextAsGroupedOptions,
   ]
 
+  const showTitle = !showTraitOptions && operator !== 'PERCENTAGE_SPLIT'
+
   return (
     <>
-      <Select
-        data-test={dataTest}
+      <SearchableDropdown
+        dataTest={dataTest}
+        value={propertyValue}
+        isClearable={true}
         placeholder={'Trait / Context value'}
-        value={
-          localCurrentValue
-            ? { label: displayedLabel, value: propertyValue }
-            : null
-        }
+        options={optionsWithTrait}
+        noOptionsMessage={'Start typing to select a trait'}
         onBlur={() => {
           setRuleProperty(ruleIndex, 'property', { value: localCurrentValue })
         }}
-        isSearchable={
-          operator !== 'PERCENTAGE_SPLIT' || isContextPropertyEnabled
-        }
         onInputChange={(e: string, metadata: any) => {
           if (metadata.action !== 'input-change') {
             return
@@ -156,10 +127,25 @@ const RuleConditionPropertySelect = ({
             value: Utils.safeParseEventValue(e?.value),
           })
         }}
-        options={[...optionsWithTrait]}
-        style={{ width: '200px' }}
-        noOptionsMessage={() => {
-          return 'Start typing to select a trait'
+        displayedLabel={displayedLabel}
+        components={{
+          Menu: ({ ...props }: any) => {
+            return (
+              <components.Menu {...props}>
+                <React.Fragment>
+                  {showTitle && (
+                    <p
+                      style={{ fontStyle: 'italic', paddingTop: 6 }}
+                      className='mb-0 faint text-center'
+                    >
+                      Pick a value or type a trait name
+                    </p>
+                  )}
+                  {props.children}
+                </React.Fragment>
+              </components.Menu>
+            )
+          },
         }}
       />
     </>
