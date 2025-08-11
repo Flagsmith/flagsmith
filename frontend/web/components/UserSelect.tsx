@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react'
+import React, { useState } from 'react'
 import InlineModal from './InlineModal'
 import Icon from './Icon'
 import classNames from 'classnames'
