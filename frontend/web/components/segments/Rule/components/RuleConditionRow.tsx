@@ -9,12 +9,11 @@ import {
 import find from 'lodash/find'
 import Button from 'components/base/forms/Button'
 import ErrorMessage from 'components/ErrorMessage'
-import RuleConditionPropertySelect, {
-  OptionType,
-} from './RuleConditionPropertySelect'
+import RuleConditionPropertySelect from './RuleConditionPropertySelect'
 import RuleConditionValueInput from './RuleConditionValueInput'
 import { RuleContextValues } from 'common/types/rules.types'
 import { RuleContextLabels } from 'common/types/rules.types'
+import { OptionType } from 'components/base/SearchableDropdown'
 
 interface RuleConditionRowProps {
   rule: SegmentCondition
@@ -32,6 +31,7 @@ interface RuleConditionRowProps {
   removeRule: (i: number) => void
   addRule: () => void
   rules: SegmentCondition[]
+  projectId: number
 }
 
 const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
@@ -39,6 +39,7 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
   'data-test': dataTest,
   errors: ruleErrors,
   operators,
+  projectId,
   readOnly,
   removeRule,
   rule,
@@ -94,6 +95,10 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
     (option) => option.value === rule.property,
   )?.value
 
+  const showEnvironmentDropdown =
+    ['EQUAL', 'NOT_EQUAL'].includes(rule.operator) &&
+    rule.property === RuleContextValues.ENVIRONMENT_NAME
+
   const showEvaluationContextWarning =
     isLastRule && isValueFromContext && isContextPropertyEnabled
   const isSkippingEvaluationContextWarning =
@@ -112,7 +117,10 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           <Flex className='or-divider__line' />
         </Row>
       )}
-      <Row noWrap className='rule align-items-center justify-content-between'>
+      <Row
+        noWrap
+        className='rule align-items-center justify-content-between gap-1'
+      >
         <RuleConditionPropertySelect
           dataTest={`${dataTest}-property-${ruleIndex}`}
           ruleIndex={ruleIndex}
@@ -142,8 +150,9 @@ const RuleConditionRow: React.FC<RuleConditionRowProps> = ({
           placeholder={valuePlaceholder}
           disabled={operatorObj && operatorObj.hideValue}
           style={{ width: '135px' }}
-          onChange={(e: InputEvent) => {
-            const value = Utils.getTypedValue(Utils.safeParseEventValue(e))
+          projectId={projectId}
+          showEnvironmentDropdown={showEnvironmentDropdown}
+          onChange={(value: string) => {
             setRuleProperty(ruleIndex, 'value', {
               value:
                 operatorObj && operatorObj.append
