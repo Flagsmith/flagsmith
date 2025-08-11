@@ -138,7 +138,7 @@ const RuleConditionPropertySelect = ({
                       style={{ fontStyle: 'italic', paddingTop: 6 }}
                       className='mb-0 faint text-center'
                     >
-                      Pick a context or type a trait name
+                      Pick a value or type a trait name
                     </p>
                   )}
                   {props.children}
