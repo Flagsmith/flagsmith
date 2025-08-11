@@ -27,8 +27,8 @@ export const UserSelect: React.FC<UserSelectProps> = ({
 }) => {
   const [filter, setFilter] = useState('')
 
-  const matchingUsers = users.filter((user) => {
-    const search = filter?.toLowerCase()
+  const matchingUsers = users?.filter((user) => {
+    const search = filter?.toLowerCase()?.trim()
 
     if (!search) {
       return true
@@ -36,8 +36,11 @@ export const UserSelect: React.FC<UserSelectProps> = ({
 
     const fullName = `${user.first_name} ${user.last_name}`.toLowerCase()
     const email = user.email.toLowerCase()
+    const splitTerms = search.split(/\s+/).filter(Boolean)
 
-    return fullName.includes(search) || email.includes(search)
+    return splitTerms.every(
+      (term) => fullName.includes(term) || email.includes(term),
+    )
   })
 
   const selectedValue = value || []
