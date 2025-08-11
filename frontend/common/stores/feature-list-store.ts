@@ -186,8 +186,8 @@ const controller = {
         }
       })
   },
-  editFeatureMv(projectId, flag, onComplete) {
-    if (flag.skipSaveProjectFeature) {
+  editFeatureMv(projectId, flag, onComplete, environmentId) {
+    if (!flag.skipSaveProjectFeature) {
       // users without CREATE_FEATURE permissions automatically hit this action, if that's the case we skip the following API calls
       onComplete({
         ...flag,
@@ -220,6 +220,7 @@ const controller = {
           flag.multivariate_options[i] = res
           return {
             ...v,
+            environment_id: environmentId,
             id: res.id,
           }
         })
@@ -1103,7 +1104,12 @@ store.dispatcherIndex = Dispatcher.register(store, (payload) => {
       controller.editFeature(projectId, action.flag, action.onComplete)
       break
     case Actions.EDIT_FEATURE_MV:
-      controller.editFeatureMv(projectId, action.flag, action.onComplete)
+      controller.editFeatureMv(
+        projectId,
+        action.flag,
+        action.onComplete,
+        action.environmentId,
+      )
       break
     case Actions.REMOVE_FLAG:
       controller.removeFlag(projectId, action.flag)

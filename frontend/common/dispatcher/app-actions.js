@@ -157,9 +157,10 @@ const AppActions = Object.assign({}, require('./base/_app-actions'), {
     })
   },
 
-  editFeatureMv(projectId, flag, onComplete) {
+  editFeatureMv(projectId, flag, onComplete, environmentId) {
     Dispatcher.handleViewAction({
       actionType: Actions.EDIT_FEATURE_MV,
+      environmentId,
       flag,
       onComplete,
       projectId,

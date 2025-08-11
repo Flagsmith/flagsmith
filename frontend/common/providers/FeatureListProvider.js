@@ -109,6 +109,7 @@ const FeatureListProvider = class extends React.Component {
               ...v,
               default_percentage_allocation:
                 matchingProjectVariate.default_percentage_allocation,
+              environment_id: environmentId,
             }
           }),
       }),
@@ -207,6 +208,7 @@ const FeatureListProvider = class extends React.Component {
               ...v,
               default_percentage_allocation:
                 matchingProjectVariate.default_percentage_allocation,
+              environment_id: environmentId,
             }
           }),
       }),
