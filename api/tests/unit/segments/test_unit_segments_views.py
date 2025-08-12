@@ -707,8 +707,9 @@ def test_update_segment_add_new_condition(
     assert response.status_code == status.HTTP_200_OK
 
     assert nested_rule.conditions.count() == 2
-    assert nested_rule.conditions.last().property == new_condition_property
-    assert nested_rule.conditions.last().value == new_condition_value
+    assert (expected_new_condition := nested_rule.conditions.last())
+    assert expected_new_condition.property == new_condition_property
+    assert expected_new_condition.value == new_condition_value
 
 
 def test_update_segment_versioned_segment(
