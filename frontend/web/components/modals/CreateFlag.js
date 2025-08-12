@@ -33,7 +33,7 @@ import IdentitySelect from 'components/IdentitySelect'
 import { setInterceptClose, setModalTitle } from './base/ModalDefault'
 import Icon from 'components/Icon'
 import ModalHR from './ModalHR'
-import FeatureValue from 'components/FeatureValue'
+import FeatureValue from 'components/feature-summary/FeatureValue'
 import { getStore } from 'common/store'
 import FlagOwnerGroups from 'components/FlagOwnerGroups'
 import ExistingChangeRequestAlert from 'components/ExistingChangeRequestAlert'
@@ -1077,7 +1077,6 @@ const CreateFlag = class extends Component {
 
               const isReleasePipelineEnabled =
                 Utils.getFlagsmithHasFeature('release_pipelines')
-
 
               return (
                 <Permission

@@ -5,7 +5,7 @@ import { Project, ProjectFlag } from 'common/types/responses'
 import { useProtectedTags } from 'common/utils/useProtectedTags'
 import { IonIcon } from '@ionic/react'
 import { warning } from 'ionicons/icons'
-import Tooltip from './Tooltip'
+import Tooltip from 'components/Tooltip'
 import ProjectStore from 'common/stores/project-store'
 import Utils from 'common/utils/utils'
 
@@ -43,7 +43,7 @@ const StaleFlagWarning: FC<StaleFlagWarningType> = ({ projectFlag }) => {
     <Tooltip
       title={
         <span
-          className='fs-caption d-flex align-items-center'
+          className='fs-caption lh-lg d-flex align-items-center'
           style={{ color: Constants.tagColors[2] }}
         >
           Created {daysAgo} days ago
