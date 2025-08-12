@@ -179,13 +179,14 @@ class Segment(
         # Ensure top-level rules are cloned first (for dependencies)
         source_rules = source_rules.order_by(models.F("rule").asc(nulls_first=True))
 
-        rule_to_cloned_rule_map: dict[SegmentRule | None, SegmentRule] = {}
+        rule_to_cloned_rule_map: dict[SegmentRule, SegmentRule] = {}
         for rule in source_rules:
             cloned_rule = deepcopy(rule)
             cloned_rule.pk = None
             cloned_rule.uuid = uuid.uuid4()
             cloned_rule.segment = self if rule.segment else None
-            cloned_rule.rule = rule_to_cloned_rule_map.get(rule.rule)
+            if rule.rule in rule_to_cloned_rule_map:
+                cloned_rule.rule = rule_to_cloned_rule_map[rule.rule]
             cloned_rule.save()
             rule_to_cloned_rule_map[rule] = cloned_rule
 
