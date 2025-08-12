@@ -286,7 +286,7 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_complete
     feature_in_pipeline_stage_phased_rollout: Feature,
     feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
 ) -> None:
-    # Given - a feature published 10 days ago
+    # Given - a feature completed 10 days ago
     ten_days_ago = timezone.now() - timedelta(days=10)
     nine_days_ago = timezone.now() - timedelta(days=9)
     feature_in_pipeline_stage_enable_feature_on_enter.environmentfeatureversion_set.filter(
@@ -299,15 +299,15 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_complete
             completed_after=nine_days_ago
         )
     )
-    # Then - we don't get the feature published 10 days ago
+    # Then - we don't get the feature completed 10 days ago
     assert completed_feature_versions.count() == 0
-    # Next, let's get the features published 10 days ago
+    # Next, let's get the features completed 10 days ago
     completed_feature_versions = (
         pipeline_stage_enable_feature_on_enter.get_completed_feature_versions_qs(
             completed_after=ten_days_ago
         )
     )
-    # Then - we get the feature published 10 days ago
+    # Then - we get the feature completed 10 days ago
     assert completed_feature_versions.count() == 1
     assert (
         completed_feature_versions.first().feature  # type: ignore[union-attr]
@@ -431,13 +431,13 @@ def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_co
     )
     # Then - we don't get the feature completed 10 days ago
     assert completed_feature_versions.count() == 0
-    # Next, let's get the features published 10 days ago
+    # Next, let's get the features completed 10 days ago
     completed_feature_versions = (
         pipeline_stage_phased_rollout.get_completed_feature_versions_qs(
             completed_after=ten_days_ago
         )
     )
-    # Then - we get the feature published 10 days ago
+    # Then - we get the feature completed 10 days ago
     assert completed_feature_versions.count() == 1
     assert (
         completed_feature_versions.first().feature  # type: ignore[union-attr]
