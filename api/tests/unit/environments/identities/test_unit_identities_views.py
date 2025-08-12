@@ -603,7 +603,9 @@ def test_identities_endpoint_returns_value_for_segment_if_rule_type_percentage_s
     )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=(identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0,
+        value=int(
+            (identity_percentage_value + (1 - identity_percentage_value) / 2) * 100.0
+        ),
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
@@ -654,7 +656,7 @@ def test_identities_endpoint_returns_default_value_if_rule_type_percentage_split
     )
     Condition.objects.create(
         operator=PERCENTAGE_SPLIT,
-        value=identity_percentage_value / 2,
+        value=int(identity_percentage_value / 2),
         rule=segment_rule,
     )
     feature_segment = FeatureSegment.objects.create(
