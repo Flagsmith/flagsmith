@@ -650,7 +650,7 @@ export type Req = {
   }
   getProjectChangeRequests: PagedRequest<{
     project_id: string
-    segment_id?: string
+    version_of?: string
     live_from_after?: string
     committed?: boolean
   }>
