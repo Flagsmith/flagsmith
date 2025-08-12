@@ -41,7 +41,7 @@ class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]
     def get_queryset(
         self,
     ) -> models.QuerySet[ModelT]:
-        # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
+        # Effectively `<ModelT>.Meta.ordering = ("id",) if ... else ()`,
         # but avoid the weirdness of a setting-dependant migration
         # and having to reload everything in tests
         qs: models.QuerySet[ModelT]
