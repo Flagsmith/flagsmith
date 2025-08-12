@@ -92,7 +92,7 @@ class EnvironmentFeatureVersion(  # type: ignore[django-manager-missing]
         null=True,
         blank=True,
     )
-    phased_rollout_state = models.ForeignKey(
+    phased_rollout_state = models.OneToOneField(
         "release_pipelines_core.PhasedRolloutState",
         related_name="environment_feature_versions",
         on_delete=models.CASCADE,

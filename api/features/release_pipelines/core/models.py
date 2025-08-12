@@ -238,7 +238,7 @@ class PhasedRolloutState(LifecycleModelMixin, models.Model):  # type: ignore[mis
             MaxValueValidator(100.0),
         ]
     )
-    rollout_segment = models.ForeignKey(
+    rollout_segment = models.OneToOneField(
         "segments.Segment",
         related_name="phased_rollout_state",
         on_delete=models.SET_NULL,

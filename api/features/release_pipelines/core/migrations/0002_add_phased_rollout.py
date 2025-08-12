@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ("last_updated_at", models.DateTimeField(auto_now=True)),
                 (
                     "rollout_segment",
-                    models.ForeignKey(
+                    models.OneToOneField(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
