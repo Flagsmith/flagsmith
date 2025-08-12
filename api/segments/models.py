@@ -46,9 +46,9 @@ class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]
         # and having to reload everything in tests
         qs: models.QuerySet[ModelT]
         if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
-            qs = SoftDeleteExportableManager.get_queryset(self).order_by("id")
+            qs = super().get_queryset().order_by("id")
         else:
-            qs = SoftDeleteExportableManager.get_queryset(self)
+            qs = super().get_queryset()
         return qs
 
 
