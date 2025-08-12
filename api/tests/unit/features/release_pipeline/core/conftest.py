@@ -65,6 +65,12 @@ def pipeline_stage_enable_feature_on_enter(
 def rollout_segment(
     project: Project,
 ) -> Segment:
+    return create_rollout_segment(project)
+
+
+def create_rollout_segment(
+    project: Project,
+) -> Segment:
     segment: Segment = Segment.objects.create(
         name="rollout_segment",
         project=project,
@@ -170,7 +176,8 @@ def phased_rollout_state(
 
 
 @pytest.fixture()
-def complete_phased_rollout_state(rollout_segment: Segment) -> PhasedRolloutState:
+def complete_phased_rollout_state(project: Project) -> PhasedRolloutState:
+    rollout_segment = create_rollout_segment(project)
     phased_rollout_state = PhasedRolloutState.objects.create(
         rollout_segment=rollout_segment,
         initial_split=20,

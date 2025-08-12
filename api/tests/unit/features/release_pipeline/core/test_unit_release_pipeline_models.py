@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pytest
 from django.utils import timezone
 
@@ -277,6 +279,42 @@ def test_pipeline_stage_on_enter_get_completed_feature_versions_qs(
     )
 
 
+def test_pipeline_stage_on_enter_get_completed_feature_versions_qs_with_completed_after(
+    pipeline_stage_enable_feature_on_enter: PipelineStage,
+    feature_in_pipeline_stage_enable_feature_on_enter: Feature,
+    feature_completed_pipeline_phased_rollout: Feature,
+    feature_in_pipeline_stage_phased_rollout: Feature,
+    feature_in_pipeline_stage_update_feature_value_on_wait_for: Feature,
+) -> None:
+    # Given - a feature published 10 days ago
+    ten_days_ago = timezone.now() - timedelta(days=10)
+    nine_days_ago = timezone.now() - timedelta(days=9)
+    feature_in_pipeline_stage_enable_feature_on_enter.environmentfeatureversion_set.filter(
+        pipeline_stage=pipeline_stage_enable_feature_on_enter
+    ).update(published_at=ten_days_ago)
+
+    # When - we get feature completed 9 days ago
+    completed_feature_versions = (
+        pipeline_stage_enable_feature_on_enter.get_completed_feature_versions_qs(
+            completed_after=nine_days_ago
+        )
+    )
+    # Then - we don't get the feature published 10 days ago
+    assert completed_feature_versions.count() == 0
+    # Next, let's get the features published 10 days ago
+    completed_feature_versions = (
+        pipeline_stage_enable_feature_on_enter.get_completed_feature_versions_qs(
+            completed_after=ten_days_ago
+        )
+    )
+    # Then - we get the feature published 10 days ago
+    assert completed_feature_versions.count() == 1
+    assert (
+        completed_feature_versions.first().feature  # type: ignore[union-attr]
+        == feature_in_pipeline_stage_enable_feature_on_enter
+    )
+
+
 def test_pipeline_stage_on_enter_get_in_stage_feature_versions_qs(
     pipeline_stage_enable_feature_on_enter: PipelineStage,
     feature_in_pipeline_stage_enable_feature_on_enter: Feature,
@@ -359,6 +397,47 @@ def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs(
         pipeline_stage_phased_rollout.get_completed_feature_versions_qs()
     )
     # Then
+    assert completed_feature_versions.count() == 1
+    assert (
+        completed_feature_versions.first().feature  # type: ignore[union-attr]
+        == feature_completed_pipeline_phased_rollout
+    )
+
+
+def test_pipeline_stage_phased_rollout_get_completed_feature_versions_qs_with_completed_after(
+    pipeline_stage_phased_rollout: PipelineStage,
+    feature_in_pipeline_stage_phased_rollout: Feature,
+    feature_completed_pipeline_phased_rollout: Feature,
+    phased_rollout_state: PhasedRolloutState,
+    feature_in_pipeline_stage_enable_feature_on_enter: Feature,
+) -> None:
+    # Given - a feature completed 10 days ago
+    ten_days_ago = timezone.now() - timedelta(days=10)
+    nine_days_ago = timezone.now() - timedelta(days=9)
+    env_feature_version = (
+        feature_completed_pipeline_phased_rollout.environmentfeatureversion_set.get(
+            pipeline_stage=pipeline_stage_phased_rollout
+        )
+    )
+    PhasedRolloutState.objects.filter(
+        id=env_feature_version.phased_rollout_state.id  # type: ignore[union-attr]
+    ).update(last_updated_at=ten_days_ago)
+
+    # When - we get feature completed 9 days ago
+    completed_feature_versions = (
+        pipeline_stage_phased_rollout.get_completed_feature_versions_qs(
+            completed_after=nine_days_ago
+        )
+    )
+    # Then - we don't get the feature completed 10 days ago
+    assert completed_feature_versions.count() == 0
+    # Next, let's get the features published 10 days ago
+    completed_feature_versions = (
+        pipeline_stage_phased_rollout.get_completed_feature_versions_qs(
+            completed_after=ten_days_ago
+        )
+    )
+    # Then - we get the feature published 10 days ago
     assert completed_feature_versions.count() == 1
     assert (
         completed_feature_versions.first().feature  # type: ignore[union-attr]

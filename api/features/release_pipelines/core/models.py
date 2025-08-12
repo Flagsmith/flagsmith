@@ -174,15 +174,19 @@ class PipelineStage(models.Model):
         )
 
     def get_completed_feature_versions_qs(
-        self, completed_after: datetime = timezone.now()
+        self, completed_after: typing.Optional[datetime] = None
     ) -> QuerySet[EnvironmentFeatureVersion]:
-        phased_rollout_action_filter = Q(
-            phased_rollout_state__is_rollout_complete=True,
-            phased_rollout_state__last_updated_at__gte=completed_after,
-        )
+        phased_rollout_action_filter = Q(phased_rollout_state__is_rollout_complete=True)
         all_other_action_filters = Q(
-            published_at__gte=completed_after, phased_rollout_state__isnull=True
+            phased_rollout_state__isnull=True, published_at__isnull=False
         )
+        if completed_after:
+            phased_rollout_action_filter = phased_rollout_action_filter & Q(
+                phased_rollout_state__last_updated_at__gte=completed_after
+            )
+            all_other_action_filters = all_other_action_filters & Q(
+                published_at__gte=completed_after
+            )
 
         return self.environment_feature_versions.filter(
             all_other_action_filters | phased_rollout_action_filter
