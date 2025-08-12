@@ -32,19 +32,19 @@ from projects.models import Project
 
 from .managers import LiveSegmentManager, SegmentManager
 
-T = typing.TypeVar("T", bound=models.Model)
+ModelT = typing.TypeVar("ModelT", bound=models.Model)
 
 logger = logging.getLogger(__name__)
 
 
-class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[T]):
+class ConfiguredOrderManager(SoftDeleteExportableManager, models.Manager[ModelT]):
     def get_queryset(
         self,
-    ) -> models.QuerySet[T]:
+    ) -> models.QuerySet[ModelT]:
         # Effectively `Condition.Meta.ordering = ("id",) if ... else ()`,
         # but avoid the weirdness of a setting-dependant migration
         # and having to reload everything in tests
-        qs: models.QuerySet[T]
+        qs: models.QuerySet[ModelT]
         if settings.SEGMENT_RULES_CONDITIONS_EXPLICIT_ORDERING_ENABLED:
             qs = SoftDeleteExportableManager.get_queryset(self).order_by("id")
         else:
