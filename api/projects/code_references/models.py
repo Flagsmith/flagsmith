@@ -1,7 +1,6 @@
 from django.contrib.postgres.indexes import GinIndex
 from django.db import models
 from django.db.models.expressions import Func
-from django.utils import timezone
 
 
 class VCSFeatureFlagCodeReferences(models.Model):
@@ -19,7 +18,7 @@ class VCSFeatureFlagCodeReferences(models.Model):
     revision = models.CharField(max_length=100)
     code_references = models.JSONField(default=list)
 
-    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ["-created_at"]
