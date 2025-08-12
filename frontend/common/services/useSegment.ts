@@ -1,9 +1,4 @@
-import {
-  Res,
-  Segment,
-  SegmentCondition,
-  SegmentRule,
-} from 'common/types/responses'
+import { Res } from 'common/types/responses'
 import { Req } from 'common/types/requests'
 import { service } from 'common/service'
 import Utils from 'common/utils/utils'
@@ -69,14 +64,11 @@ export const segmentService = service
           { id: `LIST${arg.projectId}`, type: 'Segment' },
           { id: `${arg.segment.id}`, type: 'Segment' },
         ],
-        queryFn: async (query, baseQueryApi, extraOptions, baseQuery) => {
-          const result = await baseQuery({
-            body: query.segment,
-            method: 'PUT',
-            url: `projects/${query.projectId}/segments/${query.segment.id}/`,
-          })
-          return result
-        },
+        query: (query: Req['updateSegment']) => ({
+          body: query.segment,
+          method: 'PUT',
+          url: `projects/${query.projectId}/segments/${query.segment.id}/`,
+        }),
       }),
       // END OF ENDPOINTS
     }),

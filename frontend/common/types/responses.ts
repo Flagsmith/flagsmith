@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-
 import { WithoutId } from './requests'
 
 export type EdgePagedResponse<T> = PagedResponse<T> & {

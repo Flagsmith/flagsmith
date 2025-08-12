@@ -8,6 +8,7 @@ import Icon from 'components/Icon'
 import Utils from 'common/utils/utils'
 import OverflowNav from 'components/navigation/OverflowNav'
 import ProjectChangeRequestsLink from 'components/ProjectChangeRequestsLink'
+
 type ProjectNavType = {
   environmentId?: string
   projectId?: number
