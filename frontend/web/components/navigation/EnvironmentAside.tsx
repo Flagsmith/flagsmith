@@ -277,7 +277,7 @@ const EnvironmentAside: FC<HomeAsideType> = ({ environmentId, projectId }) => {
                   </div>
                   <div
                     style={{ width: 260 }}
-                    className='text-muted position-fixed bottom-0 p-2 fs-caption d-flex flex-column gap-4'
+                    className='d-none d-lg-block text-muted position-fixed bottom-0 p-2 fs-caption d-flex flex-column gap-4'
                   >
                     <BuildVersion />
                   </div>

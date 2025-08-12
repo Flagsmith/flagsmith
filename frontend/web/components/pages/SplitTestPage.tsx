@@ -13,7 +13,7 @@ import { useGetSplitTestQuery } from 'common/services/useSplitTest'
 import { IonIcon } from '@ionic/react'
 import { chevronDown, chevronForward } from 'ionicons/icons'
 import Confidence from 'components/Confidence'
-import FeatureValue from 'components/FeatureValue'
+import FeatureValue from 'components/feature-summary/FeatureValue'
 
 interface RouteParams {
   environmentId: string

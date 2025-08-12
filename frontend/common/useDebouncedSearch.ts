@@ -4,10 +4,10 @@ import useDebounce from './useDebounce'
 export default function useDebouncedSearch(initialValue = '') {
   const [searchInput, setSearchInput] = useState(initialValue)
   const [search, setSearch] = useState(initialValue)
-  const [debounceTime, setDebounceTime] = useState(500);
+  const [debounceTime, setDebounceTime] = useState(500)
 
   useEffect(() => {
-    setDebounceTime(searchInput.length < 1 ? 0 : 500);
+    setDebounceTime(searchInput.length < 1 ? 0 : 500)
   }, [searchInput])
 
   const debouncedSearch = useDebounce((value: string) => {
@@ -23,7 +23,7 @@ export default function useDebouncedSearch(initialValue = '') {
   return {
     search,
     searchInput,
-    setSearchInput: handleSearchInput
+    setSearchInput: handleSearchInput,
   }
 }
 

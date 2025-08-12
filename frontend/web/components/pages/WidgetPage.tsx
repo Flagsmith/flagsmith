@@ -7,7 +7,7 @@ import React, {
 } from 'react'
 import TagFilter from 'components/tags/TagFilter'
 import Tag from 'components/tags/Tag'
-import FeatureRow from 'components/FeatureRow'
+import FeatureRow from 'components/feature-summary/FeatureRow'
 import FeatureListStore from 'common/stores/feature-list-store'
 import ProjectStore from 'common/stores/project-store'
 import API from 'project/api'

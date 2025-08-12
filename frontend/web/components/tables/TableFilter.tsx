@@ -29,7 +29,10 @@ const TableFilter: FC<TableFilterType> = ({
     <>
       <Row
         onClick={toggle}
-        className={classNames('cursor-pointer user-select-none', className)}
+        className={classNames(
+          'cursor-pointer py-2 py-lg-0 user-select-none',
+          className,
+        )}
       >
         <span>{title} </span>
         <IonIcon
