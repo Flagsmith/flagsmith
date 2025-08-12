@@ -27,7 +27,6 @@ import CreateFlagModal from 'components/modals/CreateFlag'
 import CreateSegmentModal from 'components/modals/CreateSegment'
 import EditIdentity from 'components/EditIdentity'
 import FeatureListStore from 'common/stores/feature-list-store'
-import FeatureValue from 'components/FeatureValue'
 import Format from 'common/utils/format'
 import Icon from 'components/Icon'
 import IdentifierString from 'components/IdentifierString'
@@ -40,7 +39,6 @@ import PanelSearch from 'components/PanelSearch'
 import Permission from 'common/providers/Permission'
 // @ts-ignore
 import Project from 'common/project'
-import Switch from 'components/Switch'
 import TableFilterOptions from 'components/tables/TableFilterOptions'
 import TableGroupsFilter from 'components/tables/TableGroupsFilter'
 import TableOwnerFilter from 'components/tables/TableOwnerFilter'
@@ -48,32 +46,19 @@ import TableSearchFilter from 'components/tables/TableSearchFilter'
 import TableSortFilter, { SortValue } from 'components/tables/TableSortFilter'
 import TableTagFilter from 'components/tables/TableTagFilter'
 import TableValueFilter from 'components/tables/TableValueFilter'
-import TagValues from 'components/tags/TagValues'
 import TryIt from 'components/TryIt'
 import Utils from 'common/utils/utils'
 // @ts-ignore
 import _data from 'common/data/base/_data'
-import classNames from 'classnames'
 import { removeIdentity } from './UsersPage'
 import { isEqual } from 'lodash'
 import ClearFilters from 'components/ClearFilters'
-import SegmentsIcon from 'components/svg/SegmentsIcon'
-import UsersIcon from 'components/svg/UsersIcon'
 import IdentityTraits from 'components/IdentityTraits'
 import { useGetIdentitySegmentsQuery } from 'common/services/useIdentitySegment'
 import useDebouncedSearch from 'common/useDebouncedSearch'
+import FeatureOverrideRow from 'components/FeatureOverrideRow'
+import featureValuesEqual from 'common/featureValuesEqual'
 
-const width = [200, 48, 78]
-
-const valuesEqual = (actualValue: any, flagValue: any) => {
-  const nullFalseyA =
-    actualValue == null ||
-    actualValue === '' ||
-    typeof actualValue === 'undefined'
-  const nullFalseyB =
-    flagValue == null || flagValue === '' || typeof flagValue === 'undefined'
-  return nullFalseyA && nullFalseyB ? true : actualValue === flagValue
-}
 interface RouteParams {
   environmentId: string
   projectId: string
@@ -142,17 +127,17 @@ const UserPage: FC = () => {
   const [preselect, setPreselect] = useState(Utils.fromParam().flag)
   const [segmentsPage, setSegmentsPage] = useState(1)
   const { search, searchInput, setSearchInput } = useDebouncedSearch('')
-  const {
-    data: segments,
-    isFetching: isFetchingSegments,
-    refetch: refetchIdentitySegments,
-  } = useGetIdentitySegmentsQuery({
-    identity: id,
-    page: segmentsPage,
-    page_size: 10,
-    projectId,
-    q: search,
-  })
+  const { data: segments, isFetching: isFetchingSegments } =
+    useGetIdentitySegmentsQuery(
+      {
+        identity: id,
+        page: segmentsPage,
+        page_size: 10,
+        projectId: `${projectId}`,
+        q: search,
+      },
+      { skip: !projectId },
+    )
   const getFilter = useCallback(
     (filter) => ({
       ...filter,
@@ -212,7 +197,7 @@ const UserPage: FC = () => {
         segment={segment.id}
         readOnly
         environmentId={environmentId}
-        projectId={projectId}
+        projectId={projectId!}
       />,
       'side-modal create-segment-modal',
     )
@@ -439,7 +424,7 @@ const UserPage: FC = () => {
                                     <ClearFilters onClick={clearFilters} />
                                   )}
                                   <TableTagFilter
-                                    projectId={projectId}
+                                    projectId={projectId!}
                                     className='me-4'
                                     value={filter.tags}
                                     tagStrategy={filter.tag_strategy}
@@ -499,7 +484,6 @@ const UserPage: FC = () => {
                                   />
                                   <TableGroupsFilter
                                     className={'me-4'}
-                                    projectId={projectId}
                                     orgId={AccountStore.getOrganisation()?.id}
                                     value={filter.group_owners}
                                     onChange={(group_owners) => {
@@ -553,10 +537,7 @@ const UserPage: FC = () => {
                           }
                           isLoading={FeatureListStore.isLoading}
                           items={projectFlags}
-                          renderRow={(
-                            { description, id: featureId, name, tags },
-                            i,
-                          ) => {
+                          renderRow={({ id: featureId, name, tags }, i) => {
                             return (
                               <Permission
                                 level='environment'
@@ -592,7 +573,10 @@ const UserPage: FC = () => {
                                     : actualEnabled !== flagEnabled
                                   const flagValueDifferent = hasUserOverride
                                     ? false
-                                    : !valuesEqual(actualValue, flagValue)
+                                    : !featureValuesEqual(
+                                        actualValue,
+                                        flagValue,
+                                      )
                                   const projectFlag = projectFlags?.find(
                                     (p: any) =>
                                       p.id === environmentFlag.feature,
@@ -624,230 +608,30 @@ const UserPage: FC = () => {
                                     }
                                   }
 
-                                  const isCompact = getViewMode() === 'compact'
                                   if (name === preselect && actualFlags) {
                                     setPreselect(null)
                                     onClick()
                                   }
 
                                   return (
-                                    <div
-                                      className={classNames(
-                                        `flex-row space list-item clickable py-2`,
-                                        {
-                                          'bg-primary-opacity-5':
-                                            hasUserOverride ||
-                                            hasSegmentOverride,
-                                        },
-                                        {
-                                          'list-item-xs':
-                                            isCompact &&
-                                            !flagEnabledDifferent &&
-                                            !flagValueDifferent,
-                                        },
+                                    <FeatureOverrideRow
+                                      toggleDataTest={`user-feature-switch-${i}${
+                                        actualEnabled ? '-on' : '-off'
+                                      }`}
+                                      valueDataTest={`user-feature-value-${i}`}
+                                      projectFlag={projectFlag}
+                                      editPermission={permission}
+                                      editPermissionDescription={Constants.environmentPermissions(
+                                        Utils.getManageFeaturePermissionDescription(
+                                          false,
+                                          true,
+                                        ),
                                       )}
-                                      key={featureId}
-                                      data-test={`user-feature-${i}`}
                                       onClick={onClick}
-                                    >
-                                      <Flex className='table-column pt-0'>
-                                        <Row>
-                                          <Flex>
-                                            <Row
-                                              className='font-weight-medium'
-                                              style={{
-                                                alignItems: 'start',
-                                                lineHeight: 1,
-                                                rowGap: 4,
-                                                wordBreak: 'break-all',
-                                              }}
-                                            >
-                                              <Row>
-                                                <span>
-                                                  {description ? (
-                                                    <Tooltip
-                                                      title={
-                                                        <span>{name}</span>
-                                                      }
-                                                    >
-                                                      {description}
-                                                    </Tooltip>
-                                                  ) : (
-                                                    name
-                                                  )}
-                                                </span>
-                                                <Button
-                                                  onClick={(e) => {
-                                                    e?.stopPropagation()
-                                                    e?.currentTarget?.blur()
-                                                    Utils.copyToClipboard(
-                                                      projectFlag!.name,
-                                                    )
-                                                  }}
-                                                  theme='icon'
-                                                  className='ms-2 me-2'
-                                                >
-                                                  <Icon name='copy' />
-                                                </Button>
-                                              </Row>
-                                              <TagValues
-                                                projectId={`${projectId}`}
-                                                value={projectFlag!.tags}
-                                              />
-                                            </Row>
-                                            {hasUserOverride ? (
-                                              <div className='list-item-subtitle text-primary d-flex align-items-center'>
-                                                <UsersIcon
-                                                  fill='#6837fc'
-                                                  width={16}
-                                                  className='me-1'
-                                                />
-                                                This feature is being overridden
-                                                for this identity
-                                              </div>
-                                            ) : flagEnabledDifferent ? (
-                                              <div
-                                                data-test={`feature-override-${i}`}
-                                                className='list-item-subtitle'
-                                              >
-                                                <Row>
-                                                  <Flex>
-                                                    {isMultiVariateOverride ? (
-                                                      <span>
-                                                        This flag is being
-                                                        overridden by a
-                                                        variation defined on
-                                                        your feature, the
-                                                        control value is{' '}
-                                                        <strong>
-                                                          {flagEnabled
-                                                            ? 'on'
-                                                            : 'off'}
-                                                        </strong>{' '}
-                                                        for this user
-                                                      </span>
-                                                    ) : (
-                                                      <span className='list-item-subtitle d-flex text-primary align-items-center'>
-                                                        <SegmentsIcon
-                                                          className='me-1'
-                                                          width={16}
-                                                          fill='#6837fc'
-                                                        />
-                                                        {`This flag is being overridden by a segment and would normally be`}
-                                                        <div className='ph-1 ml-1 mr-1 fw-semibold'>
-                                                          {flagEnabled
-                                                            ? 'on'
-                                                            : 'off'}
-                                                        </div>{' '}
-                                                        for this user
-                                                      </span>
-                                                    )}
-                                                  </Flex>
-                                                </Row>
-                                              </div>
-                                            ) : flagValueDifferent ? (
-                                              isMultiVariateOverride ? (
-                                                <div
-                                                  data-test={`feature-override-${i}`}
-                                                  className='list-item-subtitle'
-                                                >
-                                                  <span className='flex-row'>
-                                                    This feature is being
-                                                    overridden by a % variation
-                                                    in the environment, the
-                                                    control value of this
-                                                    feature is{' '}
-                                                    <FeatureValue
-                                                      className='ml-1 chip--xs'
-                                                      includeEmpty
-                                                      data-test={`user-feature-original-value-${i}`}
-                                                      value={`${flagValue}`}
-                                                    />
-                                                  </span>
-                                                </div>
-                                              ) : (
-                                                <span className='d-flex list-item-subtitle text-primary align-items-center'>
-                                                  <SegmentsIcon
-                                                    className='me-1'
-                                                    width={16}
-                                                    fill='#6837fc'
-                                                  />
-                                                  {`This feature is being
-                                                        overridden by a segment
-                                                        and would normally be`}
-                                                  <FeatureValue
-                                                    className='ml-1 chip--xs'
-                                                    includeEmpty
-                                                    data-test={`user-feature-original-value-${i}`}
-                                                    value={`${flagValue}`}
-                                                  />{' '}
-                                                  for this user
-                                                </span>
-                                              )
-                                            ) : (
-                                              getViewMode() === 'default' && (
-                                                <div className='list-item-subtitle'>
-                                                  Using environment defaults
-                                                </div>
-                                              )
-                                            )}
-                                          </Flex>
-                                        </Row>
-                                      </Flex>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: width[0] }}
-                                      >
-                                        <FeatureValue
-                                          data-test={`user-feature-value-${i}`}
-                                          value={actualValue!}
-                                        />
-                                      </div>
-                                      <div
-                                        className='table-column'
-                                        style={{ width: width[1] }}
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {Utils.renderWithPermission(
-                                          permission,
-                                          Constants.environmentPermissions(
-                                            Utils.getManageFeaturePermissionDescription(
-                                              false,
-                                              true,
-                                            ),
-                                          ),
-                                          <Switch
-                                            disabled={!permission}
-                                            data-test={`user-feature-switch-${i}${
-                                              actualEnabled ? '-on' : '-off'
-                                            }`}
-                                            checked={actualEnabled}
-                                            onChange={() =>
-                                              confirmToggle(
-                                                projectFlag,
-                                                actualFlags![name],
-                                                () =>
-                                                  toggleFlag({
-                                                    environmentFlag:
-                                                      actualFlags![name],
-                                                    environmentId,
-                                                    identity: id,
-                                                    identityFlag,
-                                                    projectFlag: {
-                                                      id: featureId,
-                                                    },
-                                                  }),
-                                              )
-                                            }
-                                          />,
-                                        )}
-                                      </div>
-                                      <div
-                                        className='table-column p-0'
-                                        style={{ width: width[2] }}
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {hasUserOverride && (
+                                      dataTest={`user-feature-${i}`}
+                                      overrideFeatureState={actualFlags?.[name]}
+                                      cta={
+                                        hasUserOverride && (
                                           <>
                                             {Utils.renderWithPermission(
                                               permission,
@@ -882,9 +666,31 @@ const UserPage: FC = () => {
                                               </Button>,
                                             )}
                                           </>
-                                        )}
-                                      </div>
-                                    </div>
+                                        )
+                                      }
+                                      environmentFeatureState={
+                                        environmentFlags[featureId]
+                                      }
+                                      onToggle={() =>
+                                        confirmToggle(
+                                          projectFlag,
+                                          actualFlags![name],
+                                          () =>
+                                            toggleFlag({
+                                              environmentFeatureState:
+                                                actualFlags![name],
+                                              environmentId,
+                                              identity: id,
+                                              identityFlag,
+                                              projectFlag: {
+                                                id: featureId,
+                                              },
+                                            }),
+                                        )
+                                      }
+                                      hasUserOverride={!!hasUserOverride}
+                                      hasSegmentOverride={hasSegmentOverride}
+                                    />
                                   )
                                 }}
                               </Permission>
@@ -931,7 +737,7 @@ const UserPage: FC = () => {
                       {!preventAddTrait && (
                         <IdentityTraits
                           environmentId={environmentId}
-                          projectId={projectId}
+                          projectId={projectId!}
                           identityId={id}
                           identityName={identity?.identity?.identifier || id}
                         />
@@ -949,9 +755,7 @@ const UserPage: FC = () => {
                             isLoading={isFetchingSegments}
                             search={searchInput}
                             onChange={(e) => {
-                              setSearchInput(
-                                Utils.safeParseEventValue(e),
-                              )
+                              setSearchInput(Utils.safeParseEventValue(e))
                             }}
                             itemHeight={70}
                             paging={segments}
