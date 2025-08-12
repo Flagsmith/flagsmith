@@ -191,7 +191,7 @@ def test_system_segment_condition_get_skip_create_audit_log(
     # Then
     assert result is True
 
-    
+
 def test_Segment_clone__can_create_standalone_segment_clone(
     segment: Segment,
 ) -> None:
@@ -304,4 +304,3 @@ def test_Segment_clone__segment_with_rules__returns_new_segment_with_copied_rule
     ) == [
         {"property": "property3a", "operator": EQUAL, "value": "value3a"},
     ]
-

@@ -230,7 +230,6 @@ class SegmentRule(
         super().clean()
         self._validate_one_parent()
 
-
     def _validate_one_parent(self) -> None:
         parents = [self.segment, self.rule]
         if (num_parents := sum(parent is not None for parent in parents)) != 1:
@@ -312,7 +311,6 @@ class Condition(
             self.operator,
             self.value,
         )
-
 
     def get_skip_create_audit_log(self) -> bool:  # pragma: no cover
         # NOTE: We'll transition to storing rules and conditions in JSON so
