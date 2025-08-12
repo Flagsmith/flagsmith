@@ -97,7 +97,7 @@ const ChangeRequestsPage: FC<ChangeRequestsPageType> = ({ match, router }) => {
       }
       ChangeRequestsDisabledMessage={
         <InfoMessage>
-          To enable this feature set a minimum number of approvals in{' '}
+          To enable this feature see <strong>Feature Change Requests</strong> in{' '}
           <Link
             to={`/project/${projectId}/environment/${environmentId}/settings`}
           >

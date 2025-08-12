@@ -65,12 +65,8 @@ const ProjectChangeRequestsPage: FC<ProjectChangeRequestsPageType> = ({
       }
       ChangeRequestsDisabledMessage={
         <InfoMessage>
-          To enable this feature set a minimum number of approvals in{' '}
-          <Link
-            to={`/project/${projectId}/environment/${environmentId}/settings`}
-          >
-            Environment Settings
-          </Link>
+          To enable this feature see <strong>Segment Change Requests</strong> in{' '}
+          <Link to={`/project/${projectId}/settings`}>Project Settings</Link>
         </InfoMessage>
       }
     />
